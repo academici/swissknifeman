@@ -112,8 +112,9 @@ def _unmet_dependency(plan: store.Plan, item_id: str, satisfied: Iterable[str]) 
 def _gate_wait(plan: store.Plan, item_id: str, granted: set[str]) -> str | None:
     authority = plan.items[item_id].get("authority")
     authority = authority if isinstance(authority, dict) else {}
-    if authority.get("kind") == "owner_gate" and authority.get("gate") not in granted:
-        return f"gate {authority.get('gate')}"
+    identity = authority.get("gate") or authority.get("label")
+    if authority.get("kind") == "owner_gate" and identity not in granted:
+        return f"gate {identity}"
     return None
 
 
@@ -166,6 +167,9 @@ class Next:
 def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa: A001 — dossier §6.1 name
     """Semantic Next of ``plan`` (dossier §6.1). ``granted`` defaults to the gates found in the log."""
     plan_id = plan.plan.get("id", plan.root.name)
+    if plan.plan.get("status") == "paused":
+        pause = plan.plan.get("pause") if isinstance(plan.plan.get("pause"), dict) else {}
+        return Next("waiting", f"paused: {pause.get('reason', 'source pause reason missing')}")
     order = phase_order(plan)
     if not order:
         return Next("waiting", "no phases yet (add-phase)")
@@ -413,8 +417,8 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             unmet = _unmet_dependency(p, item_id, requested[:position])
             if unmet:
                 raise PlanError("DEPENDENCY_NOT_READY", f"{item_id} waits for {unmet}")
-        known_gates = {(d.get("authority") or {}).get("gate") for d in p.items.values()
-                       if (d.get("authority") or {}).get("kind") == "owner_gate"}
+        known_gates = {(d.get("authority") or {}).get("gate") or (d.get("authority") or {}).get("label")
+                       for d in p.items.values() if (d.get("authority") or {}).get("kind") == "owner_gate"}
         for gate in grants:
             if gate not in known_gates:
                 raise PlanError("GATE_UNKNOWN", f"no item declares owner gate {gate!r}")
@@ -673,7 +677,8 @@ def grant(plan, gate: str, note: str, actor: Mapping | None = None) -> Next:
             raise PlanError("GATE_INVALID", f"gate must match [A-Z0-9-]+, received {gate!r}")
         if not note or not note.strip():
             raise PlanError("NOTE_REQUIRED", "--note must quote the owner's message that grants the gate")
-        if not any((d.get("authority") or {}).get("gate") == gate for d in p.items.values()):
+        if not any(((d.get("authority") or {}).get("gate") or (d.get("authority") or {}).get("label")) == gate
+                   for d in p.items.values()):
             raise PlanError("GATE_UNKNOWN", f"no item declares owner gate {gate!r}")
         if gate not in granted_gates(p):
             event = store.new_event("gate_granted", f"gate {gate} granted", _actor_doc(p, actor),

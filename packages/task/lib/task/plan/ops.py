@@ -14,7 +14,7 @@ import re
 from typing import Any, Iterator
 
 from . import store, views
-from .model import PlanError, parse_ref
+from .model import SHORT_ID, PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
@@ -125,7 +125,7 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
         raise PlanError("PLAN_EXISTS", f"plan {plan_id} already exists")
     if not _PLAN_TITLE_PREFIX.match(title):
         title = f"Plan №{ordinal} — {title}"
-    taken = [int(row["short_id"][4:]) for row in rows if row["short_id"]]
+    taken = [int(row["short_id"][4:]) for row in rows if SHORT_ID.fullmatch(row["short_id"] or "")]
     short_id = f"PLAN{max(taken, default=0) + 1}"
     root = plans_root / plan_id
     if (root / "plan.json").exists():

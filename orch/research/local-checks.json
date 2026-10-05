@@ -1,0 +1,77 @@
+{
+  "scope": "Read-only generator checks and existing tests in temporary fixtures; no paid provider calls",
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "packages/task/scripts/render-provider-commands.py",
+        "--check",
+        "--root",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.095,
+      "stdout": "render-provider-commands: check OK (no-op)\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.078,
+      "stdout": "provider instructions reference: OK\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/task/tests/engine",
+        "-p",
+        "test_context.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.603,
+      "stdout": "",
+      "stderr": ".............\n----------------------------------------------------------------------\nRan 13 tests in 1.541s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/task/tests/engine",
+        "-p",
+        "test_scout.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.49,
+      "stdout": "",
+      "stderr": ".......................\n----------------------------------------------------------------------\nRan 23 tests in 1.433s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/task/tests/engine",
+        "-p",
+        "test_units.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.656,
+      "stdout": "",
+      "stderr": "....................\n----------------------------------------------------------------------\nRan 20 tests in 2.595s\n\nOK\n"
+    }
+  ]
+}

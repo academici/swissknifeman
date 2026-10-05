@@ -219,6 +219,14 @@ class StartTests(LifeCase):
         self.assertEqual((len(granted), granted[0]["data"]["gate"]), (1, "RELEASE-1"))
         self.assertIn("RELEASE-1", lifecycle.granted_gates(self.load()))
 
+    def test_legacy_owner_gate_label_can_be_granted_without_inventing_an_id(self):
+        label = "Запускай P1.1"
+        ops.patch(self.root, "P1.1", {"authority": {"kind": "owner_gate", "label": label,
+                                                        "scope": "Exact source instruction"}})
+        self.refused("GATE_NOT_GRANTED", lambda root, *a: lifecycle.start(root, ["P1.1"], OPUS))
+        self.start("P1.1", grants=[label])
+        self.assertIn(label, lifecycle.granted_gates(self.load()))
+
 
 class FinishTests(LifeCase):
     def test_done_needs_every_acceptance_check_with_exit_zero(self):
@@ -544,6 +552,15 @@ class DeclaredOrderTests(LifeCase):
 
 
 class NextWiringTests(LifeCase):
+    def test_paused_plan_reports_the_source_pause_instead_of_ready_work(self):
+        ops.set_plan(self.root, {"pause": {"reason": "PLAN3 owns the successor work"}})
+        plan = self.load()
+        plan.plan["status"] = "paused"
+        store.save(plan.path("plan"), plan.plan, "plan")
+        action = lifecycle.next(self.load())
+        self.assertEqual(action.kind, "waiting")
+        self.assertEqual(action.reason, "paused: PLAN3 owns the successor work")
+
     def test_next_dict_form_matches_the_text_form(self):
         action = lifecycle.next(self.load())
         self.assertEqual(action.exact, f"run-items: task:plan-run {self.load().plan['id']} P1.1 P1.2")  # P1.2 follows P1.1

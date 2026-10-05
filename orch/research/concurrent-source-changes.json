@@ -1,0 +1,69 @@
+{
+  "observed_at": "2026-10-05T16:02:34.817612+00:00",
+  "base_commit": "34a6c0f3342290cb5e5a3c2d0be106838a4ae455",
+  "note": "Concurrent Task edits appeared during research. They were not made or reverted by this audit. Existing test results are historical, not attestation of the later working tree. Inspected hashes can differ from HEAD; URLs identify baseline, not every WIP byte.",
+  "affected_indexed_sources": [
+    {
+      "path": "packages/task/lib/task/plan/context.py",
+      "inspected_sha256": "8310fa93d1e19bc3d2604fe9ee120034577401eb74a74a62c2bec7fa1b6acbe8",
+      "head_sha256": "cff6efe40cf5356b7c0307c06199dea9e2307e558a6536749216483673414dc4",
+      "current_sha256": "8310fa93d1e19bc3d2604fe9ee120034577401eb74a74a62c2bec7fa1b6acbe8",
+      "changed_after_snapshot": false
+    },
+    {
+      "path": "packages/task/lib/task/plan/units.py",
+      "inspected_sha256": "d5e640fea1b17a741d6481fbd7b61d4a23d8b8173b77742bb439c556ebf6766d",
+      "head_sha256": "0a3637d2a267812337759d7704e8fb72f1d3972edf5284e92908b0b0192b146c",
+      "current_sha256": "d5e640fea1b17a741d6481fbd7b61d4a23d8b8173b77742bb439c556ebf6766d",
+      "changed_after_snapshot": false
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "inspected_sha256": "4239829c177af4395bc91eaf34f01bd32c7550f502f361c37f55a6e86ee1ff26",
+      "head_sha256": "4239829c177af4395bc91eaf34f01bd32c7550f502f361c37f55a6e86ee1ff26",
+      "current_sha256": "b3298b8fb77b1f0a349eab4f084939f8a3bf8cc65ecc6f750759effdbae72a55",
+      "changed_after_snapshot": true
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/plan.schema.json",
+      "inspected_sha256": "c8db46be23a87276c35bafdfcc4b0cfc2529552fb1de9848821171a782dd87d0",
+      "head_sha256": "2b0511504eeb791febca913aac5ab72ba8074a882eea88f1b30f122c8f838a4b",
+      "current_sha256": "c8db46be23a87276c35bafdfcc4b0cfc2529552fb1de9848821171a782dd87d0",
+      "changed_after_snapshot": false
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/item.schema.json",
+      "inspected_sha256": "a11ed447b20aec95ffccd5de5df99f16c4a12f4e47df0d00c2d4162449a64eb0",
+      "head_sha256": "a11ed447b20aec95ffccd5de5df99f16c4a12f4e47df0d00c2d4162449a64eb0",
+      "current_sha256": "e22beb98d865fcb5c76ff7e8dbea40040dcfecc295d85d3cc91504f815b02076",
+      "changed_after_snapshot": true
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/defs.schema.json",
+      "inspected_sha256": "2c525045c02d510e362913368cbf1d1218949ab479373cf4ffe45c7c61ce129c",
+      "head_sha256": "2c525045c02d510e362913368cbf1d1218949ab479373cf4ffe45c7c61ce129c",
+      "current_sha256": "23cf0e3e92a5fc280247dafe15d5457044417996d979dfc4f0fa0c4a70bd9e09",
+      "changed_after_snapshot": true
+    }
+  ],
+  "concurrent_paths": [
+    "packages/task/docs/migration/inventory.json",
+    "packages/task/docs/migration/tracker.py",
+    "packages/task/lib/task/plan/check.py",
+    "packages/task/lib/task/plan/context.py",
+    "packages/task/lib/task/plan/lifecycle.py",
+    "packages/task/lib/task/plan/model.py",
+    "packages/task/lib/task/plan/ops.py",
+    "packages/task/lib/task/plan/snapshot.py",
+    "packages/task/lib/task/plan/units.py",
+    "packages/task/schemas/plan/v1/decision.schema.json",
+    "packages/task/schemas/plan/v1/defs.schema.json",
+    "packages/task/schemas/plan/v1/item.schema.json",
+    "packages/task/schemas/plan/v1/plan.schema.json",
+    "packages/task/tests/engine/test_check.py",
+    "packages/task/tests/engine/test_lifecycle.py",
+    "packages/task/tests/engine/test_model.py",
+    "packages/task/tests/engine/test_schema.py",
+    "packages/task/tests/engine/test_snapshot.py"
+  ]
+}

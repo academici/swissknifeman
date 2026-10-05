@@ -1,0 +1,487 @@
+{
+  "checked_at": "2026-10-05T15:52:24.218273+00:00",
+  "method": "Read-only repository code/docs review plus primary web documentation; hashes identify inspected working copies, not proof of runtime integration.",
+  "local": {
+    "commit": "34a6c0f3342290cb5e5a3c2d0be106838a4ae455",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "sha256": "40302b688b17092b2ca9506ab13880a9308339ca781e3eeb3b7c483cc6abd359",
+        "bytes": 1895,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/AGENTS.md",
+        "head_sha256": "40302b688b17092b2ca9506ab13880a9308339ca781e3eeb3b7c483cc6abd359",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/AGENTS.md",
+        "sha256": "1cbf457d6085651d54cdc195490edac3649933f60a3a4c5102315abdcd77d01b",
+        "bytes": 257,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/AGENTS.md",
+        "head_sha256": "1cbf457d6085651d54cdc195490edac3649933f60a3a4c5102315abdcd77d01b",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/AGENTS.md",
+        "sha256": "722f21b0810af15aacadde3a3f82a6fa676bc4683684ac4e869072875244d0cc",
+        "bytes": 245,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/AGENTS.md",
+        "head_sha256": "722f21b0810af15aacadde3a3f82a6fa676bc4683684ac4e869072875244d0cc",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/AGENTS.md",
+        "sha256": "e4f67a3278871b042a8588d01d73c23680fe64775d2f76b45d4a7e89711789ea",
+        "bytes": 529,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/AGENTS.md",
+        "head_sha256": "e4f67a3278871b042a8588d01d73c23680fe64775d2f76b45d4a7e89711789ea",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/skiller/AGENTS.md",
+        "sha256": "c52a805b9ff3d4cc4b998bb9f9fc28bb21e6c0ecc4ae5f09dc621bfe46637661",
+        "bytes": 257,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/skiller/AGENTS.md",
+        "head_sha256": "c52a805b9ff3d4cc4b998bb9f9fc28bb21e6c0ecc4ae5f09dc621bfe46637661",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/README.md",
+        "sha256": "59ccc176508fe14358db395a41a90afa1e153e13e9484f1fdcab11875e96be77",
+        "bytes": 2168,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/README.md",
+        "head_sha256": "59ccc176508fe14358db395a41a90afa1e153e13e9484f1fdcab11875e96be77",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/README.md",
+        "sha256": "a9a608a24d2536fa6d9aee8619a3ef2e551efc537433efb348cb5fbae31ef16c",
+        "bytes": 1073,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/README.md",
+        "head_sha256": "a9a608a24d2536fa6d9aee8619a3ef2e551efc537433efb348cb5fbae31ef16c",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/commands/plan-run.md",
+        "sha256": "4f73d389d7c501e92498422fbbc53968cabace25b8fc944c5a1ec24464666001",
+        "bytes": 3734,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/commands/plan-run.md",
+        "head_sha256": "4f73d389d7c501e92498422fbbc53968cabace25b8fc944c5a1ec24464666001",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/configs/command-routing.json",
+        "sha256": "79c2c78f86765ced987bb812f2add71f991cdce6efcd29ba86733dde663a1fd1",
+        "bytes": 19454,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/configs/command-routing.json",
+        "head_sha256": "79c2c78f86765ced987bb812f2add71f991cdce6efcd29ba86733dde663a1fd1",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/lib/task/command_catalog.py",
+        "sha256": "11468b0fbf0d9f15fac59de4cb91159e78de01319f018563593e312c39dd5a59",
+        "bytes": 22657,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/command_catalog.py",
+        "head_sha256": "11468b0fbf0d9f15fac59de4cb91159e78de01319f018563593e312c39dd5a59",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/lib/task/command_render.py",
+        "sha256": "800591e0d7223ef54163ed06f6890a87d66f34179a3a187f0043e04c0a9fa7d0",
+        "bytes": 88833,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/command_render.py",
+        "head_sha256": "800591e0d7223ef54163ed06f6890a87d66f34179a3a187f0043e04c0a9fa7d0",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/lib/task/plan/context.py",
+        "sha256": "8310fa93d1e19bc3d2604fe9ee120034577401eb74a74a62c2bec7fa1b6acbe8",
+        "bytes": 8425,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/plan/context.py",
+        "head_sha256": "cff6efe40cf5356b7c0307c06199dea9e2307e558a6536749216483673414dc4",
+        "inspected_hash_matches_head": false
+      },
+      {
+        "path": "packages/task/lib/task/plan/scout.py",
+        "sha256": "e6050b3d65aaf640d163bc15d5583b9e1b9cc9bfc75c29b2e2e5e5efae8d96a1",
+        "bytes": 6050,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/plan/scout.py",
+        "head_sha256": "e6050b3d65aaf640d163bc15d5583b9e1b9cc9bfc75c29b2e2e5e5efae8d96a1",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/lib/task/plan/units.py",
+        "sha256": "d5e640fea1b17a741d6481fbd7b61d4a23d8b8173b77742bb439c556ebf6766d",
+        "bytes": 16469,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/plan/units.py",
+        "head_sha256": "0a3637d2a267812337759d7704e8fb72f1d3972edf5284e92908b0b0192b146c",
+        "inspected_hash_matches_head": false
+      },
+      {
+        "path": "packages/task/lib/task/plan/lifecycle.py",
+        "sha256": "4239829c177af4395bc91eaf34f01bd32c7550f502f361c37f55a6e86ee1ff26",
+        "bytes": 40486,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/plan/lifecycle.py",
+        "head_sha256": "4239829c177af4395bc91eaf34f01bd32c7550f502f361c37f55a6e86ee1ff26",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/lib/task/plan/cli.py",
+        "sha256": "bc566ee5a075ddda60321951a36d838e9cf01b9a894467d625aa04bf035230dc",
+        "bytes": 23889,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/plan/cli.py",
+        "head_sha256": "bc566ee5a075ddda60321951a36d838e9cf01b9a894467d625aa04bf035230dc",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/lib/task/plan/store.py",
+        "sha256": "4f25f94ade3c6eb27b19bdd449063e6c38fbadbcfc80e376602d45cf9514c994",
+        "bytes": 15713,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/lib/task/plan/store.py",
+        "head_sha256": "4f25f94ade3c6eb27b19bdd449063e6c38fbadbcfc80e376602d45cf9514c994",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/schemas/plan/v1/plan.schema.json",
+        "sha256": "c8db46be23a87276c35bafdfcc4b0cfc2529552fb1de9848821171a782dd87d0",
+        "bytes": 7429,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/schemas/plan/v1/plan.schema.json",
+        "head_sha256": "2b0511504eeb791febca913aac5ab72ba8074a882eea88f1b30f122c8f838a4b",
+        "inspected_hash_matches_head": false
+      },
+      {
+        "path": "packages/task/schemas/plan/v1/item.schema.json",
+        "sha256": "a11ed447b20aec95ffccd5de5df99f16c4a12f4e47df0d00c2d4162449a64eb0",
+        "bytes": 14973,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/schemas/plan/v1/item.schema.json",
+        "head_sha256": "a11ed447b20aec95ffccd5de5df99f16c4a12f4e47df0d00c2d4162449a64eb0",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/schemas/plan/v1/unit.schema.json",
+        "sha256": "be52f6bb18e837b7cece32adf2d04bdf85328d764bc04b94f858021c3a5554fc",
+        "bytes": 5700,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/schemas/plan/v1/unit.schema.json",
+        "head_sha256": "be52f6bb18e837b7cece32adf2d04bdf85328d764bc04b94f858021c3a5554fc",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/schemas/plan/v1/defs.schema.json",
+        "sha256": "2c525045c02d510e362913368cbf1d1218949ab479373cf4ffe45c7c61ce129c",
+        "bytes": 7107,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/schemas/plan/v1/defs.schema.json",
+        "head_sha256": "2c525045c02d510e362913368cbf1d1218949ab479373cf4ffe45c7c61ce129c",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/lib/harness/run/__init__.py",
+        "sha256": "e049a06ac9ae7b3ad7dc308614eee437190856ad4fa346ef74f6b7510fdba832",
+        "bytes": 9110,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/lib/harness/run/__init__.py",
+        "head_sha256": "e049a06ac9ae7b3ad7dc308614eee437190856ad4fa346ef74f6b7510fdba832",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/lib/harness/run/worker.py",
+        "sha256": "771502a0c99ae7001cfb83bd09b6062eb1e79142996e353b25682703c7a68a7d",
+        "bytes": 6808,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/lib/harness/run/worker.py",
+        "head_sha256": "771502a0c99ae7001cfb83bd09b6062eb1e79142996e353b25682703c7a68a7d",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/lib/harness/run/plan_reader.py",
+        "sha256": "8144bcda57e58b3159fbf43d7f05f0bd6780331df2cf57b9668d83729a2c6b0e",
+        "bytes": 5126,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/lib/harness/run/plan_reader.py",
+        "head_sha256": "8144bcda57e58b3159fbf43d7f05f0bd6780331df2cf57b9668d83729a2c6b0e",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/lib/harness/run/gate.py",
+        "sha256": "43f86fb6e5c0e79f09987007218a7a77199b4c5cc94dbea31e2b6c011aed2ce4",
+        "bytes": 8564,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/lib/harness/run/gate.py",
+        "head_sha256": "43f86fb6e5c0e79f09987007218a7a77199b4c5cc94dbea31e2b6c011aed2ce4",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/lib/harness/run/journal.py",
+        "sha256": "7de1f1179e5a12f2cb3a315d9015c5bd5d7653a407d36aa16ccb0a12d385615d",
+        "bytes": 6552,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/lib/harness/run/journal.py",
+        "head_sha256": "7de1f1179e5a12f2cb3a315d9015c5bd5d7653a407d36aa16ccb0a12d385615d",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/harness/lib/harness/instructions.py",
+        "sha256": "9cf6136f9f6a4419fb404874c03a7c057191d948d270668b2f4771d42573f2de",
+        "bytes": 95777,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/harness/lib/harness/instructions.py",
+        "head_sha256": "9cf6136f9f6a4419fb404874c03a7c057191d948d270668b2f4771d42573f2de",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/activity.py",
+        "sha256": "e4b8e93d2ab035fc4befdf6cf5caa0864630ccdc2fcd8c7551aea21259fe2a7c",
+        "bytes": 4911,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/activity.py",
+        "head_sha256": "e4b8e93d2ab035fc4befdf6cf5caa0864630ccdc2fcd8c7551aea21259fe2a7c",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/compiler.py",
+        "sha256": "e39cdf704cb37083d903312ebde9b0c7e7e0a5ee9ac82f6ab7d53e333250c031",
+        "bytes": 10877,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/compiler.py",
+        "head_sha256": "e39cdf704cb37083d903312ebde9b0c7e7e0a5ee9ac82f6ab7d53e333250c031",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/authority.py",
+        "sha256": "52ab565f608cac0d2a7f72905685661081007cd88ddc68560eaa28e3e2ff42e9",
+        "bytes": 21582,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/authority.py",
+        "head_sha256": "52ab565f608cac0d2a7f72905685661081007cd88ddc68560eaa28e3e2ff42e9",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/dispatch.py",
+        "sha256": "7cf0698a57d61b502ecd4ec61980f9fa76d6c96783e92621131b9ef819c437c2",
+        "bytes": 13264,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/dispatch.py",
+        "head_sha256": "7cf0698a57d61b502ecd4ec61980f9fa76d6c96783e92621131b9ef819c437c2",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "sha256": "0d8c71a29bdc8a3eea97fb2860f400ef288bc30ece54db1b0e2c4a067e38217e",
+        "bytes": 13188,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/scheduler.py",
+        "head_sha256": "0d8c71a29bdc8a3eea97fb2860f400ef288bc30ece54db1b0e2c4a067e38217e",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/store.py",
+        "sha256": "876f2174aad18de58ec1c28876d2bffcb7f0442b30fbca04cb135d991dc8cc6e",
+        "bytes": 18840,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/store.py",
+        "head_sha256": "876f2174aad18de58ec1c28876d2bffcb7f0442b30fbca04cb135d991dc8cc6e",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/worktree.py",
+        "sha256": "f6988ddacdccc6153e62a6e8683abac735d4b3ee4dd239b925ce1f6c9add4d4f",
+        "bytes": 13017,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/worktree.py",
+        "head_sha256": "f6988ddacdccc6153e62a6e8683abac735d4b3ee4dd239b925ce1f6c9add4d4f",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/security.py",
+        "sha256": "b96b29d2d164ec1c6d297a8d0e4213e0ee90468d986087ab16a2271c42de4d37",
+        "bytes": 5161,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/security.py",
+        "head_sha256": "b96b29d2d164ec1c6d297a8d0e4213e0ee90468d986087ab16a2271c42de4d37",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/artifex/lib/artifex/telemetry.py",
+        "sha256": "a743439a18123391aecc1b8109502ddf7565ffe1338e6cbff23647e68056b9de",
+        "bytes": 6917,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/artifex/lib/artifex/telemetry.py",
+        "head_sha256": "a743439a18123391aecc1b8109502ddf7565ffe1338e6cbff23647e68056b9de",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/tests/engine/test_context.py",
+        "sha256": "cc1e6961dd2441d456793e1bc8c1498a1512597f610aa23a9e43de7d7b310b1d",
+        "bytes": 6646,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/tests/engine/test_context.py",
+        "head_sha256": "cc1e6961dd2441d456793e1bc8c1498a1512597f610aa23a9e43de7d7b310b1d",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/tests/engine/test_scout.py",
+        "sha256": "06a89b4c2683676761cb1fd4134d1141f55624307ca0f8b730f1a478a31190bc",
+        "bytes": 12355,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/tests/engine/test_scout.py",
+        "head_sha256": "06a89b4c2683676761cb1fd4134d1141f55624307ca0f8b730f1a478a31190bc",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/tests/engine/test_units.py",
+        "sha256": "802111417d35ee611fedd137de4ec22d1d10d68e2f281d797cc5a095b88dae81",
+        "bytes": 14885,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/tests/engine/test_units.py",
+        "head_sha256": "802111417d35ee611fedd137de4ec22d1d10d68e2f281d797cc5a095b88dae81",
+        "inspected_hash_matches_head": true
+      },
+      {
+        "path": "packages/task/workflows/README.md",
+        "sha256": "da2a9eb19329ddc6286a30d3986e31eb23985b08d02daa5fc76dae2163c7b1b0",
+        "head_sha256": "da2a9eb19329ddc6286a30d3986e31eb23985b08d02daa5fc76dae2163c7b1b0",
+        "inspected_hash_matches_head": true,
+        "bytes": 6608,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/workflows/README.md",
+        "inspected_at": "2026-10-05T16:02:34.809881+00:00"
+      },
+      {
+        "path": "packages/task/workflows/wf-dev-slice.js",
+        "sha256": "f15487c3dbbc7e5cce64823399aadc7267ab7ea4658bd5c3394583b870f1d4b6",
+        "head_sha256": "f15487c3dbbc7e5cce64823399aadc7267ab7ea4658bd5c3394583b870f1d4b6",
+        "inspected_hash_matches_head": true,
+        "bytes": 13073,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/task/workflows/wf-dev-slice.js",
+        "inspected_at": "2026-10-05T16:02:34.811759+00:00"
+      },
+      {
+        "path": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+        "sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
+        "head_sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
+        "inspected_hash_matches_head": true,
+        "bytes": 12836,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/skiller/skills/general/workflow-craft/SKILL.md",
+        "inspected_at": "2026-10-05T16:02:34.814011+00:00"
+      },
+      {
+        "path": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+        "sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+        "head_sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+        "inspected_hash_matches_head": true,
+        "bytes": 13527,
+        "url": "https://github.com/academici/swissknifeman/blob/34a6c0f3342290cb5e5a3c2d0be106838a4ae455/packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+        "inspected_at": "2026-10-05T16:02:34.816592+00:00"
+      }
+    ]
+  },
+  "cao": {
+    "commit": "c31dc281ec1f215cef898c2ed919a0ce507afd08",
+    "tag": "v2.5.1",
+    "tag_commit": "d98243e7149912bf66cb7572e77629ffa0c650af",
+    "files": [
+      {
+        "path": "README.md",
+        "sha256": "034fbf6fcb51a327a5270fd70a5d4775cece4a86fb83f9503850dc3f8b77f96c",
+        "bytes": 7464,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/README.md"
+      },
+      {
+        "path": "pyproject.toml",
+        "sha256": "92177a5284f493777ea3cebd62a5405613efa8c5ffe7742a82242143e6ba3af4",
+        "bytes": 23755,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/pyproject.toml"
+      },
+      {
+        "path": "docs/workflows.md",
+        "sha256": "f38c9ba77d8ef4b6d2e7d158a6a3df93af4a81f30ff05a4d83cfa130d691fcff",
+        "bytes": 30412,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/workflows.md"
+      },
+      {
+        "path": "docs/workflow-scripts-authoring-guide.md",
+        "sha256": "6076a119ce33d75b1679bc914f6c51df8851421ea0ba70d15e0b71ec3415b548",
+        "bytes": 17540,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/workflow-scripts-authoring-guide.md"
+      },
+      {
+        "path": "docs/agent-profile.md",
+        "sha256": "b5746e3611a311da20e934ad084fae02ba9600ebfa71329adca8bf820ad593a2",
+        "bytes": 8929,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/agent-profile.md"
+      },
+      {
+        "path": "docs/codex-cli.md",
+        "sha256": "72957b48031e0ad9acff2f2f54eddbba7e213127e28134f53be92231b69f0f70",
+        "bytes": 20153,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/codex-cli.md"
+      },
+      {
+        "path": "docs/claude-code.md",
+        "sha256": "dd1bb9cdf44c8fbd58742730dcc3833c3e74fe59e99d6155d8c3586200a76063",
+        "bytes": 8611,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/claude-code.md"
+      },
+      {
+        "path": "docs/grok-cli.md",
+        "sha256": "6e106950dfc3ac1e2d574e8e0642409ddf85b4b2a979b8f82d2ffcc18fd2381c",
+        "bytes": 15652,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/grok-cli.md"
+      },
+      {
+        "path": "docs/tool-restrictions.md",
+        "sha256": "73232aeba552d85188165b674555e7fd72cd50625af95339fc5033d9e4f797ad",
+        "bytes": 26343,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/tool-restrictions.md"
+      },
+      {
+        "path": "docs/skills.md",
+        "sha256": "ee19c0fa4252bedcc8d49bd3cd0493286ec3c018e933a47c2090ba939c986e3a",
+        "bytes": 21218,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/skills.md"
+      },
+      {
+        "path": "docs/configuration.md",
+        "sha256": "588a50d422e979a0c5dda4ce7419478f5aa99ffa3e464134310c5fc92be18164",
+        "bytes": 36589,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/docs/configuration.md"
+      },
+      {
+        "path": "src/cao_workflow/__init__.py",
+        "sha256": "8b387367db4b9c671d6c56bea76f7f1fcdb7cbbfd5cebe8b43a01043ed09d3d5",
+        "bytes": 11135,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cao_workflow/__init__.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/providers/claude_code.py",
+        "sha256": "dcdf311865da3059a8a393d600d84aeae5c31703709b64eac645e8dc7188647b",
+        "bytes": 82641,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/providers/claude_code.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/providers/codex.py",
+        "sha256": "bbbc3d39933dcfda14be4129dfae0d1c26624a0c5aebb88ae30019088f90992b",
+        "bytes": 109411,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/providers/codex.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/providers/grok_cli.py",
+        "sha256": "fe495f02f6809fd9dc008a97043a6546421d41023d09bdd6af7d4508b50fe620",
+        "bytes": 80122,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/providers/grok_cli.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/services/script_runner.py",
+        "sha256": "3d55c3575a6cbd5c2efa268a861eb2f20120f98b8bca49d636246dee9829fc8d",
+        "bytes": 82525,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/services/script_runner.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/services/workflow_journal.py",
+        "sha256": "72446b836b9542775a2ad7f2cf43416e4424f7f3f49d629665c9302b2b39925f",
+        "bytes": 87047,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/services/workflow_journal.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/services/workflow_service.py",
+        "sha256": "8de68d02dab89232da100494dee014470f69c6892eb657dadaf02fa1d3610141",
+        "bytes": 93947,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/services/workflow_service.py"
+      },
+      {
+        "path": "src/cli_agent_orchestrator/agent_plugins/gate.py",
+        "sha256": "39e8969f61e4e0df6fd324c611c9aee89ee415d120eb5656635fbb3dbda76d5f",
+        "bytes": 1891,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/c31dc281ec1f215cef898c2ed919a0ce507afd08/src/cli_agent_orchestrator/agent_plugins/gate.py"
+      }
+    ]
+  },
+  "user_thread": {
+    "path": "orch/perplexity-thread.md",
+    "sha256": "f869ae8c37fc28656ba6cec64b4ae35c0c817998d03391f485a76a685c52b1aa"
+  },
+  "limitations": [
+    "No paid native model calls or end-to-end CAO/Vercel runs",
+    "Alternative projects inspected mainly through primary README/docs and metadata, not complete code audit",
+    "Perplexity JSON is the returned text-extraction result; tables/citation anchors may be missing"
+  ]
+}

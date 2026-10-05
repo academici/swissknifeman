@@ -1,0 +1,11 @@
+{
+  "id": "Q04",
+  "route": "perplexity-web-mcp existing default browser pool; search",
+  "started": "2026-10-05T15:26:00.225Z",
+  "completed": "2026-10-05T15:27:10.150Z",
+  "query": "For coding-agent workflows is a mandatory cheap context-preparation agent -> expensive architect -> cheap implementation agent -> expensive reviewer -> cheap bookkeeping agent actually economical? Context gathering can mostly use deterministic Python plus rg/git/LSP; user wants a large exhaustive context bundle. Analyze information loss, duplicate model input, prompt caching, latency, subscription quota versus dollar cost, when splitting frontend design from implementation degrades results, and when merging stages wins. Propose measurable experiment and formulas with fictional labeled numbers, no invented pricing. Cite primary sources (Anthropic/OpenAI context/caching docs and relevant research). Russian, max 1200 words.",
+  "result": {
+    "answer": "",
+    "sources": []
+  }
+}

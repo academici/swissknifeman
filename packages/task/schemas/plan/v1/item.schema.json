@@ -263,8 +263,16 @@
       }
     },
     "route": {
-      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route",
-      "description": "Minimum route to execute the item."
+      "description": "Minimum route to execute the item, or null only when a migrated source never declared one.",
+      "oneOf": [
+        {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route"
+        },
+        {
+          "type": "null",
+          "description": "No route existed in the migrated source."
+        }
+      ]
     },
     "review": {
       "type": "object",
@@ -333,6 +341,10 @@
           "description": "Gate name.",
           "minLength": 1,
           "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+        },
+        "label": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Exact source label for an owner gate that never had a machine gate id."
         },
         "scope": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",

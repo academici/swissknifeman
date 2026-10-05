@@ -36,9 +36,9 @@
     },
     "ts": {
       "type": "string",
-      "description": "UTC timestamp YYYY-MM-DDTHH:MM:SSZ.",
+      "description": "UTC timestamp YYYY-MM-DDTHH:MM:SSZ, optionally preserving fractional seconds.",
       "minLength": 1,
-      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
     },
     "date": {
       "type": "string",
@@ -132,7 +132,7 @@
     },
     "check": {
       "type": "object",
-      "description": "One validation command with its expected outcome.",
+      "description": "One exact validation command or source-defined non-shell verification procedure.",
       "properties": {
         "id": {
           "type": "string",
@@ -143,6 +143,11 @@
         "cmd": {
           "type": "string",
           "description": "Exact shell command.",
+          "minLength": 1
+        },
+        "procedure": {
+          "type": "string",
+          "description": "Exact non-shell acceptance procedure or predicate when the source declares no command.",
           "minLength": 1
         },
         "expect": {
@@ -167,7 +172,6 @@
       },
       "required": [
         "id",
-        "cmd",
         "expect",
         "kind"
       ],

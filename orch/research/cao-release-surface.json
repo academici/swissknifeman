@@ -1,0 +1,42 @@
+{
+  "tag": "v2.5.1",
+  "tag_commit": "d98243e7149912bf66cb7572e77629ffa0c650af",
+  "main_commit": "c31dc281ec1f215cef898c2ed919a0ce507afd08",
+  "surfaces": [
+    {
+      "path": "docs/workflows.md",
+      "present_at_v2.5.1": true,
+      "present_at_main": true
+    },
+    {
+      "path": "docs/workflow-scripts-authoring-guide.md",
+      "present_at_v2.5.1": true,
+      "present_at_main": true
+    },
+    {
+      "path": "src/cao_workflow/__init__.py",
+      "present_at_v2.5.1": true,
+      "present_at_main": true
+    },
+    {
+      "path": "docs/grok-cli.md",
+      "present_at_v2.5.1": true,
+      "present_at_main": true
+    },
+    {
+      "path": "src/cli_agent_orchestrator/providers/grok_cli.py",
+      "present_at_v2.5.1": true,
+      "present_at_main": true
+    },
+    {
+      "path": "src/cli_agent_orchestrator/services/script_runner.py",
+      "present_at_v2.5.1": true,
+      "present_at_main": true
+    },
+    {
+      "path": "src/cli_agent_orchestrator/agent_plugins/gate.py",
+      "present_at_v2.5.1": false,
+      "present_at_main": true
+    }
+  ]
+}

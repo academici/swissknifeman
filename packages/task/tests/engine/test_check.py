@@ -120,6 +120,16 @@ class IdentityTests(CheckCase):
             self.assertFound("id_mismatch", where)
 
 
+class PlanStateTests(CheckCase):
+    def test_paused_plan_requires_reason_and_active_plan_cannot_keep_pause(self):
+        self.edit("plan.json", lambda d: d.update(status="paused"))
+        self.assertFound("plan_state", "plan.json/pause", count=1)
+        self.edit("plan.json", lambda d: d.update(pause={"reason": "Wait for PLAN3"}))
+        self.assertEqual(self.found("plan_state"), [])
+        self.edit("plan.json", lambda d: d.update(status="active"))
+        self.assertFound("plan_state", "plan.json/pause", count=1)
+
+
 class MembershipTests(CheckCase):
     def test_phase_list_mismatch_both_ways(self):
         demo.write_doc(self.root / "phases" / "P2" / "phase.json", {**demo.fixture("phase-e2"), "id": "P2", "items": [], "batches": []}, "phase")
@@ -243,12 +253,33 @@ class CompletenessTests(CheckCase):
         self.edit(P1 + "P1.2.json", lambda d: d.update(summary="Outcome placeholder", validation=[], deliverables=[], reads=[], task_files=[]))
         self.assertEqual(self.found("incomplete"), [])
 
+    def test_validation_has_exactly_one_command_or_procedure(self):
+        self.edit(P1 + "P1.2.json", lambda d: d["validation"][0].update(procedure="Inspect the owner packet"))
+        self.assertFound("validation_carrier", "P1.2.json/validation/0", count=1)
+        self.edit(P1 + "P1.2.json", lambda d: (d["validation"][0].pop("cmd"),
+                                                d["validation"][0].pop("procedure")))
+        self.assertFound("validation_carrier", "P1.2.json/validation/0", count=1)
+
+
+class AuthorityTests(CheckCase):
+    def test_source_label_is_a_gate_identity_and_scope_is_required(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            authority={"kind": "owner_gate", "label": "Запускай P1.2", "scope": "Exact source instruction"}))
+        self.assertEqual(self.found("authority_identity"), [])
+        self.assertEqual(self.found("authority_scope"), [])
+        self.edit(P1 + "P1.2.json", lambda d: d.update(authority={"kind": "owner_gate"}))
+        self.assertFound("authority_identity", "P1.2.json/authority", count=1)
+        self.assertFound("authority_scope", "P1.2.json/authority/scope", count=1)
+
 
 class DecisionTests(CheckCase):
-    def test_open_needs_question_accepted_needs_decision_and_rationale(self):
+    def test_open_needs_question_accepted_and_proposed_need_decision_and_rationale(self):
         self.edit("decisions/D2.json", lambda d: d.pop("question"))
         self.edit("decisions/D1.json", lambda d: (d.pop("decision"), d.pop("rationale")))
         self.assertFound("decision_fields", "D2.json/question", count=1)
+        self.assertFound("decision_fields", "D1.json/decision", count=1)
+        self.assertFound("decision_fields", "D1.json/rationale", count=1)
+        self.edit("decisions/D1.json", lambda d: d.update(status="proposed"))
         self.assertFound("decision_fields", "D1.json/decision", count=1)
         self.assertFound("decision_fields", "D1.json/rationale", count=1)
 

@@ -1,0 +1,69 @@
+{
+  "commit": "5440b3a04089fe084b9236f636b316132e890373",
+  "files": [
+    {
+      "path": "packages/harness-grok-build/src/grok-build-harness.test-d.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-harness.test-d.ts",
+      "sha256": "b9152341f73b82d2ab4590f95b3e7c432a6dbd22c1777c0b91f9e7097946d039",
+      "bytes": 1406
+    },
+    {
+      "path": "packages/harness-grok-build/src/grok-build-harness.test.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-harness.test.ts",
+      "sha256": "c9fca36f3d42e885715522aea854f3c115796ce9901abd8f83275d03b05b9902",
+      "bytes": 9183
+    },
+    {
+      "path": "packages/harness-grok-build/src/grok-build-harness.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-harness.ts",
+      "sha256": "5197390501ee08061924788a2ecdf38a2ca4dddbcf3651075e3aee22a8f21a0b",
+      "bytes": 12751
+    },
+    {
+      "path": "packages/harness-grok-build/src/grok-build-question-tool.test.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-question-tool.test.ts",
+      "sha256": "7733db156322b73234a78f6c95029f6b21ae40c8b7d8edae93f406d99e61779c",
+      "bytes": 2153
+    },
+    {
+      "path": "packages/harness-grok-build/src/grok-build-question-tool.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-question-tool.ts",
+      "sha256": "4c10aa74e52958613e9f2d9ed4132f9cb99382ed03b60cac675a2b8a12c587d1",
+      "bytes": 5705
+    },
+    {
+      "path": "packages/harness-grok-build/src/grok-build-subscription.test.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-subscription.test.ts",
+      "sha256": "e6503c6ca6da7003fd8fc9f370337addb7a99f00bcd9965afe57b94eb2851dad",
+      "bytes": 2769
+    },
+    {
+      "path": "packages/harness-grok-build/src/grok-build-subscription.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/grok-build-subscription.ts",
+      "sha256": "4b2ce414635e2f4391b9471128939912120b3e471e5facd7a62c7bb17299930e",
+      "bytes": 4963
+    },
+    {
+      "path": "packages/harness-grok-build/src/index.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-grok-build/src/index.ts",
+      "sha256": "95aafbf42e7a9b602f458b0878dc49855a70c71403ef00792f75d26185c7ed79",
+      "bytes": 434
+    },
+    {
+      "path": "packages/harness-codex/src/index.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-codex/src/index.ts",
+      "sha256": "c36c6326f0b8536f7b431ca6be769cef9224e258971e6137fe1c50a11018b488",
+      "bytes": 529
+    },
+    {
+      "path": "packages/harness-claude-code/src/index.ts",
+      "url": "https://github.com/vercel/ai/blob/5440b3a04089fe084b9236f636b316132e890373/packages/harness-claude-code/src/index.ts",
+      "sha256": "b4221f18808d80a0ea4ae003e2e8f83f82df7a279db3bc0321f0b50855727196",
+      "bytes": 667
+    },
+    {
+      "path": "packages/harness/src/auth",
+      "error": "HTTP Error 404: Not Found"
+    }
+  ]
+}

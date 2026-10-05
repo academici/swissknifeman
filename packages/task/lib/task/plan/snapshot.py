@@ -55,9 +55,10 @@ def import_snapshot(root: str | Path, value: dict, *, replace: bool = False) -> 
     with store.PlanLock(root.parent):
         if (root / "plan.json").exists() and not replace:
             raise PlanError("PLAN_EXISTS", f"{root} already has a JSON plan; pass --replace to restore it")
+        short_id = proposed.plan["short_id"]
         for candidate in store.plan_dirs(root.parent):
-            if candidate != root and store.short_id_of(candidate) == proposed.plan["short_id"]:
-                raise PlanError("PLAN_AMBIGUOUS", f"{proposed.plan['short_id']} already belongs to {candidate.name}")
+            if short_id is not None and candidate != root and store.short_id_of(candidate) == short_id:
+                raise PlanError("PLAN_AMBIGUOUS", f"{short_id} already belongs to {candidate.name}")
         with tempfile.TemporaryDirectory(prefix=".snapshot-", dir=root.parent) as directory:
             staging, backup = Path(directory) / root.name, Path(directory) / "previous"
             if root.exists():

@@ -185,6 +185,7 @@ def build_model(plan: store.Plan) -> dict:
         "meta": [{"key": key, "value": cell(value)} for key, value in (
             ("Plan ID", doc.get("id")), ("Short ID", doc.get("short_id")), ("Title", doc.get("title")),
             ("Status", doc.get("status")), ("Repository", doc.get("repository")), ("Owner", doc.get("owner")),
+            ("Pause", (doc.get("pause") or {}).get("reason") if isinstance(doc.get("pause"), dict) else None),
             ("Authoring Model", _actor_text(doc.get("authoring"))), ("Design Audit", settings.get("design_audit")))],
         "has_non_goals": bool(_strings(doc.get("non_goals"))), "non_goals": _strings(doc.get("non_goals")),
         "has_rules": bool(_strings(doc.get("rules"))), "rules": _strings(doc.get("rules")),

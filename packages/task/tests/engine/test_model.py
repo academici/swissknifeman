@@ -22,8 +22,9 @@ class IdPatternTests(unittest.TestCase):
 
     def test_plan_and_short_ids(self):
         self.assertTrue(model.PLAN_ID.fullmatch("2026.10.05-№1-TASK-PLAN-JSON"))
-        self.assertIsNone(model.PLAN_ID.fullmatch("LEGACY-PLAN"))
-        for bad in ("2026.10.05-№0-X", "2026.10.05-№1-x", "legacy", "2026.10.05-1-X", "A"):
+        for legacy in ("LEGACY-PLAN", "FLEX-2", "LOQUM-DEV", "AGENTOOLS", "2026.07.17-AXIOMA-ORCHESTRA"):
+            self.assertTrue(model.PLAN_ID.fullmatch(legacy), legacy)
+        for bad in ("2026.10.05-№1-x", "legacy", "-LEGACY", "LEGACY-", "A/B"):
             self.assertIsNone(model.PLAN_ID.fullmatch(bad), bad)
         self.assertTrue(model.SHORT_ID.fullmatch("PLAN7"))
         self.assertIsNone(model.SHORT_ID.fullmatch("PLAN0"))

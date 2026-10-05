@@ -11,6 +11,7 @@
 | Status | active |
 | Repository | demo |
 | Owner | repository owner |
+| Pause |  |
 | Authoring Model | claude-code/claude-opus-5-5/high |
 | Design Audit | required |
 

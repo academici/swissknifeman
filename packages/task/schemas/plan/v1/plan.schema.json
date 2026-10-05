@@ -13,13 +13,16 @@
     },
     "id": {
       "type": "string",
-      "description": "Plan id, equals the plan directory name.",
+      "description": "Plan id, equals the plan directory name. Current date/ordinal ids and preserved legacy ids are valid.",
       "minLength": 1,
-      "pattern": "^\\d{4}\\.\\d{2}\\.\\d{2}-№[1-9][0-9]*-[A-Z][A-Z0-9-]*$"
+      "pattern": "^[A-Z0-9](?:[A-Z0-9._№-]*[A-Z0-9])?$"
     },
     "short_id": {
-      "type": "string",
-      "description": "Short id like PLAN7.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Short id like PLAN7, or null only when a migrated source never had a short id.",
       "minLength": 1,
       "pattern": "^PLAN[1-9][0-9]*$"
     },
@@ -37,6 +40,31 @@
         "done",
         "archived"
       ]
+    },
+    "pause": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Machine-readable pause reason preserved from the source, or null when the plan is not paused.",
+      "properties": {
+        "reason": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Why execution is paused and what must change."
+        },
+        "since": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/date",
+          "description": "Source date of the pause when known."
+        },
+        "by": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Source actor or controlling plan when known."
+        }
+      },
+      "required": [
+        "reason"
+      ],
+      "additionalProperties": false
     },
     "created": {
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/date",

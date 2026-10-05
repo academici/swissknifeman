@@ -17,6 +17,9 @@ it was possible to return to them directly.
 
 | Source | What | Maturity | Verdict | Taken from swissknifeman |
 |:--|:--|:--|:--|:--|
+| [AWS Labs CLI Agent Orchestrator](https://github.com/awslabs/cli-agent-orchestrator) | Local native-CLI orchestration, profiles and Python workflows | Source-reviewed 2026-10-05: main `c31dc281`, tag v2.5.1; PyPI latest 2.5.0 | **reference; pilot candidate** | Research in `orch/audit-amazon-cao.md`; no dependency or migration adopted. Replay boundaries, effect receipts, provider capability differences and terminal visibility inform the comparison. |
+| [Vercel AI SDK Harnesses](https://ai-sdk.dev/docs/ai-sdk-harnesses/overview) + [Pydantic AI Harness](https://pydantic.dev/docs/ai/harness/) | Native harness adapters versus a programmable agent runtime | First-party docs, npm metadata and selected Vercel source reviewed 2026-10-05; Vercel harness API explicitly experimental | **reference** | Corrected API-only classification; sandbox/auth/session boundaries are recorded in `orch/alternatives.md`, not adopted as runtime dependencies. |
+| [OpenHarness](https://github.com/autonomous-ai/openharness), [Agent Orchestrator](https://github.com/OrchestratorInc/agent-orchestrator), [Vibe Kanban](https://github.com/BloopAI/vibe-kanban), [AI-DLC](https://github.com/awslabs/aidlc-workflows), [Prime Agent](https://github.com/PrimeIntellect-ai/prime-agent), [Hermes](https://github.com/NousResearch/hermes-agent), [Dify](https://github.com/langgenius/dify), [Harness.io CLI](https://www.harness.io/products/platform/cli), [OpenCodex](https://github.com/lidge-jun/opencodex) | Alternative engines, command centers, methodologies and API/delivery tools | Primary README/docs and metadata reviewed 2026-10-05; no runtime benchmark | **reference / shortlist classification** | Full comparison and links in `orch/alternatives.md`; canonical Task/Skiller and a replaceable execution boundary are proposed. Prior measured code-review-graph skip remains in force. |
 | [OpenAI — Build skills](https://learn.chatgpt.com/docs/build-skills) + [Model guidance](https://developers.openai.com/api/docs/guides/latest-model) | Initial skills-list budget, metadata/body disclosure, duplicate-name discovery and the sensitivity of the model to conflicting instructions | Primary pages opened and reviewed 2026-09-14; CLI 0.154.0 locally | **reference (audit and local implementation)** | 232 canonical skills, three consumer roots, five today roadmap incidents. Runtime inventory/character proxy are separated from provider usage; double delivery elimination recommended, short Codex hub and approval authority/continuity/final. |
 | [OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model), [Build skills](https://learn.chatgpt.com/docs/build-skills), [AGENTS.md discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md); [Gloaguen et al. v2](https://arxiv.org/abs/2602.11988), [Lulla et al. v2](https://arxiv.org/abs/2601.20404), [SkillsBench v4](https://arxiv.org/abs/2602.12670) | Impact of conflicting instructions, progressive disclosure and matched usefulness rating skills/context files | First-party + primary research; Perplexity discovery and direct reading of primary pages 2026-09-10 | **reference** | Simplification audit: remove confirmed process conflicts; maintain non-standard restrictions and tools; do not consider the length of the files as evidence token savings and do not delete skills by zero direct calls. Implementation ordered as a separate session without a new plan; internal report is stored locally according to directory policy audits. |
 | Official spec Claude Code | subagents/skills/hooks/plugins, «steering» | first-party, active | **adopt** | canon frontmatter subagent (`name/description+<example>/tools/model/color`), hook contracts, progressive disclosure |
@@ -448,3 +451,45 @@ SSOT: `packages/task/configs/command-routing.json` → generated
   guidance recorded in /findings/14-*`.
 - The fewer-than-500-lines vendor orientation is printed as an independent number; it never raises
   or replaces the measured environment cap.
+
+### Coding-agent orchestration comparison — reference (2026-10-05)
+
+**What:** the owner-requested research packet in `orch/` compares extending the existing
+Task/Harness/Artifex execution path with an external
+[AWS Labs CAO](https://github.com/awslabs/cli-agent-orchestrator) Python-workflow backend.
+It preserves the original Perplexity dialogue, exact queries and returned answers,
+primary-source pins, two separate audits, a portable integration proposal and pilot gates.
+
+**Evidence:** CAO main `c31dc281ec1f215cef898c2ed919a0ce507afd08` and GitHub v2.5.1 were
+reviewed separately from PyPI 2.5.0. Existing Task context/scout/unit suites passed
+(56 tests), as did command-projection and provider-instructions-reference checks.
+Current [Claude headless](https://code.claude.com/docs/en/headless),
+[Codex SDK](https://learn.chatgpt.com/docs/codex-sdk) and
+[Grok scripting](https://docs.x.ai/build/cli/headless-scripting) document structured
+native interfaces; [Vercel HarnessAgent](https://ai-sdk.dev/docs/ai-sdk-harnesses/overview)
+is an experimental additional option, not merely a direct model API.
+
+**Pros/cons:** CAO offers visible native terminal sessions and existing workflow machinery,
+but TUI compatibility and replay of external Git/Task effects require a concrete pilot.
+An own runner can reuse current JSON context, routing and units and consume native streams,
+but would own multi-provider compatibility and recovery. Vercel/Pydantic remain references
+with distinct runtime, sandbox, authentication and maturity boundaries.
+
+**Verdict/taken:** CAO is a conditional first pilot candidate, not an adopted dependency.
+Task/Skiller remain canonical and the engine boundary is proposed as replaceable.
+This research made no runtime, schema, delivery, release or migration policy changes.
+Concurrent Task edits are recorded separately; test results describe their execution time.
+No paid agent runs were performed; reliability, subscription entitlement and savings remain unmeasured.
+Prior code-review-graph and style-skill skip decisions are preserved. Detailed evidence:
+`orch/research/sources.md`, `orch/research/source-index.json` and
+`orch/research/local-checks.json`.
+
+**Role-decomposition follow-up (2026-10-05):** `orch/task-role-decomposition.md`
+analyses separating Task data/lifecycle from execution, review and skill delivery.
+Local context, scout, actor/receipt and Harness launch boundaries were inspected.
+[Claude subagent configuration](https://code.claude.com/docs/en/sub-agents),
+[Codex skill configuration](https://learn.chatgpt.com/docs/build-skills) and
+[Grok extension discovery](https://docs.x.ai/build/features/skills-plugins-marketplaces)
+were checked to distinguish discovery, preloading, invocation and actual access.
+The proposed migration preserves acceptance requirements and canonical content;
+it is a design artifact, with no runtime changes or measured savings claim.

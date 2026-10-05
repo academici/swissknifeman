@@ -79,6 +79,35 @@ class SnapshotTests(UnitCase):
         self.assertEqual([i for i in check.check(self.load()) if i.level == "error"], [])
         self.assertEqual(context.collect(self.load(), "P1.1")["item"]["id"], "P1.1")
 
+    def test_import_preserves_legacy_id_without_inventing_short_id(self):
+        value = snapshot.export(self.load())
+        target = self.plans / "FLEX-2"
+        value["plan"]["id"], value["plan"]["short_id"] = target.name, None
+        restored = snapshot.import_snapshot(target, value)
+        self.assertEqual(restored.plan["id"], "FLEX-2")
+        self.assertIsNone(restored.plan["short_id"])
+        self.assertEqual(context.collect(restored, "P1.1")["ref"], "FLEX-2.P1.1")
+        self.assertEqual([i for i in check.check(restored) if i.level == "error"], [])
+
+    def test_proposed_decision_is_distinct_and_requires_a_complete_proposal(self):
+        value = snapshot.export(self.load())
+        decision = {"$schema": "urn:swissknifeman:task:plan:decision:v1", "id": "D1",
+                    "title": "Publication identity", "date": "2026-10-05", "status": "proposed",
+                    "decision": "Keep the release private.",
+                    "rationale": "Public identity has not been accepted.",
+                    "actor": {"provider": "codex", "model": "gpt-6"}}
+        value["decisions"].append(decision)
+        restored = snapshot.import_snapshot(self.plans / "2026.10.07-№2-PROPOSAL",
+                                            {**value, "plan": {**value["plan"],
+                                                               "id": "2026.10.07-№2-PROPOSAL",
+                                                               "short_id": "PLAN2"}})
+        self.assertEqual(restored.decisions[decision["id"]]["status"], "proposed")
+        broken = snapshot.export(restored)
+        broken["decisions"][0].pop("rationale")
+        broken["plan"]["id"], broken["plan"]["short_id"] = "2026.10.07-№3-BROKEN", "PLAN3"
+        with self.assertRaises(PlanError):
+            snapshot.import_snapshot(self.plans / "2026.10.07-№3-BROKEN", broken)
+
 
 class OrchestrationTests(UnitCase):
     def test_prepare_then_read_only_review_and_exact_route(self):

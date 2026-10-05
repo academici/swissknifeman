@@ -35,11 +35,14 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.load_problems()
     ctx.schemas()
     ctx.identity()
+    ctx.plan_state()
     ctx.membership()
     ctx.references()
     ctx.cycles()
     ctx.batches()
     ctx.completeness()
+    ctx.validation_shapes()
+    ctx.authority()
     ctx.decisions()
     ctx.paths()
     ctx.results()
@@ -111,6 +114,13 @@ class _Context:
             if kind == "unit" and doc.get("item") != key.split("/")[0]:
                 self.error("id_mismatch", f"{rel}/item",
                            f"unit item {doc.get('item')!r} differs from workspace {key.split('/')[0]!r}")
+
+    def plan_state(self) -> None:
+        status, pause = self.p.plan.get("status"), self.p.plan.get("pause")
+        if status == "paused" and not (isinstance(pause, dict) and pause.get("reason")):
+            self.error("plan_state", "plan.json/pause", "paused plan needs pause.reason")
+        if status != "paused" and pause is not None:
+            self.error("plan_state", "plan.json/pause", "only a paused plan may carry pause state")
 
     def membership(self) -> None:
         p = self.p
@@ -272,17 +282,48 @@ class _Context:
                 if not (isinstance(scope, dict) and scope.get("include")):
                     missing("scope/include", "at least one scope.include entry")
                 checks = item.get("validation") if isinstance(item.get("validation"), list) else []
-                if not any(isinstance(c, dict) and c.get("kind") == "acceptance" for c in checks):
+                if not any(isinstance(c, dict) and c.get("kind") == "acceptance"
+                           and bool(c.get("cmd") or c.get("procedure")) for c in checks):
                     missing("validation", "at least one acceptance check")
                 if not item.get("deliverables"):
                     missing("deliverables", "at least one deliverable")
                 if not (item.get("reads") or item.get("task_files") or item.get("guidance") or item.get("sections")):
                     missing("reads", "reads, task_files, guidance or self-contained sections")
 
+    def validation_shapes(self) -> None:
+        for kind, key, rel, doc in self.docs():
+            checks = doc.get("validation") if kind in ("item", "phase") else None
+            for index, entry in enumerate(checks if isinstance(checks, list) else []):
+                if not isinstance(entry, dict):
+                    continue
+                carriers = [name for name in ("cmd", "procedure") if entry.get(name)]
+                if len(carriers) != 1:
+                    self.error("validation_carrier", f"{rel}/validation/{index}",
+                               "validation needs exactly one of cmd or procedure")
+        for key, unit in self.p.units.items():
+            command = unit.get("command")
+            if isinstance(command, dict) and not command.get("cmd"):
+                self.error("validation_carrier", f"{self.file_of('unit', key)}/command",
+                           "a command unit needs an exact cmd")
+
+    def authority(self) -> None:
+        for key, item in self.p.items.items():
+            authority = item.get("authority")
+            if not isinstance(authority, dict) or authority.get("kind") != "owner_gate":
+                continue
+            identities = [name for name in ("gate", "label") if authority.get(name)]
+            if len(identities) != 1:
+                self.error("authority_identity", f"{self.file_of('item', key)}/authority",
+                           "owner_gate needs exactly one of gate or label")
+            if not authority.get("scope"):
+                self.error("authority_scope", f"{self.file_of('item', key)}/authority/scope",
+                           "owner_gate needs its source scope")
+
     def decisions(self) -> None:
         for key, doc in self.p.decisions.items():
             rel, status = self.file_of("decision", key), doc.get("status")
-            needed = {"open": ("question",), "accepted": ("decision", "rationale")}.get(status, ())
+            needed = {"open": ("question",), "proposed": ("decision", "rationale"),
+                      "accepted": ("decision", "rationale")}.get(status, ())
             for field in needed:
                 if not doc.get(field):
                     self.error("decision_fields", f"{rel}/{field}", f"a {status} decision needs {field}")

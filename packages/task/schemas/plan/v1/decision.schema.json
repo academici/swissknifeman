@@ -25,10 +25,11 @@
     },
     "status": {
       "type": "string",
-      "description": "open is an open question.",
+      "description": "open is an open question; proposed records a concrete recommendation awaiting acceptance.",
       "minLength": 1,
       "enum": [
         "open",
+        "proposed",
         "accepted",
         "rejected",
         "superseded"

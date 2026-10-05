@@ -17,9 +17,10 @@ after import, agents read JSON and use `plan.py`. Never edit new human Markdown 
    `<TASK>/scripts/plan.py --help`; `plan.py <verb> --help` describes arguments. Use
    `plan.py --output json <verb>` for a success/error envelope.
 4. Read this guide and inspect the source's actual structure. `chatom-pilot.py` is an explicit
-   mapping for Chatom RC1 and an example to adapt. It is **not** a universal Markdown parser;
-   do not run it against a different layout. A different source needs an explicit mapping built
-   from its headings, tables and evidence. Keep any such adapters in this temporary directory.
+   mapping for Chatom RC1 and an example to adapt. `legacy-v2.py` handles the common Layout-v2
+   carriers; inspect its mapping before using it. Neither script is a universal Markdown parser.
+   A different source needs an explicit mapping built from its headings, tables and evidence.
+   Keep any such adapters in this temporary directory.
 
 ## Destination layout
 
@@ -74,16 +75,22 @@ and history; do not replay `start`/`finish` to manufacture historical work.
 | file ownership / planned changes | `task_files`; no guessed files, no read count quota |
 | reads and inputs | `reads: [{path, why, required, section?}]`; convert plan carriers to JSON paths |
 | exact validation commands | `validation: [{id: V1, cmd, expect, kind: acceptance}]` |
+| non-shell validation defined by the source | `validation: [{id: V1, procedure, expect, kind: acceptance}]`; exactly one of `cmd` or `procedure` |
 | semantic route | `route.class`, `effort`; exact model selection additionally uses `provider`, `model`, `settings` |
 | existing self-review / independent review | `review.mode: self` / `requested`; preserve concrete reviewer settings |
 | explicit owner publication gate | `authority: {kind: owner_gate, gate: ...}`; never invent a grant |
 | item state and outcomes | `status` plus `result`; use authentic journal/state/evidence |
-| accepted / open / superseded decisions | decision docs with date, actor, rationale, applicability and links |
+| accepted / proposed / open / superseded decisions | decision docs with date, actor, rationale, applicability and links; proposed is not accepted |
 | variable design headings, runbooks, risk lists, source notes | `sections: [{id, title, text}]` or `knowledge/<id>.json` |
 | supporting files and evidence | preserve physical artifacts; reference them in `artifacts` / `result.evidence` |
 | chronological history | new `events`; preserve original source data in `data.source_record` where useful |
 
 Paths are repository-relative; `@plan/` means relative to the plan directory. Never use `..`.
+Preserve legacy plan IDs. If a source never had a short ID or an execution route, use the
+schema-supported `null`; do not invent either. Preserve fractional seconds in timestamps.
+A paused plan carries its actual `pause.reason` and returns a waiting next step. An owner gate
+without a machine ID may retain its source `label` and `scope`; declare exactly one of `gate`
+or `label`, without inventing a grant.
 Map all old active plan/phase/item/decision carrier paths to the new JSON destinations, including
 paths embedded in prose. Historical provenance may retain the old source path and hash; it is
 not an execution input. Keep archived dependencies qualified; do not migrate an archive to
@@ -101,7 +108,8 @@ ids; never leave an unresolved selector and claim the context is complete.
 Statuses map to `todo`, `in_progress`, `done`, `done_with_deviations`, `blocked`, `skipped`.
 A skeleton remains `phase.design: skeleton`; `scope.include: []` is allowed there. Never fill
 unknown validation with `true`, guess decisions, or mark a phase detailed to pass a checker.
-Detailed items need real acceptance commands and outputs. Reconcile conflicting sources:
+Detailed items need real acceptance commands or source-defined procedures and outputs.
+Reconcile conflicting sources:
 chronological terminal evidence and the source's own state reduction outrank stale summary
 tables; record the conflict and its resolution. A later informational `no-op` event does not erase
 an earlier finished result. Only record check exit 0 when authentic evidence establishes it.

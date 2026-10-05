@@ -163,7 +163,7 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True) -> dict:
         if event.get("type") in LESSON_TYPES and (phase == phase_id or target in near):
             lessons.append(event)
     result = {
-        "ref": f"{plan.plan['short_id']}.{item_id}", "plan": copy.deepcopy(plan.plan),
+        "ref": f"{plan.plan.get('short_id') or plan.plan['id']}.{item_id}", "plan": copy.deepcopy(plan.plan),
         "brief": copy.deepcopy(plan.brief), "phase": copy.deepcopy(plan.phases.get(phase_id, {})),
         "item": copy.deepcopy(item), "decisions": selected_decisions(plan, item_id), "upstream": upstream,
         "phase_dependencies": [copy.deepcopy(plan.phases[d]) for d in lifecycle._phase_deps(plan, phase_id)

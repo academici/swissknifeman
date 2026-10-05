@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Исследование оркестрации:** в `orch/` сохранены диалог и результаты запросов
+  Perplexity, первичные источники, отдельные аудиты собственного Harness и AWS Labs
+  CAO, программа пилота и разбор разделения Task, исполнения, ревью и skills по ролям.
+  Материалы описывают варианты архитектуры; новый runtime не внедрён.
+
 - **Grok task plugin:** `install.sh` добавляет локальный marketplace и ставит
   плагин `packages/task` и `packages/task/adapters/grok/prefix-hold` командой
   `grok plugin install … --trust`, если CLI `grok` есть. Повтор с
@@ -57,6 +62,12 @@
   `harness permissions` мержит в `.claude/settings.local.json`.
 
 ### Fixed
+
+- **Task migration fidelity:** перенос сохраняет legacy ID, отсутствие short ID и
+  маршрута, дробные timestamps, proposed decisions, причину паузы и исходные owner
+  gates. Валидация различает shell-команду и non-shell процедуру; paused-план
+  возвращает ожидание. Временные mapper и hash-guarded retirement сопровождаются
+  инвентарём проектов из config и проверкой актуальности JSON и human views.
 
 - **Task repeat-admission:** повтор одного закрытого пункта соблюдает phase-scoped
   execution gate и не требует детализации будущих фаз при необязательном design audit.

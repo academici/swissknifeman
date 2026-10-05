@@ -1,0 +1,196 @@
+{
+  "github_tree": {
+    "url": "https://api.github.com/repos/vercel/ai/git/trees/main?recursive=1",
+    "sha": "5440b3a04089fe084b9236f636b316132e890373",
+    "truncated": false,
+    "paths": [
+      "examples/harness-e2e-next/package.json",
+      "examples/harness-e2e-tui/package.json",
+      "packages/harness-acp/package.json",
+      "packages/harness-acp/src/index.ts",
+      "packages/harness-acp/src/v1/bridge/package.json",
+      "packages/harness-claude-code/package.json",
+      "packages/harness-claude-code/src/bridge/package.json",
+      "packages/harness-claude-code/src/index.ts",
+      "packages/harness-cline/package.json",
+      "packages/harness-cline/src/index.ts",
+      "packages/harness-codex/package.json",
+      "packages/harness-codex/src/bridge/package.json",
+      "packages/harness-codex/src/index.ts",
+      "packages/harness-cursor/package.json",
+      "packages/harness-cursor/src/index.ts",
+      "packages/harness-deepagents/package.json",
+      "packages/harness-deepagents/src/bridge/package.json",
+      "packages/harness-deepagents/src/index.ts",
+      "packages/harness-fx/package.json",
+      "packages/harness-fx/src/index.ts",
+      "packages/harness-github-copilot/package.json",
+      "packages/harness-github-copilot/src/bridge/package.json",
+      "packages/harness-github-copilot/src/index.ts",
+      "packages/harness-grok-build/package.json",
+      "packages/harness-grok-build/src/bridge/package.json",
+      "packages/harness-grok-build/src/index.ts",
+      "packages/harness-opencode/package.json",
+      "packages/harness-opencode/src/bridge/package.json",
+      "packages/harness-opencode/src/index.ts",
+      "packages/harness-pi/package.json",
+      "packages/harness-pi/src/index.ts",
+      "packages/harness/package.json",
+      "packages/harness/src/index.ts",
+      "packages/workflow-harness/package.json",
+      "packages/workflow-harness/src/index.ts"
+    ],
+    "name": null,
+    "version": null,
+    "dist": null,
+    "dependencies": null
+  },
+  "npm_harness": {
+    "url": "https://registry.npmjs.org/@ai-sdk%2fharness/latest",
+    "sha": null,
+    "truncated": null,
+    "paths": [],
+    "name": "@ai-sdk/harness",
+    "version": "1.0.138",
+    "dist": {
+      "shasum": "b26868b0b155e042853e2f4d49e95bbee8d470c8",
+      "tarball": "https://registry.npmjs.org/@ai-sdk/harness/-/harness-1.0.138.tgz",
+      "fileCount": 117,
+      "integrity": "sha512-eoLHWMLlCzYo3rMenPimJ7IvjMiSV/L1CXS4VihXQozY8Pr/tK+afMQS8GNk8S0OagYiex5ZC+DEI7vquanZmw==",
+      "signatures": [
+        {
+          "sig": "MEQCIEb7dridFLSawK+vzsZXIrbWUsJVby5X4A1Lzmlt55z6AiAtBdSRE6q1aBLepYM94CEebtq5sMWdXaTnS0itYEVbjw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQCRuj97xXwRuR3r+7h5oQCy+Z7oZMq+JaDD2kZQPXv6DgIhAPE402UYHGUOB/mPt4AtK0W2JD7BPottNRGd1ArNQd1N",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@ai-sdk%2fharness@1.0.138",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 1776278
+    },
+    "dependencies": {
+      "ai": "7.0.127",
+      "@ai-sdk/provider": "4.0.21",
+      "@ai-sdk/provider-utils": "5.0.53"
+    }
+  },
+  "npm_grok": {
+    "url": "https://registry.npmjs.org/@ai-sdk%2fharness-grok-build/latest",
+    "sha": null,
+    "truncated": null,
+    "paths": [],
+    "name": "@ai-sdk/harness-grok-build",
+    "version": "1.0.76",
+    "dist": {
+      "shasum": "324c5d228d0fbc4d4414c4b69476a7353e0f2c73",
+      "tarball": "https://registry.npmjs.org/@ai-sdk/harness-grok-build/-/harness-grok-build-1.0.76.tgz",
+      "fileCount": 16,
+      "integrity": "sha512-KLv+wL0RV5OL3jrbF78pNSAH/wJuw8Si0y0k5urQO+I8l1C9bNh0hVs+pdoK5IYdpgZIXwMjGotIHaHjnDfI/A==",
+      "signatures": [
+        {
+          "sig": "MEUCIGCvPuMN1x2QCa/wqvEQcpeE156wxTMEp5/Af5NN4qp4AiEAreVA/uC/JxNfhL280/+zGHmOHQXrv/ZARTO7rSxeKcM=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIBjn6PrGkRICu9Y/0BZtb6R9GAMMklMacpg4/nr4Leu8AiEApARCb1Fw/KRJW7mu1FE28DTjhhjNdg1H8reJ3wptwAg=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@ai-sdk%2fharness-grok-build@1.0.76",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 359215
+    },
+    "dependencies": {
+      "@ai-sdk/harness": "1.0.138",
+      "@ai-sdk/provider": "4.0.21",
+      "@ai-sdk/harness-acp": "1.0.77",
+      "@ai-sdk/provider-utils": "5.0.53"
+    }
+  },
+  "npm_codex": {
+    "url": "https://registry.npmjs.org/@ai-sdk%2fharness-codex/latest",
+    "sha": null,
+    "truncated": null,
+    "paths": [],
+    "name": "@ai-sdk/harness-codex",
+    "version": "1.0.140",
+    "dist": {
+      "shasum": "af17dd5573b8ceea9a98309acb148cf90f76ab4c",
+      "tarball": "https://registry.npmjs.org/@ai-sdk/harness-codex/-/harness-codex-1.0.140.tgz",
+      "fileCount": 29,
+      "integrity": "sha512-mJjC+g+Y9KV5B9+lSDIPSRie3pwFUhuUubfuxKbYsF/r5uQSnfUzsBhVoZybGH0rO3QLdYgSoJd6Tm/7WuA/LA==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDMu/ixO/DRjP4nXHaJ92beMAlHRYhybOV/PlH39bs8gQIgPuWR1e4jweCHXuo8DMBSo1wMi84ds441MHayb9wNQpw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIGz9Kff0+dCyzq9qZNZmpldtf5YWNRhaggzyr6F6joImAiEAlByLq3m486HAm+KTnX/cwplqpUnSwON3tyZjE4WGaXA=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@ai-sdk%2fharness-codex@1.0.140",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 585656
+    },
+    "dependencies": {
+      "ws": "^8.21.0",
+      "@ai-sdk/harness": "1.0.138",
+      "@ai-sdk/provider": "4.0.21",
+      "@ai-sdk/provider-utils": "5.0.53"
+    }
+  },
+  "npm_claude": {
+    "url": "https://registry.npmjs.org/@ai-sdk%2fharness-claude-code/latest",
+    "sha": null,
+    "truncated": null,
+    "paths": [],
+    "name": "@ai-sdk/harness-claude-code",
+    "version": "1.0.142",
+    "dist": {
+      "shasum": "88e70adaf0e293aa3f07fb32171ee48c769f7076",
+      "tarball": "https://registry.npmjs.org/@ai-sdk/harness-claude-code/-/harness-claude-code-1.0.142.tgz",
+      "fileCount": 32,
+      "integrity": "sha512-djR+QHzFAtqWHRJVBXWzELT4csOgkpLhmNjUCaUgnD9haZ6ZXsoW9TuvKTiXZEUK+FYT8JOdCMHcbOHCYfEviw==",
+      "signatures": [
+        {
+          "sig": "MEUCIAEZk5MctQaGi5jTTtlrcKUU3O/X2aqKedKBundq29ZeAiEAhcXJvDCMEWodtlye2r385PT5YE195IQurcq9OhBqbds=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQDbUDPfuQKjtkgUIt6KriM2QL47jdlM2U3akzQX1gvsQwIgMzYOvSVj8eEOB31TKu9UFmgU8xWjMnig99dBNqNL0t4=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@ai-sdk%2fharness-claude-code@1.0.142",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 1762884
+    },
+    "dependencies": {
+      "ws": "^8.21.0",
+      "@ai-sdk/harness": "1.0.138",
+      "@ai-sdk/provider": "4.0.21",
+      "@ai-sdk/provider-utils": "5.0.53"
+    }
+  },
+  "checked_at": "2026-10-05T15:52:24.218273+00:00"
+}

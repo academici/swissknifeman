@@ -111,6 +111,15 @@ class ValidatorTests(unittest.TestCase):
         phase["closed"] = {"at": "2026-10-05T10:40:00Z"}
         self.assertEqual(codes(schema.validate(phase, "phase")), {"required"})
 
+    def test_migration_preserves_fractional_timestamps_procedures_and_missing_routes(self):
+        event = load(FIXTURES / "valid" / "log-event-e5-start.json")
+        event["ts"] = "2026-09-11T13:53:26.807745Z"
+        self.assertEqual(schema.validate(event, "log-event"), [])
+        self.item["route"] = None
+        self.item["validation"][0]["procedure"] = "Owner compares the signed acceptance packet."
+        self.item["validation"][0].pop("cmd")
+        self.assertEqual(schema.validate(self.item, "item"), [])
+
     def test_object_data_payload_is_free_form(self):
         event = load(FIXTURES / "valid" / "log-event-e5-start.json")
         event["data"] = {"any": ["thing", 1, None], "nested": {"x": True}}

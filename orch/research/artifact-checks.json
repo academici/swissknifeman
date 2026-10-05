@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-10-05T16:06:04.132788+00:00",
+  "scope": "Research artifacts only; existing test results remain historical and concurrent Task edits were not changed by this task.",
+  "markdown_checked": 10,
+  "json_checked": 20,
+  "local_links_checked": 110,
+  "user_thread_hash_matches": true,
+  "perplexity_calls": 11,
+  "perplexity_nonempty_answers": 10,
+  "perplexity_empty_answers": [
+    "Q04"
+  ],
+  "perplexity_structured_source_gaps": [
+    "Q04",
+    "Q08",
+    "Q09"
+  ],
+  "concurrent_source_drift_paths": [
+    "packages/task/lib/task/plan/lifecycle.py",
+    "packages/task/schemas/plan/v1/plan.schema.json",
+    "packages/task/schemas/plan/v1/item.schema.json",
+    "packages/task/schemas/plan/v1/defs.schema.json"
+  ],
+  "tracked_research_diff_whitespace_exit_code": 0,
+  "errors": []
+}

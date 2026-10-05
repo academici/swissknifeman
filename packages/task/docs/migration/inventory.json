@@ -1,80 +1,350 @@
 {
-  "format": "task-json-migration/v1",
+  "format": "task-json-migration/v2",
+  "config": "/home/vostrikov/projects/packages/swissknifeman/config.json",
+  "projects": [
+    {
+      "name": "Agelto",
+      "local_path": "/home/vostrikov/projects/agelto/agelto",
+      "resolved_path": "/home/vostrikov/projects/agelto/agelto",
+      "status": "migrated",
+      "active_plans": 1
+    },
+    {
+      "name": "Diabox",
+      "local_path": "/home/vostrikov/projects/diabox",
+      "resolved_path": "/home/vostrikov/projects/diabox",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "FlexCRM",
+      "local_path": "/home/vostrikov/projects/flexcrm",
+      "resolved_path": "/home/vostrikov/projects/flexcrm",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "AxiomaErpSdk",
+      "local_path": "/home/vostrikov/projects/packages/erp-sdk",
+      "resolved_path": "/home/vostrikov/projects/packages/erp-sdk",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "AzGuard",
+      "local_path": "/home/vostrikov/projects/packages/azguard",
+      "resolved_path": "/home/vostrikov/projects/packages/azguard",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "Botkit",
+      "local_path": "/home/vostrikov/projects/packages/botkit",
+      "resolved_path": "/home/vostrikov/projects/packages/botkit",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "Vaulter",
+      "local_path": "/home/vostrikov/projects/packages/vaulter",
+      "resolved_path": "/home/vostrikov/projects/packages/vaulter",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "Swissknifeman",
+      "local_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "resolved_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "AxiomaStudio",
+      "local_path": "/home/vostrikov/projects/axioma-studio",
+      "resolved_path": "/home/vostrikov/projects/axioma-studio",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "corex",
+      "local_path": "/home/vostrikov/projects/packages/corex",
+      "resolved_path": "/home/vostrikov/projects/packages/corex",
+      "status": "pending",
+      "active_plans": 2
+    },
+    {
+      "name": "Memster",
+      "local_path": "/home/vostrikov/projects/memster",
+      "resolved_path": "/home/vostrikov/projects/memster",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "cms",
+      "local_path": "/home/vostrikov/projects/vintera/cms",
+      "resolved_path": "/home/vostrikov/projects/vintera/cms",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "Edufy",
+      "local_path": "/home/vostrikov/projects/edufy",
+      "resolved_path": "/home/vostrikov/projects/edufy",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "vintera",
+      "local_path": "/home/vostrikov/projects/vintera/vintera",
+      "resolved_path": "/home/vostrikov/projects/vintera/vintera",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "dterema",
+      "local_path": "/home/vostrikov/projects/dterema/dterema",
+      "resolved_path": "/home/vostrikov/projects/dterema/dterema",
+      "status": "pending",
+      "active_plans": 2
+    },
+    {
+      "name": "dterema-app",
+      "local_path": "/home/vostrikov/projects/dterema/app",
+      "resolved_path": "/home/vostrikov/projects/dterema/app",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "insiders",
+      "local_path": "/home/vostrikov/sibintek/projects/insiders",
+      "resolved_path": "/home/vostrikov/sibintek/projects/insiders",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "sova",
+      "local_path": "/home/vostrikov/sibintek/projects/sova",
+      "resolved_path": "/home/vostrikov/sibintek/projects/sova",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "chatom",
+      "local_path": "/home/vostrikov/projects/packages/chatom",
+      "resolved_path": "/home/vostrikov/projects/packages/chatom",
+      "status": "already_current",
+      "active_plans": 1
+    },
+    {
+      "name": "perplexity-web-mcp",
+      "local_path": "/home/vostrikov/projects/packages/perplexity-web-mcp",
+      "resolved_path": "/home/vostrikov/projects/packages/perplexity-web-mcp",
+      "status": "no_active_plans",
+      "active_plans": 0
+    },
+    {
+      "name": "loqum",
+      "local_path": "/home/vostrikov/projects/packages/loqum",
+      "resolved_path": "/home/vostrikov/projects/packages/loqum",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "brain",
+      "local_path": "/home/vostrikov/Vaults/Brain",
+      "resolved_path": "/home/vostrikov/Vaults/Brain",
+      "status": "pending",
+      "active_plans": 1
+    },
+    {
+      "name": "agentools",
+      "local_path": "/home/vostrikov/projects/packages/agentools",
+      "resolved_path": "/home/vostrikov/projects/packages/agentools",
+      "status": "pending",
+      "active_plans": 2
+    },
+    {
+      "name": "themeon",
+      "local_path": "/home/vostrikov/projects/packages/themeon",
+      "resolved_path": "/home/vostrikov/projects/packages/themeon",
+      "status": "no_active_plans",
+      "active_plans": 0
+    }
+  ],
   "plans": [
+    {
+      "project": "Agelto",
+      "local_path": "/home/vostrikov/projects/agelto/agelto",
+      "plan": "2026.09.10-№1-PARSING-PRODUCTION-REMEDIATION",
+      "path": "/home/vostrikov/projects/agelto/agelto/plans/2026.09.10-№1-PARSING-PRODUCTION-REMEDIATION",
+      "format": "json",
+      "scope": "config",
+      "status": "migrated"
+    },
+    {
+      "project": "AzGuard",
+      "local_path": "/home/vostrikov/projects/packages/azguard",
+      "plan": "2026.10.01-№1-AZGUARD-V1",
+      "path": "/home/vostrikov/projects/packages/azguard/plans/2026.10.01-№1-AZGUARD-V1",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "Diabox",
+      "local_path": "/home/vostrikov/projects/diabox",
+      "plan": "2026.08.04-ROCKET-PRODUCTION-HARDENING",
+      "path": "/home/vostrikov/projects/diabox/plans/2026.08.04-ROCKET-PRODUCTION-HARDENING",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "Edufy",
+      "local_path": "/home/vostrikov/projects/edufy",
+      "plan": "2026.09.23-№1-EDUFY-FOUNDATION",
+      "path": "/home/vostrikov/projects/edufy/plans/2026.09.23-№1-EDUFY-FOUNDATION",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "FlexCRM",
+      "local_path": "/home/vostrikov/projects/flexcrm",
+      "plan": "FLEX-2",
+      "path": "/home/vostrikov/projects/flexcrm/plans/FLEX-2",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "Memster",
+      "local_path": "/home/vostrikov/projects/memster",
+      "plan": "2026.07.12-SEMANTIC-CORE",
+      "path": "/home/vostrikov/projects/memster/plans/2026.07.12-SEMANTIC-CORE",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "Vaulter",
+      "local_path": "/home/vostrikov/projects/packages/vaulter",
+      "plan": "2026.09.29-№1-VAULTER-STABLE",
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "agentools",
+      "local_path": "/home/vostrikov/projects/packages/agentools",
+      "plan": "2026.09.19-№1-AGENTOOLS-HARDENING",
+      "path": "/home/vostrikov/projects/packages/agentools/plans/2026.09.19-№1-AGENTOOLS-HARDENING",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "agentools",
+      "local_path": "/home/vostrikov/projects/packages/agentools",
+      "plan": "AGENTOOLS",
+      "path": "/home/vostrikov/projects/packages/agentools/plans/AGENTOOLS",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "brain",
+      "local_path": "/home/vostrikov/Vaults/Brain",
+      "plan": "2026.07.17-AXIOMA-ORCHESTRA",
+      "path": "/home/vostrikov/Vaults/Brain/plans/2026.07.17-AXIOMA-ORCHESTRA",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "chatom",
+      "local_path": "/home/vostrikov/projects/packages/chatom",
+      "plan": "2026.09.27-№1-CHATOM-RC1",
+      "path": "/home/vostrikov/projects/packages/chatom/plans/2026.09.27-№1-CHATOM-RC1",
+      "format": "json",
+      "scope": "config",
+      "status": "already_current"
+    },
+    {
+      "project": "corex",
+      "local_path": "/home/vostrikov/projects/packages/corex",
+      "plan": "2026.09.19-№1-COREX-PLATFORM-HARDENING",
+      "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.19-№1-COREX-PLATFORM-HARDENING",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "corex",
+      "local_path": "/home/vostrikov/projects/packages/corex",
+      "plan": "2026.09.27-№1-COREX-KERNEL",
+      "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.27-№1-COREX-KERNEL",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "dterema",
+      "local_path": "/home/vostrikov/projects/dterema/dterema",
+      "plan": "2026.07.17-DTEREMA-UX",
+      "path": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "dterema",
+      "local_path": "/home/vostrikov/projects/dterema/dterema",
+      "plan": "2026.07.23-DTEREMA-PROD-P0",
+      "path": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.23-DTEREMA-PROD-P0",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "insiders",
+      "local_path": "/home/vostrikov/sibintek/projects/insiders",
+      "plan": "2026.07.27-RESP-CHTZ",
+      "path": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
+    {
+      "project": "loqum",
+      "local_path": "/home/vostrikov/projects/packages/loqum",
+      "plan": "LOQUM-DEV",
+      "path": "/home/vostrikov/projects/packages/loqum/plans/LOQUM-DEV",
+      "format": "markdown",
+      "scope": "config",
+      "status": "pending"
+    },
     {
       "project": "aifina",
       "plan": "2026.07.27-AIFINA",
-      "status": "pending"
+      "status": "pending",
+      "scope": "out_of_config",
+      "scope_note": "Preserved from the previous filesystem inventory; not registered in config.json."
     },
     {
       "project": "airesto",
       "plan": "AIRESTO",
-      "status": "pending"
-    },
-    {
-      "project": "diabox",
-      "plan": "2026.08.04-ROCKET-PRODUCTION-HARDENING",
-      "status": "pending"
-    },
-    {
-      "project": "edufy",
-      "plan": "2026.09.23-№1-EDUFY-FOUNDATION",
-      "status": "pending"
+      "status": "pending",
+      "scope": "out_of_config",
+      "scope_note": "Preserved from the previous filesystem inventory; not registered in config.json."
     },
     {
       "project": "flex-old",
       "plan": "2026.07.17-FLEX",
-      "status": "pending"
-    },
-    {
-      "project": "flexcrm",
-      "plan": "FLEX-2",
-      "status": "pending"
-    },
-    {
-      "project": "memster",
-      "plan": "2026.07.12-SEMANTIC-CORE",
-      "status": "pending"
-    },
-    {
-      "project": "packages/agentools",
-      "plan": "2026.09.19-№1-AGENTOOLS-HARDENING",
-      "status": "pending"
-    },
-    {
-      "project": "packages/agentools",
-      "plan": "AGENTOOLS",
-      "status": "pending"
-    },
-    {
-      "project": "packages/azguard",
-      "plan": "2026.10.01-№1-AZGUARD-V1",
-      "status": "pending"
-    },
-    {
-      "project": "packages/chatom",
-      "plan": "2026.09.27-№1-CHATOM-RC1",
-      "status": "done"
-    },
-    {
-      "project": "packages/corex",
-      "plan": "2026.09.19-№1-COREX-PLATFORM-HARDENING",
-      "status": "pending"
-    },
-    {
-      "project": "packages/corex",
-      "plan": "2026.09.27-№1-COREX-KERNEL",
-      "status": "pending"
-    },
-    {
-      "project": "packages/loqum",
-      "plan": "LOQUM-DEV",
-      "status": "pending"
-    },
-    {
-      "project": "packages/vaulter",
-      "plan": "2026.09.29-№1-VAULTER-STABLE",
-      "status": "pending"
+      "status": "pending",
+      "scope": "out_of_config",
+      "scope_note": "Preserved from the previous filesystem inventory; not registered in config.json."
     }
   ]
 }

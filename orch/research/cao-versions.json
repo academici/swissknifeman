@@ -1,0 +1,110 @@
+{
+  "pypi": {
+    "url": "https://pypi.org/pypi/cli-agent-orchestrator/json",
+    "data": {
+      "latest": "2.5.0",
+      "releases": {
+        "2.1.1": [
+          {
+            "filename": "cli_agent_orchestrator-2.1.1-py3-none-any.whl",
+            "upload_time": "2026-04-28T06:42:17",
+            "sha256": "b1f66ef2b3b5d5cde83fca84fd512ac5a410319835770012bfc99ffc303c9053"
+          },
+          {
+            "filename": "cli_agent_orchestrator-2.1.1.tar.gz",
+            "upload_time": "2026-04-28T06:42:19",
+            "sha256": "c5e0c0dfe20382f772e0601574940c3c14fc84a896f71fd413464f11775a7489"
+          }
+        ],
+        "2.3.0": [
+          {
+            "filename": "cli_agent_orchestrator-2.3.0-py3-none-any.whl",
+            "upload_time": "2026-07-12T06:28:41",
+            "sha256": "51149907aad982b603a4783cc920789c163ee60c446078f5c1db0870f0991ab5"
+          },
+          {
+            "filename": "cli_agent_orchestrator-2.3.0.tar.gz",
+            "upload_time": "2026-07-12T06:28:45",
+            "sha256": "23730c68de8e15b0e94a4ea2ba1571759d7830c3554769e4b30378c19f730b13"
+          }
+        ],
+        "2.4.0": [
+          {
+            "filename": "cli_agent_orchestrator-2.4.0-py3-none-any.whl",
+            "upload_time": "2026-08-04T05:13:48",
+            "sha256": "06fd121bd5b9841bdb36b1b208cb8859a274cb577db0679fca0c9a1e5d1cefcb"
+          },
+          {
+            "filename": "cli_agent_orchestrator-2.4.0.tar.gz",
+            "upload_time": "2026-08-04T05:13:50",
+            "sha256": "3c6815baaade89d261604014a4dd70cb6b63b85a5a99fccd942f63b1e3f477a9"
+          }
+        ],
+        "2.4.1": [
+          {
+            "filename": "cli_agent_orchestrator-2.4.1-py3-none-any.whl",
+            "upload_time": "2026-08-04T11:00:17",
+            "sha256": "a855447ef5960a0683eea753e94e26de5b5ef2e8e1aa1e52222a7a1429d0e457"
+          },
+          {
+            "filename": "cli_agent_orchestrator-2.4.1.tar.gz",
+            "upload_time": "2026-08-04T11:00:19",
+            "sha256": "a5b1eb7b01d6c7ca569829e52603f109dde40824485c385230ee2a202583f481"
+          }
+        ],
+        "2.5.0": [
+          {
+            "filename": "cli_agent_orchestrator-2.5.0-py3-none-macosx_11_0_arm64.whl",
+            "upload_time": "2026-08-28T06:11:31",
+            "sha256": "92b445d1ea3a70a3cafd9f2894dfe1eafcc863c9a4f4e1c37a7dae18c4b7ae20"
+          },
+          {
+            "filename": "cli_agent_orchestrator-2.5.0-py3-none-manylinux_2_28_x86_64.whl",
+            "upload_time": "2026-08-28T06:11:34",
+            "sha256": "694a4b6afdd29a35a66c853a8a49679229b5919044230d5a2145506f83ea0ae2"
+          },
+          {
+            "filename": "cli_agent_orchestrator-2.5.0.tar.gz",
+            "upload_time": "2026-08-28T06:11:39",
+            "sha256": "35bd7ac868700b1e52a6d1709c6b78386fd75602d3538db01ceb269780301100"
+          }
+        ]
+      }
+    }
+  },
+  "github_releases": {
+    "url": "https://api.github.com/repos/awslabs/cli-agent-orchestrator/releases?per_page=5",
+    "data": [
+      {
+        "tag": "v2.5.1",
+        "published_at": "2026-09-11T01:48:05Z",
+        "prerelease": false,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/releases/tag/v2.5.1"
+      },
+      {
+        "tag": "v2.5.0",
+        "published_at": "2026-08-28T04:36:14Z",
+        "prerelease": false,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/releases/tag/v2.5.0"
+      },
+      {
+        "tag": "v2.4.1",
+        "published_at": "2026-08-04T10:45:12Z",
+        "prerelease": false,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/releases/tag/v2.4.1"
+      },
+      {
+        "tag": "v2.3.0",
+        "published_at": "2026-07-12T06:19:33Z",
+        "prerelease": false,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/releases/tag/v2.3.0"
+      },
+      {
+        "tag": "v2.2.0",
+        "published_at": "2026-06-04T11:25:36Z",
+        "prerelease": false,
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/releases/tag/v2.2.0"
+      }
+    ]
+  }
+}

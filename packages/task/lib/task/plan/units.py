@@ -108,7 +108,8 @@ def brief(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False)
     unit = _need_unit(plan, item_id, unit_id)
     item = plan.items[item_id]
     by_id = {c["id"]: c for c in item.get("validation", [])}
-    return {"ref": f"{plan.plan['short_id']}.{item_id}/{unit_id}", "unit": copy.deepcopy(unit),
+    identity = plan.plan.get("short_id") or plan.plan["id"]
+    return {"ref": f"{identity}.{item_id}/{unit_id}", "unit": copy.deepcopy(unit),
             "context": context.collect(plan, item_id),
             "reads": [context.read_entry(plan, r) for r in unit.get("reads", [])],
             "checks": [copy.deepcopy(by_id[c] if isinstance(c, str) else c) for c in unit.get("checks", [])],

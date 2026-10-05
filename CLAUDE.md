@@ -16,20 +16,20 @@ Run skiller budget --first-turn; target 16K, warn at 23K, and require an Owner v
 For Claude Code research, use the established `perplexity-web` route before `WebSearch`; this native routing does not replace the common external-claim verification rule.
 <!-- swissknifeman:instructions:root:claude-code:extension:end -->
 
-<!-- maind:healthcheck hash=9046a1eafbee (managed by maind — do not edit manually) -->
-## ⚠ PRIORITY №1 — connection with mAInd (shared memory + graph)
+<!-- maind:healthcheck hash=70e92d16482a (managed by maind — do not edit manually) -->
+## mAInd — temporary project context and graph
 
-Before starting work, make sure that the project is connected to the hub **mAInd**. This is critical:
-without communication changes this session **will not hit** to shared memory and the graph to history
-development, irreparable gaps will appear, and further connections will not be drawn.
+Memory defaults to this project's private scope `project:swissknifeman`. Read `ns:*` or `global`
+only for an explicit cross-project request and when the scope is authorized.
 
-1. Check connection: `maind health --cwd`
-2. If the status `partial` / `standalone` — fix: `maind health --cwd --fix`
-   (will raise the memory daemon and add MCP-hub servers to this project).
-3. Proceed with the task only when the status `connected`.
+Store only short useful temporary context: 48-hour default TTL, 72-hour maximum,
+800 characters, at most 8 live entries per scope. Use one replaceable `active-handoff`
+for continuity, then forget it when work finishes. Keep plans, decisions, progress,
+commit history and durable rules in repository artifacts. Empty memory is normal.
 
-Memory **general** (demon mAInd), scope of this project - `project:swissknifeman`; facts about the entire ecosystem - in
-scope `global`. Project connections with others: `maind graph --project swissknifeman`.
+Use `maind health --cwd` for connection symptoms or setup changes; repair with
+`maind health --cwd --fix`. A memory outage does not block ordinary repository work.
+Project connections: `maind graph --project swissknifeman`.
 <!-- /maind:healthcheck -->
 
 <!-- swissknifeman:hub:start -->

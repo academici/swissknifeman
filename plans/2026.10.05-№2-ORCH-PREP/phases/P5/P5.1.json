@@ -90,7 +90,7 @@
     "Ошибка: код TASK_UNAVAILABLE и подсказка про SKM_TASK_ROOT",
     "Существующие тесты harness run зелёные"
   ],
-  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: legacy harness/run: прежний fallback поиска пути обязан остаться.\n\n`task_root(start=None) -> Path`: (1) `SKM_TASK_ROOT` — каталог, где есть `scripts/plan.py`; (2) сосед установки: для orch `Path(__file__).resolve().parents[3] / \"task\"`, для harness `Path(__file__).resolve().parents[4] / \"task\"` (проверить по факту раскладки); (3) `find_monorepo_root(start) / \"packages/task\"` (только harness; orch — без core: подъём от start до каталога с `packages/task/scripts/plan.py`); (4) `TaskUnavailable(\"TASK_UNAVAILABLE: …\")`. `routing_path()` = `task_root()/configs/command-routing.json`; `plan_script()` = `task_root()/scripts/plan.py`.\nТесты: env указывает на tmp-копию с `scripts/plan.py` → она; невалидный env (нет plan.py) → следующий шаг; сосед; fallback; ничего → TASK_UNAVAILABLE. Проверка отсутствия хардкода: `grep -n '\"packages\" / \"task\"' packages/harness/lib/harness/run/*.py` — только в task_paths.py.",
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: legacy harness/run: прежний fallback поиска пути обязан остаться.\n\n`task_root(start=None) -> Path`: (1) `SKM_TASK_ROOT` — каталог, где есть `scripts/plan.py`; (2) сосед установки: для orch `Path(__file__).resolve().parents[3] / \"task\"` (discovery.py → orch → lib → packages/orch → packages), для harness `Path(__file__).resolve().parents[4] / \"task\"` (task_paths.py → run → harness → lib → packages/harness → packages); (3) `find_monorepo_root(start) / \"packages/task\"` (только harness; orch — без core: подъём от start до каталога с `packages/task/scripts/plan.py`); (4) `TaskUnavailable(\"TASK_UNAVAILABLE: …\")`. `routing_path()` = `task_root()/configs/command-routing.json`; `plan_script()` = `task_root()/scripts/plan.py`.\nТесты: env указывает на tmp-копию с `scripts/plan.py` → она; невалидный env (нет plan.py) → следующий шаг; сосед; fallback; ничего → TASK_UNAVAILABLE. Проверка отсутствия хардкода: `grep -n '\"packages\" / \"task\"' packages/harness/lib/harness/run/*.py` — только в task_paths.py.",
   "validation": [
     {
       "id": "V1",
@@ -132,5 +132,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:00:26Z"
+  "updated_at": "2026-10-05T17:02:49Z"
 }

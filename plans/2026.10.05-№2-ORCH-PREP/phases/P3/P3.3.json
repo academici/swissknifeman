@@ -114,7 +114,7 @@
     "Проекции и golden — только генераторами",
     "test_record_parity и test_canon_literals зелёные"
   ],
-  "guidance": "Исполнитель: Opus (claude-code, frontier/high) — не экономить: слияние методики с существующими skills без противоречий и без потери лимитов Task.\n\n1. Перенести строки 12–38 review.md в code-review SKILL.md как секцию `## Review depth and report`, обрамлённую export-маркерами; формулировки, противоречащие существующему skill, согласовать (например, «one pass, no subagents» сформулировать как правило одного bounded review, а не запрет team-процесса). Severity-шкала Blocker|Major|Minor|Nit уже совпадает.\n2. В review.md на месте строк 12–38 вставить пустой managed-блок `task-review-method` и выполнить `python3 scripts/sync-managed-blocks.py --write --root .`.\n3. Аналогично review-mode.md п.4 → `task-review-findings` из artifact-review (фраза «owning item» должна остаться в итоговом тексте Task: добавить её в export-фрагмент или оставить строкой вне блока).\n4. `packages/skiller/bin/skiller registry` (регенерация skills.json, манифестов); `python3 packages/task/scripts/render-provider-commands.py --write --root .`; обновить golden способом из test_claude_command_adapter.py.",
+  "guidance": "Исполнитель: Opus (claude-code, frontier/high) — не экономить: слияние методики с существующими skills без противоречий и без потери лимитов Task.\n\n1. Перенести строки 12–38 review.md в code-review SKILL.md как секцию `## Review depth and report`, обрамлённую export-маркерами; формулировки, противоречащие существующему skill, согласовать (например, «one pass, no subagents» сформулировать как правило одного bounded review, а не запрет team-процесса). Severity-шкала Blocker|Major|Minor|Nit уже совпадает.\n2. В review.md на месте строк 12–38 вставить пустой managed-блок `task-review-method` и выполнить `python3 scripts/sync-managed-blocks.py --write --root .`.\n3. Аналогично review-mode.md п.4 → `task-review-findings` из artifact-review (фраза «owning item» должна остаться в итоговом тексте Task: добавить её в export-фрагмент или оставить строкой вне блока).\n4. `packages/skiller/bin/skiller registry` (регенерация skills.json, манифестов); `python3 packages/task/scripts/render-provider-commands.py --write --root .`; golden `tests/fixtures_data/claude-command-golden/` пишется тем же `render-provider-commands.py --write` (функция `_claude_golden_projection`), руками не трогать.\nGolden `packages/task/tests/fixtures_data/claude-command-golden/` обновляет `python3 packages/task/scripts/render-provider-commands.py --write --root .`; ручные правки golden запрещены.",
   "validation": [
     {
       "id": "V1",
@@ -169,5 +169,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:00:24Z"
+  "updated_at": "2026-10-05T17:02:49Z"
 }

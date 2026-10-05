@@ -7,9 +7,9 @@
   "why": "R12, R16: устройство и способ добавить движок записаны; R21: финальная проверка совместимости всех пакетов один раз.",
   "scope": {
     "include": [
-      "packages/orch/docs/index.md, architecture.md (из knowledge/architecture), adding-an-engine.md (из knowledge/engine-port §adding-an-engine), README.md",
-      "root docs: страница об оркестрационных контрактах и ссылка в sidebar `docs/.vitepress/config.mts`, если раздел пакетов там есть (по skill docs-maintenance)",
-      "CHANGELOG.md [Unreleased]: skiller resolve, launch catalog, managed blocks, review method в Skiller, harness discovery"
+      "packages/orch/docs/index.md (назначение, статус internal, ссылки), architecture.md (из knowledge/architecture §boundaries, §dependency-rule, §layout), adding-an-engine.md (из knowledge/engine-port §adding-an-engine), README.md (раздел Docs со ссылками)",
+      "сборка umbrella-docs: в scripts/docs-sync.sh строка `sync_pkg orch` после `sync_pkg task`; в .gitignore строка `docs/orch/` рядом с `docs/analyst/`; в docs/.vitepress/config.mts — nav `{ text: 'orch', link: '/orch/', activeMatch: '/orch/' }` после task и sidebar `'/orch/'` с пунктами index, architecture, contracts, engine-port, adding-an-engine",
+      "CHANGELOG.md [Unreleased] → `### Added`: `skiller: resolve --role`; `task: launch catalog orchestration.launch`; `scripts: sync-managed-blocks`; `harness: run discovers Task via SKM_TASK_ROOT`; `### Changed`: `task: review method is generated from quality:code-review / artifact-review`"
     ],
     "exclude": [
       "новые решения в документации (только перенос из knowledge)"
@@ -54,12 +54,17 @@
       "path": "docs/.vitepress/config.mts",
       "why": "sidebar",
       "required": true
+    },
+    {
+      "path": "scripts/docs-sync.sh",
+      "why": "как пакетные docs попадают в umbrella-сайт",
+      "required": true
     }
   ],
   "task_files": [
     {
       "path": "packages/orch/docs/*.md",
-      "change": "create"
+      "change": "any"
     },
     {
       "path": "packages/orch/README.md",
@@ -67,8 +72,12 @@
       "note": "created by P1.1"
     },
     {
-      "path": "docs/**",
-      "change": "any"
+      "path": "scripts/docs-sync.sh",
+      "change": "modify"
+    },
+    {
+      "path": ".gitignore",
+      "change": "modify"
     },
     {
       "path": "docs/.vitepress/config.mts",
@@ -83,7 +92,7 @@
     "Тексты — перенос из knowledge, без новых решений",
     "Если широкий прогон красный — log --type blocker на owning item, не чинить чужой item молча"
   ],
-  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nШирокий прогон — один раз в конце, в порядке валидаций ниже. Docs-страница: краткое назначение packages/orch, схема зависимостей, ссылки на packages/orch/docs/*.",
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nДокументы — перенос из knowledge без новых решений. Проверка docs-сборки: `bash scripts/docs-sync.sh --check` (копии docs/<pkg> gitignored; «not materialized» — нормальный исход). Широкий прогон — один раз в конце, в порядке валидаций. Красная проверка чужого пакета — `plan.py log PLAN2 P5.5 --type blocker` с owning item, не молчаливая починка.",
   "validation": [
     {
       "id": "V1",
@@ -120,6 +129,12 @@
       "cmd": "test -s packages/orch/docs/adding-an-engine.md && test -s packages/orch/docs/architecture.md",
       "expect": "exit 0",
       "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "grep -n 'sync_pkg orch' scripts/docs-sync.sh && grep -n \"'/orch/'\" docs/.vitepress/config.mts && bash scripts/docs-sync.sh --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
     }
   ],
   "deliverables": [
@@ -142,5 +157,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:00:31Z"
+  "updated_at": "2026-10-05T17:02:48Z"
 }

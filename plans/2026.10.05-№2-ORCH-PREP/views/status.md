@@ -18,7 +18,7 @@
 | Item | Title | Status | Route | Updated |
 |:--|:--|:--|:--|:--|
 | P2.1 | plan.py brief: проекция execution-input (T1, T3) | ⬜ Not started | implementation/high | 2026-10-05T17:00:25Z |
-| P2.2 | Полнота brief (T2) и конформанс exec/v1 в orch | ⬜ Not started | implementation/high | 2026-10-05T17:00:25Z |
+| P2.2 | Полнота brief (T2) и конформанс exec/v1 в orch | ⬜ Not started | implementation/high | 2026-10-05T17:03:08Z |
 | P2.3 | Resolver ссылок на другие планы (T4) | ⬜ Not started | implementation/high | 2026-10-05T17:00:25Z |
 | P2.4 | Раздельные actor и идемпотентная регистрация (T5, T7) | ⬜ Not started | frontier/high | 2026-10-05T17:00:23Z |
 | P2.5 | Evidence для finish и unit accept (T6) + settings.evidence | ⬜ Not started | frontier/high | 2026-10-05T17:00:23Z |
@@ -31,8 +31,8 @@
 |:--|:--|:--|:--|:--|
 | P3.1 | Тексты ролей packages/orch/roles/*.md + тесты чистоты и записи | ⬜ Not started | frontier/high | 2026-10-05T17:00:23Z |
 | P3.2 | Инструмент managed-блоков: sync-managed-blocks.py + gate | ⬜ Not started | implementation/high | 2026-10-05T17:00:28Z |
-| P3.3 | Review-методика → quality:code-review / artifact-review; генерируемые блоки в Task | ⬜ Not started | frontier/high | 2026-10-05T17:00:24Z |
-| P3.4 | Dedupe reviewer-абзаца, plan-run units → brief + executor handoff; широкий validate | ⬜ Not started | implementation/medium | 2026-10-05T17:00:30Z |
+| P3.3 | Review-методика → quality:code-review / artifact-review; генерируемые блоки в Task | ⬜ Not started | frontier/high | 2026-10-05T17:02:49Z |
+| P3.4 | Dedupe reviewer-абзаца, plan-run units → brief + executor handoff; широкий validate | ⬜ Not started | implementation/medium | 2026-10-05T17:02:49Z |
 
 ## P4 — Launch catalog, role manifests, capability seeds, skiller resolve · ⬜ Not started
 
@@ -47,9 +47,9 @@
 
 | Item | Title | Status | Route | Updated |
 |:--|:--|:--|:--|:--|
-| P5.1 | Discovery Task без monorepo-хардкода (harness/run и orch) | ⬜ Not started | implementation/high | 2026-10-05T17:00:26Z |
+| P5.1 | Discovery Task без monorepo-хардкода (harness/run и orch) | ⬜ Not started | implementation/high | 2026-10-05T17:02:49Z |
 | P5.2 | orch render-prompt (Claude-only) и input adhoc | ⬜ Not started | implementation/high | 2026-10-05T17:00:29Z |
 | P5.3 | orch prepare --dry-run: native launch-plan, CAO profile, Claude-only prompt | ⬜ Not started | implementation/high | 2026-10-05T17:00:27Z |
-| P5.4 | Тест переносимости: один execution-input на трёх bindings | ⬜ Not started | implementation/high | 2026-10-05T17:00:29Z |
-| P5.5 | Документация, CHANGELOG и широкий validate всех пакетов | ⬜ Not started | implementation/medium | 2026-10-05T17:00:31Z |
+| P5.4 | Тест переносимости: один execution-input на трёх bindings | ⬜ Not started | implementation/high | 2026-10-05T17:03:09Z |
+| P5.5 | Документация, CHANGELOG и широкий validate всех пакетов | ⬜ Not started | implementation/medium | 2026-10-05T17:02:48Z |
 | P5.6 | Итоговый вывод плана: сверка покрытия и записи | ⬜ Not started | frontier/high | 2026-10-05T17:00:24Z |

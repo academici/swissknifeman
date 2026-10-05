@@ -114,7 +114,7 @@
     "Проекции — генератором",
     "После правок grep показывает абзац только в reviewer-selection.md"
   ],
-  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nПроверка дубля: фраза `exact native route; without an explicit review request no review runs` встречается только в копиях абзаца (в reviewer-selection.md её нет); после правок `grep` по skills/, docs/, commands/ пакета Task пуст (V1), reviewer-selection.md не меняется. Порядок: правки → `python3 scripts/sync-managed-blocks.py --write --root .` → `python3 packages/task/scripts/render-provider-commands.py --write --root .` → golden → проверки.",
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nПроверка дубля: фраза `exact native route; without an explicit review request no review runs` встречается только в копиях абзаца (в reviewer-selection.md её нет); после правок `grep` по skills/, docs/, commands/ пакета Task пуст (V1), reviewer-selection.md не меняется. Порядок: правки → `python3 scripts/sync-managed-blocks.py --write --root .` → `python3 packages/task/scripts/render-provider-commands.py --write --root .` → (golden пишется этой же командой) → проверки.\nGolden `packages/task/tests/fixtures_data/claude-command-golden/` обновляет `python3 packages/task/scripts/render-provider-commands.py --write --root .`; ручные правки golden запрещены.",
   "validation": [
     {
       "id": "V1",
@@ -168,5 +168,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:00:30Z"
+  "updated_at": "2026-10-05T17:02:49Z"
 }

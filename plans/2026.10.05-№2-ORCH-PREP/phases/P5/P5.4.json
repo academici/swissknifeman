@@ -8,7 +8,7 @@
   "scope": {
     "include": [
       "tests/test_portability.py по knowledge/engine-port §conformance (параметризация по BINDINGS и provider)",
-      "общий helper tests/task_fixture.py (копия demo-plan в tmp, вызов plan.py brief), если ещё не выделен в P2.2"
+      "использовать helper `tests/task_fixture.py` из P2.2 без изменения его сигнатуры"
     ],
     "exclude": [
       "реальные запуски"
@@ -40,16 +40,17 @@
       "path": "packages/orch/lib/orch/port.py",
       "why": "RunState",
       "required": true
+    },
+    {
+      "path": "packages/orch/tests/task_fixture.py",
+      "why": "helper brief fixture-плана",
+      "required": true
     }
   ],
   "task_files": [
     {
       "path": "packages/orch/tests/test_portability.py",
       "change": "create"
-    },
-    {
-      "path": "packages/orch/tests/task_fixture.py",
-      "change": "any"
     }
   ],
   "rules": [
@@ -91,5 +92,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:00:29Z"
+  "updated_at": "2026-10-05T17:03:09Z"
 }

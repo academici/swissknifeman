@@ -12,7 +12,9 @@ Placeholders: `<PLAN>` = plan directory id (`2026.10.05-№1-TASK-PLAN-JSON`), `
 ## 0. Preconditions — stop if any fails
 
 1. `test -f <DIR>/plan.md && test ! -f <DIR>/plan.json && echo OK` prints `OK`.
-2. `git status --short <DIR>` prints nothing (commit or ask the owner first).
+2. `git status --short <DIR>` prints nothing (commit or ask the owner first). If `git check-ignore <DIR>/plan.md`
+   prints a path, the plan is not tracked (for example `plans/` is gitignored): note it — use `mv`/`rm -r`
+   instead of `git mv`/`git rm` below, keep a copy `cp -a <DIR> <backup outside the repo>` first, and skip the commit in step 6.
 3. `<T> --help` prints the verb list.
 4. Nothing in `<DIR>` is `🔄 In progress`: `grep -rl "In progress" <DIR>/phases` prints nothing. If it does,
    ask the owner whether to finish that item first.
@@ -25,7 +27,7 @@ cd <DIR> && git mv plan.md index.md roadmap.md status.md handoff.md open-questio
 cd <DIR> && for f in journal.jsonl bundles session-routing.md closure .plan-cache; do [ -e "$f" ] && git mv "$f" _v2/; done; cd -
 ```
 
-Expected: `ls <DIR>` shows `_v2` plus `research/`, `artifacts/`, `brief/`, `findings/`, `backlog/` if they
+For an untracked plan replace every `git mv` with `mv`. Expected: `ls <DIR>` shows `_v2` plus `research/`, `artifacts/`, `brief/`, `findings/`, `backlog/` if they
 existed. Those stay in place; refer to them as `@plan/research/...` etc. `_v2/` is temporary and is never referenced from JSON. A `git mv` error for a missing file
 is fine; any other error → stop and ask. From now on read v2 text only from `<DIR>/_v2/`.
 
@@ -53,6 +55,9 @@ Read `_v2/plan.md` Meta table and §1–§2, and `brief/*.md` (the owner's first
  "messages": [{"id": "M1", "date": "<YYYY-MM-DD>", "text": "<owner message, verbatim>"}],
  "requirements": []}
 ```
+One `messages[]` entry per owner message in `brief/*.md` (`M1`, `M2`…; keep the text verbatim without the `>`
+quote marks). Each row of a requirements table (`B1 | text | owner`) becomes `requirements[]`:
+`{"id": "B1", "text": "…", "source": "M1", "owners": ["D1", "P1.1"]}`; an `Environment` list becomes `environment[]`.
 `<DIR>/.gitignore` — exactly two lines: `context/` and `.lock`.
 
 `<DIR>/log.jsonl` — exactly one line:
@@ -64,6 +69,8 @@ Read `_v2/plan.md` Meta table and §1–§2, and `brief/*.md` (the owner's first
 
 Source: `_v2/phases/<Pn>/<Pn>.md`. Rules: a `> SKELETON` marker → `"design": "skeleton"`, otherwise
 `"detailed"`. A `<Pn>.closed.md` file (or every item terminal) → fill `closed`, else `"closed": null`.
+A `Phase Contract` block (Consumes / Produces / Boundaries) → `contract: {"consumes": [...], "produces": [...], "boundaries": [...]}`;
+a `Phase Assurance` block → `assurance: {"impact": "…", "seams": [...], "live": false, "note": "<Rationale and Audit Intent>"}`.
 
 ```json
 {
@@ -80,7 +87,8 @@ Source: `_v2/phases/<Pn>/<Pn>.md`. Rules: a `> SKELETON` marker → `"design": "
 }
 ```
 Batches: take the `Batch` column of `_v2/plan.md` §3 Routing (or `_v2/roadmap.md` execution sheet); items
-with the same batch go in one batch; an item without a batch gets its own `B<Pn>-<m>`. `closed.result` is the
+with the same batch go in one batch; an item without a batch (including `solo`) gets its own `B<Pn>-<m>`, for
+example `BP3-1`, so batch ids stay unique across phases. `closed.result` is the
 worst item result in this order: `skipped` < `done` < `done_with_deviations` < `blocked`.
 
 ## 4. Per item: write `phases/<Pn>/<Pn.m>.json`
@@ -92,15 +100,15 @@ Sources: `_v2/phases/<Pn>/<Pn.m>.md` (spec) and `_v2/phases/<Pn>/<Pn.m>.state.md
 | `### Pn.m — <title>` | `title` |
 | Intent / Why | `summary` / `why` |
 | Scope Included / Scope Excluded | `scope.include[]` / `scope.exclude[]` (one string per bullet) |
-| Required Reads (numbered) | `reads[]` in order, `required: true`; `section` = the `§…` part |
+| Required Reads (numbered) | `reads[]` in order, `required: true`; `section` = the `§…` part; a decision becomes `@plan/decisions/<D#>.json` |
 | Inputs not already in Required Reads | `reads[]`, `required: false`; plan files as `@plan/<path>` |
-| Files | `task_files[]`, `change: "any"` unless the text says create/delete |
+| Files | `task_files[]`, `change: "any"` unless the text says create/delete; one entry per path (no `{a,b}` brace lists: `check` warns `modify_missing`) |
 | Implementation Rules / Code Guidance | `rules[]` / `guidance` (one string) |
-| Validation (one bullet per command) | `validation[]`: `V1`, `V2`… with `cmd`, `expect`, `kind: "acceptance"` |
+| Validation (one bullet per command) | `validation[]`: `V1`, `V2`… with `cmd`, `expect`, `kind: "acceptance"`; a bullet that is a prose control (negative test, `ls` expectation) still gets the command that proves it, with the prose in `expect`; a manual live check gets `kind: "live"` |
 | Deliverables | `deliverables[]` |
 | Routing row class/effort | `route` (`economy`, `implementation` or `frontier`; effort `low`…`xhigh`) |
 | `Authority [OWNER-GATE:X] … scope=S` | `authority: {"kind": "owner_gate", "gate": "X", "scope": "S"}`; else `{"kind": "routine"}` |
-| Dependencies on other items | `depends_on[]` |
+| Dependencies on other items | `depends_on[]` (from the phase `Dependencies` section, e.g. `P1.1 → P1.2` makes `P1.2` depend on `P1.1`; the phase itself carries `depends_on`) |
 | state Status | `status` (table below) |
 | state Completion Notes / Known Deviations / Pending Work / Escalation | `result.notes` / `result.deviations[]` / `result.pending[]` / `result.escalation` |
 
@@ -109,7 +117,7 @@ Sources: `_v2/phases/<Pn>/<Pn.m>.md` (spec) and `_v2/phases/<Pn>/<Pn.m>.state.md
 | ⬜ Not started | `todo` | `"result": null` |
 | 🔄 In progress | `in_progress` | `started_at` |
 | 🟢 Done | `done` | `finished_at` |
-| 🟡 Done with deviations | `done_with_deviations` | `finished_at`, `deviations` |
+| 🟡 / 🟠 Done with deviations | `done_with_deviations` | `finished_at`, `deviations` (split `Known Deviations` on `;` into strings) |
 | 🔴 Blocked | `blocked` | `escalation` |
 | ⚪ Skipped | `skipped` | `decision` (`D#` that skipped it) |
 
@@ -127,7 +135,8 @@ Source: `_v2/decisions/D*.md` (skip `_index.md`, `_current.md`, `_archive.md`).
  "consequences": ["<one string per ## Consequences bullet>"], "applies_to": ["<frontmatter items>"],
  "supersedes": [], "superseded_by": null, "actor": <ME or the record's Actor>}
 ```
-`status: open` needs `question` instead of `decision`/`rationale`. Copy texts in full; `_v2/` is deleted in step 6.
+The frontmatter `Actor:` line becomes `actor` (`claude-code` + the model id); `Evidence:` lines become `evidence[]`
+(`{"kind": "repo|rag|owner", "ref": "<path>", "note": "…"}`). `status: open` needs `question` instead of `decision`/`rationale`. Copy texts in full; `_v2/` is deleted in step 6.
 
 ## 6. Check, render, verify
 
@@ -136,8 +145,9 @@ Source: `_v2/decisions/D*.md` (skip `_index.md`, `_current.md`, `_archive.md`).
 2. `<T> render <PLAN>` — writes the Markdown views, `AGENTS.md`, `CLAUDE.md`.
 3. `<T> check <PLAN>` → `0 error(s)`; `<T> show <PLAN>` lists every phase and item with the v2 statuses;
    `<T> next <PLAN>` names the step the v2 handoff named.
-4. Remove the old carriers (git history keeps them): `git rm -r -q <DIR>/_v2`.
-5. Commit: `git add <DIR> && git commit -m "chore(plan): migrate <SHORT> to layout v3"`.
+4. Remove the old carriers (git history keeps them): `git rm -r -q <DIR>/_v2`; for an untracked plan `rm -r <DIR>/_v2`
+   (your backup from step 0 is then the only copy).
+5. Commit: `git add <DIR> && git commit -m "chore(plan): migrate <SHORT> to layout v3"`. Skip this for an untracked plan.
 
 ## Worked example — one item
 

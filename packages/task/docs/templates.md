@@ -1,33 +1,34 @@
-# Templates Task plan-protocol - reference
+# Templates Task plans - reference
 
-All skeletons of plan documents live in one set of snippets in the SSOT skill:
-`packages/skiller/skills/general/plan-protocol/snippets/` (manifest - `index.json` ibid.).
-This page is an index of “which template is for what”; content is NOT duplicated - single
-source of truth > copies. The commands `/task:plan-*` take skeletons from there automatically.
+Markdown views of a plan are not written by hand: `scripts/plan.py render` (and every mutating verb)
+renders them from JSON through templates in `packages/task/templates/plan/`. This page says which template
+is for what; content is NOT duplicated here.
 
-| Template (snippet) | For what | Key in v2 |
+| Template | Output | For what |
 |:--|:--|:--|
-| `plan-template.md` | skeleton `plan.md`: Meta, Context, Execution Rules, Routing, Status Board, Decision/Update Log | required Batch/Items/route/Exec/Review/Why; `solo` only with reason |
-| `phase-template.md` | stable phase index/item spec | v2 separates spec from generated state |
-| `handoff-template.md` | skeleton rolling `handoff.md`: Next/Done/Remaining/Sources of truth/Open risks | execution Next saves Batch and remaining suffix |
-| `launch-block-template.md` | fixed form “what to run next”: table Batch/Model/Thinking/Context/Essence + separate command block | provider-native copy-safe command; Batch from Routing; cold-start and hard boundary rules |
-| `active-template.md` | 4-line index `plans/ACTIVE.md` | parses `plan-lint` byte-to-byte |
-| `code-guidance-patterns.md` | 3 Code Guidance patterns for typical item's classes | anti-conformance/contract · anti-self-deception (gate) · if-then escalation to D# |
-| `decision-record-template.md` | append-only `decisions/<D-id>.md` | YAML id/date/status/item/items/supersedes/superseded_by; literal `Solution`/`Why`, `## Consequences` on substitution |
-| `item-state-template.md` | generated `<Pn.m>.state.md` | five volatile result fields; cannot be edited by hand |
-| `closure-template.md` | opt-in judgment evidence `closure/<Pn>.json` | complements, does not replace generated `<Pn>.closed.md` |
+| `index.md` | `index.md` | what each carrier is, phases with links, how to change the plan |
+| `plan.md` | `plan.md` | Meta table (Plan ID, Short ID, Layout `v3`, status, owner), Goal, Context, Rules, phases and decisions tables |
+| `roadmap.md` | `roadmap.md` | execution sheet: one row per batch with the `task:plan-run` command, route and state |
+| `status.md` | `status.md` | totals and per-phase item tables |
+| `handoff.md` | `handoff.md` | Next (from `plan.py next`), launch lines, last finished items, open friction |
+| `open-questions.md` | `open-questions.md` | open decisions and blocked items with escalation |
+| `agents.md` | `AGENTS.md`, `CLAUDE.md` | plan-local guard: JSON is the source of truth, generated files are not read or edited |
+| `context.md` | `context/<item>.md` | the executor's context pack |
+| `_*.md` | partials | table rows and blocks (`_meta-row`, `_phase-row`, `_item-row`, `_batch-row`, `_decision-row`, `_question`, `_event-row`, `_read`, `_lesson`, `_check`, `_upstream`, `_decision`) |
 
-## How to use it
+## Syntax (Mustache subset, `lib/task/plan/templating.py`)
 
-- **New plan/phase** - do not assemble by hand: `/task:plan-design` unfolds
-  `plan-template.md` and `phase-template.md` itself.
-- **Handoff** — `plan-run`/`plan-close` overwrite `handoff.md` by
-  `handoff-template.md`; The Next block must be launch-block'th
-  (`launch-block-template.md`) - checked by `plan-lint`.
-- **Code Guidance item'a** - wording is not invented: a suitable pattern is taken from
-  `code-guidance-patterns.md` and is parameterized under item.
+`{{name}}` / `{{a.b}}` lookup through the context stack; `{{.}}` the current value; `{{#x}}…{{/x}}` iterate a
+list or render once for a truthy value; `{{^x}}…{{/x}}` render when empty; `{{>name}}` partial
+`templates/plan/_name.md`; `{{! comment}}`. A missing key renders as an empty string; unknown tag syntax is
+a `TemplateError`. A line holding only a section or partial tag is removed with its newline, so table rows
+do not leave blank lines. No escaping and no logic: all formatting (emoji status, `|` escaping, dates)
+happens in the view-model (`lib/task/plan/views.py`).
 
-Field schemes and filling rules - skill `general/plan-protocol` and
-`references/plan-layout-v2.md`. Validator: `python3 packages/task/scripts/plan-lint.py
-plans/<PLAN-ID>` - new 2.0 checks (skeleton marker, field order, launch-block,
-`[NEEDS CLARIFICATION]` at 🟡+, Update Log limit) are issued at the warning level.
+## How to change a template
+
+Edit the template, run `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine`
+and update the golden views in `tests/engine/fixtures/demo-views/` only deliberately (the test prints a
+unified diff). Rendering is deterministic: no generation dates, only values from JSON.
+
+Field schemas - [Plan structure](./plan-structure) and `packages/task/schemas/plan/v1/`.

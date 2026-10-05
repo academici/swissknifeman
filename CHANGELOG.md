@@ -25,6 +25,21 @@
 
 ### Changed
 
+- **task: layout v3 (JSON-first), удалён v2 runtime (breaking).** План Task — каталог
+  JSON-документов со схемами `packages/task/schemas/plan/v1/`; меняется только через
+  `packages/task/scripts/plan.py` (`new, show, set, push, add-*, batches, check, render, next,
+  start, context, finish, log, decide, grant, design-done, reopen, archive`). Шесть человеческих
+  видов (`index, plan, roadmap, status, handoff, open-questions`) и `AGENTS.md`/`CLAUDE.md` плана
+  генерируются шаблонами; `start` собирает контекст-пак `context/<item>.md`. Команды
+  `plan-design/plan-run/plan-close/plan-audit` и канон `plan-protocol` сокращены до глаголов
+  `plan.py`; harness получил `task.plan-files`, хуки `lifecycle.plan-guard`/`lifecycle.plan-regen`,
+  review-gate на `plan.py check`; artifex читает item JSON через `plan.py show`. Breaking: v2-планы
+  (Markdown) больше не читаются; удаляются `plan-lint`, `plan-work`, `plan-views`, журнал,
+  bundle-дайджесты, route evidence, terminal admission, `plan_weight` и связанные конфиги, тесты и
+  `docs/reference/*`. Миграция плана — вручную по
+  `packages/task/docs/migration/v2-to-v3.md`. `plugin_version` поднимается релизным потоком
+  `skiller release`, не вручную.
+
 - **Claude permissions:** пресет `base` больше не запрещает чтение `CHANGELOG.md`.
   Правило `Read(**/CHANGELOG.md)` убрано из `settings.base.json`, который
   `harness permissions` мержит в `.claude/settings.local.json`.

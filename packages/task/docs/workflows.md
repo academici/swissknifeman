@@ -31,6 +31,12 @@ Sample prototype: `wf-p5-research.js` ECOSYSTEM P5 plan - working copy of templa
   `REVIEW` slot is enabled) independent review. The missing result of impl/fix/review/gate/commit stops the workflow and
   is included in the final report; a successful outcome with such an omission is impossible.
 
+## Plans and workflows
+
+A plan item may run a workflow template in its stage (research, authoring, audit, development). The plan
+itself is driven only by `scripts/plan.py` verbs (`next, start, log, finish, check, render`) - see
+[Methodology](./methodology) and [Plan structure](./plan-structure); templates never write plan JSON by hand.
+
 ## Bundles
 
 - Review profiles for `wf-audit-adversarial.js` (constitution + measurements by type

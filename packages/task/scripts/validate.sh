@@ -2,9 +2,10 @@
 # validate.sh — package structural checks task (CI + locally), according to the example
 # packages/maind/scripts/validate.sh. Checks: compilation Python (lib/tests/scripts),
 # syntax bash (scripts/*.sh), required files, frontmatter slash-commands
-# (description/model/effort — task kicks the model/effort each command), unittest,
-# and - if the monorepo already has plans/ (plan-protocol) — run scripts/plan-lint.py
-# on it (absence plans/ — not an error, package task does not create it).
+# (description/model/effort — task kicks the model/effort each command), unittest
+# (including the plan engine tests/engine), and - for selected plans or the fleet -
+# `scripts/plan.py check` on every directory that holds a plan.json (layout v3).
+# Directories without plan.json are skipped; absence of plans/ is not an error.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 plan_targets=()
@@ -31,8 +32,8 @@ for f in scripts/*.sh; do
 done
 
 echo "[3/5] required files"
-for f in .claude-plugin/plugin.json lib/task/__init__.py lib/task/plan_lint.py \
-         scripts/plan-lint.py commands/design.md; do
+for f in .claude-plugin/plugin.json lib/task/__init__.py lib/task/plan/__init__.py \
+         scripts/plan.py schemas/plan/v1/item.schema.json commands/design.md; do
   [[ -e "$f" ]] || err "no file: $f"
 done
 
@@ -74,9 +75,9 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[5/6] tests + explicitly selected plan-lint"
+echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
 # lib/ — package task; MONOREPO_ROOT (two levels above the package) — to optional
-# was imported core (fallback core.term.warn inside plan_lint.py, see it try/except).
+# was imported core (command_render / session_context use it with a fallback).
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
@@ -85,11 +86,27 @@ PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHO
 if $fleet && [[ -n "$MONOREPO_ROOT" && -d "$MONOREPO_ROOT/plans" ]]; then
   plan_targets+=("$MONOREPO_ROOT/plans")
 fi
-for plan_target in "${plan_targets[@]}"; do
-  python3 scripts/plan-lint.py "$plan_target" || err "plan-lint.py $plan_target"
+PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 -m unittest discover -s tests/engine -p "test_*.py" || err "engine unittest"
+
+# A target is a plan directory (holds plan.json) or a plans/ root of such directories.
+plan_dirs=()
+for plan_target in ${plan_targets[@]+"${plan_targets[@]}"}; do
+  if [[ -f "$plan_target/plan.json" ]]; then
+    plan_dirs+=("$plan_target")
+  else
+    found=false
+    for d in "$plan_target"/*/ "$plan_target"/archive/*/; do
+      [[ -f "${d}plan.json" ]] && { plan_dirs+=("${d%/}"); found=true; }
+    done
+    $found || echo "  skipped (no plan.json, layout v2 or empty): $plan_target"
+  fi
+done
+for plan_dir in ${plan_dirs[@]+"${plan_dirs[@]}"}; do
+  python3 scripts/plan.py check "$plan_dir" || err "plan.py check $plan_dir"
 done
 if [[ ${#plan_targets[@]} -eq 0 ]]; then
-  echo "  plan regression not requested; --plan PATH for the task, --fleet for CI/release"
+  echo "  plan check not requested; --plan PATH for the task, --fleet for CI/release"
 fi
 
 # P0.7 — parity of provider projections of teams was maintained only by unit-tests; gate

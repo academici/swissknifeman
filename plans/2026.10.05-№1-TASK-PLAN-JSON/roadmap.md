@@ -10,4 +10,4 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 3 | P3 | BP3-1 | `task:plan-run 2026.10.05-№1-TASK-PLAN-JSON P3.1` | frontier/high | done |
 | 4 | P3 | BP3-2 | `task:plan-run 2026.10.05-№1-TASK-PLAN-JSON P3.2` | implementation/high | done |
 | 5 | P4 | B4 | `task:plan-run 2026.10.05-№1-TASK-PLAN-JSON P4.1 P4.2` | implementation/high | done |
-| 6 | P4 | BP4-3 | `task:plan-run 2026.10.05-№1-TASK-PLAN-JSON P4.3` | implementation/high | ready |
+| 6 | P4 | BP4-3 | `task:plan-run 2026.10.05-№1-TASK-PLAN-JSON P4.3` | implementation/high | done |

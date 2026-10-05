@@ -8,7 +8,7 @@
 | Plan ID | 2026.10.05-№1-TASK-PLAN-JSON |
 | Short ID | PLAN1 |
 | Title | Plan №1 — Task: JSON-first планы (схемы, Python API, генерируемые виды, контекст-пак, оркестрация) |
-| Status | active |
+| Status | done |
 | Repository | swissknifeman |
 | Owner | repository owner |
 | Authoring Model | claude-code/claude-opus-5-5/high |
@@ -44,7 +44,7 @@
 | P1 | Ядро v3: схемы, store, проверки, шаблоны, виды, CLI | detailed | 3/3 | 🟢 Done |
 | P2 | Lifecycle и контекст-пак | detailed | 2/2 | 🟢 Done |
 | P3 | Cutover на v3: команды, канон, потребители, миграция, удаление v2 | detailed | 2/2 | 🟠 Done with deviations |
-| P4 | Оркестрация: scout, рабочие units для субагентов, stats | detailed | 2/3 | 🟡 In progress |
+| P4 | Оркестрация: scout, рабочие units для субагентов, stats | detailed | 3/3 | 🟠 Done with deviations |
 
 ## Decisions
 

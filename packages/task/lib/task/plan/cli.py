@@ -1,18 +1,19 @@
 """``plan.py`` command line: argument parsing -> ``ops`` / ``check`` / ``views`` -> output (dossier §8).
 
-Authoring verbs only; lifecycle verbs arrive with P2.1/P2.2. Exit codes: 0 ok, 1 refusal or check errors
-(stderr ``CODE: message``), 2 usage.
+Authoring and lifecycle verbs (the context pack of ``start`` arrives with P2.2). Exit codes: 0 ok, 1 refusal
+or check errors (stderr ``CODE: message``), 2 usage.
 """
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
+import re
 import sys
 
 from task import plan_numbering
 
-from . import check, ops, store, views
+from . import check, lifecycle, ops, store, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -30,6 +31,24 @@ def _actor(text: str) -> dict:
             raise argparse.ArgumentTypeError(f"effort must be one of {', '.join(EFFORT_ORDER)}")
         actor["effort"] = parts[2]
     return actor
+
+
+def _check_result(text: str) -> tuple[str, int]:
+    match = re.fullmatch(r"(V[0-9]+)=(-?[0-9]+)", text)
+    if match is None:
+        raise argparse.ArgumentTypeError("expected V<n>=<exit code>, for example V1=0")
+    return match[1], int(match[2])
+
+
+def _session(value: str | None) -> str | None:
+    """``--session`` value; ``auto`` asks ``task.session_context`` and falls back to nothing."""
+    if value != "auto":
+        return value
+    try:
+        from task import session_context
+        return session_context.resolve().session_id
+    except (ValueError, ImportError, OSError):
+        return None
 
 
 def _json_value(inline: str | None, file: Path | None, *, required: bool = True):
@@ -89,9 +108,9 @@ def cmd_show(args) -> int:
             "phases": [{"id": pid, "title": plan.phases[pid].get("title"), "design": plan.phases[pid].get("design"),
                         "closed": plan.phases[pid].get("closed"),
                         "items": [{"id": iid, "title": plan.items[iid].get("title"), "status": plan.items[iid].get("status")}
-                                  for iid in views._phase_items(plan, pid)]} for pid in order],
+                                  for iid in lifecycle.phase_items(plan, pid)]} for pid in order],
             "decisions": [{"id": k, "title": d.get("title"), "status": d.get("status")} for k, d in plan.decisions.items()],
-            "next": views._next_batch(plan)["exact"],  # P2.1 replaces this with lifecycle.next
+            "next": lifecycle.next(plan).exact,
         }
         if args.json:
             _print_json(summary)
@@ -184,19 +203,91 @@ def cmd_render(args) -> int:
 
 
 def cmd_next(args) -> int:
-    action = views._next_batch(store.load_plan(_plan_dir(args)))  # P2.1 replaces this with lifecycle.next
+    action = lifecycle.next(store.load_plan(_plan_dir(args)))
     if args.json:
-        _print_json(action)
+        _print_json(action.as_dict())
         return 0
-    route = action["route"]
-    print(action["exact"] + (f"  ({route['class']}/{route['effort']})" if route else ""))
+    route = action.route
+    print(action.exact + (f"  ({route['class']}/{route['effort']})" if route else ""))
+    return 0
+
+
+def cmd_start(args) -> int:
+    actor = dict(args.actor)
+    session = _session(args.session)
+    if session:
+        actor["session"] = session
+    plan_dir = _plan_dir(args)
+    result = lifecycle.start(plan_dir, args.items, actor, grants=args.grant)
+    if args.json:
+        _print_json({"items": list(result.items), "phase": result.phase, "batch": result.batch, "route": result.route,
+                     "resumed": list(result.resumed), "packs": [str(path) for path in result.packs]})
+    else:
+        print(result.text(plan_dir.name))
+    return 0
+
+
+def cmd_finish(args) -> int:
+    result = lifecycle.finish(
+        _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
+        deviations=args.deviation, pending=args.pending, escalation=args.escalation, commits=args.commit,
+        decision=args.decision, actor=args.actor)
+    if args.json:
+        _print_json({"item": result.item, "status": result.status, "phase_closed": result.phase_closed,
+                     "plan_done": result.plan_done, "next": result.next.as_dict()})
+    else:
+        print(result.text())
+    return 0
+
+
+def cmd_log(args) -> int:
+    lifecycle.log(_plan_dir(args), args.target, args.type, args.summary, impact=args.impact, next=args.next,
+                  refs=args.ref, actor=args.actor)
+    print(f"logged {args.type} for {args.target}")
+    return 0
+
+
+def cmd_decide(args) -> int:
+    doc = lifecycle.decide(_plan_dir(args), args.decision, args.accept, args.rationale, by=args.by, actor=args.actor)
+    print(f"{args.decision} accepted: {doc['decision']}")
+    return 0
+
+
+def cmd_supersede(args) -> int:
+    lifecycle.supersede(_plan_dir(args), args.old, args.new, actor=args.actor)
+    print(f"{args.new} supersedes {args.old}")
+    return 0
+
+
+def cmd_grant(args) -> int:
+    action = lifecycle.grant(_plan_dir(args), args.gate, args.note, actor=args.actor)
+    print(f"gate {args.gate} granted\nnext: {action.exact}")
+    return 0
+
+
+def cmd_design_done(args) -> int:
+    if not PHASE_ID.fullmatch(args.phase):
+        raise UsageError(f"invalid phase id {args.phase!r}")
+    lifecycle.design_done(_plan_dir(args), args.phase, actor=args.actor)
+    print(f"{args.phase} detailed")
+    return 0
+
+
+def cmd_reopen(args) -> int:
+    lifecycle.reopen(_plan_dir(args), args.item, args.reason, actor=args.actor)
+    print(f"{args.item} reopened")
+    return 0
+
+
+def cmd_archive(args) -> int:
+    print(f"archived to {lifecycle.archive(_plan_dir(args), force=args.force, reason=args.reason, actor=args.actor)}")
     return 0
 
 
 # ---------------------------------------------------------------- parser
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="plan.py", description="Task plan (layout v3): authoring verbs.")
+    parser = argparse.ArgumentParser(prog="plan.py", description="Task plan (layout v3): authoring and lifecycle verbs.")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--plans-root", type=Path, default=None, help="plans/ directory (default: nearest up from cwd)")
     sub = parser.add_subparsers(dest="command", required=True, metavar="VERB")
@@ -267,6 +358,70 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("next", cmd_next, "semantic next step")
     p.add_argument("--json", action="store_true")
+
+    def actor_arg(p, required=False, text="PROVIDER/MODEL[/EFFORT] (default: the item executor, else plan authoring)"):
+        p.add_argument("--actor", type=_actor, required=required, help=text)
+
+    p = verb("start", cmd_start, "start (or resume) items of one detailed phase")
+    p.add_argument("items", nargs="+", metavar="item")
+    actor_arg(p, required=True, text="PROVIDER/MODEL[/EFFORT] running the items")
+    p.add_argument("--session", help="provider session id, or auto")
+    p.add_argument("--grant", action="append", default=[], metavar="GATE", help="record an owner gate grant now")
+    p.add_argument("--json", action="store_true")
+
+    p = verb("finish", cmd_finish, "record the outcome of an item; closes the phase and the plan when complete")
+    p.add_argument("item")
+    p.add_argument("--status", required=True, choices=lifecycle.FINISH_STATUSES)
+    p.add_argument("--notes")
+    p.add_argument("--check", action="append", default=[], type=_check_result, metavar="V1=0",
+                   help="acceptance check outcome (repeatable)")
+    p.add_argument("--deviation", action="append", default=[], metavar="TEXT")
+    p.add_argument("--pending", action="append", default=[], metavar="TEXT")
+    p.add_argument("--escalation", help="what the owner must decide or provide (blocked)")
+    p.add_argument("--commit", action="append", default=[], metavar="SHA")
+    p.add_argument("--decision", metavar="D#", help="accepted decision that skips the item (skipped)")
+    actor_arg(p)
+    p.add_argument("--json", action="store_true")
+
+    p = verb("log", cmd_log, "record friction for an item or phase")
+    p.add_argument("target", help="Pn.m or Pn")
+    p.add_argument("--type", required=True, choices=lifecycle.FRICTION_TYPES)
+    p.add_argument("--summary", required=True)
+    p.add_argument("--impact")
+    p.add_argument("--next")
+    p.add_argument("--ref", action="append", default=[], metavar="REF")
+    actor_arg(p)
+
+    p = verb("decide", cmd_decide, "accept an open decision")
+    p.add_argument("decision", metavar="D#")
+    p.add_argument("--accept", required=True, help="option id or decision text")
+    p.add_argument("--rationale", required=True)
+    p.add_argument("--by", choices=("owner", "agent"), default="agent")
+    actor_arg(p)
+
+    p = verb("supersede", cmd_supersede, "mark an accepted decision as replacing another")
+    p.add_argument("old", metavar="OLD_D#")
+    p.add_argument("new", metavar="NEW_D#")
+    actor_arg(p)
+
+    p = verb("grant", cmd_grant, "record an owner gate grant (note quotes the owner's message)")
+    p.add_argument("gate")
+    p.add_argument("--note", required=True)
+    actor_arg(p)
+
+    p = verb("design-done", cmd_design_done, "mark a phase detailed after check")
+    p.add_argument("phase")
+    actor_arg(p)
+
+    p = verb("reopen", cmd_reopen, "reopen a finished item (owner amendment)")
+    p.add_argument("item")
+    p.add_argument("--reason", required=True)
+    actor_arg(p)
+
+    p = verb("archive", cmd_archive, "move a done plan to plans/archive/")
+    p.add_argument("--force", action="store_true", help="archive a plan that is not done (needs --reason)")
+    p.add_argument("--reason")
+    actor_arg(p)
     return parser
 
 

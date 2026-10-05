@@ -8,6 +8,10 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "plan.py"
 ACTOR = "claude-code/claude-opus-5-5/high"
+ITEM_DETAIL = json.dumps({
+    "summary": "Keys are checked", "why": "KeyError is unclear", "scope": {"include": ["config.py"]},
+    "deliverables": ["checks"], "task_files": [{"path": "lib/config.py", "change": "any"}],
+    "validation": [{"id": "V1", "cmd": "true", "expect": "exit 0", "kind": "acceptance"}]})
 
 
 class CliCase(unittest.TestCase):
@@ -135,6 +139,101 @@ class AuthoringFlowTests(CliCase):
         result = subprocess.run([sys.executable, str(SCRIPT), "check", "PLAN1"], capture_output=True, text=True,
                                 cwd=self.plans / "2026.10.05-№1-DEMO")
         self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class LifecycleFlowTests(CliCase):
+    """new -> design-done -> start -> log -> finish -> phase closed -> archive, through real subprocesses."""
+
+    def designed_plan(self):
+        self.new_plan()
+        self.verb("add-phase", "PLAN1", "--title", "Config validation")
+        self.verb("add-item", "PLAN1", "P1", "--title", "Validate keys")
+        self.verb("set", "PLAN1", "P1.1", "--json", ITEM_DETAIL)
+
+    def item_path(self):
+        return self.plans / "2026.10.05-№1-DEMO" / "phases" / "P1" / "P1.1.json"
+
+    def test_help_lists_the_lifecycle_verbs(self):
+        out = self.run_plan("--help").stdout
+        for verb in ("start", "finish", "log", "decide", "supersede", "grant", "design-done", "reopen", "archive"):
+            self.assertIn(verb, out)
+            self.assertEqual(self.run_plan(verb, "--help").returncode, 0)
+
+    def test_full_flow_from_design_to_archive(self):
+        self.designed_plan()
+        self.assertEqual(self.verb("design-done", "PLAN1", "P1").stdout.strip(), "P1 detailed")
+        plan_id = "2026.10.05-№1-DEMO"
+        self.assertEqual(self.verb("next", "PLAN1").stdout.strip(), f"run-items: task:plan-run {plan_id} P1.1  (implementation/high)")
+        started = self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--session", "auto")
+        self.assertIn("started P1.1 (phase P1, batch BP1-1; route ok)", started.stdout)
+        self.verb("log", "PLAN1", "P1.1", "--type", "difficulty", "--summary", "tests import config", "--next", "reuse fixture")
+        self.assertIn("tests import config", self.read("PLAN1", "handoff.md"))  # open friction until the phase closes
+
+        before = self.item_path().read_bytes()  # negative control: no acceptance evidence, no state change
+        refused = self.verb("finish", "PLAN1", "P1.1", "--status", "done", expect=1)
+        self.assertTrue(refused.stderr.startswith("CHECKS_MISSING: "), refused.stderr)
+        self.assertEqual(self.item_path().read_bytes(), before)
+
+        finished = self.verb("finish", "PLAN1", "P1.1", "--status", "done", "--check", "V1=0", "--notes", "3 tests",
+                             "--commit", "a1b2c3d")
+        for fragment in ("P1.1 done", "phase P1 closed: done", "plan done", f"next: archive: task:plan-close {plan_id} archive"):
+            self.assertIn(fragment, finished.stdout)
+        item = json.loads(self.item_path().read_text(encoding="utf-8"))
+        self.assertEqual((item["status"], item["result"]["notes"], item["result"]["commits"]), ("done", "3 tests", ["a1b2c3d"]))
+        self.assertIn("No open friction", self.read("PLAN1", "handoff.md"))
+        self.assertIn("0 error(s)", self.verb("check", "PLAN1").stdout)
+
+        archived = self.verb("archive", "PLAN1")
+        self.assertIn("archived to", archived.stdout)
+        self.assertFalse((self.plans / plan_id).exists())
+        self.assertEqual(self.verb("next", "PLAN1").stdout.strip(), "terminal: plan done")
+        self.assertIn("0 error(s)", self.verb("check", "PLAN1").stdout)
+
+    def test_json_output_of_start_and_finish(self):
+        self.designed_plan()
+        self.verb("design-done", "PLAN1", "P1")
+        started = json.loads(self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--json").stdout)
+        self.assertEqual((started["items"], started["route"], started["packs"]), (["P1.1"], "ok", []))
+        finished = json.loads(self.verb("finish", "PLAN1", "P1.1", "--status", "done", "--check", "V1=0", "--json").stdout)
+        self.assertEqual((finished["phase_closed"], finished["plan_done"], finished["next"]["kind"]), ("done", True, "archive"))
+
+    def test_decide_grant_reopen_flow(self):
+        self.designed_plan()
+        self.verb("set", "PLAN1", "P1.1", "--json", '{"authority": {"kind": "owner_gate", "gate": "TAG-1", "scope": "tag"}}')
+        self.verb("design-done", "PLAN1", "P1")
+        self.assertIn("waiting: gate TAG-1", self.verb("next", "PLAN1").stdout)
+        self.assertIn("next: run-items", self.verb("grant", "PLAN1", "TAG-1", "--note", "Owner: tag it.").stdout)
+        self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR)
+        self.verb("finish", "PLAN1", "P1.1", "--status", "done", "--check", "V1=0")
+        self.assertEqual(self.verb("reopen", "PLAN1", "P1.1", "--reason", "missed a case").stdout.strip(), "P1.1 reopened")
+        self.assertEqual(json.loads(self.item_path().read_text(encoding="utf-8"))["status"], "todo")
+        self.verb("add-decision", "PLAN1", "--title", "Format", "--json", '{"options": [{"id": "A", "text": "English"}]}')
+        self.assertEqual(self.verb("decide", "PLAN1", "D1", "--accept", "A", "--rationale", "convention", "--by", "owner").stdout.strip(),
+                         "D1 accepted: A — English")
+
+    def test_lifecycle_refusals_exit_1_and_usage_errors_exit_2(self):
+        self.designed_plan()
+        for args, code in (
+            (("start", "PLAN1", "P1.1", "--actor", ACTOR), "PHASE_NOT_DETAILED"),
+            (("design-done", "PLAN1", "P9"), "REF_UNKNOWN"),
+            (("finish", "PLAN1", "P1.1", "--status", "done"), "NOT_STARTED"),
+            (("log", "PLAN1", "P1.1", "--type", "note", "--summary", "x", "--ref", "r"), None),
+            (("reopen", "PLAN1", "P1.1", "--reason", "why"), "NOT_TERMINAL"),
+            (("grant", "PLAN1", "TAG-1", "--note", "go"), "GATE_UNKNOWN"),
+            (("archive", "PLAN1"), "PLAN_NOT_DONE"),
+        ):
+            with self.subTest(args=args):
+                if code is None:
+                    self.verb(*args)
+                    continue
+                self.assertTrue(self.verb(*args, expect=1).stderr.startswith(f"{code}: "))
+        self.verb("design-done", "PLAN1", "P1")
+        low = "claude-code/claude-haiku-4-5-20251001/high"
+        self.assertTrue(self.verb("start", "PLAN1", "P1.1", "--actor", low, expect=1).stderr.startswith("ROUTE_UNDERSHOOT: "))
+        self.verb("start", "PLAN1", "P1.1", expect=2)  # --actor is required
+        self.verb("finish", "PLAN1", "P1.1", "--status", "bogus", expect=2)
+        self.verb("finish", "PLAN1", "P1.1", "--status", "done", "--check", "V1", expect=2)
+        self.verb("design-done", "PLAN1", "phase-1", expect=2)
 
 
 class RefusalTests(CliCase):

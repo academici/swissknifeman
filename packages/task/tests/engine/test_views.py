@@ -12,7 +12,7 @@ if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
 from task import plan_numbering  # noqa: E402
-from task.plan import check, ops, store, views  # noqa: E402
+from task.plan import check, lifecycle, ops, store, views  # noqa: E402
 
 try:
     from . import demo
@@ -160,7 +160,7 @@ class NextActionTests(unittest.TestCase):
         self.plan = store.load_plan(self.root)
 
     def next(self):
-        return views._next_batch(store.load_plan(self.root))
+        return lifecycle.next(store.load_plan(self.root)).as_dict()
 
     def edit(self, rel, change):
         demo.rewrite(self.root, rel, change)
@@ -247,7 +247,7 @@ class NextActionTests(unittest.TestCase):
     def test_plan_without_phases_asks_for_one(self):
         fresh = ops.new_plan("EMPTY", "Empty", plans_root=self.plans, repository="r", owner="o", authoring=demo.AUTHORING,
                              message="m", date="2026.10.07")
-        self.assertEqual(views._next_batch(fresh)["exact"], "waiting: no phases yet (add-phase)")
+        self.assertEqual(lifecycle.next(fresh).exact, "waiting: no phases yet (add-phase)")
 
     def test_roadmap_states(self):
         text = lambda: (self.root / "roadmap.md").read_text(encoding="utf-8")  # noqa: E731

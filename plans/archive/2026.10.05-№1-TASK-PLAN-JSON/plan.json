@@ -3,9 +3,9 @@
   "id": "2026.10.05-№1-TASK-PLAN-JSON",
   "short_id": "PLAN1",
   "title": "Plan №1 — Task: JSON-first планы (схемы, Python API, генерируемые виды, контекст-пак, оркестрация)",
-  "status": "done",
+  "status": "archived",
   "created": "2026-10-05",
-  "updated_at": "2026-10-05T13:14:02Z",
+  "updated_at": "2026-10-05T13:19:57Z",
   "repository": "swissknifeman",
   "owner": "repository owner",
   "authoring": {

@@ -8,7 +8,7 @@
 | Plan ID | 2026.10.05-№1-TASK-PLAN-JSON |
 | Short ID | PLAN1 |
 | Title | Plan №1 — Task: JSON-first планы (схемы, Python API, генерируемые виды, контекст-пак, оркестрация) |
-| Status | done |
+| Status | archived |
 | Repository | swissknifeman |
 | Owner | repository owner |
 | Authoring Model | claude-code/claude-opus-5-5/high |

@@ -80,7 +80,7 @@ def import_snapshot(root: str | Path, value: dict, *, replace: bool = False) -> 
             events = "".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) + "\n" for e in value["events"])
             store.atomic_write(staging / store.LOG, events)
             for name, required in ((".ignore", store.SEARCH_IGNORE), (".cursorignore", store.SEARCH_IGNORE),
-                                   (".gitignore", "context/\n.lock\n")):
+                                   (".gitignore", "context/\n.lock\nviews/\n")):
                 path = staging / name
                 previous = path.read_text(encoding="utf-8") if path.is_file() else ""
                 added = [line for line in required.splitlines() if line not in previous.splitlines()]

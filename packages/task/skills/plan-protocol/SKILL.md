@@ -34,7 +34,7 @@ plans/<YYYY.MM.DD-№N-CODENAME>/
   decisions/<D#>.json                                   # sources
   research/  artifacts/                                 # raw evidence, not Markdown execution contracts
   knowledge/<id>.json                                   # design, runbooks, evidence sections
-  views/{index,plan,roadmap,status,handoff,open-questions}.md  # human views; excluded from agent reads/indexing
+  views/{index,plan,roadmap,status,handoff,open-questions}.md  # human views; git-ignored, excluded from agent reads/indexing
   context/<Pn.m>.json                                     # generated context packs (git-ignored)
 ```
 

@@ -31,7 +31,7 @@ OWNED_FIELDS = {
     "decision": frozenset({"$schema", "id"}),
     "document": frozenset({"$schema", "id"}),
 }
-GITIGNORE = "context/\n.lock\n"
+GITIGNORE = "context/\n.lock\nviews/\n"
 
 
 def _schema_const(kind: str) -> str:

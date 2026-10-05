@@ -87,7 +87,7 @@ class NewPlanTests(RootCase):
         source = {".gitignore", ".lock", "brief.json", "log.jsonl", "plan.json"}
         self.assertEqual({p.name for p in root.iterdir()}, source | {"views", ".ignore", ".cursorignore"})
         self.assertEqual(views.render_all(plan, check=True), [])
-        self.assertEqual((root / ".gitignore").read_text(encoding="utf-8"), "context/\n.lock\n")
+        self.assertEqual((root / ".gitignore").read_text(encoding="utf-8"), "context/\n.lock\nviews/\n")
         self.assertEqual(plan.brief["messages"], [{"id": "M1", "date": "2026-10-05",
                                                     "text": "Make config errors aggregate.", "channel": "chat"}])
         events = store.read_log(root)

@@ -828,6 +828,67 @@ class ReviewPacketTests(unittest.TestCase):
             review.require_committed_green(copied / self.plan.relative_to(self.root), "P1.1", manifest["reviewer"],
                                            effort="high", decision=decision, result="closed-green")
 
+    def test_ignored_product_lock_is_archived_and_verified_without_live_bytes(self):
+        self.external_fixture()
+        subprocess.run(["git", "-C", str(self.root), "rm", "--cached", "composer.lock"], check=True, capture_output=True)
+        ignore = self.root / ".gitignore"
+        ignore.write_text(ignore.read_text() + "composer.lock\n")
+        self.commit_tree()
+        packet, _attempt, decision = self.closed_native_review(paths=[self.product.relative_to(self.root).as_posix(), "composer.lock"])
+        manifest = self.manifest(packet)
+        self.assertIn("composer.lock", {row["member"]["path"] for row in manifest["external_sources"]})
+        self.commit_tree()
+        (self.root / "composer.lock").unlink()
+        review.require_committed_green(self.plan, "P1.1", manifest["reviewer"], effort="high",
+                                       decision=decision, result="closed-green")
+
+    def test_legacy_product_recovery_is_additive_authenticated_and_committed(self):
+        from task import review_sources
+        source = self.external_fixture()
+        subprocess.run(["git", "-C", str(self.root), "rm", "--cached", "composer.lock"], check=True, capture_output=True)
+        ignore = self.root / ".gitignore"
+        ignore.write_text(ignore.read_text() + "composer.lock\n")
+        self.commit_tree()
+        packet, attempt, decision = self.closed_native_review(paths=[self.product.relative_to(self.root).as_posix(), "composer.lock"],
+            evidence=[source.relative_to(self.root).as_posix()], legacy_sources=True)
+        self.commit_tree()
+        receipt_bytes = (attempt / "receipt.json").read_bytes()
+        manifest = self.manifest(packet)
+        def historical():
+            review.require_committed_green(self.plan, "P1.1", manifest["reviewer"], effort="high",
+                                           decision=decision, result="closed-green")
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_EXTERNAL_SOURCE_UNARCHIVED"):
+            historical()
+        lock = self.root / "composer.lock"
+        lock_bytes = lock.read_bytes()
+        lock.write_bytes(lock_bytes + b"changed")
+        with self.assertRaisesRegex(ValueError, "differs from original reviewed bytes"):
+            review_sources.recover(self.plan, "P1.1")
+        lock.write_bytes(lock_bytes)
+        result = review_sources.recover(self.plan, "P1.1")
+        old = Path(result["witness"])
+        value = json.loads(old.read_text())
+        value["sources"] = [row for row in value["sources"] if row["member"]["path"] != "composer.lock"]
+        old.write_bytes(review._json(value))  # Earlier vendor-only recovery remains immutable.
+        old_bytes = old.read_bytes()
+        self.commit_tree()
+        result = review_sources.recover(self.plan, "P1.1")
+        self.assertNotEqual(Path(result["witness"]), old)
+        self.assertEqual(old.read_bytes(), old_bytes)
+        with self.assertRaisesRegex(review.ReviewError, "source recovery differs"):
+            historical()
+        self.commit_tree()
+        lock.unlink()
+        source.unlink()
+        historical()
+        self.assertEqual((attempt / "receipt.json").read_bytes(), receipt_bytes)
+        witness = json.loads(Path(result["witness"]).read_text())
+        blob = self.root / next(row['blob_path'] for row in witness['sources'] if row['member']['path'] == 'composer.lock')
+        blob.write_bytes(b"substituted")
+        self.commit_tree()
+        with self.assertRaisesRegex(review.ReviewError, "source blob changed"):
+            historical()
+
     def test_legacy_vendor_recovery_never_invents_lock_identity_or_rewrites_receipt(self):
         from task import review_sources
         source = self.external_fixture()

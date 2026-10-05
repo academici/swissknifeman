@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task review archives:** сохранять игнорируемые product-файлы в immutable source blobs; legacy recovery добавляет witness для точно захешированных байтов без перезаписи старого receipt или witness.
+
 ## [0.28.2] - 2026-10-04
 
 ### Fixed

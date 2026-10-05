@@ -28,7 +28,7 @@ def source_identity(root: Path, relative: str) -> dict:
 
 
 def archive(root: Path, directory: Path, members, tracked) -> list[dict]:
-    members = list(members)
+    members = list({row["path"]: row for row in members}.values())
     if (any(row["path"].startswith("vendor/") and row["path"] not in tracked for row in members)
             and "composer.lock" not in tracked
             and not any(row["path"] == "composer.lock" for row in members)):
@@ -126,11 +126,17 @@ def recovered_members(root, commit, manifest, *, prefix, missing, read_original)
         if not row or row[0] not in {"100644", "100755"} or row[1] != "blob":
             raise ValueError("REVIEW_EXTERNAL_SOURCE_UNARCHIVED: commit source-recovery witnesses before historical consumption")
         return review._git(root, "cat-file", "blob", row[2])
-    witness = json.loads(read(recovery_prefix + "witness.json"))
-    if (witness.get("schema_version") != "review-source-recovery/v1"
-            or witness.get("closure_commit") != commit
-            or witness.get("candidate_sha256") != manifest["candidate_sha256"]
-            or sorted((row["member"] for row in witness.get("sources", [])), key=lambda row: row["path"]) != missing):
+    witnesses = sorted(path for path in tree if path.startswith(recovery_prefix)
+        and "/" not in path[len(recovery_prefix):]
+        and (path.endswith("/witness.json") or Path(path).name.startswith("witness-") and path.endswith(".json")))
+    if not witnesses:
+        raise ValueError("REVIEW_EXTERNAL_SOURCE_UNARCHIVED: commit source-recovery witnesses before historical consumption")
+    witness = next((value for value in (json.loads(read(path)) for path in witnesses)
+        if value.get("schema_version") == "review-source-recovery/v1"
+        and value.get("closure_commit") == commit
+        and value.get("candidate_sha256") == manifest["candidate_sha256"]
+        and sorted((row["member"] for row in value.get("sources", [])), key=lambda row: row["path"]) == missing), None)
+    if witness is None:
         raise ValueError("REVIEW_CLOSURE_INVALID: source recovery differs from original authenticated inputs")
     return frozen_members(witness["sources"], read=read, tree=tree)
 
@@ -160,8 +166,9 @@ def recover(plan_dir, item: str) -> dict:
     target = directory / "source-recovery" / manifest["candidate_sha256"]
     sources = []
     with review._lock(directory):
-        for row in manifest["snapshot"]["inputs"]:
-            if not row["path"].startswith("vendor/") or row["path"] in tree or not row.get("sha256"):
+        members = {row["path"]: row for kind in ("product", "inputs") for row in manifest["snapshot"][kind]}
+        for row in sorted(members.values(), key=lambda row: row["path"]):
+            if row["path"] in tree or row.get("sha256") in {None, "directory"}:
                 continue
             path = review._inside(root, row["path"])
             payload = path.read_bytes()
@@ -169,14 +176,16 @@ def recover(plan_dir, item: str) -> dict:
                 raise ValueError("REVIEW_EXTERNAL_SOURCE_INVALID: live source differs from original reviewed bytes")
             name = "/".join(row["path"].split("/")[1:3])
             matches = [package for package in records if package.get("name") == name]
-            if lock is not None and len(matches) != 1:
+            vendor = row["path"].startswith("vendor/")
+            if vendor and lock is not None and len(matches) != 1:
                 raise ValueError("REVIEW_EXTERNAL_SOURCE_INVALID: source has no original locked package")
-            package = matches[0] if lock is not None else None
+            package = matches[0] if vendor and lock is not None else None
             identity = {"kind": "composer-source", "package": name, "version": package["version"],
                 "reference": (package.get("source") or package.get("dist") or {})["reference"],
                 "lock_path": "composer.lock", "lock_sha256": sha(lock)} if package else {
                 "kind": "legacy-reviewed-bytes", "path": row["path"], "sha256": row["sha256"],
-                "identity_limit": "original-lock-not-bound"}
+                "identity_limit": "original-lock-not-bound"} if vendor else {
+                "kind": "repository-source", "path": row["path"]}
             blob = target / "source-blobs" / row["sha256"]
             blob.parent.mkdir(parents=True, exist_ok=True)
             if blob.exists() and blob.read_bytes() != payload:
@@ -189,7 +198,9 @@ def recover(plan_dir, item: str) -> dict:
                  "candidate_sha256": manifest["candidate_sha256"], "sources": sources}
         witness = target / "witness.json"
         if witness.exists() and witness.read_bytes() != review._json(value):
-            raise ValueError("REVIEW_EXTERNAL_SOURCE_INVALID: recovery witness differs")
+            witness = target / ("witness-" + sha(review._json(value)) + ".json")
+            if witness.exists() and witness.read_bytes() != review._json(value):
+                raise ValueError("REVIEW_EXTERNAL_SOURCE_INVALID: recovery witness differs")
         witness.write_bytes(review._json(value))
     return {"action": "source-recovery-prepared", "witness": str(witness),
             "source_count": len(sources), "requires_commit": True,

@@ -424,7 +424,9 @@ def packet(plan_dir, item: str, *, selector: str | None = None, base: str = "HEA
         from task import review_sources
         tracked = set(_git(root, "ls-files", "-z").decode().split("\0"))
         try:
-            manifest["external_sources"] = review_sources.archive(root, directory, snapshot["inputs"], tracked)
+            manifest["external_sources"] = review_sources.archive(
+                root, directory, [*(row for row in snapshot["product"] if "target_sha256" not in row),
+                                  *snapshot["inputs"]], tracked)
         except ValueError as exc:
             raise ReviewError("REVIEW_EXTERNAL_SOURCE_INVALID", str(exc)) from exc
         rounds = [row for row in _history(directory) if row["status"] == "complete"]
@@ -631,15 +633,17 @@ def _require_committed_green(plan_dir, item: str, selector: str, *, effort: str 
     spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item).relative_to(root).as_posix()
     from task import review_sources
     frozen = review_sources.frozen_members(manifest.get("external_sources", []), read=read, tree=tree)
-    missing_external = [row for row in original["inputs"] if row["path"].startswith("vendor/")
-                        and row["path"] not in tree and row["path"] not in frozen and row.get("sha256")]
+    original_members = {row["path"]: row for kind in ("product", "inputs") for row in original[kind]}
+    missing_external = sorted((row for row in original_members.values()
+        if row["path"] not in tree and row["path"] not in frozen
+        and row.get("sha256") not in {None, "directory"}), key=lambda row: row["path"])
     if missing_external:
         frozen.update(review_sources.recovered_members(root, commit, manifest,
             prefix=prefix, missing=missing_external, read_original=read))
     for kind, members in (("product", manifest["paths"]), ("inputs", [spec, *manifest["supporting"]])):
         reconstructed = _committed_members(root, commit, tree, members)
-        reconstructed = [(_git_modes([frozen[row["path"]]])[0] if kind == "inputs"
-                           and row["path"] not in tree and row["path"] in frozen else row) for row in reconstructed]
+        reconstructed = [(_git_modes([frozen[row["path"]]])[0]
+                           if row["path"] not in tree and row["path"] in frozen else row) for row in reconstructed]
         if reconstructed != _git_modes(original[kind]):
             raise ReviewError("REVIEW_CLOSURE_INVALID", "closure commit changed reviewed " + kind)
     attempt = path.rsplit("/", 1)[0]

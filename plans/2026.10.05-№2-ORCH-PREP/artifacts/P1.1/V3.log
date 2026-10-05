@@ -1,0 +1,2 @@
+31:        run: bash packages/orch/scripts/validate.sh
+36:        run: bash packages/orch/scripts/test.sh -v

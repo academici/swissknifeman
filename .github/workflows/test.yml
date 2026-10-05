@@ -32,6 +32,9 @@ jobs:
       - name: Test maind
         run: bash packages/maind/scripts/test.sh -v
 
+      - name: Test orch contracts
+        run: bash packages/orch/scripts/test.sh -v
+
       - name: Test core (stdlib foundation)
         run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
 

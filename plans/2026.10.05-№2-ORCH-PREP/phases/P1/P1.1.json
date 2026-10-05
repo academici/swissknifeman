@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.1",
   "title": "Каркас packages/orch: валидатор, CLI validate, CI",
-  "status": "todo",
+  "status": "done",
   "summary": "Создан пакет packages/orch: адаптированный closed-profile валидатор, contracts.py (KINDS, validate, semantic_checks-диспетчер, canonical_digest, LIFECYCLE_PHRASES), defs.schema.json, CLI `orch.py validate`, scripts validate.sh/test.sh, тесты границ и паритета профиля, шаги CI.",
   "why": "Фундамент всех контрактов (R14, R18) и правила зависимостей (I11). Решение D4: своя копия валидатора, чтобы orch не зависел от Task.",
   "scope": {
@@ -177,6 +177,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:27Z"
+  "result": {
+    "started_at": "2026-10-05T18:42:12Z",
+    "finished_at": "2026-10-05T18:49:36Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a10d53-1cb4-7e83-b2f6-447b63114cff"
+    },
+    "notes": "Создан internal packages/orch: параметризованная копия closed-profile валидатора (Task не изменён), defs.schema.json, contracts API/digest/version rejection/semantic dispatcher, validate CLI, scripts, 13 тестов и CI шаги. V1/V2/V3 exit 0; Task AST-паритет реально выполнен, validate: OK. Логи и validation.json: @plan/artifacts/P1.1/. README документирует статус и команды; остальные 9 схем/fixtures — P1.2/P1.3, полные docs — последующие items. По указанию владельца ревью не выполнялось. Предсуществующие изменения Task сохранены вне коммита.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-05T18:49:36Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-05T18:49:36Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-05T18:49:36Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-05T18:49:36Z"
 }

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:defs:v1",
+  "title": "Shared exec/v1 definitions",
+  "description": "Closed-profile definitions shared by engine-neutral execution contracts.",
+  "$defs": {
+    "id": {
+      "description": "Contract identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$"
+    },
+    "sha256": {
+      "description": "Lowercase SHA-256 digest.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitSha": {
+      "description": "Full or abbreviated lowercase Git commit hash.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "ts": {
+      "description": "UTC timestamp.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+    },
+    "text": {
+      "description": "Non-empty text.",
+      "type": "string",
+      "minLength": 1
+    },
+    "path": {
+      "description": "Repository-relative POSIX path, optionally prefixed with @plan/.",
+      "type": "string",
+      "pattern": "^(@plan/)?[^/\\s][^\\s]*$"
+    },
+    "provider": {
+      "description": "Provider identifier, such as claude-code or codex.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "modelClass": {
+      "description": "Minimum semantic model class.",
+      "type": "string",
+      "enum": [
+        "economy",
+        "implementation",
+        "frontier"
+      ]
+    },
+    "effort": {
+      "description": "Reasoning effort.",
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    "route": {
+      "description": "Requested model route.",
+      "type": "object",
+      "properties": {
+        "class": {
+          "description": "Minimum semantic model class.",
+          "$ref": "#/$defs/modelClass"
+        },
+        "effort": {
+          "description": "Requested reasoning effort.",
+          "$ref": "#/$defs/effort"
+        },
+        "provider": {
+          "description": "Explicit provider, when selected.",
+          "$ref": "#/$defs/provider"
+        },
+        "model": {
+          "description": "Explicit model, when selected.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "class",
+        "effort"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "description": "Observed actor identity.",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "description": "Actor provider.",
+          "$ref": "#/$defs/provider"
+        },
+        "model": {
+          "description": "Observed model.",
+          "$ref": "#/$defs/text"
+        },
+        "effort": {
+          "description": "Observed reasoning effort, when available.",
+          "$ref": "#/$defs/effort"
+        },
+        "session": {
+          "description": "Native session identifier, when available.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "provider",
+        "model"
+      ],
+      "additionalProperties": false
+    },
+    "check": {
+      "description": "Validation check; exactly one of cmd or procedure is required by semantic validation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Validation check identifier.",
+          "type": "string",
+          "pattern": "^V[0-9]+$"
+        },
+        "cmd": {
+          "description": "Executable validation command.",
+          "$ref": "#/$defs/text"
+        },
+        "procedure": {
+          "description": "Observed validation procedure.",
+          "$ref": "#/$defs/text"
+        },
+        "expect": {
+          "description": "Expected outcome.",
+          "$ref": "#/$defs/text"
+        },
+        "kind": {
+          "description": "Validation category.",
+          "type": "string",
+          "enum": [
+            "acceptance",
+            "impact",
+            "live"
+          ]
+        },
+        "cwd": {
+          "description": "Working directory for the command.",
+          "$ref": "#/$defs/path"
+        }
+      },
+      "required": [
+        "id",
+        "expect",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "support": {
+      "description": "Capability support classification.",
+      "type": "string",
+      "enum": [
+        "supported",
+        "adapted",
+        "unsupported",
+        "unknown"
+      ]
+    },
+    "binding": {
+      "description": "Engine binding identifier.",
+      "type": "string",
+      "enum": [
+        "native",
+        "cao",
+        "claude-only"
+      ]
+    },
+    "roleId": {
+      "description": "Role identifier.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "section": {
+      "description": "Named text section.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Section identifier.",
+          "$ref": "#/$defs/text"
+        },
+        "title": {
+          "description": "Section title.",
+          "$ref": "#/$defs/text"
+        },
+        "text": {
+          "description": "Section content; may be empty.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

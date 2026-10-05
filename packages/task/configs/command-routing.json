@@ -674,5 +674,15 @@
         }
       ]
     }
+  },
+  "orchestration": {
+    "scout": {
+      "claude-code": {
+        "model": "haiku",
+        "effort": "low",
+        "argv": ["claude", "-p", "--model", "{model}", "--effort", "{effort}", "--tools", "", "--no-session-persistence"],
+        "timeout_s": 300
+      }
+    }
   }
 }

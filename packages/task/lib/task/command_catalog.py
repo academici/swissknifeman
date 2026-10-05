@@ -33,6 +33,11 @@ _COMMAND_KEYS = frozenset({
 _ROOT_KEYS = frozenset({
     "contract_version", "catalog_version", "plugin_version", "commands", "mappings",
 })
+_OPTIONAL_ROOT_KEYS = frozenset({"orchestration"})
+_ORCHESTRATION_KEYS = frozenset({"scout"})
+_SCOUT_KEYS = frozenset({"model", "effort", "argv", "timeout_s"})
+SCOUT_PLACEHOLDERS = frozenset({"model", "effort", "cwd"})
+_PLACEHOLDER_RE = re.compile(r"\{([^{}]*)\}")
 
 
 def package_root() -> Path:
@@ -132,7 +137,8 @@ def load_routing_metadata(path: Path) -> dict[str, object]:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise _catalog_error("CMD_VERSION_UNSUPPORTED", "/", {}, {"path": str(path)},
                              f"routing carrier is unreadable: {error}") from error
-    if not isinstance(value, dict) or set(value) != _ROOT_KEYS:
+    if (not isinstance(value, dict) or not _ROOT_KEYS <= set(value)
+            or set(value) - _ROOT_KEYS - _OPTIONAL_ROOT_KEYS):
         raise _catalog_error("CMD_VERSION_UNSUPPORTED", "/", {"keys": sorted(_ROOT_KEYS)},
                              {"keys": sorted(value) if isinstance(value, dict) else type(value).__name__},
                              "routing carrier has an unsupported shape")
@@ -147,7 +153,43 @@ def load_routing_metadata(path: Path) -> dict[str, object]:
     if not isinstance(value.get("commands"), list) or not isinstance(value.get("mappings"), dict):
         raise _catalog_error("CMD_CATALOG_MISMATCH", "/", {}, {},
                              "commands must be a list and mappings must be an object")
+    if "orchestration" in value:
+        _validate_orchestration(value["orchestration"], value["mappings"])
     return value
+
+
+def _validate_orchestration(raw: object, mappings: Mapping[str, object]) -> None:
+    """Strict shape of ``orchestration.scout.<provider>``: unknown keys, placeholders or providers are errors."""
+    if not isinstance(raw, dict) or set(raw) != _ORCHESTRATION_KEYS or not isinstance(raw["scout"], dict):
+        raise _catalog_error("CMD_ORCHESTRATION_INVALID", "/orchestration", {"keys": sorted(_ORCHESTRATION_KEYS)},
+                             {"orchestration": raw}, "orchestration must be an object holding exactly: scout")
+    for provider, entry in sorted(raw["scout"].items()):
+        where = f"/orchestration/scout/{provider}"
+        if provider not in mappings:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", where, {"providers": sorted(mappings)},
+                                 {"provider": provider}, "scout entry names a provider without a mapping")
+        if not isinstance(entry, dict) or set(entry) != _SCOUT_KEYS:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", where, {"keys": sorted(_SCOUT_KEYS)},
+                                 {"keys": sorted(entry) if isinstance(entry, dict) else type(entry).__name__},
+                                 "scout entry has an unsupported shape")
+        if not isinstance(entry["model"], str) or not entry["model"]:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", f"{where}/model", {}, {"model": entry["model"]},
+                                 "scout model must be a non-empty string")
+        if entry["effort"] not in EFFORTS:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", f"{where}/effort", {"efforts": EFFORTS},
+                                 {"effort": entry["effort"]}, "scout effort is unknown")
+        timeout = entry["timeout_s"]
+        if isinstance(timeout, bool) or not isinstance(timeout, int) or timeout <= 0:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", f"{where}/timeout_s", {}, {"timeout_s": timeout},
+                                 "scout timeout_s must be a positive integer")
+        argv = entry["argv"]
+        if not isinstance(argv, list) or not argv or not all(isinstance(a, str) for a in argv) or not argv[0]:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", f"{where}/argv", {}, {"argv": argv},
+                                 "scout argv must be a non-empty array of strings starting with the executable")
+        unknown = sorted({name for arg in argv for name in _PLACEHOLDER_RE.findall(arg)} - SCOUT_PLACEHOLDERS)
+        if unknown:
+            raise _catalog_error("CMD_ORCHESTRATION_INVALID", f"{where}/argv", {"placeholders": sorted(SCOUT_PLACEHOLDERS)},
+                                 {"unknown": unknown}, "scout argv uses an unknown placeholder")
 
 
 def build_command_catalog(command_root: Path, routing_path: Path) -> CommandCatalog:

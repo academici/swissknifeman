@@ -37,6 +37,24 @@ A plan item may run a workflow template in its stage (research, authoring, audit
 itself is driven only by `scripts/plan.py` verbs (`next, start, log, finish, check, render`) - see
 [Methodology](./methodology) and [Plan structure](./plan-structure); templates never write plan JSON by hand.
 
+## Scout
+
+An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic
+context pack and answers with at most 40 lines of `path[:symbol] — why` plus an `Unknowns:` block. It never
+writes code or decisions, and the default start makes no model call.
+
+- Enable: `plan.py start <plan> <items> --actor P/M/E --scout` once, or `plan.py set <plan> plan --json
+  '{"settings": {"scout": "auto"}}'` for every start (`--no-scout` overrides). The provider is the one in `--actor`.
+- Config (owner-editable): `configs/command-routing.json` → `orchestration.scout.<provider>` holds `model`, `effort`,
+  `argv` (placeholders `{model}`, `{effort}`, `{cwd}`; the prompt goes through stdin) and `timeout_s`. The catalog
+  rejects unknown keys, providers and placeholders. A provider without an entry is skipped; only `claude-code`
+  has one (`claude -p --model haiku --tools ""`: no tools, so no writes).
+  Add other providers only after checking their `--help` for a non-interactive, read-only mode that reads stdin.
+- Result: `context/<item>.scout.md` (generated, gitignored) and section 13 "Scout map" of the pack. A timeout,
+  a non-zero exit or an empty answer never blocks `start`: the pack is built without the map.
+- Read the outcomes in `log.jsonl`: events of type `scout` with `data: {provider, model, outcome: ok|failed|skipped,
+  seconds, lines}` (`plan.py stats` summarises them from P4.2).
+
 ## Bundles
 
 - Review profiles for `wf-audit-adversarial.js` (constitution + measurements by type

@@ -344,6 +344,7 @@ class StartResult:
     route: str  # "ok" | "ROUTE_MODEL_UNKNOWN"
     resumed: tuple[str, ...]
     packs: tuple[Path, ...] = ()  # context packs, one per item, in request order
+    scouts: tuple[str, ...] = ()  # one outcome line per scouted item (``scout <item>: ok (…)``)
 
     def text(self, plan_id: str) -> str:
         lines = [f"started {', '.join(self.items)} (phase {self.phase}"
@@ -351,14 +352,20 @@ class StartResult:
         if self.resumed:
             lines.append(f"resumed: {', '.join(self.resumed)} (started_at kept)")
         if self.packs:
+            lines.extend(self.scouts)
             lines.append("context packs: " + ", ".join(shown_path(pack) for pack in self.packs))
             lines.append(f"Read {shown_path(self.packs[0])} first.")
         lines.append(f"finish each with: plan.py finish {plan_id} <item> --status done --check V1=0 --notes …")
         return "\n".join(lines)
 
 
-def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = ()) -> StartResult:
-    """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed."""
+def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
+          scout: bool | None = None) -> StartResult:
+    """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed.
+
+    ``scout`` asks the provider's weak model for a context map after the start (D3); ``None`` follows
+    ``plan.settings.scout``. A scout failure never fails the start.
+    """
     requested = list(items)
     grants = list(grants)
     with _mutation(plan) as (p, lock):
@@ -429,8 +436,20 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
                 item=item_id, phase=phase_id, data={"requested": requested, "route": verdict}))
         _commit(p, changes, gate_events + events, lock)
         packs = tuple(context.build(p, item_id) for item_id in requested)
-        return StartResult(tuple(requested), phase_id, next_batch_id(p, phase_id, requested[0]), verdict,
-                           tuple(resumed), packs)
+        result = StartResult(tuple(requested), phase_id, next_batch_id(p, phase_id, requested[0]), verdict,
+                             tuple(resumed), packs)
+        wanted = (p.plan.get("settings") or {}).get("scout") == "auto" if scout is None else scout
+        root = p.root
+    if not wanted:
+        return result
+    from . import scout as scout_map  # scout imports this module for the plan lock
+
+    scouts = tuple(scout_map.run(root, item_id, actor["provider"]).text(item_id) for item_id in requested)
+    fresh = store.load_plan(root)  # the pack is rebuilt with section 13 (or without it after a failure)
+    if isinstance(plan, store.Plan):
+        plan.adopt(fresh)
+    packs = tuple(context.build(fresh, item_id) for item_id in requested)
+    return StartResult(result.items, result.phase, result.batch, result.route, result.resumed, packs, scouts)
 
 
 # ---------------------------------------------------------------- finish

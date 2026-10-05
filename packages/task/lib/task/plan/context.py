@@ -241,7 +241,7 @@ def _check_row(label: str, check: dict) -> dict:
             "kind": check.get("kind", ""), "cwd": f", cwd: {check['cwd']}" if check.get("cwd") else ""}
 
 
-def _model(plan: store.Plan, item_id: str, max_lines: int) -> dict:
+def _model(plan: store.Plan, item_id: str, max_lines: int, *, with_scout: bool = True) -> dict:
     if item_id not in plan.items:
         raise PlanError("REF_UNKNOWN", f"unknown item {item_id!r}")
     item, phase_id = plan.items[item_id], item_phase(item_id)
@@ -279,7 +279,7 @@ def _model(plan: store.Plan, item_id: str, max_lines: int) -> dict:
     if lifecycle.phase_items(plan, phase_id)[-1:] == [item_id]:
         checks += [_check_row(f"Phase {c.get('id', '')}", c) for c in phase.get("validation") or [] if isinstance(c, dict)]
     scout_path = plan.root / PACK_DIR / f"{item_id}.scout.md"
-    scout = scout_path.read_text(encoding="utf-8").strip() if scout_path.is_file() else ""
+    scout = scout_path.read_text(encoding="utf-8").strip() if with_scout and scout_path.is_file() else ""
     decisions, upstream, lessons = _decisions(plan, item_id), _upstream(plan, item_id), _lessons(plan, item_id)
     return {
         "ref": f"{short}.{item_id}", "title": views.line(item.get("title")), "plan_title": views.line(plan.plan.get("title")),
@@ -303,9 +303,13 @@ def _model(plan: store.Plan, item_id: str, max_lines: int) -> dict:
 
 # ---------------------------------------------------------------- public API
 
-def render(plan: store.Plan, item_id: str, *, max_inline_lines: int = DEFAULT_MAX_INLINE_LINES) -> str:
-    """The pack text of ``item_id`` (no file is written); ends with one informational size line."""
-    model = _model(plan, item_id, max_inline_lines)
+def render(plan: store.Plan, item_id: str, *, max_inline_lines: int = DEFAULT_MAX_INLINE_LINES,
+           with_scout: bool = True) -> str:
+    """The pack text of ``item_id`` (no file is written); ends with one informational size line.
+
+    ``with_scout=False`` leaves out the scout map, so the scout itself reads the deterministic pack.
+    """
+    model = _model(plan, item_id, max_inline_lines, with_scout=with_scout)
     text = _render_template(views._load_template("context"), model,
                             lambda partial: views._load_template(f"_{partial}")).rstrip("\n") + "\n"
     return f"{text}\n_Pack size: {len(text)} chars ≈ {len(text) // 4} tokens (informational; no limit)._\n"

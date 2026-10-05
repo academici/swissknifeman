@@ -216,10 +216,11 @@ def cmd_start(args) -> int:
     if session:
         actor["session"] = session
     plan_dir = _plan_dir(args)
-    result = lifecycle.start(plan_dir, args.items, actor, grants=args.grant)
+    result = lifecycle.start(plan_dir, args.items, actor, grants=args.grant, scout=args.scout)
     if args.json:
         _print_json({"items": list(result.items), "phase": result.phase, "batch": result.batch, "route": result.route,
-                     "resumed": list(result.resumed), "packs": [str(path) for path in result.packs]})
+                     "resumed": list(result.resumed), "packs": [str(path) for path in result.packs],
+                     "scouts": list(result.scouts)})
     else:
         print(result.text(plan_dir.name))
     return 0
@@ -371,6 +372,8 @@ def build_parser() -> argparse.ArgumentParser:
     actor_arg(p, required=True, text="PROVIDER/MODEL[/EFFORT] running the items")
     p.add_argument("--session", help="provider session id, or auto")
     p.add_argument("--grant", action="append", default=[], metavar="GATE", help="record an owner gate grant now")
+    p.add_argument("--scout", action=argparse.BooleanOptionalAction, default=None,
+                   help="ask the provider's weak model for a context map (default: plan.settings.scout)")
     p.add_argument("--json", action="store_true")
 
     p = verb("context", cmd_context, "rebuild the context pack of an item (context/<item>.md)")

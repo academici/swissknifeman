@@ -1,7 +1,7 @@
 """Bounded working memory. Metadata lives in content because the daemon rewrites type.
 
 Repository documents, plans and git own durable information. Every memory expires;
-reading never renews it. A record without a valid envelope is expired.
+reading never renews it. Legacy records get at most 72 hours from creation.
 """
 import base64
 import json
@@ -18,7 +18,7 @@ MAX_SCOPE_ITEMS = 8
 PREFIX = "[maind-memory:"
 MARKER_RE = re.compile(r"^\[maind-memory:([A-Za-z0-9_=-]+)\]\s?")
 SCOPE_RE = re.compile(r"^\[\[s:([^\]]+)\]\]\s?")
-ALLOWED_KEYS = {"context", "blocker", "coordination", "active-handoff", "health-probe"}
+ALLOWED_KEYS = {"context", "fact", "blocker", "coordination", "active-handoff", "health-probe"}
 JOURNAL_KEYS = {"progress", "plan-progress", "checkpoint", "session-log", "decision",
                 "plan-decision", "architecture", "release", "feature-log", "ecosystem-link"}
 # Deliberately narrow structural patterns, not individual words such as "plan" or "decision".
@@ -28,10 +28,10 @@ REPOSITORY_COPY_RE = re.compile(
 
 
 def unpack(text):
-    """Return clean text and envelope metadata ({} when absent or malformed)."""
+    """Return clean text and metadata (None for legacy, {} for malformed envelopes)."""
     m = MARKER_RE.match(text or "")
     if not m:
-        return text, {}
+        return text, {} if (text or "").startswith(PREFIX) else None
     try:
         meta = json.loads(base64.urlsafe_b64decode(m[1]).decode("utf-8"))
         if not isinstance(meta, dict):
@@ -67,10 +67,15 @@ def timestamp(value):
 def expired(row, *, now=None):
     now = time.time() if now is None else now
     _scope, _text, meta = record_parts(row)
-    created, expires = timestamp(meta.get("created_at")), timestamp(meta.get("expires_at"))
-    if created is None or expires is None or expires <= created or created > now + 60:
-        return True
-    return now >= min(expires, created + MAX_TTL_HOURS * 3600)
+    if meta is not None:
+        created, expires = timestamp(meta.get("created_at")), timestamp(meta.get("expires_at"))
+        if created is None or expires is None or expires <= created or created > now + 60:
+            return True
+        return now >= min(expires, created + MAX_TTL_HOURS * 3600)
+    created = timestamp(row.get("createdAt") or row.get("timestamp"))
+    # Recall resolves search projections through a full dump before applying this policy.
+    # Unknown age and future timestamps cannot establish bounded temporary context.
+    return created is None or created > now + 60 or now >= created + MAX_TTL_HOURS * 3600
 
 
 def rejection_reason(key, value):
@@ -121,4 +126,8 @@ def prune_reason(row, *, now=None):
         return "unscoped"
     if expired(row, now=now):
         return "expired"
-    return rejection_reason(meta.get("key", "context"), text)
+    if meta is None and timestamp(row.get("createdAt") or row.get("timestamp")) is None:
+        return "missing-timestamp"
+    key = meta.get("key", "context") if meta else \
+        ("active-handoff" if text.startswith("[active-handoff]") else "context")
+    return rejection_reason(key, text)

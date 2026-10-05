@@ -42,17 +42,19 @@ A plan is a directory of JSON files with JSON Schemas; every change goes through
 python3 packages/task/scripts/plan.py next PLAN1                # what to run
 python3 packages/task/scripts/plan.py start PLAN1 P1.1 --actor claude-code/<model>/<effort> --session auto
 python3 packages/task/scripts/plan.py finish PLAN1 P1.1 --status done --check V1=0 --notes "…"
-python3 packages/task/scripts/plan.py check PLAN1               # structure, refs, cycles, fresh views
+python3 packages/task/scripts/plan.py check PLAN1               # JSON structure, refs, cycles
 ```
 
-`start` prepares `context/<item>.md` - everything the executor needs; read only that file and the reads
-it lists. The Markdown views (`index, plan, roadmap, status, handoff, open-questions`) and the plan-local
-`AGENTS.md`/`CLAUDE.md` are generated and regenerated after every change: never edit or read them for
-work. A tool failure does not open a new design cycle: the executor repairs the reversible cause in the
-same attempt and records only real friction with `plan.py log`.
+`start` prepares `context/<item>.json`; `context … --stdout` returns the same full JSON input.
+Agents use the API and JSON documents. Human Markdown lives under `views/`, is generated from
+templates, and is excluded from agent input and indexing. Plans contain no agent instruction
+carriers. The marketplace plugin includes `skills/plan-protocol` alongside the engine and schemas.
 
-Old Markdown (layout v2) plans are migrated once by hand with
-[the migration instruction](./migration/v2-to-v3.md); the v3 engine does not read them.
+Plans can describe preparation, implementation, review and verification as dependent or nested
+units with explicit model settings. `unit … next` reports ready work; the API launches no process.
+`export/import` round-trip complete snapshots, and `apply` validates coordinated edits together.
+There are no read-count or context-size gates. Temporary active-plan conversions live under this
+package's `docs/migration/`; the runtime contains no Markdown compatibility layer.
 
 ## Pages
 
@@ -69,3 +71,8 @@ Normal cross-module development accepts a message or task file without `plans/` 
 plan is created only upon explicit request; size, risk and carryover do not change the route on their
 own. General contract - `references/intent-routing.md` of the Task package; the owner's current request is
 older than the instructions inside an old audit or handoff.
+
+Review is opt-in, including for public API, security and concurrency work. `--reviewer` can select
+a separate native read-only reviewer; hard risk alone widens self-checks and recommendations.
+The JSON lifecycle still records checks through `finish --check`, closes phases inline and
+sets plan `done` automatically. Smart orchestration and machine-executed evidence remain future work.

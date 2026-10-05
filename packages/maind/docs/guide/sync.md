@@ -103,3 +103,7 @@ sync (mode=auto, projects 1, providers: mcp, graph, memory, memory-hook, health-
 ```
 
 Next: [Trust (workspace) →](./workspace)
+
+`feature-log-hook` is a retirement-only provisioner: sync removes old managed SessionEnd commit
+copying hooks and their scripts, preserving foreign hooks. It never installs a feature-log hook
+or writes graph seeds/commit history into memory. The cleanup is idempotent and supports dry-run.

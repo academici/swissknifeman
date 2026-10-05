@@ -69,7 +69,8 @@ class BaselineTests(CheckCase):
 
     def test_check_never_raises_on_garbage(self):
         garbage = {"phases": "x", "items": 5, "depends_on": "x", "batches": [1, None, "a"], "units": {"a": 1},
-                   "reads": [None, 3, {"path": 5}], "task_files": "x", "result": [], "scope": None, "validation": {}}
+                   "reads": [None, 3, {"path": 5}], "task_files": "x", "result": [], "scope": None, "validation": {},
+                   "sections": [None, {"id": []}], "orchestration": ["bad"]}
         for rel in ("plan.json", "brief.json", P1 + "phase.json", P1 + "P1.1.json", P1 + "P1.2.json", "decisions/D1.json"):
             self.edit(rel, lambda d: d.update(copy.deepcopy(garbage)))
         self.add_unit("U1", files="x", depends_on="x", checks=[1, None], outcome=[])
@@ -222,7 +223,7 @@ class BatchTests(CheckCase):
 class CompletenessTests(CheckCase):
     def test_detailed_phase_requires_the_listed_fields(self):
         def strip(doc):
-            for field in ("deliverables", "reads", "task_files", "validation"):
+            for field in ("deliverables", "reads", "task_files", "validation", "guidance", "sections"):
                 doc.pop(field, None)
             doc["scope"]["include"] = []
         self.edit(P1 + "P1.2.json", strip)
@@ -388,12 +389,12 @@ class AdvisoryTests(CheckCase):
 
     def test_required_read_missing_warns_until_it_exists_or_a_dependency_produces_it(self):
         warn = lambda: [h.where for h in self.found("read_missing", level="warning") if "P1.2" in h.where]  # noqa: E731
-        self.assertEqual(len(warn()), 2)  # lib/pkg/config.py and @plan/research/00-design.md
+        self.assertEqual(len(warn()), 2)  # lib/pkg/config.py and @plan/knowledge/design.json
         (self.root.parents[1] / "lib" / "pkg").mkdir(parents=True)
         (self.root.parents[1] / "lib" / "pkg" / "config.py").write_text("x = 1\n", encoding="utf-8")
         self.assertEqual(len(warn()), 1)
         self.edit(P1 + "P1.1.json", lambda d: d["artifacts"].append(
-            {"path": "@plan/research/00-design.md", "role": "output"}))
+            {"path": "@plan/knowledge/design.json", "role": "output"}))
         self.assertEqual(warn(), [])  # produced by a dependency (P1.1) even though not on disk yet
         (self.root / "research").mkdir()
         (self.root / "research" / "00-design.md").write_text("# d\n", encoding="utf-8")

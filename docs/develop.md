@@ -359,3 +359,39 @@ is the pool saturated? (recall warns). Possibly written to native memory Claude,
 _Depth by subsystem: [token-budget](/skiller/guide/budget) · [toolchain](/skiller/workflows/) ·
 [semantics loop'ov](/skiller/guide/loop-semantics) · [memory](/maind/guide/memory) ·
 [graph](/maind/guide/graph) · [control-surface](/control-surface)._
+
+## Manual branch reconciliation
+
+The 2026-10-05 reconciliation keeps `feat/plan-json-v3` as the working branch and compares main's
+changes from their common ancestor. It changes working-tree bytes without merge, cherry-pick,
+commits or branch movement. Generated projections are rebuilt from canonical sources.
+
+JSON v3 remains the plan source of truth. Review is optional; an explicit `--reviewer` selects a
+separate native read-only session, while checks and lifecycle use the existing `plan.py` verbs.
+Memory compatibility accepts `fact` and at most 72-hour legacy records with trustworthy creation
+time; Grok tools remain independent of mAInd connection health. Released notes and attestations
+remain historical, and new v3 work stays under `[Unreleased]`.
+
+Before promoting the branch, review the working diff, commit the agreed result, and choose the
+GitHub integration separately. No main ref or remote is changed by this reconciliation.
+
+The compared snapshots are feature `00750a57`, main `b0f63fd4`, common ancestor `b881696d`.
+The main changes have these dispositions:
+
+| Main change | V3 result |
+|:--|:--|
+| Published package/skill versions and 0.28.0/0.28.2/0.28.3 attestations | Retained exactly as release history; v3 changes remain unreleased |
+| Provider diagnostic escaping, Grok payload normalization, Codex request observer, release-source delivery | Already present in the feature branch; retained |
+| Temporary-memory policy | Retained; added bounded legacy/fact compatibility without unknown-age records |
+| Cleanup of installed commit-copying hooks | Adapted as a retirement-only sync provisioner; no seed/feature-log APIs restored |
+| Declared execution order | Already covered by v3 phase batches/frontier tests; no numeric-order heuristic added |
+| Exact optional reviewer and effort/context selector | Adapted in `review_selection` and command projections, independent of JSON storage |
+| Read-only role separation, bounded correction, systemic invariant model | Adapted in command/skill guidance and optional workflow slots |
+| Mandatory risk-based review, Grok mAInd tool gate | Omitted according to the owner's decisions |
+| Markdown acceptance runner, review packet/ACP jobs, source archives, old route/terminal receipts | Retired with v2; measured failures remain inputs to future JSON orchestration |
+| Whole-plan-only close and old phase/audit findings reducers | Omitted; existing JSON lifecycle and `plan-close` semantics retained |
+| Registry/command locks, manifests and documentation copies | Regenerated from v3 canonical sources; obsolete copied v2 pages removed |
+
+Verification uses the Task, Harness, mAInd and Skiller validators, registry freshness and targeted
+route/workflow/memory/retirement tests. Archived PLAN1 may warn about old removed reads; it remains
+schema-valid historical data and is not rewritten by this reconciliation.

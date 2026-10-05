@@ -1,4 +1,4 @@
-"""Authoring mutations of a v3 plan: create, add phase/item/decision, merge-patch, push, batches.
+"""Authoring mutations of a v4 plan: create, add phase/item/decision, merge-patch, push, batches.
 
 Each mutation is lock -> load fresh snapshot -> change -> validate every changed document -> save ->
 regenerate views. A refused mutation leaves every file byte-identical. ``plan`` is a ``store.Plan``
@@ -29,6 +29,7 @@ OWNED_FIELDS = {
     "item": frozenset({"$schema", "id", "status", "result", "updated_at"}),
     "unit": frozenset({"$schema", "id", "item", "status", "outcome", "updated_at"}),
     "decision": frozenset({"$schema", "id"}),
+    "document": frozenset({"$schema", "id"}),
 }
 GITIGNORE = "context/\n.lock\n"
 
@@ -60,7 +61,8 @@ def _commit(p: store.Plan, changes: list[tuple[str, str | None, dict]]) -> None:
         if kind in ("plan", "brief"):
             setattr(p, kind, doc)
         else:
-            {"phase": p.phases, "item": p.items, "decision": p.decisions, "unit": p.units}[kind][key] = doc
+            {"phase": p.phases, "item": p.items, "decision": p.decisions, "unit": p.units,
+             "document": p.documents}[kind][key] = doc
 
 
 def _guard_owned(kind: str, keys) -> None:
@@ -147,6 +149,8 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
     with store.PlanLock(root) as lock:
         store.save_many([(root / "plan.json", plan_doc, "plan"), (root / "brief.json", brief_doc, "brief")])
         (root / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
+        for name in (".ignore", ".cursorignore"):
+            (root / name).write_text(store.SEARCH_IGNORE, encoding="utf-8")
         store.append_log(root, event, lock=lock)
         plan = store.load_plan(root)
         _after_mutation(plan)
@@ -228,6 +232,13 @@ def add_decision(plan, title: str, *, data: dict | None = None, actor: dict | No
 
 def resolve_target(p: store.Plan, ref: str) -> tuple[str, str, dict]:
     """Resolve a phase (``P1``), item (``P1.2``), decision (``D3``) or unit (``P1.2/U1``) of this plan."""
+    if ref in ("plan", "brief"):
+        return ref, None, getattr(p, ref)
+    if ref.startswith("knowledge/"):
+        key = ref.removeprefix("knowledge/").removesuffix(".json")
+        if key not in p.documents:
+            raise PlanError("REF_UNKNOWN", f"unknown document {key!r}")
+        return "document", key, p.documents[key]
     if _UNIT_REF.fullmatch(ref):
         if ref not in p.units:
             raise PlanError("REF_UNKNOWN", f"unknown unit {ref!r}")
@@ -300,3 +311,42 @@ def set_brief(plan, merge_patch_doc: dict) -> None:
     with _mutation(plan) as p:
         _guard_owned("brief", merge_patch_doc)
         _commit(p, [("brief", None, merge_patch(p.brief, merge_patch_doc))])
+
+
+def add_document(plan, data: dict) -> str:
+    """Add a schema-backed knowledge document; `knowledge/<id>` is its authoring reference."""
+    doc = copy.deepcopy(data)
+    doc.setdefault("$schema", _schema_const("document"))
+    store.check_doc(doc, "document", "document")
+    with _mutation(plan) as p:
+        if doc["id"] in p.documents:
+            raise PlanError("ID_DUPLICATE", f"document {doc['id']} already exists")
+        _commit(p, [("document", doc["id"], doc)])
+    return doc["id"]
+
+
+def apply(plan, patches: list[dict]) -> None:
+    """Validate a group of merge patches as one proposed graph, then commit all changed documents."""
+    from . import check
+    if not isinstance(patches, list) or not patches:
+        raise PlanError("PATCH_INVALID", "apply needs a non-empty array of {ref, patch} objects")
+    with _mutation(plan) as p:
+        proposed, changed = copy.deepcopy(p), {}
+        for entry in patches:
+            if not isinstance(entry, dict) or set(entry) != {"ref", "patch"} or not isinstance(entry["patch"], dict):
+                raise PlanError("PATCH_INVALID", "each entry must contain only ref and an object patch")
+            kind, key, doc = resolve_target(proposed, entry["ref"])
+            _guard_owned(kind, entry["patch"])
+            doc = merge_patch(doc, entry["patch"])
+            store.check_doc(doc, kind, entry["ref"])
+            if kind in ("plan", "brief"):
+                setattr(proposed, kind, doc)
+            else:
+                table = {"phase": proposed.phases, "item": proposed.items, "unit": proposed.units,
+                         "decision": proposed.decisions, "document": proposed.documents}[kind]
+                table[key] = doc
+            changed[(kind, key)] = doc
+        errors = [i for i in check.check(proposed) if i.level == "error"]
+        if errors:
+            raise PlanError("PLAN_INVALID", "; ".join(f"{i.where}: {i.message}" for i in errors), errors)
+        _commit(p, [(kind, key, doc) for (kind, key), doc in changed.items()])

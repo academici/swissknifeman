@@ -1,4 +1,4 @@
-"""The generated human views of a v3 plan: view-models, rendering, staleness (dossier §5, §13).
+"""The generated human views of a v4 plan: view-models, rendering, staleness (dossier §5, §13).
 
 ``render_all`` writes only the files whose bytes change; ``render_all(plan, check=True)`` reports the stale
 ones without writing. Output is a pure function of the plan JSON and ``log.jsonl`` — no clock, no paths.
@@ -6,6 +6,7 @@ ones without writing. Output is a pure function of the plan JSON and ``log.jsonl
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import re
 from typing import Any
 
@@ -15,8 +16,8 @@ from .templating import TemplateError, render
 
 TEMPLATE_DIR = Path(__file__).resolve().parents[3] / "templates" / "plan"
 VIEW_FILES = ("index.md", "plan.md", "roadmap.md", "status.md", "handoff.md", "open-questions.md")
-GUARD_FILES = ("AGENTS.md", "CLAUDE.md")
-GENERATED = VIEW_FILES + GUARD_FILES
+VIEW_DIR = "views"
+GENERATED = tuple(f"{VIEW_DIR}/{name}" for name in VIEW_FILES)
 PLAN_STATUS_LABEL = {"active": "🟡 Active", "paused": "⏸ Paused", "done": "🟢 Done", "archived": "📦 Archived"}
 FRICTION_TYPES = ("blocker", "deviation", "difficulty")
 
@@ -32,11 +33,31 @@ def line(value: Any) -> str:
 
 
 def render_all(plan: store.Plan, check: bool = False) -> list[str]:
-    """Render the six views and the provider guard files; return the names written (or stale, with ``check``)."""
+    """Render human views. Never create agent instruction files inside a plan."""
     model = build_model(plan)
-    guard = _render_template("agents", model)
-    files = {name: _render_template(name.removesuffix(".md"), model) for name in VIEW_FILES}
-    files.update({name: guard for name in GUARD_FILES})
+    files = {f"{VIEW_DIR}/{name}": _render_template(name.removesuffix(".md"), model) for name in VIEW_FILES}
+    documents = [("brief", "brief.json", plan.brief)]
+    for kind, table in (("phase", plan.phases), ("item", plan.items), ("unit", plan.units),
+                        ("decision", plan.decisions), ("document", plan.documents)):
+        documents += [(kind, plan.path(kind, key).relative_to(plan.root).as_posix(), doc) for key, doc in table.items()]
+    for kind, source, doc in documents:
+        doc = json.loads(store.canonical_dump(doc, kind))
+        name = f"{VIEW_DIR}/{source.removesuffix('.json')}.md"
+        fields = []
+        for key, value in doc.items():
+            if key in ("$schema", "id", "title", "sections") or value is None:
+                continue
+            if isinstance(value, str):
+                body = value
+            elif isinstance(value, list) and all(isinstance(v, str) for v in value):
+                body = "\n".join(f"- {v}" for v in value)
+            else:
+                body = "```json\n" + json.dumps(value, ensure_ascii=False, indent=2) + "\n```"
+            fields.append({"title": key.replace("_", " ").capitalize(), "body": body})
+        fields += [{"title": s["title"], "body": s["text"]} for s in doc.get("sections", [])]
+        relative = "../" * len(Path(source).parts) + source
+        files[name] = _render_template("document", {"title": doc.get("title", "Owner brief"),
+                                                    "source": relative, "fields": fields})
     changed = []
     for name, text in files.items():
         path = plan.root / name
@@ -48,6 +69,13 @@ def render_all(plan: store.Plan, check: bool = False) -> list[str]:
             changed.append(name)
             if not check:
                 store.atomic_write(path, text)
+    expected = set(files)
+    for path in sorted((plan.root / VIEW_DIR).rglob("*.md")):
+        name = path.relative_to(plan.root).as_posix()
+        if name not in expected:
+            changed.append(name)
+            if not check:
+                path.unlink()
     return changed
 
 
@@ -118,7 +146,7 @@ def build_model(plan: store.Plan) -> dict:
         phases.append({
             "id": phase_id, "title": line(phase.get("title")), "title_cell": cell(phase.get("title")), "design": phase.get("design", ""),
             "progress": f"{done}/{len(items)}", "status_label": _phase_label(plan, phase_id),
-            "path": f"phases/{phase_id}/phase.json",
+            "path": f"phases/{phase_id}/phase.md",
             "closed": {"at": closed.get("at", ""), "result_label": _item_label(closed.get("result", "")),
                        "summary": closed.get("summary", "")} if isinstance(closed, dict) else None,
             "items": [{"id": i, "title": cell(plan.items[i].get("title")), "status_label": _item_label(lifecycle.status_of(plan, i)),

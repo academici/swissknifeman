@@ -23,7 +23,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.17"
+ADAPTER_VERSION = "1.0.18"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 PROVIDER_LOCK_OWNER = "task.codex"
 _MAPPING_KEYS = frozenset({
@@ -76,7 +76,7 @@ _CODEX_RUNTIME_FORBIDDEN = (
     ("claude-model-selector", re.compile(r"\b(?:opus|sonnet|haiku|fable)\b", re.IGNORECASE)),
     ("claude-task-invocation", re.compile(r"(?<![\w/])/task:")),
     ("claude-session-control",
-     re.compile(r"(?<![\w/])/(?:model|effort|clear)(?![\w/-])")),
+     re.compile(r"(?<![\w/\[])/(?:model|effort|clear)(?![\w/-])")),
     ("claude-workflow-carrier", re.compile(r"Workflow\(")),
     ("claude-plugin-root", re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}")),
     ("project-relative-task-runtime", re.compile(r"PYTHONPATH=packages/task/lib")),
@@ -528,9 +528,22 @@ def plan_provider_invocation(
             "provider projection is not enabled")
         return PlanProviderInvocation(carrier, None, None, None,
                                       tuple(diagnostics + [diagnostic]))
-    return PlanProviderInvocation(
-        carrier, invocation, dict(mapping.class_selectors)[observed_class][0],
-        dict(mapping.effort_selectors)[observed_effort][0], tuple(diagnostics))
+    model_selector = dict(mapping.class_selectors)[observed_class][0]
+    effort_selector = dict(mapping.effort_selectors)[observed_effort][0]
+    if record.command_id == "task:plan-audit" and any(
+            value == "--reviewer" or value.startswith("--reviewer=") for value in carrier.arguments):
+        from task import review_selection
+        try:
+            selected = review_selection.invocation_selection(f"{record.command_id} {arguments}")
+            if selected["provider"] != mapping.provider_id or selected["effort"] != observed_effort:
+                raise review_selection.ReviewError("REVIEW_ROUTE_MISMATCH", "render with the selected provider and effort")
+            model_selector = selected["model"]
+            effort_selector = dict(mapping.effort_selectors)[selected["effort"]][0]
+        except review_selection.ReviewError as exc:
+            diagnostic = _diag("CMD_REVIEWER_ROUTE_MISMATCH", record, "/routing/reviewer", {},
+                               {"error": str(exc)}, mapping, "explicit reviewer cannot be substituted")
+            return PlanProviderInvocation(carrier, None, None, None, tuple(diagnostics + [diagnostic]))
+    return PlanProviderInvocation(carrier, invocation, model_selector, effort_selector, tuple(diagnostics))
 
 
 def validate_route(record: CommandRecord, observed_class: str, observed_effort: str,
@@ -635,7 +648,7 @@ def plan_codex_command_render(
     plugin = {
         "name": "task", "version": catalog.plugin_version,
         "description": "Provider-neutral task commands and executable plan protocol for Codex",
-        "skills": ["./adapters/codex/skills"],
+        "skills": ["./adapters/codex/skills", "./skills"],
     }
     all_sources = tuple(_source(record) for record in catalog.records)
     results.append(_artifact("task.codex.plugin", "packages/task/.codex-plugin/plugin.json",
@@ -1579,6 +1592,9 @@ def _project_codex_runtime_tokens(text: str) -> str:
         if match.group("task"):
             return "$ task:" + match.group("task_id")
         if match.group("ui"):
+            # A bracketed effort suffix is reviewer selector grammar, not a UI command.
+            if match.start() > 0 and text[match.start() - 1] == "[" and text[match.end():].startswith("]"):
+                return match.group(0)
             return _CODEX_UI_PROJECTIONS[match.group("ui").lower()]
         raise AssertionError("unreachable Codex runtime token")
 
@@ -1607,7 +1623,7 @@ def _claude_plugin_diagnostics(catalog: CommandCatalog, mapping: ProviderCommand
             "CMD_SOURCE_DRIFT", "task:catalog", "/plugin", {"valid_json": True},
             {"error": str(error)}, mapping, "Claude plugin descriptor is malformed"),)
     expected = {"name": "task", "version": catalog.plugin_version,
-                "commands": ["./commands"]}
+                "commands": ["./commands"], "skills": ["./skills"]}
     observed = ({key: value.get(key) for key in expected} if isinstance(value, dict)
                 else {"type": type(value).__name__})
     if observed != expected:
@@ -1627,11 +1643,11 @@ def _claude_frontmatter_diagnostics(
                       {"error": str(error)}, mapping,
                       "Claude command frontmatter is malformed"),)
 
-    if record.routing.mode == "inherited-plan":
+    if record.routing.mode == "inherited-plan" or record.command_id in {"task:review", "task:plan-audit"}:
         observed = {key: fields.get(key) for key in ("model", "effort") if key in fields}
         if observed:
             return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter/routing", {}, observed,
-                          mapping, "inherited-plan Claude command must not pin model or effort"),)
+                          mapping, "inherited/explicit-reviewer Claude command must not pin model or effort"),)
         return ()
 
     classes, efforts = dict(mapping.class_selectors), dict(mapping.effort_selectors)
@@ -1764,5 +1780,3 @@ def _required_string(value: object, label: str) -> str:
 
 def _json_bytes(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-
-

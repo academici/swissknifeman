@@ -43,7 +43,7 @@
     "status": "complete",
     "notes": "captures kept",
     "captures": [
-      "@plan/artifacts/rag/c1.md"
+      "@plan/artifacts/rag/c1.json"
     ]
   },
   "units": [

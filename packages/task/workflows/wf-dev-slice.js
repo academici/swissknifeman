@@ -1,13 +1,13 @@
-// Template 4: dev-slice — slice → impl → tests-to-green (loop with max-iteration) → optional review (REVIEW slot, off by default).
+// Template 4: dev-slice — slice → impl → tests-to-green (loop with max-iteration) → optional requested review (REVIEW slot, off by default).
 // The slices are sequential (each one builds on the previous one); slot rules - README.md nearby.
 export const meta = {
   name: 'dev-slice', // SLOT: name for a specific launch
-  description: 'Development by slices: implementation, bringing tests to green; review only when the REVIEW slot is enabled',
+  description: 'Development by slices: implementation, bringing tests to green, optional requested read-only review',
   whenToUse: 'Stage development based on ready-made technical specifications/plan; run through scriptPath (NOT named-workflow — args comes as a string)',
   phases: [
     { title: 'Impl', detail: 'slice implementation + tests', model: 'sonnet' },
     { title: 'Green', detail: 'loop: running tests → fix, until green or max-iteration', model: 'sonnet' },
-    { title: 'Review', detail: 'optional (REVIEW slot): review of cut differential, depth by risk', model: 'opus' },
+    { title: 'Review', detail: 'optional requested review; depth by risk', model: 'opus' },
   ],
 }
 
@@ -43,26 +43,28 @@ const SLICES = [
 // Typical: full test suite, statistical analysis, commit-gate «working tree is clean».
 const GATES = ['git -C REPO status --short — empty (everything is committed)']
 
-// SLOT: REVIEW — independent per-slice review. Off by default: review is opt-in (owner `--review`
-// request); enable it only when the owner asked for it. When on, risk picks the depth (see reviewFor).
+// SLOT: REVIEW — enable only for an explicit owner review request, never from risk alone.
 const REVIEW = false
 
 // SLOT: max-iteration for tests-to-green loop — REQUIRED (agent should not
 // spin endlessly, adjusting the tests to the code). Exhaustion = conveyor stop.
 const MAX_GREEN_ITERATIONS = 3
 
-// SLOT: model/effort — impl sonnet/medium; review by risk (see reviewFor).
+// SLOT: model/effort — impl sonnet/medium; REVIEWER is filled from explicit owner selection.
 const IMPL_MODEL = { model: 'sonnet', effort: 'medium' }
 const GREEN_MODEL = { model: 'sonnet', effort: 'medium' }
-// Risk-adaptive review: low — self-check by the author is sufficient (review skipped);
-// medium — one reviewer with fresh context; high — opus/xhigh (for fiscal/payments/
-// tenant-isolation additional judge panel - template wf-audit-adversarial).
+// SLOT: exact native model/effort from --reviewer provider/model; no silent default reviewer.
+// The author resolves the selected/current native route; cross-provider work needs its native handoff.
+const REVIEWER = null // { model: '<exact-native-model-id>', effort: 'high' }
+// Risk adapts review depth; only REVIEW admits a fresh read-only reviewer.
 // guarded-optional-args: cut without `risk` should not silently get cheap review — explicit
 // default 'medium' (typeof-guard), not a bare call to `s.risk` (pattern wf-agentools-drive).
 const riskOf = s => typeof s.risk === 'string' ? s.risk : 'medium'
-const reviewFor = risk => risk === 'high'
-  ? { model: 'opus', effort: 'xhigh' }
-  : { model: 'opus', effort: 'medium' }
+if (REVIEW &&
+    (!REVIEWER || typeof REVIEWER.model !== 'string' || !REVIEWER.model.trim() ||
+     !['low', 'medium', 'high', 'xhigh'].includes(REVIEWER.effort))) {
+  throw new Error('REVIEWER_REQUIRED: fill model/effort from the explicitly selected reviewer before execution')
+}
 
 // ── Schemes structured-summary ─────────────────────────────────────────────────
 const REPORT = {
@@ -90,8 +92,10 @@ const REVIEW_SCHEMA = {
           summary: { type: 'string' },
           failure_scenario: { type: 'string' },
           severity: { type: 'string', enum: ['Blocker', 'Major', 'Minor', 'Nit'] },
+          risk_class: { type: 'string', enum: ['local', 'concurrency', 'transaction', 'auth', 'data-integrity'] },
+          area: { type: 'string', description: 'stable subsystem/invariant across files and drivers' },
         },
-        required: ['file', 'summary', 'failure_scenario', 'severity'],
+        required: ['file', 'summary', 'failure_scenario', 'severity', 'risk_class', 'area'],
       },
     },
     verdict: { type: 'string', enum: ['APPROVE', 'FIX_REQUIRED'] },
@@ -111,6 +115,7 @@ const implPrompt = s => [
   s.brief,
   `Implement a slice along with tests. Drive away: ${s.tests} — bring it to green within the cut. Tests check BEHAVIOR from the technical specifications; adjustment assertion'ov under the actual code output is prohibited.`,
   `Don't commit until complete tests-to-green${REVIEW ? ', independent review' : ''} and interslice gates.`,
+  `Execution owns implementation/self-check/tests only. Do not launch reviewers or start a fix/re-review loop; the orchestrator owns the separate reviewer call.`,
 ].join('\n\n')
 
 const greenPrompt = (s, prev, iter) => [
@@ -128,9 +133,10 @@ const commitPrompt = s => [
 ].join('\n\n')
 
 const reviewPrompt = s => [
-  `Read-only slice review «${s.key}» fresh context (you are NOT the author). Repository: ${REPO}; Terms of reference: ${SPEC} (slice section). Before commit check current scoped diff via git status --short and git diff; unrelated/strangers dirty-bytes should not be included in the verdict.`,
+  `Read-only ${riskOf(s)}-risk slice review «${s.key}» fresh context (you are NOT the author). Repository: ${REPO}; Terms of reference: ${SPEC} (slice section). Before commit check current scoped diff via git status --short and git diff; unrelated/strangers dirty-bytes should not be included in the verdict.`,
   `Look for: inconsistency with technical specifications, correctness-defects with specific failure_scenario, fitting tests to the code. Severity Blocker/Major/Minor/Nit. Verdict FIX_REQUIRED for any Blocker/Major.`,
   `Don't edit or commit ANYTHING. Final text = schema data.`,
+  `For concurrency/transactions/auth/data-integrity, check the shared invariant model against all affected operation/resource/driver pairs. Return risk_class and stable area for each demonstrated finding. Do not start repairs or another review.`,
 ].join('\n\n')
 
 const gatePrompt = s => [
@@ -177,11 +183,11 @@ for (const s of SLICES) {
     break
   }
 
-  // Review is opt-in (REVIEW slot); when enabled, risk-adaptive: low skips a separate reviewer.
+  // Review is opt-in; a requested review covers every selected slice, with risk-adapted depth.
   let review = null
-  if (REVIEW && riskOf(s) !== 'low') {
+  if (REVIEW) {
     review = await safeAgent(reviewPrompt(s), {
-      label: `review:${s.key}:${s.asOf || ''}`, phase: 'Review', ...reviewFor(riskOf(s)), schema: REVIEW_SCHEMA,
+      label: `review:${s.key}:${s.asOf || ''}`, phase: 'Review', ...REVIEWER, schema: REVIEW_SCHEMA,
     })
     if (!review) {
       log(`STOP: review:${s.key} without result`)
@@ -189,7 +195,7 @@ for (const s of SLICES) {
       break
     }
     if (review && review.verdict === 'FIX_REQUIRED') {
-      log(`STOP: review slice ${s.key} = FIX_REQUIRED (${review.findings.length} find.) — fixes in main loop, review-fixes with separate commits`)
+      log(`STOP: review slice ${s.key} = FIX_REQUIRED (${review.findings.length} find.) — return one owning correction; do not automatically restart review`)
       done.push({ key: s.key, impl: res, review, stopped: 'review-fix-required' })
       break
     }

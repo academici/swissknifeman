@@ -35,7 +35,7 @@ INTENT_ORDER = ("trust", "memory-context", "health", "skills", "agent-pack", "ro
 PROVISIONER_INTENTS = {
     "mcp": (), "code-graph": (), "graph": (),
     "memory-hook": ("memory-context",), "health-hook": ("health",),
-    "health-doc": ("health",),
+    "health-doc": ("health",), "feature-log-hook": ("health",),
     "ecosystem-skill": ("skills",), "setup-skill": ("skills",),
     "skills-catalog": ("skills",), "agent-pack": ("agent-pack",),
     "output-style": ("memory-context",), "router-config": ("router",),
@@ -381,6 +381,12 @@ def _instruction_run(env, config, projects, mode, dry):
     return results
 
 
+def _feature_log_hook_run(env, config, projects, mode, dry):
+    """Retire automatic SessionEnd commit copying, including previously enabled hooks."""
+    from ..health import revert_feature_log_hook
+    return [revert_feature_log_hook(env, config, p, mode, dry) for p in projects]
+
+
 def _setup_skill_run(env, config, projects, mode, dry):
     """Controlled skill ecosystem-setup (tooling decision tree) for projects."""
     from .skilldoc import apply_setup_skill
@@ -623,6 +629,7 @@ PROVISIONERS = {
     "memory-hook": _memory_hook_run,
     "health-hook": _health_hook_run,
     "health-doc": _health_doc_run,
+    "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
     "setup-skill": _setup_skill_run,
     "skills-catalog": _skills_catalog_run,
@@ -633,7 +640,7 @@ PROVISIONERS = {
     "gitignore": _gitignore_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory-hook", "health-hook",
-         "health-doc", "ecosystem-skill", "setup-skill",
+         "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
          "skills-catalog", "agent-pack", "output-style", "router-config",
          "instructions", "gitignore"]
 
@@ -1020,7 +1027,7 @@ def cmd_sync(env, argv):
                                 "--json": "bool", "--conformance": "str"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
-              "graph,memory-hook,health-hook,health-doc,"
+              "graph,memory-hook,health-hook,health-doc,feature-log-hook,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
               "router-config,instructions] "
               "[--mode install|update|auto|repair] [--dry-run] [--json]\n"

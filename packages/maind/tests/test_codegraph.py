@@ -36,6 +36,9 @@ class TestSerenaConfig(unittest.TestCase):
             self.assertIn("- php", txt)                 # language by type php-package
             self.assertIn('- "vendor"', txt)
             self.assertIn('- "packages"', txt)          # symlinks first-party not indexable
+            self.assertIn('- "plans/**/views/**"', txt)
+            self.assertIn('- "plans/**/context/**"', txt)
+            self.assertIn('- "plans/**/*.md"', txt)
             self.assertIn("initial_prompt:", txt)       # targeting directive symbol-tools
             self.assertIn("Serena", txt)
 

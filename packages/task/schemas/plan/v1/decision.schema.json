@@ -160,6 +160,13 @@
         "owner",
         "agent"
       ]
+    },
+    "sections": {
+      "type": "array",
+      "description": "Complete supporting sections.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      }
     }
   },
   "required": [

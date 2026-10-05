@@ -140,7 +140,7 @@ class StartTests(LifeCase):
         events = self.events("start")
         self.assertEqual([e["item"] for e in events], ["P1.1", "P1.2"])
         self.assertEqual(events[0]["data"], {"requested": ["P1.1", "P1.2"], "route": "ok"})
-        self.assertIn("P1.1", (self.root / "status.md").read_text(encoding="utf-8"))
+        self.assertIn("P1.1", (self.root / "views/status.md").read_text(encoding="utf-8"))
         self.assertEqual([i for i in check.check(plan) if i.level == "error"], [])
 
     def test_start_refreshes_the_callers_plan_snapshot(self):
@@ -353,7 +353,7 @@ class LogDecideGrantTests(LifeCase):
         events = self.events("difficulty", "note")
         self.assertEqual([e["summary"] for e in events], ["tests import config", "phase-wide note"])
         self.assertEqual(events[1]["actor"], OPUS)  # plan authoring when nobody else is known
-        self.assertIn("tests import config", (self.root / "handoff.md").read_text(encoding="utf-8"))
+        self.assertIn("tests import config", (self.root / "views/handoff.md").read_text(encoding="utf-8"))
 
     def test_log_takes_the_item_executor_as_default_actor(self):
         self.start("P1.1", actor=SONNET)
@@ -499,7 +499,7 @@ class ArchiveTests(LifeCase):
         self.assertEqual(store.read_log(archived)[-1]["type"], "archived")
         self.assertEqual(lifecycle.next(reopened).exact, "terminal: plan done")
         self.assertEqual([i for i in check.check(reopened) if i.level == "error"], [])
-        self.assertIn("archived", (archived / "plan.md").read_text(encoding="utf-8"))
+        self.assertIn("archived", (archived / "views/plan.md").read_text(encoding="utf-8"))
 
     def test_forced_archive_records_the_reason(self):
         lifecycle.archive(self.root, force=True, reason="abandoned by the owner")
@@ -553,11 +553,11 @@ class NextWiringTests(LifeCase):
         self.assertEqual(data["launch"]["claude"], f"/{action.command}")
 
     def test_handoff_uses_the_lifecycle_next(self):
-        text = (self.root / "handoff.md").read_text(encoding="utf-8")
+        text = (self.root / "views/handoff.md").read_text(encoding="utf-8")
         self.assertIn(f"run-items: task:plan-run {self.load().plan['id']} P1.1 P1.2", text)
         self.start("P1.1")
         self.finish("P1.1")
-        text = (self.root / "handoff.md").read_text(encoding="utf-8")
+        text = (self.root / "views/handoff.md").read_text(encoding="utf-8")
         self.assertIn(f"task:plan-run {self.load().plan['id']} P1.2", text)
 
     def test_blocked_closed_phase_does_not_stop_independent_work(self):

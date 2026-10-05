@@ -53,10 +53,29 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             with self.subTest(kind=kind):
                 self.assertEqual(parse_next_carrier(declaration).kind, kind)
 
+    def test_explicit_audit_reviewer_survives_native_rendering(self):
+        carrier = parse_next_carrier("audit-design: task:plan-audit DEMO design --reviewer codex/gpt-6")
+        mapping = mapping_from_catalog(self.catalog, "codex")
+        result = plan_provider_invocation(self.catalog, carrier, mapping,
+                                          observed_class="frontier", observed_effort="xhigh")
+        self.assertTrue(result.ok, result.diagnostics)
+        self.assertEqual(result.model_selector, "gpt-6")
+        self.assertIn("--reviewer codex/gpt-6", result.invocation)
+        foreign = mapping_from_catalog(self.catalog, "claude-code")
+        refused = plan_provider_invocation(self.catalog, carrier, foreign,
+                                           observed_class="frontier", observed_effort="xhigh")
+        self.assertFalse(refused.ok)
+        self.assertIsNone(refused.invocation)
+        mismatch = plan_provider_invocation(self.catalog, carrier, mapping,
+                                            observed_class="frontier", observed_effort="high")
+        self.assertFalse(mismatch.ok)
+
     def test_audit_is_read_only_and_writes_a_verdict_plus_a_note(self):
         audit = (COMMAND_ROOT / "plan-audit.md").read_text(encoding="utf-8")
-        for literal in ("plan.py check", "plan.py log", "--type note", "Read-only over product code and plan JSON"):
+        for literal in ("plan.py check", "plan.py log", "--type note", "Read-only over product code and execution state",
+                        "plan.py add-document", "@plan/knowledge/<id>.json"):
             self.assertIn(literal, audit)
+        self.assertNotIn("@plan/artifacts/audit/<Pn|design>-<YYYY-MM-DD>.md", audit)
 
     def test_design_does_not_execute_items_or_spawn_a_successor(self):
         design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")
@@ -74,7 +93,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertTrue(result.ok, result.diagnostics)
 
     def test_batches_are_authored_through_the_plan_cli(self):
-        protocol = (REPO_ROOT / "packages/task/runtime/plan-protocol/SKILL.md"
+        protocol = (REPO_ROOT / "packages/task/skills/plan-protocol/SKILL.md"
                     ).read_text(encoding="utf-8")
         self.assertIn("`batches`", protocol)
         design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")

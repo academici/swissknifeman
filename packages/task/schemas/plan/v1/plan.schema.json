@@ -228,6 +228,17 @@
         "scout"
       ],
       "additionalProperties": false
+    },
+    "orchestration": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestration",
+      "description": "Orchestration."
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      },
+      "description": "Sections."
     }
   },
   "required": [

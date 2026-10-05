@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "ad2a84fde18dbe65953ec050d51295db6fbace74c6e062bd18ce49a21ca107d8",
+    "source_sha256": "71ed83a7edfa68cf132bb97e442335fa42aae08200046179b815724aef731719",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 313
   },
@@ -1095,7 +1095,7 @@
     },
     {
       "semantic_id": "task.plan-files",
-      "literal": "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth, change it only through `python3 <task>/scripts/plan.py`; ignore generated files (`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`, `context/`, unit `brief.md`): never edit them and do not read them for work; get state with `plan.py next|show|context`."
+      "literal": "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers."
     },
     {
       "semantic_id": "task.plan-files",

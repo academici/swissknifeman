@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 description: "Explicit design request: produce a plan or ADR; implementation is separate."
-argument-hint: "[what to design]"
+argument-hint: "[what to design] [--reviewer <provider/model>]"
 model: opus
 effort: high
 ---
@@ -23,3 +23,9 @@ Profile `design`:
 4. Record material external sources in provenance (`docs/reference.md` when present).
 5. Ask only for a missing product choice or authority boundary. Make authorized reversible design decisions
    directly; do not request repeated approval of the method or plan.
+
+For concurrency, transactions, auth or data integrity, model affected operations/resources/drivers
+and name invariant enforcement and bypass paths; lock work checks interfering pairs and implicit
+locks. Implementation and read-only review are separate roles. `--reviewer provider/model` is an
+explicit review request; use `references/reviewer-selection.md`, never implement reviewer findings
+inside a design-only boundary.

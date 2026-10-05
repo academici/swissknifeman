@@ -54,7 +54,7 @@ class ScoutCase(unittest.TestCase):
         ops.add_item(self.plan, "P1", "First")
         ops.patch(self.plan, "P1.1", copy.deepcopy(DETAIL))
         lifecycle.design_done(self.root, "P1", actor=OPUS)
-        self.scout_file = self.root / "context" / "P1.1.scout.md"
+        self.scout_file = self.root / "context" / "P1.1.scout.json"
 
     def events(self):
         return [e for _, e, _ in store.log_lines(self.root) if e and e.get("type") == "scout"]
@@ -68,8 +68,8 @@ class RunTests(ScoutCase):
         runner = FakeRunner(completed(ANSWER))
         result = self.run_scout(runner)
         self.assertEqual((result.outcome, result.lines, result.model), ("ok", 4, "haiku"))
-        self.assertEqual(self.scout_file.read_text(encoding="utf-8"),
-                         "- lib/x.py:load — entry point\nlib/y.py — helper\nUnknowns:\n- where tests live\n")
+        self.assertEqual(json.loads(self.scout_file.read_text())["entries"],
+                         ["- lib/x.py:load — entry point", "lib/y.py — helper", "Unknowns:", "- where tests live"])
         (event,) = self.events()
         self.assertEqual({k: event["data"][k] for k in ("provider", "model", "outcome", "lines")},
                          {"provider": "claude-code", "model": "haiku", "outcome": "ok", "lines": 4})
@@ -81,8 +81,9 @@ class RunTests(ScoutCase):
         argv, kwargs = runner.calls[0]
         self.assertEqual(argv[:6], ["claude", "-p", "--model", "haiku", "--effort", "low"])
         self.assertNotIn("PLAN", " ".join(argv))
-        self.assertIn("router, no code, no decisions", kwargs["input"])
-        self.assertIn("=== CONTEXT PACK PLAN", kwargs["input"])
+        self.assertIn("Never read plan Markdown or views/", kwargs["input"])
+        self.assertIn("never edit code", kwargs["input"])
+        self.assertIn('"ref": "PLAN1.P1.1"', kwargs["input"])
         self.assertEqual((kwargs["timeout"], kwargs["cwd"], kwargs["text"], kwargs["capture_output"]),
                          (300, self.plan.repo_root, True, True))
 
@@ -121,8 +122,8 @@ class RunTests(ScoutCase):
     def test_the_answer_is_cut_to_40_lines(self):
         answer = "".join(f"- lib/f{n}.py — why {n}\n" for n in range(60))
         result = self.run_scout(FakeRunner(completed(answer)))
-        self.assertEqual(result.lines, 40)
-        self.assertEqual(len(self.scout_file.read_text(encoding="utf-8").splitlines()), 40)
+        self.assertEqual(result.lines, 60)
+        self.assertEqual(len(json.loads(self.scout_file.read_text())["entries"]), 60)
 
     def test_a_provider_without_an_entry_is_skipped(self):
         runner = FakeRunner(completed(ANSWER))
@@ -145,7 +146,7 @@ class RunTests(ScoutCase):
         self.assertEqual(argv[argv.index("-c") + 1], 'model_reasoning_effort="low"')
         self.assertEqual(argv[-1], "-")
         self.assertIn("--ephemeral", argv)
-        self.assertIn("=== CONTEXT PACK PLAN", kwargs["input"])
+        self.assertIn('"ref": "PLAN1.P1.1"', kwargs["input"])
         self.assertNotIn(kwargs["input"], argv)
 
     def test_an_unreadable_config_is_a_failure_not_an_exception(self):
@@ -162,9 +163,9 @@ class RunTests(ScoutCase):
 
 class PackTests(ScoutCase):
     def test_section_13_appears_only_with_a_map(self):
-        self.assertNotIn("## Scout map", context.render(store.load_plan(self.root), "P1.1"))
+        self.assertNotIn("scout", context.collect(store.load_plan(self.root), "P1.1"))
         self.run_scout(FakeRunner(completed(ANSWER)))
-        self.assertIn("## Scout map\n\n- lib/x.py:load — entry point", context.render(store.load_plan(self.root), "P1.1"))
+        self.assertIn("- lib/x.py:load — entry point", context.render(store.load_plan(self.root), "P1.1"))
 
 
 class StartTests(ScoutCase):
@@ -174,18 +175,18 @@ class StartTests(ScoutCase):
             return lifecycle.start(self.root, ["P1.1"], OPUS, **kwargs), runner
 
     def pack(self):
-        return (self.root / "context" / "P1.1.md").read_text(encoding="utf-8")
+        return (self.root / "context" / "P1.1.json").read_text(encoding="utf-8")
 
     def test_scout_is_off_by_default(self):
         result, runner = self.start()
         self.assertEqual((runner.calls, result.scouts), ([], ()))
-        self.assertNotIn("## Scout map", self.pack())
+        self.assertNotIn("scout", json.loads(self.pack()))
 
     def test_the_flag_runs_the_scout_and_rebuilds_the_pack(self):
         result, runner = self.start(scout=True)
         self.assertEqual(len(runner.calls), 1)
         self.assertRegex(result.scouts[0], r"^scout P1\.1: ok \(4 lines, \d+s\)$")
-        self.assertIn("## Scout map", self.pack())
+        self.assertIn('"scout"', self.pack())
         self.assertIn(result.scouts[0], result.text("PLAN1"))
 
     def test_the_plan_setting_enables_it_and_the_flag_overrides_it(self):
@@ -198,7 +199,7 @@ class StartTests(ScoutCase):
             result = lifecycle.start(self.root, ["P1.1"], OPUS, scout=True)
         self.assertIn("failed", result.scouts[0])
         self.assertEqual(store.load_plan(self.root).items["P1.1"]["status"], "in_progress")
-        self.assertNotIn("## Scout map", self.pack())
+        self.assertNotIn("scout", json.loads(self.pack()))
 
     def test_cli_flags_reach_start(self):
         parser = cli.build_parser()

@@ -43,11 +43,13 @@ Review runs only on an explicit owner request:
 |:--|:--|
 | `--review` in `task:dev` or `task:plan-run` arguments | one `task:review` pass over the whole requested result, before the final close |
 | `--review` in `task:plan-design` arguments | the plan includes one `Review Pn` item at the end of the requested scope |
+| `--reviewer provider/model` | explicitly requested separate native reviewer on that route; plan-run reviews its selected items |
 | `task:review` | standalone read-only review |
-| `task:plan-audit` | design or phase audit; a phase audit still needs `audit-admission/v2` |
+| `task:plan-audit` | design or phase audit; JSON v3 audits run only on explicit owner invocation |
 
-One review is one reviewer over the whole scope: no per-item or per-slice partial passes and no
-subagents unless the owner asked for an independent or second-opinion pass. A finding gets one owning
+One review is one reviewer over the requested scope. `--reviewer` in `plan-run` explicitly requests
+item-scoped independent sessions; otherwise do not split the scope or spawn subagents unless asked.
+See `reviewer-selection.md` for exact selection and bounded automatic item rounds. A finding gets one owning
 fix and a re-check of that finding only; a second full review needs a new owner request.
 
 Outside an explicitly selected plan route, do not require design finish, phase audit, plan
@@ -59,6 +61,6 @@ remain unloaded until explicitly invoked. Its work product must match the curren
 review request retains its boundary, and an explicit plan invocation retains the plan contract.
 
 For persisted plans/tasks and work-specific references, apply
-[work identity and references](../runtime/plan-protocol/references/work-references.md):
+[work identity and references](../skills/plan-protocol/references/work-references.md):
 assign stable `PLAN<N>`/`TASK<N>` when creating a document; qualify external references such as
 `PLAN<N>.D35` or `TASK<N>.D2`. A message-only task needs no document or ID allocation.

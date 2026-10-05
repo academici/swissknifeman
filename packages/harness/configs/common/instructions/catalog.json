@@ -2240,7 +2240,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
@@ -2270,7 +2270,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
@@ -2299,7 +2299,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
@@ -2314,7 +2314,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth, change it only through `python3 <task>/scripts/plan.py`; ignore generated files (`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`, `context/`, unit `brief.md`): never edit them and do not read them for work; get state with `plan.py next|show|context`.",
+          "intent": "Apply this source-derived instruction: Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
           "obligations": [
             {
               "modality": "must",
@@ -2328,11 +2328,11 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
-            "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth, change it only through `python3 <task>/scripts/plan.py`; ignore generated files (`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`, `context/`, unit `brief.md`): never edit them and do not read them for work; get state with `plan.py next|show|context`.",
+            "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
             "`plan.json`",
             "`python3 <task>/scripts/plan.py`",
             "`plan.py next|show|context`"
@@ -2358,7 +2358,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
@@ -2389,7 +2389,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
@@ -2419,7 +2419,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [
@@ -2447,7 +2447,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "e75c4a856b2196e4a6db7fa0e18d277d36fe00c8fca83619d2554f9d7612a3ff"
+              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
             }
           ],
           "compatibility_assertions": [

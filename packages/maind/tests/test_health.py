@@ -486,3 +486,29 @@ class TestMergeSessionHook(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRetiredFeatureHook(unittest.TestCase):
+    def test_sync_retirement_is_dry_run_safe_idempotent_and_preserves_foreign_hooks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project, root = _setup(tmp)
+            script = root / ".claude/maind-feature-log.sh"
+            script.parent.mkdir(parents=True, exist_ok=True)
+            script.write_text("legacy\n")
+            settings = script.parent / "settings.json"
+            original = {"hooks": {"SessionEnd": [{"hooks": [
+                {"type": "command", "command": f"bash {script}"},
+                {"type": "command", "command": "bash foreign.sh"}]}]}}
+            settings.write_text(json.dumps(original))
+            from maind.provision import sync
+            preview = sync._feature_log_hook_run(env, config, [project], "auto", True)
+            self.assertEqual(preview[0]["status"], "dry")
+            self.assertFalse(preview[0]["changed"])
+            self.assertTrue(script.exists())
+            self.assertEqual(json.loads(settings.read_text()), original)
+            applied = sync._feature_log_hook_run(env, config, [project], "auto", False)
+            self.assertTrue(applied[0]["changed"])
+            self.assertFalse(script.exists())
+            remaining = json.loads(settings.read_text())["hooks"]["SessionEnd"][0]["hooks"]
+            self.assertEqual(remaining, [{"type": "command", "command": "bash foreign.sh"}])
+            self.assertFalse(sync._feature_log_hook_run(env, config, [project], "auto", False)[0]["changed"])

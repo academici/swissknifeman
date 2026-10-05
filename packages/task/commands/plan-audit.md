@@ -1,11 +1,13 @@
 ---
 disable-model-invocation: true
 description: "Read-only Task plan audit of a design or a phase on explicit owner request."
-argument-hint: "<PLAN> <Pn|design>"
-model: opus
-effort: xhigh
+argument-hint: "<PLAN> <Pn|design> [--reviewer <provider/model>] [--effort xhigh]"
 ---
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Task package root>/scripts/plan.py`.
+
+Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.
+Without a selector, use the current native review route. A session that executed this candidate
+must hand the review to a fresh read-only session; never review its own work as independent evidence.
 
 **Goal:** one independent verdict (GREEN / ATTENTION / RED) on a plan design or a finished phase.
 
@@ -16,13 +18,15 @@ Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Task package root>/scri
    (`plan.py context <plan> <item> --stdout`): scope, reads, exact checks, decisions, dependencies.
 3. `Pn`: compare the phase's product diff with item scope, recorded checks and deliverables; rerun
    only checks whose inputs changed.
-4. Write the verdict to `@plan/artifacts/audit/<Pn|design>-<YYYY-MM-DD>.md`: verdict, findings
-   (severity, evidence `path:line`, owning item), recommendations.
+4. Add a knowledge JSON document using `plan.py add-document <plan> --file <input.json>`:
+   lowercase `id: audit-<scope>-<YYYY-MM-DD>`, title, `applies_to`, and `sections` for the verdict,
+   findings (severity, evidence `path:line`, owning item) and recommendations. The API generates
+   its human view; report the source `@plan/knowledge/<id>.json`.
 5. `plan.py log <plan> <Pn> --type note --summary "audit <verdict>: <file>"` (`design`: the first target phase).
 
 **Rules**
 - Runs only on explicit owner invocation; one reviewer, one pass, no subagents unless asked.
-- Read-only over product code and plan JSON; the verdict file and the note are the only writes.
+- Read-only over product code and execution state; only the verdict document and note are added through the API.
 - A finding names its owning item; fixing it is `plan-run` work (`plan.py reopen` by the owner).
 - Severity follows demonstrated impact; uncertainty is reported as a question, not a defect.
 

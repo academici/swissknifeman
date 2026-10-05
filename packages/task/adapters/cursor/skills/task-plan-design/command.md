@@ -1,7 +1,7 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:0e7ec24601eb19b8ea917da7dfefb611506c3dc6904ea62685ddab8f8ef4106f
-Adapter: task.cursor-command/1.0.17
+Canonical SHA-256: sha256:c53117ccaf803fcedce4ec3574d9bee3c06b0ec3b00671470d132fece49b5aec
+Adapter: task.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
 
@@ -50,12 +50,14 @@ context pack alone, and `plan.py check` passes.
 **Rules**
 - Change plans only through `plan.py`; never edit the generated Markdown views.
 - Spend research only where it can change a decision; long reasoning, algorithms and worked examples go
-  to `research/` or `artifacts/` files referenced from item reads (`@plan/...`).
-- A few outcome items per phase (normally ≤ 4), ≤ 8 reads per item; detail one phase at a time when
-  later phases depend on real code.
+  to JSON `sections` or `knowledge/<id>.json` through `add-document`, referenced from item reads.
+- Use as many items, reads and sections as the contract needs; detail a phase when its inputs are known.
 - Validation names exact commands that must pass; diagnostics stay out of acceptance checks.
-- Review is opt-in: items use `review: none`; only `--review` or an owner request adds one read-only
+- Review is opt-in: items use `review: {mode: none}`; only `--review` or an owner request adds one read-only
   review item at the end of the scope. Name hard risks in the item's `why`.
+- For concurrency, transactions, auth or data integrity, put the shared invariant model in
+  JSON `sections` or `knowledge/<id>.json` and reference it through item reads; name enforcement, bypass and
+  interfering operation/lock pairs. Use existing rules and validation fields, not new mandatory gates.
 - Design does not execute items.
 
 **Done when** `plan.py check <plan>` reports 0 errors, the target phase is `detailed`, and the report

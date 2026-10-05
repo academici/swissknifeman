@@ -1,6 +1,6 @@
 """Work units of an item (dossier §2.5.1, D3): the executor splits an item, hands pieces to other agents, integrates.
 
-A unit is ``phases/<Pn>/<Pn.m>/<U#>.json``; its workspace ``<U#>/`` holds the generated ``brief.md`` and whatever the
+A unit is ``phases/<Pn>/<Pn.m>/<U#>.json``; its workspace ``<U#>/`` holds the generated ``brief.json`` and whatever the
 worker writes. Lifecycle: ``todo -> dispatched -> returned -> accepted | rejected``; ``rework`` sends a returned unit back
 to ``dispatched`` with new notes. Python never starts an agent: ``dispatch`` writes the brief and records the worker.
 Every transition logs one ``delegate`` event. Refusals are ``PlanError`` codes and leave every file unchanged.
@@ -8,12 +8,12 @@ Every transition logs one ``delegate`` event. Refusals are ``PlanError`` codes a
 from __future__ import annotations
 
 import copy
+import json
 from pathlib import Path
 from typing import Iterable, Mapping
 
 from . import check as _check, lifecycle, store, views
 from .model import ITEM_ID, PlanError
-from .templating import render as _render_template
 
 UNIT_STATUSES = ("todo", "dispatched", "returned", "accepted", "reworked", "rejected")
 OPEN = ("dispatched", "returned")
@@ -44,7 +44,7 @@ def _reaches(deps: Mapping[str, Iterable[str]], start: str, goal: str) -> bool:
 def parallel_pairs(plan: store.Plan, item_id: str) -> list[tuple[str, str]]:
     """Pairs of unfinished units with no ``depends_on`` path between them and disjoint ``files`` (parallel-safe)."""
     docs = {u: plan.units[f"{item_id}/{u}"] for u in unit_ids(plan, item_id)}
-    deps = {u: [d for d in doc.get("depends_on") or [] if d in docs] for u, doc in docs.items()}
+    deps = {u: dependencies(plan, item_id, u) for u in docs}
     live = [u for u in docs if docs[u].get("status") not in ("accepted", "rejected")]
     pairs = []
     for index, a in enumerate(live):
@@ -56,72 +56,68 @@ def parallel_pairs(plan: store.Plan, item_id: str) -> list[tuple[str, str]]:
     return pairs
 
 
-def pack_section(plan: store.Plan, item_id: str) -> dict | None:
-    """View-model of the pack subsection ``Units``; None when the item has no units."""
+# ---------------------------------------------------------------- JSON dispatch contract
+
+def policy(plan: store.Plan, item_id: str) -> dict:
+    value = {"strategy": "dag"}
+    for doc in (plan.plan, plan.phases.get(item_id.split(".")[0], {}), plan.items[item_id]):
+        if isinstance(doc.get("orchestration"), dict):
+            value.update(doc["orchestration"])
+    return value
+
+
+def dependencies(plan: store.Plan, item_id: str, unit_id: str) -> list[str]:
     ids = unit_ids(plan, item_id)
-    if not ids:
-        return None
-    rows = []
-    for unit_id in ids:
-        doc = plan.units[f"{item_id}/{unit_id}"]
-        files = ", ".join(f for f in doc.get("files") or [] if isinstance(f, str))
-        deps = f" (after {', '.join(doc['depends_on'])})" if doc.get("depends_on") else ""
-        cells = [unit_id, views.line(doc.get("title")), doc.get("mode", ""), views._route_text(doc.get("route")),
-                 f"{doc.get('status', 'todo')}{deps}", files]
-        rows.append("| " + " | ".join(cell.replace("|", "\\|") for cell in cells) + " |")
-    pairs = parallel_pairs(plan, item_id)
-    return {"rows": rows, "parallel": ", ".join(f"{a} ∥ {b}" for a, b in pairs)}
+    doc = plan.units[f"{item_id}/{unit_id}"]
+    authored = doc.get("depends_on")
+    deps = [d for d in authored if isinstance(d, str)] if isinstance(authored, list) else []
+    deps += [u for u in ids if plan.units[f"{item_id}/{u}"].get("parent") == unit_id]
+    if policy(plan, item_id)["strategy"] == "sequential":
+        # Containers wait for their children; order only sibling nodes.
+        siblings = [u for u in ids if plan.units[f"{item_id}/{u}"].get("parent") == doc.get("parent")]
+        position = siblings.index(unit_id)
+        if position:
+            deps.append(siblings[position - 1])
+    return list(dict.fromkeys(deps))
 
 
-# ---------------------------------------------------------------- brief.md
+def ready(plan: store.Plan, item_id: str) -> list[dict]:
+    """Dispatch candidates only; this function starts no agents and runs no commands."""
+    candidates = []
+    for u in unit_ids(plan, item_id):
+        doc = plan.units[f"{item_id}/{u}"]
+        if doc.get("status") not in ("todo", "reworked"):
+            continue
+        if any(plan.units.get(f"{item_id}/{d}", {}).get("status") != "accepted"
+               for d in dependencies(plan, item_id, u)):
+            continue
+        candidates.append({"ref": f"{item_id}/{u}", "kind": doc.get("kind", "implementation"),
+                           "mode": doc.get("mode", "either"), "route": copy.deepcopy(doc.get("route", {})),
+                           "files": list(doc.get("files", []))})
+    limit = policy(plan, item_id).get("max_parallel")
+    running = sum(plan.units[f"{item_id}/{u}"].get("status") == "dispatched" for u in unit_ids(plan, item_id))
+    return candidates[:max(0, limit - running)] if limit is not None else candidates
+
 
 def brief_path(root: Path, item_id: str, unit_id: str) -> Path:
-    return store.unit_path(root, item_id, unit_id).with_suffix("") / "brief.md"
+    return store.unit_path(root, item_id, unit_id).with_suffix("") / "brief.json"
 
 
-def _workspace(item_id: str, unit_id: str) -> str:
-    return f"phases/{item_id.split('.', 1)[0]}/{item_id}/{unit_id}"
-
-
-def _block(lines: list[str]) -> dict | None:
-    return {"items": lines} if lines else None
+def brief(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False) -> dict:
+    from . import context
+    unit = _need_unit(plan, item_id, unit_id)
+    item = plan.items[item_id]
+    by_id = {c["id"]: c for c in item.get("validation", [])}
+    return {"ref": f"{plan.plan['short_id']}.{item_id}/{unit_id}", "unit": copy.deepcopy(unit),
+            "context": context.collect(plan, item_id),
+            "reads": [context.read_entry(plan, r) for r in unit.get("reads", [])],
+            "checks": [copy.deepcopy(by_id[c] if isinstance(c, str) else c) for c in unit.get("checks", [])],
+            "rework": (unit.get("outcome") or {}).get("notes", "") if rework else "",
+            "report_api": {"verb": "unit return", "item": item_id, "unit": unit_id}}
 
 
 def brief_text(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False) -> str:
-    """The mini-pack of one unit: goal, owned files, reads, item rules and decisions, checks, how to report.
-
-    ``rework`` adds the executor's notes (``outcome.notes``) as the reason the piece came back.
-    """
-    from . import context  # context imports this module for its Units section
-
-    item, unit = plan.items[item_id], plan.units[f"{item_id}/{unit_id}"]
-    short = plan.plan.get("short_id") or plan.plan.get("id", plan.root.name)
-    reads = [f"{r['path']}{' ' + r['section'] if r.get('section') else ''} — {views.line(r.get('why'))}"
-             for r in unit.get("reads") or [] if isinstance(r, dict) and isinstance(r.get("path"), str)]
-    reads += [f"{r['path']}{' ' + r['section'] if r.get('section') else ''} — {views.line(r.get('why'))} (item read)"
-              for r in context._reads(item) if r.get("required") is True]
-    by_id = {c.get("id"): c for c in item.get("validation") or [] if isinstance(c, dict)}
-    checks = []
-    for entry in unit.get("checks") or []:
-        check = by_id.get(entry) if isinstance(entry, str) else entry
-        if isinstance(check, dict):
-            checks.append(f"{check.get('id', '')}: `{check.get('cmd', '')}` → {views.line(check.get('expect'))}")
-    decisions = [f"{row['id']}: {row['text']}" for row in context._decisions(plan, item_id) if row["text"]]
-    outcome = unit.get("outcome") if isinstance(unit.get("outcome"), dict) else {}
-    agent = outcome.get("agent") if isinstance(outcome.get("agent"), dict) else {}
-    workspace = _workspace(item_id, unit_id)
-    model = {
-        "ref": f"{short}.{item_id}/{unit_id}", "title": views.line(unit.get("title")), "plan_title": views.line(plan.plan.get("title")),
-        "item": item_id, "item_title": views.line(item.get("title")), "unit": unit_id, "plan_ref": short,
-        "agent": f"{agent.get('provider', '?')}/{agent.get('model', '?')}", "route": views._route_text(unit.get("route")),
-        "goal": str(unit.get("goal") or "").strip(), "files": [f for f in unit.get("files") or [] if isinstance(f, str)],
-        "workspace": workspace, "instructions": str(unit.get("instructions") or "").strip(),
-        "rework": str(outcome.get("notes") or "").strip() if rework else "",
-        "reads": _block(reads), "rules": _block([views.line(r) for r in item.get("rules") or []]),
-        "decisions": _block(decisions), "checks": _block(checks), "report": f"{workspace}/report.md",
-    }
-    text = _render_template(views._load_template("unit-brief"), model, lambda name: views._load_template(f"_{name}"))
-    return text.rstrip("\n") + "\n"
+    return json.dumps(brief(plan, item_id, unit_id, rework=rework), ensure_ascii=False, indent=2) + "\n"
 
 
 # ---------------------------------------------------------------- mutations
@@ -201,21 +197,26 @@ def add_unit(plan, item_id: str, title: str, data: dict | None = None) -> str:
 
 
 def dispatch(plan, item_id: str, unit_id: str, agent, *, actor: Mapping | None = None) -> Path:
-    """Record ``agent`` as the worker, write ``<U#>/brief.md`` and return its path. Python starts nobody."""
+    """Record ``agent`` as the worker, write ``<U#>/brief.json`` and return its path. Python starts nobody."""
     with lifecycle._mutation(plan) as (p, lock):
         unit = copy.deepcopy(_need_unit(p, item_id, unit_id))
         if lifecycle.status_of(p, item_id) != "in_progress":
             raise PlanError("ITEM_NOT_IN_PROGRESS", f"{item_id} is {lifecycle.status_of(p, item_id)}; start it first")
-        if unit.get("mode") == "self":
-            raise PlanError("UNIT_SELF", f"{item_id}/{unit_id} has mode self: the executor does it itself")
+        if unit.get("mode") == "self" and _agent(agent) != lifecycle._actor_doc(p, actor, item_id):
+            raise PlanError("UNIT_SELF", f"{item_id}/{unit_id} requires the item executor")
         if unit.get("status") not in ("todo", "reworked"):
             raise PlanError("UNIT_STATE", f"{item_id}/{unit_id} is {unit.get('status')}; dispatch needs todo")
-        waiting = [d for d in unit.get("depends_on") or []
+        waiting = [d for d in dependencies(p, item_id, unit_id)
                    if p.units.get(f"{item_id}/{d}", {}).get("status") != "accepted"]
         if waiting:
             raise PlanError("UNIT_DEPENDENCY", f"{item_id}/{unit_id} waits for accepted {', '.join(waiting)}")
         worker = _agent(agent)
         need = unit.get("route") or {}
+        lifecycle.validate_route(need, worker, f"{item_id}/{unit_id}")
+        policy_limit = policy(p, item_id).get("max_parallel")
+        if policy_limit is not None and sum(d.get("status") == "dispatched" for k, d in p.units.items()
+                                            if k.startswith(f"{item_id}/")) >= policy_limit:
+            raise PlanError("PARALLEL_LIMIT", "all configured dispatch slots are occupied")
         admitted = lifecycle.admitted_class(worker["provider"], worker["model"])
         if admitted is not None and lifecycle._rank(lifecycle.CLASS_ORDER, admitted) < lifecycle._rank(
                 lifecycle.CLASS_ORDER, need.get("class")):

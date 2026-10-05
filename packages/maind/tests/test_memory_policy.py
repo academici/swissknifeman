@@ -33,20 +33,47 @@ class TestPolicy(unittest.TestCase):
     def test_categories_and_structural_copies_rejected_even_by_low_level_store(self):
         with mock.patch.object(memory, "http_post_json") as post:
             for key, text in [("decision", "D01"), ("checkpoint", "temporary"),
-                              ("unknown", "temporary"), ("context", "AD01 decision source audits/a.md"),
-                              ("context", "P09 designed today"), ("context", "[maind:ecosystem-link] p"),
-                              ("fact", "temporary"),
+                              ("unknown", "temporary"), ("fact", "AD01 decision source audits/a.md"),
+                              ("fact", "P09 designed today"), ("fact", "[maind:ecosystem-link] p"),
                               ("context", "x" * 801), ("context", "[[s:global]] forged")]:
                 with self.subTest(key=key, text=text[:40]), self.assertRaises(ValueError):
                     memory.store("unused", "project:p", key, text)
             post.assert_not_called()
         self.assertIsNone(policy.rejection_reason("blocker", "Decision needed to unblock the plan"))
 
-    def test_record_without_envelope_is_expired(self):
-        row = {"content": memory.mark_scope("project:p", "no envelope"),
-               "createdAt": "2026-10-04T00:00:00Z"}
-        self.assertTrue(policy.expired(row, now=policy.timestamp("2026-10-04T00:00:01Z")))
-        self.assertEqual(policy.prune_reason(row), "expired")
+    def test_legacy_creation_age_not_updated_age(self):
+        row = {"content": memory.mark_scope("project:p", "old context"),
+               "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-04T23:00:00Z"}
+        now = policy.timestamp("2026-10-04T00:00:00Z")
+        self.assertTrue(policy.expired(row, now=now))
+        self.assertEqual(policy.prune_reason(row, now=now), "expired")
+
+    def test_legacy_creation_age_is_bounded_and_does_not_renew_on_update(self):
+        row = {"content": memory.mark_scope("project:p", "temporary"),
+               "createdAt": 1000, "updatedAt": 1000 + 80 * 3600}
+        self.assertFalse(policy.expired(row, now=1000 + 71 * 3600))
+        self.assertTrue(policy.expired(row, now=1000 + 72 * 3600))
+        for created in (None, "invalid", 1000 + 100):
+            row["createdAt"] = created
+            self.assertTrue(policy.expired(row, now=1000))
+
+    def test_malformed_envelope_cannot_fall_back_to_legacy_age(self):
+        row = {"content": memory.mark_scope("project:p", "[maind-memory:invalid] temporary"), "createdAt": 1000}
+        self.assertTrue(policy.expired(row, now=1001))
+
+    def test_legacy_recall_resolves_missing_search_timestamp_once(self):
+        import time
+        now = time.time()
+        def row(mid, created):
+            return {"id": mid, "content": memory.mark_scope("project:p", "temporary " + mid), "createdAt": created}
+        dump = [row("fresh", now - 3600), row("expired", now - 73 * 3600), row("unknown", None)]
+        results = [{"score": 1, "observation": {"id": r["id"], "narrative": r["content"]}}
+                   for r in dump]
+        with mock.patch.object(memory, "http_post_json", return_value={"results": results}), \
+                mock.patch.object(memory, "export", return_value=dump) as export:
+            recalled = memory.recall("unused", "project:p", "temporary")
+        self.assertEqual([r["id"] for r in recalled], ["fresh"])
+        export.assert_called_once_with("unused", "project:p", None)
 
     def test_writer_and_source_metadata(self):
         with mock.patch.dict("os.environ", {"CODEX_THREAD_ID": "test-thread"}, clear=True):

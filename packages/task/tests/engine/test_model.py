@@ -90,7 +90,7 @@ class StatusTests(unittest.TestCase):
 
     def test_class_and_effort_order(self):
         self.assertEqual(model.CLASS_ORDER, ("economy", "implementation", "frontier"))
-        self.assertEqual(model.EFFORT_ORDER, ("low", "medium", "high", "xhigh"))
+        self.assertEqual(model.EFFORT_ORDER, ("low", "medium", "high", "xhigh", "max", "ultra"))
 
 
 class PhaseStatusTests(unittest.TestCase):

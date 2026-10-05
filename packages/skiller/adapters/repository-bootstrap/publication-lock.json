@@ -72,16 +72,16 @@
       "provider": "claude",
       "target": ".claude/skills/ecosystem-mcp/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
-      "canonical_sha256": "ca1c837a439f5cc74dd8d3ce872564f6ae30231162584a676b0cdf120a0fc53b",
-      "rendered_sha256": "48d14713af713f4c031461b61e9ce99a3fa294e52268906d6351eeb6671f8acd"
+      "canonical_sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+      "rendered_sha256": "29a61a56501ba16e3a9c0a59323ad8d1cbe5942be41da74129757d94289969f7"
     },
     {
       "identity": "ecosystem-mcp",
       "provider": "codex",
       "target": ".agents/skills/ecosystem-mcp/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
-      "canonical_sha256": "ca1c837a439f5cc74dd8d3ce872564f6ae30231162584a676b0cdf120a0fc53b",
-      "rendered_sha256": "48d14713af713f4c031461b61e9ce99a3fa294e52268906d6351eeb6671f8acd"
+      "canonical_sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+      "rendered_sha256": "29a61a56501ba16e3a9c0a59323ad8d1cbe5942be41da74129757d94289969f7"
     },
     {
       "identity": "ecosystem-setup",
@@ -216,16 +216,16 @@
       "provider": "claude",
       "target": ".claude/skills/task-development-philosophy/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
-      "canonical_sha256": "e41445fd72fb170fcbc0e9182dfb2b7ded08be5847bc924e09337ee3b74ef980",
-      "rendered_sha256": "6711beaa98d3b8d851d5d25d24221118de41fd2f7009a0428c4e94f4e880929c"
+      "canonical_sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+      "rendered_sha256": "6cc25f70205d0a42da4b1dcd11c5cf7841e32a08b0bb80ebdeb5099c2edd8fc7"
     },
     {
       "identity": "task-development-philosophy",
       "provider": "codex",
       "target": ".agents/skills/task-development-philosophy/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
-      "canonical_sha256": "e41445fd72fb170fcbc0e9182dfb2b7ded08be5847bc924e09337ee3b74ef980",
-      "rendered_sha256": "6711beaa98d3b8d851d5d25d24221118de41fd2f7009a0428c4e94f4e880929c"
+      "canonical_sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+      "rendered_sha256": "6cc25f70205d0a42da4b1dcd11c5cf7841e32a08b0bb80ebdeb5099c2edd8fc7"
     },
     {
       "identity": "workflow-craft",
@@ -233,8 +233,8 @@
       "target": ".agents/skills/workflow-craft/SKILL.md",
       "source_class": "public-bucket",
       "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
-      "canonical_sha256": "47a88dbf5309c424b264ccbcacaf87ae734c6f7e2a241c3c4d5236c70c907c94",
-      "rendered_sha256": "c134c94cd16a68636e820c049527cc2b8fda0d46f0076c09d853de872ced4bbd"
+      "canonical_sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
+      "rendered_sha256": "a284fea973dcd173fdbc86405e532cca76094696c5c038eb58490d832c6a9b70"
     }
   ]
 }

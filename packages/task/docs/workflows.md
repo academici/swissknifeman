@@ -40,7 +40,7 @@ itself is driven only by `scripts/plan.py` verbs (`next, start, log, finish, che
 ## Scout
 
 An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic
-context pack and answers with at most 40 lines of `path[:symbol] — why` plus an `Unknowns:` block. It never
+context pack and answers with all useful entries of `path[:symbol] — why` plus an `Unknowns:` block. It never
 writes code or decisions, and the default start makes no model call.
 
 - Enable: `plan.py start <plan> <items> --actor P/M/E --scout` once, or `plan.py set <plan> plan --json
@@ -50,7 +50,7 @@ writes code or decisions, and the default start makes no model call.
   rejects unknown keys, providers and placeholders. A provider without an entry is skipped; only `claude-code`
   has one (`claude -p --model haiku --tools ""`: no tools, so no writes).
   Add other providers only after checking their `--help` for a non-interactive, read-only mode that reads stdin.
-- Result: `context/<item>.scout.md` (generated, gitignored) and section 13 "Scout map" of the pack. A timeout,
+- Result: `context/<item>.scout.json` (generated, gitignored) and the JSON scout field. A timeout,
   a non-zero exit or an empty answer never blocks `start`: the pack is built without the map.
 - Read the outcomes in `log.jsonl`: events of type `scout` with `data: {provider, model, outcome: ok|failed|skipped,
   seconds, lines}` (`plan.py stats` summarises them from P4.2).
@@ -66,7 +66,7 @@ agents build, and stays the integrator: it reviews and tests every returned piec
   `unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, `return --notes … --changed …` (the worker),
   `accept|rework|reject --notes …` (the executor). `rework` sends the piece back to `dispatched` and rewrites its brief;
   every transition logs a `delegate` event. `mode: self` units are never dispatched (`UNIT_SELF`).
-- `dispatch` writes `phases/<Pn>/<Pn.m>/<U#>/brief.md`: goal, owned files, reads, item rules and decisions, checks,
+- `dispatch` writes `phases/<Pn>/<Pn.m>/<U#>/brief.json`: goal, owned files, reads, item rules and decisions, checks,
   where to report. Python starts no agent: hand the brief to a native subagent of your provider (Claude Code Task
   tool, Codex, Cursor or Grok subagents) and run parallel-safe units together (the pack's Units section lists them).
 - `finish --status done|done_with_deviations` is refused with `UNITS_OPEN` while a unit is `dispatched` or `returned`.
@@ -83,3 +83,10 @@ agents build, and stays the integrator: it reviews and tests every returned piec
   command `/task:review`.
 - Full cycle in which workflow templates occupy the research/exec/review stages -
   [Methodology](./methodology).
+
+Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+exact native route; without an explicit review request no review runs. `plan-run` accepts
+`--review-effort`; review/audit accept `--effort`. See the Task package's
+`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.

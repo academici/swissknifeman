@@ -58,13 +58,15 @@
     },
     "effort": {
       "type": "string",
-      "description": "Reasoning effort, ordered low < medium < high < xhigh.",
+      "description": "Reasoning effort, ordered low < medium < high < xhigh < max < ultra.",
       "minLength": 1,
       "enum": [
         "low",
         "medium",
         "high",
-        "xhigh"
+        "xhigh",
+        "max",
+        "ultra"
       ]
     },
     "route": {
@@ -78,6 +80,18 @@
         "effort": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/effort",
           "description": "Minimum effort."
+        },
+        "provider": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Provider."
+        },
+        "model": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Model."
+        },
+        "settings": {
+          "type": "object",
+          "description": "Provider-native JSON settings, carried without interpretation or execution."
         }
       },
       "required": [
@@ -163,6 +177,75 @@
       "type": "string",
       "description": "Non-empty text, Markdown allowed.",
       "minLength": 1
+    },
+    "orchestration": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "dag",
+            "sequential"
+          ],
+          "description": "Strategy."
+        },
+        "instructions": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Instructions."
+        },
+        "max_parallel": {
+          "type": "integer",
+          "description": "Optional concurrent dispatch ceiling; positive when present."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "orchestration contract."
+    },
+    "section": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Id."
+        },
+        "title": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Title."
+        },
+        "text": {
+          "type": "string",
+          "description": "Full section body, including code and examples; no truncation."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "text"
+      ],
+      "additionalProperties": false,
+      "description": "section contract."
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+          "description": "Path."
+        },
+        "note": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Note."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Sha256."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "provenance contract."
     }
   }
 }

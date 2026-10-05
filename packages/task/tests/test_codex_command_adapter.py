@@ -126,7 +126,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (
-            b"\nmodel/effort <model/effort> path/effort\n"
+            b"\nmodel/effort <model/effort> path/effort provider/model[/context][/effort]\n"
             b"/model /effort /clear /task:fix\n"
         )
         source_contents = tuple(
@@ -141,7 +141,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
             artifact.managed_bytes.decode("utf-8")
             for artifact in plan.artifacts
             if artifact.path.endswith("/task-fix/command.md"))
-        self.assertIn("model/effort <model/effort> path/effort", runtime)
+        self.assertIn("model/effort <model/effort> path/effort provider/model[/context][/effort]", runtime)
         self.assertIn(
             "select the session model class select the session effort "
             "reset the session context $ task:fix",

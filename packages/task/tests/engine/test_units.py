@@ -20,7 +20,6 @@ from task.plan.model import PlanError  # noqa: E402
 OPUS = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
 HAIKU = "claude-code/haiku"
 SONNET = "claude-code/sonnet"
-GOLDEN = Path(__file__).resolve().parent / "fixtures" / "unit-brief.golden.md"
 DETAIL = {
     "summary": "s", "why": "w", "scope": {"include": ["x"]}, "deliverables": ["d"], "rules": ["Keep it small"],
     "task_files": [{"path": "lib/**", "change": "any"}, {"path": "docs/*.md", "change": "any"}],
@@ -120,17 +119,19 @@ class DispatchTests(UnitCase):
     def test_dispatch_writes_the_brief_and_logs_the_event(self):
         self.add("Errors", U1)
         path = units.dispatch(self.root, "P1.1", "U1", HAIKU)
-        self.assertEqual(path, self.root / "phases" / "P1" / "P1.1" / "U1" / "brief.md")
+        self.assertEqual(path, self.root / "phases" / "P1" / "P1.1" / "U1" / "brief.json")
         unit = self.unit()
         self.assertEqual(unit["status"], "dispatched")
         self.assertEqual(unit["outcome"]["agent"], {"provider": "claude-code", "model": "haiku"})
         (event,) = self.delegate_events()
         self.assertEqual(event["data"], {"unit": "U1", "class": "economy", "model": "haiku", "status": "dispatched"})
 
-    def test_golden_brief(self):
+    def test_json_brief_contains_contract_and_reporting_api(self):
         self.add("Errors", U1)
-        text = units.dispatch(self.root, "P1.1", "U1", HAIKU).read_text(encoding="utf-8")
-        self.assertEqual(text, GOLDEN.read_text(encoding="utf-8"))
+        value = json.loads(units.dispatch(self.root, "P1.1", "U1", HAIKU).read_text())
+        self.assertEqual(value["unit"]["goal"], "Error types")
+        self.assertEqual(value["context"]["item"]["rules"], ["Keep it small"])
+        self.assertEqual(value["report_api"]["verb"], "unit return")
 
     def test_refusals(self):
         self.add("Errors", U1)
@@ -173,8 +174,8 @@ class TransitionTests(UnitCase):
         units.rework(self.root, "P1.1", "U1", notes="use frozen dataclasses")
         unit = self.unit()
         self.assertEqual((unit["status"], unit["outcome"]["notes"]), ("dispatched", "use frozen dataclasses"))
-        brief = (self.root / "phases/P1/P1.1/U1/brief.md").read_text(encoding="utf-8")
-        self.assertIn("## Rework requested\n\nuse frozen dataclasses", brief)
+        brief = (self.root / "phases/P1/P1.1/U1/brief.json").read_text(encoding="utf-8")
+        self.assertEqual(json.loads(brief)["rework"], "use frozen dataclasses")
         units.return_unit(self.root, "P1.1", "U1", notes="fixed")
         units.rework(self.root, "P1.1", "U1", notes="once more")
         counts = [e["data"].get("rework") for e in self.delegate_events() if e["data"]["status"] == "reworked"]
@@ -208,7 +209,11 @@ class FinishTests(UnitCase):
 
     def test_units_still_out_block_done_and_done_with_deviations(self):
         self.add("Errors", U1)
-        self.finish()  # a todo unit is the executor's own business
+        self.refused("UNITS_OPEN", lifecycle.finish, "P1.1", "done", checks={"V1": 0})
+        units.dispatch(self.root, "P1.1", "U1", HAIKU)
+        units.return_unit(self.root, "P1.1", "U1")
+        units.accept(self.root, "P1.1", "U1")
+        self.finish()
         self.assertEqual(self.load().items["P1.1"]["status"], "done")
 
     def test_dispatched_and_returned_units_refuse_finish(self):
@@ -239,17 +244,16 @@ class PackTests(UnitCase):
     def test_no_units_no_section(self):
         self.assertNotIn("## Units", self.pack())
 
-    def test_units_table_and_parallel_hint(self):
+    def test_units_and_ready_candidates_are_json(self):
         self.add("Errors", U1)
         self.add("Docs", U2)
         self.add("Glue", U3)
-        text = self.pack()
-        self.assertIn("## Units\n", text)
-        self.assertIn("| U1 | Errors | delegate | economy/medium | todo | lib/errors.py |", text)
-        self.assertIn("| U3 | Glue | self | implementation/high | todo (after U1) | lib/config.py |", text)
-        self.assertIn("Parallel-safe: U1 ∥ U2, U2 ∥ U3", text)
+        value = json.loads(self.pack())
+        self.assertEqual([u["id"] for u in value["units"]], ["U1", "U2", "U3"])
+        self.assertEqual([u["ref"] for u in value["ready_units"]], ["P1.1/U1", "P1.1/U2"])
+        self.assertEqual(units.parallel_pairs(self.load(), "P1.1"), [("U1", "U2"), ("U2", "U3")])
         units.dispatch(self.root, "P1.1", "U1", HAIKU)
-        self.assertIn("| U1 | Errors | delegate | economy/medium | dispatched |", self.pack())
+        self.assertEqual(json.loads(self.pack())["units"][0]["status"], "dispatched")
 
     def test_finished_units_leave_the_parallel_hint(self):
         self.add("Errors", U1)

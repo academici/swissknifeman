@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:b93cfe5909174190d3bc1875f88a76793e573ad43fd4c0d4a2d0825df237bcc2
-Adapter: task.codex-command/1.0.17
+Canonical SHA-256: sha256:4f73d389d7c501e92498422fbbc53968cabace25b8fc944c5a1ec24464666001
+Adapter: task.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -37,25 +37,30 @@ one commit per item, inside the item's scope.
 
 **Steps**
 1. `plan.py next <plan>` — without item ids, run the batch it names; with ids, run those.
-   `--review` is a flag, never an item id.
+   Review flags are options, never item ids. Read `references/reviewer-selection.md` when requested.
+   `--reviewer` requests a fresh read-only review of each selected item before `finish`;
+   an omitted reviewer flag never starts a review.
 2. `plan.py start <plan> <items…> --actor <provider>/<model>/<effort> --session auto`.
    A route refusal (`ROUTE_UNDERSHOOT`) stops before any product write; a stronger route is fine.
-3. Read only `context/<item>.md` and the files its Reads section lists; get more state with
+3. Read `plan.py context <plan> <item> --stdout` as JSON and the supporting files it names; get more state with
    `plan.py show <plan> <ref>`. Never read or edit the generated Markdown views.
 4. Implement Scope include only. Use the item's rules, guidance and decisions.
 5. When reality changes the plan, an assumption or a blocker appears:
    `plan.py log <plan> <item> --type deviation|blocker|difficulty|assumption|note --summary "…"`.
 6. Run each Validation check once per relevant change; keep long output in a file.
+   With `--reviewer`, run the selected native read-only reviewer after GREEN checks; record its
+   verdict and actual session in an artifact and a `plan.py log --type note` event. A finding returns
+   one owning correction and affected checks, then at most one re-review; no recursive reviewer fixes.
 7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…"`
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
 8. One scoped commit (plan JSON + product files), then the next item of the batch.
 
 **Units (optional)**
-- Split an item only into independent pieces that own separate files and checks; `plan.py unit <plan> <item> add --title … --json …`.
+- Represent preparation, implementation, review and checks as units with dependencies and optional parents; `plan.py unit <plan> <item> add --title … --json …`.
 - Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give its
-  `phases/<Pn>/<Pn.m>/<U#>/brief.md` to a native subagent of your own provider; parallel-safe units are listed in the pack.
+  `phases/<Pn>/<Pn.m>/<U#>/brief.json` to a native subagent of your own provider; use `unit … next` for ready work and JSON context for dependencies.
 - You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`.
-- `finish` is refused while a unit is `dispatched` or `returned`. Python starts no agent; `plan.py stats` shows the numbers.
+- `finish` is refused until every unit is `accepted` or explicitly `rejected`. Python starts no agent; `plan.py stats` shows the numbers.
 
 **Rules**
 - Run under the session route; never switch the model. The item route is the minimum.

@@ -27,6 +27,7 @@ EXPECTED_MATRIX_CLASSES = (
     ("memory-hook", "delegated", "not-observed", "MAIND_DELEGATED:memory-context"),
     ("health-hook", "delegated", "not-observed", "MAIND_DELEGATED:health"),
     ("health-doc", "delegated", "not-observed", "MAIND_DELEGATED:health"),
+    ("feature-log-hook", "delegated", "not-observed", "MAIND_DELEGATED:health"),
     ("ecosystem-skill", "delegated", "not-observed", "MAIND_DELEGATED:skills"),
     ("setup-skill", "delegated", "not-observed", "MAIND_DELEGATED:skills"),
     ("skills-catalog", "delegated", "not-observed", "MAIND_DELEGATED:skills"),

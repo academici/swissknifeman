@@ -1,108 +1,125 @@
-# Task plan structure - layout v3
+# Task JSON plans — layout v4
 
-A plan lives in `plans/<PLAN-ID>/` (`YYYY.MM.DD-№N-SLUG`, Short ID `PLAN<N>`, archived plans in
-`plans/archive/`). JSON is the only source of truth; every JSON document validates against a schema in
-`packages/task/schemas/plan/v1/` (Draft 2020-12, closed profile: `additionalProperties: false`, unknown
-schema keywords are an error). Plans are changed only through `scripts/plan.py` - it validates, writes
-canonical JSON atomically under a lock and regenerates the views.
-
-## Layout
+JSON owns plan contracts, instructions, orchestration and outcomes. Agents use
+`python3 <TASK>/scripts/plan.py` or read JSON. Human Markdown is generated from templates
+under `views/` and excluded from agent input and indexing. The API never parses those views.
 
 ```text
-plans/<ID>/
-  plan.json              goal, context, rules, phase order, settings
-  brief.json             owner messages (verbatim) and extracted requirements
-  log.jsonl              append-only event log (lifecycle events + friction)
-  decisions/<D#>.json    decisions and open questions
-  phases/<Pn>/phase.json goal, scope, validation, batches, closure
-  phases/<Pn>/<Pn.m>.json  one item: stable spec + volatile result
-  phases/<Pn>/<Pn.m>/<U#>.json  optional work units; <U#>/ holds a generated brief.md and reports
-  research/ artifacts/ findings/ backlog/   free-form supporting files (referenced as @plan/...)
-  .gitignore             `context/` and `.lock`
-  index.md plan.md roadmap.md status.md handoff.md open-questions.md AGENTS.md CLAUDE.md context/
-                         generated - never edit, never read for work
+plans/<YYYY.MM.DD-№N-SLUG>/
+  plan.json  brief.json  log.jsonl
+  phases/<Pn>/phase.json
+  phases/<Pn>/<Pn.m>.json
+  phases/<Pn>/<Pn.m>/<U#>.json             # optional subtasks
+  phases/<Pn>/<Pn.m>/<U#>/brief.json       # generated worker input
+  decisions/<D#>.json
+  knowledge/<id>.json                     # complete design/runbook/evidence sections
+  artifacts/ research/ findings/ backlog/ # raw supporting evidence
+  views/                                 # template-generated human views
+  context/<Pn.m>.json                     # generated executor input
+  .ignore .cursorignore .gitignore
 ```
 
-## Schemas
+Schemas in `schemas/plan/v1/` use Draft 2020-12 and markers
+`urn:swissknifeman:task:plan:<kind>:v1`. Document shapes are closed; provider-native `route.settings`
+and event `data` carry arbitrary JSON. Unknown schema keywords are rejected. Paths are
+repository-relative or `@plan/…`; `..` is rejected. Stable identities may contain leading zeroes.
 
-| Schema | Document | Notable fields |
-|:--|:--|:--|
-| `plan` | `plan.json` | `id`, `short_id`, `status` (`active, paused, done, archived`), `goal`, `context`, `rules`, `phases`, `settings {design_audit, scout}` |
-| `brief` | `brief.json` | `messages[]` (M#), `requirements[]` (B#, `source`, `owners`), `environment` |
-| `phase` | `phase.json` | `design` (`skeleton, detailed`), `scope`, `depends_on`, `pitfalls`, `validation`, `items`, `batches`, `contract`, `assurance`, `closed` |
-| `item` | `<Pn.m>.json` | `status`, `summary`, `why`, `scope`, `depends_on`, `reads`, `task_files`, `artifacts`, `rules`, `guidance`, `validation`, `route`, `review`, `authority`, `rag`, `units`, `result` |
-| `decision` | `<D#>.json` | `status` (`open, accepted, rejected, superseded`), `question`/`options` or `decision`/`rationale`, `consequences`, `applies_to`, `evidence`, `actor` |
-| `unit` | `<U#>.json` | owned `files`, `depends_on`, `checks`, `route`, `mode` (`self, delegate, either`), `status` |
-| `log-event` | `log.jsonl` line | `type`, `item`/`phase`, `summary`, `impact`, `next`, `actor`, `data` |
+| Document | Main fields |
+| --- | --- |
+| plan | identity, goal, context, rules, non_goals, phase order, settings, contracts, sections, orchestration |
+| brief | owner quotes or explicitly marked source records, requirements, constraints, environment, sections |
+| phase | design, goal, scope, contracts, dependencies, pitfalls, validation, ordered batches, closure, sections |
+| item | status, summary, why, scope, reads, files, rules, guidance, checks, outputs, route, review, authority, units, result |
+| unit | kind, goal, files, reads, checks, instructions, dependencies, parent, route, mode, outputs, command, status, outcome |
+| decision | status, question/options or decision/rationale, applicability, evidence, supersession, sections |
+| document | id, title, sections, applies_to, provenance; stored as `knowledge/<id>.json` |
+| snapshot | complete plan graph and events, used by export/import |
 
-`task_files` and `related` are hints, not limits. Paths are repository-relative; `@plan/` means relative to
-the plan directory; `..` is rejected.
+A section is `{id, title, text}` and retains its complete body, including code/examples.
+A knowledge read can select its section id or exact title. A document without `applies_to`
+is global context; otherwise it applies to the named phases/items.
 
-## Statuses
+## API
 
-Item: `todo, in_progress, done, done_with_deviations, blocked, skipped`. `blocked` does not satisfy a
-dependency; `skipped` does and needs an accepted decision. `status`, `result`, `phase.closed`,
-`phase.design` and `plan.status` are owned by the lifecycle verbs; `set` refuses them (`FIELD_OWNED`).
-A phase closes when all items are terminal, with the worst result (`blocked > done_with_deviations >
-done`); the plan becomes `done` when all phases are closed.
-
-## Batches and route
-
-Each phase lists `batches` in execution order; each item is in exactly one. `recommended` batches may be
-split; `required` ones run as one. `plan.py next` names the next batch with its route: the highest model
-class (`economy < implementation < frontier`) and effort (`low < medium < high < xhigh`) of its members.
-`start --actor <provider>/<model>[/<effort>]` is checked against the model pool in
-`configs/command-routing.json`: undershoot is refused (`ROUTE_UNDERSHOOT`), an unknown model only warns.
-
-## Lifecycle
-
-`new → add-phase/add-item/add-decision/set/push/batches → check → design-done → start → (log) → finish
-→ phase closes → … → archive`. Owner gates (`authority.kind=owner_gate`) need `plan.py grant` with the owner's
-message quoted in `--note`. `finish --status done` needs every acceptance check recorded with exit 0.
-`reopen` returns a finished item to `todo` with a reason; `archive` moves a done plan to `plans/archive/`.
-Refusals print `CODE: message` and write nothing.
-
-## Log and friction
-
-`log.jsonl` is append-only. The API writes lifecycle events (`plan_created, design_done, start, finish,
-phase_closed, gate_granted, decision, archived, migrated`); agents add only friction with
-`plan.py log <plan> <item> --type deviation|blocker|difficulty|assumption|note --summary "…"` when the plan,
-an assumption or a blocker changes. The next context pack replays the latest friction as Lessons.
-
-## Context pack
-
-`start` (and `plan.py context <plan> <item> [--stdout]`) writes `context/<item>.md` in a fixed order:
-Task, Goal, Scope, Context, Decisions, Upstream results, Reads (sections of `.md` files inlined, others
-listed with why), Files, Artifacts, Lessons, Rules, Done when and an optional Scout map. Empty sections
-are omitted. Size is reported, not gated.
-
-## Views and ignore rules
-
-`index, plan, roadmap, status, handoff, open-questions` are rendered from JSON by `templates/plan/` after
-every mutation; `plan.py render [--check]` rebuilds or detects stale files, and `check` reports `stale_view`.
-Every provider is told to ignore generated files: the global instruction `task.plan-files`, the plan-local
-`AGENTS.md`/`CLAUDE.md`, and harness hooks (`lifecycle.plan-guard` blocks writes to generated files,
-`lifecycle.plan-regen` runs `check` and `render` after JSON edits).
-
-## Work units (opt-in)
-
-The schema lets an item be split into units in a workspace folder next to the item file:
-
-```text
-phases/P1/P1.1.json            item; "units": ["U1", "U2"]
-phases/P1/P1.1/U1.json         unit: files, depends_on, checks, route, mode, status, outcome
-phases/P1/P1.1/U1/brief.md     generated at dispatch, read only by the worker
-phases/P1/P1.1/U1/report.md    written by the worker (plus any logs or scratch)
+```bash
+python3 <TASK>/scripts/plan.py new --codename DEMO --title Demo --actor provider/model/high --message-file owner.txt
+python3 <TASK>/scripts/plan.py show PLAN1 plan
+python3 <TASK>/scripts/plan.py context PLAN1 P1.1 --stdout
+python3 <TASK>/scripts/plan.py --output json next PLAN1 --json
+python3 <TASK>/scripts/plan.py apply PLAN1 --file coordinated-patches.json
+python3 <TASK>/scripts/plan.py export PLAN1 > snapshot.json
+python3 <TASK>/scripts/plan.py import plans/<existing-id> --file snapshot.json
 ```
 
-Each unit owns disjoint `files`, has a minimum route and a lifecycle `todo → dispatched → returned → accepted |
-rejected` (`rework` returns a piece to `dispatched`). The item executor stays the integrator: it reviews and tests
-every returned piece and alone finishes the item (`UNITS_OPEN` while a unit is `dispatched` or `returned`). `check`
-enforces unique ids, acyclic `depends_on` and non-overlapping `files` of independent units. Verbs: `plan.py unit …`
-and `plan.py stats`; see [Workflows](./workflows).
+Author with `add-phase`, `add-item`, `add-decision`, `add-document`, `set`, `push`, `batches`.
+Knowledge references for show/set are `knowledge/<id>`. `apply` accepts a non-empty array of
+`{ref, patch}` objects and validates their combined graph before writing. Identity and lifecycle
+fields are protected from authoring edits. Refusals write nothing and carry a stable code.
+`--output json` provides an `{ok, data}` or `{ok: false, error}` envelope.
 
-## Contracts and portability
+`export` includes every current JSON document and the event log. `import` validates a complete
+snapshot, stages the destination with supporting files, then publishes it with rollback on
+publication failure. Existing JSON requires `--replace`. Historical dates, states and evidence
+survive import exactly. Import is a data API; source-format conversion is never runtime behavior.
 
-`plan.json.contracts` notifies other plans of exported/consumed contracts; cross-plan references use
-`PLAN7.P2.3` or `repo:PLAN7.D4`. Plans in this repository are gitignored (`plans/`); product commits
-contain only code and docs, plan bookkeeping stays local.
+## Lifecycle and scheduling
+
+Items: `todo → in_progress → done | done_with_deviations | blocked | skipped`.
+Blocked items do not satisfy dependencies; skipped items require an accepted decision.
+Phases progress `skeleton → detailed` via `design-done`. A detailed item needs real scope,
+acceptance checks, deliverables and supporting input or self-contained guidance/sections.
+Skeleton scope may be empty. `finish` closes a terminal phase and finishes a plan only when all
+phases close without blockers. `reopen` clears the affected item/phase closure.
+
+Batches cover every phase item exactly once and preserve execution order. Recommended batches
+can be split; required batches are atomic. Explicit phase dependencies express parallel branches.
+`next --json` reports one semantic action and its required route. Owner gates are declared in
+`authority`, granted through `grant --note` with authentic owner permission.
+
+Routes specify minimum `class: economy|implementation|frontier` and effort
+`low|medium|high|xhigh|max|ultra`. Optional `provider` and `model` select an exact executor;
+`settings` carry native JSON options. `start --actor` and unit dispatch reject mismatched explicit
+selections or known capability/effort undershoots. Unknown model classes are reported honestly.
+No process is launched merely because it appears in JSON.
+
+## Orchestration units
+
+An item lists unit IDs; documents live under its workspace. `kind` names preparation,
+implementation, review, verification, integration or command work. `files` is write ownership
+and may be empty for read-only work; `outputs` describes produced evidence. Command units carry
+an exact command check. `parent` permits nested subtasks without introducing another lifecycle.
+
+Plan → phase → item `orchestration` overrides `strategy: dag|sequential`, instructions and an
+optional owner-selected `max_parallel`. DAG scheduling uses dependencies and disjoint write
+ownership. Sequential scheduling orders siblings. A parent waits for its children. Cycles,
+unknown dependencies/parents and unordered overlapping write sets are errors.
+
+`unit … next` returns ready units as JSON; `unit … <U#> context` returns a full JSON worker brief.
+`dispatch --agent` records the executor and writes `brief.json`. A self unit belongs to the item
+executor. State is `todo → dispatched → returned → accepted | rejected`; `rework` redispatches
+with new instructions. Every declared unit must be accepted or explicitly rejected before its
+item completes, including units never started. Python reports work and stores results; a provider
+orchestrator is responsible for launching it and performing checks.
+
+## Context, views and delivery
+
+`context --stdout` returns the full plan/brief, phase and item, applicable decisions and knowledge,
+upstream results, selected supporting sections, friction history, units and readiness. `start`
+writes the same JSON under `context/`. There is no read count, inline cap, lesson truncation,
+phase-size quota or spending gate. Supporting code/docs can be read when needed.
+
+`check` validates JSON schemas, references, graph invariants and recorded state. It never reads
+human Markdown and does not depend on view freshness. `render --check` separately detects stale
+human views. Templates produce overview, roadmap, status, handoff, questions and complete
+brief/phase/item/unit/decision/knowledge views. No plan-local `AGENTS.md` or `CLAUDE.md` is created.
+
+Search/index ignores exclude plan Markdown, `views/` and generated `context/`; Serena provisioning applies
+these exclusions even when gitignored files are indexed. Harness guards protect generated
+views, JSON packs and worker briefs from hand edits. References from reads/examples into
+human views or any plan-local Markdown are rejected. Design and review prose belongs in JSON;
+historical Markdown receipts may remain immutable evidence for people.
+
+The Task marketplace plugin delivers `skills/plan-protocol` with the engine, schemas, templates
+and provider commands. The protocol is explicitly invoked and shares the same installed package
+as its API. Temporary migrations live under the package's `docs/migration/` and are removed when
+the active-plan inventory is exhausted; archived plans are untouched.

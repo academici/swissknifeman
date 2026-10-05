@@ -34,8 +34,7 @@
       "description": "Files the unit owns (write set); parallel units must be disjoint.",
       "items": {
         "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
-      },
-      "minItems": 1
+      }
     },
     "reads": {
       "type": "array",
@@ -165,6 +164,41 @@
     "updated_at": {
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
       "description": "Last save time, written by the store."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "preparation",
+        "implementation",
+        "review",
+        "verification",
+        "integration",
+        "command"
+      ],
+      "description": "Kind."
+    },
+    "parent": {
+      "type": "string",
+      "pattern": "^U[0-9]+$",
+      "description": "Parent."
+    },
+    "command": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/check",
+      "description": "Command."
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+      },
+      "description": "Outputs."
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      },
+      "description": "Sections."
     }
   },
   "required": [

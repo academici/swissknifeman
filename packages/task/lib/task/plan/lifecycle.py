@@ -1,4 +1,4 @@
-"""Lifecycle of a v3 plan: semantic Next and the verbs that move items, phases and the plan (dossier §6).
+"""Lifecycle of a v4 plan: semantic Next and the verbs that move items, phases and the plan (dossier §6).
 
 ``next`` is a pure function of a ``Plan`` snapshot (gate grants come from the caller or the log). Every verb
 refuses before it writes: all checks run inside the plan lock on a fresh snapshot, then item, phase, plan
@@ -68,8 +68,13 @@ def route_of(plan: store.Plan, items: Iterable[str]) -> dict | None:
     routes = [plan.items[i].get("route") for i in items if isinstance(plan.items[i].get("route"), dict)]
     if not routes:
         return None
-    return {"class": max((r.get("class") for r in routes), key=lambda c: _rank(CLASS_ORDER, c)),
-            "effort": max((r.get("effort") for r in routes), key=lambda e: _rank(EFFORT_ORDER, e))}
+    value = {"class": max((r.get("class") for r in routes), key=lambda c: _rank(CLASS_ORDER, c)),
+             "effort": max((r.get("effort") for r in routes), key=lambda e: _rank(EFFORT_ORDER, e))}
+    for field in ("provider", "model", "settings"):
+        selections = [r[field] for r in routes if field in r]
+        if selections and all(v == selections[0] for v in selections):
+            value[field] = copy.deepcopy(selections[0])
+    return value
 
 
 def granted_gates(plan: store.Plan) -> set[str]:
@@ -336,6 +341,16 @@ def shown_path(path: Path) -> str:
         return str(path)
 
 
+def validate_route(route: dict, actor: Mapping, target: str) -> None:
+    """Explicit selections are portable pins; semantic class/effort remain minimums."""
+    for field in ("provider", "model"):
+        if route.get(field) and route[field] != actor.get(field):
+            raise PlanError("ROUTE_MISMATCH", f"{target} selects {field} {route[field]!r}")
+    if route.get("effort") and (route.get("model") or actor.get("effort")):
+        if not actor.get("effort") or _rank(EFFORT_ORDER, actor["effort"]) < _rank(EFFORT_ORDER, route["effort"]):
+            raise PlanError("ROUTE_UNDERSHOOT", f"{target} needs effort {route['effort']}")
+
+
 @dataclass(frozen=True)
 class StartResult:
     items: tuple[str, ...]
@@ -409,11 +424,16 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             if wait:
                 raise PlanError("GATE_NOT_GRANTED", f"{item_id} needs {wait} (plan.py grant, or start --grant)")
         verdict = _route_verdict(p, requested, actor)
+        for item_id in requested:
+            validate_route(p.items[item_id].get("route") or {}, actor, item_id)
         from . import context  # context imports this module for scheduling
 
         missing = [f"{i}: {path}" for i in requested for path in context.missing_reads(p, i)]
         if missing:
             raise PlanError("READ_MISSING", f"required read(s) missing — {'; '.join(missing)}")
+        # Resolve inputs before any lifecycle state is written.
+        for item_id in requested:
+            context.collect(p, item_id, with_scout=False)
 
         now = store.now()
         changes, events, resumed = [], [], []
@@ -498,7 +518,7 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
         phase_id = _item_phase(item_id)
         if status in ("done", "done_with_deviations"):
             open_units = sorted(key.split("/")[1] for key, unit in p.units.items()
-                                if key.startswith(f"{item_id}/") and unit.get("status") in ("dispatched", "returned"))
+                                if key.startswith(f"{item_id}/") and unit.get("status") not in ("accepted", "rejected"))
             if open_units:
                 raise PlanError("UNITS_OPEN", f"{item_id} has units still out: {', '.join(open_units)} "
                                               "(plan.py unit … accept|reject|rework)")

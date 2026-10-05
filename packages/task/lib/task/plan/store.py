@@ -1,4 +1,4 @@
-"""Plan snapshot, canonical JSON, atomic saves, plan lock and event log for layout v3 (stdlib only).
+"""Plan snapshot, canonical JSON, atomic saves, plan lock and event log for layout v4 (stdlib only).
 
 Every write goes through ``save``/``save_many``: the whole changed document is validated against its
 schema first, then written in canonical form (keys in schema order, UTF-8, indent 2, trailing newline)
@@ -22,6 +22,7 @@ from .model import SHORT_ID, PlanError, id_sort_key
 LOG = "log.jsonl"
 LOCK = ".lock"
 ARCHIVE = "archive"
+SEARCH_IGNORE = "views/\ncontext/\n*.md\n.lock\n"
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
 
 
@@ -79,6 +80,7 @@ class Plan:
     items: dict[str, dict] = field(default_factory=dict)
     decisions: dict[str, dict] = field(default_factory=dict)
     units: dict[str, dict] = field(default_factory=dict)  # key "P1.2/U1"
+    documents: dict[str, dict] = field(default_factory=dict)
     problems: list[tuple[str, str]] = field(default_factory=list)  # (relative file, message)
 
     @property
@@ -98,6 +100,8 @@ class Plan:
             return item_path(self.root, key)
         if kind == "decision":
             return decision_path(self.root, key)
+        if kind == "document":
+            return self.root / "knowledge" / f"{key}.json"
         if kind == "unit":
             match = _UNIT_REF.fullmatch(key)
             return unit_path(self.root, match[1], match[2])
@@ -128,7 +132,7 @@ def _read_json(root: Path, path: Path, problems: list) -> dict | None:
 
 
 def load_plan(root: str | Path) -> Plan:
-    """Load every JSON document of a v3 plan directory; unreadable files become ``problems``, not exceptions."""
+    """Load every JSON document of a v4 plan directory; unreadable files become ``problems``, not exceptions."""
     root = Path(root)
     if not (root / "plan.json").is_file():
         raise PlanError("PLAN_NOT_FOUND", f"{root} has no plan.json")
@@ -154,6 +158,9 @@ def load_plan(root: str | Path) -> Plan:
         for decision_file in sorted(decisions_dir.glob("*.json"), key=lambda f: _natural(f.stem)):
             doc = _read_json(root, decision_file, plan.problems)
             plan.decisions[decision_file.stem] = doc if doc is not None else {}
+    for path in sorted((root / "knowledge").glob("*.json")):
+        doc = _read_json(root, path, plan.problems)
+        plan.documents[path.stem] = doc if doc is not None else {}
     return plan
 
 

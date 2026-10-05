@@ -27,8 +27,8 @@ and memory rises upon request. `MODE=maind` with SessionStart digest is enabled 
 measured evidence of benefit.
 
 Every record expires: **48 hours by default, at most 72 hours**, including handoffs. Maximum
-800 characters and 8 live entries per scope. Allowed categories: `context`, `blocker`,
-`coordination`, `active-handoff`. Use memory only for temporary information
+800 characters and 8 live entries per scope. Allowed categories: `context` (`fact` is a legacy
+alias), `blocker`, `coordination`, `active-handoff`. Use memory only for temporary information
 another session needs that cannot simply be read from repository artifacts. One `active-handoff`
 per scope points to the repository handoff and names the next action; replace it instead of
 appending a journal, and forget it on completion. Never store plan decisions, audit copies,
@@ -80,7 +80,7 @@ respond or memory is empty:
 
 1. Check: `maind health --cwd` (read-only) or `maind health --cwd --deep` with a real symptom;
    `maind verify` checks if memory is full/graph across the entire ecosystem or everything is raised
-   «idle». Memory through the eyes - viewer `maind verify` prints its URL (REST port + 2).
+   «idle». Memory through the eyes - viewer `http://127.0.0.1:3113`.
 2. When status `partial` / `standalone` — fix: `maind health --cwd --fix` (will raise the demon
    memory and add MCP-hub servers into the project).
 3. Report the unavailable channel and continue ordinary repository work. Memory is temporary

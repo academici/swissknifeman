@@ -1,11 +1,13 @@
 ---
 disable-model-invocation: true
 description: "Risk-scaled read-only review of code, docs or specs."
-argument-hint: "[artifact: diff / branch / PR# / docs path]"
-model: sonnet
-effort: high
+argument-hint: "<artifact: diff / branch / PR# / docs path> [--reviewer <provider/model>] [--effort high]"
 ---
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
+
+Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.
+Without a selector, use the current native review route. A session that executed this candidate
+must hand the review to a fresh read-only session; never review its own work as independent evidence.
 
 Identify the artifact and observable risk, then select depth:
 
@@ -21,7 +23,11 @@ the complete finding list only when the owner explicitly asked for an independen
 review. Report and stop: no self-started fixes and no repeat review. A re-review on request covers only
 the earlier findings and the code that fixed them.
 
-Use the diff as primary context. Open manifests, local instructions, and skills only when they apply to the
+For concurrency, transactions, auth or data integrity, use the shared invariant model as primary
+context: affected operations/resources/drivers, enforcement and bypass paths, interfering pairs,
+explicit and implicit lock order. Classify findings by risk class and stable subsystem/invariant.
+A systemic re-review checks that model; local re-review checks findings and changed dependency closure.
+For other risks, use the diff as primary context. Open manifests, local instructions, and skills only when they apply to the
 changed stack or behavior. Do not scan the full registry, glossary, caller graph, or test suite for completeness.
 Check adjacent rules in one pass and handle one or two applicable skills yourself. Verify changing external
 premises against primary sources.

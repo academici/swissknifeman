@@ -36,6 +36,14 @@
             "type": "string",
             "description": "Where the message came from.",
             "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "description": "Owner quote or a source record explicitly distinguished from a verbatim message.",
+            "enum": [
+              "owner",
+              "record"
+            ]
           }
         },
         "required": [
@@ -104,6 +112,13 @@
       "description": "Out of scope.",
       "items": {
         "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "sections": {
+      "type": "array",
+      "description": "Complete supporting sections.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
       }
     }
   },

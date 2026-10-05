@@ -54,7 +54,7 @@ class HelpAndUsageTests(CliCase):
         self.run_plan("bogus", expect=2)
         self.run_plan("new", "--title", "T", "--actor", ACTOR, expect=2)  # no codename / plan-id
         self.run_plan("new", "--codename", "X", "--title", "T", "--actor", "claude-code", expect=2)  # bad actor
-        self.run_plan("new", "--codename", "X", "--title", "T", "--actor", "a/b/ultra", expect=2)  # bad effort
+        self.run_plan("new", "--codename", "X", "--title", "T", "--actor", "a/b/impossible", expect=2)  # bad effort
         self.run_plan("check", expect=2)  # plan missing
 
     def test_invalid_json_input_exits_2(self):
@@ -72,7 +72,7 @@ class AuthoringFlowTests(CliCase):
                       "--date", "2026.10.05", "--plans-root", str(self.plans))
         plan_dir = self.plans / "2026.10.05-№1-DEMO"
         self.assertTrue((plan_dir / "plan.json").is_file())
-        self.assertTrue((plan_dir / "status.md").is_file())
+        self.assertTrue((plan_dir / "views/status.md").is_file())
         self.assertEqual(self.verb("add-phase", "PLAN1", "--title", "Config validation").stdout.strip(), "P1")
         self.assertEqual(self.verb("add-item", "PLAN1", "P1", "--title", "Validate keys").stdout.strip(), "P1.1")
         self.assertEqual(self.verb("add-item", "PLAN1", "P1", "--title", "Validate types", "--batch", "B1",
@@ -116,7 +116,7 @@ class AuthoringFlowTests(CliCase):
         self.assertEqual(self.verb("add-decision", "PLAN1", "--title", "Pick a format").stdout.strip(), "D1")
         decision = json.loads(self.verb("show", "PLAN1", "D1").stdout)
         self.assertEqual((decision["status"], decision["question"]), ("open", "Pick a format"))
-        self.assertIn("Pick a format", self.read("PLAN1", "open-questions.md"))
+        self.assertIn("Pick a format", self.read("PLAN1", "views/open-questions.md"))
 
     def test_show_overview_text_and_json(self):
         self.new_plan()
@@ -167,7 +167,7 @@ class LifecycleFlowTests(CliCase):
         started = self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--session", "auto")
         self.assertIn("started P1.1 (phase P1, batch BP1-1; route ok)", started.stdout)
         self.verb("log", "PLAN1", "P1.1", "--type", "difficulty", "--summary", "tests import config", "--next", "reuse fixture")
-        self.assertIn("tests import config", self.read("PLAN1", "handoff.md"))  # open friction until the phase closes
+        self.assertIn("tests import config", self.read("PLAN1", "views/handoff.md"))  # open friction until the phase closes
 
         before = self.item_path().read_bytes()  # negative control: no acceptance evidence, no state change
         refused = self.verb("finish", "PLAN1", "P1.1", "--status", "done", expect=1)
@@ -180,7 +180,7 @@ class LifecycleFlowTests(CliCase):
             self.assertIn(fragment, finished.stdout)
         item = json.loads(self.item_path().read_text(encoding="utf-8"))
         self.assertEqual((item["status"], item["result"]["notes"], item["result"]["commits"]), ("done", "3 tests", ["a1b2c3d"]))
-        self.assertIn("No open friction", self.read("PLAN1", "handoff.md"))
+        self.assertIn("No open friction", self.read("PLAN1", "views/handoff.md"))
         self.assertIn("0 error(s)", self.verb("check", "PLAN1").stdout)
 
         archived = self.verb("archive", "PLAN1")
@@ -194,7 +194,7 @@ class LifecycleFlowTests(CliCase):
         self.verb("design-done", "PLAN1", "P1")
         started = json.loads(self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--json").stdout)
         self.assertEqual((started["items"], started["route"]), (["P1.1"], "ok"))
-        self.assertEqual([Path(p).name for p in started["packs"]], ["P1.1.md"])
+        self.assertEqual([Path(p).name for p in started["packs"]], ["P1.1.json"])
         finished = json.loads(self.verb("finish", "PLAN1", "P1.1", "--status", "done", "--check", "V1=0", "--json").stdout)
         self.assertEqual((finished["phase_closed"], finished["plan_done"], finished["next"]["kind"]), ("done", True, "archive"))
 
@@ -238,6 +238,19 @@ class LifecycleFlowTests(CliCase):
 
 
 class RefusalTests(CliCase):
+    def test_json_envelopes_include_schema_and_input_errors(self):
+        self.new_plan()
+        result = self.run_plan("--output", "json", "set", "PLAN1", "plan", "--json", '{"bogus": 1}',
+                               "--plans-root", str(self.plans), expect=1)
+        value = json.loads(result.stdout)
+        self.assertFalse(value["ok"])
+        self.assertEqual(value["error"]["code"], "SCHEMA_INVALID")
+        self.assertEqual(value["error"]["issues"][0]["path"], "/bogus")
+        result = self.run_plan("--output", "json", "set", "PLAN1", "plan", "--json", '{broken',
+                               "--plans-root", str(self.plans), expect=2)
+        self.assertEqual(json.loads(result.stdout)["error"]["code"], "USAGE")
+        self.assertEqual(result.stderr, "")
+
     def test_refusals_exit_1_with_code_and_message_on_stderr(self):
         cases = [
             (("new", "--codename", "X", "--title", "T", "--actor", ACTOR, "--plans-root", str(self.plans)), "MESSAGE_REQUIRED"),
@@ -252,7 +265,7 @@ class RefusalTests(CliCase):
             (("set", "PLAN1", "P9", "--json", "{}"), "REF_UNKNOWN"),
             (("set", "PLAN1", "plan", "--json", '{"status": "done"}'), "FIELD_OWNED"),
             (("set", "PLAN1", "plan", "--json", '{"bogus": 1}'), "SCHEMA_INVALID"),
-            (("push", "PLAN1", "plan", "title", "--json", '"x"'), "REF_INVALID"),
+            (("push", "PLAN1", "plan", "title", "--json", '"x"'), "FIELD_NOT_ARRAY"),
             (("add-item", "PLAN1", "P7", "--title", "x"), "REF_UNKNOWN"),
             (("add-phase", "PLAN1", "--title", "x", "--json", '{"design": "detailed"}'), "FIELD_OWNED"),
         ):
@@ -290,12 +303,12 @@ class CheckAndRenderTests(CliCase):
     def test_negative_control_hand_edited_view_fails_render_check_with_its_name(self):
         self.new_plan()
         self.verb("render", "PLAN1", "--check")
-        (self.plans / "2026.10.05-№1-DEMO" / "status.md").write_text("hand edit\n", encoding="utf-8")
+        (self.plans / "2026.10.05-№1-DEMO" / "views/status.md").write_text("hand edit\n", encoding="utf-8")
         result = self.verb("render", "PLAN1", "--check", expect=1)
-        self.assertIn("STALE_VIEW: status.md", result.stderr)
-        self.assertEqual(self.read("PLAN1", "status.md"), "hand edit\n")  # --check never writes
-        self.assertIn("stale_view: status.md", self.verb("check", "PLAN1", expect=1).stderr)
-        self.assertIn("status.md", self.verb("render", "PLAN1").stdout)
+        self.assertIn("STALE_VIEW: views/status.md", result.stderr)
+        self.assertEqual(self.read("PLAN1", "views/status.md"), "hand edit\n")  # --check never writes
+        self.assertIn("0 error(s)", self.verb("check", "PLAN1").stdout)
+        self.assertIn("views/status.md", self.verb("render", "PLAN1").stdout)
         self.verb("render", "PLAN1", "--check")
 
     def test_next_text_and_json(self):

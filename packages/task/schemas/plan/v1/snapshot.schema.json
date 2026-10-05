@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:snapshot:v1",
+  "title": "Complete plan snapshot",
+  "description": "Portable current-format JSON graph; import does not parse Markdown.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "urn:swissknifeman:task:plan:snapshot:v1",
+      "description": "$schema."
+    },
+    "plan": {
+      "$ref": "urn:swissknifeman:task:plan:plan:v1",
+      "description": "Plan."
+    },
+    "brief": {
+      "$ref": "urn:swissknifeman:task:plan:brief:v1",
+      "description": "Brief."
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:phase:v1"
+      },
+      "description": "Phases."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:item:v1"
+      },
+      "description": "Items."
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:unit:v1"
+      },
+      "description": "Units."
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:decision:v1"
+      },
+      "description": "Decisions."
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:document:v1"
+      },
+      "description": "Documents."
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:log-event:v1"
+      },
+      "description": "Events."
+    }
+  },
+  "required": [
+    "$schema",
+    "plan",
+    "brief",
+    "phases",
+    "items",
+    "units",
+    "decisions",
+    "documents",
+    "events"
+  ],
+  "additionalProperties": false
+}

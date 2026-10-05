@@ -1,7 +1,7 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/fix.md
 Canonical SHA-256: sha256:81ca00ac6d2835bf262dc1b916b0ec71f9cd50f357bfed8d2e1a844fb5015009
-Adapter: task.cursor-command/1.0.17
+Adapter: task.cursor-command/1.0.18
 -->
 ---
 disable-model-invocation: true

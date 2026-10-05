@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:plan-run`.
 - Invocation: `task:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/task/commands/plan-run.md`
-- Canonical SHA-256: `sha256:b93cfe5909174190d3bc1875f88a76793e573ad43fd4c0d4a2d0825df237bcc2`
+- Canonical SHA-256: `sha256:4f73d389d7c501e92498422fbbc53968cabace25b8fc944c5a1ec24464666001`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

@@ -49,7 +49,12 @@ const JUDGE_PANEL = false
 // SLOT: model/effort — finders sonnet/medium; verify more expensive (fresh context decides the verdict).
 const FINDER_MODEL = { model: 'sonnet', effort: 'medium' }
 const DEDUP_MODEL = { model: 'sonnet', effort: 'low' }
-const VERIFY_MODEL = { model: 'opus', effort: 'high' }
+// SLOT: exact native model/effort from the selected or current captured native review route.
+const VERIFY_MODEL = null // { model: '<exact-native-model-id>', effort: 'high' }
+if (!VERIFY_MODEL || typeof VERIFY_MODEL.model !== 'string' || !VERIFY_MODEL.model.trim() ||
+    !['low', 'medium', 'high', 'xhigh'].includes(VERIFY_MODEL.effort)) {
+  throw new Error('REVIEWER_REQUIRED: fill VERIFY_MODEL from the selected/current native route before requested audit')
+}
 
 // ── Schemes structured-summary ─────────────────────────────────────────────────
 const FINDING = {
@@ -61,9 +66,11 @@ const FINDING = {
     summary: { type: 'string', description: 'Defect in one sentence' },
     failure_scenario: { type: 'string', description: 'Specific input/status → incorrect result' },
     severity: { type: 'string', enum: SEVERITY },
+    risk_class: { type: 'string', enum: ['local', 'concurrency', 'transaction', 'auth', 'data-integrity'] },
+    area: { type: 'string', description: 'shared subsystem/invariant, independent of file/driver' },
     rule_ref: { type: 'string', description: 'Link constitution/skill → rule (for conformance-finds)' },
   },
-  required: ['dimension', 'file', 'summary', 'failure_scenario', 'severity'],
+  required: ['dimension', 'file', 'summary', 'failure_scenario', 'severity', 'risk_class', 'area'],
 }
 
 const FINDINGS_SCHEMA = {
@@ -100,6 +107,7 @@ function finderPrompt(d) {
     `Measurement: ${d.brief}`,
     `READ-ONLY: do not edit or commit anything. Each find is with file/line and specific failure_scenario; «could be bad» without script = is not a find. Severity strictly from ${JSON.stringify(SEVERITY)}. Empty array findings = purely by measurement, this is a valid result.`,
     `Return strictly according to the scheme. Final text = data, not a message to a person.`,
+    `For systemic concurrency/transaction/auth/data-integrity risk, inspect the shared invariant model and all interfering operation/resource/driver pairs. Classify each finding by risk_class and stable area.`,
   ].join('\n')
 }
 
@@ -117,6 +125,7 @@ function verifyPrompt(findings, judgeIdx) {
     `Adversarial verification of audit findings with fresh context${judgeIdx != null ? ` (independent judge #${judgeIdx + 1} — don't know other people's opinions)` : ''}. Target: ${TARGET.paths.join(', ')}.`,
     `Your task is to REJECT every finding: re-read the indicated passage yourself and try to prove that there is no defect. CONFIRMED only when I reproduced it myself failure_scenario by code/text; could neither confirm nor reject = PLAUSIBLE; finding is erroneous = REJECTED with explanation in note. Can be adjusted severity.`,
     `READ-ONLY: don't edit anything. Finds:\n${JSON.stringify(findings, null, 2)}`,
+    `Return one owning continuation for confirmed defects. Never repair product or start another audit. Preserve risk_class/area and systemic model coverage across a recheck.`,
     `Return it strictly according to the scheme.`,
   ].join('\n')
 }

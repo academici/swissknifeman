@@ -47,6 +47,14 @@ lives in the main loop of an expensive model (model routing: expensive for desig
    pipeline stop + escalation in the main loop, not another iteration. Infinite loop -
    is an agent that fits tests to code.
 
+6. **Execution/review separation.** REVIEW stays off unless the owner requested review.
+   Fill reviewer model/effort slots from `--reviewer provider/model` or the current captured native
+   route before requested review. Missing slots refuse before executor/finder dispatch. Executors
+   own product repairs; reviewers return read-only verdicts and one owning continuation. Findings
+   retain `(risk_class, area)` across files/drivers and check the shared invariant model. Resumes
+   keep verdict history and unchanged evidence; they never reset review caps or replay accepted work.
+   `plan-run --reviewer` can coordinate native sessions with the JSON API; no v2 packet transport.
+
 General template invariants: fan-out - via `pipeline()` without barrier (verify/self-check
 starts immediately after its element, does not wait for the entire wave); audit/review agents - strictly
 read-only; authors commit only the files of their task (git status before add); dropped out

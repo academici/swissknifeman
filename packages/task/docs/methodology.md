@@ -1,4 +1,4 @@
-# Methodology Task plans v3 - full cycle
+# Methodology Task plans v4 - full cycle
 
 One page for the whole day-to-day process on the JSON plan engine. Structure and schemas -
 [Plan structure](./plan-structure). Nothing here requires a plan for ordinary work: `/task:dev` and
@@ -9,15 +9,16 @@ One page for the whole day-to-day process on the JSON plan engine. Structure and
 ```text
 research → design (plan-design) → check → design-done → run (plan-run) → close (plan-close) → archive
                                      ↑                       │
-                                     └── reopen / amend ←─────┘   audit (plan-audit) only on owner request or material risk
+                                     └── reopen / amend ←─────┘   audit (plan-audit) only on owner request
 ```
 
 Every step is a verb of `scripts/plan.py`; the verb that names the next step is `plan.py next <plan>`.
 
 ## research
 
-Optional. Multi-source research with verification (`/task:research`); results go to `research/` and
-`artifacts/` of the plan and are linked from items through `reads` and `artifacts` (`@plan/...`).
+Optional. Multi-source research with verification (`/task:research`); plan reasoning goes to JSON
+`sections` or `knowledge/<id>.json` through `add-document`. Raw supporting evidence stays in
+`artifacts/`; execution reads refer to JSON, never to plan Markdown.
 
 ## design (`/task:plan-design`)
 
@@ -36,7 +37,7 @@ Open questions are decisions with status `open`; the owner answers, then `plan.p
 
 1. `plan.py next <plan>` (or the items the owner named) → `plan.py start <plan> <items> --actor … --session auto`.
    A route refusal stops before any product write.
-2. Read only `context/<item>.md` and the files its Reads section lists; get more state with `plan.py show`.
+2. Read JSON from `plan.py context … --stdout` and supporting files as needed; get more state with `plan.py show`.
 3. Implement inside the item's scope; `task_files` are hints, not limits. Use the item's rules and decisions.
 4. When reality changes the plan or an assumption/blocker appears: `plan.py log … --type deviation|blocker|difficulty|assumption|note`.
 5. Run each validation check once per relevant change; long output goes to a file, only the result to context.
@@ -74,3 +75,10 @@ arrive with phase P4 of the JSON-engine plan. Neither becomes a default without 
 Do not invent bookkeeping: JSON plus the API already keep state consistent. A tool failure or a reversible
 local defect is repaired in the same attempt and logged only if it changed the plan; repeated re-audits
 without a material scope/risk change are not run.
+
+Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+exact native route; without an explicit review request no review runs. `plan-run` accepts
+`--review-effort`; review/audit accept `--effort`. See the Task package's
+`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.

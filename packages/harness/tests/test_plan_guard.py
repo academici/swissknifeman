@@ -48,9 +48,9 @@ class PlanFixture(unittest.TestCase):
 class PlanGuardCoreTests(PlanFixture):
     def test_generated_files_are_recognised_only_inside_a_plan_directory(self):
         cwd = str(self.root)
-        for relative in ("index.md", "plan.md", "roadmap.md", "status.md", "handoff.md",
-                         "open-questions.md", "AGENTS.md", "CLAUDE.md", "context/P1.1.md",
-                         "phases/P1/P1.1/U1/brief.md"):
+        for relative in ("views/index.md", "views/plan.md", "views/roadmap.md", "views/status.md", "views/handoff.md",
+                         "views/open-questions.md", "views/AGENTS.md", "views/CLAUDE.md", "context/P1.1.json",
+                         "phases/P1/P1.1/U1/brief.json"):
             with self.subTest(relative=relative):
                 self.assertEqual(generated_plan_file(f"plans/X/{relative}", cwd), str(self.plan))
                 self.assertIsNone(generated_plan_file(f"plans/Y/{relative}", cwd))
@@ -58,9 +58,9 @@ class PlanGuardCoreTests(PlanFixture):
             self.assertIsNone(generated_plan_file(f"plans/X/{relative}", cwd), relative)
 
     def test_patch_headers_and_plain_paths_are_candidates(self):
-        patch = {"input": "*** Begin Patch\n*** Update File: plans/X/status.md\n@@\n"}
-        self.assertEqual(plan_guard_hit(patch, str(self.root)), "plans/X/status.md")
-        self.assertIsNone(plan_guard_hit({"input": "*** Update File: plans/Y/status.md\n"}, str(self.root)))
+        patch = {"input": "*** Begin Patch\n*** Update File: plans/X/views/status.md\n@@\n"}
+        self.assertEqual(plan_guard_hit(patch, str(self.root)), "plans/X/views/status.md")
+        self.assertIsNone(plan_guard_hit({"input": "*** Update File: plans/Y/views/status.md\n"}, str(self.root)))
 
 
 class ClaudePlanGuardTests(PlanFixture):
@@ -75,15 +75,15 @@ class ClaudePlanGuardTests(PlanFixture):
     def test_write_to_a_generated_file_is_blocked_when_plan_json_exists(self):
         self._mode("strict")
         for tool in ("Edit", "Write", "MultiEdit"):
-            result = _run(GUARD, self._payload("status.md", tool))
+            result = _run(GUARD, self._payload("views/status.md", tool))
             self.assertEqual(result.returncode, 2, tool)
             self.assertIn(MESSAGE, result.stderr)
-        for relative in ("context/P1.1.md", "phases/P1/P1.1/U1/brief.md", "AGENTS.md"):
+        for relative in ("context/P1.1.json", "phases/P1/P1.1/U1/brief.json", "views/AGENTS.md"):
             self.assertEqual(_run(GUARD, self._payload(relative)).returncode, 2, relative)
 
     def test_same_write_without_plan_json_is_allowed(self):
         self._mode("strict")
-        result = _run(GUARD, self._payload("status.md", plan="Y"))
+        result = _run(GUARD, self._payload("views/status.md", plan="Y"))
         self.assertEqual((result.returncode, result.stderr), (0, ""))
 
     def test_plan_json_itself_is_never_blocked(self):
@@ -92,18 +92,18 @@ class ClaudePlanGuardTests(PlanFixture):
 
     def test_warn_does_not_block_and_off_is_silent(self):
         self._mode("warn")
-        warned = _run(GUARD, self._payload("status.md"))
+        warned = _run(GUARD, self._payload("views/status.md"))
         self.assertEqual(warned.returncode, 0)
         self.assertIn("[warn]", warned.stderr)
         self._mode("off")
-        self.assertEqual(_run(GUARD, self._payload("status.md")).stderr, "")
+        self.assertEqual(_run(GUARD, self._payload("views/status.md")).stderr, "")
 
     def test_inactive_without_a_mode_file(self):
-        self.assertEqual(_run(GUARD, self._payload("status.md")).returncode, 0)
+        self.assertEqual(_run(GUARD, self._payload("views/status.md")).returncode, 0)
 
     def test_decision_matches_the_shared_core(self):
         self._mode("strict")
-        for relative in ("status.md", "context/a.md", "plan.json", "phases/P1/P1.1/U1/brief.md",
+        for relative in ("views/status.md", "context/a.md", "plan.json", "phases/P1/P1.1/U1/brief.json",
                          "artifacts/index.md"):
             blocked = _run(GUARD, self._payload(relative)).returncode == 2
             self.assertEqual(blocked, generated_plan_file(f"plans/X/{relative}", str(self.root)) is not None,
@@ -124,7 +124,7 @@ class ProviderPlanGuardTests(PlanFixture):
                     "hook_event_name": "PreToolUse", "tool_name": "apply_patch"}
             refused = None
             for plan, code in (("X", 2), ("Y", 0)):
-                payload = {**base, "tool_input": {"input": f"*** Update File: plans/{plan}/status.md\n"}}
+                payload = {**base, "tool_input": {"input": f"*** Update File: plans/{plan}/views/status.md\n"}}
                 result = subprocess.run(
                     [sys.executable, str(handler), "--surface", "lifecycle.plan-guard"],
                     input=json.dumps(payload).encode(), capture_output=True,
@@ -143,7 +143,7 @@ class ProviderPlanGuardTests(PlanFixture):
                     "workspace_roots": [str(ROOT)], "tool_name": "Write"}
             outcomes = {}
             for plan in ("X", "Y"):
-                payload = {**base, "tool_input": {"file_path": f"plans/{plan}/status.md"}}
+                payload = {**base, "tool_input": {"file_path": f"plans/{plan}/views/status.md"}}
                 result = subprocess.run(
                     [sys.executable, str(handler), "--surface", "lifecycle.plan-guard"],
                     input=json.dumps(payload).encode(), capture_output=True, timeout=20)
@@ -197,7 +197,7 @@ class PlanRegenTests(unittest.TestCase):
         data = json.loads((self.plan / "plan.json").read_text(encoding="utf-8"))
         data["status"] = "not-a-status"
         (self.plan / "plan.json").write_text(json.dumps(data), encoding="utf-8")
-        status = self.plan / "status.md"
+        status = self.plan / "views/status.md"
         status.write_text("sentinel\n", encoding="utf-8")
         result = _run(REGEN, self._payload(self.plan / "plan.json"), env=self.env)
         self.assertEqual(result.returncode, 2, result.stderr)
@@ -206,14 +206,14 @@ class PlanRegenTests(unittest.TestCase):
 
     def test_valid_json_edit_renders_the_generated_views(self):
         self._enable()
-        status = self.plan / "status.md"
+        status = self.plan / "views/status.md"
         status.write_text("stale\n", encoding="utf-8")
         result = _run(REGEN, self._payload(self.plan / "plan.json"), env=self.env)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotEqual(status.read_text(encoding="utf-8"), "stale\n")
 
     def test_inactive_by_default_and_for_non_json_or_plain_directories(self):
-        status = self.plan / "status.md"
+        status = self.plan / "views/status.md"
         status.write_text("stale\n", encoding="utf-8")
         _run(REGEN, self._payload(self.plan / "plan.json"), env=self.env)
         self.assertEqual(status.read_text(encoding="utf-8"), "stale\n")

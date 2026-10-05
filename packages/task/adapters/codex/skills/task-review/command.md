@@ -1,9 +1,13 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/review.md
-Canonical SHA-256: sha256:781c008bbde8a4cb0185fc94fb33e05c44f87be3a5f8b9becacf7648eb5ea48b
-Adapter: task.codex-command/1.0.17
+Canonical SHA-256: sha256:7eaf2e4ea10d1a80c0c013077d338a779961170acb72694891eee3f0a1e8ed6a
+Adapter: task.codex-command/1.0.18
 -->
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
+
+Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.
+Without a selector, use the current native review route. A session that executed this candidate
+must hand the review to a fresh read-only session; never review its own work as independent evidence.
 
 Identify the artifact and observable risk, then select depth:
 
@@ -19,7 +23,11 @@ the complete finding list only when the owner explicitly asked for an independen
 review. Report and stop: no self-started fixes and no repeat review. A re-review on request covers only
 the earlier findings and the code that fixed them.
 
-Use the diff as primary context. Open manifests, local instructions, and skills only when they apply to the
+For concurrency, transactions, auth or data integrity, use the shared invariant model as primary
+context: affected operations/resources/drivers, enforcement and bypass paths, interfering pairs,
+explicit and implicit lock order. Classify findings by risk class and stable subsystem/invariant.
+A systemic re-review checks that model; local re-review checks findings and changed dependency closure.
+For other risks, use the diff as primary context. Open manifests, local instructions, and skills only when they apply to the
 changed stack or behavior. Do not scan the full registry, glossary, caller graph, or test suite for completeness.
 Check adjacent rules in one pass and handle one or two applicable skills yourself. Verify changing external
 premises against primary sources.

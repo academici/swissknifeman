@@ -442,6 +442,7 @@ def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
                          {"query": query, "namespace": scope, "limit": limit}, headers=headers)
     results = res.get("results", []) if isinstance(res, dict) else []
     out = []
+    legacy_dump = None
     for r in results:
         obs = r.get("observation") or {}
         raw = (obs.get("narrative") or obs.get("title")
@@ -449,7 +450,15 @@ def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
         sc, text = split_scope(raw)
         if sc != scope:           # alien scope or untagged legacy → isolate
             continue
-        if obs.get("isLatest") is False or policy.expired(obs):
+        checked = obs
+        if policy.record_parts(obs)[2] is None and not (obs.get("createdAt") or obs.get("timestamp")):
+            # Search projections may omit legacy creation time. Use one dump, never renew age.
+            if legacy_dump is None:
+                legacy_dump = {m.get("id"): m for m in export(url, scope, headers)}
+            checked = legacy_dump.get(obs.get("id"))
+            if checked is None:
+                continue
+        if checked.get("isLatest") is False or policy.expired(checked):
             continue
         out.append({"score": r.get("score"), "text": text, "id": obs.get("id")})
     # Saturation: the demon returned exactly all candidate-pool (common to all projects) — relevant

@@ -1,8 +1,8 @@
 """Scout (dossier §12, D3): a weak model of the current provider maps where to look; it never writes code.
 
 ``run`` hands the deterministic context pack to the provider's economy CLI (``orchestration.scout.<provider>`` in
-``command-routing.json``; the prompt goes through stdin), keeps at most ``MAX_LINES`` lines of "path[:symbol] — why"
-plus the unknowns block in ``context/<item>.scout.md`` and logs one ``scout`` event. Any failure is an outcome, never
+``command-routing.json``; the prompt goes through stdin), keeps the full useful answer of "path[:symbol] — why"
+plus the unknowns block in ``context/<item>.scout.json`` and logs one ``scout`` event. Any failure is an outcome, never
 an exception: the caller (``lifecycle.start``) continues without the map.
 """
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
+import json
 import subprocess
 import time
 from typing import Callable
@@ -18,9 +19,7 @@ from task.command_catalog import SCOUT_PLACEHOLDERS, load_routing_metadata
 
 from . import context, lifecycle, store, views
 from .model import PlanError
-from .templating import render as _render_template
 
-MAX_LINES = 40
 _ENTRY = re.compile(r"^(?:- |[\w@./\\-]+(?::[\w.<>-]+)?\s+[—–-]\s+\S)")
 _UNKNOWNS = re.compile(r"^unknowns?\s*:", re.IGNORECASE)
 
@@ -40,8 +39,8 @@ class ScoutResult:
         return f"scout {item_id}: {self.outcome} ({detail})"
 
 
-def filter_answer(output: str, limit: int = MAX_LINES) -> list[str]:
-    """Entries ("- …" or "path[:symbol] — why") and the ``Unknowns:`` block of ``output``, cut to ``limit`` lines."""
+def filter_answer(output: str) -> list[str]:
+    """Entries ("- …" or "path[:symbol] — why") and the ``Unknowns:`` block of ``output``, without a line quota."""
     kept: list[str] = []
     unknowns = False
     for raw in output.splitlines():
@@ -53,13 +52,13 @@ def filter_answer(output: str, limit: int = MAX_LINES) -> list[str]:
             kept.append(text)
         elif unknowns or _ENTRY.match(text):
             kept.append(text)
-    return kept[:limit]
+    return kept
 
 
 def _prompt(plan: store.Plan, item_id: str) -> str:
-    model = {"max_lines": MAX_LINES, "ref": f"{plan.plan.get('short_id') or plan.root.name}.{item_id}",
-             "pack": context.render(plan, item_id, with_scout=False).rstrip("\n")}
-    return _render_template(views._load_template("scout-prompt"), model, lambda name: views._load_template(f"_{name}"))
+    return ("Map useful repository files and unknowns for this JSON task. Read supporting files as needed. "
+            "Never read plan Markdown or views/, and never edit code. Return path[:symbol] — why entries and Unknowns.\n"
+            + context.render(plan, item_id, with_scout=False))
 
 
 def _argv(entry: dict, cwd: Path) -> list[str]:
@@ -75,8 +74,8 @@ def _config(provider: str, routing_path: str | Path | None) -> dict | None:
 
 
 def _attempt(plan: store.Plan, item_id: str, entry: dict, runner: Callable) -> tuple[str, str, int]:
-    """``(outcome, reason, lines)``; writes or removes ``context/<item>.scout.md``."""
-    target = plan.root / context.PACK_DIR / f"{item_id}.scout.md"
+    """``(outcome, reason, lines)``; writes or removes ``context/<item>.scout.json``."""
+    target = plan.root / context.PACK_DIR / f"{item_id}.scout.json"
     reason, kept = "", []
     try:
         done = runner(_argv(entry, plan.repo_root), input=_prompt(plan, item_id), capture_output=True, text=True,
@@ -96,7 +95,7 @@ def _attempt(plan: store.Plan, item_id: str, entry: dict, runner: Callable) -> t
     if reason:
         target.unlink(missing_ok=True)  # a stale map must not outlive a failed run
         return "failed", reason, 0
-    store.atomic_write(target, "\n".join(kept) + "\n")
+    store.atomic_write(target, json.dumps({"entries": kept}, ensure_ascii=False, indent=2) + "\n")
     return "ok", "", len(kept)
 
 
@@ -119,7 +118,7 @@ def run(plan, item_id: str, provider: str, *, runner: Callable | None = None,
     seconds = round(time.monotonic() - started, 1)
     model = entry["model"] if entry else "none"
     result = ScoutResult(outcome, provider, model, seconds, lines,
-                         snapshot.root / context.PACK_DIR / f"{item_id}.scout.md" if outcome == "ok" else None, reason)
+                         snapshot.root / context.PACK_DIR / f"{item_id}.scout.json" if outcome == "ok" else None, reason)
     event = store.new_event("scout", result.text(item_id), {"provider": provider, "model": model}, item=item_id,
                             phase=item_id.split(".", 1)[0],
                             data={"provider": provider, "model": model, "outcome": outcome, "seconds": seconds,

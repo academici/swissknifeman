@@ -1,4 +1,4 @@
-"""Identifiers, status enums and ordering for v3 plan documents (stdlib only).
+"""Identifiers, status enums and ordering for v4 plan documents (stdlib only).
 
 The ID patterns here are the same literals as ``schemas/plan/v1/*.schema.json``; a test keeps them in sync.
 Match them with ``fullmatch`` — ``$`` alone would also accept a trailing newline.
@@ -20,7 +20,7 @@ _REF_PARTS = re.compile(r"^(?:(?:(?P<repo>[a-z0-9-]+):)?(?P<plan>PLAN[0-9]+)\.)?
 _SORTABLE = re.compile(r"^(?P<prefix>[A-Z]+)(?P<nums>[0-9]+(?:\.[0-9]+)*)$", re.ASCII)
 
 CLASS_ORDER = ("economy", "implementation", "frontier")
-EFFORT_ORDER = ("low", "medium", "high", "xhigh")
+EFFORT_ORDER = ("low", "medium", "high", "xhigh", "max", "ultra")
 
 
 class ItemStatus(str, Enum):

@@ -6,13 +6,15 @@ or check errors (stderr ``CODE: message``), 2 usage.
 from __future__ import annotations
 
 import argparse
+from contextlib import redirect_stdout
+import io
 import json
 from pathlib import Path
 import re
 import sys
 
 
-from . import check, context, lifecycle, ops, stats, store, units, views
+from . import check, context, lifecycle, ops, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -253,6 +255,12 @@ def cmd_finish(args) -> int:
 
 def cmd_unit(args) -> int:
     plan_dir = _plan_dir(args)
+    if args.target == "next":
+        _print_json(units.ready(store.load_plan(plan_dir), args.item))
+        return 0
+    if args.action == "context":
+        print(units.brief_text(store.load_plan(plan_dir), args.item, args.target), end="")
+        return 0
     if args.target == "add":
         if args.action:
             raise UsageError("unit … add takes no further verb")
@@ -338,10 +346,33 @@ def cmd_archive(args) -> int:
     return 0
 
 
+def cmd_export(args) -> int:
+    _print_json(snapshot.export(store.load_plan(_plan_dir(args))))
+    return 0
+
+
+def cmd_import(args) -> int:
+    plan = snapshot.import_snapshot(args.plan, _json_value(args.json, args.file), replace=args.replace)
+    _print_json({"id": plan.plan["id"], "path": str(plan.root), "next": lifecycle.next(plan).as_dict()})
+    return 0
+
+
+def cmd_apply(args) -> int:
+    ops.apply(_plan_dir(args), _json_value(args.json, args.file))
+    _print_json({"updated": True})
+    return 0
+
+
+def cmd_add_document(args) -> int:
+    _print_json({"id": ops.add_document(_plan_dir(args), _json_value(args.json, args.file))})
+    return 0
+
+
 # ---------------------------------------------------------------- parser
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="plan.py", description="Task plan (layout v3): authoring and lifecycle verbs.")
+    parser = argparse.ArgumentParser(prog="plan.py", description="Task plan (layout v4): authoring and lifecycle verbs.")
+    parser.add_argument("--output", choices=("text", "json"), default="text", help="structured success/error envelope")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--plans-root", type=Path, default=None, help="plans/ directory (default: nearest up from cwd)")
     sub = parser.add_subparsers(dest="command", required=True, metavar="VERB")
@@ -375,6 +406,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("set", cmd_set, "merge-patch plan, brief, a phase, item, decision or unit")
     p.add_argument("ref", help="plan | brief | Pn | Pn.m | D# | Pn.m/U#")
+    value_args(p, True)
+
+    p = verb("apply", cmd_apply, "validate and apply a JSON array of {ref, patch} edits together")
+    value_args(p, True)
+    p = verb("export", cmd_export, "export the complete plan as a current-format JSON snapshot")
+    p = verb("import", cmd_import, "import a current-format JSON snapshot into the specified directory")
+    value_args(p, True)
+    p.add_argument("--replace", action="store_true", help="restore an existing JSON plan")
+    p = verb("add-document", cmd_add_document, "add a schema-backed knowledge document")
     value_args(p, True)
 
     p = verb("push", cmd_push, "append a value to an array field (dotted paths allowed)")
@@ -422,7 +462,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="ask the provider's weak model for a context map (default: plan.settings.scout)")
     p.add_argument("--json", action="store_true")
 
-    p = verb("context", cmd_context, "rebuild the context pack of an item (context/<item>.md)")
+    p = verb("context", cmd_context, "return complete JSON context (context/<item>.json)")
     p.add_argument("item")
     p.add_argument("--stdout", action="store_true", help="print the pack instead of writing it")
 
@@ -442,8 +482,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("unit", cmd_unit, "split an item into units and move them: add | <U#> dispatch|return|accept|rework|reject")
     p.add_argument("item")
-    p.add_argument("target", metavar="add|U#")
-    p.add_argument("action", nargs="?", metavar="dispatch|return|accept|rework|reject")
+    p.add_argument("target", metavar="add|next|U#")
+    p.add_argument("action", nargs="?", metavar="context|dispatch|return|accept|rework|reject")
     p.add_argument("--title", help="add: unit title")
     value_args(p, False)
     p.add_argument("--agent", metavar="PROVIDER/MODEL[/EFFORT]", help="dispatch: the worker")
@@ -504,12 +544,36 @@ def main(argv=None) -> int:
     except SystemExit as exc:  # argparse: 0 for --help, 2 for usage
         return int(exc.code or 0)
     try:
+        if args.output == "json":
+            output = io.StringIO()
+            with redirect_stdout(output):
+                code = args.handler(args)
+            raw = output.getvalue().strip()
+            try:
+                data = json.loads(raw)
+            except ValueError:
+                data = {"message": raw}
+            _print_json({"ok": code == 0, "data": data})
+            return code
         return args.handler(args)
     except UsageError as exc:
-        print(f"plan.py {args.command}: error: {exc}", file=sys.stderr)
+        if args.output == "json":
+            _print_json({"ok": False, "error": {"code": "USAGE", "message": str(exc)}})
+        else:
+            print(f"plan.py {args.command}: error: {exc}", file=sys.stderr)
         return 2
     except PlanError as exc:
+        if args.output == "json":
+            _print_json({"ok": False, "error": {"code": exc.code, "message": exc.message,
+                        "issues": [i._asdict() for i in exc.issues if hasattr(i, "_asdict")]}})
+            return 1
         print(f"{exc.code}: {exc.message}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        if args.output == "json":
+            _print_json({"ok": False, "error": {"code": "IO_ERROR", "message": str(exc)}})
+        else:
+            print(f"IO_ERROR: {exc}", file=sys.stderr)
         return 1
 
 

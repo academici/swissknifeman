@@ -1,7 +1,7 @@
 ---
 name: workflow-craft
 bucket: general
-version: 0.1.0
+version: 0.3.0
 description: "Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README."
 risk: draft
 persona: oss-dev
@@ -31,9 +31,9 @@ Use this skill when the user asks for:
 - reworking/extending an already-existing plan workflow script.
 
 **Field-case this skill closes:** a project is connected to skiller, the
-constructor exists and its dev template already has mandatory review — and
+constructor exists and its dev template already has optional review — and
 the model still invents orchestration from scratch for a free-form phrasing
-("compose a full-development workflow") and drops the mandatory review stage.
+("compose a full-development workflow") and drops the optional review stage.
 A free-form phrasing doesn't match any existing trigger — this skill's
 `description` is the missing trigger.
 
@@ -49,7 +49,7 @@ A free-form phrasing doesn't match any existing trigger — this skill's
   execution phase (see "File location and name" below) — but the plan itself
   isn't about subagent orchestration, it's about framing the work.
 - `/task:make-workflow` (gate command, if present) — interview + generation +
-  automatic output reviewer around this same discipline. If the command is
+  requested output reviewer around this same discipline. If the command is
   available, prefer it over manually following the skill: it guarantees a red
   reviewer verdict blocks the script from shipping unfixed.
 
@@ -71,16 +71,27 @@ silently write orchestration from scratch.
 
 Workflows come in exactly two types, each with its own fixed set of mandatory
 stages. Blending types or dropping a mandatory stage is a defect even if the
-user didn't explicitly ask for it out loud (review for a dev workflow isn't
-an interview question, it's a given).
+user didn't explicitly ask for it out loud (review for a dev workflow is
+enabled only by explicit owner request).
 
 | Type | Base templates | Mandatory stages | What's absent |
 |:--|:--|:--|:--|
-| **Design** (design-only) | `wf-research-fanout.js`, `wf-audit-adversarial.js` | RAG research → design (expensive-model main loop) → adversarial audit/DoR gate → fixes → re-audit | code, tests, semver |
-| **Development** (dev) | `wf-dev-slice.js`, `wf-author-by-spec.js` | slice → impl → tests-to-green → risk-adaptive review → inter-slice gates → commit | design decisions on the cheap model (escalate to main loop, don't decide inline) |
+| **Design** (design-only) | `wf-research-fanout.js`, `wf-audit-adversarial.js` | RAG research → design (expensive-model main loop) → self-check/DoR gate → optional requested read-only audit → one owning correction; re-audit only after changed evidence | code, tests, semver |
+| **Development** (dev) | `wf-dev-slice.js`, `wf-author-by-spec.js` | slice → impl → tests-to-green → optional requested review → inter-slice gates → commit | design decisions on the cheap model (escalate to main loop, don't decide inline) |
 
 This table is the skill's SSOT — the `/task:make-workflow` command and its
 output reviewer cite THIS table, not their own copy; fix drift here only.
+
+Review and audit are opt-in: hard risks widen self-checks, not review admission. An explicit review
+request can optionally select `--reviewer provider/model`; otherwise use the current native route.
+Execution and review are separate calls, never recursive unbounded
+fix/review. One owner `plan-run --reviewer` invocation may orchestrate both roles automatically,
+retaining their independent sessions and bounded verdict history. The reviewer never repairs
+product or starts its successor. Fill reviewer slots from the selected or current captured native route before
+requested review; do not silently pick a default model. Repeated systemic class/area findings revise the
+shared invariant model, and completed review rounds are bounded by Task's two-completed-round/one-correction policy. A
+resume retains review history and unchanged evidence; it never resets a cap or broad-replays
+previously accepted work. See the workflow README for slot details.
 
 **Don't invent mandatory stages beyond this table** (source: `packages/task/workflows/README.md`) — if it seems
 like another mandatory stage is needed, propose a matrix edit explicitly,
@@ -88,7 +99,7 @@ don't quietly bolt it onto one script.
 
 **design ≠ dev, don't blend.** These are two disjoint requirement sets, not
 two variants of one set: a design-only script with an `impl`/`tests` step, or
-a dev script without risk-adaptive review, are equally defective (the first
+a dev script that omits explicitly requested review, are equally defective (the first
 turns a design session into unplanned code on the cheap model, the second
 reproduces the exact vaulter field-case). Determine the type BEFORE
 generation (the template-matching step already hints the type:

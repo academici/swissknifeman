@@ -1,4 +1,4 @@
-"""Closed-profile JSON Schema validator for v3 plan documents (stdlib only).
+"""Closed-profile JSON Schema validator for v4 plan documents (stdlib only).
 
 Supports exactly the keywords in ``SUPPORTED_KEYWORDS``; any other keyword in a schema file fails
 closed with ``SchemaProfileError`` at load time. Validation collects every issue instead of stopping at the
@@ -13,7 +13,7 @@ from typing import Any, NamedTuple
 
 SCHEMA_URN_PREFIX = "urn:swissknifeman:task:plan:"
 DIALECT = "https://json-schema.org/draft/2020-12/schema"
-KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event")
+KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot")
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
                "min_length", "one_of", "ref")
 SUPPORTED_KEYWORDS = frozenset({

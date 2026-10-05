@@ -7,6 +7,20 @@ unexplained without those client/server events.
 
 Directions only; order within a block is rough priority. Work starts on measured need, not in anticipation of it.
 
+## JSON v3 reconciliation with main (2026-10-05)
+
+The feature branch incorporates compatible main changes at `b0f63fd4` while keeping the JSON v3
+state API and lifecycle. Optional `--reviewer` selection is independent of storage; risk does not
+admit review. Executor/reviewer roles, bounded correction and systemic invariant checks are retained.
+The v2 check runner, review packet/ACP jobs, candidate receipts and whole-plan close facade were
+removed with v2 and are not v3 capabilities. Prior v2 field qualification is historical evidence,
+not qualification of the replacement engine. The existing roadmap records remain useful failure
+examples; adapt their behavior only when measured or explicitly prioritized.
+
+Future work: smart orchestration, machine-run checks with stored proof, native reviewer job recovery
+and candidate-bound provenance. Design these against JSON objects and the simple `plan.py` API;
+do not resurrect Markdown state reducers. No implementation of that future orchestrator is included.
+
 ## Near term
 
 - **Session efficiency.** Accumulated tool results, not the resident skill set, dominate Codex session growth; duplicate skill names exist in the umbrella and in Vaulter. Next: safe pilots that trim tool-result carry-over and remove the duplicates.

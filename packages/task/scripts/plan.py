@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin launcher: Task plan (layout v3) authoring CLI.
+"""Thin launcher: Task plan (layout v4) authoring CLI.
 
 Logic - in lib/task/plan/cli.py (thin launcher: sys.path -> lib).
 

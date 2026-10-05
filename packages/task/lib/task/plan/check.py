@@ -1,8 +1,8 @@
-"""Structural checks of a v3 plan (dossier §4, §2.5, §2.5.1). Never raises on a broken plan.
+"""Structural checks of a v4 plan (dossier §4, §2.5, §2.5.1). Never raises on a broken plan.
 
 ``check(plan)`` returns every problem as an ``Issue``; unreadable JSON, schema violations, identity and
 reference drift, batches, cycles, completeness, result/status consistency and unit rules are errors, a
-few advisory findings are warnings. Staleness of the generated views is added by P1.3.
+few advisory findings are warnings. Human-view freshness is checked separately by ``render --check``.
 """
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import re
 from typing import Any, Iterator, NamedTuple
 
 from . import schema as _schema
-from . import store, views
+from . import store
 from .model import ITEM_ID, parse_ref
 
 _UNIT_ID = re.compile(r"^U[0-9]+$")
@@ -44,9 +44,9 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.paths()
     ctx.results()
     ctx.units()
+    ctx.orchestration()
     ctx.log()
     ctx.advisories()
-    ctx.stale_views()
     return issues
 
 
@@ -76,6 +76,8 @@ class _Context:
         for key, doc in p.units.items():
             item_id, unit_id = key.split("/")
             yield "unit", key, p.rel(store.unit_path(p.root, item_id, unit_id)), doc
+        for key, doc in p.documents.items():
+            yield "document", key, f"knowledge/{key}.json", doc
 
     def file_of(self, kind: str, key: str) -> str:
         return self.p.rel(self.p.path(kind, key or None))
@@ -201,12 +203,6 @@ class _Context:
             else:
                 phases[phase_id] = [order[index - 1]] if index else []  # default: the previous phase
         self.report_cycles("phase", phases, "depends_on")
-        for item_id in p.items:
-            keys = [k for k in p.units if k.startswith(f"{item_id}/")]
-            ids = {k.split("/")[1] for k in keys}
-            unit_graph = {k.split("/")[1]: [d for d in p.units[k].get("depends_on", []) if d in ids]
-                          if isinstance(p.units[k].get("depends_on"), list) else [] for k in keys}
-            self.report_cycles("unit", unit_graph, "depends_on", prefix=f"{item_id}/")
 
     def report_cycles(self, label: str, graph: dict[str, list[str]], field: str, prefix: str = "") -> None:
         state: dict[str, int] = {}
@@ -280,8 +276,8 @@ class _Context:
                     missing("validation", "at least one acceptance check")
                 if not item.get("deliverables"):
                     missing("deliverables", "at least one deliverable")
-                if not (item.get("reads") or item.get("task_files")):
-                    missing("reads", "reads or task_files")
+                if not (item.get("reads") or item.get("task_files") or item.get("guidance") or item.get("sections")):
+                    missing("reads", "reads, task_files, guidance or self-contained sections")
 
     def decisions(self) -> None:
         for key, doc in self.p.decisions.items():
@@ -292,6 +288,7 @@ class _Context:
                     self.error("decision_fields", f"{rel}/{field}", f"a {status} decision needs {field}")
 
     def paths(self) -> None:
+        from . import context
         for kind, key, rel, doc in self.docs():
             for pointer, value in _path_fields(kind, doc):
                 parts = re.split(r"[\\/]", value)
@@ -299,6 +296,8 @@ class _Context:
                     self.error("path", f"{rel}{pointer}", f"path {value!r} contains a '..' segment")
                 elif value.startswith("/") or _DRIVE.match(value) or value.startswith("~"):
                     self.error("path", f"{rel}{pointer}", f"path {value!r} must be relative to the repository or @plan/")
+                elif kind in ("item", "unit") and pointer.startswith(("/reads/", "/examples/")) and context.human_view(self.p, value):
+                    self.error("human_view", f"{rel}{pointer}", "plan Markdown and human views cannot be agent inputs")
 
     def results(self) -> None:
         for key, doc in self.p.items.items():
@@ -338,9 +337,9 @@ class _Context:
                                   f"{path} is not covered by the task_files of {item_id}")
 
     def unit_overlap(self, item_id: str, keys: list[str]) -> None:
+        from . import units as work_units
         units = {k.split("/")[1]: self.p.units[k] for k in keys}
-        deps = {u: set(d for d in doc.get("depends_on", []) if d in units) if isinstance(doc.get("depends_on"), list) else set()
-                for u, doc in units.items()}
+        deps = {u: set(work_units.dependencies(self.p, item_id, u)) for u in units}
 
         def reaches(start: str, goal: str) -> bool:
             stack, seen = list(deps[start]), set()
@@ -363,6 +362,32 @@ class _Context:
                         if globs_overlap(fa, fb):
                             self.error("unit_overlap", f"{item_id}/{a}",
                                        f"independent units {a} and {b} both own {fa!r} / {fb!r}")
+
+    def orchestration(self) -> None:
+        from . import units
+        for kind, key, rel, doc in self.docs():
+            setting = doc.get("orchestration")
+            if isinstance(setting, dict) and "max_parallel" in setting:
+                value = setting["max_parallel"]
+                if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                    self.error("orchestration", f"{rel}/orchestration/max_parallel", "must be a positive integer")
+            route = doc.get("route")
+            if isinstance(route, dict) and bool(route.get("provider")) != bool(route.get("model")):
+                self.error("route", f"{rel}/route", "explicit provider and model must be supplied together")
+            sections = doc.get("sections")
+            section_ids = [s["id"] for s in sections if isinstance(s, dict) and isinstance(s.get("id"), str)] if isinstance(sections, list) else []
+            if len(section_ids) != len(set(section_ids)):
+                self.error("sections", f"{rel}/sections", "section ids must be unique within a document")
+        for key, doc in self.p.units.items():
+            item_id, uid = key.split("/")
+            parent = doc.get("parent")
+            if parent and (parent == uid or f"{item_id}/{parent}" not in self.p.units):
+                self.error("unit_parent", key, "parent must name another unit in this item")
+            if doc.get("kind") == "command" and not doc.get("command"):
+                self.error("unit_command", key, "a command unit needs a command check")
+        for item_id in self.p.items:
+            graph = {u: units.dependencies(self.p, item_id, u) for u in units.unit_ids(self.p, item_id)}
+            self.report_cycles("unit", graph, "depends_on", prefix=f"{item_id}/")
 
     def log(self) -> None:
         p = self.p
@@ -400,17 +425,6 @@ class _Context:
                         and not _GLOB.search(hint["path"]) and not self.exists(hint["path"])):
                     self.warn("modify_missing", f"{rel}/task_files/{index}/path",
                               f"{hint['path']} is marked modify but does not exist")
-
-    def stale_views(self) -> None:
-        if any(i.level == "error" and i.code in ("json", "schema") for i in self.out):
-            return  # views of a schema-broken plan are meaningless; repair the JSON first
-        try:
-            stale = views.render_all(self.p, check=True)
-        except Exception as exc:  # noqa: BLE001 — check never raises on a broken plan
-            self.error("stale_view", "views", f"cannot render the views: {exc}")
-            return
-        for name in stale:
-            self.error("stale_view", name, f"{name} is stale or missing; run plan.py render")
 
     def exists(self, path: str) -> bool:
         base = self.p.root if path.startswith("@plan/") else self.p.repo_root
@@ -475,8 +489,12 @@ def _path_fields(kind: str, doc: dict) -> Iterator[tuple[str, str]]:
             yield from listed("/rag/captures", rag.get("captures"))
     elif kind == "unit":
         yield from listed("/files", doc.get("files"))
+        yield from listed("/outputs", doc.get("outputs"))
         yield from listed("/reads", doc.get("reads"), "path")
         yield from checks("/checks", doc.get("checks"))
         outcome = doc.get("outcome")
         if isinstance(outcome, dict):
             yield from listed("/outcome/changed", outcome.get("changed"))
+        command = doc.get("command")
+        if isinstance(command, dict) and isinstance(command.get("cwd"), str):
+            yield "/command/cwd", command["cwd"]

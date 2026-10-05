@@ -39,7 +39,7 @@ TOOLS = [
                     "use one active-handoff for continuity.",
      "inputSchema": {"type": "object", "properties": {
          "scope": {"type": "string", "description": "e.g. project:brain or global"},
-         "key": {"type": "string", "enum": ["context", "blocker", "coordination", "active-handoff"]},
+         "key": {"type": "string", "enum": ["context", "fact", "blocker", "coordination", "active-handoff"]},
          "ttl_hours": {"type": "number", "exclusiveMinimum": 0, "maximum": 72, "default": 48},
          "value": {"type": "string"}}, "required": ["value"]}},
     {"name": "maind_memory_recall",

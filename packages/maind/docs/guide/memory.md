@@ -7,13 +7,16 @@ HTTP wrappers. Repository files and git own durable knowledge and history.
 ## Write policy and expiry
 
 All records expire: **48 hours by default, at most 72 hours**. Reading never extends expiry.
-A record without a valid mAInd envelope is treated as expired. Recall and digest hide expired
-entries; hourly collection physically deletes them. New writes also pass `ttlDays` to the daemon
-for native `forgetAfter` expiry when supported.
+Legacy records without TTL expire within 72 hours of `createdAt`, regardless of `updatedAt`.
+Records with missing/untrustworthy creation time or malformed TTL metadata are expired; search
+projections missing time use one full export to establish age, without renewing the record.
+Recall and digest hide expired entries; hourly collection physically deletes them. New writes
+also pass `ttlDays` to the daemon for native `forgetAfter` expiry when supported; the mAInd
+collector remains responsible for legacy records and policy violations.
 
 Store only short useful context that another session needs and cannot simply read from the
-repository. Categories: `context`, `blocker`, `coordination`, `active-handoff`.
-Maximum 800 characters and 8 live entries per scope. Identical context is
+repository. Categories: `context` (`fact` is a compatibility alias), `blocker`, `coordination`,
+`active-handoff`. Maximum 800 characters and 8 live entries per scope. Identical context is
 deduplicated without renewing expiry. One `active-handoff` per scope replaces its predecessor
 after successful storage. Include a repository handoff path and next action, then forget the
 memory when the work finishes. A renewed handoff is an explicit new write, never a side effect
@@ -23,11 +26,11 @@ Do not store plan decisions, audit/document copies, progress/checkpoints, sessio
 facts, commit/release history or ecosystem connection seeds. Category rejection and narrow
 structural patterns (`AD01 …`, `P09 designed …`, `[maind:ecosystem-link]`, code/JSON dumps) reject
 obvious copies; individual words such as "plan" are not banned. Semantic usefulness still needs
-agent judgment.
+agent judgment. Stop words alone cannot establish whether a note is useful.
 
 ```bash
 maind memory remember --type blocker --ttl-hours 24 "Temporary blocker and next action"
-maind memory remember --type active-handoff "See plans/current/handoff.md; next: review"
+maind memory remember --type active-handoff "Plan PLAN1: use plan.py next PLAN1; next: review"
 maind memory audit --all --json             # read-only inventory and proposed deletion reasons
 maind memory prune --all                    # preview only
 maind memory prune --all --apply --json     # exact ids, snapshot first, verify deletion
@@ -40,17 +43,17 @@ repository duplicates in that selected pool. Pruning snapshots the exact records
 `~/.maind/memory-backups/` (directory 0700, files 0600), rechecks candidates for concurrent
 changes and verifies deletion. These local recovery snapshots expire after seven days during
 GC; they are never loaded into agent context. Recover by inspecting the snapshot and rewriting
-only still-useful entries with a fresh bounded TTL.
+only still-useful entries with a fresh bounded TTL. Old journals should stay in repository files.
 
 The timer `maind-memory-gc.timer` runs once per hour and catches missed runs after login.
 Inspect with `systemctl --user status maind-memory-gc.timer` and `journalctl --user -u
 maind-memory-gc.service`. The daemon is not restarted. Already-running MCP sessions need a
-reconnection to load changed Python code.
+reconnection to load changed Python code; their legacy writes remain subject to collector rules.
 
 Metadata is embedded after the scope marker because the engine rewrites `type` and ignores
 `namespace`: category, creation/expiry, `source` (`cli`, `mcp`, `internal`) and provider when its
 session environment is available. Unknown authors remain `unknown`; no author is fabricated.
-Automatic graph seeds and SessionEnd feature/commit copying do not exist.
+Automatic graph seeds and SessionEnd feature/commit copying are disabled, including on sync.
 
 ## Life cycle
 
@@ -148,7 +151,8 @@ existing nodes do not change behavior). For multiple persistent machines
 Scope model: memory writes are explicit; connections are read from config/graph without seeds.
 Graph namespaces (`namespaces`) and allowed shared memory areas
 (`memory_namespaces`) are separated. Regular recall reads only `project:<id>`; `ns:<name>`
-is read or written only when explicitly passed `scope`. Derivation of buckets - `namespaces.py`. Groups -
+is read or written only when explicitly passed `scope`. Automatic publication seed
+is disabled. Derivation of buckets - `namespaces.py`. Groups -
 [Namespaces](./namespaces).
 
 ## Single write path/read: hook + MCP via maind

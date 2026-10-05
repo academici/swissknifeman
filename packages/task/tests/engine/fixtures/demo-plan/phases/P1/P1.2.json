@@ -25,8 +25,8 @@
       "required": true
     },
     {
-      "path": "@plan/research/00-design.md",
-      "section": "§2 Validation",
+      "path": "@plan/knowledge/design.json",
+      "section": "validation",
       "why": "error format",
       "required": true
     }
@@ -48,7 +48,7 @@
   "guidance": "Iterate REQUIRED_KEYS; append `ConfigIssue(key, problem)`; raise `ConfigError(issues)`.",
   "examples": [
     {
-      "path": "@plan/artifacts/design/examples.md",
+      "path": "@plan/artifacts/design/examples.json",
       "section": "E3"
     }
   ],

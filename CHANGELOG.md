@@ -25,26 +25,199 @@
 
 ### Changed
 
-- **task: layout v3 (JSON-first), удалён v2 runtime (breaking).** План Task — каталог
-  JSON-документов со схемами `packages/task/schemas/plan/v1/`; меняется только через
-  `packages/task/scripts/plan.py` (`new, show, set, push, add-*, batches, check, render, next,
-  start, context, finish, log, decide, grant, design-done, reopen, archive`). Шесть человеческих
-  видов (`index, plan, roadmap, status, handoff, open-questions`) и `AGENTS.md`/`CLAUDE.md` плана
-  генерируются шаблонами; `start` собирает контекст-пак `context/<item>.md`. Команды
-  `plan-design/plan-run/plan-close/plan-audit` и канон `plan-protocol` сокращены до глаголов
-  `plan.py`; harness получил `task.plan-files`, хуки `lifecycle.plan-guard`/`lifecycle.plan-regen`,
-  review-gate на `plan.py check`; artifex читает item JSON через `plan.py show`. Breaking: v2-планы
-  (Markdown) больше не читаются; удаляются `plan-lint`, `plan-work`, `plan-views`, журнал,
-  bundle-дайджесты, route evidence, terminal admission, `plan_weight` и связанные конфиги, тесты и
-  `docs/reference/*`. Миграция плана — вручную по
-  `packages/task/docs/migration/v2-to-v3.md`. `plugin_version` поднимается релизным потоком
-  `skiller release`, не вручную.
+- **Синхронизация JSON v3 с main:** сохранены история релизов 0.28.0–0.28.3 и версии
+  опубликованных пакетов; JSON-фича остаётся в `[Unreleased]`. Опциональный `--reviewer`
+  выбирает отдельную нативную read-only сессию без обязательного ревью по риску; роли
+  исполнителя и ревьюера, ограничение двух завершённых раундов/одной коррекции и модель
+  системных инвариантов адаптированы к простому API v3. `plan-work`, встроенный запуск
+  проверок, v2 receipts и отдельное закрытие всего плана не возвращаются.
+- **mAInd compatibility:** `fact` принимается как временный контекст, legacy-записи без TTL
+  живут до 72 часов от достоверного времени создания; чтение срок не продлевает. Sync удаляет
+  ранее установленные SessionEnd hooks копирования коммитов. Grok не блокирует инструменты
+  из-за неподключённого mAInd; viewer продолжает использовать effective HTTP port + 2.
+
+
+- **task: layout v4, JSON-only API и граф оркестрации (breaking).** Контракты,
+  состояния, знания и контекст исполнителей хранятся в JSON; Markdown генерируется
+  только для людей в `views/`, не участвует в исполнении и исключён из индексирования.
+  Убраны AGENTS/CLAUDE carriers, Markdown packs/briefs и квоты чтения. Схема поддерживает
+  вложенные units подготовки/реализации/ревью/проверок, зависимости, sequential/DAG,
+  явные provider/model/effort/settings. API добавляет `add-document`, `apply`,
+  `export`/`import` с проверкой графа, сохранением истории и откатом публикации.
+  `plan-protocol` поставляется как skill внутри marketplace-плагина Task вместе
+  со схемами и движком; отдельного runtime-протокола и legacy-парсеров нет.
+  Временная инструкция `packages/task/docs/migration/README.md` сопровождает
+  конвертацию активных планов и автоматически удаляется после проверки инвентаря.
+  Пилот Chatom RC1 сохраняет 42 пункта, 25 решений и следующий шаг — дизайн P11.
+  Архивные планы остаются вне миграции. Исполнение графа нативным оркестратором —
+  следующий этап; API сам не запускает новые units или их команды.
 
 - **Claude permissions:** пресет `base` больше не запрещает чтение `CHANGELOG.md`.
   Правило `Read(**/CHANGELOG.md)` убрано из `settings.base.json`, который
   `harness permissions` мержит в `.claude/settings.local.json`.
 
 ### Fixed
+
+- **Task repeat-admission:** повтор одного закрытого пункта соблюдает phase-scoped
+  execution gate и не требует детализации будущих фаз при необязательном design audit.
+  Завершённый repeat сохраняет исторические sibling heads при последующем owning repeat;
+  незавершённый запуск по-прежнему отклоняет изменившиеся sibling heads. Точный owner marker,
+  одноразовый допуск и обязательный whole-plan GREEN сохраняются.
+
+- **Grok project config:** `.grok/config.toml` остаётся локальным: `maind sync` пишет
+  абсолютные пути MCP-лаунчеров. Образец — `.grok/config.toml.example`. В
+  `provider-artifacts.lock.json` добавлена запись `maind.provider-deploy.grok`.
+
+## [0.28.3] - 2026-10-05
+
+### Fixed
+
+- **Task deletion reviews:** native reads of removed repository-local files bind
+  absence instead of aborting the review; reappearing files invalidate that evidence.
+- **Task Markdown validation:** execute every inline command/result clause and
+  stop on the first failure while retaining the original acceptance carrier.
+- **Task execution facade:** `plan-work` now owns persisted check definitions,
+  candidate-bound validation and qualified close. Unchanged GREEN evidence is reused;
+  known RED stops later checks, timeouts cannot certify success, and incomplete
+  validation exits nonzero. Typed write-site decisions render without journal repairs.
+- **Task review jobs:** attempts precede native spawn; process/session/request identity
+  and raw output survive interruption. Status, cancellation and reconciliation avoid
+  duplicate prompts when an outcome is unknown. Compact delta packets retain the
+  complete disk manifest, dependency ledger and candidate freshness checks.
+- **Task command projections:** remove duplicated route exports, manual terminal
+  recipes and default review/phase-close/two-commit wording; preserve effort selector
+  grammar when rendering Codex UI guidance.
+- **Harness Codex telemetry:** add an opt-in transparent app-server stdio observer
+  for request lifecycle and delivery gaps, with explicit stale/unknown state.
+- **Task review archives:** сохранять игнорируемые product-файлы в immutable source blobs; legacy recovery добавляет witness для точно захешированных байтов без перезаписи старого receipt или witness.
+- **Task concrete Files:** recursive glob inventory uses tracked and nonignored
+  untracked source files, preserving base deletions and explicitly named ignored
+  inputs. Standalone traversal does not follow directory symlinks, so pnpm dependency
+  cycles cannot exhaust memory during canonical evidence or review preparation.
+
+## [0.28.2] - 2026-10-04
+
+### Fixed
+
+- **Task roadmap follow-ups:** `plan-close` закрывает только весь план; новые
+  phase/item-close команды и lifecycle events запрещены, исторические carriers
+  остаются читаемыми. Проверяются terminal item evidence, phase/plan Validation,
+  freshness и owning work; terminal operation/reconcile машинно формирует
+  handoff, один successor bundle и delivery receipt, повтор без дублирования истории.
+- **Task reviewer correctness:** reviewer опционален; явное review/audit без флага
+  использует настоящий captured native route. Все новые Grok-запуски используют ACP
+  с inactivity-only liveness. Files раскрываются в concrete inventory с new/deleted
+  members и explicit foreign exclusions; native read ledger связывает фактически
+  прочитанные зависимости. Immutable source blobs и additive legacy recovery
+  сохраняют оригинальное evidence, не выдумывая отсутствующую lock/version history.
+- **Task qualification scope:** selected-item lint включает producer closure;
+  future-only bundle/read-budget defects видны, но не блокируют текущую работу.
+  Candidate/attempt-bound validation DAG исключает перезапись попыток и конкурентных
+  writers одного output; подробные review archives возвращаются компактным result.
+
+- **mAInd working memory:** память ограничена временным контекстом: TTL 48 часов
+  по умолчанию, максимум 72, 800 символов и 8 живых записей на scope; один заменяемый
+  handoff, дедупликация, фильтр журналов/решений/копий документов. Добавлены audit,
+  восстановимая prune и почасовой GC; автоматические graph seeds и копии коммитов
+  отключены. MCP/CLI/digest по умолчанию читают только свой проект; общая память
+  требует явного запроса и разрешённого scope, настройка общего digest не обходит это правило.
+
+- **Task phase order:** recovery учитывает полную уникальную цепочку в `Dependencies and order`, её непосредственные predecessor edges и тот же порядок при выборе следующего bundle. Нечисловой execution order больше не создаёт ложные зависимости; legacy `Planned Items` и явные producer-аннотации сохранены.
+
+- **Task long-running review:** native ACP now probes process, route and selected-session
+  activity every 30 seconds and times out only on inactivity. Active reviews have no elapsed
+  deadline or default Task turn cap. Response notifications no longer impersonate native turns.
+  Incomplete transports retain diagnostic receipts without consuming a separate retry budget;
+  only completed verdicts consume the existing two-round review budget.
+
+- **Task Codex invocation:** provider-owned `plan-run --reviewer=...` и форма
+  с пробелом сопоставляются через общий reviewer parser, включая default high
+  и canonical context/effort suffixes. Исходная команда сохраняется в route
+  evidence; несовпадение plan/workset, reviewer, cwd или executor route отклоняется.
+
+- **Task journal lint:** авторитетный committed terminal row проверяется по
+  immutable closure proof, поэтому изменения зависимого пункта не делают
+  закрытого predecessor устаревшим. Неподтверждённый commit закрытия сохраняет
+  live guard; повреждённое committed evidence не допускает fallback.
+
+- **Task committed predecessors:** batch/dependency admission проверяет закрытый
+  reviewed producer по первому commit с точной terminal journal row и исходными
+  receipt, packet, output и native evidence. Проверяется полный reviewed inventory
+  в дереве closure commit, включая symlinks и совместимый executable bit; работа
+  следующего пункта над общими файлами не отменяет исторический GREEN.
+  Новые closes сохраняют обязательную проверку текущих product/evidence bytes.
+
+- **Task review freshness:** коммит уже проверенных untracked файлов больше не
+  делает настоящий GREEN устаревшим. Проверка сохраняет исходный authenticated
+  snapshot и сверяет полный inventory product/input bytes, modes и symlink
+  targets; изменение представления Git diff не подменяет изменение результата.
+
+- **Task Grok reviewer:** явный размер контекста запускает свежую read-only ACP
+  сессию и проверяет эффективные модель, effort и окно по native provider summary
+  до отправки packet. Терминальное ACP evidence подтверждает завершение и usage;
+  внутреннее имя модели в token accounting больше не подменяет route ID.
+  Неполные попытки сохраняют исходную причину, логи и прежние бюджеты; initial
+  review явно сообщает об отсутствии предыдущих findings.
+
+## [0.28.0] - 2026-10-04
+
+### Added
+
+- **Task executor/reviewer:** выполнение и read-only ревью разделены на отдельные
+  invocation; `review`/`plan-audit` явно принимают `--reviewer provider/model`.
+  `plan-run <план> <фаза/пункты> --reviewer provider/model` автоматически запускает
+  независимое item review и одно исправление без второй команды владельца;
+  выбор сохраняется при resume и не меняет модель исполнителя или frozen spec.
+  Reviewer допускает свободные suffixes контекста/effort и завершающий `/`
+  (`grok/grok-4.7/500k/high/`, `.../hight/`); размер окна подтверждает провайдер,
+  расходный token budget не вводится и неизвестное окно не запускает слепой повтор.
+  `plan-work.py review-packet|review-run|review-record|review-status` связывает
+  spec, product и evidence с дайджестом, ограничивает packet 80 КБ, проверяет
+  реальную модель/сессию Grok и архивирует неполные попытки без GREEN.
+  Явный `owner-review` блокирует item close до текущего GREEN; системные риски
+  требуют модели инвариантов и self-check. Повтор класса/области меняет тактику,
+  два завершённых раунда и две неполные попытки имеют раздельные бюджеты.
+
+- **Grok task plugin:** `install.sh` добавляет локальный marketplace и ставит
+  плагин `packages/task` и `packages/task/adapters/grok/prefix-hold` командой
+  `grok plugin install … --trust`, если CLI `grok` есть. Повтор с
+  `already configured` / `already installed` считается успехом.
+  Marketplace-плагин `core` для Grok не ставится: его source — корень
+  монорепозитория. Opt-out: `--no-grok-plugins`. Grok даёт префикс `task:`
+  только при совпадении голого имени, поэтому `prefix-hold` резервирует имена
+  десяти команд. Меню новой сессии: `/task:design`, `/task:dev`, `/task:fix`,
+  `/task:research`, `/task:review`, `/task:make-workflow`, `/task:plan-design`,
+  `/task:plan-run`, `/task:plan-close`, `/task:plan-audit`.
+
+- **Gitignore при sync:** провиженер `gitignore` в конце `maind sync` смотрит файлы
+  проекта по `configs/gitignore-policy.json` и дописывает в `.gitignore` строки
+  для `ignore` и для `portable-or-ignore`, если в файле есть машинный путь.
+  `.grok/config.toml` с абсолютным путём попадает в ignore. На коммит остаются
+  `.grok/hooks/`, `.grok/rules/`, `.grok/skills/`, агенты, команды, плагины,
+  workflows и `.grok/config.toml.example`. Рантайм `.grok/review-gate.state.json`
+  игнорируется. `git rm --cached` sync не запускает. Повтор ничего не дописывает.
+
+### Changed
+
+- **Claude permissions:** пресет `base` больше не запрещает чтение `CHANGELOG.md`.
+  Правило `Read(**/CHANGELOG.md)` убрано из `settings.base.json`, который
+  `harness permissions` мержит в `.claude/settings.local.json`.
+
+### Fixed
+
+- **Grok PreToolUse hook:** generated `.grok/hooks/lifecycle.py` now normalizes
+  Grok's camelCase envelope instead of silently exiting 2 on the Claude-only
+  schema. Until mAInd is connected it keeps `maind health --cwd`/`--fix` and
+  required bootstrap reads available; a real denial emits Grok's structured
+  `reason` and `hookSpecificOutput` fields as well as stderr. Malformed payloads,
+  unknown tool names, unavailable `maind`, and probe timeouts fail open with a
+  diagnostic rather than bricking the session.
+
+- **Task phase acceptance:** GREEN-закрытие после owning repairs проверяет полный
+  inventory исторического RED review, admitted repeats, terminal evidence,
+  committed logs/exit codes и текущие product bytes. Phase-close сохраняет
+  native session/run identity для terminal delivery. Исторический review
+  сохраняется; неполная или невалидная связь findings/evidence запрещает закрытие.
 
 - **Task repeat-admission:** повтор одного закрытого пункта соблюдает phase-scoped
   execution gate и не требует детализации будущих фаз при необязательном design audit.

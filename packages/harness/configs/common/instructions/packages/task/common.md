@@ -9,7 +9,7 @@ Keep the intent and plan command catalog in `commands/`; each intent command dec
 Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route.
 <!-- instruction:task.plan-files -->
 ## task.plan-files
-Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth, change it only through `python3 <task>/scripts/plan.py`; ignore generated files (`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`, `context/`, unit `brief.md`): never edit them and do not read them for work; get state with `plan.py next|show|context`.
+Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.
 <!-- instruction:task.layout -->
 ## task.layout
 Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.

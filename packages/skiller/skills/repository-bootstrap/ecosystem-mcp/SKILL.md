@@ -37,8 +37,8 @@ memory access. Shared `ns:*`/`global` require an explicit task request, explicit
 authorization through `memory_namespaces`. Never duplicate code, git, plans, audits or decisions.
 
 Every record expires: **48 hours by default, at most 72 hours**, including handoffs. Maximum
-800 characters and 8 live entries per scope. Allowed categories: `context`, `blocker`,
-`coordination`, `active-handoff`. Write only when another session needs a
+800 characters and 8 live entries per scope. Allowed categories: `context` (`fact` is a legacy
+alias), `blocker`, `coordination`, `active-handoff`. Write only when another session needs a
 temporary fact that cannot simply be read from the repository. One `active-handoff` per scope
 points to the current repository handoff and names the next action; replace it instead of
 appending a journal, and forget it on completion. Reading never extends TTL. Empty memory is normal.

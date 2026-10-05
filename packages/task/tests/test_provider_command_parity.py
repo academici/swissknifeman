@@ -36,7 +36,7 @@ MODEL_ROLES_REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-
 _CODEX_RUNTIME_FORBIDDEN = (
     re.compile(r"(?i)\b(?:opus|sonnet|haiku|fable)\b"),
     re.compile(r"(?<![\w/])/task:"),
-    re.compile(r"(?<![\w/])/(?:model|effort|clear)\b"),
+    re.compile(r"(?<![\w/\[])/(?:model|effort|clear)\b"),
     re.compile(r"Workflow\("),
 )
 _PLAN_STATUSES = (
@@ -226,10 +226,10 @@ class ProviderCommandParityTests(unittest.TestCase):
         self.assertIn("scripts/plan.py", plan_text)
 
     def test_qualified_item_reference_rule_lives_in_the_protocol_canon(self):
-        canon = (REPO_ROOT / "packages/task/runtime/plan-protocol/SKILL.md").read_text(encoding="utf-8")
+        canon = (REPO_ROOT / "packages/task/skills/plan-protocol/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("`PLAN<N>.P2.3`", canon)
         self.assertIn("references/work-references.md", canon)
-        rule = (REPO_ROOT / "packages/task/runtime/plan-protocol/references/work-references.md"
+        rule = (REPO_ROOT / "packages/task/skills/plan-protocol/references/work-references.md"
                 ).read_text(encoding="utf-8")
         self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2`, `PLAN<N>.P2.3`", rule)
 

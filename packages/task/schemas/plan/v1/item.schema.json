@@ -49,8 +49,7 @@
           "description": "Included.",
           "items": {
             "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
-          },
-          "minItems": 1
+          }
         },
         "exclude": {
           "type": "array",
@@ -273,10 +272,11 @@
       "properties": {
         "mode": {
           "type": "string",
-          "description": "none or requested.",
+          "description": "none disables review; self names executor checks; requested declares independent review.",
           "minLength": 1,
           "enum": [
             "none",
+            "self",
             "requested"
           ]
         },
@@ -296,6 +296,14 @@
             "note": {
               "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
               "description": "Remark."
+            },
+            "provider": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Selected reviewer provider."
+            },
+            "effort": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/effort",
+              "description": "Selected reviewer effort."
             }
           },
           "required": [],
@@ -324,7 +332,7 @@
           "type": "string",
           "description": "Gate name.",
           "minLength": 1,
-          "pattern": "^[A-Z0-9-]+$"
+          "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
         },
         "scope": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
@@ -482,6 +490,13 @@
         "decision": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref",
           "description": "Accepted decision; required when status is skipped."
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+          },
+          "description": "Evidence."
         }
       },
       "required": [],
@@ -490,6 +505,17 @@
     "updated_at": {
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
       "description": "Last save time, written by the store."
+    },
+    "orchestration": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestration",
+      "description": "Orchestration."
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      },
+      "description": "Sections."
     }
   },
   "required": [

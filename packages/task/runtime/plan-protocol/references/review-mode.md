@@ -14,13 +14,13 @@ Generated bookkeeping drift may be reconciled only through its deterministic own
 must not be reported as a product defect.  Fresh evidence is reused; a new audit needs a
 new material hypothesis and matching authority.
 
-Read `../SKILL.md` on demand for audit-admission, candidate fingerprint, or phase-close
+Read `../SKILL.md` on demand for audit-admission, candidate fingerprint, or whole-plan close
 schema details.  Completion is the requested review artifact, not implementation or
 release.
 
 ## Executor/reviewer handoff
 
-The default remains self-check plus affected tests and a dedicated phase/slice review item.
+The default is self-check plus affected tests. A dedicated phase/slice review requires an explicit owner request or a concrete risk.
 Only an explicit owner requirement adds `owner-review: <provider/model>` to an item's Validation.
 The carrier is an acceptance requirement, not permission for unbounded recursive review.
 For one-command operation use `task:plan-run <PLAN-ID> <Pn|items> --reviewer <provider/model>`.

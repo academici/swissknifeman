@@ -4,6 +4,31 @@ Implemented 2026-10-04: Task executor/reviewer separation with optional reviewer
 digest-bound owner-review packets, bounded transport/review rounds and invariant-model checks.
 See [Task tooling](task/reference/plan-tooling.md#independent-review-transport).
 
+## Field incident — 2026-10-05
+
+Chatom P10.6 with current Task 0.28.2 took 2h23m including interruptions/resume.
+The local report `roadmap/2026-10-05-codex-chatom-p10-6-postmortem.md` and adjacent
+metrics JSON distinguish a 38-minute unexplained executor silence after validation,
+manual workflow overhead, validation retries, and one interrupted active Grok review.
+Current command bytes were loaded; the reviewer was not restarted in this run.
+Yesterday's source invariants worked, but end-to-end live efficiency remained unproved.
+Source changes now complete the existing Task facade with persisted validation and
+qualified close, durable review attempts with status/cancel/reconcile, compact delta
+packets and shorter generated commands. Local Git/subprocess regressions exercise
+failure, interruption recovery, candidate freshness and unchanged-evidence reuse.
+An opt-in [Codex request observer](harness/codex-request-lifecycle.md) captures native
+app-server identity and lifecycle; it requires integration at the owning client.
+The original silence is still unexplained, and no matched live executor comparison
+or consumer rollout has been demonstrated. Local implementation and acceptance
+evidence are recorded in `roadmap/2026-10-05-postmortem-execution.md`.
+
+Acceptance snapshot: Task, Harness and Skiller package validation passed. Native Grok
+transport attested two completed FINDINGS rounds and archived an incomplete attempt;
+the corrected fixture passes local validation but has no final native GREEN or close.
+The umbrella docs build currently fails on existing markup in the unchanged
+`docs/provider-support.md`. These limits remain open for release acceptance; source
+implementation does not establish that the original live delay has been eliminated.
+
 ## Roadmap audit — 2026-10-04
 
 All twelve dated local roadmap records were checked against code and regression evidence,

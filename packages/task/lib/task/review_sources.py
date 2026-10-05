@@ -235,14 +235,14 @@ class ReadLedger:
         if path is None:
             return  # grep/list are discovery, not a claim to have read every match.
         arguments = update.get("rawInput", {})
-        if not path.resolve().is_relative_to(self.root) or not path.is_file():
+        if not path.resolve().is_relative_to(self.root) or (path.exists() and not path.is_file()):
             raise ValueError("REVIEW_READ_UNVERIFIABLE: source must be a repository-local file")
         relative = path.relative_to(self.root).as_posix()
         from task import review_packet
         row = review_packet._members(self.root, [relative])[0]
         if relative in self.rows and self.rows[relative]["member"] != row:
             raise ValueError("REVIEW_DEPENDENCY_STALE: consulted bytes changed during review")
-        identity = source_identity(self.root, relative) if relative.startswith("vendor/") else None
+        identity = source_identity(self.root, relative) if relative.startswith("vendor/") and row.get("sha256") is not None else None
         entry = self.rows.setdefault(relative, {"member": row, "reads": [], "identity": identity})
         if entry.get("identity") != identity:
             raise ValueError("REVIEW_DEPENDENCY_STALE: external source lock changed during review")

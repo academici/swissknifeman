@@ -1,6 +1,8 @@
 """Native ACP transport boundaries without launching a reviewer or model call."""
 import io
+import hashlib
 import json
+import os
 import queue
 import subprocess
 import tempfile
@@ -11,6 +13,7 @@ import unittest
 from unittest.mock import patch
 
 from task import review_grok_acp as acp
+from task import review_job
 
 
 class _Pipe:
@@ -45,7 +48,7 @@ class _Process:
     def write(self, raw):
         request = json.loads(raw)
         self.sent.append(request)
-        if "method" not in request or self.silent:
+        if "method" not in request or "id" not in request or self.silent:
             return
         method, rid = request["method"], request["id"]
         if method == "session/new":
@@ -122,6 +125,40 @@ class _ActiveProcess(_Process):
 
 
 class GrokACPTests(unittest.TestCase):
+    def test_streams_identity_and_raw_before_cancellation_returns(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            attempt = Path(temporary)
+            process = _ActiveProcess()
+            process.pid = os.getpid()
+            result = []
+            with patch.object(acp.subprocess, "Popen", return_value=process), \
+                    patch.object(acp, "provider_route", return_value=self.witness), \
+                    patch.object(acp, "_stop", side_effect=lambda proc: proc.terminate()):
+                thread = threading.Thread(target=lambda: result.append(acp.run(
+                    self.manifest, b"packet", cwd=Path(temporary), timeout=1,
+                    heartbeat_interval=.02, attempt_dir=attempt)))
+                thread.start()
+                until = time.monotonic() + 1
+                while time.monotonic() < until:
+                    path = attempt / "job.json"
+                    if path.exists() and json.loads(path.read_text())["phase"] == "session/prompt":
+                        break
+                    time.sleep(.005)
+                job = json.loads(path.read_text())
+                self.assertEqual(job["session_id"], "reviewer-id")
+                self.assertEqual(job["request_id"], 4)
+                self.assertTrue((attempt / "provider-output.jsonl").stat().st_size)
+                review_job.write(attempt / "cancel.json", {"requested_at": time.time()})
+                thread.join(timeout=2)
+                self.assertFalse(thread.is_alive())
+            self.assertFalse(result[0]["complete"])
+            self.assertIn("REVIEW_CANCELLED", result[0]["detail"])
+            saved = json.loads((attempt / "transport-result.json").read_text())
+            self.assertFalse(saved["complete"])
+            self.assertEqual(saved["exit_code"], -15)
+            self.assertIn("session/cancel", [row.get("method") for row in process.sent])
+            self.assertEqual(json.loads((attempt / "job.json").read_text())["phase"], "interrupted")
+
     def setUp(self):
         # Provenance is exercised separately; never hash a machine-local binary
         # or include its IO latency in millisecond-scale fake transport tests.
@@ -158,6 +195,55 @@ class GrokACPTests(unittest.TestCase):
         self.assertEqual(requests[2]["params"]["_meta"], {"contextWindow": 500000, "reasoningEffort": "high"})
         self.assertEqual(requests[3]["params"]["prompt"], [{"type": "text", "text": "unchanged digest-bound packet"}])
         self.assertIn(b"provider diagnostics", result["stderr"])
+
+    def immutable_packet(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        packet_path = root / "owner-review" / "packet-immutable" / "packet.md"
+        packet_path.parent.mkdir(parents=True)
+        packet = b"bound review packet"
+        manifest = {**self.manifest, "packet_sha256": hashlib.sha256(packet).hexdigest()}
+        packet_path.write_bytes(packet)
+        packet_path.with_name("review-route.json").write_text(json.dumps(manifest))
+        return root, packet_path, packet, manifest
+
+    def test_outgoing_prompt_supplies_exact_readable_immutable_packet_and_manifest(self):
+        root, packet_path, packet, manifest = self.immutable_packet()
+        process = _Process()
+        with patch.object(acp.subprocess, "Popen", return_value=process), \
+                patch.object(acp, "provider_route", return_value=self.witness), \
+                patch.object(acp, "_stop", side_effect=lambda proc: proc.terminate()):
+            result = acp.run(manifest, packet, cwd=root, timeout=1, packet_path=packet_path)
+        self.assertTrue(result["complete"], result["detail"])
+        outgoing = next(row for row in process.sent if row.get("method") == "session/prompt")
+        prompt = outgoing["params"]["prompt"]
+        self.assertEqual(prompt[0], {"type": "text", "text": packet.decode()})
+        locator = json.loads(prompt[1]["text"].splitlines()[1])
+        self.assertEqual(locator["packet_path"], str(packet_path.resolve()))
+        self.assertEqual(locator["machine_manifest"], str(packet_path.with_name("review-route.json").resolve()))
+        self.assertIn("take precedence", prompt[1]["text"])
+        self.assertFalse((packet_path.parent.parent / "review-route.json").exists())
+        # The native read that failed in production now points at the actual immutable file.
+        ledger = acp.ReadLedger(root)
+        ledger.observe({"sessionUpdate": "tool_call", "title": "read_file", "toolCallId": "manifest",
+                        "rawInput": {"target_file": locator["machine_manifest"]}})
+        self.assertEqual(ledger.result()["reads"][0]["member"]["path"],
+                         "owner-review/packet-immutable/review-route.json")
+
+    def test_locator_refuses_changed_packet_or_manifest_before_provider_launch(self):
+        for changed in ("packet", "manifest"):
+            with self.subTest(changed=changed):
+                root, packet_path, packet, manifest = self.immutable_packet()
+                if changed == "packet":
+                    packet_path.write_bytes(b"replaced packet")
+                else:
+                    packet_path.with_name("review-route.json").write_text(json.dumps({**manifest, "effort": "low"}))
+                with patch.object(acp.subprocess, "Popen") as launch:
+                    result = acp.run(manifest, packet, cwd=root, timeout=1, packet_path=packet_path)
+                self.assertFalse(result["complete"])
+                self.assertIn("REVIEW_PACKET_STALE", result["detail"])
+                launch.assert_not_called()
 
     def test_small_missing_capacity_and_wrong_route_refuse_before_prompt(self):
         cases = [({**self.witness, "context_tokens": 256000}, "REVIEW_CONTEXT_UNDERSHOOT"),
@@ -303,6 +389,16 @@ class GrokACPTests(unittest.TestCase):
             acp._stop(process)
         self.assertEqual([call.args[1] for call in kill.call_args_list], [acp.signal.SIGTERM, acp.signal.SIGKILL])
         self.assertEqual(process.wait.call_count, 2)
+
+    def test_cleanup_kills_descendants_after_leader_exits(self):
+        from unittest.mock import Mock
+        process = Mock(pid=987654)
+        process.wait.return_value = 0
+        with patch.object(acp.os, "name", "posix"), patch.object(acp.os, "killpg") as kill:
+            acp._stop(process)
+        self.assertEqual([call.args[1] for call in kill.call_args_list],
+                         [acp.signal.SIGTERM, acp.signal.SIGKILL])
+        process.wait.assert_called_once_with(timeout=2)
 
     def test_summary_is_session_and_cwd_bound(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(acp.Path, "home", return_value=Path(directory)):

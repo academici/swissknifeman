@@ -1,5 +1,44 @@
 # Plan tooling: verification gates `plans/`
 
+## Execution facade
+
+Use `scripts/plan-work.py prepare`, implement the selected scope, then `validate` and `close`
+with the same `--plan-dir`/`--item`. Prepare owns route capture and saves the admitted run, base,
+contract and evidence graph under `.plan-cache/Pn.m-work.json`; no second route export is needed.
+`validate --attempt-id <unique-id>` derives commands from Validation, writes immutable logs and
+contract receipts, and returns `qualify` or `repair`. Quoted command text excludes its prose
+description and review/self-check directives. Check definitions can add `env`, `timeout`, and
+`depends_on` with `--checks`, while every acceptance command remains exact. Definition order is
+the default DAG order. An unchanged candidate and environment reuse already GREEN evidence.
+
+Validation stops on the first RED, reaps timed-out child groups, and defaults
+`COMPOSER_PROCESS_TIMEOUT=0` so Composer does not impose an unrelated 300-second deadline.
+Explicit check environment/timeouts override that default. `complete:false` returns shell exit 1.
+Generation precedes dependent lint; generation that changes candidate bytes requires a new
+candidate-bound validation attempt. Logs retain raw bytes, including ANSI; archive formatting
+is not a product whitespace gate.
+
+`close [--note <result>]` checks live contract/authority, candidate bytes, current receipts,
+required independent review and selected-item lint including producers. It builds the terminal
+decision through existing policy owners, appends once and converges projections/continuity and
+delivery. A repeat resumes reconciliation. Typed `decision.write_site` supplies the generated
+boundary line for a producer whose journal prose lacks it. It never invents an allow result.
+Exceptional producer-readiness is a typed `--producer-readiness` input, not terminal JSON.
+
+With admitted review, close returns `review-ready` and stores the manifest; `review` launches
+one native attempt. `review-status`, `review-cancel`, and `review-reconcile` operate on the same
+job. Attempt identity and logs exist before provider spawn; raw streams and heartbeats persist
+immediately, and native terminal results persist before receipt publication. An unreceipted
+attempt blocks another prompt. Reconciliation can publish a saved terminal without repeating
+the model call. Cancellation requests ACP cancel and reaps the child group; a dead owner may
+signal only the attested process identity. Unknown outcomes remain explicit, never GREEN.
+
+Mutation Files and required review paths are separate: the prompt lists the complete changed,
+new and deleted product delta plus explicit adjacent paths and normative evidence. The complete
+machine manifest and source metadata remain in artifacts. Unchanged neighbors can be consulted
+through the existing native read ledger. Packet capacity does not depend on manifest size;
+freshness still binds the full declared inventory and consulted dependencies.
+
 ## Independent review transport
 
 Execution and review are separate sessions, not necessarily separate owner commands.
@@ -48,7 +87,7 @@ Grok has a built-in read-only ACP runner; other providers require a supported in
 and `review-record`. An unavailable launcher is explicit, never an automatic model substitution.
 
 Without that explicit requirement normal execution uses self-check and affected tests;
-a phase/slice review is a dedicated read-only item. An explicit owner requirement may declare
+a dedicated phase/slice review needs owner authorization or a concrete risk. An explicit owner requirement may declare
 `owner-review: grok/grok-4.7` in Validation. Reviewer selection is optional for all supporting
 commands. Explicit `task:review`/`task:plan-audit` without the flag use the independently captured
 native session's actual route; execution/design without it adds no external reviewer.

@@ -125,9 +125,9 @@ MANDATORY_PATH_LITERALS = (
 )
 V2_MANDATORY_PATH_LITERALS = (
     "scripts/plan-work.py prepare",
-    "compact execution capsule",
-    "full plan/phase/bundle/state are internal runtime inputs",
-    "scripts/plan-work.py complete",
+    "selected item capsule",
+    "plan-work.py validate",
+    "plan-work.py close",
 )
 PLAN_RUN_RELPATH = Path("packages/task/commands/plan-run.md")
 

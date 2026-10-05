@@ -84,6 +84,12 @@ def _inputs_sha256(plan_dir, spec_path, item_id, event_rows):
 
 def _latest_write_site(event_rows):
     for _number, _raw, event in reversed(event_rows):
+        qualification = (event.get("decision") or {}).get("write_site")
+        if (event.get("result") in {"closed-green", "closed-deviations"}
+                and isinstance(qualification, dict)
+                and qualification.get("pre_mutation") == "allow"
+                and qualification.get("pre_final") == "allow"):
+            return "write-site: pre_mutation: allow · pre_final: allow"
         note = event.get("note")
         if not isinstance(note, str):
             continue

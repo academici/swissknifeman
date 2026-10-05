@@ -268,10 +268,34 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
             executor_session=session_id, invocation=invocation)
     else:
         selected_review = review_packet.review_request(root, item_id)
+        declared_review = review_packet.declarations(plan_bundle._fields(root, item_id)).get("owner-review")
+        if selected_review is None and declared_review:
+            selected_review = {"reviewer": declared_review, "effort": review_packet.selected_effort(declared_review, None)}
         if selected_review:
             result["owner_review"] = review_packet.register_request(
                 root, item_id, selector=selected_review["reviewer"], effort=selected_review["effort"],
                 executor_session=session_id, invocation=invocation)
+    from task import review_job
+    context_path = _work_path(root, item_id)
+    previous = json.loads(context_path.read_text()) if context_path.exists() else {}
+    context = {"schema_version": "plan-work-run/v1", "run_id": position["run_id"],
+               "attempt": position["attempt"], "session_id": session_id, "actor": actor,
+               "command": command, "contract": contract, "graph": graph, "capabilities": list(capabilities),
+               "batch_receipt": result["batch_receipt"],
+               "pre_mutation": "allow", "runtime_provenance": review_packet.runtime_provenance()}
+    import subprocess
+    repo = plan_weight.repo_root_for(root)
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, text=True, capture_output=True)
+    context["base"] = (previous.get("base") if previous.get("run_id") == position["run_id"] else None) or (
+        base.stdout.strip() if base.returncode == 0 else None)
+    if (previous.get("run_id") == position["run_id"]
+            and previous.get("contract") == contract):
+        context["validation"] = previous.get("validation")
+    context_path.parent.mkdir(parents=True, exist_ok=True)
+    review_job.write(context_path, context)
+    result["work_context"] = str(context_path)
+    result["action"] = "implement"
+    result["runtime_provenance"] = context["runtime_provenance"]
     return result
 
 
@@ -437,10 +461,188 @@ def complete(plan_dir, item_id: str, entry: dict) -> dict:
     return finalize(plan_dir, item_id)
 
 
+def _closure_lint(root: Path, item: str) -> None:
+    from task import plan_downstream
+    items = plan_downstream._all_items(root)
+    scope = set()
+    def include(subject):
+        if subject not in scope:
+            scope.add(subject)
+            for producer in plan_recovery._dependencies(root, subject, items):
+                include(producer)
+    include(item)
+    diagnostics = plan_lint.Diagnostics(selected_items=scope)
+    plan_lint.lint_plan(root, diagnostics)
+    if diagnostics.errors:
+        raise WorkError("PLAN_WORK_CLOSURE_INVALID", diagnostics.errors[:5])
+
+
+def _work_path(root: Path, item: str) -> Path:
+    if not re.fullmatch(r"P\d+\.\d+", item):
+        raise WorkError("PLAN_WORK_INVALID_TARGET", item)
+    return root / ".plan-cache" / f"{item}-work.json"
+
+
+def _work_context(root: Path, item: str) -> dict:
+    context = json.loads(_work_path(root, item).read_text())
+    current = plan_recovery.inspect(root, item)
+    if current.get("run_id") != context["run_id"]:
+        raise WorkError("PLAN_WORK_RUN_STALE", "prepare the current run")
+    spec = plan_layout.carrier_path(root, "item-spec", item_id=item)
+    graph_spec = next(row for row in context["graph"]["nodes"] if row["id"] == "spec")
+    if hashlib.sha256(spec.read_bytes()).hexdigest() != graph_spec["sha256"]:
+        raise WorkError("PLAN_WORK_SPEC_STALE", "prepare the changed specification")
+    return context
+
+
+def _validation_argv(carrier: str) -> list[str]:
+    """Execute inline command/result clauses, retaining the original receipt carrier."""
+    if re.match(r"\s*\d+\)", carrier):
+        # Each numbered clause owns its first code span. Later spans describe
+        # results/prerequisites and never become additional acceptance commands.
+        pattern = re.compile(r"\s*(\d+)\)\s*`([^`]+)`\s*((?:[^`;]|`[^`]+`)*)(?:;|$)")
+        commands, position = [], 0
+        while carrier[position:].strip():
+            match = pattern.match(carrier, position)
+            if match is None or match.group(1) != str(len(commands) + 1) or not match.group(2).strip():
+                raise WorkError("PLAN_WORK_CHECKS_INVALID", "numbered validation needs consecutive command clauses starting at 1")
+            result = match.group(3).strip()
+            if ((result not in {"", "."} and not re.match(r"(?:—|→)\s*\S", result))
+                    or re.search(r"(?:^|\s)\d+\)\s*`", result)):
+                raise WorkError("PLAN_WORK_CHECKS_INVALID", "numbered validation results need a result marker and semicolon-separated clauses")
+            commands.append(match.group(2))
+            position = match.end()
+        return ["bash", "-lc", " && ".join(commands)]
+    if not re.match(r"\s*(?:-\s*)?`", carrier):
+        return ["bash", "-lc", carrier]
+    pattern = re.compile(r"\s*(?:-\s*)?`([^`]+)`\s*→\s*[^`;]+(?:;|$)")
+    commands, position = [], 0
+    while position < len(carrier):
+        match = pattern.match(carrier, position)
+        if match is None:
+            raise WorkError("PLAN_WORK_CHECKS_INVALID", "validation needs executable command/result clauses")
+        commands.append(match.group(1))
+        position = match.end()
+    return ["bash", "-lc", "set -e\n" + "\n".join(commands)]
+
+
+def validate(plan_dir, item: str, *, attempt_id: str, checks=None) -> dict:
+    """Own check definitions, candidate logs and contract receipts in one operation."""
+    from task import evidence_runner, review_job
+    root = Path(plan_dir).resolve()
+    context = _work_context(root, item)
+    contract = context["contract"]
+    declared = [row for row in contract["evidence"] if row.get("algorithm") == "shell-command"]
+    if checks is None:
+        checks = [{"id": row["id"], "argv": _validation_argv(row["path"]),
+                   "depends_on": [declared[index - 1]["id"]] if index else []}
+                  for index, row in enumerate(declared)]
+    # Project definitions may add environment/timeouts/dependencies, never replace
+    # or omit an acceptance carrier while still claiming a complete run.
+    by_id = {row["id"]: row for row in declared}
+    if (len(checks) != len(declared) or {row.get("id") for row in checks} != set(by_id)
+            or any(row.get("argv") != _validation_argv(by_id[row["id"]]["path"]) for row in checks)):
+        raise WorkError("PLAN_WORK_CHECKS_INVALID", "checks must execute every declared carrier exactly")
+    before = task_contract.current_validation_context(root, item)
+    previous = context.get("validation") or {}
+    if previous.get("complete") and previous.get("context") == before:
+        saved = json.loads(Path(previous["receipt"]).read_text())
+        if saved.get("checks") == checks:
+            from task import file_manifest, review_packet
+            inventory = file_manifest.expand(plan_weight.repo_root_for(root),
+                [plan_evidence._repository_path(path, plan_dir=root, repo_root=plan_weight.repo_root_for(root))
+                 for path in plan_evidence.material_product_paths(root, item)] + context["graph"]["digest_inputs"],
+                base="HEAD", required=True)
+            if review_packet._members(plan_weight.repo_root_for(root), inventory) == saved["candidate"]:
+                return {key: previous[key] for key in ("complete", "candidate_sha256", "receipt", "results")} | {
+                    "action": "qualify", "reused": True}
+    paths = [plan_evidence._repository_path(path, plan_dir=root, repo_root=plan_weight.repo_root_for(root))
+             for path in plan_evidence.material_product_paths(root, item)]
+    paths.extend(context["graph"]["digest_inputs"])
+    result = evidence_runner.run(plan_weight.repo_root_for(root), root / "artifacts" / item / "validation",
+                                paths=sorted(set(paths)), checks=checks, attempt_id=attempt_id)
+    after = task_contract.current_validation_context(root, item)
+    result["complete"] = result["complete"] and before == after
+    receipts = [task_contract.build_validation_receipt(contract, name,
+                    exit_code=row["exit_code"], context=after)
+                for name, row in result["results"].items() if type(row["exit_code"]) is int
+                and (row["exit_code"] != 0 or row["status"] == "green")]
+    context["validation"] = {**result, "receipts": receipts, "context": after}
+    review_job.write(_work_path(root, item), context)
+    result["action"] = "qualify" if result["complete"] else "repair"
+    return result
+
+
+def close(plan_dir, item: str, *, note: str = "", producer_readiness=None) -> dict:
+    """Qualify a live GREEN candidate and build its terminal through existing owners."""
+    from task import review_packet, terminal_policy
+    root = Path(plan_dir).resolve()
+    # A retry after append resumes projections, without fabricating another row.
+    if item in plan_recovery.terminal_items(root):
+        finalized = finalize(root, item)
+        _closure_lint(root, item)
+        return {**finalized, "action": "complete"}
+    context = _work_context(root, item)
+    validation = context.get("validation")
+    if not validation or validation.get("complete") is not True:
+        return {"action": "repair", "complete": False, "reason": "VALIDATION_RECEIPT_MISSING"}
+    candidate = json.loads(Path(validation["receipt"]).read_text())
+    repo = plan_weight.repo_root_for(root)
+    from task import file_manifest
+    paths = file_manifest.expand(repo, [plan_evidence._repository_path(path, plan_dir=root, repo_root=repo)
+            for path in plan_evidence.material_product_paths(root, item)] + context["graph"]["digest_inputs"],
+            base="HEAD", required=True)
+    if review_packet._members(repo, paths) != candidate["candidate"]:
+        return {"action": "repair", "complete": False, "reason": "VALIDATION_RECEIPT_STALE"}
+    from task import route_evidence
+    route = route_evidence.run_receipt_from_journal(root, context["run_id"])
+    live_contract = task_contract.build(root, item, actual_route=route["evidence"],
+        capabilities=context.get("capabilities", ()), carrier=context["contract"]["next"]["carrier"])
+    if task_contract.content_hash(live_contract) != task_contract.content_hash(context["contract"]):
+        return {"action": "repair", "complete": False, "reason": "PLAN_WORK_CONTRACT_STALE"}
+    qualification = task_contract.evaluate(live_contract, evidence_graph=context["graph"],
+        validation_receipts=validation["receipts"],
+        validation_context=task_contract.current_validation_context(root, item))
+    if qualification["pre_mutation"] != "allow" or qualification["pre_final"] != "allow":
+        return {"action": "repair", "complete": False, "qualification": qualification}
+    try:
+        decision = terminal_policy.build_decision(root, item, result="closed-green",
+            validation=[{"carrier": row["command"], "status": "green", "evidence_ids": [row["evidence_id"],
+                        validation["receipt"]]} for row in validation["receipts"]], producer_readiness=producer_readiness)
+    except terminal_policy.TerminalPolicyError as exc:
+        if exc.code not in {"OWNER_REVIEW_PENDING", "REVIEW_CANDIDATE_STALE", "OWNER_REVIEW_NOT_GREEN"}:
+            raise
+        request = review_packet.review_request(root, item)
+        if not request:
+            raise
+        from task import review_job
+        evidence_path = Path(validation["receipt"])
+        evidence = [path.relative_to(repo).as_posix() for path in
+                    [evidence_path, *sorted(evidence_path.parent.glob("*.log"))]]
+        packet = review_packet.packet(root, item, selector=request["reviewer"],
+            effort=request["effort"], executor_session=request["executor_session"],
+            base=context["base"], evidence=evidence)
+        if packet["action"] == "review-ready":
+            context["review_manifest"] = packet["manifest"]
+            review_job.write(_work_path(root, item), context)
+            return packet
+        return review_packet.summary(packet, review_packet._location(root, item))
+    _closure_lint(root, item)
+    decision["write_site"] = qualification
+    entry = journal.new_entry(plan_id=root.name, item_id=item, command=context["command"],
+        actor=context["actor"], session_id=context["session_id"], run_id=context["run_id"],
+        attempt=context["attempt"], result="closed-green", decision=decision,
+        batch_receipt=context["batch_receipt"],
+        note=(note + "\nwrite-site: pre_mutation: allow · pre_final: allow").strip())
+    completed = complete(root, item, entry)
+    _closure_lint(root, item)
+    return {**completed, "action": "complete"}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Compact Task work context and completion")
     actions = parser.add_subparsers(dest="action", required=True)
-    for name in ("prepare", "design-context", "finalize-design", "design-gate", "finalize", "complete", "close-plan", "validate-evidence", "review-recover-sources"):
+    for name in ("prepare", "design-context", "finalize-design", "design-gate", "finalize", "complete", "close-plan", "validate-evidence", "review-recover-sources", "validate", "close", "review", "status"):
         action = actions.add_parser(name)
         action.add_argument("--plan-dir", type=Path, required=True)
         if name in {"design-context", "finalize-design"}:
@@ -452,6 +654,12 @@ def main(argv=None) -> int:
         if name in {"prepare", "finalize-design"}:
             action.add_argument("--actor", required=True)
             action.add_argument("--session-id")
+        if name == "validate":
+            action.add_argument("--attempt-id", required=True)
+            action.add_argument("--checks", type=Path)
+        if name == "close":
+            action.add_argument("--note", default="")
+            action.add_argument("--producer-readiness", type=Path)
         if name == "complete":
             action.add_argument("--entry", type=Path, required=True, help="qualified terminal journal entry JSON")
         if name == "prepare":
@@ -473,11 +681,11 @@ def main(argv=None) -> int:
             action.add_argument("--checks", type=Path, required=True)
             action.add_argument("--attempt-id", required=True)
             action.add_argument("--output-dir", type=Path, required=True)
-    for name in ("review-packet", "review-run", "review-record", "review-status"):
+    for name in ("review-packet", "review-run", "review-record", "review-status", "review-cancel", "review-reconcile"):
         action = actions.add_parser(name)
         action.add_argument("--plan-dir", type=Path, required=True)
         action.add_argument("--reviewer")
-        if name in {"review-packet", "review-status"}:
+        if name in {"review-packet", "review-status", "review-cancel", "review-reconcile"}:
             action.add_argument("--item", required=True)
         if name == "review-packet":
             action.add_argument("--base", default="HEAD")
@@ -502,14 +710,40 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     started_at = time.perf_counter()
     try:
-        if args.action == "review-recover-sources":
+        if args.action == "validate":
+            result = validate(args.plan_dir, args.item, attempt_id=args.attempt_id,
+                              checks=json.loads(args.checks.read_text()) if args.checks else None)
+        elif args.action == "close":
+            result = close(args.plan_dir, args.item, note=args.note,
+                producer_readiness=json.loads(args.producer_readiness.read_text()) if args.producer_readiness else None)
+        elif args.action == "status":
+            context = _work_context(args.plan_dir, args.item)
+            validation = context.get("validation") or {}
+            action = "qualify" if validation.get("complete") else "repair" if validation else "implement"
+            if args.item in plan_recovery.terminal_items(args.plan_dir):
+                action = "complete"
+            elif validation.get("complete") and validation["context"] != task_contract.current_validation_context(args.plan_dir, args.item):
+                action = "repair"
+            result = {"run_id": context["run_id"], "action": action,
+                      "work_context": str(_work_path(args.plan_dir, args.item))}
+        elif args.action == "review":
+            context = _work_context(args.plan_dir, args.item)
+            if not context.get("review_manifest"):
+                raise WorkError("PLAN_WORK_REVIEW_MISSING", "call close to qualify and prepare the review candidate")
+            from task import review_packet
+            result = review_packet.summary(review_packet.run(args.plan_dir, context["review_manifest"]),
+                                          review_packet._location(args.plan_dir, args.item))
+        elif args.action == "review-recover-sources":
             from task import review_sources
             result = review_sources.recover(args.plan_dir, args.item)
         elif args.action.startswith("review-"):
             from task import review_packet
             if args.reviewer is not None:
                 review_packet.reviewer(args.reviewer)
-            if args.action == "review-packet":
+            if args.action in {"review-status", "review-cancel", "review-reconcile"}:
+                result = review_packet.job_status(args.plan_dir, args.item,
+                    cancel=args.action == "review-cancel", reconcile=args.action == "review-reconcile")
+            elif args.action == "review-packet":
                 exclusions = {}
                 for value in args.exclude:
                     path, separator, reason = value.partition("=")
@@ -530,16 +764,7 @@ def main(argv=None) -> int:
                     raise review_packet.ReviewError("REVIEW_ROUTE_MISMATCH", "reviewer differs from packet")
                 result = review_packet.record(args.plan_dir, args.manifest, args.output,
                                               invocation=args.invocation)
-            else:
-                selected = args.reviewer
-                if selected is None:
-                    history = review_packet._history(review_packet._location(args.plan_dir, args.item))
-                    if not history:
-                        raise review_packet.ReviewError("OWNER_REVIEW_PENDING", "no review receipt")
-                    selected = history[-1]["reviewer"]
-                result = {"action": "accept-candidate", "receipt": review_packet.require_green(
-                    args.plan_dir, args.item, selected)}
-            if args.action != "review-packet":
+            if args.action in {"review-run", "review-record"}:
                 item = args.item if args.action == "review-status" else json.loads(args.manifest.read_text())["item_id"]
                 result = review_packet.summary(result, review_packet._location(args.plan_dir, item))
         elif args.action == "complete":
@@ -578,9 +803,16 @@ def main(argv=None) -> int:
         print(json.dumps({"error": getattr(exc, "code", "PLAN_WORK_FAILED"),
                           "detail": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 1
+    if args.action in {"close", "complete", "finalize"} and "terminal" in result:
+        terminal, receipt = result["terminal"], result["receipt"]
+        result = {"plan_id": result["plan_id"], "item_id": result["item_id"],
+                  "action": "complete", "run_id": terminal["run_id"],
+                  "result": terminal["result"], "next_exact": receipt["next_exact"],
+                  "recommendation": receipt["recommendation"], "continuity": receipt["continuity"],
+                  "receipt": str(args.plan_dir / ".plan-cache" / f"{args.item}-terminal-delivery-receipt.json")}
     payload_bytes = len(json.dumps(result, ensure_ascii=False).encode("utf-8"))
     result["metrics"] = {"operation": args.action,
                          "wall_ms": round((time.perf_counter() - started_at) * 1000),
                          "payload_bytes": payload_bytes}
     print(json.dumps(result, ensure_ascii=False))
-    return 0
+    return 1 if result.get("complete") is False or result.get("action") == "repair" else 0

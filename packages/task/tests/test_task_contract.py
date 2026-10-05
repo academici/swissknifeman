@@ -716,6 +716,120 @@ class PreFinalTests(unittest.TestCase):
         self.assertEqual(task_contract.pre_final(contract), "EVIDENCE_PROOF_CLASS_INSUFFICIENT")
 
 
+class CurrentValidationContextTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.plan = self.root / "plans" / "DEMO-1"
+        self.plan.mkdir(parents=True)
+        (self.plan / "plan.md").write_text(fixtures.plan_md("DEMO-1"), encoding="utf-8")
+        self.declarations = ("`src/{source,binding}.py` · `fixtures/**` · "
+                             "`src/not-created.py` · `journal.jsonl`")
+        self.write_spec(self.declarations)
+        self.write("src/source.py", "source\n")
+        self.write("src/binding.py", "binding\n")
+        self.write("fixtures/nested/member.json", '{"role":"editor"}\n')
+        self.git("init", "-q")
+        self.git("add", ".")
+        self.commit("baseline")
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.root,
+                              capture_output=True, check=True)
+
+    def commit(self, message):
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                 "commit", "-qm", message)
+
+    def write(self, relative, content):
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def write_spec(self, declarations):
+        spec = fixtures.item_spec_md().replace("**Files:** lib/pkg/config.py",
+                                               "**Files:** " + declarations)
+        fixtures.write_v2_carriers(self.plan, item_spec=spec, refresh_views=False)
+
+    def context(self):
+        return task_contract.current_validation_context(self.plan, "P1.1")
+
+    def test_each_brace_member_edit_changes_product_tree(self):
+        before = self.context()
+        for relative in ("src/source.py", "src/binding.py"):
+            with self.subTest(path=relative):
+                path = self.root / relative
+                original = path.read_bytes()
+                path.write_bytes(original + b"changed\n")
+                self.assertNotEqual(before["tree"], self.context()["tree"])
+                path.write_bytes(original)
+                self.assertEqual(before["tree"], self.context()["tree"])
+
+    def test_nested_glob_member_edit_changes_product_tree(self):
+        before = self.context()
+        self.write("fixtures/nested/member.json", '{"role":"owner"}\n')
+        self.assertNotEqual(before["tree"], self.context()["tree"])
+
+    def test_new_untracked_glob_member_changes_product_tree(self):
+        before = self.context()
+        added = self.write("fixtures/new/nested/member.json", '{}\n')
+        self.assertNotEqual(before["tree"], self.context()["tree"])
+        added.unlink()
+        self.assertEqual(before["tree"], self.context()["tree"])
+
+    def test_deleted_glob_member_changes_product_tree_even_when_staged(self):
+        before = self.context()
+        (self.root / "fixtures/nested/member.json").unlink()
+        deleted = self.context()
+        self.assertNotEqual(before["tree"], deleted["tree"])
+        self.git("add", "-u")
+        self.assertEqual(deleted["tree"], self.context()["tree"])
+
+    def test_missing_explicit_member_creation_and_deletion_change_tree(self):
+        before = self.context()
+        path = self.write("src/not-created.py", "new\n")
+        self.assertNotEqual(before["tree"], self.context()["tree"])
+        path.unlink()
+        self.assertEqual(before["tree"], self.context()["tree"])
+
+    def test_symlink_target_is_hashed_without_following_its_bytes(self):
+        self.write("targets/one.py", "same\n")
+        self.write("targets/two.py", "same\n")
+        path = self.root / "fixtures/link.py"
+        path.symlink_to("../targets/one.py")
+        before = self.context()
+        self.write("targets/one.py", "changed outside declared files\n")
+        self.assertEqual(before["tree"], self.context()["tree"])
+        path.unlink()
+        path.symlink_to("../targets/two.py")
+        self.assertNotEqual(before["tree"], self.context()["tree"])
+
+    def test_bookkeeping_edits_and_head_movement_keep_product_tree_stable(self):
+        before = self.context()
+        (self.plan / "journal.jsonl").write_text('{"event":"validated"}\n', encoding="utf-8")
+        fixtures.item_state_path(self.plan).write_text("**Status:** 🟡 In progress\n",
+                                                     encoding="utf-8")
+        self.write("notes.md", "unrelated bookkeeping\n")
+        self.assertEqual(before["tree"], self.context()["tree"])
+        self.git("add", ".")
+        self.commit("bookkeeping")
+        after = self.context()
+        self.assertNotEqual(before["head"], after["head"])
+        self.assertEqual(before["tree"], after["tree"])
+        self.assertEqual(before["spec_sha256"], after["spec_sha256"])
+        self.assertEqual(before["environment_sha256"], after["environment_sha256"])
+
+    def test_declaration_order_and_overlap_do_not_change_product_digest(self):
+        before = self.context()
+        self.write_spec("`fixtures/**` · `src/not-created.py` · "
+                        "`src/{binding,source}.py` · `src/source.py`")
+        after = self.context()
+        self.assertNotEqual(before["spec_sha256"], after["spec_sha256"])
+        self.assertEqual(before["tree"], after["tree"])
+
+
 class RuntimeValidationReceiptTests(unittest.TestCase):
     def setUp(self):
         self.contract = _load_base_contract()

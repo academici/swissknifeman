@@ -1568,7 +1568,11 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
         raise TaskContractBuildError(item_id, "Required Reads", "no evidence entry found")
 
     public_acceptance = []
-    for clause in _split_nonempty(validation_text, _VALIDATION_SPLIT_RE):
+    validation_carriers = re.sub(r"\b(?:owner-review|self-check):\s*`?[^\s`;·]+`?;?", "", validation_text)
+    for clause in _split_nonempty(validation_carriers, _VALIDATION_SPLIT_RE):
+        quoted = _BACKTICK_RE.findall(clause)
+        if len(quoted) == 1:
+            clause = quoted[0]
         eid = f"E{len(evidence) + 1}"
         evidence.append({"id": eid, "path": clause, "proof_class": "declared",
                          "algorithm": "shell-command"})
@@ -1648,7 +1652,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
             "granted": authority_granted,
             "granted_by": authority_granted_by,
             "auto_allowed": ["write the item's declared Files", "run the item's Validation",
-                            "close the item with the two-commit topology"],
+                            "close the item with one scoped commit"],
             "stop_boundaries": ["tag/push/release", "fleet rollout", "consumer repositories",
                                "FOREMAN outward parts"],
             "loop_budget": {"audit_rounds_max": review_policy.AUDIT_ROUNDS_MAX,
@@ -2082,7 +2086,10 @@ def current_validation_context(plan_dir, item_id: str) -> dict:
     ).encode("utf-8")).hexdigest()
     spec = plan_layout.carrier_path(root, "item-spec", item_id=item_id)
     product_members = []
-    for relative in plan_evidence.material_product_paths(root, item_id):
+    from task import file_manifest
+    declarations = [plan_evidence._repository_path(path, plan_dir=root, repo_root=repo_root)
+                    for path in plan_evidence.material_product_paths(root, item_id)]
+    for relative in file_manifest.expand(repo_root, declarations, base="HEAD"):
         path = repo_root / relative
         if path.is_symlink():
             member = {"path": relative, "state": "symlink", "target": str(path.readlink())}

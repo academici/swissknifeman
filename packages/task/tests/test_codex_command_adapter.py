@@ -79,11 +79,9 @@ class CodexCommandAdapterTests(unittest.TestCase):
             if artifact.path.endswith("/task-plan-run/command.md"))
         self.assertIn("codex plugin marketplace list --json", codex_runtime)
         self.assertIn("packages/task/lib/task", codex_runtime)
-        self.assertIn('export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace', codex_runtime)
-        self.assertIn(
-            'PYTHONPATH="${TASK_CODEX_PLUGIN_ROOT}/lib:${TASK_CODEX_PLUGIN_ROOT}/../.."',
-            codex_runtime,
-        )
+        self.assertIn('TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace', codex_runtime)
+        self.assertIn('python3 "$TASK_CODEX_PLUGIN_ROOT/scripts/plan-work.py"', codex_runtime)
+        self.assertNotIn("TASK_CODEX_ROUTE_EVIDENCE", codex_runtime)
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
         self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
 
@@ -100,6 +98,11 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertEqual(set(runtimes), plan_commands)
         for command, codex_runtime in runtimes.items():
             with self.subTest(command=command):
+                if command == "plan-run":
+                    self.assertIn("genuine cold-start-root/owner-requested-new-session", codex_runtime)
+                    self.assertIn("-a never -s danger-full-access", codex_runtime)
+                    self.assertIn("**Native Codex command:**", codex_runtime)
+                    continue
                 self.assertIn(
                     "Native Codex launch-block — required only at a real user-facing boundary",
                     codex_runtime)
@@ -115,8 +118,8 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn("owner-requested-new-session", codex_runtime)
                 self.assertIn("even when no terminal-admission lease", codex_runtime)
                 self.assertIn("cold-start-root", codex_runtime)
-        self.assertIn("do not reuse the preceding session's route", runtimes["plan-run"])
-        self.assertIn("Codex snapshot transport guard", runtimes["plan-run"])
+        self.assertIn("Use the successor's Routing", runtimes["plan-run"])
+        self.assertIn("selected item capsule", runtimes["plan-run"])
         self.assertIn("PLAN_CONTEXT_TRUNCATED", runtimes["plan-run"])
 
     def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
@@ -152,8 +155,13 @@ class CodexCommandAdapterTests(unittest.TestCase):
         for command in plan_commands:
             with self.subTest(command=command):
                 runtime = runtimes[command]
-                self.assertIn("task.route_evidence_codex capture", runtime)
-                self.assertIn("TASK_CODEX_ROUTE_EVIDENCE", runtime)
+                if command == "plan-run":
+                    self.assertIn("plan-work.py prepare", runtime)
+                    self.assertIn("route_evidence_codex.capture_current", runtime)
+                    self.assertNotIn("TASK_CODEX_ROUTE_EVIDENCE", runtime)
+                else:
+                    self.assertIn("task.route_evidence_codex capture", runtime)
+                    self.assertIn("TASK_CODEX_ROUTE_EVIDENCE", runtime)
                 self.assertIn('source="provider-thread-state"', runtime)
                 self.assertIn("doctor output", runtime)
                 self.assertIn("forbidden substitutes", runtime)

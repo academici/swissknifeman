@@ -36,7 +36,7 @@ MODEL_ROLES_REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-
 _CODEX_RUNTIME_FORBIDDEN = (
     re.compile(r"(?i)\b(?:opus|sonnet|haiku|fable)\b"),
     re.compile(r"(?<![\w/])/task:"),
-    re.compile(r"(?<![\w/])/(?:model|effort|clear)\b"),
+    re.compile(r"(?<![\w/\[])/(?:model|effort|clear)\b"),
     re.compile(r"Workflow\("),
 )
 _PLAN_STATUSES = (

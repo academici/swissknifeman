@@ -210,8 +210,8 @@ Two ways, both the work of a human, not an agent:
    `packages/harness/configs/claude-code/agent-packs/<pack>/` (template +
    `pack.json` version + `CHANGELOG.md` pack), after which the change reaches
    projects the same `upgrade`. This is an edit to the original package `harness`, and not
-   of the rendered file in the target project - normal PR-process, `bash
-   packages/harness/scripts/validate.sh` before the commit.
+   of the rendered file in the target project - normal PR-process,
+   `bash packages/harness/scripts/validate.sh` before the commit.
 
 In both cases, the source of truth remains the same - `configs/claude-code/agent-packs/`
 in `harness`; the rendered copy in the project is secondary and can be restored by the team from
@@ -242,8 +242,8 @@ prints the plan (that will be deleted/left) without a single change on disk.
 
 ## src_pack — file sharing between packs
 
-`files[]`-entry in `pack.json` may carry an optional field `src_pack:
-<other-pack-name>` — then the source (`src`) is read from the directory SPECIFIED
+`files[]`-entry in `pack.json` may carry an optional field
+`src_pack: <other-pack-name>` — then the source (`src`) is read from the directory SPECIFIED
 pack, not from your own. File owner (that goes into `Pack:` header,
 command `Upgrade:`) while the current pack remains - `src_pack` only affects
 for source resolution, delivery/provenance does not change. Suitable when several

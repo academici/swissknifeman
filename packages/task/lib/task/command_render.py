@@ -77,7 +77,7 @@ _CODEX_RUNTIME_FORBIDDEN = (
     ("claude-model-selector", re.compile(r"\b(?:opus|sonnet|haiku|fable)\b", re.IGNORECASE)),
     ("claude-task-invocation", re.compile(r"(?<![\w/])/task:")),
     ("claude-session-control",
-     re.compile(r"(?<![\w/])/(?:model|effort|clear)(?![\w/-])")),
+     re.compile(r"(?<![\w/\[])/(?:model|effort|clear)(?![\w/-])")),
     ("claude-workflow-carrier", re.compile(r"Workflow\(")),
     ("claude-plugin-root", re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}")),
     ("project-relative-task-runtime", re.compile(r"PYTHONPATH=packages/task/lib")),
@@ -1559,7 +1559,27 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes,
     projected = _project_codex_runtime_tokens(body)
     if record.kind == "plan-protocol":
         provider_rule = _codex_current_route_rule(record)
-        projected = _codex_native_launch_rule(mapping) + provider_rule + projected
+        if record.command_id == "task:plan-run":
+            projected = ('Resolve the installed Task runtime once:\n\n```bash\n'
+                         f'TASK_CODEX_PLUGIN_ROOT="{codex_task_plugin_root_expression()}"\n'
+                         '```\nUse `python3 "$TASK_CODEX_PLUGIN_ROOT/scripts/plan-work.py"` for facade operations.\n\n') + """## Codex execution binding
+
+`plan-work.py prepare` captures `CODEX_THREAD_ID` and provider-written turn_context through
+`route_evidence_codex.capture_current`; no route export is needed. Resume and the Codex clear command use the current thread. Proof has source="provider-thread-state" and
+source_version="codex-turn-context-v1". The source="cli-flag" compatibility fallback is only
+for an attested fresh launch; doctor output/config/actor prose are forbidden substitutes.
+
+At a genuine cold-start-root/owner-requested-new-session boundary, render the receipt's
+**Native Codex command:** outside the metadata table:
+```bash
+codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
+```
+Use the successor's Routing. scope-complete retains continue-root; report its recommendation
+without launching outside owner scope. Same-session completion uses the compact receipt.
+
+""" + projected
+        else:
+            projected = _codex_native_launch_rule(mapping) + provider_rule + projected
     provenance = (
         "<!-- Generated Codex runtime projection; do not edit as source.\n"
         f"Canonical source: {record.source.path}\n"
@@ -1727,6 +1747,10 @@ def _project_codex_runtime_tokens(text: str) -> str:
         if match.group("task"):
             return "$ task:" + match.group("task_id")
         if match.group("ui"):
+            # /effort in provider/model[/context][/effort] is selector grammar,
+            # not a standalone provider UI command.
+            if match.start() > 0 and text[match.start() - 1] == "[" and text[match.end():].startswith("]"):
+                return match.group(0)
             return _CODEX_UI_PROJECTIONS[match.group("ui").lower()]
         raise AssertionError("unreachable Codex runtime token")
 

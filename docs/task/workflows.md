@@ -18,6 +18,12 @@ Sample prototype: `wf-p5-research.js` ECOSYSTEM P5 plan - working copy of templa
 
 ## Slot Rules
 
+Reviewer selection is explicit: fill REVIEWER from `--reviewer provider/model` before a
+review-capable dev-slice run. Execution and read-only review use separate calls; an orchestrator
+owns their handoff. Findings stop review and return one owning correction, with systemic
+class/area and shared-model evidence preserved across resume. Cross-provider item review uses
+Task review packets/receipts and their existing budgets.
+
 - **Slots are only constants in the script header.** Parameterization for editing the header, not
   args-string: embedded-config instead of parsing arguments (named-workflow trap -
   the line of arguments breaks on the very first multi-line TK).

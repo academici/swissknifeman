@@ -436,6 +436,8 @@ class ReviewPacketTests(unittest.TestCase):
         packet = self.packet()
         self.assertLessEqual(packet["packet_bytes"], review.PACKET_BYTES_MAX)
         self.assertIn("No code is truncated", Path(packet["packet"]).read_text())
+        self.assertIn("same immutable packet-<digest> directory", Path(packet["packet"]).read_text())
+        self.assertNotIn("beside this packet under", Path(packet["packet"]).read_text())
         self.spec.write_text(self.spec.read_text() + "\n" + "é" * 45_000)
         with self.assertRaisesRegex(review.ReviewError, "REVIEW_PACKET_TOO_LARGE"):
             self.packet()
@@ -480,6 +482,8 @@ class ReviewPacketTests(unittest.TestCase):
                 self.assertEqual(selected["route"]["model"], "grok-4.7")
                 self.assertEqual(selected["effort"], "high")
                 self.assertEqual(packet_bytes, Path(packet["packet"]).read_bytes())
+                self.assertEqual(kwargs["packet_path"], Path(packet["packet"]))
+                self.assertEqual(kwargs["packet_path"].with_name("review-route.json"), Path(packet["manifest"]))
                 return {"session": "independent-native-session", "raw": b"native ACP transcript\n",
                         "stderr": b"", "output": json.dumps(self.verdict(manifest)).encode(),
                         "detail": "ACP end_turn", "complete": True, "observed_context": context,

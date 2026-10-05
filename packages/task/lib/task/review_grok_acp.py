@@ -19,6 +19,7 @@ import time
 from urllib.parse import quote
 import uuid
 from task.review_sources import ReadLedger
+from task import review_job
 
 
 class TransportError(ValueError):
@@ -79,18 +80,24 @@ def _stop(process) -> None:
     except subprocess.TimeoutExpired:
         kill(signal.SIGKILL)
         process.wait(timeout=2)
+    else:
+        # The leader may exit while descendants still own its process group.
+        kill(signal.SIGKILL)
 
 
 def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: int = 0,
-        heartbeat_interval: float = 30, progress=None) -> dict:
+        heartbeat_interval: float = 30, progress=None, attempt_dir: Path | None = None,
+        packet_path: Path | None = None) -> dict:
     """No retry, no product mutation, no prompt before native capacity proof."""
     command = argv(manifest, max_turns=max_turns)
     # A refused session/new still has a distinct attempt identity for archiving.
     result = {"session": str(uuid.uuid4()), "argv": command, "output": b"", "raw": b"",
               "stderr": b"", "complete": False, "detail": "", "observed_context": None,
               "provider_route": {}, "heartbeats": [], "read_ledger": {}}
+    attempt_dir = Path(attempt_dir) if attempt_dir is not None else None
     ledger = ReadLedger(cwd)
     process = None
+    process_identity = None
     raw, stderr, chunks = [], [], []
     last_response = ""
     inbox = queue.Queue()
@@ -102,6 +109,13 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
     responses = 0
     session = None
 
+    def persist(method, request_id=None):
+        if attempt_dir is not None:
+            review_job.write(attempt_dir / "job.json", {
+                "session_id": session, "request_id": request_id if request_id is not None else sequence, "phase": method,
+                "process": process_identity,
+                "updated_at": time.time()})
+
     def probe(method):
         nonlocal next_probe
         now = time.monotonic()
@@ -110,22 +124,33 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
         if session is not None and method == "session/prompt":
             verify_route(provider_route(cwd, session), manifest)
         snapshot = {"schema_version": "review-heartbeat/v1", "session_id": session,
-                    "phase": method, "process_alive": True,
+                    "phase": method, "process_alive": True, "updated_at": time.time(),
                     "elapsed_seconds": round(now - started, 3),
                     "idle_seconds": round(now - last_activity, 3),
                     "activity_events": activity_events, "responses": responses}
         result["heartbeats"].append(snapshot)
+        if attempt_dir is not None:
+            with (attempt_dir / "heartbeats.jsonl").open("a") as stream:
+                stream.write(json.dumps(snapshot) + "\n")
+                stream.flush()
         if progress is not None:
             progress(snapshot)
         next_probe = now + heartbeat_interval
 
     def reader(stream, target, deliver=False):
+        archive = ((attempt_dir / ("provider-output.jsonl" if deliver else "stderr.log")).open("ab", buffering=0)
+                   if attempt_dir is not None else None)
         try:
             while line := stream.readline():
-                target.append(line)
+                if archive is None:
+                    target.append(line)
+                if archive is not None:
+                    archive.write(line)
                 if deliver:
                     inbox.put(line)
         finally:
+            if archive is not None:
+                archive.close()
             if deliver:
                 inbox.put(None)
 
@@ -137,16 +162,21 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
         nonlocal sequence, last_response, responses, last_activity, activity_events
         sequence += 1
         request_id = sequence
+        persist(method, request_id)
         send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params})
         while True:
             now = time.monotonic()
+            if attempt_dir is not None and (attempt_dir / "cancel.json").exists():
+                if session is not None:
+                    send({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": session}})
+                raise TransportError("REVIEW_CANCELLED: cancellation requested; provider group will be reaped")
             if now >= next_probe:
                 probe(method)
             remaining = timeout - (now - last_activity)
             if remaining <= 0:
                 raise TransportError("REVIEW_INACTIVE: timeout without reviewer activity")
             try:
-                line = inbox.get(timeout=min(remaining, max(0, next_probe - now)))
+                line = inbox.get(timeout=min(remaining, max(0, next_probe - now), 0.25))
             except queue.Empty:
                 continue
             if line is None:
@@ -212,6 +242,21 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
             time.sleep(min(0.05, max(0, until - time.monotonic())))
 
     try:
+        prompt = [{"type": "text", "text": packet.decode()}]
+        if packet_path is not None:
+            immutable_packet = Path(packet_path).resolve()
+            machine_manifest = immutable_packet.with_name("review-route.json")
+            if (not immutable_packet.is_relative_to(cwd.resolve())
+                    or immutable_packet.name != "packet.md"
+                    or immutable_packet.read_bytes() != packet
+                    or hashlib.sha256(packet).hexdigest() != manifest.get("packet_sha256")
+                    or json.loads(machine_manifest.read_bytes()) != manifest):
+                raise TransportError("REVIEW_PACKET_STALE: immutable packet/manifest locator differs from the bound input")
+            locator = {"packet_path": str(immutable_packet), "machine_manifest": str(machine_manifest)}
+            prompt.append({"type": "text", "text": "## Immutable review artifact locator\n"
+                           + json.dumps(locator, ensure_ascii=False, sort_keys=True)
+                           + "\nUse these exact paths for the immutable packet and its machine metadata; "
+                           "they take precedence over relative locator descriptions in the packet."})
         executable = shutil.which(command[0])
         result["provider_runtime"] = {"executable": executable,
             "sha256": hashlib.sha256(Path(executable).read_bytes()).hexdigest() if executable else None}
@@ -220,6 +265,8 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
         next_probe = started + heartbeat_interval
         process = subprocess.Popen(command, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, start_new_session=os.name == "posix")
+        process_identity = review_job.identity(process.pid) if attempt_dir is not None else None
+        persist("spawned")
         for stream, target, deliver in ((process.stdout, raw, True), (process.stderr, stderr, False)):
             thread = threading.Thread(target=reader, args=(stream, target, deliver), daemon=True)
             thread.start()
@@ -239,12 +286,13 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
                                                if "context_tokens" in manifest["route"] else {})}})
         route()
         terminal = rpc("session/prompt", {"sessionId": session,
-                                          "prompt": [{"type": "text", "text": packet.decode()}]})
+                                          "prompt": prompt})
         ledger.verify()
         result["read_ledger"] = ledger.result()
         metadata = terminal.get("_meta", {})
         usage = metadata.get("usage", {})
         result["usage"] = usage
+        result["stop_reason"] = terminal.get("stopReason")
         usage_known = (isinstance(usage, dict)
                        and all(type(usage.get(key)) is int and usage[key] >= 0
                                for key in ("inputTokens", "outputTokens", "cachedReadTokens", "cacheCreationTokens"))
@@ -258,7 +306,11 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
                               and not metadata.get("usage_is_incomplete", False)
                               and not terminal.get("usage_is_incomplete", False))
         result["detail"] = f"ACP stopReason={terminal.get('stopReason')}; usage_complete={usage_known}"
-    except (OSError, ValueError, TypeError, AttributeError) as exc:
+    except (KeyboardInterrupt, SystemExit):
+        result["complete"] = False
+        result["detail"] = "REVIEW_INTERRUPTED: executor interrupted transport"
+        raise
+    except (OSError, ValueError, TypeError, AttributeError, KeyError) as exc:
         result["detail"] = str(exc) if isinstance(exc, TransportError) else type(exc).__name__ + ": " + str(exc)
     finally:
         if process is not None:
@@ -268,6 +320,17 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
             for stream in (process.stdin, process.stdout, process.stderr):
                 stream.close()
         result["output"] = ("".join(chunks) or last_response).encode()
-        result["raw"] = b"".join(raw)
-        result["stderr"] = b"".join(stderr)
+        result["raw"] = b"".join(raw) if attempt_dir is None else (attempt_dir / "provider-output.jsonl").read_bytes() if (attempt_dir / "provider-output.jsonl").exists() else b""
+        result["stderr"] = b"".join(stderr) if attempt_dir is None else (attempt_dir / "stderr.log").read_bytes() if (attempt_dir / "stderr.log").exists() else b""
+        result["exit_code"] = process.poll() if process is not None else None
+        result["process"] = process_identity
+        result["prompt_request_id"] = sequence
+        result["wall_seconds"] = round(time.monotonic() - started, 3)
+        if attempt_dir is not None:
+            (attempt_dir / "output.json").write_bytes(result["output"])
+            result["read_ledger"] = result["read_ledger"] or ledger.result()
+            review_job.write(attempt_dir / "transport-result.json",
+                             {key: value for key, value in result.items() if key not in {"output", "raw", "stderr"}})
+            persist("completed" if result["complete"] else "interrupted" if result["detail"].startswith(
+                ("REVIEW_INTERRUPTED", "REVIEW_CANCELLED")) else "failed")
     return result

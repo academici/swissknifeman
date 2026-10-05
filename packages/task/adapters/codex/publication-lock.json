@@ -4,7 +4,7 @@
       "artifact_id": "task.codex.plugin",
       "path": "packages/task/.codex-plugin/plugin.json",
       "rendered_hash": "sha256:0f163d15b6846e64c621c1e990da95d3a5107e3cf434ec66b4fbb780b6f32135",
-      "source_hash": "sha256:e7fb2c96163c5b13f0a3538765c078715c0e8397d4d7dd7201332edd6ab5e7a4"
+      "source_hash": "sha256:73582f404f636c3b3abf9a5aa8541f1a015bcd9e1a5518749af89b0d1a12e724"
     },
     {
       "artifact_id": "task.codex.design.skill",
@@ -135,20 +135,20 @@
     {
       "artifact_id": "task.codex.plan.run.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-run/SKILL.md",
-      "rendered_hash": "sha256:ef3f97bfdecc9fce70324aee6a8df8e3c7ff2d850c088083f91ef3ddf2b024eb",
-      "source_hash": "sha256:4b707571240da491e2a9910658c326799a15235879a3e5f88d75e1aa6e8da1fa"
+      "rendered_hash": "sha256:0f28b903f66f38272cfb5ff3bf65589410fc9f0b21301f0b70b16f667184c055",
+      "source_hash": "sha256:b7faac1b132c40f028e564f25c251a083ce3046bddcb4c04894dad18508c2625"
     },
     {
       "artifact_id": "task.codex.plan.run.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-plan-run/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:e9a6ca902c9ccbc960178d49edc37b53c4e20ddc693750835e634eaf0c91c122"
+      "source_hash": "sha256:1f0bd17a8723f20dae41863236470f5673557f71b3d736e4e68a0c02c576796d"
     },
     {
       "artifact_id": "task.codex.plan.run.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-run/command.md",
-      "rendered_hash": "sha256:b684c8bde0b7d707177ca215401aff68920d601a88da963e1fc84c84a8c52940",
-      "source_hash": "sha256:611c83d5ebad31c1cda68b0dcc0e1d6006d4934951f438fd1bb5a93d5058fcd0"
+      "rendered_hash": "sha256:2757b288aa9b4f45e5e53f9358f3970c7e67dfe9700206792a83a8750615bb9e",
+      "source_hash": "sha256:0a2aaef11eaa764604ab724b85cc7e8c5ec26de1903b71f13c13f0f6de788b07"
     },
     {
       "artifact_id": "task.codex.research.skill",

@@ -109,7 +109,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         for command in ("plan-design", "plan-run"):
             with self.subTest(command=command):
                 body = (COMMAND_ROOT / f"{command}.md").read_text(encoding="utf-8")
-                self.assertIn("Batch", body)
+                self.assertIn("batch", body.lower())
 
     def test_terminal_phase_handoff_uses_audit_policy_instead_of_probe_close(self):
         execution = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
@@ -121,9 +121,9 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                 self.assertIn("phase_audit_policy", carrier)
         self.assertNotIn(
             "Phase is terminal → `/task:plan-close <PLAN-ID> Pn`", execution)
-        self.assertIn("GREEN evidence direct-closes by default", execution)
-        self.assertIn("fresh owner consent", execution)
-        self.assertIn("verify its phase acceptance without a phase-close event or carrier", execution)
+        self.assertIn("Close each GREEN item in this invocation", execution)
+        self.assertIn("candidate/run-bound owner consent", execution)
+        self.assertIn("`plan-close` is whole-plan-only", execution)
 
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():

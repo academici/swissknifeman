@@ -131,15 +131,9 @@ class RoadmapFollowupTests(unittest.TestCase):
     def test_evidence_runner_never_publishes_old_candidate_as_new_green(self):
         product = self.root / "product.py"
         product.write_text("value = 1\n")
-        original = subprocess.run
-        def mutate(*args, **kwargs):
-            if args[0][0] != "tests":
-                return original(*args, **kwargs)
-            product.write_text("value = 2\n")
-            return subprocess.CompletedProcess(args[0], 0)
-        with patch.object(evidence_runner.subprocess, "run", side_effect=mutate):
-            result = evidence_runner.run(self.root, self.root / "output", paths=["product.py"], attempt_id="changed",
-                checks=[{"id": "tests", "argv": ["tests"], "depends_on": []}])
+        result = evidence_runner.run(self.root, self.root / "output", paths=["product.py"], attempt_id="changed",
+            checks=[{"id": "tests", "argv": [sys.executable, "-c",
+                "from pathlib import Path; Path('product.py').write_text('value = 2\\n')"], "depends_on": []}])
         self.assertFalse(result["complete"])
         self.assertFalse(json.loads(Path(result["receipt"]).read_text())["candidate_fresh"])
 

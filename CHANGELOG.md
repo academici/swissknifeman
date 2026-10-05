@@ -4,7 +4,28 @@
 
 ### Fixed
 
+- **Task deletion reviews:** native reads of removed repository-local files bind
+  absence instead of aborting the review; reappearing files invalidate that evidence.
+- **Task Markdown validation:** execute every inline command/result clause and
+  stop on the first failure while retaining the original acceptance carrier.
+- **Task execution facade:** `plan-work` now owns persisted check definitions,
+  candidate-bound validation and qualified close. Unchanged GREEN evidence is reused;
+  known RED stops later checks, timeouts cannot certify success, and incomplete
+  validation exits nonzero. Typed write-site decisions render without journal repairs.
+- **Task review jobs:** attempts precede native spawn; process/session/request identity
+  and raw output survive interruption. Status, cancellation and reconciliation avoid
+  duplicate prompts when an outcome is unknown. Compact delta packets retain the
+  complete disk manifest, dependency ledger and candidate freshness checks.
+- **Task command projections:** remove duplicated route exports, manual terminal
+  recipes and default review/phase-close/two-commit wording; preserve effort selector
+  grammar when rendering Codex UI guidance.
+- **Harness Codex telemetry:** add an opt-in transparent app-server stdio observer
+  for request lifecycle and delivery gaps, with explicit stale/unknown state.
 - **Task review archives:** сохранять игнорируемые product-файлы в immutable source blobs; legacy recovery добавляет witness для точно захешированных байтов без перезаписи старого receipt или witness.
+- **Task concrete Files:** recursive glob inventory uses tracked and nonignored
+  untracked source files, preserving base deletions and explicitly named ignored
+  inputs. Standalone traversal does not follow directory symlinks, so pnpm dependency
+  cycles cannot exhaust memory during canonical evidence or review preparation.
 
 ## [0.28.2] - 2026-10-04
 

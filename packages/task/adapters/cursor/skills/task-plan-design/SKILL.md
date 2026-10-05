@@ -1,6 +1,6 @@
 ---
 name: task-plan-design
-description: "Only when explicitly invoked. Explicit Task plan design: author or refine executable plan contracts."
+description: "Only when explicitly invoked. Explicit Task plan design: author or refine a plan with plan.py."
 disable-model-invocation: true
 ---
 
@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:plan-design`.
 - Invocation: `task:plan-design <arguments>`
 - Routing: `frontier/high -> claude-opus-5-thinking-high/high`
 - Canonical source: `packages/task/commands/plan-design.md`
-- Canonical SHA-256: `sha256:4d22e6bf0b011eb659b7bf0cee4f49d73d9af9d90ae826e338e3961261ecd057`
+- Canonical SHA-256: `sha256:8a0ea5ea4e4d14f6470e686782855b5c38679a2db3d46c73935eed1b30c6809d`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

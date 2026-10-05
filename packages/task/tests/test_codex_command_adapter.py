@@ -72,7 +72,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_task_runtime_paths_are_provider_specific_and_never_project_relative(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
-        self.assertIn("task.plan_lifecycle", canonical)
+        self.assertIn("plan.py", canonical)
         self.assertNotIn("PYTHONPATH=packages/task/lib", canonical)
         codex_runtime = next(
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
@@ -80,24 +80,21 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertIn("codex plugin marketplace list --json", codex_runtime)
         self.assertIn("packages/task/lib/task", codex_runtime)
         self.assertIn('export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace', codex_runtime)
-        self.assertIn(
-            'PYTHONPATH="${TASK_CODEX_PLUGIN_ROOT}/lib:${TASK_CODEX_PLUGIN_ROOT}/../.."',
-            codex_runtime,
-        )
+        self.assertIn("scripts/plan.py", codex_runtime)
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
         self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
 
-    def test_plan_runtime_requires_a_native_launch_only_at_a_real_boundary(self):
-        plan_commands = {
-            "plan-design", "plan-run", "plan-audit", "plan-close",
-        }
-        runtimes = {
+    def _plan_runtimes(self):
+        return {
             artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
             artifact.managed_bytes.decode("utf-8")
             for artifact in self.render().artifacts
             if "/task-plan-" in artifact.path and artifact.path.endswith("/command.md")
         }
-        self.assertEqual(set(runtimes), plan_commands)
+
+    def test_plan_runtime_requires_a_native_launch_only_at_a_real_boundary(self):
+        runtimes = self._plan_runtimes()
+        self.assertEqual(set(runtimes), {"plan-design", "plan-run", "plan-audit", "plan-close"})
         for command, codex_runtime in runtimes.items():
             with self.subTest(command=command):
                 self.assertIn(
@@ -109,71 +106,23 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn("This generated runtime is the Codex provider projection", codex_runtime)
                 self.assertIn("never put the command in a table", codex_runtime)
                 self.assertIn("**Native Codex command:**", codex_runtime)
-                self.assertIn("Final-response guard", codex_runtime)
-                self.assertIn("continue compatible work inside the admitted owner scope", codex_runtime)
-                self.assertIn("`scope-complete` retains `continue-root`", codex_runtime)
-                self.assertIn("owner-requested-new-session", codex_runtime)
-                self.assertIn("even when no terminal-admission lease", codex_runtime)
-                self.assertIn("cold-start-root", codex_runtime)
-        self.assertIn("do not reuse the preceding session's route", runtimes["plan-run"])
-        self.assertIn("Codex snapshot transport guard", runtimes["plan-run"])
-        self.assertIn("PLAN_CONTEXT_TRUNCATED", runtimes["plan-run"])
 
-    def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
-        canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
-        self.assertIn("route-run-receipt/v1", canonical)
-        self.assertIn("provider-attested route", canonical)
-        self.assertIn("plan_lifecycle", canonical)
-        self.assertNotIn("task.route_evidence_codex.capture_current", canonical)
-
-        runtime = next(
-            artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
-            if artifact.path.endswith("/task-plan-run/command.md"))
-        self.assertIn('source="provider-thread-state"', runtime)
-        self.assertIn("codex-turn-context-v1", runtime)
-        self.assertIn("CODEX_THREAD_ID", runtime)
-        self.assertIn("Codex clear command", runtime)
-        self.assertIn("compatibility fallback", runtime)
-        self.assertIn('source="cli-flag"', runtime)
-        self.assertIn("route_evidence_codex.capture_current", runtime)
-        self.assertNotIn('source="provider-doctor"', runtime)
-        self.assertNotIn('source="self-attested"', runtime)
-
-    def test_every_plan_runtime_binds_route_to_provider_thread_state(self):
-        plan_commands = (
-            "plan-run", "plan-audit", "plan-close",
-        )
-        runtimes = {
-            artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
-            artifact.managed_bytes.decode("utf-8")
-            for artifact in self.render().artifacts
-            if "/task-plan-" in artifact.path and artifact.path.endswith("/command.md")
-        }
-        for command in plan_commands:
+    def test_every_plan_runtime_names_the_codex_task_root_and_plan_cli(self):
+        for command, runtime in self._plan_runtimes().items():
             with self.subTest(command=command):
-                runtime = runtimes[command]
-                self.assertIn("task.route_evidence_codex capture", runtime)
-                self.assertIn("TASK_CODEX_ROUTE_EVIDENCE", runtime)
-                self.assertIn('source="provider-thread-state"', runtime)
-                self.assertIn("doctor output", runtime)
-                self.assertIn("forbidden substitutes", runtime)
-        self.assertIn("Codex design route", runtimes["plan-design"])
-        self.assertNotIn("TASK_CODEX_ROUTE_EVIDENCE", runtimes["plan-design"])
+                self.assertIn("## Codex Task root", runtime)
+                self.assertIn("TASK_CODEX_PLUGIN_ROOT", runtime)
+                self.assertIn("scripts/plan.py", runtime)
+                for retired in ("route_evidence_codex", "TASK_CODEX_ROUTE_EVIDENCE",
+                                "continue-root", "receipt"):
+                    self.assertNotIn(retired, runtime)
 
     def test_plan_runtimes_do_not_reintroduce_the_retired_route_recipe(self):
-        plan_commands = (
-            "plan-design", "plan-run", "plan-audit", "plan-close",
-        )
-        runtimes = {
-            artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
-            artifact.managed_bytes.decode("utf-8")
-            for artifact in self.render().artifacts
-            if "/task-plan-" in artifact.path and artifact.path.endswith("/command.md")
-        }
-        for command in plan_commands:
+        for command, runtime in self._plan_runtimes().items():
             with self.subTest(command=command):
-                self.assertNotIn('source="provider-doctor"', runtimes[command])
-                self.assertNotIn('source="self-attested"', runtimes[command])
+                self.assertNotIn('source="provider-doctor"', runtime)
+                self.assertNotIn('source="self-attested"', runtime)
+
 
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (

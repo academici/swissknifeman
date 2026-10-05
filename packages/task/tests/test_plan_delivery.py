@@ -607,11 +607,11 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertEqual(json.loads(target.read_text(encoding="utf-8")), receipt)
         self.assertEqual(list(target.parent.glob(".receipt.json.*.tmp")), [])
 
-    def test_all_canonical_commands_require_a_delivery_receipt(self):
+    def test_every_plan_command_reports_the_exact_next_plan_line(self):
         command_dir = Path(__file__).resolve().parents[1] / "commands"
         for name in ("plan-design.md", "plan-run.md", "plan-audit.md", "plan-close.md"):
             source = (command_dir / name).read_text(encoding="utf-8")
-            self.assertIn("semantic Next", source, name)
+            self.assertIn("plan.py next", source, name)
 
 
 if __name__ == "__main__":

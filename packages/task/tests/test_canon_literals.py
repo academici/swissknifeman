@@ -9,28 +9,29 @@ PROTOCOL = ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
 
 
 class CompactCanonTests(unittest.TestCase):
-    def test_plan_commands_delegate_to_one_runtime_lifecycle(self):
-        for name in ("plan-run.md", "plan-audit.md", "plan-design.md"):
+    def test_plan_commands_delegate_to_the_plan_cli(self):
+        for name in ("plan-run.md", "plan-audit.md", "plan-design.md", "plan-close.md"):
             with self.subTest(name=name):
-                self.assertIn("task.plan_lifecycle", (COMMANDS / name).read_text(encoding="utf-8"))
+                text = (COMMANDS / name).read_text(encoding="utf-8")
+                self.assertIn("scripts/plan.py", text)
+                self.assertIn("plan.py", text)
 
-    def test_execution_still_names_hard_safety_boundaries(self):
+    def test_execution_still_names_hard_risk_and_owner_gates(self):
         text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")
-        for risk in ("security/auth", "destructive migration", "irreversible external action",
-                     "payment/accounting", "concurrency/shared state", "public API/schema",
-                     "low-confidence impact"):
-            self.assertIn(risk, text)
+        for literal in ("Hard risk", "security, schema/public API, data, concurrency, publishing",
+                        "Owner gates", "plan.py grant", "ROUTE_UNDERSHOOT"):
+            self.assertIn(literal, text)
 
     def test_command_budget_is_below_the_lean_cap(self):
         total = sum(path.stat().st_size for path in COMMANDS.glob("plan-*.md")) + PROTOCOL.stat().st_size
         self.assertLessEqual(total, 105795)
 
-    def test_commands_preserve_v2_and_delivery_owners(self):
+    def test_plan_run_uses_the_v3_lifecycle_verbs_only(self):
         text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")
-        self.assertIn("scripts/plan-work.py prepare", text)
-        self.assertIn("PLAN_CONTEXT_TRUNCATED", text)
-        self.assertIn("phase_audit_policy", text)
-        self.assertIn("plan_delivery", text)
+        for verb in ("plan.py next", "plan.py start", "plan.py log", "plan.py finish", "plan.py show"):
+            self.assertIn(verb, text)
+        for retired in ("plan-work.py", "plan-views.py", "plan-lint.py", "journal", "bundle", "receipt", "continuity"):
+            self.assertNotIn(retired, text)
 
 
 if __name__ == "__main__":

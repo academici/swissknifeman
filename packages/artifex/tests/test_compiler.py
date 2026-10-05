@@ -1,24 +1,16 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 from artifex import compiler
-from support import clone, p2_1_pending_s3_fixture
+from support import PLAN_CLI, clone, make_plan, p2_1_pending_s3_fixture, plan_cli
 
 
-PLAN_ID = "DEMO-PLAN"
 ITEM = "P2.1"
-CONTRACT_HASH = "a" * 64
-FIELDS = {
-    "Status": "⬜ Not started",
-    "Files": "`src/out.py`",
-    "Required Reads": "`docs/read.md`",
-    "Validation": "check one",
-    "Deliverables": "Deliverable text",
-}
 
 
 def _git_init(root: Path) -> None:
@@ -29,17 +21,13 @@ def _git_init(root: Path) -> None:
 
 
 class CompilerTests(unittest.TestCase):
-    """Compile against small synthetic S1/S2/S3 sources in a throwaway repository."""
+    """Compile against a real v3 plan (made through plan.py) and a synthetic harness queue."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name).resolve()
         _git_init(self.root)
-        self.plan = self.root / "work" / PLAN_ID
-        (self.plan / "phases").mkdir(parents=True)
-        (self.plan / "plan.md").write_text("# plan\n", encoding="utf-8")
-        (self.plan / "phases/P2.md").write_text("# phase\n", encoding="utf-8")
-        (self.plan / "handoff.md").write_text("# handoff\n", encoding="utf-8")
+        self.plan = make_plan(self.root / "work")
         (self.root / "docs").mkdir()
         (self.root / "docs/read.md").write_text("required read\n", encoding="utf-8")
         policy = self.root / "packages/harness/configs/common/agent-packs/execution-policy.json"
@@ -50,16 +38,8 @@ class CompilerTests(unittest.TestCase):
         self.temp.cleanup()
 
     def _sources(self):
-        s1 = {"plans": {PLAN_ID: {"phases": {"P2": {"items": {ITEM: {"title": "Demo item", "fields": dict(FIELDS)}}}}}}}
-        s2 = {"schema_version": "task-contract/v1", "version": {"content_hash": CONTRACT_HASH},
-              "route": {"required": {"model_class": "implementation", "effort": "high"}},
-              "evidence": [{"id": "E1", "path": "docs/read.md"}],
-              "cold_start": {"reads": ["E1"]},
-              "done": {"public_acceptance": [{"id": "A1", "check": "check one", "predicate": "Deliverable text"}]}}
-        return s1, s2, p2_1_pending_s3_fixture()
-
-    def _fields(self, s1):
-        return s1["plans"][PLAN_ID]["phases"]["P2"]["items"][ITEM]["fields"]
+        item = json.loads(plan_cli(self.root, "show", str(self.plan), ITEM, "--json"))
+        return item, p2_1_pending_s3_fixture()
 
     def test_manual_projection_is_deterministic(self):
         sources = self._sources()
@@ -69,32 +49,48 @@ class CompilerTests(unittest.TestCase):
         self.assertEqual("run", first["route"]["exec"])
         self.assertEqual("implementation", first["route"]["model_class"])
         self.assertEqual("high", first["route"]["effort"])
+        self.assertEqual(["V1"], first["scope"]["evidence_refs"])
         self.assertEqual(first["task_contract"]["public_acceptance_ids"], first["scope"]["evidence_refs"])
-        self.assertEqual(f"{PLAN_ID}:{ITEM}:r1", first["slice_id"])
+        self.assertEqual({"required_reads": ["docs/read.md"], "files": ["src/out.py"], "validation": ["check one"],
+                          "deliverables": ["Deliverable text"], "evidence_refs": ["V1"]}, first["scope"])
+        self.assertEqual(f"{self.plan.name}:{ITEM}:r1", first["slice_id"])
+        self.assertEqual(set(compiler.SOURCE_KEYS), set(first["source_hashes"]))
+
+    def test_observe_sources_reads_the_item_through_plan_py(self):
+        item = json.loads(plan_cli(self.root, "show", str(self.plan), ITEM, "--json"))
+        observed = compiler._run_json(["python3", str(PLAN_CLI), "show", str(self.plan), ITEM, "--json"],
+                                      cwd=self.root, env=compiler._minimal_env())
+        self.assertEqual(item, observed)
 
     def test_source_drift_refuses_before_manifest(self):
-        s1, s2, s3 = self._sources()
-        next(row for row in s3["items"] if row["item_id"] == ITEM)["route"]["effort"] = "medium"
+        item, queue = self._sources()
+        next(row for row in queue["items"] if row["item_id"] == ITEM)["route"]["effort"] = "medium"
         with self.assertRaisesRegex(compiler.CompileRefusal, "SOURCE_DRIFT"):
-            compiler.compile_slice(self.root, self.plan, ITEM, sources=(s1, s2, s3))
+            compiler.compile_slice(self.root, self.plan, ITEM, sources=(item, queue))
 
-    def test_malformed_files_refuse(self):
-        s1, s2, s3 = self._sources()
-        self._fields(s1)["Files"] += " prose"
+    def test_changed_item_status_drifts_from_the_queue(self):
+        item, queue = self._sources()
+        item["status"] = "in_progress"
+        with self.assertRaisesRegex(compiler.CompileRefusal, "SOURCE_DRIFT"):
+            compiler.compile_slice(self.root, self.plan, ITEM, sources=(item, queue))
+
+    def test_duplicate_files_refuse(self):
+        item, queue = self._sources()
+        item["task_files"].append(dict(item["task_files"][0]))
         with self.assertRaisesRegex(compiler.CompileRefusal, "SLICE_INPUT_MISSING"):
-            compiler.compile_slice(self.root, self.plan, ITEM, sources=(s1, s2, s3))
+            compiler.compile_slice(self.root, self.plan, ITEM, sources=(item, queue))
 
     def test_external_file_refuses(self):
-        s1, s2, s3 = self._sources()
-        self._fields(s1)["Files"] = "`../escape.py`"
+        item, queue = self._sources()
+        item["task_files"][0]["path"] = "../escape.py"
         with self.assertRaisesRegex(compiler.CompileRefusal, "SLICE_INPUT_EXTERNAL"):
-            compiler.compile_slice(self.root, self.plan, ITEM, sources=(s1, s2, s3))
+            compiler.compile_slice(self.root, self.plan, ITEM, sources=(item, queue))
 
     def test_skeleton_item_refuses(self):
-        s1, s2, s3 = self._sources()
-        self._fields(s1)["Deliverables"] = "—"
+        item, queue = self._sources()
+        item["deliverables"] = []
         with self.assertRaisesRegex(compiler.CompileRefusal, "SKELETON_ITEM"):
-            compiler.compile_slice(self.root, self.plan, ITEM, sources=(s1, s2, s3))
+            compiler.compile_slice(self.root, self.plan, ITEM, sources=(item, queue))
 
 
 if __name__ == "__main__":

@@ -43,23 +43,6 @@ class PlanDecisionsTest(unittest.TestCase):
                     plan_decisions.load_decisions(plan)
             path.write_text(decision("D1", date_value="2024-02-29"), encoding="utf-8")
             self.assertEqual(plan_decisions.load_decisions(plan)[0].date, "2024-02-29")
-    def test_distributed_templates_parse_without_manual_schema_repairs(self):
-        root = Path(__file__).resolve().parents[3]
-        paths = (root / "packages/skiller/skills/general/plan-protocol/snippets/decision-record-template.md",
-                 root / "packages/task/runtime/plan-protocol/snippets/decision-record-template.md")
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "D1-example.md"
-            for template in paths:
-                with self.subTest(template=template):
-                    source = template.read_text().split("```markdown\n", 1)[1].split("```", 1)[0]
-                    source = source.replace("<D-id>", "D1").replace("<YYYY-MM-DD>", "2026-09-15")
-                    source = source.replace("<Pn.m>", "P1.1")
-                    path.write_text(source)
-                    record = plan_decisions.parse_decision(path)
-                    self.assertEqual(record.identifier, "D1")
-                    self.assertEqual(record.items, ("P1.1",))
-                    self.assertEqual(record.decision_text, "<one precise decision>")
-
     def _plan(self, root):
         plan = Path(root) / "plan"
         (plan / "decisions").mkdir(parents=True)

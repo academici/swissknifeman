@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Foundation",
+  "design": "skeleton",
+  "goal": "Foundation",
+  "items": [],
+  "batches": []
+}

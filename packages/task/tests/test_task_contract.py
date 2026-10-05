@@ -654,9 +654,9 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
 class AuthorityCommandBoundaryTests(unittest.TestCase):
     """Both write-sites consume the compiler; plan-run is the single execution command."""
 
-    def test_plan_run_boundaries_use_the_checked_compiler(self):
+    def test_plan_run_boundaries_use_the_plan_cli_grant(self):
         run_text = (REPO_ROOT / "packages/task/commands/plan-run.md").read_text(encoding="utf-8")
-        self.assertIn("task_contract", run_text)
+        self.assertIn("plan.py grant", run_text)
         self.assertNotIn("authority_granted", run_text)
         self.assertNotIn("authority_granted_by", run_text)
 

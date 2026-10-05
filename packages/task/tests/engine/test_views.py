@@ -71,7 +71,7 @@ class GoldenTests(unittest.TestCase):
         agents = (self.root / "AGENTS.md").read_text(encoding="utf-8")
         self.assertEqual(agents, (self.root / "CLAUDE.md").read_text(encoding="utf-8"))
         self.assertLessEqual(len(agents.splitlines()), 10)
-        for name in ("index.md", "handoff.md", "context/", "_v2/", "plan.py"):
+        for name in ("index.md", "handoff.md", "context/", "plan.py"):
             self.assertIn(name, agents)
 
     def test_pipes_and_newlines_are_escaped_only_inside_table_cells(self):

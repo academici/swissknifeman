@@ -9,8 +9,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parents[1]
 RG_SRC = PKG / "configs" / "claude-code" / "hooks" / "review-gate"
-VC_SRC = PKG.parents[1] / "packages" / "task" / "scripts" / "verify-plan-citations.py"
-TASK_RUNTIME_SRC = PKG.parents[1] / "packages" / "task" / "lib" / "task"
+TASK_SRC = PKG.parents[1] / "packages" / "task"
 
 
 def _run(cmd, cwd):
@@ -98,15 +97,14 @@ class TestReviewGate(unittest.TestCase):
         self.assertIn("DOWNGRADE", out3)
 
 
-def _hookdir_citations(tmp):
-    """Internal documentation."""
+def _plan_lint_hookdir(tmp):
     dst = tmp / "hookdir"
     shutil.copytree(RG_SRC, dst)
     (dst / "env.ini").write_text("MODE=strict\n")
     (dst / "config.json").write_text(json.dumps({
         "version": 2,
         "check_command": "$REVIEW_GATE_DIR/checks/run-checks.sh",
-        "checks": [{"name": "plan-citations", "mode": "strict"}],
+        "checks": [{"name": "plan-lint", "mode": "strict"}],
     }))
     (dst / "review-gate.sh").chmod(0o755)
     for f in (dst / "checks").glob("*.sh"):
@@ -114,66 +112,48 @@ def _hookdir_citations(tmp):
     return dst
 
 
-class TestPlanCitationsCheck(unittest.TestCase):
-    """Internal documentation."""
+class TestPlanLintCheck(unittest.TestCase):
+    """The plan-lint check runs `plan.py check` for changed plan dirs that hold a plan.json."""
 
     def setUp(self):
         self._td = tempfile.TemporaryDirectory()
+        self.addCleanup(self._td.cleanup)
         self.tmp = Path(self._td.name)
         self.repo = self.tmp / "repo"
         self.repo.mkdir()
         _init_repo(self.repo)
-        plan_dir = self.repo / "plans" / "TESTPLAN"
-        (plan_dir / "phases" / "P1").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            "# TESTPLAN\n\n## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n"
-        )
-        (plan_dir / "phases" / "P1" / "P1.md").write_text(
-            "Cite `plans/TESTPLAN/plan.md:1` here.\n"
-        )
-        (self.repo / "packages" / "task" / "scripts").mkdir(parents=True)
-        shutil.copy(VC_SRC, self.repo / "packages" / "task" / "scripts" / "verify-plan-citations.py")
-        runtime_dst = self.repo / "packages" / "task" / "lib" / "task"
-        runtime_dst.mkdir(parents=True)
-        for name in ("__init__.py", "plan_layout.py"):
-            shutil.copy(TASK_RUNTIME_SRC / name, runtime_dst / name)
+        shutil.copytree(TASK_SRC, self.repo / "packages" / "task",
+                        ignore=shutil.ignore_patterns("__pycache__", "tests", "adapters", "runtime", "docs"))
+        (self.repo / "plans").mkdir()
         _run(["git", "add", "."], self.repo)
-        _run(["git", "config", "user.email", "review-gate-test@example.invalid"], self.repo)
-        _run(["git", "commit", "-q", "-m", "plan skeleton"], self.repo)
+        _run(["git", "commit", "-q", "-m", "task"], self.repo)
+        created = subprocess.run(
+            ["python3", str(self.repo / "packages/task/scripts/plan.py"), "new", "--codename", "DEMO",
+             "--title", "Demo", "--actor", "claude-code/x/high", "--message", "m"],
+            cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(created.returncode, 0, created.stderr)
+        self.plan = next((self.repo / "plans").iterdir())
         self.state_dir = self.tmp / "state"
-        self.hookdir = _hookdir_citations(self.tmp)
+        self.hookdir = _plan_lint_hookdir(self.tmp)
 
-    def tearDown(self):
-        self._td.cleanup()
+    def test_valid_v3_plan_passes(self):
+        rc, _, err = _run_hook(self.hookdir, self.repo, self.state_dir, "s1", "a1")
+        self.assertEqual((rc, err.strip()), (0, ""))
 
-    def test_broken_citation_caught(self):
-        (self.repo / "plans" / "TESTPLAN" / "phases" / "P1" / "P1.md").write_text(
-            "Cite `plans/TESTPLAN/nonexistent-file.py:1` here.\n"
-        )
-        rc, out, err = _run_hook(self.hookdir, self.repo, self.state_dir, "sess-vc-a", "agent-vc-a")
+    def test_broken_plan_json_is_a_violation(self):
+        data = json.loads((self.plan / "plan.json").read_text())
+        data["status"] = "not-a-status"
+        (self.plan / "plan.json").write_text(json.dumps(data))
+        rc, _, err = _run_hook(self.hookdir, self.repo, self.state_dir, "s2", "a2")
         self.assertEqual(rc, 2)
-        self.assertIn("plans/TESTPLAN:", err)
-        self.assertIn("nonexistent-file.py", err)
+        self.assertIn("plan.py check failed", err)
 
-    def test_clean_citation_passes(self):
-        (self.repo / "plans" / "TESTPLAN" / "phases" / "P1" / "P1.md").write_text(
-            "Cite `plans/TESTPLAN/plan.md:1` here (updated).\n"
-        )
-        rc, out, err = _run_hook(self.hookdir, self.repo, self.state_dir, "sess-vc-b", "agent-vc-b")
-        self.assertEqual(rc, 0)
-        self.assertEqual(out.strip(), "")
-        self.assertEqual(err.strip(), "")
-
-    def test_missing_task_runtime_fails_closed(self):
-        shutil.rmtree(self.repo / "packages" / "task" / "lib")
-        proc = subprocess.run(
-            ["python3", str(self.repo / "packages" / "task" / "scripts" /
-                            "verify-plan-citations.py"),
-             str(self.repo / "plans" / "TESTPLAN"), "--strict"],
-            cwd=self.repo, capture_output=True, text=True,
-        )
-        self.assertEqual(proc.returncode, 2)
-        self.assertIn("canonical resolver task.plan_layout not available", proc.stderr)
+    def test_changed_plan_dir_without_plan_json_is_skipped(self):
+        other = self.repo / "plans" / "OLD"
+        other.mkdir()
+        (other / "notes.md").write_text("not a v3 plan\n")
+        rc, _, err = _run_hook(self.hookdir, self.repo, self.state_dir, "s3", "a3")
+        self.assertEqual((rc, err.strip()), (0, ""))
 
 
 if __name__ == "__main__":

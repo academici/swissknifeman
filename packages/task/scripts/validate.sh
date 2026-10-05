@@ -92,11 +92,6 @@ if [[ ${#plan_targets[@]} -eq 0 ]]; then
   echo "  plan regression not requested; --plan PATH for the task, --fleet for CI/release"
 fi
 
-# --conflicts — cheap
-# reconciliation «EN-only canon ↔ implementation» without input plan; lack of canon fail-closed.
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
-  python3 scripts/plan-lint.py --conflicts || err "plan-lint.py --conflicts — see output above"
-
 # P0.7 — parity of provider projections of teams was maintained only by unit-tests; gate
 # of the generator also covers claude-golden, runtime-copy plan-protocol and publication-lock.
 

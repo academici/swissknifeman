@@ -45,7 +45,8 @@ class ProviderHookTests(unittest.TestCase):
         unsupported = {binding.surface_id for binding in plan.bindings
                        if binding.support_level == "unsupported"}
         self.assertEqual(unsupported, {
-            "lifecycle.notification", "context.output-style", "context.plans-directory"})
+            "lifecycle.notification", "lifecycle.plan-regen", "context.output-style",
+            "context.plans-directory"})
         self.assertEqual({binding.surface_id for binding in plan.bindings
                           if binding.support_level == "config-native"},
                          {"lifecycle.auto-approval"})
@@ -56,7 +57,7 @@ class ProviderHookTests(unittest.TestCase):
                           "lifecycle.router", "lifecycle.memory", "lifecycle.pack-guard",
                           "lifecycle.changelog-gate", "lifecycle.review-gate",
                           "lifecycle.daemon-safety", "lifecycle.git-guardrails",
-                          "lifecycle.terminal-admission"})
+                          "lifecycle.plan-guard"})
         self.assertEqual({item.code for item in plan.diagnostics},
                          {"HARNESS_ACTIVATION_UNSUPPORTED"})
 
@@ -109,35 +110,6 @@ class ProviderHookTests(unittest.TestCase):
             adapt_codex_hook_payload(observer, {"session_id": "s", "cwd": "/tmp/project",
                 "hook_event_name": "SessionStart", "model": "gpt-5.6-terra", "permission_mode": "dontAsk"})
 
-    def test_terminal_admission_renders_the_same_fail_closed_stop_response_for_both_providers(self):
-        request = {"applicable": True, "plan": "PLAN", "subject": "P4.2", "command": "plan-run",
-                   "run_id": "run-1", "task_session": "task-session", "continuity_json": json.dumps({
-                       "schema_version": "session-continuity-decision/v1", "outcome": "continue-root",
-                       "reason": "compatible-active-work", "evidence": ["batch:" + "0" * 64], "runnable": True,
-                   })}
-        payload = {"session_id": "provider-session", "turn_id": "turn-1", "cwd": "", "hook_event_name": "Stop",
-                   "model": "gpt-5.6-terra", "stop_hook_active": False, "last_assistant_message": "not persisted",
-                   "terminal_admission": request}
-        claude_adapter = PACKAGE / "configs/claude-code/hooks/terminal-admission/terminal-admission.py"
-        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
-            root = Path(project)
-            (root / ".codex").mkdir()
-            (root / ".claude").mkdir()
-            (root / ".codex/terminal-admission.env.ini").write_text("MODE=on\n", encoding="utf-8")
-            (root / ".claude/terminal-admission.env.ini").write_text("MODE=on\n", encoding="utf-8")
-            payload["cwd"] = project
-            codex_handler = Path(scratch) / "lifecycle.py"
-            codex_handler.write_bytes(render_codex_hook_handler())
-            codex = subprocess.run([sys.executable, str(codex_handler), "--surface", "lifecycle.terminal-admission"],
-                                   input=json.dumps(payload).encode(), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   check=True, timeout=20)
-            claude = subprocess.run([sys.executable, str(claude_adapter)], input=json.dumps(payload).encode(),
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=20)
-        self.assertEqual(json.loads(codex.stdout), {
-            "decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"})
-        self.assertEqual(json.loads(claude.stdout), {
-            "decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"})
-
     def test_claude_current_registration_fixture_remains_independent(self):
         fixture = json.loads(CLAUDE_FIXTURE.read_text(encoding="utf-8"))
         bindings = plan_lifecycle(self.catalog, provider_id=ProviderId.CLAUDE_CODE, trusted=True,
@@ -145,9 +117,12 @@ class ProviderHookTests(unittest.TestCase):
                                             LifecycleRequest("lifecycle.router"),
                                             LifecycleRequest("lifecycle.run-report"),
                                             LifecycleRequest("lifecycle.pack-guard"),
-                                            LifecycleRequest("lifecycle.changelog-gate"))).bindings
+                                            LifecycleRequest("lifecycle.changelog-gate"),
+                                            LifecycleRequest("lifecycle.plan-guard"),
+                                            LifecycleRequest("lifecycle.plan-regen"))).bindings
         actual = {"auto-approval": bindings[0], "router": bindings[1], "run-report": bindings[2],
-                  "pack-guard": bindings[3], "changelog-gate": bindings[4]}
+                  "pack-guard": bindings[3], "changelog-gate": bindings[4],
+                  "plan-guard": bindings[5], "plan-regen": bindings[6]}
         for name, expected in fixture.items():
             self.assertEqual(actual[name].event, expected["event"])
             self.assertEqual(actual[name].matcher, expected["matcher"])

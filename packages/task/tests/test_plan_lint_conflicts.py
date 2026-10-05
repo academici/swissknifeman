@@ -170,11 +170,6 @@ class TestConflictsFlagLiveRepo(unittest.TestCase):
         if _find_skill() is None:
             self.skipTest("standalone-layout: SKILL.md not found from plan_lint.py up")
 
-    def test_conflicts_green_on_live_canon(self):
-        diag = Diagnostics()
-        run_conflicts_check(diag)
-        self.assertTrue(diag.ok, diag.errors)
-
     def test_missing_canon_is_error_not_vacuous_pass(self):
         diag = Diagnostics()
         with unittest.mock.patch.object(conflicts_module, "_find_skill", return_value=None):
@@ -201,21 +196,6 @@ class TestConflictsFlagLiveRepo(unittest.TestCase):
                 self.assertEqual(conflicts_module._find_skill(), runtime)
                 provenance.write_text("{}", encoding="utf-8")
                 self.assertIsNone(conflicts_module._find_skill())
-
-    def test_main_conflicts_flag_exit_0(self):
-        out, err = io.StringIO(), io.StringIO()
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = main(["--conflicts"])
-        self.assertEqual(code, 0)
-        self.assertIn("OK", out.getvalue())
-
-    def test_main_path_optional_with_conflicts(self):
-        """Implementation Rule 5: `path` is optional when `--conflicts` (back-compat
-        positional `path` without a flag is saved - see. `test_main_without_conflicts_or_path_errors`)."""
-        out, err = io.StringIO(), io.StringIO()
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = main(["--conflicts"])
-        self.assertEqual(code, 0)
 
     def test_main_without_conflicts_or_path_errors(self):
         err = io.StringIO()

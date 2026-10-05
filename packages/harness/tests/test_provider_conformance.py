@@ -100,7 +100,7 @@ class ProviderConformanceTests(unittest.TestCase):
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
         self.assertEqual(observed, expected)
-        self.assertEqual(len(report["surface_map"]), 100)
+        self.assertEqual(len(report["surface_map"]), 104)
         self.assertIn({"category": "activation", "provider": "claude-code",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44"},
@@ -173,13 +173,13 @@ class ProviderConformanceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory)
             install = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
-                       "--terminal-admission", "on", "--trusted", "--target", str(repository)]
+                       "--plan-guard", "strict", "--trusted", "--target", str(repository)]
             seeded = subprocess.run(install, cwd=repository, text=True, capture_output=True)
             self.assertEqual(seeded.returncode, 0, seeded.stderr)
             protected = tuple(path for path in repository.rglob("*") if path.is_file())
             before = {path: path.read_bytes() for path in protected}
             command = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
-                       "--terminal-admission", "on", "--trusted", "--dry-run", "--target"]
+                       "--plan-guard", "strict", "--trusted", "--dry-run", "--target"]
             relative = subprocess.run(command + ["."], cwd=repository, text=True,
                                       capture_output=True, check=False)
             absolute = subprocess.run(command + [str(repository)], cwd=repository, text=True,

@@ -1556,7 +1556,7 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes,
 
 
 def _codex_native_launch_rule(mapping: ProviderCommandMapping) -> str:
-    """Return the mandatory native launch contract for generated plan runtimes."""
+    """Return the native launch format for generated plan runtimes."""
     classes = dict(mapping.class_selectors)
     efforts = dict(mapping.effort_selectors)
     class_routes = ", ".join(
@@ -1565,105 +1565,38 @@ def _codex_native_launch_rule(mapping: ProviderCommandMapping) -> str:
         f"{name}={efforts[name][0]}" for name in EFFORTS)
     return f'''## Native Codex launch-block — required only at a real user-facing boundary
 
-This generated runtime is the Codex provider projection. Render only the Codex-native launch;
-never copy Claude Code slash syntax as the executable invocation and never print both providers.
-`$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When the typed Context is `continue-root`, keep executing the compatible ready successor within
-the owner-authorized scope in this root. If that scope is complete, report the exact successor as a
-recommendation for this chat; a final answer does not require a new `codex` process. A command, phase, directory, local repair, or ordinary test failure is not a session
-boundary.
+This generated runtime is the Codex provider projection. `$ task:…` runs inside the **current**
+Codex session; never copy Claude Code slash syntax. Continue ready work of the requested scope in
+this session: an item, a phase or a failed test is not a session boundary.
 
-At a fresh-session boundary, keep Batch/Model/Thinking/Context/The bottom line in the metadata table,
-but never put the command in a table
-cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
-block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
-and sandbox:
+Only when the owner asks for a new session, print `**Native Codex command:**` and one fenced `bash`
+line that pins the repository cwd, the model and effort mapped from the next item's route, approval
+policy and sandbox (never put the command in a table cell):
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
 
-Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
-every continued line except the last with `\\`; never rely on Markdown visual wrapping.
-
-**Final-response guard:** continue compatible work inside the admitted owner scope. At an actual
-chat stop, include the exact shared receipt recommendation even when no terminal-admission lease
-is installed. `scope-complete` retains `continue-root`; it does not authorize the successor or
-require a fresh launch. An explicit new-session request updates the persisted decision to
-`cold-start-root: owner-requested-new-session` with a fresh post-close checkpoint. Then include the
-copyable native Codex block after the metadata table. Waiting continuations retain the exact gate;
-never present them as an unconditional command to run now. A completed objective needs no invented
-successor. Render only the active provider.
-
-Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
-do not reuse the preceding session's route. Current Codex mapping: {class_routes};
-{effort_routes}. At a fresh-session boundary, keep the provider-neutral Next too; its
-`$ task:…` form alone or an unpinned `codex` command is not a native fresh launch.
+Current Codex mapping: {class_routes}; {effort_routes}.
 
 '''
 
 
 def _codex_current_route_rule(record: CommandRecord) -> str:
-    """Bind every plan command's route to Codex's current chat state."""
-    invocation = f"$ {record.command_id} <arguments>"
+    """Tell Codex where the Task package root (and so ``plan.py``) lives."""
     task_root = codex_task_plugin_root_expression()
-    if record.command_id == "task:plan-design":
-        return '''## Codex design route
+    return f'''## Codex Task root — provider-specific
 
-Use the current provider route once; honor the requested design budget. Design-only Markdown
-does not require execution admission, a durable execution start, or a terminal-admission lease.
-Use `plan-work.py design-context` and `finalize-design` for compact context and generated carriers.
-Do not capture execution route proof or load raw five-carrier snapshots merely to author a phase.
-Fixed design routing is frontier/high; diagnose an unrequested cost overshoot before authoring.
-
-'''
-    context_rule = ""
-    if record.command_id == "task:plan-run":
-        context_rule = '''
-## Codex snapshot transport guard — provider-specific
-
-Use `plan-work.py prepare` for the compact execution capsule. Its runtime validates the immutable
-five-carrier snapshot internally; do not transport full plan/phase/bundle/state into model context.
-`PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` remain real errors, not prompts to reread
-everything. Open a full carrier only for a named ambiguity or repair diagnostic.
-
-'''
-    return f'''## Codex current-route binding — provider-specific
-
-Before the first product-journal mutation, capture the effective route for this exact command:
+The Task package root is the installed Codex plugin:
 
 ```bash
 export TASK_CODEX_PLUGIN_ROOT="{task_root}"
-export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="${{TASK_CODEX_PLUGIN_ROOT}}/lib:${{TASK_CODEX_PLUGIN_ROOT}}/../.." \
-  python3 -m task.route_evidence_codex capture \
-  --expected-invocation '{invocation}' --expected-cwd <repo-cwd>)"
 ```
 
-Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
-cwd. A non-zero exit is `ROUTE-UNVERIFIABLE`; do not start or mutate the product item.
+`plan.py` means `python3 "$TASK_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
+`--actor codex/<model>/<reasoning effort>` from this session's settings.
 
-For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
-`CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete
-model, reasoning effort, cwd, approval policy, sandbox policy, and the exact current Task
-prompt. The resulting actual-route record carries `source="provider-thread-state"` and
-`source_version="codex-turn-context-v1"`.
-
-This path is valid both after a full native launch and after the Codex clear command, which
-starts a fresh chat inside the same CLI process. A model or reasoning change before product
-journal start is therefore checked from the current chat state, never from stale process argv.
-If persisted thread state is genuinely absent, exact ancestor argv remains a compatibility
-fallback with `source="cli-flag"`. Malformed/mismatched thread state fails closed; config,
-doctor output, actor prose, and self-attestation remain forbidden substitutes.
-
-This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
-command below. The projected contract snippets consume exactly
-`json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])`; do not recreate route evidence from
-placeholders, `codex doctor`, configuration, or agent prose. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
-its private-rollout prohibition forbids manual probing but not this validated adapter-owned
-read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
-evidence.
-
-''' + context_rule
+'''
 
 
 def _project_codex_runtime_tokens(text: str) -> str:

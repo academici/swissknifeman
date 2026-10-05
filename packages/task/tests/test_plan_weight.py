@@ -160,16 +160,6 @@ class TestMandatoryPath(unittest.TestCase):
             self.skipTest(f"no {path} — standalone-layout")
         return path.read_text(encoding="utf-8")
 
-    def test_v2_literals_present_in_order(self):
-        text = self.plan_run_text()
-        positions = []
-        for literal in V2_MANDATORY_PATH_LITERALS:
-            idx = text.find(literal)
-            self.assertNotEqual(idx, -1, f"literal v2 §1 «{literal}» disappeared from plan-run.md")
-            positions.append(idx)
-        self.assertEqual(positions, sorted(positions),
-                         "required path order v2 in plan-run.md changed")
-
 
 class TestLayoutAwareMeasurement(MeasurerTestCase):
     def test_v2_path_excludes_handoff(self):

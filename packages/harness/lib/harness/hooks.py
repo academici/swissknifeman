@@ -24,6 +24,7 @@ MEM_MODES = ("file", "federation", "agentmemory", "off")
 ROUTER_MODES = ("propose", "auto_dispatch", "off")
 RUNREPORT_MODES = ("on", "off")
 PACKGUARD_MODES = ("off", "warn", "strict")
+PLANREGEN_MODES = ("off", "on")
 CHANGELOGGATE_MODES = ("off", "warn", "strict")
 PLANSDIR_DEFAULT = "plans"
 STATUSLINE_MODES = ("context", "off")
@@ -92,7 +93,8 @@ def _claude_lifecycle_bindings():
         "lifecycle.review-gate": LifecycleBinding("lifecycle.review-gate", "native", "global-hook", "SubagentStop", "", "~/.claude/hooks/review-gate/review-gate.sh"),
         "lifecycle.daemon-safety": LifecycleBinding("lifecycle.daemon-safety", "native", "global-hook", "PreToolUse", "Bash", "~/.claude/hooks/daemon-safety/block-daemon-ops.sh"),
         "lifecycle.git-guardrails": LifecycleBinding("lifecycle.git-guardrails", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
-        "lifecycle.terminal-admission": LifecycleBinding("lifecycle.terminal-admission", "native", "trusted-project-stop", "Stop", "", "terminal-admission.py", "TERMINAL_ADMISSION=off"),
+        "lifecycle.plan-guard": LifecycleBinding("lifecycle.plan-guard", "native", "project-settings", "PreToolUse", "Edit|Write|MultiEdit", "python3 ~/.claude/hooks/plan-guard/plan-guard.py", "MODE=off"),
+        "lifecycle.plan-regen": LifecycleBinding("lifecycle.plan-regen", "native", "project-settings", "PostToolUse", "Edit|Write|MultiEdit", "python3 ~/.claude/hooks/plan-regen/plan-regen.py", "MODE=off"),
         "security.safe-dirs": LifecycleBinding("security.safe-dirs", "native", "embedded-in-auto-approval", "PreToolUse", "Bash", "~/.claude/hooks/auto-approve/lib/safedirs.py"),
         "context.observer": LifecycleBinding("context.observer", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
         "context.output-style": LifecycleBinding("context.output-style", "native", "new-session", handler="outputStyle", kill_switch="outputStyle=off"),
@@ -248,8 +250,8 @@ _CURSOR_HANDLER_COMMAND_PREFIX = ('python3 "${CURSOR_PROJECT_DIR:-.}/.cursor/hoo
                                   '--surface ')
 _CURSOR_ENFORCEMENT_SURFACES = frozenset((
     "security.safe-dirs", "lifecycle.daemon-safety", "lifecycle.git-guardrails",
-    "lifecycle.changelog-gate", "lifecycle.pack-guard", "lifecycle.review-gate",
-    "lifecycle.terminal-admission",
+    "lifecycle.changelog-gate", "lifecycle.pack-guard", "lifecycle.plan-guard",
+    "lifecycle.review-gate",
 ))
 
 
@@ -438,8 +440,7 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
-            mode = value if value in allowed else "off"
+            mode = value if value in _GATE_MODES else "off"
     return mode
 
 
@@ -877,56 +878,31 @@ def _review_gate(payload):
                            state_key=state_key, message=followup)
 
 
-def _terminal_admission_followup(reason):
-    templates = {
-        "TASK_OPEN_RUN_FINAL_FORBIDDEN": ("Terminal admission denied: an open Task run for this session is still in progress. "
-                                          "Continue the active plan item and retry stop after it reaches a terminal state."),
-        "TASK_WORKSET_INCOMPLETE": ("Terminal admission denied: the active Task workset is incomplete for this session. "
-                                    "Finish the next required workset members, then retry stop."),
-        "TASK_FINAL_STATE_UNAVAILABLE": ("Terminal admission denied: Task final-state evidence is unavailable. "
-                                         "Restore plan journals/receipts and retry stop."),
-        "TERMINAL_ADMISSION_CONTEXT_INVALID": ("Terminal admission denied: stop payload misses session context. "
-                                               "Retry from the same Task session context."),
-    }
-    prefix = templates.get(reason, "Terminal admission denied: Task lease state is not ready for final completion.")
-    return f"{prefix} (reason={reason})"
-
-
-def _terminal_admission_decision(payload, cwd):
-    conversation_id = _conversation_id(payload)
-    if conversation_id is None:
-        return {"final_allowed": False, "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"}
+def _plan_guard(payload):
+    cwd = _payload_cwd(payload)
+    mode = _read_mode(cwd, "plan-guard.env.ini")
+    if mode == "off":
+        return
     root = _find_repo_root(payload)
     if root is None:
-        return {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
-    task_lib = os.path.join(root, "packages", "task", "lib")
+        _emit_tool_deny("lifecycle.plan-guard: refusing command - harness core unreachable")
+        sys.exit(0)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
-        if task_lib not in sys.path:
-            sys.path.insert(0, task_lib)
-        from task import terminal_admission
-        terminal_admission.validate_contracts()
-        return terminal_admission.pre_final_open_runs(Path(cwd), conversation_id)
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_plan_guard_core import MESSAGE, plan_guard_hit
+        hit = plan_guard_hit(payload.get("tool_input"), cwd)
     except Exception:
-        return {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
-
-
-def _terminal_admission(payload):
-    cwd = _payload_cwd(payload)
-    if _read_mode(cwd, "terminal-admission.env.ini") != "on":
+        _emit_tool_deny("lifecycle.plan-guard: refusing command - policy core failed")
+        sys.exit(0)
+    if hit is None:
         return
-    if payload.get("status") != "completed":
-        return
-    decision = _terminal_admission_decision(payload, cwd)
-    state_key = _conversation_id(payload) or "noconversation"
-    state_path = _followup_state_path(cwd, "terminal-admission.state.json")
-    if decision.get("final_allowed"):
-        _clear_followup_state(state_path, state_key)
-        return
-    reason = str(decision.get("reason") or "TERMINAL_ADMISSION_REFUSED")
-    followup = _terminal_admission_followup(reason)
-    _emit_followup_message(payload, cwd=cwd,
-                           state_filename="terminal-admission.state.json",
-                           state_key=state_key, message=followup)
+    reason = "plan-guard: %s: %s" % (MESSAGE, hit)
+    if mode == "strict":
+        _emit_tool_deny(reason)
+        sys.exit(0)
+    _emit_tool_allow(agent_message="[warn] " + reason)
 
 
 def _first_command_token(command):
@@ -1143,8 +1119,8 @@ _HANDLERS = {
     "lifecycle.git-guardrails": _git_guardrails,
     "lifecycle.changelog-gate": _changelog_gate,
     "lifecycle.pack-guard": _pack_guard,
+    "lifecycle.plan-guard": _plan_guard,
     "lifecycle.review-gate": _review_gate,
-    "lifecycle.terminal-admission": _terminal_admission,
     "lifecycle.command-log": _command_log,
     "lifecycle.tool-telemetry": _tool_telemetry,
     "lifecycle.run-report": _run_report,
@@ -1156,9 +1132,9 @@ _SURFACE_EVENTS = {
     "lifecycle.git-guardrails": "beforeShellExecution",
     "lifecycle.changelog-gate": "beforeShellExecution",
     "lifecycle.pack-guard": "preToolUse",
+    "lifecycle.plan-guard": "preToolUse",
     "lifecycle.tool-telemetry": "preToolUse",
     "lifecycle.review-gate": "subagentStop",
-    "lifecycle.terminal-admission": "stop",
     "lifecycle.command-log": "afterShellExecution",
     "lifecycle.run-report": "sessionEnd",
 }
@@ -1279,12 +1255,12 @@ _SURFACE_EVENTS = {{
     "lifecycle.router": "UserPromptSubmit",
     "lifecycle.memory": "SessionStart",
     "lifecycle.pack-guard": "PreToolUse",
+    "lifecycle.plan-guard": "PreToolUse",
     "lifecycle.changelog-gate": "PreToolUse",
     "lifecycle.review-gate": "SubagentStop",
     "security.safe-dirs": "PreToolUse",
     "lifecycle.daemon-safety": "PreToolUse",
     "lifecycle.git-guardrails": "PreToolUse",
-    "lifecycle.terminal-admission": "Stop",
 }}
 _EVENT_FIELDS = {{
     "SessionStart": ("source",),
@@ -1316,8 +1292,7 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
-            mode = value if value in allowed else "off"
+            mode = value if value in _GATE_MODES else "off"
     return mode
 _ROUTER_CATALOG = {router_catalog_literal}
 _ROUTER_HINT_TEMPLATE = {hint_template!r}
@@ -1887,49 +1862,31 @@ def _git_guardrails(payload):
     print(json.dumps({{"systemMessage": "[warn] " + reason}}))
 
 
-def _terminal_admission(payload):
-    """Thin Stop adapter: P4.1 remains the only terminal-policy owner."""
+def _plan_guard(payload):
     cwd = payload.get("cwd")
-    if _read_mode(cwd, "terminal-admission.env.ini") != "on" or not cwd:
+    mode = _read_mode(cwd, "plan-guard.env.ini")
+    if mode == "off" or not cwd:
         return
-    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
-    if cli.is_file():
-        try:
-            result = subprocess.run([sys.executable, str(cli), "check-open", "--project-root", cwd,
-                                     "--provider-session", str(payload.get("session_id") or "")],
-                                    cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
-            verdict = json.loads(result.stdout)
-            if not isinstance(verdict, dict) or result.returncode not in (0, 1):
-                raise ValueError("invalid pre-final result")
-        except (OSError, subprocess.TimeoutExpired, TypeError, ValueError):
-            verdict = {{"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}}
-        if not verdict.get("final_allowed"):
-            print(json.dumps({{"decision": "block", "reason": verdict.get("reason")}})); return
-    request = payload.get("terminal_admission")
-    if not isinstance(request, dict) or not request.get("applicable"):
-        return
-    required = ("plan", "subject", "command", "run_id", "task_session", "continuity_json")
-    if any(not isinstance(request.get(key), str) or not request[key] for key in required):
-        print(json.dumps({{"decision": "block", "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"}})); return
-    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
-    if not cli.is_file():
-        print(json.dumps({{"decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"}})); return
-    message = payload.get("last_assistant_message")
-    if not isinstance(message, str):
-        print(json.dumps({{"decision": "block", "reason": "TERMINAL_MESSAGE_UNAVAILABLE"}})); return
-    command = [sys.executable, str(cli), "check", "--state-dir", str(Path(cwd) / ".swissknifeman/terminal-admission"),
-               "--plan", request["plan"], "--subject", request["subject"], "--command", request["command"],
-               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", _PROVIDER_ID,
-               "--provider-session", payload.get("session_id", ""), "--turn-id", payload.get("turn_id", ""),
-               "--continuity-json", request["continuity_json"], "--message", message,
-               "--plan-dir", str(Path(cwd) / "plans" / request["plan"])]
-    result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.plan-guard: refusing command — harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
-        verdict = json.loads(result.stdout)
-    except (TypeError, ValueError):
-        verdict = {{"final_allowed": False, "reason": "TERMINAL_ADMISSION_VERIFIER_FAILED"}}
-    if not verdict.get("final_allowed"):
-        print(json.dumps({{"decision": "block", "reason": str(verdict.get("reason") or "TERMINAL_ADMISSION_REFUSED")}}))
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_plan_guard_core import MESSAGE, plan_guard_hit
+        hit = plan_guard_hit(payload.get("tool_input"), cwd)
+    except Exception:
+        sys.stderr.write("lifecycle.plan-guard: refusing command — policy core failed\\n")
+        sys.exit(2)
+    if hit is None:
+        return
+    msg = "plan-guard: " + MESSAGE + ": " + hit
+    if mode == "strict":
+        sys.stderr.write(msg + "\\n")
+        sys.exit(2)
+    print(json.dumps({{"systemMessage": "[warn] " + msg}}))
 
 
 _HANDLERS = {{
@@ -1940,12 +1897,12 @@ _HANDLERS = {{
     "lifecycle.router": _router,
     "lifecycle.memory": _memory,
     "lifecycle.pack-guard": _pack_guard,
+    "lifecycle.plan-guard": _plan_guard,
     "lifecycle.changelog-gate": _changelog_gate,
     "lifecycle.review-gate": _review_gate,
     "security.safe-dirs": _safe_dirs,
     "lifecycle.daemon-safety": _daemon_safety,
     "lifecycle.git-guardrails": _git_guardrails,
-    "lifecycle.terminal-admission": _terminal_admission,
 }}
 
 parser = argparse.ArgumentParser()
@@ -2284,6 +2241,27 @@ def block_pack_guard(target, mode, settings_file, dry):
         print(f"  hook pack-guard is already registered in {f}")
 
 
+def block_plan_guard(target, mode, settings_file, dry):
+    """Register the Claude PreToolUse guard for files generated by plan.py."""
+    print(f"plan-guard: {mode or 'pass'}")
+    if not mode:
+        return
+    if mode not in PACKGUARD_MODES:
+        die(f"unknown mode plan-guard: {mode} ({'|'.join(PACKGUARD_MODES)})")
+    write_text(target / ".claude" / "plan-guard.env.ini", f"MODE={mode}\n", dry)
+    if mode == "off":
+        return
+    settings, f = load_settings(target, settings_file)
+    cmd = "python3 ~/.claude/hooks/plan-guard/plan-guard.py"
+    added = False
+    for matcher in ("Edit", "Write", "MultiEdit"):
+        added |= add_hook(settings, "PreToolUse", matcher, cmd)
+    if added:
+        write_json(f, settings, dry)
+    else:
+        print(f"  hook plan-guard is already registered in {f}")
+
+
 def block_changelog_gate(target, mode, settings_file, dry):
     """Internal documentation."""
     print(f"changelog-gate: {mode or 'pass'}")
@@ -2407,13 +2385,15 @@ _CODEX_OBSERVABILITY_SURFACES = (
     "lifecycle.tool-telemetry",
     "lifecycle.run-report",
 )
-_CODEX_GATE_FLAGS = ("pack_guard", "changelog_gate", "review_gate", "git_guardrails")
+_CODEX_GATE_FLAGS = ("pack_guard", "plan_guard", "changelog_gate", "review_gate", "git_guardrails")
 _CODEX_GATE_SURFACE = {
-    "pack_guard": "lifecycle.pack-guard", "changelog_gate": "lifecycle.changelog-gate",
+    "pack_guard": "lifecycle.pack-guard", "plan_guard": "lifecycle.plan-guard",
+    "changelog_gate": "lifecycle.changelog-gate",
     "review_gate": "lifecycle.review-gate", "git_guardrails": "lifecycle.git-guardrails",
 }
 _CODEX_GATE_ENV_FILE = {
-    "lifecycle.pack-guard": "pack-guard.env.ini", "lifecycle.changelog-gate": "changelog-gate.env.ini",
+    "lifecycle.pack-guard": "pack-guard.env.ini", "lifecycle.plan-guard": "plan-guard.env.ini",
+    "lifecycle.changelog-gate": "changelog-gate.env.ini",
     "lifecycle.review-gate": "review-gate.env.ini", "lifecycle.git-guardrails": "git-guardrails.env.ini",
 }
 
@@ -2443,16 +2423,9 @@ def _block_codex_gates(env, target, opts, *, provider="codex"):
                   opts["dry_run"])
         if mode != "off":
             surfaces.append(surface_id)
-    if opts["terminal_admission"]:
-        if opts["terminal_admission"] not in ("on", "off"):
-            die("unknown mode terminal-admission: on|off")
-        write_text(target / state_dir / "terminal-admission.env.ini",
-                   f"MODE={opts['terminal_admission']}\n", opts["dry_run"])
-        if opts["terminal_admission"] == "on":
-            surfaces.append("lifecycle.terminal-admission")
     if not surfaces:
         die(f"provider {provider} needs at least one of: --observer / --pack-guard off|warn|strict / "
-            "--changelog-gate off|warn|strict / --review-gate off|warn|strict / "
+            "--plan-guard off|warn|strict / --changelog-gate off|warn|strict / --review-gate off|warn|strict / "
             "--git-guardrails off|warn|strict / --safe-dirs / --daemon-safety")
     for surface in _CODEX_OBSERVABILITY_SURFACES:
         if surface not in surfaces:
@@ -2516,6 +2489,15 @@ def _block_cursor_gates(env, target, opts):
                    opts["dry_run"])
         if pack_mode != "off":
             surfaces.append("lifecycle.pack-guard")
+    plan_mode = opts["plan_guard"]
+    if plan_mode:
+        if plan_mode not in PACKGUARD_MODES:
+            die("unknown mode --plan-guard: "
+                + f"{plan_mode} ({'|'.join(PACKGUARD_MODES)})")
+        write_text(target / ".cursor" / "plan-guard.env.ini", f"MODE={plan_mode}\n",
+                   opts["dry_run"])
+        if plan_mode != "off":
+            surfaces.append("lifecycle.plan-guard")
     review_mode = opts["review_gate"]
     if review_mode:
         if review_mode not in PACKGUARD_MODES:
@@ -2525,38 +2507,39 @@ def _block_cursor_gates(env, target, opts):
                    opts["dry_run"])
         if review_mode != "off":
             surfaces.append("lifecycle.review-gate")
-    terminal_mode = opts["terminal_admission"]
-    if terminal_mode:
-        if terminal_mode not in ("on", "off"):
-            die("unknown mode --terminal-admission: on|off")
-        write_text(target / ".cursor" / "terminal-admission.env.ini",
-                   f"MODE={terminal_mode}\n", opts["dry_run"])
-        if terminal_mode == "on":
-            surfaces.append("lifecycle.terminal-admission")
     block_cursor_lifecycle(env, target, surfaces=tuple(surfaces),
                            trusted=bool(opts["trusted"]), repair=bool(opts["repair"]),
                            dry=bool(opts["dry_run"]))
 
 
-def block_terminal_admission(target, mode, settings_file, dry):
-    """Register the opt-in Claude Stop adapter without making it a global policy."""
-    if mode not in ("on", "off"):
-        die("unknown mode terminal-admission: on|off")
-    write_text(target / ".claude" / "terminal-admission.env.ini", f"MODE={mode}\n", dry)
+def block_plan_regen(target, mode, settings_file, dry):
+    """Register the Claude PostToolUse hook that checks and re-renders a plan after a JSON edit."""
+    print(f"plan-regen: {mode or 'pass'}")
+    if not mode:
+        return
+    if mode not in PLANREGEN_MODES:
+        die(f"unknown mode plan-regen: {mode} ({'|'.join(PLANREGEN_MODES)})")
+    write_text(target / ".claude" / "plan-regen.env.ini", f"MODE={mode}\n", dry)
     if mode == "off":
         return
-    settings, path = load_settings(target, settings_file)
-    command = 'python3 ${CLAUDE_PROJECT_DIR}/packages/harness/configs/claude-code/hooks/terminal-admission/terminal-admission.py'
-    if add_hook(settings, "Stop", "", command):
-        write_json(path, settings, dry)
+    settings, f = load_settings(target, settings_file)
+    cmd = "python3 ~/.claude/hooks/plan-regen/plan-regen.py"
+    added = False
+    for matcher in ("Edit", "Write", "MultiEdit"):
+        added |= add_hook(settings, "PostToolUse", matcher, cmd)
+    if added:
+        write_json(f, settings, dry)
+    else:
+        print(f"  hook plan-regen is already registered in {f}")
 
 
 def cmd_hooks(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
         "--router": "str", "--run-report": "str", "--pack-guard": "str",
+        "--plan-guard": "str", "--plan-regen": "str",
         "--changelog-gate": "str", "--review-gate": "str", "--git-guardrails": "str",
-        "--safe-dirs": "bool", "--daemon-safety": "bool", "--terminal-admission": "str",
+        "--safe-dirs": "bool", "--daemon-safety": "bool",
         "--output-style": "str", "--plans-dir": "str", "--statusline": "str",
         "--file": "str",
         "--provider": "str", "--observer": "bool", "--trusted": "bool",
@@ -2568,19 +2551,20 @@ def cmd_hooks(env, argv):
               f"[--router {'|'.join(ROUTER_MODES)}] "
               f"[--run-report {'|'.join(RUNREPORT_MODES)}] "
               f"[--pack-guard {'|'.join(PACKGUARD_MODES)}] "
+              f"[--plan-guard {'|'.join(PACKGUARD_MODES)}] "
+              f"[--plan-regen {'|'.join(PLANREGEN_MODES)}] "
               f"[--changelog-gate {'|'.join(CHANGELOGGATE_MODES)}] "
               "[--output-style lean|off] "
               "[--plans-dir plans|off] "
               f"[--statusline {'|'.join(STATUSLINE_MODES)}] "
-              "[--provider codex|grok [--observer] [--pack-guard off|warn|strict] "
+              "[--provider codex|grok [--observer] [--pack-guard off|warn|strict] [--plan-guard off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
-              "[--terminal-admission on|off] | --provider cursor [--safe-dirs] "
+              "| --provider cursor [--safe-dirs] "
               "[--memory BRAIN:maind|file|federation|agentmemory|off] "
               "[--daemon-safety] [--git-guardrails off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--pack-guard off|warn|strict] "
-              "[--review-gate off|warn|strict] "
-              "[--terminal-admission on|off] "
+              "[--plan-guard off|warn|strict] [--review-gate off|warn|strict] "
               "[--trusted] [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
@@ -2602,11 +2586,12 @@ def cmd_hooks(env, argv):
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]
-            or opts["output_style"] or opts["plans_dir"] or opts["statusline"] or opts["terminal_admission"]):
+            or opts["output_style"] or opts["plans_dir"] or opts["statusline"]
+            or opts["plan_guard"] or opts["plan_regen"]):
         die("needs at least one of: --auto-approve MODE / --memory BRAIN:MODE / "
             "--router MODE / --run-report on|off / --pack-guard off|warn|strict / "
-            "--changelog-gate off|warn|strict / "
-            "--output-style lean|off / --plans-dir plans|off / "
+            "--changelog-gate off|warn|strict / --plan-guard off|warn|strict / "
+            "--plan-regen on|off / --output-style lean|off / --plans-dir plans|off / "
             "--statusline context|off / --global")
     settings_file = opts["file"] or "settings.json"
     if opts["auto_approve"]:
@@ -2628,5 +2613,7 @@ def cmd_hooks(env, argv):
         block_plans_dir(target, opts["plans_dir"], settings_file, opts["dry_run"])
     if opts["statusline"]:
         block_statusline(target, opts["statusline"], opts["dry_run"])
-    if opts["terminal_admission"]:
-        block_terminal_admission(target, opts["terminal_admission"], settings_file, opts["dry_run"])
+    if opts["plan_guard"]:
+        block_plan_guard(target, opts["plan_guard"], settings_file, opts["dry_run"])
+    if opts["plan_regen"]:
+        block_plan_regen(target, opts["plan_regen"], settings_file, opts["dry_run"])

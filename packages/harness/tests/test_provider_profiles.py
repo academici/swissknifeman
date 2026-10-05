@@ -30,7 +30,7 @@ class ProviderProfilesTests(unittest.TestCase):
     def test_exact_catalog_and_common_schema_are_provider_free(self):
         self.assertEqual(tuple(profile.id for profile in self.catalog.profiles),
                          ("observe", "workspace-contained", "trusted-full-access"))
-        self.assertEqual(len(self.catalog.surfaces), 25)
+        self.assertEqual(len(self.catalog.surfaces), 26)
         text = CATALOG.read_text(encoding="utf-8")
         for token in (".claude", ".codex", "PreToolUse", "approval_policy", "sandbox_mode"):
             self.assertNotIn(token, text)

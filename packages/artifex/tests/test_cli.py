@@ -21,7 +21,7 @@ class CliTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.repo = Path(self.temp.name) / "repo"; self.repo.mkdir()
         self.plan = self.repo / "plan"; (self.plan / "artifacts/P1").mkdir(parents=True)
-        (self.plan / "plan.md").write_text("# plan\n", encoding="utf-8")
+        (self.plan / "plan.json").write_text("{}", encoding="utf-8")
         (self.plan / "artifacts/P1/supervisor-run-cases-v1.json").write_bytes(PLAN_SOURCE.read_bytes())
         self.runs = self.plan / "runs"; self.mandate = self.plan / "mandate.json"; self.mandate.write_text("{}", encoding="utf-8")
 

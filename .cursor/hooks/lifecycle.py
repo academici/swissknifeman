@@ -100,8 +100,7 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
-            mode = value if value in allowed else "off"
+            mode = value if value in _GATE_MODES else "off"
     return mode
 
 
@@ -539,56 +538,31 @@ def _review_gate(payload):
                            state_key=state_key, message=followup)
 
 
-def _terminal_admission_followup(reason):
-    templates = {
-        "TASK_OPEN_RUN_FINAL_FORBIDDEN": ("Terminal admission denied: an open Task run for this session is still in progress. "
-                                          "Continue the active plan item and retry stop after it reaches a terminal state."),
-        "TASK_WORKSET_INCOMPLETE": ("Terminal admission denied: the active Task workset is incomplete for this session. "
-                                    "Finish the next required workset members, then retry stop."),
-        "TASK_FINAL_STATE_UNAVAILABLE": ("Terminal admission denied: Task final-state evidence is unavailable. "
-                                         "Restore plan journals/receipts and retry stop."),
-        "TERMINAL_ADMISSION_CONTEXT_INVALID": ("Terminal admission denied: stop payload misses session context. "
-                                               "Retry from the same Task session context."),
-    }
-    prefix = templates.get(reason, "Terminal admission denied: Task lease state is not ready for final completion.")
-    return f"{prefix} (reason={reason})"
-
-
-def _terminal_admission_decision(payload, cwd):
-    conversation_id = _conversation_id(payload)
-    if conversation_id is None:
-        return {"final_allowed": False, "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"}
+def _plan_guard(payload):
+    cwd = _payload_cwd(payload)
+    mode = _read_mode(cwd, "plan-guard.env.ini")
+    if mode == "off":
+        return
     root = _find_repo_root(payload)
     if root is None:
-        return {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
-    task_lib = os.path.join(root, "packages", "task", "lib")
+        _emit_tool_deny("lifecycle.plan-guard: refusing command - harness core unreachable")
+        sys.exit(0)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
-        if task_lib not in sys.path:
-            sys.path.insert(0, task_lib)
-        from task import terminal_admission
-        terminal_admission.validate_contracts()
-        return terminal_admission.pre_final_open_runs(Path(cwd), conversation_id)
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_plan_guard_core import MESSAGE, plan_guard_hit
+        hit = plan_guard_hit(payload.get("tool_input"), cwd)
     except Exception:
-        return {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
-
-
-def _terminal_admission(payload):
-    cwd = _payload_cwd(payload)
-    if _read_mode(cwd, "terminal-admission.env.ini") != "on":
+        _emit_tool_deny("lifecycle.plan-guard: refusing command - policy core failed")
+        sys.exit(0)
+    if hit is None:
         return
-    if payload.get("status") != "completed":
-        return
-    decision = _terminal_admission_decision(payload, cwd)
-    state_key = _conversation_id(payload) or "noconversation"
-    state_path = _followup_state_path(cwd, "terminal-admission.state.json")
-    if decision.get("final_allowed"):
-        _clear_followup_state(state_path, state_key)
-        return
-    reason = str(decision.get("reason") or "TERMINAL_ADMISSION_REFUSED")
-    followup = _terminal_admission_followup(reason)
-    _emit_followup_message(payload, cwd=cwd,
-                           state_filename="terminal-admission.state.json",
-                           state_key=state_key, message=followup)
+    reason = "plan-guard: %s: %s" % (MESSAGE, hit)
+    if mode == "strict":
+        _emit_tool_deny(reason)
+        sys.exit(0)
+    _emit_tool_allow(agent_message="[warn] " + reason)
 
 
 def _first_command_token(command):
@@ -805,8 +779,8 @@ _HANDLERS = {
     "lifecycle.git-guardrails": _git_guardrails,
     "lifecycle.changelog-gate": _changelog_gate,
     "lifecycle.pack-guard": _pack_guard,
+    "lifecycle.plan-guard": _plan_guard,
     "lifecycle.review-gate": _review_gate,
-    "lifecycle.terminal-admission": _terminal_admission,
     "lifecycle.command-log": _command_log,
     "lifecycle.tool-telemetry": _tool_telemetry,
     "lifecycle.run-report": _run_report,
@@ -818,9 +792,9 @@ _SURFACE_EVENTS = {
     "lifecycle.git-guardrails": "beforeShellExecution",
     "lifecycle.changelog-gate": "beforeShellExecution",
     "lifecycle.pack-guard": "preToolUse",
+    "lifecycle.plan-guard": "preToolUse",
     "lifecycle.tool-telemetry": "preToolUse",
     "lifecycle.review-gate": "subagentStop",
-    "lifecycle.terminal-admission": "stop",
     "lifecycle.command-log": "afterShellExecution",
     "lifecycle.run-report": "sessionEnd",
 }

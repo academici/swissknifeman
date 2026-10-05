@@ -2,5 +2,5 @@
 # Plan files — read this first
 
 JSON is the source of truth for this plan: change it only through `python3 <task>/scripts/plan.py`.
-Generated files — never edit them and do not read them for work: index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md, context/, unit brief.md files, _v2/.
+Generated files — never edit them and do not read them for work: index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md, context/, unit brief.md files.
 Common verbs: `plan.py next <plan>` · `plan.py show <plan> [ref]` · `plan.py set <plan> <ref> --json '<patch>'` · `plan.py check <plan>`.

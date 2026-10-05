@@ -46,13 +46,6 @@
         "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.memory"
       }
     ],
-    "stop": [
-      {
-        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.terminal-admission",
-        "failClosed": true,
-        "loop_limit": 3
-      }
-    ],
     "subagentStop": [
       {
         "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.review-gate",

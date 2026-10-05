@@ -44,8 +44,8 @@ class ProviderDocsTests(unittest.TestCase):
                          manifest_snapshot.APPROVED_CARRIER_SHA256,
                          manifest_snapshot.REGENERATION_DIAGNOSTIC)
         self.assertTrue(report["carrier_terminal_lf"])
-        self.assertEqual(sum(len(values) for values in report["contributors"].values()), 37)
-        self.assertEqual(len(set().union(*map(set, report["contributors"].values()))), 37)
+        self.assertEqual(sum(len(values) for values in report["contributors"].values()), 38)
+        self.assertEqual(len(set().union(*map(set, report["contributors"].values()))), 38)
         self.assertTrue(report["requirements"])
 
     def test_committed_outputs_are_exact_and_check_is_no_write(self):

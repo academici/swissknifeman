@@ -122,14 +122,24 @@
       "diagnostic_code": ""
     },
     {
-      "surface_id": "lifecycle.terminal-admission",
+      "surface_id": "lifecycle.plan-guard",
       "support_level": "hook-native",
-      "activation": "trusted-project-hook-review-stop",
-      "event": "Stop",
-      "matcher": "",
+      "activation": "trusted-project-hook-review-pretooluse",
+      "event": "PreToolUse",
+      "matcher": "^apply_patch$",
       "handler": "lifecycle.py",
-      "kill_switch": "TERMINAL_ADMISSION=off",
+      "kill_switch": "[hooks].enabled=false",
       "diagnostic_code": ""
+    },
+    {
+      "surface_id": "lifecycle.plan-regen",
+      "support_level": "unsupported",
+      "activation": "none",
+      "event": "",
+      "matcher": "",
+      "handler": "",
+      "kill_switch": "",
+      "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED"
     },
     {
       "surface_id": "security.safe-dirs",

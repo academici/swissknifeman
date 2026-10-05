@@ -94,7 +94,7 @@ def _plan_protocol_projection(root: Path) -> dict[Path, bytes]:
     projection = {_PLAN_PROTOCOL_RUNTIME: runtime, _PLAN_PROTOCOL_PROVENANCE: provenance}
     # These are on-demand support files, outside native skill discovery. Copy
     # their relative layout so the standalone Task runtime never relies on CORE.
-    for directory in ("references", "snippets"):
+    for directory in ("references",):
         support = source.parent / directory
         if not support.is_dir() or support.is_symlink():
             raise FileNotFoundError(f"plan-protocol support missing: {support}")
@@ -107,9 +107,18 @@ def _plan_protocol_projection(root: Path) -> dict[Path, bytes]:
     return projection
 
 
+def _plan_protocol_stale(root: Path, projection: dict[Path, bytes]) -> tuple[Path, ...]:
+    runtime_dir = root / _PLAN_PROTOCOL_RUNTIME.parent
+    if not runtime_dir.is_dir():
+        return ()
+    return tuple(path for path in sorted(runtime_dir.rglob("*"))
+                 if path.is_file() and path.relative_to(root) not in projection)
+
+
 def _plan_protocol_runtime_drift(root: Path, projection: dict[Path, bytes]) -> tuple[Path, ...]:
-    return tuple(root / path for path, expected in projection.items()
-                 if not (root / path).is_file() or (root / path).read_bytes() != expected)
+    drift = tuple(root / path for path, expected in projection.items()
+                  if not (root / path).is_file() or (root / path).read_bytes() != expected)
+    return drift + _plan_protocol_stale(root, projection)
 
 
 def _claude_golden_projection(claude_plan) -> dict[Path, bytes]:
@@ -256,7 +265,10 @@ def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)
-    for path, contents in _plan_protocol_projection(root).items():
+    protocol_projection = _plan_protocol_projection(root)
+    for path in _plan_protocol_stale(root, protocol_projection):
+        path.unlink()
+    for path, contents in protocol_projection.items():
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)

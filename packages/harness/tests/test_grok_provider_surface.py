@@ -84,7 +84,6 @@ class GrokProviderSurfaceTests(unittest.TestCase):
         self.assertIn("_STATE_DIR = '.grok'", source)
         self.assertIn("_PROVIDER_ID = 'grok'", source)
         self.assertIn('record["provider_id"] = _PROVIDER_ID', source)
-        self.assertIn('"--provider", _PROVIDER_ID', source)
         self.assertNotIn('record["provider_id"] = "codex"', source)
         self.assertNotIn('"--provider", "codex"', source)
 

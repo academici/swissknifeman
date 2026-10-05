@@ -70,7 +70,7 @@ def _file(path: Path) -> Path:
 def _roots(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     repo = _directory(Path(args.repo_root))
     plan_root = _inside(repo, repo / args.plan_dir)
-    plan = _file(plan_root / "plan.md").parent
+    plan = _file(plan_root / "plan.json").parent
     runs = _inside(repo, repo / args.runs_root)
     if runs.exists():
         _directory(runs)

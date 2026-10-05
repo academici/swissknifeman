@@ -16,7 +16,7 @@ spec.loader.exec_module(generator)
 
 
 class PlanProtocolRuntimeTests(unittest.TestCase):
-    def test_relocated_runtime_resolves_schema_and_templates_without_skiller(self):
+    def test_relocated_runtime_resolves_references_without_skiller(self):
         projection = generator._plan_protocol_projection(ROOT)
         with tempfile.TemporaryDirectory() as directory:
             checkout = Path(directory)
@@ -28,26 +28,20 @@ class PlanProtocolRuntimeTests(unittest.TestCase):
             runtime = checkout / generator._PLAN_PROTOCOL_RUNTIME.parent
             body = (runtime / "SKILL.md").read_text()
             references = re.findall(r"\]\(([^)]+)\)", body)
-            self.assertIn("references/plan-layout-v2.md", references)
-            self.assertIn("snippets/", references)
+            self.assertIn("references/work-references.md", references)
             for reference in references:
                 self.assertTrue((runtime / reference).exists(), reference)
-            index = json.loads((runtime / "snippets/index.json").read_text())
-            for snippet in index["snippets"]:
-                self.assertTrue((runtime / "snippets" / snippet["file"]).is_file(), snippet["file"])
-            self.assertIn("Required Reads", (runtime / "references/plan-layout-v2.md").read_text())
-            for name in ("journal-template.md", "source-evidence-template.md"):
-                template = (runtime / "snippets" / name).read_text()
-                self.assertIn('PYTHONPATH="<task-package-root>/lib"', template)
-                self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", template)
+            self.assertFalse((runtime / "snippets").exists())
+            self.assertFalse((runtime / "references/plan-layout-v2.md").exists())
 
             self.assertEqual(generator._plan_protocol_runtime_drift(checkout, projection), ())
-            victim = runtime / "snippets/plan-template.md"
-            victim.write_text("stale template")
-            missing = runtime / "references/plan-layout-v2.md"
+            stale = runtime / "snippets/plan-template.md"
+            stale.parent.mkdir()
+            stale.write_text("stale template")
+            missing = runtime / "references/work-references.md"
             missing.unlink()
             self.assertEqual(set(generator._plan_protocol_runtime_drift(checkout, projection)),
-                             {victim, missing})
+                             {stale, missing})
 
     def test_committed_projection_is_complete_and_does_not_add_discovery_entries(self):
         projection = generator._plan_protocol_projection(ROOT)

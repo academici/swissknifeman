@@ -639,7 +639,8 @@ _CLAUDE_COMPAT_SURFACE_HINTS = (
     ("lifecycle.memory", "sessionstart", "", "hooks/memory/memory.sh"),
     ("lifecycle.pack-guard", "pretooluse", "", "hooks/pack-guard/pack-guard.py"),
     ("lifecycle.changelog-gate", "pretooluse", "bash", "hooks/changelog-gate/changelog-gate.py"),
-    ("lifecycle.terminal-admission", "stop", "", "terminal-admission/terminal-admission.py"),
+    ("lifecycle.plan-guard", "pretooluse", "", "hooks/plan-guard/plan-guard.py"),
+    ("lifecycle.plan-regen", "posttooluse", "", "hooks/plan-regen/plan-regen.py"),
     # safe-dirs is embedded into auto-approve on the Claude compatibility path.
     ("security.safe-dirs", "pretooluse", "bash", "auto-approve/auto-approve.sh"),
 )

@@ -1,121 +1,55 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:92975d2487c93e4ce3db31bfab8e71ca1880bc402a438ce86a9778f9e31dbd8f
+Canonical SHA-256: sha256:c56c955b46a6a907b46f5306de2bee25daa30ce809a91efd99a84846989b2de8
 Adapter: task.codex-command/1.0.17
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
-This generated runtime is the Codex provider projection. Render only the Codex-native launch;
-never copy Claude Code slash syntax as the executable invocation and never print both providers.
-`$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When the typed Context is `continue-root`, keep executing the compatible ready successor within
-the owner-authorized scope in this root. If that scope is complete, report the exact successor as a
-recommendation for this chat; a final answer does not require a new `codex` process. A command, phase, directory, local repair, or ordinary test failure is not a session
-boundary.
+This generated runtime is the Codex provider projection. `$ task:…` runs inside the **current**
+Codex session; never copy Claude Code slash syntax. Continue ready work of the requested scope in
+this session: an item, a phase or a failed test is not a session boundary.
 
-At a fresh-session boundary, keep Batch/Model/Thinking/Context/The bottom line in the metadata table,
-but never put the command in a table
-cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
-block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
-and sandbox:
+Only when the owner asks for a new session, print `**Native Codex command:**` and one fenced `bash`
+line that pins the repository cwd, the model and effort mapped from the next item's route, approval
+policy and sandbox (never put the command in a table cell):
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
 
-Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
-every continued line except the last with `\`; never rely on Markdown visual wrapping.
+Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-6-sol, frontier=gpt-6-astra; low=low, medium=medium, high=high, xhigh=xhigh.
 
-**Final-response guard:** continue compatible work inside the admitted owner scope. At an actual
-chat stop, include the exact shared receipt recommendation even when no terminal-admission lease
-is installed. `scope-complete` retains `continue-root`; it does not authorize the successor or
-require a fresh launch. An explicit new-session request updates the persisted decision to
-`cold-start-root: owner-requested-new-session` with a fresh post-close checkpoint. Then include the
-copyable native Codex block after the metadata table. Waiting continuations retain the exact gate;
-never present them as an unconditional command to run now. A completed objective needs no invented
-successor. Render only the active provider.
+## Codex Task root — provider-specific
 
-Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
-do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-6-sol, frontier=gpt-6-astra;
-low=low, medium=medium, high=high, xhigh=xhigh. At a fresh-session boundary, keep the provider-neutral Next too; its
-`$ task:…` form alone or an unpinned `codex` command is not a native fresh launch.
-
-## Codex current-route binding — provider-specific
-
-Before the first product-journal mutation, capture the effective route for this exact command:
+The Task package root is the installed Codex plugin:
 
 ```bash
 export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')"
-export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="${TASK_CODEX_PLUGIN_ROOT}/lib:${TASK_CODEX_PLUGIN_ROOT}/../.."   python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-audit <arguments>' --expected-cwd <repo-cwd>)"
 ```
 
-Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
-cwd. A non-zero exit is `ROUTE-UNVERIFIABLE`; do not start or mutate the product item.
+`plan.py` means `python3 "$TASK_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
+`--actor codex/<model>/<reasoning effort>` from this session's settings.
 
-For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
-`CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete
-model, reasoning effort, cwd, approval policy, sandbox policy, and the exact current Task
-prompt. The resulting actual-route record carries `source="provider-thread-state"` and
-`source_version="codex-turn-context-v1"`.
+Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Task package root>/scripts/plan.py`.
 
-This path is valid both after a full native launch and after the Codex clear command, which
-starts a fresh chat inside the same CLI process. A model or reasoning change before product
-journal start is therefore checked from the current chat state, never from stale process argv.
-If persisted thread state is genuinely absent, exact ancestor argv remains a compatibility
-fallback with `source="cli-flag"`. Malformed/mismatched thread state fails closed; config,
-doctor output, actor prose, and self-attestation remain forbidden substitutes.
+**Goal:** one independent verdict (GREEN / ATTENTION / RED) on a plan design or a finished phase.
 
-This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
-command below. The projected contract snippets consume exactly
-`json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])`; do not recreate route evidence from
-placeholders, `codex doctor`, configuration, or agent prose. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
-its private-rollout prohibition forbids manual probing but not this validated adapter-owned
-read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
-evidence.
+**Steps**
+1. `plan.py check <plan>` and `plan.py show <plan>`; read the target phase and items with
+   `plan.py show <plan> <ref>`.
+2. `design`: judge whether each detailed item is executable from its context pack
+   (`plan.py context <plan> <item> --stdout`): scope, reads, exact checks, decisions, dependencies.
+3. `Pn`: compare the phase's product diff with item scope, recorded checks and deliverables; rerun
+   only checks whose inputs changed.
+4. Write the verdict to `@plan/artifacts/audit/<Pn|design>-<YYYY-MM-DD>.md`: verdict, findings
+   (severity, evidence `path:line`, owning item), recommendations.
+5. `plan.py log <plan> <Pn> --type note --summary "audit <verdict>: <file>"` (`design`: the first target phase).
 
-Invocation payload: `$ARGUMENTS`.
+**Rules**
+- Runs only on explicit owner invocation; one reviewer, one pass, no subagents unless asked.
+- Read-only over product code and plan JSON; the verdict file and the note are the only writes.
+- A finding names its owning item; fixing it is `plan-run` work (`plan.py reopen` by the owner).
+- Severity follows demonstrated impact; uncertainty is reported as a question, not a defect.
 
-Read `runtime/plan-protocol/references/common-principles.md` and
-`runtime/plan-protocol/references/review-mode.md` from the configured Task package root.
-The full schema canon and snippets are on-demand references, not mandatory review context.
-
-Run only on an explicit owner invocation: no other command (`plan-run`, `plan-design`, `dev`, `review`) starts an
-audit. One reviewer makes one pass over the whole target delta, with no per-item partial passes, no fan-out
-and no subagents unless the owner asked for them.
-
-Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
-sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.
-For `design`, first run `scripts/plan-work.py design-gate --plan-dir <dir>`. Require a completed
-`finalize-design --finish` and audit the returned current fingerprint across every declared phase,
-item, dependency and execution-sheet row. Persist the audit journal event with that fingerprint
-using the existing `--fingerprint` field. A changed design input makes the verdict stale; after
-correction, repeat finish and the design audit. GREEN is the only result that satisfies a `Design Audit: required` gate; by default the design audit is optional.
-Before phase audit, consume one accepted, unsuperseded `audit-admission/v2` decision whose bounded
-residual-risk question, target phase, material candidate fingerprint, audit run, owner-message
-provenance, and scope digest all match. Foreign, stale, ambiguous, or already consumed consent does
-not admit a run. Legacy `required`/`auto`/`light`, risk prose, integration seams, missing assurance,
-or an agent-authored grant are advisory only. Without matching consent, preserve a bounded
-recommendation and leave GREEN evidence eligible for direct close; missing or RED acceptance
-returns owning repair.
-Persist the runtime candidate snapshot with
-a GREEN verdict. A post-GREEN mismatch is `audit-impact/v1`: gate-rebind, delta, justified full,
-evidence gathering, or owner review—never bare stale/full. This classification scopes native repair
-and evidence; it does not authorize another audit. Fresh deterministic evidence is reused.
-Before GREEN, regenerate audit-owned carriers once, rebuild the candidate and persist
-`task.plan_evidence.audit_finalization()` with the exact `phase_close_gate` admission; product
-paths must remain byte-identical between the product and closure anchors.
-
-Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput(audit=True))` as advice: at most one deterministic audit-owned bookkeeping
-repair is allowed. A product defect returns one exact owning continuation; it does not trigger a
-second audit, full replay, product write, or fresh root merely because this command is an audit.
-Material risk selects one independent review path. Persist the semantic Next through `plan_delivery`.
-One consent admits one bounded run; its in-progress journal event reserves it and its terminal event
-consumes it. A repeat needs a new question, candidate/run-bound consent, and material hypothesis.
-
-Audit does not bypass terminal admission: an applicable lease can only emit `waiting-owner` or its
-typed continuation until a fresh terminal receipt and exact final fragment exist.
-
-Persist a product finding as audit-attention (or audit-red) with decision action
-`return-owning-continuation`, evidence IDs, reason_code, scope_class=<owning item>,
-recovered=false, terminal=false,
-and exact run-items owning continuation. Reviewer completion leaves the phase open.
+**Done when** the verdict file exists, the note is logged, and the report gives the verdict and
+`plan.py next <plan>`.

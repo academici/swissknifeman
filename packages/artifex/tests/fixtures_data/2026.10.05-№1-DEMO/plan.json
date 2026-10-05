@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:plan:v1",
+  "id": "2026.10.05-№1-DEMO",
+  "short_id": "PLAN1",
+  "title": "Plan №1 — Demo plan",
+  "status": "active",
+  "created": "2026-10-05",
+  "updated_at": "2026-10-05T08:40:22Z",
+  "repository": "fixture",
+  "owner": "repository owner",
+  "authoring": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "goal": "Plan №1 — Demo plan",
+  "context": "Plan №1 — Demo plan",
+  "phases": [
+    "P1",
+    "P2"
+  ],
+  "settings": {
+    "design_audit": "none",
+    "scout": "off"
+  }
+}

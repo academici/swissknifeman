@@ -88,7 +88,7 @@ The initial ordered common inventories are frozen as follows:
 | `harness` | `harness.identity` · `harness.semantic-source` · `harness.layout` · `harness.command-surface` · `harness.agent-pack-lifecycle` · `harness.engineering-invariants` · `harness.cross-package-boundaries` · `harness.validation-release` |
 | `maind` | `maind.identity` · `maind.three-planes` · `maind.layout` · `maind.module-boundaries` · `maind.orchestration` · `maind.engineering-invariants` · `maind.validation-release` |
 | `analyst` | `analyst.identity-human-gate` · `analyst.layer-boundary` · `analyst.layout` · `analyst.module-boundaries` · `analyst.data-lifecycle` · `analyst.privacy` · `analyst.engineering-invariants` · `analyst.validation-release` |
-| `task` | `task.identity` · `task.command-catalog` · `task.plan-protocol` · `task.layout` · `task.schema-ownership` · `task.engineering-invariants` · `task.validation-release` |
+| `task` | `task.identity` · `task.command-catalog` · `task.plan-protocol` · `task.plan-files` · `task.layout` · `task.schema-ownership` · `task.engineering-invariants` · `task.validation-release` |
 
 The initial provider-extension inventories are:
 
@@ -288,6 +288,7 @@ Normative shape:
             "task.identity",
             "task.command-catalog",
             "task.plan-protocol",
+            "task.plan-files",
             "task.layout",
             "task.schema-ownership",
             "task.engineering-invariants",

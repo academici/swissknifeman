@@ -7,12 +7,15 @@ Keep the intent and plan command catalog in `commands/`; each intent command dec
 <!-- instruction:task.plan-protocol -->
 ## task.plan-protocol
 Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route.
+<!-- instruction:task.plan-files -->
+## task.plan-files
+Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth, change it only through `python3 <task>/scripts/plan.py`; ignore generated files (`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`, `context/`, unit `brief.md`): never edit them and do not read them for work; get state with `plan.py next|show|context`.
 <!-- instruction:task.layout -->
 ## task.layout
-Keep command Markdown in `commands/`, the deterministic plan linter in `lib/task/plan_lint.py`, its launcher in `scripts/plan-lint.py`, and isolated tests in `tests/`.
+Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.
 <!-- instruction:task.schema-ownership -->
 ## task.schema-ownership
-Treat `plan_lint.py` and the `plan-protocol` skill as synchronized sources of the plan schema; change both when the schema changes.
+Treat `schemas/plan/v1/` and the `plan-protocol` skill as synchronized sources of the plan schema; validate with `scripts/plan.py check` and change both when the schema changes.
 <!-- instruction:task.engineering-invariants -->
 ## task.engineering-invariants
 Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.

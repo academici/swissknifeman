@@ -136,7 +136,7 @@
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-design.md",
       "argument_contract": "plan ID and design mode",
-      "output_contract": "plan/design carriers and next-step handoff",
+      "output_contract": "plan.json and generated views through plan.py, ready for the next step",
       "routing": {
         "mode": "fixed",
         "model_class": "frontier",
@@ -152,9 +152,7 @@
       "plan_semantics": [
         "statuses",
         "item-fields",
-        "next",
-        "journal",
-        "commit-topology"
+        "next"
       ],
       "aliases": []
     },
@@ -163,7 +161,7 @@
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-run.md",
       "argument_contract": "plan ID and item list",
-      "output_contract": "implementation, validation, closed item and handoff under the session route",
+      "output_contract": "implemented and verified items finished through plan.py, one commit per item",
       "routing": {
         "mode": "inherited-plan",
         "model_class": "routing-required",
@@ -179,9 +177,7 @@
       "plan_semantics": [
         "statuses",
         "item-fields",
-        "next",
-        "journal",
-        "commit-topology"
+        "next"
       ],
       "aliases": []
     },
@@ -190,7 +186,7 @@
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-close.md",
       "argument_contract": "plan ID plus item, phase or archive mode",
-      "output_contract": "reconciled/closed/archived plan state",
+      "output_contract": "phase reconciled through plan.py finish/reopen, plan archived",
       "routing": {
         "mode": "fixed",
         "model_class": "implementation",
@@ -206,9 +202,7 @@
       "plan_semantics": [
         "statuses",
         "item-fields",
-        "next",
-        "journal",
-        "commit-topology"
+        "next"
       ],
       "aliases": []
     },
@@ -217,7 +211,7 @@
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-audit.md",
       "argument_contract": "plan ID plus phase or design mode",
-      "output_contract": "append-only independent audit verdict",
+      "output_contract": "read-only audit verdict file plus a plan.py note event",
       "routing": {
         "mode": "fixed",
         "model_class": "frontier",
@@ -232,9 +226,7 @@
       "plan_semantics": [
         "statuses",
         "item-fields",
-        "next",
-        "journal",
-        "commit-topology"
+        "next"
       ],
       "aliases": []
     }

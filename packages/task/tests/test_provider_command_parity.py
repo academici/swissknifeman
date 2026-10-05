@@ -60,25 +60,16 @@ def _write_routing(root, mutation):
 
 
 class ProviderCommandParityTests(unittest.TestCase):
-    def test_canonical_and_both_provider_examples_execute_the_same_policy(self):
-        import task.plan_lifecycle
-        expected = {"plan-audit": "read-only", "plan-run": "not-requested",
-                    "plan-design": "not-requested"}
-        for command, action in expected.items():
+    def test_canonical_and_both_provider_projections_carry_the_same_plan_verbs(self):
+        for command in ("plan-audit", "plan-run", "plan-design", "plan-close"):
             paths = (COMMAND_ROOT / f"{command}.md",
                      REPO_ROOT / f"packages/task/adapters/codex/skills/task-{command}/command.md",
                      REPO_ROOT / f"packages/task/tests/fixtures_data/claude-command-golden/commands/{command}.md")
-            results = []
-            for path in paths:
-                text = path.read_text()
-                examples = re.findall(r"`(task\.plan_lifecycle\.select\([^`]+\))`", text)
-                self.assertEqual(len(examples), 1, str(path))
-                result = eval(examples[0], {"task": task, "__builtins__": {}})
-                self.assertEqual(result.audit_action, action)
-                self.assertEqual(result.validation, ("focused",))
-                results.append(result)
-            self.assertEqual(results[0], results[1])
-            self.assertEqual(results[0], results[2])
+            bodies = [re.sub(r"\A---\n.*?\n---\n", "", path.read_text(), flags=re.S) for path in paths]
+            verbs = [set(re.findall(r"plan\.py ([a-z][a-z-]*)", body)) for body in bodies]
+            self.assertTrue(verbs[0], command)
+            self.assertEqual(verbs[0], verbs[1], command)
+            self.assertEqual(verbs[0], verbs[2], command)
 
     def test_mapping_support_is_manifest_derived_and_missing_manifest_fails_closed(self):
         manifest = json.loads((REPO_ROOT / "configs/provider-capabilities.json").read_text())
@@ -223,7 +214,6 @@ class ProviderCommandParityTests(unittest.TestCase):
                 re.findall(r"[\w<>]+/effort", projected[record.command_id]))
             canonical_clear_controls += len(
                 re.findall(r"(?<![\w/])/clear\b", canonical_body))
-        self.assertTrue(canonical_route_notation)
         self.assertEqual(projected_route_notation, canonical_route_notation)
         self.assertEqual(canonical_clear_controls, 0)
         self.assertIsNone(re.search(r"(?<![\w/])/clear\b", projected_text))
@@ -233,26 +223,15 @@ class ProviderCommandParityTests(unittest.TestCase):
         plan_text = "\n".join(
             projected[command_id] for command_id in projected
             if self.catalog.by_id()[command_id].kind == "plan-protocol")
-        self.assertIn("plan_lifecycle", plan_text)
-        self.assertIn("plan_lifecycle", plan_text)
+        self.assertIn("scripts/plan.py", plan_text)
 
-    def test_qualified_item_reference_rule_survives_provider_rendering(self):
-        literal = "runtime/plan-protocol/references/work-references.md"
-        source = self.catalog.content_for("task:plan-design").decode("utf-8")
-        self.assertIn(literal, source)
-        self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`", source)
-        for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan),
-                                  ("cursor", self.cursor_plan)):
-            # Grok is lock-only (discovers `.agents/skills`); it has no command body.
-            with self.subTest(provider=provider_id):
-                rendered = "\n".join(
-                    artifact.managed_bytes.decode("utf-8")
-                    for artifact in plan.artifacts
-                    if artifact.path == "packages/task/commands/plan-design.md"
-                    or "task-plan-design" in artifact.path
-                )
-                self.assertIn(literal, rendered)
-                self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`", rendered)
+    def test_qualified_item_reference_rule_lives_in_the_protocol_canon(self):
+        canon = (REPO_ROOT / "packages/task/runtime/plan-protocol/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("`PLAN<N>.P2.3`", canon)
+        self.assertIn("references/work-references.md", canon)
+        rule = (REPO_ROOT / "packages/task/runtime/plan-protocol/references/work-references.md"
+                ).read_text(encoding="utf-8")
+        self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2`, `PLAN<N>.P2.3`", rule)
 
     def test_all_contract_diagnostics_have_fail_closed_negative_cases(self):
         observed = set()

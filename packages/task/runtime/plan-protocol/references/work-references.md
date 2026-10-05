@@ -1,27 +1,18 @@
 # Work identity and references
 
-When creating a persisted plan or standalone task, assign `Short ID`: `PLAN<N>` for a plan,
-`TASK<N>` for a task (positive integer). Store it in plan Meta or the task document header,
-alongside its title and existing directory ID. Allocate the next unused number above the
-maximum in that repository and namespace, including archived work; never recycle or renumber.
-Do not count by hand: `python3 packages/task/scripts/plan-id.py --codename <NAME>` scans live and
-archived plans and returns the next day ordinal `№N` (`ordinal`, unique within the date), the
-next repository-wide `short_id`, the ready `plan_id` and the `title_prefix`; use them verbatim.
-Re-run it immediately before writing the plan; concurrent allocations are reconciled by
-`plan-lint` (Short ID collisions).
-A plan item keeps its existing `Pn.m`; it does not receive a standalone `TASK<N>`.
+A persisted plan has a stable repository-local Short ID `PLAN<N>`; a standalone task document uses
+`TASK<N>`. Allocate the next unused number above every live and archived one; never recycle or
+renumber. For plans do not count by hand: `plan.py new --codename <NAME> --title … --actor …`
+allocates the directory id `YYYY.MM.DD-№N-CODENAME`, the title prefix `Plan №N —` and the Short ID,
+and refuses a collision. A plan item keeps its `Pn.m`; it never receives a standalone `TASK<N>`.
 
-Outside the owning work directory, qualify every work-specific decision, phase, item or finding:
-`PLAN<N>.D35`, `PLAN<N>.P2`, `PLAN<N>.P2.3`, `PLAN<N>.F4`, `TASK<N>.D2`. This applies to code comments, docstrings,
-PRs, reviews, docs and generated text. Inside that directory, bare local IDs are allowed.
-Across repositories, prepend the repository identity: `swissknifeman:PLAN<N>.D35`.
-`#` is optional presentation, not part of the ID. Short ID maps directly to its owning document;
-keep it when archiving, renaming a directory or handing off. Do not create comments just to cite work.
+Outside the owning plan directory, qualify every work-specific decision, phase, item or finding:
+`PLAN<N>.D35`, `PLAN<N>.P2`, `PLAN<N>.P2.3`, `TASK<N>.D2`. This applies to code comments, docstrings,
+PRs, reviews, docs and generated text. Inside the plan directory bare local ids are allowed.
+Across repositories prepend the repository identity: `swissknifeman:PLAN<N>.D35`.
+`#` is optional presentation, not part of the id. Keep the Short ID when archiving or handing off.
+Do not create comments just to cite work.
 
-Existing work without Short ID uses `<PLAN-ID> D35`, `<PLAN-ID> P2.3`, or the exact task path
-plus local ID. Assign a Short ID only when needed; repair an old ambiguous reference only after
-verifying its source. Full IDs and command arguments remain valid and unchanged.
-
-These are authoring rules, not a new workflow or task schema. `plan-lint` checks declared plan
-Short IDs for syntax and collisions across live/archive siblings; absence stays valid for legacy
-plans. Task IDs and cross-repository references are checked when authoring or reviewing.
+`plan.py` accepts a plan as its directory id, its Short ID or a path. `plan.py check` reports
+unknown local references; qualified references to other plans are checked when authoring or
+reviewing.

@@ -2,6 +2,8 @@
 import argparse, datetime, importlib.util, json, os, re, shlex, shutil, subprocess, sys
 from pathlib import Path
 
+_STATE_DIR = '.codex'
+_PROVIDER_ID = 'codex'
 _SURFACE_EVENTS = {
     "context.observer": "SessionStart",
     "lifecycle.command-log": "PreToolUse",
@@ -10,12 +12,12 @@ _SURFACE_EVENTS = {
     "lifecycle.router": "UserPromptSubmit",
     "lifecycle.memory": "SessionStart",
     "lifecycle.pack-guard": "PreToolUse",
+    "lifecycle.plan-guard": "PreToolUse",
     "lifecycle.changelog-gate": "PreToolUse",
     "lifecycle.review-gate": "SubagentStop",
     "security.safe-dirs": "PreToolUse",
     "lifecycle.daemon-safety": "PreToolUse",
     "lifecycle.git-guardrails": "PreToolUse",
-    "lifecycle.terminal-admission": "Stop",
 }
 _EVENT_FIELDS = {
     "SessionStart": ("source",),
@@ -29,12 +31,12 @@ _GATE_MODES = ("off", "warn", "strict")
 
 
 def _read_mode(cwd, filename):
-    """MODE from <cwd>/.codex/<filename> (harness hooks --provider codex writes it).
+    """MODE from <cwd>/<_STATE_DIR>/<filename> (harness hooks writes it).
     Missing/unreadable/unknown value -> off (safe default, matches the Claude-side
     gates and the phase's explicit "inactive by default" requirement)."""
     if not cwd:
         return "off"
-    f = Path(cwd) / ".codex" / filename
+    f = Path(cwd) / _STATE_DIR / filename
     try:
         text = f.read_text(encoding="utf-8")
     except OSError:
@@ -47,8 +49,7 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
-            mode = value if value in allowed else "off"
+            mode = value if value in _GATE_MODES else "off"
     return mode
 _ROUTER_CATALOG = []
 _ROUTER_HINT_TEMPLATE = '[intent-router] bias (non-authoritative): top={name} score={score}{runners}'
@@ -110,7 +111,7 @@ def _append_jsonl(path, payload):
 
 
 def _tool_sidecar_path(cwd, session_id):
-    return Path(cwd) / ".codex" / "state" / (str(session_id) + ".tools.jsonl")
+    return Path(cwd) / _STATE_DIR / "state" / (str(session_id) + ".tools.jsonl")
 
 
 def _aggregate_tool_sidecar(path):
@@ -192,7 +193,7 @@ def _tool_telemetry(payload):
 
 
 def _command_log(payload):
-    log_dir = Path.home() / ".codex" / "logs"
+    log_dir = Path.home() / _STATE_DIR / "logs"
     try:
         log_dir.mkdir(parents=True, exist_ok=True)
         tool_input = payload.get("tool_input") or {}
@@ -225,7 +226,7 @@ def _run_report(payload):
                    "transcript_path": tpath if isinstance(tpath, str) else None}
     else:
         record["schema"] = 2
-        record["provider_id"] = "codex"
+        record["provider_id"] = _PROVIDER_ID
         record["session_id"] = sid
         record["cwd"] = cwd
         record["reason"] = payload.get("reason") or ""
@@ -243,7 +244,7 @@ def _run_report(payload):
             cur = existing.setdefault(op, {"calls": 0})
             cur["calls"] += rec.get("calls", 0)
         record["codegraph"] = existing
-    runs_dir = Path(cwd) / ".codex" / "runs"
+    runs_dir = Path(cwd) / _STATE_DIR / "runs"
     try:
         runs_dir.mkdir(parents=True, exist_ok=True)
         gitignore = runs_dir / ".gitignore"
@@ -288,7 +289,7 @@ def _memory(payload):
     cwd = payload.get("cwd")
     mode, brain = "maind", "core"
     if cwd:
-        ini = Path(cwd) / ".codex" / "memory.env.ini"
+        ini = Path(cwd) / _STATE_DIR / "memory.env.ini"
         try:
             for line in ini.read_text(encoding="utf-8").splitlines():
                 line = line.strip()
@@ -464,7 +465,7 @@ def _review_gate(payload):
     if not check:
         return
     key = (payload.get("session_id") or "nosession") + ":" + (payload.get("agent_id") or "noagent")
-    state_path = Path(cwd) / ".codex" / "review-gate.state.json"
+    state_path = Path(cwd) / _STATE_DIR / "review-gate.state.json"
     try:
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -618,49 +619,31 @@ def _git_guardrails(payload):
     print(json.dumps({"systemMessage": "[warn] " + reason}))
 
 
-def _terminal_admission(payload):
-    """Thin Stop adapter: P4.1 remains the only terminal-policy owner."""
+def _plan_guard(payload):
     cwd = payload.get("cwd")
-    if _read_mode(cwd, "terminal-admission.env.ini") != "on" or not cwd:
+    mode = _read_mode(cwd, "plan-guard.env.ini")
+    if mode == "off" or not cwd:
         return
-    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
-    if cli.is_file():
-        try:
-            result = subprocess.run([sys.executable, str(cli), "check-open", "--project-root", cwd,
-                                     "--provider-session", str(payload.get("session_id") or "")],
-                                    cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
-            verdict = json.loads(result.stdout)
-            if not isinstance(verdict, dict) or result.returncode not in (0, 1):
-                raise ValueError("invalid pre-final result")
-        except (OSError, subprocess.TimeoutExpired, TypeError, ValueError):
-            verdict = {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
-        if not verdict.get("final_allowed"):
-            print(json.dumps({"decision": "block", "reason": verdict.get("reason")})); return
-    request = payload.get("terminal_admission")
-    if not isinstance(request, dict) or not request.get("applicable"):
-        return
-    required = ("plan", "subject", "command", "run_id", "task_session", "continuity_json")
-    if any(not isinstance(request.get(key), str) or not request[key] for key in required):
-        print(json.dumps({"decision": "block", "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"})); return
-    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
-    if not cli.is_file():
-        print(json.dumps({"decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"})); return
-    message = payload.get("last_assistant_message")
-    if not isinstance(message, str):
-        print(json.dumps({"decision": "block", "reason": "TERMINAL_MESSAGE_UNAVAILABLE"})); return
-    command = [sys.executable, str(cli), "check", "--state-dir", str(Path(cwd) / ".swissknifeman/terminal-admission"),
-               "--plan", request["plan"], "--subject", request["subject"], "--command", request["command"],
-               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", "codex",
-               "--provider-session", payload.get("session_id", ""), "--turn-id", payload.get("turn_id", ""),
-               "--continuity-json", request["continuity_json"], "--message", message,
-               "--plan-dir", str(Path(cwd) / "plans" / request["plan"])]
-    result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.plan-guard: refusing command — harness core unreachable\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
-        verdict = json.loads(result.stdout)
-    except (TypeError, ValueError):
-        verdict = {"final_allowed": False, "reason": "TERMINAL_ADMISSION_VERIFIER_FAILED"}
-    if not verdict.get("final_allowed"):
-        print(json.dumps({"decision": "block", "reason": str(verdict.get("reason") or "TERMINAL_ADMISSION_REFUSED")}))
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_plan_guard_core import MESSAGE, plan_guard_hit
+        hit = plan_guard_hit(payload.get("tool_input"), cwd)
+    except Exception:
+        sys.stderr.write("lifecycle.plan-guard: refusing command — policy core failed\n")
+        sys.exit(2)
+    if hit is None:
+        return
+    msg = "plan-guard: " + MESSAGE + ": " + hit
+    if mode == "strict":
+        sys.stderr.write(msg + "\n")
+        sys.exit(2)
+    print(json.dumps({"systemMessage": "[warn] " + msg}))
 
 
 _HANDLERS = {
@@ -671,12 +654,12 @@ _HANDLERS = {
     "lifecycle.router": _router,
     "lifecycle.memory": _memory,
     "lifecycle.pack-guard": _pack_guard,
+    "lifecycle.plan-guard": _plan_guard,
     "lifecycle.changelog-gate": _changelog_gate,
     "lifecycle.review-gate": _review_gate,
     "security.safe-dirs": _safe_dirs,
     "lifecycle.daemon-safety": _daemon_safety,
     "lifecycle.git-guardrails": _git_guardrails,
-    "lifecycle.terminal-admission": _terminal_admission,
 }
 
 parser = argparse.ArgumentParser()

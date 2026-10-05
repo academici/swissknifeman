@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "243e720fc74087ef0d5c45fbd86a9f4c57a0e58c673c5cde1f84db8cfc8f2f98",
+    "source_sha256": "ad2a84fde18dbe65953ec050d51295db6fbace74c6e062bd18ce49a21ca107d8",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 309
+    "literal_count": 313
   },
   "literals": [
     {
@@ -1094,8 +1094,24 @@
       "literal": "`plan-run` inherits the owner session route"
     },
     {
+      "semantic_id": "task.plan-files",
+      "literal": "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth, change it only through `python3 <task>/scripts/plan.py`; ignore generated files (`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`, `context/`, unit `brief.md`): never edit them and do not read them for work; get state with `plan.py next|show|context`."
+    },
+    {
+      "semantic_id": "task.plan-files",
+      "literal": "`plan.json`"
+    },
+    {
+      "semantic_id": "task.plan-files",
+      "literal": "`python3 <task>/scripts/plan.py`"
+    },
+    {
+      "semantic_id": "task.plan-files",
+      "literal": "`plan.py next|show|context`"
+    },
+    {
       "semantic_id": "task.layout",
-      "literal": "Keep command Markdown in `commands/`, the deterministic plan linter in `lib/task/plan_lint.py`, its launcher in `scripts/plan-lint.py`, and isolated tests in `tests/`."
+      "literal": "Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`."
     },
     {
       "semantic_id": "task.layout",
@@ -1103,11 +1119,11 @@
     },
     {
       "semantic_id": "task.layout",
-      "literal": "`lib/task/plan_lint.py`"
+      "literal": "`lib/task/plan/`"
     },
     {
       "semantic_id": "task.layout",
-      "literal": "`scripts/plan-lint.py`"
+      "literal": "`scripts/plan.py`"
     },
     {
       "semantic_id": "task.layout",
@@ -1115,19 +1131,19 @@
     },
     {
       "semantic_id": "task.schema-ownership",
-      "literal": "Treat `plan_lint.py` and the `plan-protocol` skill as synchronized sources of the plan schema"
+      "literal": "Treat `schemas/plan/v1/` and the `plan-protocol` skill as synchronized sources of the plan schema; validate with `scripts/plan.py check` and change both when the schema changes."
     },
     {
       "semantic_id": "task.schema-ownership",
-      "literal": "change both when the schema changes."
-    },
-    {
-      "semantic_id": "task.schema-ownership",
-      "literal": "`plan_lint.py`"
+      "literal": "`schemas/plan/v1/`"
     },
     {
       "semantic_id": "task.schema-ownership",
       "literal": "`plan-protocol`"
+    },
+    {
+      "semantic_id": "task.schema-ownership",
+      "literal": "change both when the schema changes"
     },
     {
       "semantic_id": "task.engineering-invariants",

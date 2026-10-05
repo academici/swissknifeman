@@ -18,5 +18,5 @@ the verified journal replay. It never trusts snapshots, provider raw output or a
 readiness status; unknown provider data stays explicit as an `unknown_reasons` entry.
 
 Package tests are self-contained: plan-shaped inputs (authority contract and case banks, provider
-matrix and parity mapping, indexed smoke admissions) live under `tests/fixtures_data/plan/` and
-describe a synthetic `DEMO-PLAN`. No test or runtime path reads a local-only plan directory.
+matrix and parity mapping, indexed smoke admissions) live under `tests/fixtures_data/2026.10.05-№1-DEMO/` and
+describe a synthetic v3 plan. No test or runtime path reads a local-only plan directory.

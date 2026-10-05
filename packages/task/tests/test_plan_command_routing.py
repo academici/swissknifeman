@@ -55,26 +55,18 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             with self.subTest(kind=kind):
                 self.assertEqual(parse_next_carrier(declaration).kind, kind)
 
-    def test_audit_handoff_uses_the_shared_lifecycle_without_a_forced_root(self):
+    def test_audit_is_read_only_and_writes_a_verdict_plus_a_note(self):
         audit = (COMMAND_ROOT / "plan-audit.md").read_text(encoding="utf-8")
-        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md").read_text(
-            encoding="utf-8")
-        self.assertIn("task.plan_lifecycle.select", audit)
-        self.assertIn("semantic Next", audit)
-        self.assertNotIn("AUDIT-ROOT-TERMINAL", protocol)
+        for literal in ("plan.py check", "plan.py log", "--type note", "Read-only over product code and plan JSON"):
+            self.assertIn(literal, audit)
 
-    def test_design_scope_does_not_force_a_new_process_or_authorize_execution(self):
+    def test_design_does_not_execute_items_or_spawn_a_successor(self):
         design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")
         codex_design = (REPO_ROOT / "packages/task/adapters/codex/skills/task-plan-design/command.md"
                         ).read_text(encoding="utf-8")
-        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md").read_text(
-            encoding="utf-8")
-        self.assertIn("scope-complete", design)
-        self.assertIn("must not execute or spawn", design)
-        self.assertIn("scope-complete", codex_design)
-        self.assertIn("must not execute or spawn", codex_design)
-        self.assertIn("Design completion alone never requires a fresh process", protocol)
-        self.assertIn("must not execute or spawn an unauthorized successor", protocol)
+        for carrier in (design, codex_design):
+            self.assertIn("Design does not execute items.", carrier)
+            self.assertIn("plan.py design-done", carrier)
 
     def test_design_overshoot_is_recorded_not_blocked(self):
         mapping = mapping_from_catalog(self.catalog, "codex")
@@ -83,32 +75,20 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                                           observed_class="frontier", observed_effort="xhigh")
         self.assertTrue(result.ok, result.diagnostics)
 
-    def test_new_plan_batch_is_mandatory_and_survives_every_handoff_writer(self):
+    def test_batches_are_authored_through_the_plan_cli(self):
         protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
                     ).read_text(encoding="utf-8")
-        template = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/snippets/plan-template.md"
-                    ).read_text(encoding="utf-8")
-        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Why |", protocol)
-        self.assertIn("For every new layout-v2 plan, `Batch` and `Review` are mandatory", protocol)
-        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Why |", template)
-        for command in ("plan-design", "plan-run"):
-            with self.subTest(command=command):
-                body = (COMMAND_ROOT / f"{command}.md").read_text(encoding="utf-8")
-                self.assertIn("Batch", body)
+        self.assertIn("`batches`", protocol)
+        design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")
+        self.assertIn("plan.py batches", design)
+        self.assertIn("plan.py next", (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8"))
 
-    def test_terminal_phase_handoff_uses_audit_policy_instead_of_probe_close(self):
+    def test_last_item_closes_its_phase_and_review_stays_opt_in(self):
         execution = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
         close = (COMMAND_ROOT / "plan-close.md").read_text(encoding="utf-8")
-        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
-                    ).read_text(encoding="utf-8")
-        for carrier in (execution, close, protocol):
-            with self.subTest(carrier=carrier[:40]):
-                self.assertIn("phase_audit_policy", carrier)
-        self.assertNotIn(
-            "Phase is terminal → `/task:plan-close <PLAN-ID> Pn`", execution)
-        self.assertIn("GREEN evidence direct-closes by default", execution)
-        self.assertIn("fresh owner consent", execution)
-        self.assertIn("create its phase closure before deriving Next", execution)
+        self.assertIn("The last item closes its phase.", execution)
+        self.assertIn("no review runs by default", execution)
+        self.assertIn("closes its phase", close)
 
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():

@@ -12,12 +12,12 @@ _SURFACE_EVENTS = {
     "lifecycle.router": "UserPromptSubmit",
     "lifecycle.memory": "SessionStart",
     "lifecycle.pack-guard": "PreToolUse",
+    "lifecycle.plan-guard": "PreToolUse",
     "lifecycle.changelog-gate": "PreToolUse",
     "lifecycle.review-gate": "SubagentStop",
     "security.safe-dirs": "PreToolUse",
     "lifecycle.daemon-safety": "PreToolUse",
     "lifecycle.git-guardrails": "PreToolUse",
-    "lifecycle.terminal-admission": "Stop",
 }
 _EVENT_FIELDS = {
     "SessionStart": ("source",),
@@ -49,8 +49,7 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
-            mode = value if value in allowed else "off"
+            mode = value if value in _GATE_MODES else "off"
     return mode
 _ROUTER_CATALOG = []
 _ROUTER_HINT_TEMPLATE = '[intent-router] bias (non-authoritative): top={name} score={score}{runners}'
@@ -620,49 +619,31 @@ def _git_guardrails(payload):
     print(json.dumps({"systemMessage": "[warn] " + reason}))
 
 
-def _terminal_admission(payload):
-    """Thin Stop adapter: P4.1 remains the only terminal-policy owner."""
+def _plan_guard(payload):
     cwd = payload.get("cwd")
-    if _read_mode(cwd, "terminal-admission.env.ini") != "on" or not cwd:
+    mode = _read_mode(cwd, "plan-guard.env.ini")
+    if mode == "off" or not cwd:
         return
-    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
-    if cli.is_file():
-        try:
-            result = subprocess.run([sys.executable, str(cli), "check-open", "--project-root", cwd,
-                                     "--provider-session", str(payload.get("session_id") or "")],
-                                    cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
-            verdict = json.loads(result.stdout)
-            if not isinstance(verdict, dict) or result.returncode not in (0, 1):
-                raise ValueError("invalid pre-final result")
-        except (OSError, subprocess.TimeoutExpired, TypeError, ValueError):
-            verdict = {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
-        if not verdict.get("final_allowed"):
-            print(json.dumps({"decision": "block", "reason": verdict.get("reason")})); return
-    request = payload.get("terminal_admission")
-    if not isinstance(request, dict) or not request.get("applicable"):
-        return
-    required = ("plan", "subject", "command", "run_id", "task_session", "continuity_json")
-    if any(not isinstance(request.get(key), str) or not request[key] for key in required):
-        print(json.dumps({"decision": "block", "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"})); return
-    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
-    if not cli.is_file():
-        print(json.dumps({"decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"})); return
-    message = payload.get("last_assistant_message")
-    if not isinstance(message, str):
-        print(json.dumps({"decision": "block", "reason": "TERMINAL_MESSAGE_UNAVAILABLE"})); return
-    command = [sys.executable, str(cli), "check", "--state-dir", str(Path(cwd) / ".swissknifeman/terminal-admission"),
-               "--plan", request["plan"], "--subject", request["subject"], "--command", request["command"],
-               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", _PROVIDER_ID,
-               "--provider-session", payload.get("session_id", ""), "--turn-id", payload.get("turn_id", ""),
-               "--continuity-json", request["continuity_json"], "--message", message,
-               "--plan-dir", str(Path(cwd) / "plans" / request["plan"])]
-    result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.plan-guard: refusing command — harness core unreachable\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
-        verdict = json.loads(result.stdout)
-    except (TypeError, ValueError):
-        verdict = {"final_allowed": False, "reason": "TERMINAL_ADMISSION_VERIFIER_FAILED"}
-    if not verdict.get("final_allowed"):
-        print(json.dumps({"decision": "block", "reason": str(verdict.get("reason") or "TERMINAL_ADMISSION_REFUSED")}))
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_plan_guard_core import MESSAGE, plan_guard_hit
+        hit = plan_guard_hit(payload.get("tool_input"), cwd)
+    except Exception:
+        sys.stderr.write("lifecycle.plan-guard: refusing command — policy core failed\n")
+        sys.exit(2)
+    if hit is None:
+        return
+    msg = "plan-guard: " + MESSAGE + ": " + hit
+    if mode == "strict":
+        sys.stderr.write(msg + "\n")
+        sys.exit(2)
+    print(json.dumps({"systemMessage": "[warn] " + msg}))
 
 
 _HANDLERS = {
@@ -673,12 +654,12 @@ _HANDLERS = {
     "lifecycle.router": _router,
     "lifecycle.memory": _memory,
     "lifecycle.pack-guard": _pack_guard,
+    "lifecycle.plan-guard": _plan_guard,
     "lifecycle.changelog-gate": _changelog_gate,
     "lifecycle.review-gate": _review_gate,
     "security.safe-dirs": _safe_dirs,
     "lifecycle.daemon-safety": _daemon_safety,
     "lifecycle.git-guardrails": _git_guardrails,
-    "lifecycle.terminal-admission": _terminal_admission,
 }
 
 parser = argparse.ArgumentParser()

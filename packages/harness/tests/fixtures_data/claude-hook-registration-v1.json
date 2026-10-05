@@ -3,5 +3,7 @@
   "router": {"event": "UserPromptSubmit|SessionStart", "matcher": "", "handler": "python3 ~/.claude/hooks/agent-router/router.py", "kill_switch": "POLICY=off"},
   "run-report": {"event": "SessionEnd", "matcher": "", "handler": "python3 ~/.claude/hooks/run-report/run-report.py", "kill_switch": "ENABLED=off"},
   "pack-guard": {"event": "PreToolUse", "matcher": "Edit|Write|MultiEdit|NotebookEdit", "handler": "python3 ~/.claude/hooks/pack-guard/pack-guard.py", "kill_switch": "MODE=off"},
+  "plan-guard": {"event": "PreToolUse", "matcher": "Edit|Write|MultiEdit", "handler": "python3 ~/.claude/hooks/plan-guard/plan-guard.py", "kill_switch": "MODE=off"},
+  "plan-regen": {"event": "PostToolUse", "matcher": "Edit|Write|MultiEdit", "handler": "python3 ~/.claude/hooks/plan-regen/plan-regen.py", "kill_switch": "MODE=off"},
   "changelog-gate": {"event": "PreToolUse", "matcher": "Bash", "handler": "python3 ~/.claude/hooks/changelog-gate/changelog-gate.py", "kill_switch": "MODE=off"}
 }

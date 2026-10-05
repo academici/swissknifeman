@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕26 ↻10682"]:::cool
+    plan_protocol["plan-protocol<br/>⊕33 ↻1599"]:::mild
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
@@ -437,13 +437,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 310977 current · ⌥ on-demand 846631 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12593** current (is always resident if you include the entire registry) · ↻ bodies 301894 current · ⌥ on-demand 826122 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 33468 | 29678 |
+| `general` | 22 | 1267 | 24385 | 9169 |
 | `repository-bootstrap` | 14 | 1047 | 30040 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
@@ -516,7 +516,6 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `plan-protocol` | general | 10682 |
 | `project-tooling-runbook` | repository-bootstrap | 7466 |
 | `package-architecture` | repository-bootstrap | 3698 |
 | `task-development-philosophy` | repository-bootstrap | 3531 |
@@ -526,3 +525,4 @@ The heaviest bodies are loaded when using the skill.
 | `modular-architecture` | laravel-architecture | 3112 |
 | `laravel-testing` | laravel-testing | 3024 |
 | `build-loop` | blender-modeling | 2847 |
+| `spatie-settings` | laravel-extras | 2677 |

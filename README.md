@@ -18,7 +18,7 @@ process. Details Claude Code — in [developer's runbook](docs/develop.md).
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Provider support (generated)
 
-Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `3c2bf3a8b2658034e415cf1d64a46718517d841506c8088572230b93cebf1370`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
+Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `5d6faa26b0541b74a38262da24fbeafb2967b59b1ecf8fac12d13162afb5f545`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor | Grok |
 |:--|:--:|:--:|:--:|:--:|
@@ -48,10 +48,11 @@ Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `3c2bf3a8b
 | `lifecycle.memory` | adapted | adapted | adapted | adapted |
 | `lifecycle.notification` | adapted | unsupported | unsupported | unsupported |
 | `lifecycle.pack-guard` | adapted | adapted | adapted | adapted |
+| `lifecycle.plan-guard` | adapted | adapted | adapted | adapted |
+| `lifecycle.plan-regen` | adapted | unsupported | unsupported | unsupported |
 | `lifecycle.review-gate` | adapted | adapted | adapted | adapted |
 | `lifecycle.router` | adapted | adapted | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted | adapted | adapted |
-| `lifecycle.terminal-admission` | adapted | adapted | adapted | adapted |
 | `lifecycle.tool-telemetry` | unsupported | adapted | adapted | adapted |
 | `mcp.catalog` | adapted | adapted | native | native |
 | `security.safe-dirs` | adapted | adapted | adapted | adapted |

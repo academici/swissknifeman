@@ -1,22 +1,15 @@
 # Review mode
 
-Review is read-only over product work.  Inspect the declared candidate and changed-risk
-delta, rank demonstrated findings by impact, and return one owning continuation for each
-material defect.  Do not perform product repair, execute a successor, or turn uncertainty
-into a new audit cycle.
+Applies to `task:plan-audit` and to a review item added by `--review`.
 
-Review runs only on an owner request (`task:review`, `--review`, an explicit `Review Pn` item or
-`task:plan-audit`); no other command starts it. One reviewer, one pass over the whole requested scope.
-
-A plan review item (`Review Pn`) is this same read-only mode scheduled as an ordinary item: it reuses
-the executed results of its phase, runs only the checks its Validation names (the one broad pass of
-the phase lives here), and writes a verdict file; product repair is the next owning item.
-
-A phase audit additionally requires the existing candidate/run-bound consent contract.
-Generated bookkeeping drift may be reconciled only through its deterministic owner and
-must not be reported as a product defect.  Fresh evidence is reused; a new audit needs a
-new material hypothesis and matching authority.
-
-Read `../SKILL.md` on demand for audit-admission, candidate fingerprint, or phase-close
-schema details.  Completion is the requested review artifact, not implementation or
-release.
+1. Runs only on explicit owner request: one reviewer, one pass over the whole target, no subagents
+   unless the owner asked.
+2. Read-only over product code and plan JSON. Inputs: `plan.py show`, `plan.py check`, the item
+   context packs, the product diff, recorded check results.
+3. Judge against the item contracts: scope, acceptance checks, deliverables, decisions.
+4. Each finding: severity by demonstrated impact, evidence (`path:line` or command output), owning
+   item. Uncertainty is a question, not a defect.
+5. Output: a verdict file (`GREEN`, `ATTENTION` or `RED`) under `@plan/artifacts/audit/` and one
+   `plan.py log <Pn> --type note` event naming it.
+6. Fixes are execution work of the owning item (`plan.py reopen` by the owner when it is closed);
+   the reviewer does not fix and does not start a second pass without a new question.

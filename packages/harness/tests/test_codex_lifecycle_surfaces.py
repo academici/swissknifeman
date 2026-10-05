@@ -15,7 +15,6 @@ from core import ProviderId, load_provider_manifest, support_for
 from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload, plan_lifecycle,
                            render_codex_hook_handler, render_codex_hooks)
 from harness.profiles import load_catalog
-from task import journal, terminal_admission
 
 PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
@@ -105,110 +104,6 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
                   "tool_input": {"command": "ls"}}
         adapted = adapt_codex_hook_payload(binding, payload)
         self.assertEqual(adapted["permission_mode"], "")
-
-    def test_terminal_admission_stop_requires_documented_stop_fields_and_is_inactive_by_default(self):
-        binding = plan_lifecycle(self.catalog, provider_id=ProviderId.CODEX, trusted=True,
-                                 requests=(LifecycleRequest("lifecycle.terminal-admission"),),
-                                 codex_bindings_path=BINDINGS).bindings[0]
-        payload = {**_COMMON_FIELDS, "hook_event_name": "Stop", "turn_id": "t1",
-                   "stop_hook_active": False, "last_assistant_message": "final"}
-        self.assertEqual(adapt_codex_hook_payload(binding, payload)["event"], "Stop")
-        with self.assertRaisesRegex(ValueError, "HARNESS_MAPPING_MISSING"):
-            adapt_codex_hook_payload(binding, {key: value for key, value in payload.items()
-                                               if key != "last_assistant_message"})
-        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
-            handler = self._write_handler(scratch)
-            result = _run_handler(handler, "lifecycle.terminal-admission", {**payload, "cwd": project})
-            self.assertEqual(result.returncode, 0)
-            self.assertEqual(result.stdout, b"")
-
-    def test_stop_dispatchers_reject_open_session_without_task_payload_or_lease(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / "packages").mkdir()
-            (root / "packages/task").symlink_to(ROOT / "packages/task", target_is_directory=True)
-            for provider in ("codex", "claude"):
-                config = root / f".{provider}/terminal-admission.env.ini"
-                config.parent.mkdir()
-                config.write_text("MODE=on\n")
-            path = root / "plans/DEMO/journal.jsonl"
-            path.parent.mkdir(parents=True)
-            entry = journal.new_entry(plan_id="DEMO", item_id="P7.4", command="plan-run",
-                                      actor="sonnet/medium", result="in-progress",
-                                      session_id="s1", run_id="run-1", attempt=1)
-            path.write_text(json.dumps(entry) + "\n")
-            before = path.read_bytes()
-            handler = self._write_handler(root)
-            payload = {**_COMMON_FIELDS, "cwd": str(root), "hook_event_name": "Stop",
-                       "turn_id": "t1", "stop_hook_active": False,
-                       "last_assistant_message": "Subset tests passed. Done."}
-            adapters = ([sys.executable, str(handler), "--surface", "lifecycle.terminal-admission"],
-                        [sys.executable, str(PACKAGE / "configs/claude-code/hooks/terminal-admission/terminal-admission.py")])
-            for command in adapters:
-                with self.subTest(adapter=command):
-                    result = subprocess.run(command, input=json.dumps(payload), text=True,
-                                            capture_output=True, timeout=20)
-                    self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(json.loads(result.stdout), {
-                        "decision": "block", "reason": "TASK_OPEN_RUN_FINAL_FORBIDDEN"})
-                    ordinary = subprocess.run(command, input=json.dumps({**payload, "session_id": "ordinary"}),
-                                              text=True, capture_output=True, timeout=20)
-                    self.assertEqual(ordinary.returncode, 0, ordinary.stderr)
-                    self.assertEqual(ordinary.stdout, "")
-            self.assertEqual(path.read_bytes(), before)
-
-    def test_terminal_admission_proves_forty_advancing_boundaries_then_one_exact_final(self):
-        """Exercise the shared P4.1 reducer; providers only render its verdict."""
-        def continuity(outcome):
-            return {
-                "schema_version": "session-continuity-decision/v1",
-                "outcome": outcome,
-                "reason": "terminal-evidence" if outcome == "terminal" else "compatible-active-work",
-                "evidence": ["batch:" + "0" * 64],
-                "runnable": outcome != "terminal",
-            }
-
-        receipt = {
-            "schema_version": "terminal-delivery-receipt/v1", "plan_id": "PLAN", "subject": "P4.2",
-            "next_exact": "$ task:plan-audit PLAN P4", "recommendation": "Audit P4.",
-            "journal": {"run_id": "run-1", "command": "plan-run"},
-        }
-        identity = terminal_admission.Identity(
-            plan_id="PLAN", subject="P4.2", command="plan-run", run_id="run-1",
-            task_session="task-session", provider="codex", provider_session="provider-session", turn_id="turn-1",
-        )
-        with tempfile.TemporaryDirectory() as directory:
-            store = terminal_admission.FileStore(Path(directory))
-            lease = terminal_admission.arm(store, identity, continuity("continue-root"),
-                                           progress_fingerprint="0" * 64, ttl_seconds=60)
-            blocked = []
-            for boundary in range(1, 41):
-                progress = f"{boundary:064x}"
-                lease = terminal_admission.refresh(
-                    store, identity, expected_sequence=lease.sequence, progress_fingerprint=progress,
-                    continuity=continuity("continue-root"), ttl_seconds=60,
-                )
-                verdict = terminal_admission.evaluate(
-                    store, identity, continuity("continue-root"), receipt_reader=lambda: receipt,
-                    proposed_message=f"non-terminal-{boundary}",
-                )
-                blocked.append(verdict)
-            lease = terminal_admission.refresh(
-                store, identity, expected_sequence=lease.sequence, progress_fingerprint="f" * 64,
-                continuity=continuity("terminal"), ttl_seconds=60,
-            )
-            allowed = terminal_admission.evaluate(
-                store, identity, continuity("terminal"), receipt_reader=lambda: receipt,
-                proposed_message=terminal_admission.required_final_message(receipt),
-            )
-            events = (Path(directory) / "events.jsonl").read_text(encoding="utf-8")
-
-        self.assertEqual(len(blocked), 40)
-        self.assertTrue(all(not verdict.final_allowed for verdict in blocked))
-        self.assertEqual([verdict.sequence for verdict in blocked], list(range(2, 42)))
-        self.assertTrue(allowed.final_allowed)
-        self.assertEqual(allowed.sequence, lease.sequence + 1)
-        self.assertNotIn("non-terminal-1", events)
 
     def test_dispatcher_rejects_unknown_surface_and_malformed_payload(self):
         with tempfile.TemporaryDirectory() as directory:

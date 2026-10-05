@@ -1,6 +1,6 @@
 ---
 name: task-plan-run
-description: "Only when explicitly invoked. Execute authorized Task plan items under the current session route with inline closure."
+description: "Only when explicitly invoked. Execute ready Task plan items with plan.py under the current session route."
 ---
 
 # Task plan-run
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-run`.
 - Invocation: `$ task:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/task/commands/plan-run.md`
-- Canonical SHA-256: `sha256:cf0d71322cb63f5dd5b9f35ff17a4c73b551b10613839a04ce0a9de09766991d`
+- Canonical SHA-256: `sha256:4d57b8f4c83a0ca04519023a8df00a5e88d439d55d214fe17428f4d2ba1e5c2e`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this Task command or skill. Task is not an

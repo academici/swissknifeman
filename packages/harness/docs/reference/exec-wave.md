@@ -8,25 +8,27 @@ the worker physically could not. The driver does not make decisions - he produce
 
 ## What it does
 
-- **`plan_reader`** reads the execution queue of ONE phase: item'you're fine
-  `## Phase Status`, terminal (`🟢`/`🟠`/`⛔`) excluded, for each
-  remaining - route (`task.task_contract build`), value `Exec`, right
-  driving. Drive right = `Exec` in `## 3. Routing` resolves to `run` (legacy
-  `plan-exec`/`manual`/`plan-run` spellings included) and the item route resolves. Semantic `Next` for v1 and v2 is taken only from
-  owner `handoff.md`; layout-v2 item-state contains only result fields and is not
-  fallback-source orchestration.
+- **`plan_reader`** reads the execution queue of ONE phase through the Task plan API
+  (`plan.py show <plan> <Pn>|<Pn.m> --json`, `plan.py next <plan> --json`): terminal items
+  (`done`, `done_with_deviations`, `skipped`) are excluded; for each remaining item - route
+  (`item.route`), status and drivability. An item is driven when the phase is `detailed`, the item
+  is not `blocked` and its route resolves; otherwise the refusal is named (`PHASE-NOT-DETAILED`,
+  `ITEM-BLOCKED`, `ROUTING-UNRESOLVED`). Semantic `next_form` is the plan's `next` step. Nothing
+  parses plan Markdown.
 - **`worker`** starts ONE item process `claude -p "/task:plan-run
   &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` under timeout (default 1800s),
   strictly one worker at a time (serial wave - parallel fan-out on
   common codebase does not start). Model selectors/effort are taken from
   `packages/task/configs/command-routing.json`.
 - **`gate`** gives a verdict `GREEN`/`ATTENTION`/`RED` from four sources:
-  run outcome class, `plan-lint --baseline --gate new`, git-topology
-  closing (`<SHA to>..HEAD`), status/fields item'and after the run. Table
+  run outcome class, `plan.py check` (errors RED, warnings ATTENTION), git
+  closing (`<SHA to>..HEAD` commits and the uncommitted remainder outside the plan directory),
+  status/fields of the item JSON after the run. Table
   «sign → verdict» total: any RED wins, unmatched set
   signs by itself RED (fail-safe).
-- **`journal`** appends the line to `journal.jsonl` EXACTLY when the session
-  worker did not reach close-protocol itself (timeout/transport/quota/error/
+- **`journal`** appends a friction event (`plan.py log`: `blocker` for a refused launch,
+  `difficulty` for a failed or idle run) EXACTLY when the session
+  worker did not reach `plan.py finish` itself (timeout/transport/quota/error/
   routing-blocked/no-op) — successful self-close `/task:plan-run` not
   duplicated (D32).
 
@@ -42,7 +44,7 @@ harness run <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S]
 | `--dry-run` | queue only/routes/accurate `argv`/reasons for failures - WITHOUT worker spawn and WITHOUT a single record (read-only) |
 | `--limit N` | maximum item'ov waves (default - entire queue) |
 | `--timeout S` | timeout for ONE worker run, seconds |
-| `--plans-root PATH` | directory where to look `<PLAN-ID>/plan.md` (default `<monorepo>/plans`) |
+| `--plans-root PATH` | directory where to look `<PLAN-ID>/plan.json` (default `<monorepo>/plans`) |
 | `--json` | same summary machine (`ensure_ascii=False`) |
 
 Wave **serial** and stops at **first RED**; `ATTENTION` her

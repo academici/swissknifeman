@@ -509,7 +509,7 @@ def _capability_gap_diagnostic(repo_root):
 
 
 def _analyst_trace_modules_available():
-    """One-way, optional import (mirrors `analyst.doctor`'s own optional `task.route_evidence`
+    """One-way, optional import (mirrors `analyst.doctor`'s own optional `task.plan`
     check): absence of `analyst` degrades this diagnostic, it never raises a trace."""
     try:
         import analyst.metrics as _metrics

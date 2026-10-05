@@ -1,379 +1,113 @@
-"""Internal documentation."""
-import sys
+"""Queue of a phase through the Task plan API (`plan.py show|next --json`)."""
 import tempfile
 import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures_data" / "run"
-SAMPLE_PLAN = FIXTURES_ROOT / "sample-plan"
-
 from harness.run import plan_reader
+from packages.harness.tests.plan_fixture import write_plan
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+MEDIUM = ("implementation", "medium")
 
 
-_ITEM_TEMPLATE = """### {item_id} — Test item
-
-**Status:** {status}
-**Intent:** Test item for `test_run_plan_reader.py`.
-**Why:** Needed for unit testing `plan_reader`.
-**Scope Included:** does not implement anything - a fixture.
-**Scope Excluded:** real logic.
-**Inputs:** —
-**Files:** —
-**Required Reads:** 1) not applicable (fixture).
-**Implementation Rules:** no - fixture.
-**Code Guidance:** no - fixture.
-**Validation:** not applicable.
-**Deliverables:** synthetic test data.
-**Completion Notes:** —
-**Pending Work:** —
-**Known Deviations:** —
-**Escalation Needed:** no
-"""
-
-
-def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v2"):
-    """Internal documentation."""
-    if layout != "v2":
-        raise ValueError("Harness success fixtures must use canonical Layout v2")
-    from packages.harness.tests.v2_plan_fixture import write_v2_plan
-    return write_v2_plan(
-        Path(tmp), plan_id=plan_id, items=list(zip(item_ids, ["🟡 In progress"] * len(item_ids))),
-        routing_rows=routing_rows, next_line=next_line,
-    )
-
-    plan_dir = Path(tmp) / plan_id
-    phase_dir = plan_dir / "phases" / "P1" if layout == "v2" else plan_dir / "phases"
-    phase_dir.mkdir(parents=True)
-
-    total = len(item_ids)
-    status_rows = "\n".join(
-        f"| {iid} | Test item | 🟡 In progress | 2026-08-01 |" for iid in item_ids)
-    item_blocks = "\n".join(
-        _ITEM_TEMPLATE.format(item_id=iid, status="🟡 In progress") for iid in item_ids)
-    routing_table = "\n".join(routing_rows)
-
-    (plan_dir / "plan.md").write_text(f"""# {plan_id} — Synthetic test plan
-
-## 0. Meta
-
-| Field | Meaning |
-|:--|:--|
-| Plan ID | {plan_id} |
-| Title | Synthetic test plan |
-| Version | 0.1.0 |
-| Status | 🟡 In progress |
-| Last Updated | 2026-08-01 |
-| Layout | {layout} |
-
-## 1. Context
-
-Synthetic dough `test_run_plan_reader.py`.
-
-## 2. Execution Rules
-
-- One item at a time.
-
-## 3. Routing
-
-| Items | Model class/effort | Exec | Why |
-|:--|:--|:--|:--|
-{routing_table}
-
-## 4. Phase Index & Status Board
-
-| Phase | Title | Items 🟢/total | Status |
-|:--|:--|:--|:--|
-| P1 | Phase times | 0/{total} | 🟡 In progress |
-
-## 5. Decision Log
-
-| D# | Date | Solution | Why |
-|:--|:--|:--|:--|
-| D1 | 2026-08-01 | test | test |
-
-## 6. Update Log
-
-| Date | Who (role/model) | What |
-|:--|:--|:--|
-| 2026-08-01 | package-implementer/sonnet | plan created |
-""", encoding="utf-8")
-
-    (phase_dir / "P1.md").write_text(f"""# P1 — Phase times
-
-## Phase Context
-
-Synthetic dough.
-
-## Phase Status
-
-| ID | Title | Status | Updated |
-|:--|:--|:--|:--|
-{status_rows}
-
-{item_blocks}
-## Phase Handoff
-
-Synthetic dough.
-""", encoding="utf-8")
-    (plan_dir / "handoff.md").write_text(f"""# HANDOFF — 2026-08-01 — after {item_ids[0]}
-
-**Next:** {next_line}
-
-| Parameter | Meaning |
-|:--|:--|
-| Model | sonnet |
-| Thinking | medium |
-| Context | continue-root |
-| The bottom line | test |
-
-````
-{next_line}
-````
-
-**Done:** —
-**Remaining:** —
-**Sources of truth:** plan.md
-**Open risks:** —
-**Workarounds/Deferred/Open questions:**
-- workarounds: —
-- deferred: —
-- open_questions: —
-""", encoding="utf-8")
-
-    return plan_dir
-
-
-class QueueSamplePlanTest(unittest.TestCase):
-    """Canonical v2 fixture keeps queue/routing coverage on generated carriers."""
-
+class QueueTest(unittest.TestCase):
     def setUp(self):
-        from packages.harness.tests.v2_plan_fixture import write_v2_plan
         self._tmp = tempfile.TemporaryDirectory()
-        self.plan = write_v2_plan(
-            self._tmp.name, plan_id="RUN-FIXTURE",
-            items=[("P1.3", "🟡 In progress"), ("P1.1", "🟡 In progress"),
-                   ("P1.2", "🟢 Done")],
-            routing_rows=[
-                "| P1.1 | implementation/medium | run | single item |",
-                "| P1.3–P1.5 | implementation/medium | run | range |",
-            ],
-            next_line="exec-items: task:plan-run RUN-FIXTURE P1.1",
-        )
+        self.addCleanup(self._tmp.cleanup)
+        self.plan, _ = write_plan(
+            self._tmp.name,
+            items=[("todo", MEDIUM), ("done", MEDIUM), ("in_progress", ("frontier", "high"))])
 
-    def tearDown(self):
-        self._tmp.cleanup()
-
-    def test_order_terminal_exclusion_range_form_drivable(self):
+    def test_order_terminal_exclusion_and_drivable_items(self):
         result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         self.assertEqual([it["item_id"] for it in result["items"]], ["P1.1", "P1.3"])
-        self.assertEqual(
-            [e["item_id"] for e in result["excluded_terminal"]], ["P1.2"])
-        self.assertEqual(result["excluded_terminal"][0]["refusal"],
-                         plan_reader.ITEM_TERMINAL)
+        self.assertEqual([e["item_id"] for e in result["excluded_terminal"]], ["P1.2"])
+        self.assertEqual(result["excluded_terminal"][0]["refusal"], plan_reader.ITEM_TERMINAL)
+        self.assertEqual(result["excluded_terminal"][0]["status"], "done")
         for item in result["items"]:
             self.assertTrue(item["drivable"], item)
             self.assertIsNone(item["refusal"])
             self.assertEqual(item["exec"], "run")
-            self.assertEqual(item["route"], {"model_class": "implementation", "effort": "medium"})
-        self.assertEqual(result["next_form"]["kind"], "exec-items")
+        self.assertEqual(result["items"][0]["status"], "todo")
+        self.assertEqual(result["items"][0]["route"], {"model_class": "implementation", "effort": "medium"})
+        self.assertEqual(result["items"][1]["status"], "in_progress")
+        self.assertEqual(result["items"][1]["route"], {"model_class": "frontier", "effort": "high"})
 
-    def test_committed_fixture_runs_without_degradation(self):
-        """Package-owned committed fixture stays independent from root plan history."""
+    def test_next_form_is_the_semantic_next_of_the_plan(self):
         result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
+        self.assertEqual(result["next_form"]["kind"], "run-items")
+        self.assertTrue(result["next_form"]["declaring_line"].startswith("run-items: task:plan-run "))
+        for item in result["items"]:
+            self.assertEqual(item["next_form"], result["next_form"])
+
+
+class RefusalTest(unittest.TestCase):
+    def _queue(self, **kwargs):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan, _ = write_plan(tmp, **kwargs)
+            return plan_reader.queue(plan, "P1", monorepo_root=REPO_ROOT)
+
+    def test_blocked_item_is_not_drivable(self):
+        result = self._queue(items=[("todo", MEDIUM), ("blocked", MEDIUM)])
         self.assertFalse(result["degraded"], result["degraded_reasons"])
-        self.assertIsInstance(result["items"], list)
+        by_id = {item["item_id"]: item for item in result["items"]}
+        self.assertTrue(by_id["P1.1"]["drivable"])
+        self.assertFalse(by_id["P1.2"]["drivable"])
+        self.assertEqual(by_id["P1.2"]["refusal"], plan_reader.ITEM_BLOCKED)
+        self.assertEqual(by_id["P1.2"]["status"], "blocked")
 
-
-class ExecCellTest(unittest.TestCase):
-    def test_v2_reads_next_from_handoff_with_schema_pure_state(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="V2-STATE", item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | test |"],
-                next_line="exec-items: task:plan-run V2-STATE P1.1", layout="v2")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-            state = (plan_dir / "phases" / "P1" / "P1.1.state.md").read_text(encoding="utf-8")
-        self.assertFalse(result["degraded"], result["degraded_reasons"])
-        self.assertEqual(result["next_form"]["kind"], "exec-items")
-        self.assertEqual(result["items"][0]["next_form"]["kind"], "exec-items")
-        self.assertNotIn("**Next:**", state)
-
-    def test_v2_invalid_handoff_next_remains_undrivable(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="V2-BAD-HANDOFF", item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | test |"],
-                next_line="unsupported: V2-BAD-HANDOFF P1.1", layout="v2")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertTrue(result["degraded"])
-        self.assertEqual(result["items"], [])
-        self.assertIn("Next does not match", result["degraded_reasons"][0])
-    def test_legacy_exec_spellings_are_drivable_as_run(self):
-        for spelling in ("run", "plan-run", "plan-exec", "manual"):
-            with self.subTest(spelling=spelling), tempfile.TemporaryDirectory() as tmp:
-                plan_dir = _write_fixture(
-                    tmp, plan_id="EXEC-SPELLING",
-                    item_ids=["P1.1"],
-                    routing_rows=[f"| P1.1 | implementation/medium | {spelling} | test |"],
-                    next_line="run-items: task:plan-run EXEC-SPELLING P1.1")
-                result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-                self.assertFalse(result["degraded"], result["degraded_reasons"])
-                item = result["items"][0]
-                self.assertTrue(item["drivable"], item)
-                self.assertEqual(item["exec"], "run")
-
-    def test_legacy_next_form_is_still_read(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="NEXT-LEGACY-FORM",
-                item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | test |"],
-                next_line="exec-items: task:plan-exec NEXT-LEGACY-FORM P1.1")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertFalse(result["degraded"], result["degraded_reasons"])
-        self.assertEqual(result["next_form"]["kind"], "exec-items")
-        self.assertTrue(result["items"][0]["drivable"])
-
-    def test_exec_other_than_run_refuses(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="EXEC-DESIGN",
-                item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | plan-design | test |"],
-                next_line="run-items: task:plan-run EXEC-DESIGN P1.1")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+    def test_skeleton_phase_refuses_every_item(self):
+        result = self._queue(items=[("todo", MEDIUM)], design="skeleton")
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         item = result["items"][0]
         self.assertFalse(item["drivable"])
-        self.assertEqual(item["refusal"], plan_reader.EXEC_NOT_RUN)
-        self.assertEqual(item["exec"], "plan-design")
+        self.assertEqual(item["refusal"], plan_reader.PHASE_NOT_DETAILED)
+        self.assertIsNone(item["exec"])
 
-    def test_comma_list_items_cell_refuses_both(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="COMMA-LIST",
-                item_ids=["P1.1", "P1.2"],
-                routing_rows=["| P1.1, P1.2 | implementation/medium | run | test |"],
-                next_line="exec-items: task:plan-run COMMA-LIST P1.1")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertTrue(result["degraded"])
-        self.assertIn("outside closed grammar", result["degraded_reasons"][0])
+    def test_done_with_deviations_is_terminal(self):
+        result = self._queue(items=[("done_with_deviations", MEDIUM), ("todo", MEDIUM)])
+        self.assertEqual([e["status"] for e in result["excluded_terminal"]], ["done_with_deviations"])
+        self.assertEqual([it["item_id"] for it in result["items"]], ["P1.2"])
 
     def test_frontier_high_route_is_drivable(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="ROUTE-FRONTIER",
-                item_ids=["P1.1"],
-                routing_rows=["| P1.1 | frontier/high | run | test |"],
-                next_line="run-items: task:plan-run ROUTE-FRONTIER P1.1")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertFalse(result["degraded"], result["degraded_reasons"])
+        result = self._queue(items=[("todo", ("frontier", "high"))])
         item = result["items"][0]
         self.assertTrue(item["drivable"], item)
-        self.assertIsNone(item["refusal"])
         self.assertEqual(item["route"], {"model_class": "frontier", "effort": "high"})
 
-    def test_routing_unresolved_on_malformed_row(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="ROUTE-UNRESOLVED",
-                item_ids=["P1.1"],
-                routing_rows=["| P1.1 | notaslasheffort | run | test |"],
-                next_line="exec-items: task:plan-run ROUTE-UNRESOLVED P1.1")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertFalse(result["degraded"], result["degraded_reasons"])
-        item = result["items"][0]
-        self.assertFalse(item["drivable"])
-        self.assertEqual(item["refusal"], plan_reader.ROUTING_UNRESOLVED)
-        self.assertIsNone(item["route"])
-        self.assertIsNotNone(item["route_error"])
-
-
-class NextFormTest(unittest.TestCase):
-    def test_legacy_next_form_is_unsupported(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = _write_fixture(
-                tmp, plan_id="NEXT-LEGACY",
-                item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | test |"],
-                next_line="/task:plan-run NEXT-LEGACY P1.1")
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertFalse(result["degraded"], result["degraded_reasons"])
-        self.assertIsNone(result["next_form"]["kind"])
-        item = result["items"][0]
-        self.assertFalse(item["drivable"])
-        self.assertEqual(item["refusal"], plan_reader.NEXT_FORM_UNSUPPORTED)
+    def test_incomplete_route_is_unresolved(self):
+        self.assertEqual(
+            plan_reader._classify("todo", True, None, "item route is incomplete: {}"),
+            (False, plan_reader.ROUTING_UNRESOLVED, "item route is incomplete: {}"))
+        self.assertEqual(plan_reader._route({"route": {"class": "frontier"}})[0], None)
 
 
 class DegradedTest(unittest.TestCase):
     def test_monorepo_root_not_found_is_degraded_not_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = Path(tmp) / "STANDALONE"
-            (plan_dir / "phases").mkdir(parents=True)
-            (plan_dir / "plan.md").write_text("# STANDALONE\n", encoding="utf-8")
+            plan_dir.mkdir()
             result = plan_reader.queue(plan_dir, "P1")
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
         self.assertTrue(result["degraded_reasons"])
 
-    def test_plan_lint_nonzero_exit_is_degraded_not_empty(self):
+    def test_missing_plan_json_is_degraded_not_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = Path(tmp) / "BROKEN"
             plan_dir.mkdir(parents=True)
-
-
-
-            (plan_dir / "plan.md").write_text("# BROKEN — plan without Meta\n", encoding="utf-8")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
         self.assertTrue(result["degraded_reasons"])
 
-
-class RoutingMatcherDriftTest(unittest.TestCase):
-    """Internal documentation."""
-
-    @classmethod
-    def setUpClass(cls):
-        task_lib = str(REPO_ROOT / "packages" / "task" / "lib")
-        if task_lib not in sys.path:
-            sys.path.insert(0, task_lib)
-        from task import plan_lint, task_contract  # noqa: PLC0415
-        cls.plan_lint = plan_lint
-        cls.task_contract = task_contract
-
-    def test_matcher_mirrors_task_contract_find_routing_row(self):
-        plan_lines = """## 3. Routing
-
-| Items | Model class/effort | Exec | Why |
-|:--|:--|:--|:--|
-| P9.1 | implementation/medium | run | single form |
-| P9.2-P9.4 | implementation/medium | run | range, covers P9.3 |
-| P9.5, P9.6 | implementation/medium | run | comma separated list - illegal |
-
-## 4. Next section
-""".splitlines()
-
-        candidate_items = ["P9.1", "P9.3", "P9.5", "P9.6", "P9.9"]
-
-        covered_by_plan_reader = {
-            item_id for item_id in candidate_items
-            if plan_reader._resolve_exec_cell(plan_lines, item_id)[0] is not None
-        }
-
-        covered_by_task_contract = set()
-        for item_id in candidate_items:
-            try:
-                self.task_contract._find_routing_row(
-                    self.plan_lint, plan_lines, item_id, routing_metadata={})
-            except self.task_contract.TaskContractBuildError:
-                continue
-            covered_by_task_contract.add(item_id)
-
-        self.assertEqual(covered_by_plan_reader, covered_by_task_contract)
-        self.assertEqual(covered_by_plan_reader, {"P9.1", "P9.3"})
+    def test_unknown_phase_is_degraded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan, _ = write_plan(tmp, items=[("todo", MEDIUM)])
+            result = plan_reader.queue(plan, "P7", monorepo_root=REPO_ROOT)
+        self.assertTrue(result["degraded"])
+        self.assertEqual(result["items"], [])
 
 
 if __name__ == "__main__":

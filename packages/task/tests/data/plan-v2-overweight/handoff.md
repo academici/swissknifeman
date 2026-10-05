@@ -1,3 +1,0 @@
-# HANDOFF — fixture
-
-**Next:** —

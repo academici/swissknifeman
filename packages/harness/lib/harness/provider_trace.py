@@ -48,7 +48,7 @@ def build_claude_raw(run_report, *, raw_ref, occurred_at, source_bytes=None, pla
     re-parse it: the fields a `TraceRecord` needs beyond raw tool/file counts
     (`plan_ref`/`contract_ref`/`route`/`dispatch`/`public_outcome`) are caller-supplied,
     because inferring plan/contract/route linkage from tool-call shapes would duplicate
-    logic `task.journal`/`task.route_evidence` already own."""
+    logic the Task plan log (`plan.py log`) already owns."""
     if not isinstance(run_report, dict):
         raise ValueError("run_report must be a dict (harness run-report SCHEMA=2 shape)")
     raw = {

@@ -12,7 +12,7 @@ sys.path.insert(0, str(REPO_ROOT / "packages" / "harness" / "lib"))
 from harness.run import journal, worker  # noqa: E402
 
 
-PLAN_ID = "JOURNAL-FIXTURE"
+from packages.harness.tests.plan_fixture import write_plan  # noqa: E402
 
 
 def _outcome(kind, **extra):
@@ -24,18 +24,16 @@ def _outcome(kind, **extra):
 
 
 class _Plan:
-    """Internal documentation."""
+    """A v3 plan with one open item; `events()` reads its append-only `log.jsonl`."""
 
     def __init__(self, tmp):
-        self.plan_dir = Path(tmp) / PLAN_ID
-        self.plan_dir.mkdir(parents=True)
+        self.plan_dir, _ = write_plan(Path(tmp), items=[("in_progress", ("implementation", "medium"))])
 
-    def entries(self):
-        path = self.plan_dir / "journal.jsonl"
-        if not path.is_file():
-            return []
-        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
-               if line.strip()]
+    def events(self, type_=None):
+        path = self.plan_dir / "log.jsonl"
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip()]
+        return [row for row in rows if type_ is None or row["type"] == type_]
 
 
 class ClassifyTest(unittest.TestCase):
@@ -46,25 +44,25 @@ class ClassifyTest(unittest.TestCase):
 
     def test_ok_outcome_with_terminal_status_is_worker(self):
         category, who = journal.classify(
-            pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="🟢 Done")
+            pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="done")
         self.assertEqual(category, "ok-terminal")
         self.assertEqual(who, journal.WORKER)
 
     def test_ok_outcome_with_deviations_status_is_still_worker(self):
         category, who = journal.classify(
             pre_launch=False, outcome=_outcome(worker.OUTCOME_OK),
-            item_status="🟠 Done with deviations")
+            item_status="done_with_deviations")
         self.assertEqual(who, journal.WORKER)
 
     def test_ok_outcome_with_blocked_escalation_status_is_worker(self):
 
         category, who = journal.classify(
-            pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="🔴 Blocked")
+            pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="blocked")
         self.assertEqual(who, journal.WORKER)
 
     def test_ok_outcome_with_non_terminal_status_is_driver_no_op(self):
         category, who = journal.classify(
-            pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="🟡 In progress")
+            pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="in_progress")
         self.assertEqual(category, "no-op")
         self.assertEqual(who, journal.DRIVER)
 
@@ -77,7 +75,7 @@ class ClassifyTest(unittest.TestCase):
     def test_transport_and_quota_and_error_are_driver(self):
         for kind in (worker.OUTCOME_TRANSPORT, worker.OUTCOME_QUOTA, worker.OUTCOME_ERROR):
             category, who = journal.classify(
-                pre_launch=False, outcome=_outcome(kind), item_status="⬜ Not started")
+                pre_launch=False, outcome=_outcome(kind), item_status="todo")
             self.assertEqual(category, kind)
             self.assertEqual(who, journal.DRIVER)
 
@@ -89,135 +87,93 @@ class ClassifyTest(unittest.TestCase):
 class MaybeWriteTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
         self.plan = _Plan(self._tmp.name)
 
-    def tearDown(self):
-        self._tmp.cleanup()
+    def _write(self, **kwargs):
+        kwargs.setdefault("run_id", "wave-1")
+        kwargs.setdefault("monorepo_root", REPO_ROOT)
+        return journal.maybe_write(self.plan.plan_dir, "P1.1", **kwargs)
 
-    def test_worker_closed_item_gets_no_driver_line(self):
-        result = journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.1", run_id="wave-1", attempt=1,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_OK), item_status="🟢 Done",
-            monorepo_root=REPO_ROOT)
+    def _driver_events(self):
+        return [e for e in self.plan.events() if e["actor"]["model"] == "driver"]
+
+    def test_worker_closed_item_gets_no_driver_event(self):
+        result = self._write(outcome=_outcome(worker.OUTCOME_OK), item_status="done")
         self.assertIsNone(result)
-        self.assertEqual(self.plan.entries(), [])
+        self.assertEqual(self._driver_events(), [])
 
-    def test_timeout_writes_exactly_one_nonterminal_candidate(self):
-        result = journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.1", run_id="wave-1", attempt=1,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT, reason="30min"),
-            item_status="🟡 In progress", monorepo_root=REPO_ROOT)
+    def test_timeout_writes_exactly_one_difficulty_event(self):
+        result = self._write(outcome=_outcome(worker.OUTCOME_TIMEOUT, reason="30min"),
+                             item_status="in_progress")
         self.assertIsNotNone(result)
-        entries = self.plan.entries()
-        self.assertEqual(len(entries), 1)
-        entry = entries[0]
-        self.assertEqual(entry["run_id"], "wave-1")
-        self.assertEqual(entry["item_id"], "P9.1")
-        self.assertEqual(entry["command"], "plan-run")
-        self.assertEqual(entry["result"], "block-candidate")
-        self.assertNotIn(entry["result"], ("blocked", "escalated"))
-        self.assertTrue(entry["note"].startswith("[wave wave-1]"))
+        self.assertEqual(result["type"], "difficulty")
+        events = self._driver_events()
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual((event["type"], event["item"]), ("difficulty", "P1.1"))
+        self.assertEqual(event["actor"], {"provider": "harness", "model": "driver"})
+        self.assertTrue(event["summary"].startswith("[wave wave-1] timeout"))
+        self.assertIn("run:wave-1", event["refs"])
 
-    def test_routing_blocked_writes_routing_rejected_with_friction(self):
-        journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.2", run_id="wave-1", attempt=1,
-            actor="sonnet/high", pre_launch=True, refusal_detail="EXEC-NOT-RUN",
-            monorepo_root=REPO_ROOT)
-        entries = self.plan.entries()
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0]["result"], "routing-rejected")
-        self.assertEqual(entries[0]["friction"], ["routing-blocked"])
+    def test_routing_blocked_writes_a_blocker_with_the_refusal(self):
+        self._write(pre_launch=True, refusal_detail="PHASE-NOT-DETAILED: phase is a skeleton")
+        events = self._driver_events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["type"], "blocker")
+        self.assertIn("routing-blocked: PHASE-NOT-DETAILED", events[0]["summary"])
 
-    def test_worker_failures_are_nonterminal_candidates(self):
-        for index, kind in enumerate((
-                worker.OUTCOME_TIMEOUT, worker.OUTCOME_TRANSPORT,
-                worker.OUTCOME_QUOTA, worker.OUTCOME_ERROR), start=1):
+    def test_worker_failures_are_difficulties_not_blockers(self):
+        for kind in (worker.OUTCOME_TIMEOUT, worker.OUTCOME_TRANSPORT,
+                     worker.OUTCOME_QUOTA, worker.OUTCOME_ERROR):
             with self.subTest(kind=kind):
-                item_id = f"P8.{index}"
-                journal.maybe_write(
-                    self.plan.plan_dir, PLAN_ID, item_id, run_id="wave-failures", attempt=1,
-                    actor="sonnet/high", outcome=_outcome(kind), item_status="🟡 In progress",
-                    monorepo_root=REPO_ROOT)
-                entry = self.plan.entries()[-1]
-                self.assertEqual(entry["result"], "block-candidate")
-                self.assertNotIn(entry["result"], ("blocked", "escalated"))
+                self._write(run_id=f"wave-{kind}", outcome=_outcome(kind),
+                            item_status="in_progress")
+                self.assertEqual(self._driver_events()[-1]["type"], "difficulty")
 
-    def test_no_op_writes_no_op_result_and_friction(self):
-        journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.3", run_id="wave-1", attempt=1,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_OK), item_status="⬜ Not started",
-            monorepo_root=REPO_ROOT)
-        entries = self.plan.entries()
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0]["result"], "no-op")
-        self.assertEqual(entries[0]["friction"], ["no-op"])
+    def test_no_op_writes_a_difficulty(self):
+        self._write(outcome=_outcome(worker.OUTCOME_OK), item_status="todo")
+        events = self._driver_events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["type"], "difficulty")
+        self.assertIn("no-op", events[0]["summary"])
 
-    def test_repeat_in_wave_uses_attempt_and_appends_second_line(self):
-        journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.4", run_id="wave-1", attempt=1,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="🟡 In progress",
-            monorepo_root=REPO_ROOT)
-        journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.4", run_id="wave-1", attempt=2,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="🟡 In progress",
-            monorepo_root=REPO_ROOT)
-        entries = [e for e in self.plan.entries() if e["item_id"] == "P9.4"]
-        self.assertEqual(len(entries), 2)
-        self.assertEqual([e["attempt"] for e in entries], [1, 2])
+    def test_run_metrics_are_recorded_in_the_impact(self):
+        self._write(outcome=_outcome(worker.OUTCOME_ERROR, session_id="s-1", total_cost_usd=0.5,
+                                     num_turns=3, duration_ms=1200),
+                    item_status="in_progress")
+        impact = self._driver_events()[0]["impact"]
+        for fragment in ("session=s-1", "cost_usd=0.5", "turns=3", "duration_ms=1200"):
+            self.assertIn(fragment, impact)
+
+    def test_repeat_in_wave_appends_a_second_event(self):
+        for _ in range(2):
+            self._write(outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="in_progress")
+        self.assertEqual(len(self._driver_events()), 2)
 
     def test_unknown_outcome_refuses_without_calling_cli(self):
         with self.assertRaises(journal.JournalWriteRefused):
-            journal.maybe_write(
-                self.plan.plan_dir, PLAN_ID, "P9.5", run_id="wave-1", attempt=1,
-                actor="sonnet/high", outcome=_outcome("bogus"), item_status="🟡 In progress",
-                monorepo_root=REPO_ROOT)
-        self.assertEqual(self.plan.entries(), [])
+            self._write(outcome=_outcome("bogus"), item_status="in_progress")
+        self.assertEqual(self._driver_events(), [])
 
     def test_nonzero_cli_exit_raises_and_stops_wave(self):
-
-
         with self.assertRaises(journal.JournalCallFailed):
             journal.maybe_write(
-                self.plan.plan_dir, "WRONG-PLAN-ID", "P9.6", run_id="wave-1", attempt=1,
-                actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT),
-                item_status="🟡 In progress", monorepo_root=REPO_ROOT)
+                self.plan.plan_dir, "P9.9", run_id="wave-1",
+                outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="in_progress",
+                monorepo_root=REPO_ROOT)
 
     def test_missing_run_id_is_rejected(self):
         with self.assertRaises(ValueError):
-            journal.maybe_write(
-                self.plan.plan_dir, PLAN_ID, "P9.7", run_id=None, attempt=1,
-                actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT),
-                item_status="🟡 In progress", monorepo_root=REPO_ROOT)
+            self._write(run_id=None, outcome=_outcome(worker.OUTCOME_TIMEOUT),
+                        item_status="in_progress")
 
-    def test_no_two_driver_lines_for_one_item_in_one_wave(self):
-
-
-        journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.8", run_id="wave-1", attempt=1,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="🟡 In progress",
-            monorepo_root=REPO_ROOT)
-        by_item = {}
-        for entry in self.plan.entries():
-            if entry["run_id"] != "wave-1":
-                continue
-            by_item.setdefault(entry["item_id"], []).append(entry)
-        self.assertTrue(all(len(v) <= 1 for v in by_item.values()))
-
-    def test_every_written_line_passes_owner_schema_validation(self):
-        journal.maybe_write(
-            self.plan.plan_dir, PLAN_ID, "P9.9", run_id="wave-1", attempt=1,
-            actor="sonnet/high", outcome=_outcome(worker.OUTCOME_QUOTA), item_status="🟡 In progress",
-            monorepo_root=REPO_ROOT)
+    def test_every_written_event_passes_check(self):
+        self._write(outcome=_outcome(worker.OUTCOME_QUOTA), item_status="in_progress")
         proc = subprocess.run(
-            [sys.executable, "-c",
-            "import json,sys\n"
-            "sys.path.insert(0, sys.argv[2])\n"
-            "from task.journal import validate_entry\n"
-            "[validate_entry(json.loads(l)) for l in open(sys.argv[1]) if l.strip()]\n",
-            str(self.plan.plan_dir / "journal.jsonl"),
-            str(REPO_ROOT / "packages" / "task" / "lib")],
-            capture_output=True, text=True)
-        self.assertEqual(proc.returncode, 0, proc.stderr)
+            [sys.executable, str(REPO_ROOT / "packages/task/scripts/plan.py"), "check",
+             str(self.plan.plan_dir)], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 
 
 class SummarizeWaveTest(unittest.TestCase):

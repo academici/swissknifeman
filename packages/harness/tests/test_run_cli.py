@@ -14,150 +14,13 @@ sys.path.insert(0, str(REPO_ROOT / "packages" / "harness" / "lib"))
 from harness.cli import COMMANDS  # noqa: E402
 from harness.common import Env  # noqa: E402
 from harness.run import cmd_run, gate, journal, plan_reader, worker  # noqa: E402
+from packages.harness.tests.plan_fixture import write_plan  # noqa: E402
 
 BIN_HARNESS = REPO_ROOT / "packages" / "harness" / "bin" / "harness"
 
-PLAN_ID = "CLI-FIXTURE"
-PHASE_ID = "P9"
-DRIVABLE_ID = "P9.1"
-MANUAL_ID = "P9.2"
-
-
-def _plan_md():
-    return f"""# {PLAN_ID} — Fixture plan for cmd_run (P4.6)
-
-## 0. Meta
-
-| Field | Meaning |
-|:--|:--|
-| Plan ID | {PLAN_ID} |
-| Title | Fixture plan for cmd_run |
-| Version | 0.1.0 |
-| Status | 🟡 In progress |
-| Document Type | Executable Master Plan |
-| Authoring Model | opus |
-| Last Updated | 2026-08-01 |
-| Repository | swissknifeman |
-| Approval Owner | dv |
-
-## 1. Context
-
-Synthetic plan for unit tests `harness/run/__init__.py` (P4.6). NOT a battle plan.
-
-## 2. Execution Rules
-
-- One item at a time.
-
-## 3. Routing
-
-| Items | Model class/effort | Exec | Why |
-|:--|:--|:--|:--|
-| {DRIVABLE_ID} | implementation/medium | run | fixture cmd_run |
-| {MANUAL_ID} | frontier/high | plan-design | fixture cmd_run — failure |
-
-## 4. Phase Index & Status Board
-
-| Phase | Title | Items 🟢/total | Status |
-|:--|:--|:--|:--|
-| {PHASE_ID} | Phase times | 0/2 | 🟡 In progress |
-
-## 5. Decision Log
-
-| D# | Date | Solution | Why |
-|:--|:--|:--|:--|
-| D1 | 2026-08-01 | Closed set fittings | cover cmd_run without a second parser |
-
-## 6. Update Log
-
-| Date | Who (role/model) | What |
-|:--|:--|:--|
-| 2026-08-01 | package-implementer/sonnet | Fixture created (P4.6) |
-"""
-
-
-def _phase_md():
-    return f"""# {PHASE_ID} — Phase times
-
-## Phase Context
-
-Synthetic phase of fixture `cmd_run` (P4.6).
-
-## Phase Status
-
-| ID | Title | Status | Updated |
-|:--|:--|:--|:--|
-| {DRIVABLE_ID} | Slave item | ⬜ Not started | 2026-08-01 |
-| {MANUAL_ID} | Not driverable item | ⬜ Not started | 2026-08-01 |
-
-### {DRIVABLE_ID} — Slave item
-
-**Status:** ⬜ Not started
-**Intent:** Demonstrates driving.
-**Why:** Basic case.
-**Scope Included:** nothing - fixture.
-**Scope Excluded:** real logic.
-**Inputs:** —
-**Files:** —
-**Required Reads:** 1) not applicable (fixture).
-**Implementation Rules:** no - fixture.
-**Code Guidance:** no - fixture.
-**Validation:** not applicable - fixture is read by tests `cmd_run`.
-**Deliverables:** synthetic data for `test_run_cli.py`.
-**Completion Notes:** —
-**Pending Work:** —
-**Known Deviations:** —
-**Escalation Needed:** no
-
-### {MANUAL_ID} — Not driverable item
-
-**Status:** ⬜ Not started
-**Intent:** Demonstrates driving failure (Exec=plan-design).
-**Why:** Basic case.
-**Scope Included:** nothing - fixture.
-**Scope Excluded:** real logic.
-**Inputs:** —
-**Files:** —
-**Required Reads:** 1) not applicable (fixture).
-**Implementation Rules:** no - fixture.
-**Code Guidance:** no - fixture.
-**Validation:** not applicable - fixture is read by tests `cmd_run`.
-**Deliverables:** synthetic data for `test_run_cli.py`.
-**Completion Notes:** —
-**Pending Work:** —
-**Known Deviations:** —
-**Escalation Needed:** no
-
-## Phase Handoff
-
-Fixture: the phase does not really give up, it is used by tests `cmd_run`.
-"""
-
-
-def _handoff_md():
-    return f"""# HANDOFF — 2026-08-01 — after P0.0
-
-**Next:** run-items: task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}
-
-| Parameter | Meaning |
-|:--|:--|
-| Model class | implementation |
-| Effort | medium |
-| Context | continue (/clear) |
-| The bottom line | fixture - read by tests `cmd_run` |
-
-```
-/task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}
-```
-
-**Done:** —
-**Remaining:** {DRIVABLE_ID}, {MANUAL_ID}.
-**Sources of truth:** plans/{PLAN_ID}/plan.md · plans/{PLAN_ID}/phases/{PHASE_ID}.md
-**Open risks:** —
-**Workarounds/Deferred/Open questions:**
-- workarounds: —
-- deferred: —
-- open_questions: —
-"""
+PHASE_ID = "P1"
+DRIVABLE_ID = "P1.1"
+BLOCKED_ID = "P1.2"
 
 
 def _init_repo(root):
@@ -170,16 +33,9 @@ def _init_repo(root):
     run(["init", "-q"])
     run(["config", "user.email", "cli-test@example.com"])
     run(["config", "user.name", "cli-test"])
-    from packages.harness.tests.v2_plan_fixture import write_v2_plan
-    plan_dir = write_v2_plan(
-        root, plan_id=PLAN_ID,
-        items=[(DRIVABLE_ID, "🟡 In progress"), (MANUAL_ID, "🟡 In progress")],
-        routing_rows=[
-            f"| {DRIVABLE_ID} | implementation/medium | run | fixture cmd_run |",
-            f"| {MANUAL_ID} | frontier/high | plan-design | fixture cmd_run |",
-        ],
-        next_line=f"run-items: task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}",
-    )
+    plan_dir, _ = write_plan(
+        root, codename="CLI-FIXTURE",
+        items=[("todo", ("implementation", "medium")), ("blocked", ("frontier", "high"))])
     run(["add", "."])
     run(["commit", "-q", "-m", "initial"])
     return plan_dir
@@ -225,7 +81,7 @@ class DryRunTest(unittest.TestCase):
         raise AssertionError("--dry-run must NOT call this (Implementation Rule 2)")
 
     def _run(self, extra_flags):
-        argv = [PLAN_ID, PHASE_ID, "--dry-run", "--plans-root", str(self.root / "plans"),
+        argv = [self.plan_dir.name, PHASE_ID, "--dry-run", "--plans-root", str(self.root / "plans"),
                *extra_flags]
         with mock.patch.object(worker, "run", side_effect=self._refuse_if_called), \
              mock.patch.object(worker, "resolve_claude_bin", return_value=sys.executable), \
@@ -237,9 +93,9 @@ class DryRunTest(unittest.TestCase):
     def test_text_output_shows_argv_and_refusal(self):
         out = self._run([])
         self.assertIn(f"[DRIVING] {DRIVABLE_ID}", out)
-        self.assertIn("/task:plan-run CLI-FIXTURE P9.1", out)
-        self.assertIn(f"[FAILURE] {MANUAL_ID}", out)
-        self.assertIn("EXEC-NOT-RUN", out)
+        self.assertIn(f"/task:plan-run {self.plan_dir.name} {DRIVABLE_ID}", out)
+        self.assertIn(f"[FAILURE] {BLOCKED_ID}", out)
+        self.assertIn("ITEM-BLOCKED", out)
 
     def test_json_output_is_valid(self):
         import json
@@ -248,7 +104,9 @@ class DryRunTest(unittest.TestCase):
         self.assertEqual(payload["mode"], "dry-run")
         ids = {item["item_id"]: item for item in payload["items"]}
         self.assertTrue(ids[DRIVABLE_ID]["drivable"])
-        self.assertFalse(ids[MANUAL_ID]["drivable"])
+        self.assertFalse(ids[BLOCKED_ID]["drivable"])
+        self.assertEqual(ids[BLOCKED_ID]["refusal"], "ITEM-BLOCKED")
+        self.assertEqual(ids[DRIVABLE_ID]["status"], "todo")
 
     def test_read_only_no_git_diff(self):
         before = subprocess.run(["git", "status", "--porcelain"], cwd=self.root,
@@ -261,14 +119,14 @@ class DryRunTest(unittest.TestCase):
 
 def _queue_item(item_id, *, drivable=True):
     if drivable:
-        return {"item_id": item_id, "status": "⬜ Not started",
+        return {"item_id": item_id, "status": "todo",
                 "route": {"model_class": "implementation", "effort": "medium"},
                 "route_error": None, "exec": "run", "exec_error": None,
                 "drivable": True, "refusal": None, "refusal_detail": None}
-    return {"item_id": item_id, "status": "⬜ Not started", "route": None,
-           "route_error": None, "exec": "plan-design", "exec_error": None,
-           "drivable": False, "refusal": "EXEC-NOT-RUN",
-           "refusal_detail": "Exec='plan-design'"}
+    return {"item_id": item_id, "status": "todo", "route": None,
+           "route_error": None, "exec": None, "exec_error": None,
+           "drivable": False, "refusal": "ITEM-BLOCKED",
+           "refusal_detail": "item is blocked"}
 
 
 def _canned_queue(*item_ids):
@@ -297,7 +155,7 @@ class WaveOrchestrationTest(unittest.TestCase):
              mock.patch.object(gate, "verdict",
                                return_value={"verdict": gate.RED, "signals_matched": ["outcome-not-ok"],
                                             "lint_class": None,
-                                            "raw": {"item_after": {"status": "⬜ Not started"}}}), \
+                                            "raw": {"item_after": {"status": "todo"}}}), \
              mock.patch.object(journal, "maybe_write", return_value={"category": "error"}) as jw:
             out = self._run(["FIXTURE-WAVE", PHASE_ID, "--plans-root", "/irrelevant"])
         self.assertEqual(worker.run.call_count if hasattr(worker.run, "call_count") else 1, 1)
@@ -310,7 +168,7 @@ class WaveOrchestrationTest(unittest.TestCase):
 
         def fake_verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, **kw):
             return {"verdict": verdicts[item_id], "signals_matched": ["status-deviations"],
-                   "lint_class": "clean", "raw": {"item_after": {"status": "🟠 Done with deviations"}}}
+                   "lint_class": "clean", "raw": {"item_after": {"status": "done_with_deviations"}}}
 
         with mock.patch.object(plan_reader, "queue",
                                return_value=_canned_queue("P9.1", "P9.2")), \
@@ -319,7 +177,7 @@ class WaveOrchestrationTest(unittest.TestCase):
                                return_value={"outcome": "ok", "session_id": "s1",
                                             "total_cost_usd": 0.01, "num_turns": 3,
                                             "duration_ms": 1000, "permission_denials": [],
-                                            "result_text": "Status: 🟠 Done with deviations"}), \
+                                            "result_text": "Status: done_with_deviations"}), \
              mock.patch.object(gate, "verdict", side_effect=fake_verdict), \
              mock.patch.object(journal, "maybe_write", return_value=None) as jw:
             out = self._run(["FIXTURE-WAVE", PHASE_ID, "--plans-root", "/irrelevant"])

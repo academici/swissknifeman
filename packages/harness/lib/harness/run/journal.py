@@ -1,13 +1,12 @@
-"""Internal documentation."""
+"""Driver friction events of a run wave, written through `plan.py log`."""
 from __future__ import annotations
 
-import os
 import subprocess
 from pathlib import Path
 
 from core import find_monorepo_root
 
-from harness.run import worker
+from harness.run import plan_reader, worker
 
 
 DRIVER = "driver"
@@ -39,23 +38,22 @@ _WHO_WRITES = dict(WHO_WRITES)
 
 
 
-_RESULT_FRICTION = {
-    CATEGORY_ROUTING_BLOCKED: ("routing-rejected", ("routing-blocked",)),
-    worker.OUTCOME_TIMEOUT: ("block-candidate", ()),
-    worker.OUTCOME_TRANSPORT: ("block-candidate", ()),
-    worker.OUTCOME_QUOTA: ("block-candidate", ()),
-    worker.OUTCOME_ERROR: ("block-candidate", ()),
-    CATEGORY_NO_OP: ("no-op", ("no-op",)),
+# category -> `plan.py log` type: a refused launch is a blocker, a failed or idle run a difficulty
+_EVENT_TYPE = {
+    CATEGORY_ROUTING_BLOCKED: "blocker",
+    worker.OUTCOME_TIMEOUT: "difficulty",
+    worker.OUTCOME_TRANSPORT: "difficulty",
+    worker.OUTCOME_QUOTA: "difficulty",
+    worker.OUTCOME_ERROR: "difficulty",
+    CATEGORY_NO_OP: "difficulty",
 }
 
+# the driver identity recorded as the event actor (`PROVIDER/MODEL`)
+DRIVER_ACTOR = "harness/driver"
+
+_NON_TERMINAL_STATUSES = frozenset({"in_progress", "todo"})
 
 
-
-_NON_TERMINAL_STATUSES = frozenset({"🟡 In progress", "⬜ Not started"})
-
-
-
-_DRIVER_COMMAND = worker.WORKER_COMMAND_ID.rsplit(":", 1)[-1]
 
 
 class JournalUnavailable(RuntimeError):
@@ -88,32 +86,17 @@ def classify(*, pre_launch, outcome=None, item_status=None):
 
 
 
-def _build_argv(*, plan_dir, plan_id, item_id, run_id, attempt, actor, result, friction, note,
+def _build_argv(*, plan_dir, item_id, run_id, event_type, note, monorepo_root,
                 session_id=None, cost_usd=None, num_turns=None, duration_ms=None):
-    argv = ["python3", "-m", "task.journal", "append",
-           "--plan-dir", str(plan_dir), "--plan", plan_id, "--item", item_id,
-           "--command", _DRIVER_COMMAND, "--result", result, "--actor", actor,
-           "--run-id", run_id, "--attempt", str(attempt)]
-    if friction:
-        argv += ["--friction", ",".join(friction)]
-    if session_id is not None:
-        argv += ["--session-id", session_id]
-    if cost_usd is not None:
-        argv += ["--cost-usd", str(cost_usd)]
-    if num_turns is not None:
-        argv += ["--num-turns", str(num_turns)]
-    if duration_ms is not None:
-        argv += ["--duration-ms", str(duration_ms)]
-    if note is not None:
-        argv += ["--note", note]
+    argv = ["python3", str(plan_reader.plan_script(monorepo_root)), "log",
+            str(plan_dir), item_id, "--type", event_type, "--summary", note,
+            "--actor", DRIVER_ACTOR, "--ref", f"run:{run_id}"]
+    metrics = [f"{key}={value}" for key, value in (
+        ("session", session_id), ("cost_usd", cost_usd), ("turns", num_turns),
+        ("duration_ms", duration_ms)) if value is not None]
+    if metrics:
+        argv += ["--impact", " ".join(metrics)]
     return argv
-
-
-def _task_lib_path(monorepo_root):
-
-
-
-    return Path(monorepo_root).joinpath("packages", "task", "lib")
 
 
 def _resolve_monorepo_root(monorepo_root, plan_dir):
@@ -127,17 +110,11 @@ def _resolve_monorepo_root(monorepo_root, plan_dir):
     return root
 
 
-def _run_cli(argv, *, monorepo_root, plan_dir, timeout):
-    root = _resolve_monorepo_root(monorepo_root, plan_dir)
-    env = dict(os.environ)
-    lib_path = str(_task_lib_path(root))
-    existing = env.get("PYTHONPATH")
-    env["PYTHONPATH"] = lib_path if not existing else os.pathsep.join([lib_path, existing])
+def _run_cli(argv, *, timeout):
     try:
-        return subprocess.run(argv, capture_output=True, text=True, timeout=timeout,
-                              env=env, check=False)
+        return subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise JournalUnavailable(f"process CLI log failed: {exc}") from exc
+        raise JournalUnavailable(f"plan.py log failed: {exc}") from exc
 
 
 def _build_note(run_id, category, *, outcome=None, refusal_detail=None):
@@ -152,7 +129,7 @@ def _build_note(run_id, category, *, outcome=None, refusal_detail=None):
 
 
 
-def maybe_write(plan_dir, plan_id, item_id, *, run_id, attempt, actor, pre_launch=False,
+def maybe_write(plan_dir, item_id, *, run_id, pre_launch=False,
                 refusal_detail=None, outcome=None, item_status=None, monorepo_root=None,
                 timeout=30):
     """Internal documentation."""
@@ -163,22 +140,22 @@ def maybe_write(plan_dir, plan_id, item_id, *, run_id, attempt, actor, pre_launc
     if who == WORKER:
         return None
 
-    result, friction = _RESULT_FRICTION[category]
+    event_type = _EVENT_TYPE[category]
     note = _build_note(run_id, category, outcome=outcome, refusal_detail=refusal_detail)
+    root = _resolve_monorepo_root(monorepo_root, plan_dir)
     argv = _build_argv(
-        plan_dir=plan_dir, plan_id=plan_id, item_id=item_id, run_id=run_id, attempt=attempt,
-        actor=actor, result=result, friction=friction, note=note,
+        plan_dir=plan_dir, item_id=item_id, run_id=run_id, event_type=event_type, note=note,
+        monorepo_root=root,
         session_id=(outcome or {}).get("session_id"),
         cost_usd=(outcome or {}).get("total_cost_usd"),
         num_turns=(outcome or {}).get("num_turns"),
         duration_ms=(outcome or {}).get("duration_ms"))
 
-    proc = _run_cli(argv, monorepo_root=monorepo_root, plan_dir=plan_dir, timeout=timeout)
+    proc = _run_cli(argv, timeout=timeout)
     if proc.returncode != 0:
         raise JournalCallFailed(
-            f"task.journal append returned {proc.returncode}: {(proc.stderr or '').strip()[-400:]}")
-    return {"category": category, "result": result, "friction": list(friction), "note": note,
-           "argv": argv}
+            f"plan.py log returned {proc.returncode}: {(proc.stderr or '').strip()[-400:]}")
+    return {"category": category, "type": event_type, "note": note, "argv": argv}
 
 
 def summarize_wave(run_id, records):

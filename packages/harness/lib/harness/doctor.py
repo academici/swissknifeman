@@ -173,6 +173,6 @@ def cmd_doctor(env, argv):
 
 
     print("  · route evidence: live model — from payload hook/`codex doctor --json`; "
-          "effort remains self-attested (`task.route_evidence capture --source self-attested`)")
+          "effort remains self-attested (the `--actor` declared to `plan.py start`)")
 
     print("\nharness: OK" if ok else "\nharness: there are problems (see ✗)")

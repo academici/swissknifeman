@@ -22,7 +22,7 @@ RUN_USAGE = (
     "                     WITHOUT a single entry (read-only, is being checked `git status --porcelain`)\n"
     "  --limit N          maximum item'ov waves (default - entire queue)\n"
     f"  --timeout S        timeout for ONE worker run, seconds (default {worker.DEFAULT_TIMEOUT})\n"
-    "  --plans-root PATH  directory where to look `<PLAN-ID>/plan.md` (default — `<monorepo>/plans`)\n"
+    "  --plans-root PATH  directory where to look `<PLAN-ID>/plan.json` (default — `<monorepo>/plans`)\n"
     "  --json             same summary machine (valid JSON, ensure_ascii=False)\n"
     "Sequential wave (D8) and stops at the FIRST RED; ATTENTION not\n"
     "stops the wave, but is included in the report by name. Retraya there is not a single shooting gallery (D9).\n"
@@ -95,11 +95,6 @@ def _print_dry_run(queue, plan_id, phase_id, *, monorepo_root, as_json):
         print(f"  [TERMINAL] {excl['item_id']} — status={excl['status']!r}")
 
 
-def _item_actor(item):
-    route = item.get("route")
-    return f"{route['model_class']}/{route['effort']}" if route else "driver"
-
-
 def _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir, *, limit, timeout):
     queue = plan_reader.queue(plan_dir, phase_id, monorepo_root=monorepo_root)
     if queue["degraded"]:
@@ -114,14 +109,12 @@ def _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir, *, limit, t
     records = []
     for item in items:
         item_id = item["item_id"]
-        actor = _item_actor(item)
 
         if not item["drivable"]:
             verdict = gate.pre_launch_verdict(item)
             jrec = journal.maybe_write(
-                plan_dir, plan_id, item_id, run_id=run_id, attempt=1, actor=actor,
-                pre_launch=True, refusal_detail=item.get("refusal_detail"),
-                monorepo_root=monorepo_root)
+                plan_dir, item_id, run_id=run_id, pre_launch=True,
+                refusal_detail=item.get("refusal_detail"), monorepo_root=monorepo_root)
             records.append({"item_id": item_id, "verdict": verdict["verdict"],
                             "outcome": None, "wrote_driver_line": jrec is not None,
                             "verdict_detail": verdict})
@@ -134,9 +127,8 @@ def _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir, *, limit, t
                                    monorepo_root=monorepo_root)
             item_status = (verdict["raw"]["item_after"] or {}).get("status")
             jrec = journal.maybe_write(
-                plan_dir, plan_id, item_id, run_id=run_id, attempt=1, actor=actor,
-                pre_launch=False, outcome=outcome, item_status=item_status,
-                monorepo_root=monorepo_root)
+                plan_dir, item_id, run_id=run_id, pre_launch=False, outcome=outcome,
+                item_status=item_status, monorepo_root=monorepo_root)
             records.append({"item_id": item_id, "verdict": verdict["verdict"],
                             "outcome": outcome, "wrote_driver_line": jrec is not None,
                             "verdict_detail": verdict})

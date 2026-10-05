@@ -1,6 +1,9 @@
 """Grok project surfaces follow Grok's own hook and config contract."""
 import json
+import os
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -86,6 +89,36 @@ class GrokProviderSurfaceTests(unittest.TestCase):
         self.assertIn('record["provider_id"] = _PROVIDER_ID', source)
         self.assertNotIn('record["provider_id"] = "codex"', source)
         self.assertNotIn('"--provider", "codex"', source)
+
+    def test_grok_envelope_is_normalized_and_malformed_input_fails_open(self):
+        """A Grok envelope must not turn an observer into a silent exit-2 brick."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            handlers = {}
+            for state_dir in (".grok", ".codex"):
+                handler = root / (state_dir.strip(".") + "-lifecycle.py")
+                handler.write_bytes(render_codex_hook_handler(state_dir=state_dir))
+                handlers[state_dir] = handler
+
+            def invoke(state_dir, payload):
+                data = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
+                return subprocess.run(
+                    [sys.executable, str(handlers[state_dir]), "--surface", "lifecycle.tool-telemetry"],
+                    input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    cwd=root, env={**os.environ}, timeout=20)
+
+            native = {"hookEventName": "pre_tool_use", "toolName": "run_terminal_command",
+                      "toolInput": {"command": "true"}, "cwd": str(root),
+                      "sessionId": "grok-session", "permissionMode": "acceptEdits"}
+            self.assertEqual(invoke(".grok", native).returncode, 0)
+            malformed = invoke(".grok", b"{")
+            self.assertEqual(malformed.returncode, 0)
+            self.assertIn(b"payload was not parseable", malformed.stderr)
+            mismatch = invoke(".grok", {**native, "hookEventName": "session_start"})
+            self.assertEqual(mismatch.returncode, 0)
+            self.assertIn(b"did not match the lifecycle event", mismatch.stderr)
+            # Codex keeps the fail-closed contract for the same malformed input.
+            self.assertEqual(invoke(".codex", b"{").returncode, 2)
 
 
 if __name__ == "__main__":

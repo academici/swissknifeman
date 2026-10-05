@@ -113,6 +113,14 @@ adapter). Lifecycle hooks render `.grok/hooks/swissknifeman.json` plus
 `.grok/hooks.json` is not a hook document. Router and observer are hook-native
 (Grok also loads every `.grok/rules/*.md`).
 
+### PreToolUse envelope
+
+The generated Grok dispatcher accepts both the native camelCase envelope
+(`hookEventName`, `toolName`, `toolInput`, `sessionId`, `workspaceRoot`) and the
+Claude-shaped snake_case envelope. A malformed envelope or an unknown surface is
+logged to stderr and allowed: an observer must never turn a project into a silent
+`exit 2` loop. The Codex dispatcher keeps its fail-closed contract.
+
 ## See also
 
 - [Adapter Grok](/skiller/adapters/grok)

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/dev.md
-Canonical SHA-256: sha256:20a4afec35b75c41cefc1ddbea0869cbce277b62046d9400b5624372863ef275
+Canonical SHA-256: sha256:3f72ea0aa5881cf57d59fba163a9de4360a9b73775125274ef4c15a367e65075
 Adapter: task.codex-command/1.0.17
 -->
 
@@ -18,12 +18,19 @@ read-only review boundaries.
 
 Read applicable package guides. Order research, implementation, and hypothesis checks by dependency.
 Vertical slices may organize work without Pn identifiers, carriers, a fixed order, or a workflow pack.
-Delegate only independent work or verification whose risk or cost justifies coordination.
+Do the work in one session. Delegate only an independent implementation track whose cost justifies
+coordination; never delegate checks or review.
 
-Start with focused checks of changed behavior. Add package or integration checks for integration risk.
-Security, public API, concurrency, or irreversible effects require broader verification and independent
-review. Run explicitly requested checks. Report a foreign red baseline and determine whether it intersects
-scope or dependency closure.
+Start with focused checks of changed behavior and run each once per change; do not re-run unchanged
+checks. Add package or integration checks for integration risk. Security, public API, concurrency, or
+irreversible effects require broader verification and a `task:review` recommendation in the report, not
+an automatic review. Run explicitly requested checks. Report a foreign red baseline and determine whether
+it intersects scope or dependency closure.
+
+Review is opt-in ([review contract](../references/intent-routing.md#review-is-opt-in)). Only with `--review`
+(strip it from the task text), after the checks are green, run one read-only pass over the whole diff using
+the `task:review` depth rules: no subagents, one owning fix per confirmed finding, re-check of those
+findings only.
 
 Repair authorized reversible defects until the result is ready. File count, an exhausted audit budget, or a
 recommended Next does not override Scope or Acceptance. External writes, changed Acceptance, and unavailable

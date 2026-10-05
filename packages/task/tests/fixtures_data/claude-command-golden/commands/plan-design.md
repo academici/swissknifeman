@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 description: "Explicit Task plan design: author or refine executable plan contracts."
-argument-hint: "<PLAN-ID>|new <title>|finish <PLAN-ID>"
+argument-hint: "<PLAN-ID>|new <title>|finish <PLAN-ID> [--review]"
 model: opus
 effort: high
 ---
@@ -54,11 +54,13 @@ public/authority, or material-risk boundary does. Design-only scope must not exe
 an unauthorized successor. Completion alone does not require a fresh process: use `scope-complete`
 and a same-root recommendation; the owner may invoke execution in this session.
 
-Plan the shape of review, not a ritual: item Review defaults to `none` (self-check plus affected
-tests). Independent review is a dedicated read-only item (`Review Pn`, numeric `Pn.m`, Deliverable =
-verdict file) at the end of the phase; a large phase gets slice review items between slices. Never
-write `Independent review` into an item's Validation. Routing names a minimum semantic class; the
-Executor/Reviewer cells of the execution sheet are recommended defaults from the provider model
+Review is opt-in ([review contract](../references/intent-routing.md#review-is-opt-in)): every item Review
+is `none` (self-check plus affected tests) and the plan has no `Review Pn` item, even for a hard risk
+(name the risk and the `task:review` recommendation in the item's Why instead). Only with `--review` (not
+part of the plan title or ID) or an explicit owner request, add one dedicated read-only item (`Review Pn`,
+numeric `Pn.m`, Deliverable = verdict file) at the end of the requested scope; slice review items only
+when the owner asked for per-slice review. Never write `Independent review` into an item's Validation.
+Routing names a minimum semantic class; the Executor/Reviewer cells of the execution sheet are recommended defaults from the provider model
 pool, so the owner may swap models inside the pool without editing the plan.
 
 Prefer a few outcome items (normally at most four), at most eight necessary reads per item, and

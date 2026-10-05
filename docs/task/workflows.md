@@ -12,7 +12,7 @@ is already quite expressive; the constructor only captures proven topologies.
 | `wf-research-fanout.js` | N topics × research → adversarial verify (pipeline, no barrier) | `TOPICS[]`, answer schemes, model/effort | multi-topic research with verification: market, stack, RAG under plan |
 | `wf-author-by-spec.js` | spec → N file tasks × author → self-check (pipeline) | `FILES[]` (file + TK + validation), pipeline-commands | Stage-3 authoring using a ready-made spec: skills, docks, commands per-file |
 | `wf-audit-adversarial.js` | M finders → dedup → adversarial verify → verdicts | `DIMENSIONS[]`, severity-enum, profile constitution | audit/review of artifact by measurements: plan, code, documentation |
-| `wf-dev-slice.js` | slice → impl → tests-to-green → risk-adaptive review | `SLICES[]`, gates | development by vertical slices (profile `/task:dev`) |
+| `wf-dev-slice.js` | slice → impl → tests-to-green → optional review (REVIEW slot, off by default) | `SLICES[]`, gates | development by vertical slices (profile `/task:dev`) |
 
 Sample prototype: `wf-p5-research.js` ECOSYSTEM P5 plan - working copy of template 1.
 
@@ -27,8 +27,8 @@ Sample prototype: `wf-p5-research.js` ECOSYSTEM P5 plan - working copy of templa
   single-agent: it closes most tasks, the panel of judges is selective (fiscal,
   payments, public contracts).
 - **`max-iteration` is required for any loop-until** - a loop without an upper bound is prohibited.
-- In `wf-dev-slice.js` commit is performed only after green tests, independent review and
-  interslice gates. The missing result of impl/fix/review/gate/commit stops the workflow and
+- In `wf-dev-slice.js` commit is performed only after green tests, interslice gates and (only when the
+  `REVIEW` slot is enabled) independent review. The missing result of impl/fix/review/gate/commit stops the workflow and
   is included in the final report; a successful outcome with such an omission is impossible.
 
 ## Bundles

@@ -28,11 +28,11 @@ subagents live in `harness` (agent-packs); master plan protocol - in skill
 |:--|:--|:--|
 | `/task:fix` | Sonnet/medium | minor edits (narrow single-agent, no fan-out) |
 | `/task:design` | Opus/high | design (artifacts, not code) |
-| `/task:dev` | Sonnet/high | development by vertical slices with risk-adaptive review-gate |
+| `/task:dev` | Sonnet/high | direct development by vertical slices with risk-proportional checks; `--review` adds one review pass |
 | `/task:research` | Opus/high | multi-source research with RAG verification |
 | `/task:review` | Sonnet/high | risk-scaled read-only review |
 | `/task:plan-design` | Opus/high | create/detail a master plan `plans/<ID>/` |
-| `/task:plan-run` | session route | execute plan items under the current session route; the minimum comes from the plan's Routing row |
+| `/task:plan-run` | session route | execute plan items under the current session route; the minimum comes from the plan's Routing row; `--review` adds one review pass before the final close |
 | `/task:plan-close` | Sonnet/low | recovery-reconciliation of item or closing the phase after a fresh GREEN |
 | `/task:plan-audit` | Opus/xhigh | one pre-exec or pre-close audit by material trigger |
 

@@ -275,16 +275,16 @@ class is the highest class among them, and an entry matches by id, `aliases` or 
 `ROUTE_MODEL_UNKNOWN` (nonterminal): add it to the pool, never rewrite the plan; set
 `status: retired` to leave the pool. Execution-sheet Executor/Reviewer cells are recommended
 defaults, not admission contracts. Only a lower class stops (`ROUTE_UNDERSHOOT`).
-Review shape is part of the plan, not an item ritual: item Review defaults to `none` (self-check and
-affected tests). Independent review is a dedicated read-only review item (`Review Pn`, numeric `Pn.m`,
-Exec `run`, Deliverable = verdict file) at the end of a phase; a large phase gets slice review
-items between slices. Never put `Independent review` into an item's Validation. Findings get one
-owning correction; the re-review checks only the findings. The reviewer is a fresh session; another
-model only for a named hard risk or an owner requirement, picked from pool entries tagged `review`.
-Choose Review from concrete item risk: ordinary low-risk work uses self-check and
-affected tests, bounded integration adds the necessary package/integration check, and independent
-review requires a named hard risk or explicit owner requirement. Uncertainty gathers evidence rather
-than defaulting to full. A batch inherits its highest justified review depth.
+Review is opt-in plan shape, never a default ritual: item Review is `none` (self-check and affected
+tests) unless the owner asked for review of that scope (`--review` or an explicit request). A hard risk
+widens validation and is named in the report with a `task:review` recommendation; it neither adds a
+Review item nor raises Review. Requested independent review is one dedicated read-only review item
+(`Review Pn`, numeric `Pn.m`, Exec `run`, Deliverable = verdict file) at the end of the requested
+scope; slice review items only when the owner asked for review per slice. Never put
+`Independent review` into an item's Validation. Findings get one owning correction; the re-review
+checks only the findings. The reviewer is a fresh session; another model only on an owner
+requirement, picked from pool entries tagged `review`. Uncertainty gathers evidence rather than
+defaulting to review. A batch inherits its highest requested review depth.
 `task_contract.resolve_exec` owns execution-mode normalization for both compiler and lint.
 There is one execution mode, `run`; legacy `plan-exec`, `manual` and `plan-run` resolve to it. The raw
 cell stays in `declared_exec` and routing digests. Unknown spellings fail closed; alias resolution

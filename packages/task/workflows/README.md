@@ -14,7 +14,7 @@ Prototypes - working scripts ECOSYSTEM P5 (`wf-p5-research.js` corresponds to te
 | `wf-research-fanout.js` | N topics × research → adversarial verify (pipeline, no barrier) | `TOPICS[]`, diagrams, model/effort |
 | `wf-author-by-spec.js` | spec → N file tasks × author → self-check (pipeline) | `FILES[]` (file+TK+validation), pipeline-commands |
 | `wf-audit-adversarial.js` | M finders → dedup → adversarial verify → verdicts | `DIMENSIONS[]`, severity-enum, constitution (artifact-review) |
-| `wf-dev-slice.js` | slice → impl → tests-to-green → risk-adaptive review | `SLICES[]`, gates |
+| `wf-dev-slice.js` | slice → impl → tests-to-green → optional review (REVIEW slot, off by default) | `SLICES[]`, gates |
 
 Combined: plan pipeline = research-fanout → (design in main loop) → author-by-spec
 or dev-slice → audit-adversarial. We do not intentionally cover the design stage with a template - it

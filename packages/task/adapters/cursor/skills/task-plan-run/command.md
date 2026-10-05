@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:21a20c3b12eb6966dcb6139dc24fa9ab321f52e80cb51ca2820f46618954dd1f
+Canonical SHA-256: sha256:cf0d71322cb63f5dd5b9f35ff17a4c73b551b10613839a04ce0a9de09766991d
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -20,13 +20,14 @@ agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled
 ---
 disable-model-invocation: true
 description: "Execute authorized Task plan items under the current session route with inline closure."
-argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
+argument-hint: "<PLAN-ID> Pn.m [Pn.k] [--review]"
 ---
 Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
 Schema canon and snippets are on-demand references, not mandatory execution context.
 
 Execute the admitted Routing group, or the ready subset of a recommended group, for `$ARGUMENTS`.
+`--review` is a flag, not an item id: strip it from the item list before any `plan-work.py` call.
 Activation requires an explicit owner Task invocation ([intent routing](../references/intent-routing.md)).
 Run under the session's provider-attested route; never switch the model manually. The plan's Routing row sets
 the minimum class/effort: a stronger model or higher effort is admitted and recorded as `over`, any
@@ -77,18 +78,23 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    a changed route or scope needs fresh admission. Open full carriers only for a named ambiguity
    or diagnostic. A real `SELF_INVALIDATING_EVIDENCE_ANCHOR` requires separate anchors; routine
    bookkeeping does not. Do not repeat preflight merely because the workflow advances a step.
-3. Implement only Scope Included. Ordinary low-risk work uses a self-check and affected tests;
-   bounded integration adds the necessary package/integration check. Independent review requires a
-   concrete item risk (security/auth, destructive migration, irreversible external action,
-   payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release
-   authority) or an explicit owner requirement, and then it is a separate read-only review item of the
-   plan (`Review Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
-   default to full review. Never fabricate evidence or bypass those boundaries; existing dirty changes
-   belong to the owner.
+3. Implement only Scope Included. Use a self-check and affected tests; bounded integration adds the
+   necessary package/integration check. Run each declared check once per relevant change; never re-run
+   unchanged evidence. This command starts no independent review, review subagent or audit: a hard
+   risk (security/auth, destructive migration, irreversible external action, payment/accounting,
+   concurrency/shared state, public API/schema, low-confidence impact, release authority) widens the checks and is named in
+   the final report with a `task:review` recommendation. Review runs only for `--review`
+   ([review contract](../references/intent-routing.md#review-is-opt-in)) or when the owner explicitly
+   runs a `Review Pn` item. Uncertainty gathers evidence; it never defaults to review. Never fabricate
+   evidence or bypass those boundaries; existing dirty changes belong to the owner.
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
-5. After GREEN acceptance, persist evidence and the terminal journal event, then call
+5. With `--review`, when the last item of the requested scope is GREEN and before `finalize`, run one
+   `task:review` pass over the whole scope's diff (no subagents). Fix a confirmed finding once in its owning item and re-check that finding only;
+   a finding owned by an already closed item is reported as a recommendation and never reopens it.
+   The verdict goes to the final report; it adds no plan item, journal event or audit.
+6. After GREEN acceptance, persist evidence and the terminal journal event, then call
    `scripts/plan-work.py finalize --plan-dir <dir> --item <Pn.m>` once to converge changed terminal
    projections, the selected successor bundle, freshness and delivery receipt. Close the item in this
    invocation. If this is the last item, phase gates are GREEN, and no audit was explicitly admitted,

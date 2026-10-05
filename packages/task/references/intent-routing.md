@@ -29,6 +29,27 @@ Size, risk, cross-module scope, portability needs, plugin presence, or a relevan
 authorize plan creation. Increase verification within the direct route when needed. If a local
 project rule requires a workflow, cite its exact file and rule; do not infer it from discovery.
 
+## Review is opt-in
+
+No Task command starts an independent review, a review subagent or a phase audit by itself. The
+default quality gate is a self-check plus the affected tests, each run once per relevant change.
+A hard risk (security/auth, destructive migration, payments/accounting, concurrency/shared state,
+public API/schema, irreversible external effect) widens those checks and is named in the final report
+with a `task:review` recommendation; it does not start a review.
+
+Review runs only on an explicit owner request:
+
+| Owner request | Result |
+|:--|:--|
+| `--review` in `task:dev` or `task:plan-run` arguments | one `task:review` pass over the whole requested result, before the final close |
+| `--review` in `task:plan-design` arguments | the plan includes one `Review Pn` item at the end of the requested scope |
+| `task:review` | standalone read-only review |
+| `task:plan-audit` | design or phase audit; a phase audit still needs `audit-admission/v2` |
+
+One review is one reviewer over the whole scope: no per-item or per-slice partial passes and no
+subagents unless the owner asked for an independent or second-opinion pass. A finding gets one owning
+fix and a re-check of that finding only; a second full review needs a new owner request.
+
 Outside an explicitly selected plan route, do not require design finish, phase audit, plan
 close, plan archival, status/roadmap carriers, or a launch/handoff file. A concise result or
 evidence document explicitly requested by the owner remains an ordinary document.

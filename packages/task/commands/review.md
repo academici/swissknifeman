@@ -13,8 +13,13 @@ Identify the artifact and observable risk, then select depth:
 - `standard`: an ordinary code diff; correctness, security, and performance in the affected slice, with
   relevant targeted checks.
 - `adversarial`: security/auth, destructive migration, payments/accounting, concurrency/shared state,
-  irreversible external effects, or public API/schema; test concrete failure scenarios and use one independent
-  finder/verifier only when a separate perspective is justified.
+  irreversible external effects, or public API/schema; test concrete failure scenarios yourself.
+
+This is one reviewer making one pass over the whole artifact, in this session. Do not split the review
+into per-file or per-slice partial passes and do not spawn subagents; use one independent verifier over
+the complete finding list only when the owner explicitly asked for an independent or second-opinion
+review. Report and stop: no self-started fixes and no repeat review. A re-review on request covers only
+the earlier findings and the code that fixed them.
 
 Use the diff as primary context. Open manifests, local instructions, and skills only when they apply to the
 changed stack or behavior. Do not scan the full registry, glossary, caller graph, or test suite for completeness.

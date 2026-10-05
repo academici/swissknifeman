@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:1f060e4a595f9a6eb197f2e9ec00d59148faa1f814d0a3afc330fe10c1280a0c
+Canonical SHA-256: sha256:92975d2487c93e4ce3db31bfab8e71ca1880bc402a438ce86a9778f9e31dbd8f
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -29,6 +29,10 @@ Invocation payload: `$ARGUMENTS`.
 Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/review-mode.md` from the configured Task package root.
 The full schema canon and snippets are on-demand references, not mandatory review context.
+
+Run only on an explicit owner invocation: no other command (`plan-run`, `plan-design`, `dev`, `review`) starts an
+audit. One reviewer makes one pass over the whole target delta, with no per-item partial passes, no fan-out
+and no subagents unless the owner asked for them.
 
 Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
 sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.

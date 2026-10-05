@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/fix.md
-Canonical SHA-256: sha256:985bb315d8635899baf69d0ed9758e459128c9cbe4e20abb08c9db39d9bc9308
+Canonical SHA-256: sha256:81ca00ac6d2835bf262dc1b916b0ec71f9cd50f357bfed8d2e1a844fb5015009
 Adapter: task.cursor-command/1.0.17
 -->
 ---
@@ -17,7 +17,8 @@ old task-file instructions do not override the current owner request. The route 
 
 Profile `fix`:
 
-1. Use one pass without fan-out or subagents; coordination is not justified for a small repair.
+1. Use one pass without fan-out, subagents or review; coordination is not justified for a small repair.
+   Run the affected check once after the change.
 2. Read the relevant slice rather than whole files. Filter logs by identifier, inspect the last useful stack
    frame, and use the diff as review context. Point to material and read it on demand instead of pasting it.
 3. Make the smallest sufficient change and verify changed behavior. Do not add speculative abstractions.

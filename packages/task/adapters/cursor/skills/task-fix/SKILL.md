@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:fix`.
 - Invocation: `task:fix <arguments>`
 - Routing: `implementation/medium -> composer-2.5/medium`
 - Canonical source: `packages/task/commands/fix.md`
-- Canonical SHA-256: `sha256:985bb315d8635899baf69d0ed9758e459128c9cbe4e20abb08c9db39d9bc9308`
+- Canonical SHA-256: `sha256:81ca00ac6d2835bf262dc1b916b0ec71f9cd50f357bfed8d2e1a844fb5015009`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

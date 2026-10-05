@@ -11,6 +11,10 @@ Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/review-mode.md` from the configured Task package root.
 The full schema canon and snippets are on-demand references, not mandatory review context.
 
+Run only on an explicit owner invocation: no other command (`plan-run`, `plan-design`, `dev`, `review`) starts an
+audit. One reviewer makes one pass over the whole target delta, with no per-item partial passes, no fan-out
+and no subagents unless the owner asked for them.
+
 Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
 sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.
 For `design`, first run `scripts/plan-work.py design-gate --plan-dir <dir>`. Require a completed

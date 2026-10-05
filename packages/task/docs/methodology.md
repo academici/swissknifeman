@@ -8,8 +8,9 @@ do not select a plan. The general routing boundary is `references/intent-routing
 
 `task.plan_lifecycle` provides advisory impact selection alongside existing runtime owners and persists no new carrier.  Low-risk
 items use focused validation, changed projections once, one semantic Next and one scoped commit.
-Declared hard risk widens validation and review; audits are read-only and return product findings to
-their owning item.
+Declared hard risk widens validation and adds a `task:review` recommendation; review and audit run only on an
+explicit owner request (`--review`, `task:review`, `task:plan-audit`), are read-only and return product
+findings to their owning item.
 
 How a plan lives life from research to project documentation. SSOT circuits, gates and
 markers - compact skill `general/plan-protocol`; this page is a cycle map with links
@@ -131,9 +132,11 @@ If work becomes disproportionate, narrow immediately to the smallest safe patch,
 one package validator, and concise evidence. Do not add agents, schemas, byte-level comparisons, or
 another review round merely to increase confidence beyond that boundary.
 
-## review (by material trigger)
+## review (opt-in)
 
-Reviews are dispatched by artifact type, but not by ritual status. One scoped verdict
+Review is opt-in: one reviewer, one pass over the whole requested scope, started only by the owner
+(`--review` on `task:dev`/`task:plan-run`/`task:plan-design`, `task:review`, `task:plan-audit`); no
+command starts it by itself. Reviews are dispatched by artifact type, but not by ritual status. One scoped verdict
 is reused as long as the material scope, SHA or risk has not changed. Terminal items form
 runtime-built phase candidate. A single `plan_assurance.evaluate()` selects the next carrier without
 trial `plan-close`: missing `Phase Assurance | v1` means isolated/reversible default;

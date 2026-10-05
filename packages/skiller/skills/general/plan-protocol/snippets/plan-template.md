@@ -62,10 +62,10 @@ plan-protocol; do not copy it entirely. Minimum:>
 cause; connected adjacent items of the same phase should be grouped if the general context saves
 re-read/setup/validation. The group does not cross audit/close and does not mix Exec.
 Exec: `run` (execution under the session route) or `plan-design`; legacy `plan-exec`/`manual`/`plan-run` are read as `run`.
-Review is selected according to a specific item risk or the direct request of the owner: unknown
-collects evidence first and does not automatically turn into full. By default Review=`none`;
-independent review - a separate item `Review Pn` (read-only, verdict file) at the end of the phase, at the big
-phases - in slices. Do not write `Independent review` in the Validation item.
+Review is opt-in: Review=`none` unless the owner asked for review of the scope (`--review` or an explicit
+request); hard risk widens validation and is reported, it does not raise Review. Requested independent
+review - one separate item `Review Pn` (read-only, verdict file) at the end of the requested scope.
+Do not write `Independent review` in the Validation item.
 Only semantic classes `economy|implementation|frontier`, not provider selectors.
 Design finish raises the batch to maximum class/effort/review and fixes
 exact admission in `roadmap.md` execution sheet.>
@@ -73,8 +73,8 @@ exact admission in `roadmap.md` execution sheet.>
 | Batch | Items | Model class/effort | Exec | Review | Why |
 |:--|:--|:--|:--|:--|:--|
 | B1 | <Pn.m> | <implementation/high> | run | none | recommended: <low-risk; self-check + affected tests; general reads/setup> |
-| B1 | <Pn.(m+1)> | <implementation/high> | run | light | recommended: <bounded integration seam requires targeted review> |
-| solo | <Pn.k> | <frontier/high> | run | full | <named security/public/irreversible risk or owner requirement> |
+| B1 | <Pn.(m+1)> | <implementation/high> | run | none | recommended: <bounded integration seam; add the package/integration check to Validation> |
+| solo | <Pn.k> | <frontier/high> | run | full | <only when the owner requested review of this item> |
 
 ## 5. Decision Log
 

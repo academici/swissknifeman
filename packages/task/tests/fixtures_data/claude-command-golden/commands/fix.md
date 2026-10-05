@@ -12,7 +12,8 @@ old task-file instructions do not override the current owner request. The route 
 
 Profile `fix`:
 
-1. Use one pass without fan-out or subagents; coordination is not justified for a small repair.
+1. Use one pass without fan-out, subagents or review; coordination is not justified for a small repair.
+   Run the affected check once after the change.
 2. Read the relevant slice rather than whole files. Filter logs by identifier, inspect the last useful stack
    frame, and use the diff as review context. Point to material and read it on demand instead of pasting it.
 3. Make the smallest sufficient change and verify changed behavior. Do not add speculative abstractions.

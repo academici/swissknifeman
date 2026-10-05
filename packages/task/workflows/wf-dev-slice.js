@@ -1,13 +1,13 @@
-// Template 4: dev-slice — slice → impl → tests-to-green (loop with max-iteration) → risk-adaptive review.
+// Template 4: dev-slice — slice → impl → tests-to-green (loop with max-iteration) → optional review (REVIEW slot, off by default).
 // The slices are sequential (each one builds on the previous one); slot rules - README.md nearby.
 export const meta = {
   name: 'dev-slice', // SLOT: name for a specific launch
-  description: 'Development by slices: implementation, bringing tests to green, review in depth according to the risk of cutting',
+  description: 'Development by slices: implementation, bringing tests to green; review only when the REVIEW slot is enabled',
   whenToUse: 'Stage development based on ready-made technical specifications/plan; run through scriptPath (NOT named-workflow — args comes as a string)',
   phases: [
     { title: 'Impl', detail: 'slice implementation + tests', model: 'sonnet' },
     { title: 'Green', detail: 'loop: running tests → fix, until green or max-iteration', model: 'sonnet' },
-    { title: 'Review', detail: 'review of cut differential, depth by risk', model: 'opus' },
+    { title: 'Review', detail: 'optional (REVIEW slot): review of cut differential, depth by risk', model: 'opus' },
   ],
 }
 
@@ -42,6 +42,10 @@ const SLICES = [
 // red gate stops the conveyor (the following slices do not start).
 // Typical: full test suite, statistical analysis, commit-gate «working tree is clean».
 const GATES = ['git -C REPO status --short — empty (everything is committed)']
+
+// SLOT: REVIEW — independent per-slice review. Off by default: review is opt-in (owner `--review`
+// request); enable it only when the owner asked for it. When on, risk picks the depth (see reviewFor).
+const REVIEW = false
 
 // SLOT: max-iteration for tests-to-green loop — REQUIRED (agent should not
 // spin endlessly, adjusting the tests to the code). Exhaustion = conveyor stop.
@@ -106,19 +110,19 @@ const implPrompt = s => [
   COMMON,
   s.brief,
   `Implement a slice along with tests. Drive away: ${s.tests} — bring it to green within the cut. Tests check BEHAVIOR from the technical specifications; adjustment assertion'ov under the actual code output is prohibited.`,
-  `Don't commit until complete tests-to-green, independent review and interslice gates.`,
+  `Don't commit until complete tests-to-green${REVIEW ? ', independent review' : ''} and interslice gates.`,
 ].join('\n\n')
 
 const greenPrompt = (s, prev, iter) => [
   COMMON,
   `Slice tests «${s.key}» not green (iteration ${iter}/${MAX_GREEN_ITERATIONS}). Drive away ${s.tests}, sort out the crashes, fix the CODE (edit tests only if the test contradicts the technical specifications - then record this in issues).`,
   `Report from previous attempt: ${prev.validation}`,
-  `Don't commit to independent review and interslice gates.`,
+  `Don't commit before${REVIEW ? ' independent review and' : ''} interslice gates.`,
 ].join('\n\n')
 
 const commitPrompt = s => [
   COMMON,
-  `All checks, review and slice gates «${s.key}» passed. Before commit do git status --short and git diff --name-only.`,
+  `All checks${REVIEW ? ', review' : ''} and slice gates «${s.key}» passed. Before commit do git status --short and git diff --name-only.`,
   `Stage only files modified by you in this slice; never use git add -A/-u. Unrelated or foreign dirty-do not touch the bytes and point to issues.`,
   `Create one commit: ${s.commit}.`,
 ].join('\n\n')
@@ -173,9 +177,9 @@ for (const s of SLICES) {
     break
   }
 
-  // Risk-adaptive review: low skips a separate reviewer.
+  // Review is opt-in (REVIEW slot); when enabled, risk-adaptive: low skips a separate reviewer.
   let review = null
-  if (riskOf(s) !== 'low') {
+  if (REVIEW && riskOf(s) !== 'low') {
     review = await safeAgent(reviewPrompt(s), {
       label: `review:${s.key}:${s.asOf || ''}`, phase: 'Review', ...reviewFor(riskOf(s)), schema: REVIEW_SCHEMA,
     })

@@ -517,6 +517,32 @@ class ArchiveTests(LifeCase):
         self.assertEqual(caught.exception.code, "ALREADY_ARCHIVED")
 
 
+class DeclaredOrderTests(LifeCase):
+    """``batches`` fix the execution order of a phase; item numbers never do."""
+
+    def declare_reversed_order(self):
+        plan = self.load()
+        ops.add_item(plan, "P1", "Third")
+        ops.patch(plan, "P1.3", copy.deepcopy(DETAIL))
+        ops.set_batches(plan, "P1", [{"id": "B1", "items": ["P1.3"], "mode": "recommended"},
+                                     {"id": "B2", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
+
+    def test_next_follows_declared_batches_not_item_numbers(self):
+        self.declare_reversed_order()
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.kind, action.batch, action.items), ("run-items", "B1", ("P1.3",)))
+        plan = self.load()
+        self.assertEqual(lifecycle.batch_state(plan, "P1", lifecycle.batches_of(plan, "P1")[1], action, set()),
+                         "waiting: B1")
+
+    def test_after_the_first_batch_the_next_one_becomes_ready(self):
+        self.declare_reversed_order()
+        self.start("P1.3")
+        self.finish("P1.3")
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.kind, action.batch, action.items), ("run-items", "B2", ("P1.1", "P1.2")))
+
+
 class NextWiringTests(LifeCase):
     def test_next_dict_form_matches_the_text_form(self):
         action = lifecycle.next(self.load())

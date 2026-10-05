@@ -86,7 +86,7 @@ action_class
 
 <!-- declared-set: operation_predicates -->
 ```text
-compile_slice:task_contract_allow
+compile_slice:item_runnable
 compile_slice:dependency_ready
 compile_slice:input_hashes_current
 supersede_pending:prior_pending

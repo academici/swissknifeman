@@ -10,13 +10,11 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "packages/task/lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ProviderId, load_provider_manifest, support_for
 from harness.hooks import LifecycleRequest, plan_lifecycle, render_cursor_hook_handler, render_cursor_hooks
 from harness.profiles import load_catalog
-from task import journal
 
 PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
@@ -72,21 +70,6 @@ class CursorLifecycleGateTests(unittest.TestCase):
         cfg.mkdir(parents=True)
         (cfg / "config.json").write_text(
             json.dumps({"check_command": check_command}), encoding="utf-8")
-
-    def _seed_open_run(self, project, *, session_id):
-        path = Path(project) / "plans" / "DEMO" / "journal.jsonl"
-        path.parent.mkdir(parents=True)
-        entry = journal.new_entry(
-            plan_id="DEMO",
-            item_id="P7.4",
-            command="plan-run",
-            actor="test/medium",
-            result="in-progress",
-            session_id=session_id,
-            run_id="run-1",
-            attempt=1,
-        )
-        path.write_text(json.dumps(entry) + "\n", encoding="utf-8")
 
     def test_manifest_daemon_safety_row_is_adapted_with_named_adapter(self):
         manifest = load_provider_manifest(MANIFEST)

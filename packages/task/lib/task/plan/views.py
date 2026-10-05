@@ -155,7 +155,7 @@ def build_model(plan: store.Plan) -> dict:
         "status_label": PLAN_STATUS_LABEL.get(doc.get("status"), str(doc.get("status", ""))),
         "goal": doc.get("goal", ""), "context": doc.get("context", ""),
         "meta": [{"key": key, "value": cell(value)} for key, value in (
-            ("Plan ID", doc.get("id")), ("Short ID", doc.get("short_id")), ("Title", doc.get("title")), ("Layout", "v3"),
+            ("Plan ID", doc.get("id")), ("Short ID", doc.get("short_id")), ("Title", doc.get("title")),
             ("Status", doc.get("status")), ("Repository", doc.get("repository")), ("Owner", doc.get("owner")),
             ("Authoring Model", _actor_text(doc.get("authoring"))), ("Design Audit", settings.get("design_audit")))],
         "has_non_goals": bool(_strings(doc.get("non_goals"))), "non_goals": _strings(doc.get("non_goals")),

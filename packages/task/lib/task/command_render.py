@@ -1601,42 +1601,6 @@ export TASK_CODEX_PLUGIN_ROOT="{task_root}"
 
 def _project_codex_runtime_tokens(text: str) -> str:
     """Project the finite standalone Claude token set without touching slash notation."""
-    task_root = codex_task_plugin_root_expression()
-    text = text.replace('PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib"',
-                        f'PYTHONPATH="{task_root}/lib"')
-    text = text.replace('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py"',
-                        f'python3 "{task_root}/scripts/plan-lint.py"')
-    text = text.replace('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py"',
-                        f'python3 "{task_root}/scripts/plan-delivery.py"')
-    text = text.replace(
-        "from task import task_contract, route_evidence",
-        "import json\n   import os\n   from task import task_contract",
-    )
-    text = text.replace(
-        '''route_evidence.capture_actual(
-       "<provider-attested model_class>", "<provider-attested effort>",
-       source="provider-doctor", model="<provider-attested model>")''',
-        'json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])',
-    )
-    text = re.sub(
-        r'''route_evidence\.capture_actual\(\n       "<provider-attested [^"]+>", "<provider-attested effort>",\n       source="provider-doctor", model="<provider-attested [^"]+>"\)''',
-        'json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])',
-        text,
-    )
-    text = text.replace(
-        '''If API does not give the model or effort, call `capture_actual(None, None,
-   source="self-attested")`, print `unknown/unknown` and stop before mutation: selector
-   remains only part fresh launch, and not by substitution of evidence.''',
-        '''Codex runtime only gets a record from provider-specific binding above. If capture
-   failed, this `ROUTE-UNVERIFIABLE`: don't start item and do not substitute another source.''',
-    )
-    text = text.replace(
-        '''Provider API does not certify the model/effort → pass `capture_actual(None, None,
-   source="self-attested")`, write down unknown and stop: self-attestation does not replace selector.''',
-        '''Codex runtime only gets a record from provider-specific binding above. If capture
-   failed, this `ROUTE-UNVERIFIABLE`: do not close item and do not substitute the model/effort
-   from another source.''',
-    )
     def replacement(match: re.Match[str]) -> str:
         if match.group("workflow_path") or match.group("workflow"):
             return _CODEX_WORKFLOW_CARRIER

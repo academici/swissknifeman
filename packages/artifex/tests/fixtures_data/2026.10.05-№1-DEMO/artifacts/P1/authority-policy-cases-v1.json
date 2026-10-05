@@ -29,7 +29,7 @@
     "validations": ["authority-verifier", "mandate-json", "cases-json", "diff-check"],
     "authority_sources": [],
     "operation_context": {
-      "task_contract_allow": true,
+      "item_runnable": true,
       "dependency_ready": true,
       "input_hashes_current": true,
       "prior_pending": true,
@@ -116,7 +116,7 @@
     {"id": "NRW-008", "dimension": "action_class", "mutations": [{"path": ["requested_class"], "value": "SUPER-AUTO"}], "expected": "MANDATE_WIDENS_ACTION_CLASS"}
   ],
   "operation_predicate_cases": [
-    {"id": "OPP-001", "operation": "compile_slice", "predicate": "task_contract_allow"},
+    {"id": "OPP-001", "operation": "compile_slice", "predicate": "item_runnable"},
     {"id": "OPP-002", "operation": "compile_slice", "predicate": "dependency_ready"},
     {"id": "OPP-003", "operation": "compile_slice", "predicate": "input_hashes_current"},
     {"id": "OPP-004", "operation": "supersede_pending", "predicate": "prior_pending"},

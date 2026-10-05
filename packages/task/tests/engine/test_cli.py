@@ -94,14 +94,14 @@ class AuthoringFlowTests(CliCase):
         self.assertEqual(self.verb("next", "PLAN1").stdout.strip(),
                          "design-phase: task:plan-design 2026.10.05-№1-DEMO P1")
 
-    def test_new_reads_the_message_from_a_file_and_adopts_an_identity(self):
+    def test_new_reads_the_message_from_a_file(self):
         message = self.tmp / "message.txt"
         message.write_text("Verbatim owner message.\n", encoding="utf-8")
-        self.run_plan("new", "--plan-id", "2026.08.01-№3-LEGACY", "--short-id", "PLAN4", "--title", "Plan №3 — Legacy",
+        self.run_plan("new", "--codename", "FILED", "--date", "2026.08.01", "--title", "Filed",
                       "--actor", ACTOR, "--message-file", str(message), "--plans-root", str(self.plans))
-        brief = json.loads((self.plans / "2026.08.01-№3-LEGACY" / "brief.json").read_text(encoding="utf-8"))
+        brief = json.loads((self.plans / "2026.08.01-№1-FILED" / "brief.json").read_text(encoding="utf-8"))
         self.assertEqual(brief["messages"][0]["text"], "Verbatim owner message.\n")
-        self.assertEqual(json.loads(self.verb("show", "PLAN4", "plan").stdout)["short_id"], "PLAN4")
+        self.assertEqual(json.loads(self.verb("show", "PLAN1", "plan").stdout)["short_id"], "PLAN1")
 
     def test_json_values_may_come_from_files(self):
         self.new_plan()
@@ -254,7 +254,7 @@ class RefusalTests(CliCase):
             (("set", "PLAN1", "plan", "--json", '{"bogus": 1}'), "SCHEMA_INVALID"),
             (("push", "PLAN1", "plan", "title", "--json", '"x"'), "REF_INVALID"),
             (("add-item", "PLAN1", "P7", "--title", "x"), "REF_UNKNOWN"),
-            (("add-phase", "PLAN1", "--title", "x", "--id", "P1x"), "PHASE_ID_INVALID"),
+            (("add-phase", "PLAN1", "--title", "x", "--json", '{"design": "detailed"}'), "FIELD_OWNED"),
         ):
             with self.subTest(code=code):
                 before = self.read("PLAN1", "plan.json")

@@ -12,7 +12,7 @@ a baseline whose `baseline_proof_class` is `pinned-not-recomputable`/`unknown` c
 silently promoted to a recomputed comparator or GREEN predicate — `pair_metric`
 enforces this rather than restating it in prose. The proof-class vocabulary is cited from
 those two contracts, not imported: analyst does not depend on `task` hard (mirrors
-`doctor.py`'s optional `task.route_evidence` check), and each contract owns its own closed
+`doctor.py`'s optional `task.plan` check), and each contract owns its own closed
 enum rather than sharing a runtime module across an unrelated boundary.
 
 `project_id` slicing: the frozen `TraceRecord` (`unified-agent-trace-v1.md` § Field set) does

@@ -198,9 +198,9 @@ class ProviderReaderTests(unittest.TestCase):
                       project_id="p", raw_ref="local:r")
 
 
-class DoctorRouteEvidenceTests(unittest.TestCase):
+class DoctorPlanApiTests(unittest.TestCase):
     """P2.4: `analyst doctor` optionally reports
-    whether `task.route_evidence` is importable — analyst does not depend on `task`
+    whether `task.plan` is importable — analyst does not depend on `task`
     hard, mirroring the existing optional `maind` check."""
 
     def _run_doctor(self):
@@ -213,18 +213,18 @@ class DoctorRouteEvidenceTests(unittest.TestCase):
 
     def test_reports_available_when_task_lib_is_on_sys_path(self):
         sys.path.insert(0, str(_TASK_LIB))
-        sys.modules.pop("task.route_evidence", None)
+        sys.modules.pop("task.plan", None)
         sys.modules.pop("task", None)
         try:
             text = self._run_doctor()
         finally:
             sys.path.remove(str(_TASK_LIB))
-            sys.modules.pop("task.route_evidence", None)
+            sys.modules.pop("task.plan", None)
             sys.modules.pop("task", None)
-        self.assertIn("✓ task.route_evidence", text)
+        self.assertIn("✓ task.plan", text)
 
     def test_reports_optional_and_does_not_fail_the_verdict_when_absent(self):
-        sys.modules.pop("task.route_evidence", None)
+        sys.modules.pop("task.plan", None)
         sys.modules.pop("task", None)
         blocked = [p for p in sys.path if p.endswith("task/lib") or p == str(_TASK_LIB)]
         for p in blocked:
@@ -234,7 +234,7 @@ class DoctorRouteEvidenceTests(unittest.TestCase):
         finally:
             for p in blocked:
                 sys.path.insert(0, p)
-        self.assertIn("· task.route_evidence", text)
+        self.assertIn("· task.plan", text)
         self.assertIn("The environment is ready.", text)
 
 

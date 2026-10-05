@@ -20,8 +20,21 @@ OPERATIONS = (
 )
 ACTION_CLASSES = ("AUTO", "AUTO-FIX", "OWNER")
 ATTENTION_CLASSES = ("none", "batched", "immediate")
+def item_runnable(item: dict, *, done: frozenset[str] = frozenset(), granted_gates: frozenset[str] = frozenset()) -> bool:
+    """The ``item_runnable`` predicate from item JSON facts (``plan.py show <plan> <item>``).
+
+    True when the item is ``todo``/``in_progress``, every ``depends_on`` id is in ``done`` and its authority is
+    ``routine`` or an ``owner_gate`` whose gate is in ``granted_gates``.
+    """
+    authority = item.get("authority") if isinstance(item.get("authority"), dict) else {}
+    gate_ok = authority.get("kind") == "routine" or (
+        authority.get("kind") == "owner_gate" and authority.get("gate") in granted_gates)
+    return (item.get("status") in ("todo", "in_progress") and gate_ok
+            and all(dependency in done for dependency in item.get("depends_on", [])))
+
+
 OPERATION_REQUIREMENTS = {
-    "compile_slice": ("task_contract_allow", "dependency_ready", "input_hashes_current"),
+    "compile_slice": ("item_runnable", "dependency_ready", "input_hashes_current"),
     "supersede_pending": ("prior_pending", "supersedes_hash_exact"),
     "dispatch_worker": ("intent_durable", "route_frozen"),
     "validate_result": ("observation_durable", "validation_argv_frozen"),

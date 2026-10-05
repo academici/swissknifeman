@@ -6,6 +6,22 @@ from artifex import authority
 from support import FIXTURE_PLAN as PLAN
 
 
+class ItemRunnableTests(unittest.TestCase):
+    ITEM = {"status": "todo", "depends_on": ["P1.1"], "authority": {"kind": "routine"}}
+
+    def test_runnable_when_status_dependencies_and_authority_hold(self):
+        self.assertTrue(authority.item_runnable(self.ITEM, done=frozenset({"P1.1"})))
+        self.assertTrue(authority.item_runnable({**self.ITEM, "status": "in_progress"}, done=frozenset({"P1.1"})))
+
+    def test_each_failed_fact_makes_the_item_not_runnable(self):
+        done = frozenset({"P1.1"})
+        self.assertFalse(authority.item_runnable(self.ITEM))
+        self.assertFalse(authority.item_runnable({**self.ITEM, "status": "done"}, done=done))
+        gated = {**self.ITEM, "authority": {"kind": "owner_gate", "gate": "RELEASE", "scope": "tag"}}
+        self.assertFalse(authority.item_runnable(gated, done=done))
+        self.assertTrue(authority.item_runnable(gated, done=done, granted_gates=frozenset({"RELEASE"})))
+
+
 class AuthorityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

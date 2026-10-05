@@ -8,7 +8,6 @@
 | Plan ID | 2026.10.05-№1-GOLD |
 | Short ID | PLAN3 |
 | Title | Plan №1 — Gold \| pipes |
-| Layout | v3 |
 | Status | active |
 | Repository | demo |
 | Owner | repository owner |

@@ -755,19 +755,16 @@ def provider_capability_matrix(*, claude_lookup=claude_bin, codex_lookup=codex_b
     }
 
 
-# --- portability tier (cites task.task_contract, never re-implements it) --- #
+# --- portability tier (`plan-portability-v1.md` § Classification rule) --- #
 def classify_portability_tier(work):
-    """Classify a case's portability tier via `task.task_contract.classify_tier`
-    (`plan-portability-v1.md` § Classification rule). → `(tier, reason)`; `tier`
-    is `None` with a reason when `task` is not importable from the current
-    PYTHONPATH — fail-closed on the CALLER's side (a `None` tier must never be
-    treated as `brief-acceptance` by default), mirroring `analyst.doctor`'s
-    optional `task.route_evidence` check: cited via import, never duplicated."""
-    try:
-        from task import task_contract
-    except ImportError as exc:
-        return None, f"task-not-importable: {exc}"
-    return task_contract.classify_tier(work), None
+    """Classify a case's portability tier from the four symptoms of `work`:
+    `sessions` (`"single"`/`"multi"`), `risk` (`"low"`/`"high"`), `handoff` (bool),
+    `audit` (bool). → `(tier, reason)`; `reason` is always `None` — the rule is local,
+    so no optional package import can fail."""
+    if (work.get("sessions") == "multi" or work.get("risk") == "high"
+            or work.get("handoff") or work.get("audit")):
+        return "committed-bundle", None
+    return "brief-acceptance", None
 
 
 # --- paired baseline/candidate ---------------------------------------------- #

@@ -14,10 +14,9 @@ import re
 from typing import Any, Iterator
 
 from . import store, views
-from .model import PHASE_ID, PLAN_ID, SHORT_ID, PlanError, parse_ref
+from .model import PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
-_SHORT_ROW = re.compile(r"^\s*\|\s*Short ID\s*\|\s*(PLAN[1-9][0-9]*)\s*\|\s*$")
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
 _PLAN_TITLE_PREFIX = re.compile(r"^Plan №[1-9][0-9]* —")
 DEFAULT_ROUTE = {"class": "implementation", "effort": "high"}
@@ -92,38 +91,22 @@ def _next_number(prefix: str, ids) -> int:
 # ---------------------------------------------------------------- new plan
 
 def _identities(plans_root: Path) -> list[dict]:
-    """One row per distinct plan directory in ``plans/`` and ``plans/archive/``: id and Short ID.
-
-    A v3 ``plan.json`` carries ``short_id``; a v2 plan still carries the ``| Short ID | PLAN<N> |`` row.
-    """
+    """One row per distinct plan directory in ``plans/`` and ``plans/archive/``: id and Short ID from ``plan.json``."""
     rows: dict[str, dict] = {}
     for path in store.plan_dirs(plans_root):
         row = rows.setdefault(path.name, {"id": path.name, "short_id": None})
         if row["short_id"] is None:
-            row["short_id"] = store.short_id_of(path) or _v2_short_id(path / "plan.md")
+            row["short_id"] = store.short_id_of(path)
     return list(rows.values())
 
 
-def _v2_short_id(plan_md: Path) -> str | None:
-    try:
-        lines = plan_md.read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeError):
-        return None
-    for line in lines[:60]:
-        match = _SHORT_ROW.match(line)
-        if match:
-            return match.group(1)
-    return None
-
-
-def new_plan(codename: str | None, title: str, *, plans_root: str | Path, repository: str, owner: str,
+def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: str, owner: str,
              authoring: dict, message: str, date: str | None = None, message_date: str | None = None,
-             plan_id: str | None = None, short_id: str | None = None, channel: str | None = None) -> store.Plan:
-    """Create plan.json, brief.json, .gitignore and log.jsonl for a new plan, or adopt an explicit identity.
+             channel: str | None = None) -> store.Plan:
+    """Create plan.json, brief.json, .gitignore and log.jsonl for a new plan.
 
-    Without ``plan_id``/``short_id`` the identity is allocated like ``plan_numbering.next_identity``: the
-    next ``№N`` of the day and the next ``PLAN<N>`` above every live and archived plan. Explicit values
-    adopt an existing identity (migration); the directory may already hold a v2 plan but never a plan.json.
+    The identity is allocated from the plans already present: the next ``№N`` of the day and the next
+    ``PLAN<N>`` above every live and archived plan.
     """
     plans_root = Path(plans_root)
     if not isinstance(message, str) or not message.strip():
@@ -131,29 +114,20 @@ def new_plan(codename: str | None, title: str, *, plans_root: str | Path, reposi
     date = date or _date.today().strftime("%Y.%m.%d")
     if not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}", date):
         raise PlanError("PLAN_DATE_INVALID", f"expected YYYY.MM.DD, received {date!r}")
+    if codename is None or not re.fullmatch(r"[A-Z][A-Z0-9-]*", codename):
+        raise PlanError("PLAN_CODENAME_INVALID", f"code name must match [A-Z][A-Z0-9-]*, received {codename!r}")
     rows = _identities(plans_root)
     ordinal = max((int(m[2]) for row in rows if (m := _DIR_ID.match(row["id"])) and m[1] == date), default=0) + 1
-    if plan_id is None:
-        if codename is None or not re.fullmatch(r"[A-Z][A-Z0-9-]*", codename):
-            raise PlanError("PLAN_CODENAME_INVALID", f"code name must match [A-Z][A-Z0-9-]*, received {codename!r}")
-        plan_id = f"{date}-№{ordinal}-{codename}"
-        if any(row["id"] == plan_id for row in rows):
-            raise PlanError("PLAN_EXISTS", f"plan {plan_id} already exists")
-        if not _PLAN_TITLE_PREFIX.match(title):
-            title = f"Plan №{ordinal} — {title}"
-    elif not PLAN_ID.fullmatch(plan_id):
-        raise PlanError("PLAN_ID_INVALID", f"invalid plan id {plan_id!r}")
-    if short_id is None:
-        taken = [int(row["short_id"][4:]) for row in rows if row["short_id"]]
-        short_id = f"PLAN{max(taken, default=0) + 1}"
-    elif not SHORT_ID.fullmatch(short_id):
-        raise PlanError("SHORT_ID_INVALID", f"invalid short id {short_id!r}")
-    clash = [row["id"] for row in rows if row["short_id"] == short_id and row["id"] != plan_id]
-    if clash:
-        raise PlanError("SHORT_ID_TAKEN", f"{short_id} already belongs to {clash[0]}")
+    plan_id = f"{date}-№{ordinal}-{codename}"
+    if any(row["id"] == plan_id for row in rows):
+        raise PlanError("PLAN_EXISTS", f"plan {plan_id} already exists")
+    if not _PLAN_TITLE_PREFIX.match(title):
+        title = f"Plan №{ordinal} — {title}"
+    taken = [int(row["short_id"][4:]) for row in rows if row["short_id"]]
+    short_id = f"PLAN{max(taken, default=0) + 1}"
     root = plans_root / plan_id
     if (root / "plan.json").exists():
-        raise PlanError("PLAN_EXISTS", f"{root} already holds a v3 plan")
+        raise PlanError("PLAN_EXISTS", f"{root} already holds a plan")
 
     created = date.replace(".", "-")
     plan_doc = {
@@ -187,17 +161,12 @@ def _reject_owned_data(kind: str, data: dict | None) -> dict:
     return data
 
 
-def add_phase(plan, title: str, *, phase_id: str | None = None, data: dict | None = None) -> str:
+def add_phase(plan, title: str, *, data: dict | None = None) -> str:
     """Add a skeleton phase and append it to ``plan.phases``; returns the phase id."""
     extra = _reject_owned_data("phase", data)
     with _mutation(plan) as p:
         existing = set(p.phases) | set(p.plan.get("phases", []))
-        if phase_id is None:
-            phase_id = f"P{_next_number('P', existing)}"
-        elif not PHASE_ID.fullmatch(phase_id):
-            raise PlanError("PHASE_ID_INVALID", f"invalid phase id {phase_id!r}")
-        if phase_id in existing:
-            raise PlanError("PHASE_EXISTS", f"phase {phase_id} already exists")
+        phase_id = f"P{_next_number('P', existing)}"
         doc = {"$schema": _schema_const("phase"), "id": phase_id, "title": title, "design": "skeleton",
                "goal": title, "items": [], "batches": []}
         doc.update(copy.deepcopy(extra))

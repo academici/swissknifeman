@@ -153,16 +153,16 @@ class LoadAndOpenTests(DemoCase):
                          ["brief.json", "decisions/D2.json", "phases/P1/P1.2.json"])
         self.assertEqual(plan.items["P1.2"], {})
 
-    def test_directory_without_plan_json_is_not_v3(self):
-        legacy = self.plans / "2026.01.01-№1-OLD"
-        legacy.mkdir()
-        (legacy / "plan.md").write_text("# old\n", encoding="utf-8")
+    def test_directory_without_plan_json_is_not_found(self):
+        empty = self.plans / "2026.01.01-№1-EMPTY"
+        empty.mkdir()
         with self.assertRaises(PlanError) as ctx:
-            store.load_plan(legacy)
-        self.assertEqual(ctx.exception.code, "PLAN_NOT_V3")
+            store.load_plan(empty)
+        self.assertEqual(ctx.exception.code, "PLAN_NOT_FOUND")
+        self.assertIn("has no plan.json", str(ctx.exception))
         with self.assertRaises(PlanError) as ctx:
-            store.open_plan("2026.01.01-№1-OLD", self.plans)
-        self.assertEqual(ctx.exception.code, "PLAN_NOT_V3")
+            store.open_plan("2026.01.01-№1-EMPTY", self.plans)
+        self.assertEqual(ctx.exception.code, "PLAN_NOT_FOUND")
 
     def test_open_plan_by_id_path_and_short_id(self):
         for ref in (demo.PLAN_ID, str(self.root), "PLAN7"):

@@ -97,7 +97,7 @@ class TestReviewGate(unittest.TestCase):
         self.assertIn("DOWNGRADE", out3)
 
 
-def _plan_lint_hookdir(tmp):
+def _plan_check_hookdir(tmp):
     dst = tmp / "hookdir"
     shutil.copytree(RG_SRC, dst)
     (dst / "env.ini").write_text("MODE=strict\n")
@@ -134,7 +134,7 @@ class TestPlanLintCheck(unittest.TestCase):
         self.assertEqual(created.returncode, 0, created.stderr)
         self.plan = next((self.repo / "plans").iterdir())
         self.state_dir = self.tmp / "state"
-        self.hookdir = _plan_lint_hookdir(self.tmp)
+        self.hookdir = _plan_check_hookdir(self.tmp)
 
     def test_valid_v3_plan_passes(self):
         rc, _, err = _run_hook(self.hookdir, self.repo, self.state_dir, "s1", "a1")

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from skiller.common import Env
-from skiller.publication import (_codex_skill_runtime_files, _project_codex_skill_runtime,
+from skiller.publication import (_codex_skill_runtime_files,
                                  assert_root_bootstrap_set_completeness,
                                  load_repository_bootstrap_config,
                                  render_repository_bootstrap_projections)
@@ -124,7 +124,7 @@ class TestCodexPublication(unittest.TestCase):
         files = _codex_skill_runtime_files(skill_root, source_root=skill_root.parent,
                                           plugin="general")
         artifacts = {path.relative_to(skill_root): path.read_bytes() for path in files}
-        runtime_path = Path("snippets/plan-template.md")
+        runtime_path = Path("references/work-references.md")
         expected_bytes = (skill_root / runtime_path).read_bytes()
         self.assertEqual(artifacts[runtime_path], expected_bytes)
         self.assertNotIn(Path("SKILL.ru.md"), artifacts)
@@ -138,23 +138,11 @@ class TestCodexPublication(unittest.TestCase):
             self.assertEqual((cached / runtime_path).read_bytes(), expected_bytes)
             self.assertFalse((cached / "SKILL.ru.md").exists())
 
-    def test_optional_plan_protocol_keeps_the_adaptive_execution_contract(self):
+    def test_optional_plan_protocol_names_the_plan_cli_verbs(self):
         skill_root = self._optional_plan_protocol_root()
-        canonical = (skill_root / "SKILL.md").read_bytes()
-        canon_text = canonical.decode("utf-8")
-        for literal in ("observe → minimal reproduce → classify → act → verify",
-                        "procedural / transient / dependency-not-ready / unrelated-pre-existing",
-                        "Reuse a prior scoped verdict"):
+        canon_text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        for literal in ("`next`", "`start`", "`finish`", "`check`", "references/work-references.md"):
             self.assertIn(literal, canon_text)
-
-    def test_runtime_projection_resolves_task_without_consumer_copy(self):
-        skill_root = self._optional_plan_protocol_root()
-        canonical = (skill_root / "snippets/journal-template.md").read_bytes()
-        projected = _project_codex_skill_runtime(canonical)
-        self.assertIn(b"<task-package-root>/lib", canonical)
-        self.assertNotIn(b"${CLAUDE_PLUGIN_ROOT}", canonical)
-        self.assertEqual(projected, canonical)
-        self.assertNotIn(b"PYTHONPATH=packages/task/lib", projected)
 
     def test_retirement_preserves_modified_files_and_removes_only_prior_owned_bytes(self):
         import tempfile

@@ -9,8 +9,7 @@ from enum import Enum
 import re
 from typing import Iterable, NamedTuple
 
-# Same Plan ID literal as plan_numbering._DIR_ID, plus the historical codename-only form.
-PLAN_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2}-№[1-9][0-9]*-[A-Z][A-Z0-9-]*|[A-Z][A-Z0-9-]+)$", re.ASCII)
+PLAN_ID = re.compile(r"^\d{4}\.\d{2}\.\d{2}-№[1-9][0-9]*-[A-Z][A-Z0-9-]*$", re.ASCII)
 SHORT_ID = re.compile(r"^PLAN[1-9][0-9]*$", re.ASCII)
 PHASE_ID = re.compile(r"^P[0-9]+$", re.ASCII)
 ITEM_ID = re.compile(r"^P[0-9]+\.[0-9]+$", re.ASCII)

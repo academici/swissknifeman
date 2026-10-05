@@ -61,7 +61,7 @@ class DemoCase(unittest.TestCase):
 
 
 class NewPlanTests(RootCase):
-    def test_allocates_ordinal_and_short_id_like_plan_numbering(self):
+    def test_allocates_ordinal_and_short_id(self):
         first = self.new("DEMO", "Demo")
         self.assertEqual(first.plan["id"], "2026.10.05-№1-DEMO")
         self.assertEqual(first.plan["short_id"], "PLAN1")
@@ -71,13 +71,13 @@ class NewPlanTests(RootCase):
         later = self.new("LATER", "Later", date="2026.10.06")
         self.assertEqual((later.plan["id"], later.plan["short_id"]), ("2026.10.06-№1-LATER", "PLAN3"))
 
-    def test_numbering_sees_v2_plan_md_and_v3_plan_json_in_live_and_archive(self):
-        old = self.plans / "2026.10.05-№5-OLD"
-        old.mkdir()
-        (old / "plan.md").write_text("# old\n\n| Field | Value |\n|:--|:--|\n| Short ID | PLAN9 |\n", encoding="utf-8")
+    def test_numbering_counts_plan_json_in_live_and_archive(self):
         archived = self.plans / "archive" / "2026.09.01-№1-ARCH"
         archived.mkdir(parents=True)
         (archived / "plan.json").write_text(json.dumps({"short_id": "PLAN20"}), encoding="utf-8")
+        live = self.plans / "2026.10.05-№5-OLD"
+        live.mkdir()
+        (live / "plan.json").write_text(json.dumps({"short_id": "PLAN9"}), encoding="utf-8")
         plan = self.new("NEXT", "Next")
         self.assertEqual((plan.plan["id"], plan.plan["short_id"]), ("2026.10.05-№6-NEXT", "PLAN21"))
 
@@ -124,32 +124,13 @@ class NewPlanTests(RootCase):
                 self.assertEqual(ctx.exception.code, code)
                 self.assertEqual(list(self.plans.iterdir()), [])
 
-    def test_existing_plan_is_never_overwritten(self):
-        self.new("DEMO", "Demo")
-        with self.assertRaises(PlanError) as ctx:
-            self.new("DEMO", "Demo again", plan_id="2026.10.05-№1-DEMO", short_id="PLAN5")
-        self.assertEqual(ctx.exception.code, "PLAN_EXISTS")
-
-    def test_explicit_identity_adopts_an_existing_v2_directory(self):
-        legacy = self.plans / "2026.08.01-№3-LEGACY"
-        legacy.mkdir()
-        (legacy / "plan.md").write_text("| Short ID | PLAN4 |\n", encoding="utf-8")
-        plan = ops.new_plan(None, "Plan №3 — Legacy", plans_root=self.plans, repository="r", owner="o",
-                            authoring=AUTHORING, message="m", plan_id=legacy.name, short_id="PLAN4")
-        self.assertEqual((plan.plan["id"], plan.plan["short_id"]), (legacy.name, "PLAN4"))
-        self.assertTrue((legacy / "plan.md").is_file())
-        self.assertEqual(plan.plan["created"], __import__("datetime").date.today().isoformat())
-
-    def test_explicit_short_id_must_be_free_and_valid(self):
-        self.new("DEMO", "Demo")
-        for kwargs, code in (({"short_id": "PLAN1", "plan_id": "2026.10.05-№9-X"}, "SHORT_ID_TAKEN"),
-                             ({"short_id": "PLAN0", "plan_id": "2026.10.05-№9-X"}, "SHORT_ID_INVALID"),
-                             ({"plan_id": "bad id", "short_id": "PLAN8"}, "PLAN_ID_INVALID")):
-            with self.subTest(code=code):
+    def test_codename_is_required_and_validated(self):
+        for codename in (None, "lower", "1X", ""):
+            with self.subTest(codename=codename):
                 with self.assertRaises(PlanError) as ctx:
-                    ops.new_plan(None, "t", plans_root=self.plans, repository="r", owner="o",
-                                 authoring=AUTHORING, message="m", **kwargs)
-                self.assertEqual(ctx.exception.code, code)
+                    ops.new_plan(codename, "t", plans_root=self.plans, repository="r", owner="o",
+                                 authoring=AUTHORING, message="m")
+                self.assertEqual(ctx.exception.code, "PLAN_CODENAME_INVALID")
 
 
 class AddTests(DemoCase):
@@ -161,10 +142,7 @@ class AddTests(DemoCase):
         self.assertEqual((doc["design"], doc["goal"], doc["items"], doc["batches"]), ("skeleton", "Third goal", [], []))
         self.assertEqual(errors(store.load_plan(self.root)), [])
 
-    def test_add_phase_explicit_id_and_refusals(self):
-        self.assertEqual(ops.add_phase(self.plan, "Migrated", phase_id="P08"), "P08")
-        self.assertRefused("PHASE_EXISTS", ops.add_phase, self.plan, "Dup", phase_id="P1")
-        self.assertRefused("PHASE_ID_INVALID", ops.add_phase, self.plan, "Bad", phase_id="phase-2")
+    def test_add_phase_refuses_owned_fields(self):
         self.assertRefused("FIELD_OWNED", ops.add_phase, self.plan, "Owned", data={"design": "detailed"})
 
     def test_add_item_numbers_without_reusing_ids_and_gets_a_solo_batch(self):

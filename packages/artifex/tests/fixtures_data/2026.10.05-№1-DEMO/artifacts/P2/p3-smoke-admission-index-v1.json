@@ -6,15 +6,15 @@
       "task_id": "p3-smoke-claude-code-v1",
       "provider": "claude-code",
       "path": "artifacts/P2/p3-smoke-admissions/claude-code.json",
-      "sha256": "77b543dcca36b9f6b4edddd40cdbc39e5e1525a09a4caf57d87b05b90e11ea4d",
-      "admission_hash": "eee11cdda09b850539c1b5b94661c7e4cd4af3763393d8c5cb100f2cdca09eb4"
+      "sha256": "c071324ae192f4a099d08ff86f52ab5beb5b5c7c438fd0804bbc13c81c5852f3",
+      "admission_hash": "36db626f5188df1da09fa5edf1c24df697a597999c679413e6f701c96d44a601"
     },
     {
       "task_id": "p3-smoke-codex-v1",
       "provider": "codex",
       "path": "artifacts/P2/p3-smoke-admissions/codex.json",
-      "sha256": "2e3e591be08948772266886405ac1b456850139baa7bb2aee6136efea9108a28",
-      "admission_hash": "e51259ac86b60195e20c1c2b2caef9731c925c00b5036ea521455b9870f8c3eb"
+      "sha256": "5a119a9e5bc8fdce537fdf8ee0137f8d01da711cb5e5e58b43c8059557504ad0",
+      "admission_hash": "a3b9a7c10edaf560e42a8f479023035c0aee94102ed8cbc968fcfa837f6d7215"
     }
   ]
 }

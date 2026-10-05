@@ -167,15 +167,15 @@ def compile_slice(repo_root: str | Path, plan_dir: str | Path, item_id: str, *, 
     if exec_value != "run":
         raise CompileRefusal("ROUTE_EXEC_MISMATCH", str(exec_value))
     scope, _ = _scope(root, item)
-    contract_hash = sha256_bytes(canonical_bytes(item))
+    item_hash = sha256_bytes(canonical_bytes(item))
     source_hashes = _source_hashes(root, plan, phase, item)
     manifest = {
         "schema_version": "slice-manifest-v1", "manifest_version": "1.0.0",
         "slice_id": f"{plan.name}:{item_id}:r{revision}", "plan_id": plan.name, "item_id": item_id,
         "revision": revision, "content_hash": "", "supersedes": supersedes, "lifecycle": "pending",
         "source_hashes": source_hashes,
-        "task_contract": {"schema_version": item.get("$schema"), "content_hash": contract_hash,
-                          "pre_mutation": "allow", "public_acceptance_ids": scope["evidence_refs"]},
+        "item": {"schema_version": item.get("$schema"), "content_hash": item_hash,
+                 "acceptance_ids": scope["evidence_refs"]},
         "run": {"contract_id": "supervisor-run-v1", "contract_version": "1.0.0",
                 "contract_hash": "c9b7290dc0d30b7fc1c7c20782cec7b4f327ba6673300bed71cadf172ab88e2a",
                 "run_id": f"{plan.name}:{item_id}:r{revision}", "attempt": 1,

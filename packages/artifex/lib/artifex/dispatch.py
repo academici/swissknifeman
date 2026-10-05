@@ -10,7 +10,7 @@ from typing import Any
 
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 TASK_KEYS = frozenset(("schema_version", "manifest_version", "task_id", "task_hash", "purpose",
-                       "provider", "parent_plan_id", "parent_item_id", "parent_task_contract_hash",
+                       "provider", "parent_plan_id", "parent_item_id", "parent_item_hash",
                        "workspace", "permissions", "prompt", "response_schema", "outputs", "budgets",
                        "source_hashes"))
 GRANT_KEYS = frozenset(("schema_version", "grant_version", "grant_id", "grant_hash", "owner_decision",

@@ -16,15 +16,24 @@ import re
 import time
 from typing import Any, Iterable
 
-from task import plan_numbering
-
 from . import schema as _schema
 from .model import SHORT_ID, PlanError, id_sort_key
 
 LOG = "log.jsonl"
 LOCK = ".lock"
-ARCHIVE = plan_numbering.ARCHIVE
+ARCHIVE = "archive"
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
+
+
+def find_plans_root(start: str | Path | None = None) -> Path:
+    """Nearest ``plans/`` at or above ``start``; ``<start>/plans`` (maybe absent) when none exists."""
+    base = Path(start or Path.cwd()).resolve()
+    for candidate in (base, *base.parents):
+        if (candidate / "plans").is_dir():
+            return candidate / "plans"
+        if candidate.name == "plans" and candidate.is_dir():
+            return candidate
+    return base / "plans"
 
 
 def now() -> str:
@@ -122,8 +131,7 @@ def load_plan(root: str | Path) -> Plan:
     """Load every JSON document of a v3 plan directory; unreadable files become ``problems``, not exceptions."""
     root = Path(root)
     if not (root / "plan.json").is_file():
-        hint = " (layout v2: plan.md without plan.json)" if (root / "plan.md").is_file() else ""
-        raise PlanError("PLAN_NOT_V3", f"{root} has no plan.json{hint}")
+        raise PlanError("PLAN_NOT_FOUND", f"{root} has no plan.json")
     plan = Plan(root=root)
     plan.plan = _read_json(root, root / "plan.json", plan.problems) or {}
     plan.brief = _read_json(root, root / "brief.json", plan.problems) or {}
@@ -165,7 +173,7 @@ def resolve_plan_dir(ref: str | Path, plans_root: str | Path | None = None) -> P
     candidate = Path(ref)
     if (candidate / "plan.json").is_file():
         return candidate
-    root = Path(plans_root) if plans_root is not None else plan_numbering.find_plans_root()
+    root = Path(plans_root) if plans_root is not None else find_plans_root()
     for parent in (root, root / ARCHIVE):
         if (parent / ref / "plan.json").is_file():
             return parent / ref
@@ -175,9 +183,6 @@ def resolve_plan_dir(ref: str | Path, plans_root: str | Path | None = None) -> P
             raise PlanError("PLAN_AMBIGUOUS", f"{ref} matches {', '.join(d.name for d in matches)}")
         if matches:
             return matches[0]
-    for parent in (root, root / ARCHIVE, candidate.parent):
-        if (parent / candidate.name / "plan.md").is_file():
-            raise PlanError("PLAN_NOT_V3", f"{ref} is a layout v2 plan (plan.md without plan.json)")
     raise PlanError("PLAN_NOT_FOUND", f"no plan {ref!r} under {root}")
 
 

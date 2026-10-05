@@ -22,7 +22,7 @@ class IdPatternTests(unittest.TestCase):
 
     def test_plan_and_short_ids(self):
         self.assertTrue(model.PLAN_ID.fullmatch("2026.10.05-№1-TASK-PLAN-JSON"))
-        self.assertTrue(model.PLAN_ID.fullmatch("LEGACY-PLAN"))
+        self.assertIsNone(model.PLAN_ID.fullmatch("LEGACY-PLAN"))
         for bad in ("2026.10.05-№0-X", "2026.10.05-№1-x", "legacy", "2026.10.05-1-X", "A"):
             self.assertIsNone(model.PLAN_ID.fullmatch(bad), bad)
         self.assertTrue(model.SHORT_ID.fullmatch("PLAN7"))

@@ -50,7 +50,8 @@ class CompilerTests(unittest.TestCase):
         self.assertEqual("implementation", first["route"]["model_class"])
         self.assertEqual("high", first["route"]["effort"])
         self.assertEqual(["V1"], first["scope"]["evidence_refs"])
-        self.assertEqual(first["task_contract"]["public_acceptance_ids"], first["scope"]["evidence_refs"])
+        self.assertEqual(first["item"]["acceptance_ids"], first["scope"]["evidence_refs"])
+        self.assertEqual(64, len(first["item"]["content_hash"]))
         self.assertEqual({"required_reads": ["docs/read.md"], "files": ["src/out.py"], "validation": ["check one"],
                           "deliverables": ["Deliverable text"], "evidence_refs": ["V1"]}, first["scope"])
         self.assertEqual(f"{self.plan.name}:{ITEM}:r1", first["slice_id"])

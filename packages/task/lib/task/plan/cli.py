@@ -11,7 +11,6 @@ from pathlib import Path
 import re
 import sys
 
-from task import plan_numbering
 
 from . import check, context, lifecycle, ops, store, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
@@ -82,7 +81,7 @@ def _print_json(value) -> None:
 # ---------------------------------------------------------------- handlers
 
 def cmd_new(args) -> int:
-    plans_root = args.plans_root or plan_numbering.find_plans_root()
+    plans_root = args.plans_root or store.find_plans_root()
     if args.message_file is not None:
         try:
             message = args.message_file.read_text(encoding="utf-8")
@@ -92,8 +91,7 @@ def cmd_new(args) -> int:
         message = args.message
     plan = ops.new_plan(
         args.codename, args.title, plans_root=plans_root, repository=args.repository or Path(plans_root).resolve().parent.name,
-        owner=args.owner, authoring=args.actor, message=message, date=args.date, plan_id=args.plan_id,
-        short_id=args.short_id)
+        owner=args.owner, authoring=args.actor, message=message, date=args.date)
     print(f"created {plan.plan['id']} ({plan.plan['short_id']}) at {plan.root}")
     return 0
 
@@ -152,7 +150,7 @@ def cmd_push(args) -> int:
 
 
 def cmd_add_phase(args) -> int:
-    print(ops.add_phase(_plan_dir(args), args.title, phase_id=args.id, data=_json_value(args.json, args.file, required=False)))
+    print(ops.add_phase(_plan_dir(args), args.title, data=_json_value(args.json, args.file, required=False)))
     return 0
 
 
@@ -314,7 +312,7 @@ def build_parser() -> argparse.ArgumentParser:
         group.add_argument("--file", type=Path, help="file holding the JSON")
 
     p = verb("new", cmd_new, "create a plan", plan=False)
-    p.add_argument("--codename", help="CODE-NAME [A-Z][A-Z0-9-]*")
+    p.add_argument("--codename", required=True, help="CODE-NAME [A-Z][A-Z0-9-]*")
     p.add_argument("--title", required=True)
     p.add_argument("--repository")
     p.add_argument("--owner", default="repository owner")
@@ -322,8 +320,6 @@ def build_parser() -> argparse.ArgumentParser:
     message = p.add_mutually_exclusive_group()
     message.add_argument("--message", help="first owner message, verbatim")
     message.add_argument("--message-file", type=Path)
-    p.add_argument("--plan-id", help="adopt an existing identity (migration)")
-    p.add_argument("--short-id", help="adopt an existing PLAN<N> (migration)")
     p.add_argument("--date", help="YYYY.MM.DD (default today)")
 
     p = verb("show", cmd_show, "overview of a plan, or one document as canonical JSON")
@@ -341,7 +337,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("add-phase", cmd_add_phase, "add a skeleton phase")
     p.add_argument("--title", required=True)
-    p.add_argument("--id", help="explicit phase id (migration)")
     value_args(p, False)
 
     p = verb("add-item", cmd_add_item, "add a skeleton item to a phase")
@@ -444,9 +439,6 @@ def main(argv=None) -> int:
         args = parser.parse_args(argv)
     except SystemExit as exc:  # argparse: 0 for --help, 2 for usage
         return int(exc.code or 0)
-    if args.command == "new" and not (args.codename or args.plan_id):
-        print("plan.py new: error: --codename or --plan-id is required", file=sys.stderr)
-        return 2
     try:
         return args.handler(args)
     except UsageError as exc:

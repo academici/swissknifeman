@@ -1,0 +1,1 @@
+- {{id}} {{status_label}} — {{notes}}{{outputs}}

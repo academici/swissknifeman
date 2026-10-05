@@ -1,0 +1,1 @@
+- {{when}} {{target}} {{type}}: {{summary}}{{follow_up}}

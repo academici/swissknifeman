@@ -1,0 +1,1 @@
+- {{label}} `{{cmd}}` → {{expect}} ({{kind}}{{cwd}})

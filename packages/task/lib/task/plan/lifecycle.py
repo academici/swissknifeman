@@ -328,6 +328,14 @@ def next_batch_id(p: store.Plan, phase_id: str, item_id: str) -> str | None:
     return None
 
 
+def shown_path(path: Path) -> str:
+    """``path`` relative to the working directory when it lies below it, else absolute."""
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
+
 @dataclass(frozen=True)
 class StartResult:
     items: tuple[str, ...]
@@ -335,13 +343,16 @@ class StartResult:
     batch: str | None
     route: str  # "ok" | "ROUTE_MODEL_UNKNOWN"
     resumed: tuple[str, ...]
-    packs: tuple[Path, ...] = ()  # context packs (P2.2)
+    packs: tuple[Path, ...] = ()  # context packs, one per item, in request order
 
     def text(self, plan_id: str) -> str:
         lines = [f"started {', '.join(self.items)} (phase {self.phase}"
                  + (f", batch {self.batch}" if self.batch else "") + f"; route {self.route})"]
         if self.resumed:
             lines.append(f"resumed: {', '.join(self.resumed)} (started_at kept)")
+        if self.packs:
+            lines.append("context packs: " + ", ".join(shown_path(pack) for pack in self.packs))
+            lines.append(f"Read {shown_path(self.packs[0])} first.")
         lines.append(f"finish each with: plan.py finish {plan_id} <item> --status done --check V1=0 --notes …")
         return "\n".join(lines)
 
@@ -391,6 +402,11 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             if wait:
                 raise PlanError("GATE_NOT_GRANTED", f"{item_id} needs {wait} (plan.py grant, or start --grant)")
         verdict = _route_verdict(p, requested, actor)
+        from . import context  # context imports this module for scheduling
+
+        missing = [f"{i}: {path}" for i in requested for path in context.missing_reads(p, i)]
+        if missing:
+            raise PlanError("READ_MISSING", f"required read(s) missing — {'; '.join(missing)}")
 
         now = store.now()
         changes, events, resumed = [], [], []
@@ -412,8 +428,9 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
                 "start", f"start {item_id}" + (f" (batch {batch_id})" if batch_id else ""), actor,
                 item=item_id, phase=phase_id, data={"requested": requested, "route": verdict}))
         _commit(p, changes, gate_events + events, lock)
-        batch_id = next_batch_id(p, phase_id, requested[0])
-        return StartResult(tuple(requested), phase_id, batch_id, verdict, tuple(resumed))
+        packs = tuple(context.build(p, item_id) for item_id in requested)
+        return StartResult(tuple(requested), phase_id, next_batch_id(p, phase_id, requested[0]), verdict,
+                           tuple(resumed), packs)
 
 
 # ---------------------------------------------------------------- finish

@@ -193,7 +193,8 @@ class LifecycleFlowTests(CliCase):
         self.designed_plan()
         self.verb("design-done", "PLAN1", "P1")
         started = json.loads(self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--json").stdout)
-        self.assertEqual((started["items"], started["route"], started["packs"]), (["P1.1"], "ok", []))
+        self.assertEqual((started["items"], started["route"]), (["P1.1"], "ok"))
+        self.assertEqual([Path(p).name for p in started["packs"]], ["P1.1.md"])
         finished = json.loads(self.verb("finish", "PLAN1", "P1.1", "--status", "done", "--check", "V1=0", "--json").stdout)
         self.assertEqual((finished["phase_closed"], finished["plan_done"], finished["next"]["kind"]), ("done", True, "archive"))
 

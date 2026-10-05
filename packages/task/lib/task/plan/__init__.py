@@ -1,5 +1,5 @@
-"""task.plan — JSON-first plan engine (layout v3): schemas, validator, store, authoring ops, check, lifecycle. stdlib-only."""
-from . import check, lifecycle, ops, store, templating, views  # noqa: F401 — submodules stay reachable as task.plan.*
+"""task.plan — JSON-first plan engine (layout v3): schemas, validator, store, authoring ops, check, lifecycle, context pack. stdlib-only."""
+from . import check, context, lifecycle, ops, store, templating, views  # noqa: F401 — submodules stay reachable as task.plan.*
 from .check import Issue  # noqa: F401
 from .model import (  # noqa: F401
     CLASS_ORDER, DECISION_ID, EFFORT_ORDER, ITEM_ID, PHASE_ID, PLAN_ID, REF, SATISFYING, SHORT_ID,

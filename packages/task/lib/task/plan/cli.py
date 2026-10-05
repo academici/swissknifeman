@@ -1,6 +1,6 @@
 """``plan.py`` command line: argument parsing -> ``ops`` / ``check`` / ``views`` -> output (dossier §8).
 
-Authoring and lifecycle verbs (the context pack of ``start`` arrives with P2.2). Exit codes: 0 ok, 1 refusal
+Authoring, lifecycle and context-pack verbs. Exit codes: 0 ok, 1 refusal
 or check errors (stderr ``CODE: message``), 2 usage.
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ import sys
 
 from task import plan_numbering
 
-from . import check, lifecycle, ops, store, views
+from . import check, context, lifecycle, ops, store, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -227,6 +227,15 @@ def cmd_start(args) -> int:
     return 0
 
 
+def cmd_context(args) -> int:
+    plan = store.load_plan(_plan_dir(args))
+    if args.stdout:
+        print(context.render(plan, args.item), end="")
+    else:
+        print(lifecycle.shown_path(context.build(plan, args.item)))
+    return 0
+
+
 def cmd_finish(args) -> int:
     result = lifecycle.finish(
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
@@ -368,6 +377,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--session", help="provider session id, or auto")
     p.add_argument("--grant", action="append", default=[], metavar="GATE", help="record an owner gate grant now")
     p.add_argument("--json", action="store_true")
+
+    p = verb("context", cmd_context, "rebuild the context pack of an item (context/<item>.md)")
+    p.add_argument("item")
+    p.add_argument("--stdout", action="store_true", help="print the pack instead of writing it")
 
     p = verb("finish", cmd_finish, "record the outcome of an item; closes the phase and the plan when complete")
     p.add_argument("item")

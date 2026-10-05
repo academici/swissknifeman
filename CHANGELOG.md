@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-10-05
+
 ### Fixed
 
 - **Task deletion reviews:** native reads of removed repository-local files bind

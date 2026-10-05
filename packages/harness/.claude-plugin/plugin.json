@@ -1,6 +1,6 @@
 {
   "name": "harness",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "harness — environment settings Claude Code: presets permissions, auto-approve/bypass, MCP-servers and hooks (memory/notify). Thin face above CLI harness.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/swissknifeman",

@@ -22,7 +22,7 @@ independent mechanisms** — different jobs, same goal of "linking projects":
 
 | Mechanism | Links | How it lives |
 |:--|:--|:--|
-| **agent-memory** | memory/context (facts, change stream) | Node daemon on the hub; an MCP client is rolled out to projects |
+| **agent-memory** | Temporary working context (48-hour default TTL, 72-hour maximum) | Node daemon on the hub; scoped access through maind MCP/CLI |
 | **code graph (Serena)** | code **inside** a project (symbols/references/implementations) | per-project MCP server `serena` (via `uvx`) |
 
 Plus mAInd's own **graph** — topology **between** projects (who depends on whom, shared packages,
@@ -35,8 +35,11 @@ A project declares groups via `projects[].namespaces` in `config.json`. **Shared
 isolated across groups.** `["*"]` — shared infrastructure (visible to everyone).
 
 - **Graph**: a cross-project edge A↔B is built only if A and B share a namespace.
-- **Memory**: buckets `project:<id>` (private) · `ns:<name>` (group) · `global` (whole ecosystem,
-  wildcard). `recall`/MCP read `project:<id>` + `ns:<own groups>` + `global`.
+- **Memory**: `recall`/MCP/CLI read only `project:<id>` by default. `ns:<name>` and `global`
+  require an explicit cross-project request and allowed `memory_namespaces`; graph namespaces
+  do not grant memory access. Every record expires within 72 hours. Do not store plan decisions,
+  progress, code/git facts or graph seeds; durable information lives in the repository.
+  Keep at most one short `active-handoff` per scope and forget it when work finishes.
 
 **Session-start digest (SessionStart hook) — `project:<id>` only by default**
 (`shared_max=0`, context-economy: another namespace's/global context does not flow into every
@@ -79,8 +82,8 @@ Diagnosing "looks connected but doesn't work" — that's `verify`.
 ## Hub MCP tools (11; per-project server `maind` from `.mcp.json`)
 
 `maind mcp --scope project:<id>` (how `deploy` rolls it out) is **isolated to its own project**:
-other projects' memory/graph are unreachable (scope reduces to `recall_scopes`: private +
-`ns:groups` + `global`; graph tools — only projects sharing a namespace). Hub mode
+other projects' private memory is unreachable. Shared memory requires an explicit request and
+allowed `memory_namespaces`; graph tools reach only projects sharing a namespace. Hub mode
 (`--scope global`) or `MAIND_MCP_ALLOW_CROSS_SCOPE=1` lift the isolation (admin).
 
 | Group | Tools |
@@ -94,7 +97,8 @@ other projects' memory/graph are unreachable (scope reduces to `recall_scopes`: 
 - `lib/maind/federation.py` — graph layout + `graph_reader` (unified read facade).
 - `lib/maind/derive.py` — building the graph from sources of truth.
 - `lib/maind/namespaces.py` — connection isolation + memory scope buckets.
-- `lib/maind/seed.py` — per-namespace seed memory.
+- `lib/maind/memory_policy.py` — bounded temporary memory and expiry.
+- `lib/maind/memory_maintenance.py` — audits, recoverable pruning and hourly GC.
 - `lib/maind/mcp.py` — MCP server (11 tools).
 - Docs: `docs/ecosystem.md` (philosophy) → `docs/architecture.md` → `docs/guide/*`.
 - Conventions — root `CLAUDE.md` (stdlib-only, explicit `Env`, atomic JSON, Russian messages).

@@ -4225,8 +4225,8 @@
       "path": "skills/repository-bootstrap/ecosystem-integration/SKILL.md",
       "version": "0.1.0",
       "description": "How to connect (onboard) a new project to the academici ecosystem via the mAInd hub - shared memory + graph + MCP tools + skills. Use to onboard a project, add it to mAInd, roll out memory/graph, or fix/update an already-connected project.",
-      "sha256": "8cd383b8dc375dd76840dc44b412163ceee9323b82dceb41e057cb8e27691ab1",
-      "content_sha256": "f9194ebfa9a0a96bc8daec278e25b099dad1ea8dc08f9ae7edeb160a84869fe7",
+      "sha256": "b0f1ba4bd0fa95061c3c800e9ceb4350f4911f68659624365e503a780b88caac",
+      "content_sha256": "3572e6e9b7193773b26b1322cad3ab96f315ca75873d56b0eb20d456d5d4a4ce",
       "tags": [
         "ecosystem",
         "maind",
@@ -4241,8 +4241,8 @@
       "path": "skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
       "version": "0.1.0",
       "description": "What MCP tools are available here (agent-memory = shared memory/context, serena = code graph), when to call them, which ecosystem projects this one links to, and how to fix a broken link. Use in any ecosystem project to raise past-decision context, navigate code, or diagnose missing memory/graph.",
-      "sha256": "caeb1bdf5cf3bf3a688bd74692c0600972b4cc0a72b6333ede54e85172e92424",
-      "content_sha256": "f858d0476899e2aa6464539e6395219a19c12507811abe3b920cc7a806440223",
+      "sha256": "ca1c837a439f5cc74dd8d3ce872564f6ae30231162584a676b0cdf120a0fc53b",
+      "content_sha256": "98bcb57fed2aa7f9e73e2f753a622eb2260ae39ede0b0a4c9222ee1ba24a14e6",
       "tags": [
         "ecosystem",
         "mcp",
@@ -4273,8 +4273,8 @@
       "path": "skills/repository-bootstrap/field-feedback-loop/SKILL.md",
       "version": "0.1.0",
       "description": "Feedback loop from field work: implementing/integrating/syncing a project (skiller connect|vendor, maind onboard|sync, harness, setup) and reality diverges from promised behavior - route it, don't swallow it. Obvious bug -> fix now; new/uncertain -> propose, don't implement speculatively.",
-      "sha256": "4f922f96b2e32174862d91b31190817f0b9e245814adab4d47a6ef91b5476f11",
-      "content_sha256": "79de34a5fda1bad1f1626a3fb28b57396c9754e1128ab7f4f821ded1632e3e63",
+      "sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
+      "content_sha256": "2d73227e92f940dabc683c02257022f721c7eaa6172d54744fc0a3e7021dc6af",
       "tags": [
         "field-feedback",
         "improvement-loop",
@@ -4305,8 +4305,8 @@
       "path": "skills/repository-bootstrap/maind-overview/SKILL.md",
       "version": "0.1.0",
       "description": "Brief overview of the mAInd hub - two linking mechanisms (code graph/Serena, agent-memory), the namespace model, and key commands. Use when working in maind or any ecosystem project to understand shared memory, the connection graph, and namespace isolation.",
-      "sha256": "a8d80ee84443796d3130149e1ee488c4f2605c4f42035e5124e98a2d84093bd8",
-      "content_sha256": "ef04110273206913aefceb9e87872014e787f388b8fe6b9ec972372913203fe0",
+      "sha256": "fcb147b84f6b0c66fa05c68e2db728be4aeda2fa15f70158107d26340ccb1550",
+      "content_sha256": "55508e0b809c05329cb246bb36a36d25f423b9d809a320a57f3f42385b866bb8",
       "tags": [
         "maind",
         "ecosystem",

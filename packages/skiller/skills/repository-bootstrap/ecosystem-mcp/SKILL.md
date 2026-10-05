@@ -28,13 +28,23 @@ projects (`maind onboard`/`maind sync`) — do not conflate the two sources.
 
 | MCP server | What it is | When to call |
 |:--|:--|:--|
-| **agentmemory** | Shared ecosystem memory/context (facts, change stream). mAInd daemon, this project's scope — `project:swissknifeman` | At the **start of a task** — raise context of past project/ecosystem decisions (recall). On **committing** a significant decision/fact — write it (store) so it enters shared history |
+| **maind memory tools** | Temporary working context; default scope `project:swissknifeman` | Recall only when temporary context can affect the task. Store a short unresolved blocker, coordination note, or one `active-handoff`; keep decisions and progress in repository files |
 | **serena** (code graph) | Graph of code **inside** the project: symbols, references, implementations, file overview (Serena engine) | For **code navigation** — `find_symbol`, `find_referencing_symbols`, `get_symbols_overview` instead of reading whole files (saves tokens). Available if `.mcp.json` has a code server (usually `serena`); if not, navigate with ordinary search. Don't confuse with the cross-project maind graph |
 | **maind** | The hub itself (topology **between** projects, connection status) | When you need this project's links to other ecosystem nodes or a status summary |
 
-Memory is **shared within a namespace** and isolated across namespaces — anything written here is
-visible to linked projects in the same group. Don't duplicate into memory what's already in
-code/git.
+Memory is **project-only by default**, for MCP, CLI and digest. Graph `namespaces` do not grant
+memory access. Shared `ns:*`/`global` require an explicit task request, explicit scope and
+authorization through `memory_namespaces`. Never duplicate code, git, plans, audits or decisions.
+
+Every record expires: **48 hours by default, at most 72 hours**, including handoffs. Maximum
+800 characters and 8 live entries per scope. Allowed categories: `context`, `blocker`,
+`coordination`, `active-handoff`. Write only when another session needs a
+temporary fact that cannot simply be read from the repository. One `active-handoff` per scope
+points to the current repository handoff and names the next action; replace it instead of
+appending a journal, and forget it on completion. Reading never extends TTL. Empty memory is normal.
+Use `maind memory audit --all` to inspect and `maind memory prune --all --apply` to collect
+expired/junk records with a seven-day local recovery snapshot. `maind memory gc-install`
+enables hourly collection on the memory host.
 
 **Session-start digest — this project only.** `maind memory digest` (SessionStart hook)
 defaults to showing **only this project's private memory** (`shared_max=0` — context-economy:
@@ -51,8 +61,8 @@ them") — raise cross-project context explicitly, three steps:
 2. **Group context** — raise the namespace's shared memory explicitly (not in the default
    digest): `maind memory recall --scope ns:<name>` (CLI) or `maind_memory_recall` with that
    scope (MCP).
-3. **Output is written to the shared scope**, not the project's private one — otherwise the next
-   project in the group won't see it: `maind memory remember --scope ns:<name> "<fact>"` (CLI,
+3. **Only necessary temporary coordination** may be written to an explicitly authorized shared
+   scope: `maind memory remember --scope ns:<name> --type coordination --ttl-hours 48 "<note>"` (CLI,
    `--scope` is a direct bucket address — not the same as `--project --share`, which serves a
    different purpose: private + group at once) or `maind_memory_store` with `scope: "ns:<name>"`
    (MCP).
@@ -72,7 +82,7 @@ The serena code graph (LSP) is live — this caveat doesn't apply to it.
 
 ## Project links
 
-- **memory scope:** `project:swissknifeman`; ecosystem-wide facts — scope `global`.
+- **memory scope:** `project:swissknifeman`; shared scope only by explicit authorized request.
 - **namespaces:** `axioma` (shared within the group, isolated across groups).
 - **linked to:** —.
 - see current links: `maind graph --project swissknifeman`.
@@ -90,8 +100,8 @@ or memory is empty:
    `http://127.0.0.1:3113`.
 2. On `partial` / `standalone` status — fix it: `maind health --cwd --fix` (brings up the memory
    daemon and appends hub MCP servers).
-3. **Tell the user**: until status is `connected`, this session's changes will **not** enter
-   shared memory and graph — an unrecoverable gap will appear in ecosystem history.
+3. Report the unavailable channel and continue ordinary repository work. Memory is optional
+   temporary context; repository artifacts preserve decisions and history.
 
 ## Provenance (root-bootstrap, P1.2)
 

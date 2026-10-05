@@ -303,12 +303,12 @@ flowchart LR
     cross_project_optimizer["cross-project-optimizer<br/>⊕95 ↻1015"]:::warm
     decision_verification["decision-verification<br/>⊕39 ↻293"]:::mild
     docs_maintenance["docs-maintenance<br/>⊕88 ↻1005"]:::warm
-    ecosystem_integration["ecosystem-integration<br/>⊕77 ↻1954"]:::warm
-    ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1608"]:::warm
+    ecosystem_integration["ecosystem-integration<br/>⊕77 ↻2035"]:::warm
+    ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1847"]:::warm
     ecosystem_setup["ecosystem-setup<br/>⊕89 ↻1103"]:::warm
-    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1325"]:::warm
+    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1357"]:::warm
     harness_operations["harness-operations<br/>⊕87 ↻2093"]:::warm
-    maind_overview["maind-overview<br/>⊕80 ↻1615"]:::warm
+    maind_overview["maind-overview<br/>⊕80 ↻1738"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3698"]:::warm
     project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7466"]:::mild
     release_discipline["release-discipline<br/>⊕64 ↻1488"]:::warm
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12593** current (is always resident if you include the entire registry) · ↻ bodies 301894 current · ⌥ on-demand 826122 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12593** current (is always resident if you include the entire registry) · ↻ bodies 302369 current · ⌥ on-demand 826122 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
 | `general` | 22 | 1267 | 24385 | 9169 |
-| `repository-bootstrap` | 14 | 1047 | 30040 | 0 |
+| `repository-bootstrap` | 14 | 1047 | 30515 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |

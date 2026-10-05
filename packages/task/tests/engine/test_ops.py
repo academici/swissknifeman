@@ -10,7 +10,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task.plan import PlanError, check, ops, schema, store  # noqa: E402
+from task.plan import PlanError, check, ops, schema, store, views  # noqa: E402
 
 try:
     from . import demo
@@ -84,7 +84,9 @@ class NewPlanTests(RootCase):
     def test_creates_plan_brief_gitignore_and_log(self):
         plan = self.new(channel="chat")
         root = plan.root
-        self.assertEqual(sorted(p.name for p in root.iterdir()), [".gitignore", ".lock", "brief.json", "log.jsonl", "plan.json"])
+        source = {".gitignore", ".lock", "brief.json", "log.jsonl", "plan.json"}
+        self.assertEqual({p.name for p in root.iterdir()}, source | set(views.GENERATED))
+        self.assertEqual(views.render_all(plan, check=True), [])
         self.assertEqual((root / ".gitignore").read_text(encoding="utf-8"), "context/\n.lock\n")
         self.assertEqual(plan.brief["messages"], [{"id": "M1", "date": "2026-10-05",
                                                     "text": "Make config errors aggregate.", "channel": "chat"}])

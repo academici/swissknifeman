@@ -9,12 +9,11 @@ from __future__ import annotations
 from contextlib import contextmanager
 import copy
 from datetime import date as _date
-from importlib.util import find_spec
 from pathlib import Path
 import re
 from typing import Any, Iterator
 
-from . import store
+from . import store, views
 from .model import PHASE_ID, PLAN_ID, SHORT_ID, PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
@@ -40,10 +39,7 @@ def _schema_const(kind: str) -> str:
 
 
 def _after_mutation(plan: store.Plan) -> None:
-    """Regenerate the human views; ``views.py`` arrives with P1.3, until then this is a no-op."""
-    if find_spec("task.plan.views") is None:
-        return
-    from . import views
+    """Regenerate the human views inside the mutation's lock; only changed files are written."""
     views.render_all(plan)
 
 
@@ -261,7 +257,7 @@ def add_decision(plan, title: str, *, data: dict | None = None, actor: dict | No
 
 # ---------------------------------------------------------------- patch / push / batches
 
-def _target(p: store.Plan, ref: str) -> tuple[str, str, dict]:
+def resolve_target(p: store.Plan, ref: str) -> tuple[str, str, dict]:
     """Resolve a phase (``P1``), item (``P1.2``), decision (``D3``) or unit (``P1.2/U1``) of this plan."""
     if _UNIT_REF.fullmatch(ref):
         if ref not in p.units:
@@ -285,7 +281,7 @@ def patch(plan, ref: str, merge_patch_doc: dict) -> None:
     if not isinstance(merge_patch_doc, dict):
         raise PlanError("PATCH_INVALID", "a merge patch must be a JSON object")
     with _mutation(plan) as p:
-        kind, key, doc = _target(p, ref)
+        kind, key, doc = resolve_target(p, ref)
         _guard_owned(kind, merge_patch_doc)
         _commit(p, [(kind, key, merge_patch(doc, merge_patch_doc))])
 
@@ -294,7 +290,7 @@ def push(plan, ref: str, field: str, value: Any) -> None:
     """Append ``value`` to an array field; ``field`` may be dotted (``scope.include``)."""
     parts = field.split(".")
     with _mutation(plan) as p:
-        kind, key, doc = _target(p, ref)
+        kind, key, doc = resolve_target(p, ref)
         _guard_owned(kind, parts[:1])
         doc = copy.deepcopy(doc)
         holder = doc

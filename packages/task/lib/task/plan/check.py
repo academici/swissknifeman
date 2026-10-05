@@ -11,7 +11,7 @@ import re
 from typing import Any, Iterator, NamedTuple
 
 from . import schema as _schema
-from . import store
+from . import store, views
 from .model import ITEM_ID, parse_ref
 
 _UNIT_ID = re.compile(r"^U[0-9]+$")
@@ -46,6 +46,7 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.units()
     ctx.log()
     ctx.advisories()
+    ctx.stale_views()
     return issues
 
 
@@ -399,6 +400,17 @@ class _Context:
                         and not _GLOB.search(hint["path"]) and not self.exists(hint["path"])):
                     self.warn("modify_missing", f"{rel}/task_files/{index}/path",
                               f"{hint['path']} is marked modify but does not exist")
+
+    def stale_views(self) -> None:
+        if any(i.level == "error" and i.code in ("json", "schema") for i in self.out):
+            return  # views of a schema-broken plan are meaningless; repair the JSON first
+        try:
+            stale = views.render_all(self.p, check=True)
+        except Exception as exc:  # noqa: BLE001 — check never raises on a broken plan
+            self.error("stale_view", "views", f"cannot render the views: {exc}")
+            return
+        for name in stale:
+            self.error("stale_view", name, f"{name} is stale or missing; run plan.py render")
 
     def exists(self, path: str) -> bool:
         base = self.p.root if path.startswith("@plan/") else self.p.repo_root

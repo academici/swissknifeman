@@ -1,0 +1,1 @@
+- {{ts}} {{type}} {{target}} — {{summary}}{{#follow_up}} → {{follow_up}}{{/follow_up}}

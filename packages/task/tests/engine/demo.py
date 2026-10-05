@@ -8,7 +8,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task.plan import store  # noqa: E402
+from task.plan import store, views  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "valid"
 PLAN_ID = "2026.10.05-№1-DEMO"
@@ -44,6 +44,7 @@ def make_demo_plan(plans_root: Path) -> Path:
     events += [fixture(f"log-event-e5-{name}") for name in ("start", "difficulty", "finish")]
     (root / "log.jsonl").write_text(
         "".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) + "\n" for e in events), encoding="utf-8")
+    views.render_all(store.load_plan(root))
     return root
 
 

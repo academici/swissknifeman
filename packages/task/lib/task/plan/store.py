@@ -281,7 +281,7 @@ def save_many(entries: Iterable[tuple[Path, dict, str]], registry: _schema.Regis
         check_doc(doc, kind, Path(path).name, reg)
         prepared.append((Path(path), canonical_dump(doc, kind, reg)))
     for path, text in prepared:
-        _atomic_write(path, text)
+        atomic_write(path, text)
     return [path for path, _ in prepared]
 
 
@@ -289,7 +289,7 @@ def save(path: str | Path, doc: dict, kind: str, registry: _schema.Registry | No
     return save_many([(Path(path), doc, kind)], registry)[0]
 
 
-def _atomic_write(path: Path, text: str) -> None:
+def atomic_write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     try:

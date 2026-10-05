@@ -105,7 +105,7 @@ def _release_unit_policy(source):
     return {
         "schema_version": "release-unit-policy/v1",
         "plugins": {
-            "task": {"version_owner": "umbrella", "required_providers": ["claude-code", "codex"]},
+            "task": {"version_owner": "umbrella", "required_providers": ["claude-code", "codex", "grok"]},
             "maind": {"version_owner": "package", "package": "maind", "required_providers": ["claude-code"]},
             "analyst": {"version_owner": "package", "package": "analyst", "required_providers": ["claude-code"]},
             "harness": {"version_owner": "package", "package": "harness", "required_providers": ["claude-code"]},
@@ -191,6 +191,13 @@ def build(root, tag=None, *, ref=None):
             providers["codex-native"] = surface(source, codex_root, ["."],
                                                   manifest=".codex-plugin/plugin.json")
             provider_versions["codex"] = manifest["version"]
+            # Grok installs the Task package itself and discovers its native
+            # slash commands from `commands/`.  It is a separate native
+            # delivery surface, even though it shares the Task package root.
+            if name == "task":
+                providers["grok"] = surface(source, codex_root, ["commands"],
+                                             manifest=".claude-plugin/plugin.json")
+                provider_versions["grok"] = manifest["version"]
         other = claude.get(name)
         if other:
             claude_root = str(Path(other["source"]))

@@ -503,6 +503,57 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
                         row["status"] = "updated"
                     save()
+        # Grok's Task commands are a machine-level plugin, not files in each
+        # project's `.grok/` directory.  Update only the existing channel and
+        # prove its installed cache against the attested Grok projection.
+        if shutil.which("grok") and "task" in units and "grok" in units["task"]["providers"]:
+            row = {"surface": "grok-cache/task", "status": "blocked"}
+            receipt["targets"].append(row)
+            save()
+            # SKM owns this plugin completely.  Grok's `update` follows the
+            # old local source and can therefore leave a released Task stale;
+            # replace that installation from this attested checkout instead.
+            removed, remove_detail = _run(["grok", "plugin", "uninstall", "task"])
+            installed_ok, install_detail = _run(
+                ["grok", "plugin", "install", str(root / "packages/task"), "--trust"])
+            ok = removed and installed_ok
+            row["reason"] = "uninstall: " + remove_detail + "; install: " + install_detail
+            try:
+                listed = subprocess.run(["grok", "plugin", "list", "--json"],
+                                        capture_output=True, text=True, check=False)
+                entries = json.loads(listed.stdout) if listed.returncode == 0 else []
+            except (OSError, json.JSONDecodeError):
+                entries = []
+            installed = next((entry for entry in entries if entry.get("name") == "task"
+                              and entry.get("status") == "installed"), None)
+            if not installed or not installed.get("path"):
+                row["readback"] = ["GROK_TASK_NOT_INSTALLED"]
+            else:
+                row["readback"] = verify_surface(Path(installed["path"]),
+                                                  units["task"]["providers"]["grok"])
+            if ok and not row["readback"]:
+                row["status"] = "updated"
+                row["digest"] = units["task"]["providers"]["grok"]["tree_digest"]
+            save()
+    # A release policy is also a delivery contract.  Never silently omit a
+    # provider merely because its native binary/channel was absent: every
+    # required surface must leave a confirmed receipt row.
+    if native:
+        prefixes = {"codex": "codex-cache/", "claude-code": "claude-cache/",
+                    "grok": "grok-cache/"}
+        for unit in value["units"]:
+            for provider in unit.get("required_providers", []):
+                prefix = prefixes.get(provider)
+                if prefix is None:
+                    receipt["targets"].append({"surface": f"{provider}-cache/{unit['id']}",
+                                               "status": "blocked",
+                                               "reason": "DELIVERY_PROVIDER_UNSUPPORTED"})
+                    continue
+                expected = prefix + unit["id"]
+                if not any(row.get("surface") == expected for row in receipt["targets"]):
+                    receipt["targets"].append({"surface": expected, "status": "blocked",
+                                               "reason": "DELIVERY_PROVIDER_UNCONFIRMED"})
+        save()
     receipt["cache_gc"] = prune_provider_caches(env, value, history, dry_run=dry_run) if native else []
     cache_blocked = any(row.get("status") == "blocked" for row in receipt["cache_gc"])
     receipt["status"] = ("GREEN" if receipt["targets"] and not cache_blocked

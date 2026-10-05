@@ -22,12 +22,12 @@ The original silence is still unexplained, and no matched live executor comparis
 or consumer rollout has been demonstrated. Local implementation and acceptance
 evidence are recorded in `roadmap/2026-10-05-postmortem-execution.md`.
 
-Acceptance snapshot: Task, Harness and Skiller package validation passed. Native Grok
-transport attested two completed FINDINGS rounds and archived an incomplete attempt;
-the corrected fixture passes local validation but has no final native GREEN or close.
-The umbrella docs build currently fails on existing markup in the unchanged
-`docs/provider-support.md`. These limits remain open for release acceptance; source
-implementation does not establish that the original live delay has been eliminated.
+Release acceptance: Task, Harness and Skiller package validation passed. The corrected
+fixture has a final native Grok GREEN and qualified close after the owner-authorized,
+candidate-bound third round; the former two FINDINGS rounds and incomplete transport
+receipt remain archived. The umbrella docs build is GREEN after provider-document
+generation began escaping diagnostic markup. Source implementation still does not
+establish that the original live delay has been eliminated.
 
 ## Roadmap audit — 2026-10-04
 

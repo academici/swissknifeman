@@ -847,7 +847,7 @@ Capture provider-native tool-call sidecar evidence for run-report enrichment.
   Evidence: [2026-09-18] Cursor lifecycle handler records tool_name and codegraph counters to .cursor/state/&lt;conversation&gt;.tools.jsonl and sessionEnd run-report merges the sidecar — `packages/harness/tests/test_cursor_hook_render.py` (cursor lifecycle.tool-telemetry preToolUse sidecar and run-report enrichment).
 
 - **grok** — `adapted`; binding: `—`; adapter: `harness.grok.lifecycle.tool-telemetry`.
-  Diagnostic: deterministic grok adapter records PreToolUse tool_name into .grok/state/<session>.tools.jsonl
+  Diagnostic: deterministic grok adapter records PreToolUse tool_name into .grok/state/&lt;session&gt;.tools.jsonl
   Limitations: correlates records by session_id, not Cursor conversation_id; sidecar path is .grok/state, not .cursor/state.
   Evidence: [2026-10-03] Grok tool-telemetry appends tool_name under .grok/state/&lt;session_id&gt;.tools.jsonl; SessionEnd run-report merges that sidecar — `packages/harness/lib/harness/hooks.py` (grok lifecycle.tool-telemetry shared handler).
 

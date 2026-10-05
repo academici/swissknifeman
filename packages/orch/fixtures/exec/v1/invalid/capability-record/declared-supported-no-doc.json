@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:capability-record:v1",
+  "contract_version": "exec/v1",
+  "binding": "native",
+  "provider": "claude-code",
+  "cli": {
+    "name": "claude"
+  },
+  "status": "declared",
+  "recorded_at": "2026-10-05T17:00:00Z",
+  "transport": "jsonl",
+  "auth_route": "subscription_oauth",
+  "model": {
+    "set": "supported",
+    "observe": "unknown"
+  },
+  "effort": {
+    "set": "unknown",
+    "observe": "unknown"
+  },
+  "stream": "unknown",
+  "attach": "unknown",
+  "cancel": "unknown",
+  "resume": "unknown",
+  "usage": "unknown",
+  "restrictions": {
+    "tools_native": "unknown",
+    "sandbox_os": "unknown",
+    "prompt_only": false
+  },
+  "skill_delivery": {
+    "mode": "unknown",
+    "per_run_isolation": "unknown"
+  },
+  "plan_write_prevention": "unknown",
+  "terminal_signal": "Synthetic result signal.",
+  "evidence": [
+    {
+      "kind": "perplexity",
+      "ref": "fixture:documented-model-selection",
+      "note": "Synthetic declaration for contract tests; not a live capability probe."
+    }
+  ]
+}

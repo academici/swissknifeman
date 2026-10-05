@@ -1,0 +1,24 @@
+{
+  "item": "PLAN2.P1.2",
+  "status": "resolved_by_owner",
+  "source": "@plan/knowledge/contracts.json sections conventions and execution-input",
+  "requirements": [
+    "canonical_digest excludes only the top-level digest field",
+    "input_id ends with @digest[:12]"
+  ],
+  "demonstration": {
+    "fixture": "plan-bound example",
+    "computed_digest_before_setting_input_id_suffix": "bb2138787fd7cb9d91c3231754066658b9f5c2ce5b1e3e0613e9312947e71a9e",
+    "input_id_after_setting_suffix": "PLAN9.P1.2@bb2138787fd7",
+    "recomputed_digest": "14acd192b9941f443bf6c90052974bb5b4c7139fa7b90e705f24fdda6c79ca77",
+    "digest_matches": false,
+    "recomputed_suffix_matches": false
+  },
+  "impact": "Generating valid execution-input fixtures under both rules would require finding a 48-bit hash fixed point. Repeated rehashing does not resolve the contract.",
+  "recommended_resolution": "Exclude top-level digest and normalize input_id to the identity prefix before its final @ suffix when hashing; retain identity in the digest.",
+  "alternative_resolution": "Exclude top-level digest and input_id entirely when hashing.",
+  "downstream": "P2.1 Task brief digest generation must follow the same corrected algorithm.",
+  "checks_run": [],
+  "review": "not performed",
+  "owner_answer": "При хэшировании исключать digest и суффикс input_id после @; сохранять в хэше идентификатор задания (рекомендовано)"
+}

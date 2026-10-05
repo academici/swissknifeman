@@ -1,0 +1,18 @@
+test_digest_canonical_bytes_and_no_mutation (tests.test_schema_profile.SchemaProfileTests.test_digest_canonical_bytes_and_no_mutation) ... ok
+test_registry_cache_includes_route_parameters (tests.test_schema_profile.SchemaProfileTests.test_registry_cache_includes_route_parameters) ... ok
+test_schema_and_semantic_dispatch (tests.test_schema_profile.SchemaProfileTests.test_schema_and_semantic_dispatch) ... ok
+test_shared_definitions (tests.test_schema_profile.SchemaProfileTests.test_shared_definitions) ... ok
+test_task_profile_parity_without_importing_task (tests.test_schema_profile.SchemaProfileTests.test_task_profile_parity_without_importing_task) ... ok
+test_unsupported_keyword_fails_closed (tests.test_schema_profile.SchemaProfileTests.test_unsupported_keyword_fails_closed) ... ok
+test_file_and_usage_errors (tests.test_cli_validate.CliValidateTests.test_file_and_usage_errors) ... ok
+test_incompatible_contract_version (tests.test_cli_validate.CliValidateTests.test_incompatible_contract_version) ... ok
+test_missing_schema_fails_closed (tests.test_cli_validate.CliValidateTests.test_missing_schema_fails_closed) ... ok
+test_quiet_keeps_error_and_status (tests.test_cli_validate.CliValidateTests.test_quiet_keeps_error_and_status) ... ok
+test_unknown_kind_is_refusal (tests.test_cli_validate.CliValidateTests.test_unknown_kind_is_refusal) ... ok
+test_valid_output_and_schema_errors (tests.test_cli_validate.CliValidateTests.test_valid_output_and_schema_errors) ... ok
+test_runtime_imports_are_stdlib_or_orch (tests.test_boundaries.BoundaryTests.test_runtime_imports_are_stdlib_or_orch) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.141s
+
+OK

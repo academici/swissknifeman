@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "contract_version": "exec/v1",
+  "policy_id": "review-only",
+  "description": "Fixture review-only pipeline.",
+  "stages": [
+    {
+      "id": "context",
+      "kind": "context",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "review",
+      "kind": "primary",
+      "role": "reviewer",
+      "required": true,
+      "on_unavailable": "refuse"
+    }
+  ],
+  "review": {
+    "enabled": false,
+    "independent_provider": false,
+    "max_rounds": 2,
+    "max_corrections": 1
+  },
+  "retries_budget": {
+    "total_max": 1
+  },
+  "git_action": "none",
+  "finalize": {
+    "kind": "none",
+    "register": false
+  }
+}

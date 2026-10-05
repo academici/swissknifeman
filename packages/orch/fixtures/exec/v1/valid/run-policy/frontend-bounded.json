@@ -1,0 +1,67 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "contract_version": "exec/v1",
+  "policy_id": "frontend-bounded",
+  "description": "Fixture frontend-bounded pipeline.",
+  "stages": [
+    {
+      "id": "context",
+      "kind": "context",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "scout",
+      "kind": "scout",
+      "role": "scout",
+      "required": true,
+      "on_unavailable": "refuse",
+      "model_class": "economy"
+    },
+    {
+      "id": "primary",
+      "kind": "primary",
+      "role": "executor",
+      "required": true,
+      "on_unavailable": "refuse",
+      "model_class": "frontier"
+    },
+    {
+      "id": "bounded",
+      "kind": "bounded",
+      "role": "frontend",
+      "required": true,
+      "on_unavailable": "refuse",
+      "model_class": "economy"
+    },
+    {
+      "id": "checks",
+      "kind": "checks",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "registrar",
+      "kind": "registrar",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    }
+  ],
+  "review": {
+    "enabled": false,
+    "independent_provider": false,
+    "max_rounds": 2,
+    "max_corrections": 1
+  },
+  "retries_budget": {
+    "total_max": 1
+  },
+  "git_action": "none",
+  "finalize": {
+    "kind": "deterministic",
+    "register": true
+  }
+}

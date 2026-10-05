@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.2",
   "title": "Схемы входа: execution-input, run-policy, role-manifest, capability-record + fixtures",
-  "status": "todo",
+  "status": "done",
   "summary": "Четыре схемы входной стороны exec/v1 с semantic checks и fixtures: три примера execution-input (plan-bound, ad-hoc, review-only), четыре профиля run-policy (solo, scout-solo, frontend-bounded, review-only), role-manifest и capability-record; невалидные fixtures дают ожидаемые коды.",
   "why": "R5–R7, R13, R18: задание стадии, профиль конвейера, роль и возможности binding описываются один раз для всех движков. Инварианты I3 (plan_mutation forbidden), I7 (required ⇒ refuse), I10 (≤2 раунда) закрепляются здесь.",
   "scope": {
@@ -106,8 +106,8 @@
     },
     {
       "id": "V3",
-      "cmd": "python3 packages/orch/scripts/orch.py validate run-policy packages/orch/fixtures/exec/v1/invalid/run-policy/required-skip.json",
-      "expect": "exit 1; output contains POLICY_REQUIRED_REFUSE",
+      "cmd": "python3 -c 'import subprocess; p = subprocess.run([\"python3\", \"packages/orch/scripts/orch.py\", \"validate\", \"run-policy\", \"packages/orch/fixtures/exec/v1/invalid/run-policy/required-skip.json\"], capture_output=True, text=True); print(\"observed CLI exit:\", p.returncode); print(p.stdout, end=\"\"); print(p.stderr, end=\"\"); raise SystemExit(0 if p.returncode == 1 and \"POLICY_REQUIRED_REFUSE\" in p.stdout + p.stderr else 1)'",
+      "expect": "exit 0; asserts CLI exit 1 and POLICY_REQUIRED_REFUSE",
       "kind": "acceptance"
     }
   ],
@@ -131,6 +131,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:27Z"
+  "result": {
+    "started_at": "2026-10-05T19:00:25Z",
+    "finished_at": "2026-10-05T19:10:00Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a10d53-1cb4-7e83-b2f6-447b63114cff"
+    },
+    "notes": "Созданы 4 входные схемы exec/v1, semantic checks и 21 fixture (9 valid, 12 invalid; каждый invalid даёт ровно один ожидаемый error). 12 новых и 13 затронутых тестов прошли. V1/V2/V3 exit 0; V3 assertion подтвердил реальный CLI exit 1 и POLICY_REQUIRED_REFUSE. Решение владельца устранило цикл digest/input_id: суффикс после последнего @ исключён, идентификатор задания хэшируется; JSON knowledge/contracts и knowledge/task-changes синхронизированы через plan.py. Доказательства: @plan/artifacts/P1.2/. Review не запускалось; широкий validate не повторялся. Документация контрактов зафиксирована в knowledge; остальные docs/CHANGELOG вне scope. Предсуществующие изменения Task сохранены.",
+    "pending": [
+      "CLI из P1.1 пока возвращает exit 1 при warning-only issues; contracts API правильно возвращает level=warning. CLI не изменён, поскольку вне scope P1.2; нужен отдельный scoped repair consumer CLI."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-05T19:10:00Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-05T19:10:00Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-05T19:10:00Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-05T19:10:00Z"
 }

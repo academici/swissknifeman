@@ -1,0 +1,64 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "contract_version": "exec/v1",
+  "policy_id": "solo",
+  "description": "Fixture solo pipeline.",
+  "stages": [
+    {
+      "id": "context",
+      "kind": "context",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "primary",
+      "kind": "primary",
+      "role": "executor",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "checks",
+      "kind": "checks",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "registrar",
+      "kind": "registrar",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "git",
+      "kind": "git",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "extra-primary",
+      "kind": "primary",
+      "role": "executor",
+      "required": true,
+      "on_unavailable": "refuse"
+    }
+  ],
+  "review": {
+    "enabled": false,
+    "independent_provider": false,
+    "max_rounds": 2,
+    "max_corrections": 1
+  },
+  "retries_budget": {
+    "total_max": 1
+  },
+  "git_action": "commit",
+  "finalize": {
+    "kind": "deterministic",
+    "register": true
+  }
+}

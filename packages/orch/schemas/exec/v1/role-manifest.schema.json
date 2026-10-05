@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "title": "role-manifest",
+  "type": "object",
+  "description": "Engine-neutral role-manifest contract.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:role-manifest:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "role_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+      "description": "Role identifier."
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Role title."
+    },
+    "description": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Role purpose."
+    },
+    "instructions": {
+      "type": "array",
+      "description": "Canonical instruction sources.",
+      "items": {
+        "type": "object",
+        "description": "Canonical instruction reference.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Canonical instruction path."
+          },
+          "purpose": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Purpose of this instruction source."
+          },
+          "sha256": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+            "description": "Instruction byte digest."
+          }
+        },
+        "required": [
+          "path",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "skills": {
+      "type": "array",
+      "description": "Required or optional skills.",
+      "items": {
+        "type": "object",
+        "description": "Skill requirement.",
+        "properties": {
+          "name": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Skill identifier, optionally bucket-qualified."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether skill delivery is mandatory."
+          },
+          "why": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Reason for using the skill."
+          }
+        },
+        "required": [
+          "name",
+          "required",
+          "why"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tools": {
+      "type": "object",
+      "description": "Tool permissions.",
+      "properties": {
+        "filesystem": {
+          "type": "string",
+          "enum": [
+            "none",
+            "read",
+            "write"
+          ],
+          "description": "Filesystem permission."
+        },
+        "shell": {
+          "type": "string",
+          "enum": [
+            "none",
+            "read_only",
+            "full"
+          ],
+          "description": "Shell permission."
+        },
+        "network": {
+          "type": "string",
+          "enum": [
+            "none",
+            "allowed"
+          ],
+          "description": "Network permission."
+        },
+        "plan_api": {
+          "type": "string",
+          "enum": [
+            "none",
+            "read",
+            "write"
+          ],
+          "description": "Task plan API permission."
+        }
+      },
+      "required": [
+        "filesystem",
+        "shell",
+        "network",
+        "plan_api"
+      ],
+      "additionalProperties": false
+    },
+    "write_authority": {
+      "type": "string",
+      "enum": [
+        "none",
+        "code_scope",
+        "plan"
+      ],
+      "description": "Role write authority."
+    },
+    "result_shape": {
+      "type": "string",
+      "enum": [
+        "context-map",
+        "stage-report",
+        "review-findings",
+        "registration-receipt"
+      ],
+      "description": "Result shape."
+    },
+    "model_class_min": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+      "description": "Minimum model class."
+    },
+    "forbidden_inputs": {
+      "type": "array",
+      "description": "Forbidden input categories.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "lifecycle_instructions",
+          "report_api",
+          "plan_write"
+        ],
+        "description": "Forbidden input category."
+      },
+      "uniqueItems": true
+    },
+    "agent_pack_roles": {
+      "type": "array",
+      "description": "Informational agent pack role links.",
+      "items": {
+        "type": "object",
+        "description": "Informational agent pack link.",
+        "properties": {
+          "pack_id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Agent pack identifier."
+          },
+          "role_id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Role identifier in the agent pack."
+          }
+        },
+        "required": [
+          "pack_id",
+          "role_id"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "role_id",
+    "title",
+    "description",
+    "instructions",
+    "tools",
+    "write_authority",
+    "result_shape",
+    "model_class_min",
+    "forbidden_inputs"
+  ],
+  "additionalProperties": false
+}

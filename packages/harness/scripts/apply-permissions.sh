@@ -138,7 +138,7 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     echo "--- dry-run: --global (hook files are not written) ---"
     RG_DST_CFG="$HOME/.claude/hooks/review-gate/config.json"
     if [[ ! -f "$RG_DST_CFG" ]]; then
-      echo "review-gate: config.json is missing - a new template will be installed (checks: generated-assets, plan-lint, tests-touched)"
+      echo "review-gate: config.json is missing - a new template will be installed (checks: generated-assets, plan-check, tests-touched)"
     else
       RG_DST_SHA256="$(sha256sum "$RG_DST_CFG" | cut -d' ' -f1)"
       if [[ "$RG_DST_SHA256" == "$RG_OLD_STUB_SHA256" ]]; then

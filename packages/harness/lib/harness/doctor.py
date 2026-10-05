@@ -13,7 +13,7 @@ from .mcp import available_mcp
 _RUN_REPORT_FILES = ("run-report.py", "_lib.py", "_usage.py")
 
 
-_REVIEW_GATE_CHECK_CODES = {"generated-assets": "G1", "plan-lint": "G2", "tests-touched": "W1"}
+_REVIEW_GATE_CHECK_CODES = {"generated-assets": "G1", "plan-check": "G2", "tests-touched": "W1"}
 
 
 def _review_gate_mode(env_path):

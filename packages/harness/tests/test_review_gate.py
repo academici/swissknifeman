@@ -104,7 +104,7 @@ def _plan_check_hookdir(tmp):
     (dst / "config.json").write_text(json.dumps({
         "version": 2,
         "check_command": "$REVIEW_GATE_DIR/checks/run-checks.sh",
-        "checks": [{"name": "plan-lint", "mode": "strict"}],
+        "checks": [{"name": "plan-check", "mode": "strict"}],
     }))
     (dst / "review-gate.sh").chmod(0o755)
     for f in (dst / "checks").glob("*.sh"):
@@ -113,7 +113,7 @@ def _plan_check_hookdir(tmp):
 
 
 class TestPlanLintCheck(unittest.TestCase):
-    """The plan-lint check runs `plan.py check` for changed plan dirs that hold a plan.json."""
+    """The plan-check runs `plan.py check` for changed plan dirs that hold a plan.json."""
 
     def setUp(self):
         self._td = tempfile.TemporaryDirectory()

@@ -27,7 +27,7 @@ harness (`checks/<name>.sh`); machine announces ONLY dialing and per-check mode:
   "check_command": "$REVIEW_GATE_DIR/checks/run-checks.sh",
   "checks": [
     { "name": "generated-assets", "mode": "strict" },
-    { "name": "plan-lint", "mode": "strict" },
+    { "name": "plan-check", "mode": "strict" },
     { "name": "tests-touched", "mode": "warn" }
   ]
 }
@@ -36,7 +36,7 @@ harness (`checks/<name>.sh`); machine announces ONLY dialing and per-check mode:
 | Code | Verification | Default mode | What it does |
 |:--|:--|:--|:--|
 | G1 | `generated-assets` | `strict` | diff touches header file `swissknifeman:generated` → violation (edit belongs to the pack, is being edited override-file) |
-| G2 | `plan-lint` | `strict` | diff touched `plans/<ID>/` with a `plan.json` → run `packages/task/scripts/plan.py check`; errors → violation (plan dirs without `plan.json` are skipped) |
+| G2 | `plan-check` | `strict` | diff touched `plans/<ID>/` with a `plan.json` → run `packages/task/scripts/plan.py check`; errors → violation (plan dirs without `plan.json` are skipped) |
 | W1 | `tests-touched` | `warn` | diff touches `packages/*/lib/**` without `packages/*/tests/**` (heuristics - there are legal exceptions, so there are always `warn`, never `strict`) |
 
 Unknown name in `checks[]` — apparent configuration error (the dispatcher prints it and

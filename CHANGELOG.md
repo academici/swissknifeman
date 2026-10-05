@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Grok delivery:** replace the SKM-owned Task plugin from the attested release checkout instead of following its previous local source.
+
 ## [0.28.4] - 2026-10-05
 
 ### Fixed

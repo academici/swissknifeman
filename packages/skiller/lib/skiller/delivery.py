@@ -510,8 +510,14 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             row = {"surface": "grok-cache/task", "status": "blocked"}
             receipt["targets"].append(row)
             save()
-            ok, detail = _run(["grok", "plugin", "update", "task"])
-            row["reason"] = detail
+            # SKM owns this plugin completely.  Grok's `update` follows the
+            # old local source and can therefore leave a released Task stale;
+            # replace that installation from this attested checkout instead.
+            removed, remove_detail = _run(["grok", "plugin", "uninstall", "task"])
+            installed_ok, install_detail = _run(
+                ["grok", "plugin", "install", str(root / "packages/task"), "--trust"])
+            ok = removed and installed_ok
+            row["reason"] = "uninstall: " + remove_detail + "; install: " + install_detail
             try:
                 listed = subprocess.run(["grok", "plugin", "list", "--json"],
                                         capture_output=True, text=True, check=False)

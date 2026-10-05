@@ -1,0 +1,18 @@
+{
+  "v": 1,
+  "ts": "2026-10-05T10:40:00Z",
+  "type": "finish",
+  "item": "P1.1",
+  "phase": "P1",
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6-sol"
+  },
+  "summary": "P1.1 done",
+  "refs": [
+    "a1b2c3d"
+  ],
+  "data": {
+    "status": "done"
+  }
+}

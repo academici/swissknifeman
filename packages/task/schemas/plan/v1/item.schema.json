@@ -1,0 +1,510 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:item:v1",
+  "title": "Item",
+  "description": "One plan item: stable spec plus volatile result (phases/<Pn>/<Pn.m>.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:item:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:item:v1"
+    },
+    "id": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId",
+      "description": "Item id, equals the file name."
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Item title."
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle-owned after design.",
+      "minLength": 1,
+      "enum": [
+        "todo",
+        "in_progress",
+        "done",
+        "done_with_deviations",
+        "blocked",
+        "skipped"
+      ]
+    },
+    "summary": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Observable outcome in 1-3 sentences."
+    },
+    "why": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Why the item exists."
+    },
+    "scope": {
+      "type": "object",
+      "description": "Item scope.",
+      "properties": {
+        "include": {
+          "type": "array",
+          "description": "Included.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          },
+          "minItems": 1
+        },
+        "exclude": {
+          "type": "array",
+          "description": "Excluded.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        }
+      },
+      "required": [
+        "include",
+        "exclude"
+      ],
+      "additionalProperties": false
+    },
+    "depends_on": {
+      "type": "array",
+      "description": "Blocking item dependencies in the same plan.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId"
+      },
+      "uniqueItems": true
+    },
+    "related": {
+      "type": "array",
+      "description": "Non-blocking links.",
+      "items": {
+        "type": "object",
+        "description": "One link.",
+        "properties": {
+          "ref": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref",
+            "description": "Linked phase, item or decision."
+          },
+          "relation": {
+            "type": "string",
+            "description": "Kind of link.",
+            "minLength": 1,
+            "enum": [
+              "informs",
+              "consumes",
+              "conflicts",
+              "follows_up",
+              "supersedes"
+            ]
+          },
+          "note": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Why linked."
+          }
+        },
+        "required": [
+          "ref",
+          "relation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Decisions the executor must honour.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
+      }
+    },
+    "reads": {
+      "type": "array",
+      "description": "Files to read, in reading order.",
+      "items": {
+        "type": "object",
+        "description": "One read.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+            "description": "File to read."
+          },
+          "section": {
+            "type": "string",
+            "description": "Section within the file.",
+            "minLength": 1
+          },
+          "why": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Why read it."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the read is mandatory."
+          }
+        },
+        "required": [
+          "path",
+          "why",
+          "required"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "task_files": {
+      "type": "array",
+      "description": "Files likely to change; a hint, not a write limit.",
+      "items": {
+        "type": "object",
+        "description": "One file hint.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+            "description": "Path or glob."
+          },
+          "change": {
+            "type": "string",
+            "description": "Expected change.",
+            "minLength": 1,
+            "enum": [
+              "create",
+              "modify",
+              "delete",
+              "any"
+            ]
+          },
+          "note": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Remark."
+          }
+        },
+        "required": [
+          "path",
+          "change"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Plan or repo artifacts consumed or produced.",
+      "items": {
+        "type": "object",
+        "description": "One artifact.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+            "description": "Artifact path."
+          },
+          "role": {
+            "type": "string",
+            "description": "Consumed or produced.",
+            "minLength": 1,
+            "enum": [
+              "input",
+              "output"
+            ]
+          },
+          "note": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Remark."
+          }
+        },
+        "required": [
+          "path",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Implementation rules.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "guidance": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Code guidance, Markdown; may hold algorithm sketches."
+    },
+    "examples": {
+      "type": "array",
+      "description": "Worked examples.",
+      "items": {
+        "type": "object",
+        "description": "One example.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+            "description": "Example file."
+          },
+          "section": {
+            "type": "string",
+            "description": "Section within the file.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "validation": {
+      "type": "array",
+      "description": "Exact validation commands.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/check"
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "description": "Deliverables.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "route": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route",
+      "description": "Minimum route to execute the item."
+    },
+    "review": {
+      "type": "object",
+      "description": "Review mode; requested only on owner request.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "none or requested.",
+          "minLength": 1,
+          "enum": [
+            "none",
+            "requested"
+          ]
+        },
+        "reviewer": {
+          "type": "object",
+          "description": "Preferred reviewer.",
+          "properties": {
+            "class": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/modelClass",
+              "description": "Reviewer model class."
+            },
+            "model": {
+              "type": "string",
+              "description": "Reviewer model id.",
+              "minLength": 1
+            },
+            "note": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Remark."
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "description": "Authority needed; owner_gate requires gate and scope.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "routine or owner_gate.",
+          "minLength": 1,
+          "enum": [
+            "routine",
+            "owner_gate"
+          ]
+        },
+        "gate": {
+          "type": "string",
+          "description": "Gate name.",
+          "minLength": 1,
+          "pattern": "^[A-Z0-9-]+$"
+        },
+        "scope": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "What the gate authorizes."
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "rag": {
+      "type": "object",
+      "description": "Research need and status.",
+      "properties": {
+        "need": {
+          "type": "string",
+          "description": "How much research is needed.",
+          "minLength": 1,
+          "enum": [
+            "none",
+            "optional",
+            "required"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "Research status.",
+          "minLength": 1,
+          "enum": [
+            "not_needed",
+            "pending",
+            "complete",
+            "failed"
+          ]
+        },
+        "notes": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Remark."
+        },
+        "captures": {
+          "type": "array",
+          "description": "Capture file paths.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+          }
+        }
+      },
+      "required": [
+        "need",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "units": {
+      "type": "array",
+      "description": "Ordered unit ids stored in the item workspace.",
+      "items": {
+        "type": "string",
+        "description": "Unit id like U1.",
+        "minLength": 1,
+        "pattern": "^U[0-9]+$"
+      },
+      "uniqueItems": true
+    },
+    "result": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Volatile result written only by the lifecycle API, or null.",
+      "properties": {
+        "started_at": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+          "description": "Start time."
+        },
+        "finished_at": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+          "description": "Finish time."
+        },
+        "executor": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+          "description": "Actor that executed the item."
+        },
+        "notes": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Completion notes."
+        },
+        "deviations": {
+          "type": "array",
+          "description": "Known deviations.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "pending": {
+          "type": "array",
+          "description": "Pending work.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "escalation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Escalation needed, or null.",
+          "minLength": 1
+        },
+        "checks": {
+          "type": "array",
+          "description": "Recorded check outcomes.",
+          "items": {
+            "type": "object",
+            "description": "One check outcome.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Check id like V1.",
+                "minLength": 1,
+                "pattern": "^V[0-9]+$"
+              },
+              "exit": {
+                "type": "integer",
+                "description": "Process exit code."
+              },
+              "at": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+                "description": "When the check ran."
+              },
+              "summary": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+                "description": "Short outcome."
+              }
+            },
+            "required": [
+              "id",
+              "exit",
+              "at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "commits": {
+          "type": "array",
+          "description": "Commit SHAs.",
+          "items": {
+            "type": "string",
+            "description": "Commit SHA, 7-40 hex.",
+            "minLength": 1,
+            "pattern": "^[0-9a-f]{7,40}$"
+          }
+        },
+        "decision": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref",
+          "description": "Accepted decision; required when status is skipped."
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "updated_at": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+      "description": "Last save time, written by the store."
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "title",
+    "status",
+    "summary",
+    "why",
+    "scope",
+    "route",
+    "review",
+    "authority",
+    "rag",
+    "updated_at"
+  ],
+  "additionalProperties": false
+}

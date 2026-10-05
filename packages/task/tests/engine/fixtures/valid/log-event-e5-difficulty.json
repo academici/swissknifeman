@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "ts": "2026-10-05T10:20:00Z",
+  "type": "difficulty",
+  "item": "P1.1",
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6-sol"
+  },
+  "summary": "tests import config at module load; patched via fixture",
+  "impact": "P1.2 tests need the same fixture",
+  "next": "reuse tests/conftest fixture"
+}

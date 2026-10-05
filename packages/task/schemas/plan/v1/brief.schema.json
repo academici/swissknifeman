@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:brief:v1",
+  "title": "Brief",
+  "description": "Owner messages verbatim plus extracted requirements (brief.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:brief:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:brief:v1"
+    },
+    "messages": {
+      "type": "array",
+      "description": "Owner messages, verbatim.",
+      "items": {
+        "type": "object",
+        "description": "One owner message.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Message id like M1.",
+            "minLength": 1,
+            "pattern": "^M[0-9]+$"
+          },
+          "date": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/date",
+            "description": "Message date."
+          },
+          "text": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Message text, verbatim."
+          },
+          "channel": {
+            "type": "string",
+            "description": "Where the message came from.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "requirements": {
+      "type": "array",
+      "description": "Extracted requirements.",
+      "items": {
+        "type": "object",
+        "description": "One requirement.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Requirement id like B1.",
+            "minLength": 1,
+            "pattern": "^B[0-9]+$"
+          },
+          "text": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Requirement text."
+          },
+          "source": {
+            "type": "string",
+            "description": "Source message id.",
+            "minLength": 1,
+            "pattern": "^M[0-9]+$"
+          },
+          "owners": {
+            "type": "array",
+            "description": "Phases or items that own it.",
+            "items": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Constraints.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "environment": {
+      "type": "array",
+      "description": "Environment notes.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "out_of_scope": {
+      "type": "array",
+      "description": "Out of scope.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "messages",
+    "requirements"
+  ],
+  "additionalProperties": false
+}

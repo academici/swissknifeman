@@ -1,0 +1,57 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "Gated release step",
+  "status": "blocked",
+  "summary": "Outcome placeholder",
+  "why": "From plan goal",
+  "scope": {
+    "include": [
+      "to be designed"
+    ],
+    "exclude": []
+  },
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "claude-opus-5-5",
+      "note": "hard risk"
+    }
+  },
+  "authority": {
+    "kind": "owner_gate",
+    "gate": "RELEASE-1",
+    "scope": "tag and push v1"
+  },
+  "rag": {
+    "need": "required",
+    "status": "complete",
+    "notes": "captures kept",
+    "captures": [
+      "@plan/artifacts/rag/c1.md"
+    ]
+  },
+  "result": {
+    "escalation": "owner decision needed"
+  },
+  "updated_at": "2026-10-05T10:00:00Z",
+  "related": [
+    {
+      "ref": "PLAN3.P2.1",
+      "relation": "consumes"
+    },
+    {
+      "ref": "repo:PLAN3.D4",
+      "relation": "conflicts"
+    }
+  ],
+  "units": [
+    "U1",
+    "U2"
+  ]
+}

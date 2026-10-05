@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "TBD by phase design",
+  "status": "todo",
+  "summary": "Outcome placeholder",
+  "why": "From plan goal",
+  "scope": {
+    "include": [
+      "to be designed"
+    ],
+    "exclude": []
+  },
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T10:00:00Z"
+}

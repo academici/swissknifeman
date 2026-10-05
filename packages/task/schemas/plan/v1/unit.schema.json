@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:unit:v1",
+  "title": "Unit",
+  "description": "One work unit inside an item (phases/<Pn>/<Pn.m>/<U#>.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:unit:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:unit:v1"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unit id local to the item.",
+      "minLength": 1,
+      "pattern": "^U[0-9]+$"
+    },
+    "item": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId",
+      "description": "Owning item."
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Unit title."
+    },
+    "goal": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Observable result of the piece."
+    },
+    "files": {
+      "type": "array",
+      "description": "Files the unit owns (write set); parallel units must be disjoint.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+      },
+      "minItems": 1
+    },
+    "reads": {
+      "type": "array",
+      "description": "Extra context beyond the item's reads.",
+      "items": {
+        "type": "object",
+        "description": "One read.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+            "description": "File to read."
+          },
+          "section": {
+            "type": "string",
+            "description": "Section within the file.",
+            "minLength": 1
+          },
+          "why": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Why read it."
+          }
+        },
+        "required": [
+          "path",
+          "why"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "depends_on": {
+      "type": "array",
+      "description": "Units whose output this one needs.",
+      "items": {
+        "type": "string",
+        "description": "Unit id like U1.",
+        "minLength": 1,
+        "pattern": "^U[0-9]+$"
+      },
+      "uniqueItems": true
+    },
+    "checks": {
+      "type": "array",
+      "description": "Item validation ids or own unit checks.",
+      "items": {
+        "description": "A V# id of an item check, or an own check object.",
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Item validation id.",
+            "minLength": 1,
+            "pattern": "^V[0-9]+$"
+          },
+          {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/check"
+          }
+        ]
+      }
+    },
+    "route": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route",
+      "description": "Minimum route for the worker."
+    },
+    "mode": {
+      "type": "string",
+      "description": "self never handed out; either lets the executor decide.",
+      "minLength": 1,
+      "enum": [
+        "self",
+        "delegate",
+        "either"
+      ]
+    },
+    "instructions": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Worker-facing guidance."
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle-owned unit status.",
+      "minLength": 1,
+      "enum": [
+        "todo",
+        "dispatched",
+        "returned",
+        "accepted",
+        "reworked",
+        "rejected"
+      ]
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Result written by the unit verbs, or null.",
+      "properties": {
+        "agent": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+          "description": "Agent that did the work."
+        },
+        "at": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+          "description": "When it returned."
+        },
+        "notes": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Remark."
+        },
+        "changed": {
+          "type": "array",
+          "description": "Changed paths.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+          }
+        },
+        "minutes": {
+          "type": "integer",
+          "description": "Minutes spent."
+        }
+      },
+      "required": [
+        "agent",
+        "at"
+      ],
+      "additionalProperties": false
+    },
+    "updated_at": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+      "description": "Last save time, written by the store."
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "item",
+    "title",
+    "goal",
+    "files",
+    "route",
+    "mode",
+    "status",
+    "updated_at"
+  ],
+  "additionalProperties": false
+}

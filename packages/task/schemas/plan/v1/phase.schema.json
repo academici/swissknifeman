@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:phase:v1",
+  "title": "Phase",
+  "description": "Phase context, scope, batches and validation (phases/<Pn>/phase.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:phase:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:phase:v1"
+    },
+    "id": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId",
+      "description": "Phase id, equals the directory name."
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Phase title."
+    },
+    "design": {
+      "type": "string",
+      "description": "skeleton until design-done sets detailed.",
+      "minLength": 1,
+      "enum": [
+        "skeleton",
+        "detailed"
+      ]
+    },
+    "goal": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Phase goal."
+    },
+    "context": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Self-contained Markdown context; environment notes go here."
+    },
+    "contract": {
+      "type": "object",
+      "description": "What the phase consumes, produces and respects.",
+      "properties": {
+        "consumes": {
+          "type": "array",
+          "description": "Consumed inputs.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "produces": {
+          "type": "array",
+          "description": "Produced outputs.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "boundaries": {
+          "type": "array",
+          "description": "Boundaries.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "description": "Phase scope.",
+      "properties": {
+        "include": {
+          "type": "array",
+          "description": "Included.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "description": "Excluded.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        }
+      },
+      "required": [
+        "include",
+        "exclude"
+      ],
+      "additionalProperties": false
+    },
+    "depends_on": {
+      "type": "array",
+      "description": "Blocking phase dependencies; default is the previous phase.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId"
+      },
+      "uniqueItems": true
+    },
+    "pitfalls": {
+      "type": "array",
+      "description": "Known pitfalls.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "validation": {
+      "type": "array",
+      "description": "Phase-level broad checks, run once by the last item.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/check"
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "description": "Deliverables.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "assurance": {
+      "type": "object",
+      "description": "Assurance notes, only for real integration or hard risk.",
+      "properties": {
+        "impact": {
+          "type": "string",
+          "description": "Impact description.",
+          "minLength": 1
+        },
+        "seams": {
+          "type": "array",
+          "description": "Integration seams.",
+          "items": {
+            "type": "string",
+            "description": "One string.",
+            "minLength": 1
+          }
+        },
+        "live": {
+          "type": "boolean",
+          "description": "Whether a live boundary check is required."
+        },
+        "note": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Free note."
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "supporting": {
+      "type": "array",
+      "description": "Dossier and example paths for this phase.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+      }
+    },
+    "items": {
+      "type": "array",
+      "description": "Item ids in order.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId"
+      },
+      "uniqueItems": true
+    },
+    "batches": {
+      "type": "array",
+      "description": "Execution batches in order; every item is in exactly one batch.",
+      "items": {
+        "type": "object",
+        "description": "One batch.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Batch id like B1.",
+            "minLength": 1,
+            "pattern": "^B[0-9A-Za-z-]+$"
+          },
+          "items": {
+            "type": "array",
+            "description": "Items of the batch.",
+            "items": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId"
+            },
+            "minItems": 1
+          },
+          "mode": {
+            "type": "string",
+            "description": "recommended may be split; required must run as one.",
+            "minLength": 1,
+            "enum": [
+              "recommended",
+              "required"
+            ]
+          },
+          "note": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Why these items are batched."
+          }
+        },
+        "required": [
+          "id",
+          "items",
+          "mode"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "closed": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Phase closure written by lifecycle only, or null.",
+      "properties": {
+        "at": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+          "description": "Closure time."
+        },
+        "result": {
+          "type": "string",
+          "description": "Worst-of item results.",
+          "minLength": 1,
+          "enum": [
+            "done",
+            "done_with_deviations",
+            "blocked",
+            "skipped"
+          ]
+        },
+        "summary": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Closure summary."
+        }
+      },
+      "required": [
+        "at",
+        "result",
+        "summary"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "title",
+    "design",
+    "goal",
+    "items",
+    "batches"
+  ],
+  "additionalProperties": false
+}

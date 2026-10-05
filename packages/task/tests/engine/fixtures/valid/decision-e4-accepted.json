@@ -15,16 +15,14 @@
       "text": "Russian"
     }
   ],
+  "decision": "A — English",
+  "rationale": "repo convention",
+  "consequences": [
+    "All diagnostics are English"
+  ],
   "applies_to": [
     "P1"
   ],
-  "actor": {
-    "provider": "claude-code",
-    "model": "claude-opus-5-5"
-  },
-  "decision": "A — English",
-  "rationale": "repo convention",
-  "answered_by": "owner",
   "supersedes": [
     "D1"
   ],
@@ -36,7 +34,9 @@
       "note": "stated in the brief"
     }
   ],
-  "consequences": [
-    "All diagnostics are English"
-  ]
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "owner"
 }

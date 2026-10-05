@@ -45,13 +45,13 @@
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId",
       "description": "Phase the event is about."
     },
-    "summary": {
-      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
-      "description": "One-line summary."
-    },
     "actor": {
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
       "description": "Who produced the event."
+    },
+    "summary": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "One-line summary."
     },
     "impact": {
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",

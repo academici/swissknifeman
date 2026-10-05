@@ -52,6 +52,16 @@ STATUS_LABEL = {
 _PHASE_RESULT_ORDER = (ItemStatus.skipped, ItemStatus.done, ItemStatus.done_with_deviations, ItemStatus.blocked)
 
 
+class PlanError(Exception):
+    """Single refusal type of the plan API: a stable ``code``, a message and optional schema issues."""
+
+    def __init__(self, code: str, message: str, issues=()):
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+        self.issues = tuple(issues)
+
+
 class Ref(NamedTuple):
     repo: str | None
     plan: str | None

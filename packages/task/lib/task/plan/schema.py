@@ -166,6 +166,13 @@ def validate(doc: object, kind: str, registry: Registry | None = None) -> list[V
     return issues
 
 
+def validate_node(registry: Registry, node: dict, base_id: str, value: object) -> list[ValidationIssue]:
+    """Validate ``value`` against one schema node (for example a ``oneOf`` branch) owned by ``base_id``."""
+    issues: list[ValidationIssue] = []
+    _check(registry, node, base_id, value, "", issues)
+    return issues
+
+
 def _check(reg: Registry, schema: dict, base: str, value: Any, pointer: str, out: list[ValidationIssue]) -> None:
     def add(code: str, message: str, at: str | None = None) -> None:
         location = pointer if at is None else at

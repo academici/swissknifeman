@@ -11,6 +11,16 @@
     ],
     "exclude": []
   },
+  "related": [
+    {
+      "ref": "PLAN3.P2.1",
+      "relation": "consumes"
+    },
+    {
+      "ref": "repo:PLAN3.D4",
+      "relation": "conflicts"
+    }
+  ],
   "route": {
     "class": "implementation",
     "effort": "high"
@@ -36,22 +46,12 @@
       "@plan/artifacts/rag/c1.md"
     ]
   },
-  "result": {
-    "escalation": "owner decision needed"
-  },
-  "updated_at": "2026-10-05T10:00:00Z",
-  "related": [
-    {
-      "ref": "PLAN3.P2.1",
-      "relation": "consumes"
-    },
-    {
-      "ref": "repo:PLAN3.D4",
-      "relation": "conflicts"
-    }
-  ],
   "units": [
     "U1",
     "U2"
-  ]
+  ],
+  "result": {
+    "escalation": "owner decision needed"
+  },
+  "updated_at": "2026-10-05T10:00:00Z"
 }

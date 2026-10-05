@@ -25,11 +25,6 @@
   "phases": [
     "P1"
   ],
-  "settings": {
-    "design_audit": "required",
-    "scout": "auto",
-    "language": "en"
-  },
   "links": {
     "predecessor": "PLAN3",
     "related_plans": [
@@ -53,5 +48,10 @@
         "reaction": "re-check"
       }
     ]
+  },
+  "settings": {
+    "design_audit": "required",
+    "scout": "auto",
+    "language": "en"
   }
 }

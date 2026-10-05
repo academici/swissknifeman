@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.28.4] - 2026-10-05
+
+### Fixed
+
+- **Grok delivery:** update and attest the installed Task command plugin during fleet delivery.
+
 ## [0.28.3] - 2026-10-05
 
 ### Fixed

@@ -667,7 +667,7 @@
       },
       "evidence": [
         {
-          "source": "grok --help and packages/task/lib/task/route_evidence_grok.py",
+          "source": "grok --help",
           "verified_at": "2026-10-03",
           "scope": "Grok Build CLI command routing",
           "claim": "slash /task:<id> invocation; class pins grok-4.5/4.6/4.7; agent is an argv alias of grok"

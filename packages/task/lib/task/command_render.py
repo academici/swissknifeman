@@ -19,7 +19,6 @@ from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderReque
                                     plan_artifact_render)
 from core.provider.lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
 from core.provider.runtime import codex_task_plugin_root_expression
-from task import plan_continuity
 from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_CLASSES,
                                   metadata_value)
 
@@ -121,7 +120,6 @@ class PlanNextCarrier:
     item_ids: tuple[str, ...] = ()
     cold_start_scope: tuple[tuple[str, str], ...] = ()
     orchestration_capabilities: tuple[str, ...] = ()
-    continuity: plan_continuity.ContinuityDecision | None = None
 
     def __post_init__(self) -> None:
         if self.kind not in self.allowed_kinds():
@@ -139,25 +137,6 @@ class PlanNextCarrier:
                 "same-session", "cold-start", "continue-root",
                 "isolated-child-return", "cold-start-root"}:
             raise ValueError("CMD_INVOCATION_INVALID: unknown context kind")
-        if self.continuity is not None:
-            try:
-                decision = plan_continuity.validate_decision(self.continuity)
-            except plan_continuity.ContinuityError as error:
-                raise ValueError("CMD_INVOCATION_INVALID: invalid continuity decision") from error
-            expected = {
-                "same-session": "continue-root",
-                "cold-start": "cold-start-root",
-            }.get(self.context_kind, self.context_kind)
-            waiting_matches = (
-                self.kind == "waiting" and decision.outcome in {"waiting-owner", "waiting-external"}
-                and not decision.runnable
-            )
-            runnable_matches = (
-                self.kind != "waiting" and decision.runnable
-                and decision.outcome == expected
-            )
-            if not (waiting_matches or runnable_matches):
-                raise ValueError("CMD_INVOCATION_INVALID: continuity/context mismatch")
 
     @classmethod
     def allowed_kinds(cls) -> set[str]:
@@ -175,8 +154,6 @@ class PlanNextCarrier:
         }
         if self.orchestration_capabilities:
             value["orchestration_capabilities"] = list(self.orchestration_capabilities)
-        if self.continuity is not None:
-            value["continuity"] = self.continuity.as_dict()
         return value
 
 
@@ -416,7 +393,6 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
                        item_ids: list[str] | tuple[str, ...] = (),
                        cold_start_scope: list[list[str]] | tuple[tuple[str, str], ...] = (),
                        orchestration_capabilities: tuple[str, ...] = (),
-                       continuity: plan_continuity.ContinuityDecision | None = None,
                        ) -> PlanNextCarrier:
     """Parse the canonical `<kind>: task:<id> <arguments>` Next declaration."""
     if not isinstance(declaration, str):
@@ -449,7 +425,7 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
         return PlanNextCarrier(
             kind, None, None, arguments, context_kind, tuple(item_ids),
             tuple(tuple(item) for item in cold_start_scope),
-            tuple(orchestration_capabilities), continuity)
+            tuple(orchestration_capabilities))
     command_id, separator, raw_arguments = payload.partition(" ")
     command_id = _LEGACY_COMMAND_IDS.get(command_id, command_id)
     if not separator:
@@ -466,13 +442,7 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
                else arguments[0] if arguments else None)
     return PlanNextCarrier(
         kind, command_id, plan_id, arguments, context_kind,
-        tuple(item_ids), scope, tuple(orchestration_capabilities), continuity)
-
-
-def render_continuity_decision(decision: plan_continuity.ContinuityDecision) -> str:
-    """Persist the full typed pause, since compact Context cannot carry a checkpoint."""
-    value = plan_continuity.validate_decision(decision).as_dict()
-    return "```session-continuity-decision/v1\n" + json.dumps(value, ensure_ascii=False, sort_keys=True) + "\n```"
+        tuple(item_ids), scope, tuple(orchestration_capabilities))
 
 
 def plan_provider_invocation(

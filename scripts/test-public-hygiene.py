@@ -69,9 +69,9 @@ class TestPublicHygiene(unittest.TestCase):
         found = public_hygiene.plan_reference_violations(sorted(files), read=files.get)
         self.assertEqual(sorted({path.split(" ")[0] for path, _ in found}), ["a.md", "b.md", "c.md", "d.md"])
 
-    def test_sealed_measurement_evidence_is_the_only_content_exemption(self):
-        self.assertEqual(sorted(public_hygiene.CONTENT_PLAN_EXEMPT),
-                         ["packages/task/configs/calibration-probe-log-v2.json"])
+    def test_no_sealed_measurement_exemption_remains(self):
+        self.assertEqual(public_hygiene.CONTENT_PLAN_EXEMPT, {})
+        self.assertEqual(public_hygiene.CONTENT_PLAN_EXEMPT_SHA256, {})
 
     def test_binary_or_unreadable_files_are_skipped(self):
         self.assertEqual(public_hygiene.content_violations(["x.bin"], read=lambda _p: None), [])

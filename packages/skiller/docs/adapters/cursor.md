@@ -139,4 +139,4 @@ python3 packages/task/scripts/render-provider-commands.py --check --root .
 
 - [Harness setup: Cursor](/harness/setup/cursor) — permissions, MCP, profiles
 - [Provider model roles](/task/reference/provider-model-roles) — design/exec/audit/economy
-- [Plan tooling: launch-block](/task/reference/plan-tooling) — handoff-form
+- [Provider commands](/task/reference/provider-commands) — generated command projections

@@ -19,7 +19,7 @@ export default withMermaid(defineConfig({
           { text: 'Plan Structure', link: '/plan-structure' },
           { text: 'Templates', link: '/templates' },
           { text: 'Workflow', link: '/workflows' },
-          { text: 'Contract read-budget', link: '/reference/read-budget-contract' },
+          { text: 'Provider model roles', link: '/reference/provider-model-roles' },
         ],
       }],
     },

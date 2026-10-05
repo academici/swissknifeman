@@ -2116,8 +2116,8 @@
       "path": "skills/general/context-economy/SKILL.md",
       "version": "1.3.0",
       "description": "Reduce measured context overhead with targeted reads, on-demand instructions, continuity and honest usage evidence.",
-      "sha256": "fbc48ed3bfd41b5abb2724b4590e28edad2ae2a173df4bfbbf485b35bf41f0e6",
-      "content_sha256": "7df958ab136ad2e2849dc7bd208087da8576fa9b63ae07fb570975f547d09a7c",
+      "sha256": "6f2ad4cc61ae2df8d0f939607aaeeacb94de8b31f0d5acf05e4813e6ed546200",
+      "content_sha256": "c4db3e2e238fc8a9890c74f8ad19a6cae0dbaa5d68b26ed82da706ad6d490e76",
       "tags": [
         "tokens",
         "context",

@@ -14,8 +14,6 @@ from task.command_catalog import EFFORTS, MODEL_CLASSES, build_command_catalog
 from task.command_render import (PlanNextCarrier, mapping_from_catalog,
                                  parse_next_carrier, plan_provider_invocation,
                                  render_codex_launch)
-from task.plan_continuity import ContinuityDecision
-from task.route_evidence import required_route
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -129,31 +127,6 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             self.assertEqual(plan.invocation, invocation)
             self.assertIs(plan.carrier, carrier)
 
-    def test_renderer_verifies_precomputed_continuity_instead_of_rechoosing_it(self):
-        decision = ContinuityDecision(
-            "continue-root", "compatible-active-work", ("batch:" + "a" * 64,), True)
-        carrier = parse_next_carrier(
-            "audit-phase: task:plan-audit PLAN P4",
-            context_kind="continue-root",
-            continuity=decision,
-        )
-        self.assertEqual(carrier.as_dict()["continuity"]["reason"],
-                         "compatible-active-work")
-        with self.assertRaisesRegex(ValueError, "continuity/context mismatch"):
-            parse_next_carrier(
-                "audit-phase: task:plan-audit PLAN P4",
-                context_kind="cold-start-root",
-                continuity=decision,
-            )
-        waiting = parse_next_carrier(
-            "waiting: gate D1 → run-items: task:plan-run PLAN P4.4",
-            context_kind="continue-root",
-            continuity=ContinuityDecision(
-                "waiting-owner", "owner-wait", ("request:Q1",), False),
-        )
-        self.assertEqual(waiting.continuity.outcome, "waiting-owner")
-        self.assertFalse(waiting.continuity.runnable)
-
     def test_codex_launch_pins_the_mapped_route_and_process_safety_flags(self):
         carrier = PlanNextCarrier(
             "run-items", "task:plan-run", "PLAN", ("PLAN", "P2.7"),
@@ -264,23 +237,6 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                         inherited_minimum=inherited)
                     self.assertTrue(plan.ok, plan.diagnostics)
                     self.assertIsNotNone(plan.invocation)
-
-    def test_route_evidence_required_route_agrees_with_the_catalog_for_every_plan_command(self):
-        # P2.4: route_evidence derives REQUIRED from the same CommandCatalog this
-        # module already builds — never a second, independently-parsed reading of
-        # `command-routing.json` that could silently drift from this one.
-        for command_id, expected in self.expected["plan_commands"].items():
-            with self.subTest(command_id=command_id):
-                record = self.records[command_id]
-                if expected["mode"] == "fixed":
-                    required = required_route(record)
-                    self.assertEqual(
-                        [required["model_class"], required["effort"]], expected["minimum"])
-                else:
-                    required = required_route(
-                        record, inherited_minimum=tuple(expected["minimum"]))
-                    self.assertEqual(
-                        [required["model_class"], required["effort"]], expected["minimum"])
 
 
 if __name__ == "__main__":  # pragma: no cover

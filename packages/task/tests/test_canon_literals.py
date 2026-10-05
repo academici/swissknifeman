@@ -1,5 +1,6 @@
 """Regression checks for the compact canonical command surface."""
 from pathlib import Path
+import re
 import unittest
 
 
@@ -30,8 +31,9 @@ class CompactCanonTests(unittest.TestCase):
         text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")
         for verb in ("plan.py next", "plan.py start", "plan.py log", "plan.py finish", "plan.py show"):
             self.assertIn(verb, text)
-        for retired in ("plan-work.py", "plan-views.py", "plan-lint.py", "journal", "bundle", "receipt", "continuity"):
+        for retired in ("journal", "bundle", "receipt", "continuity"):
             self.assertNotIn(retired, text)
+        self.assertIsNone(re.search(r"plan-(work|views|lint)\.py", text))
 
 
 if __name__ == "__main__":

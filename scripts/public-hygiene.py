@@ -57,14 +57,10 @@ CONTENT_EXEMPT = {
         "accurate historical preimage D108/D115, sha256 which is pinned to provider_deploy.py",
 }
 # Sealed measurement evidence: its text is the measured input, so rewriting it would falsify the measurement.
-CONTENT_PLAN_EXEMPT = {
-    "packages/task/configs/calibration-probe-log-v2.json":
-        "sealed provider-probe measurement; sample text is hash-bound input",
-}
+# None remain: the only one (the v2 calibration probe log) was deleted with the v2 runtime.
+CONTENT_PLAN_EXEMPT: dict[str, str] = {}
 # The exemption holds only while the sealed file is byte-identical to the reviewed one.
-CONTENT_PLAN_EXEMPT_SHA256 = {
-    "packages/task/configs/calibration-probe-log-v2.json": "16cacebfb6d44dc51d678d875fccef1fd427f0e8c9f1c4bc70f4b30650242d14",
-}
+CONTENT_PLAN_EXEMPT_SHA256: dict[str, str] = {}
 
 # Working documents are local-only; nothing tracked may live under or point into them.
 WORKING_DOC_DIRS = ("plans/", "roadmap/", "tasks/", ".cursor/plans/")

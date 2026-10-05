@@ -28,7 +28,7 @@ Read targeted code, diffs and logs; retain enough context to assess dependencies
 
 Continue in the current root while context and capabilities suffice. A phase,
 command or directory change alone does not require a restart. For executable
-plans, `general/plan-protocol` and `task.plan_continuity` own continuity. Respect
+plans, `general/plan-protocol` and `plan.py next` own continuity. Respect
 an explicit request for separate design/review. Before a necessary handoff,
 record decisions, rejected alternatives, unresolved work and exact next inputs.
 Missing optional usage telemetry is visible uncertainty, not a repair task.

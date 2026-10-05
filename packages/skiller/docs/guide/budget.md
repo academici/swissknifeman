@@ -157,7 +157,7 @@ flowchart LR
     anti_drift["anti-drift<br/>⊕29 ↻1010"]:::cool
     compact_responses["compact-responses<br/>⊕40 ↻227"]:::mild
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕33 ↻630"]:::mild
-    context_economy["context-economy<br/>⊕39 ↻490"]:::mild
+    context_economy["context-economy<br/>⊕39 ↻488"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻432"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1077"]:::cool
     git_safety["git-safety<br/>⊕84 ↻570"]:::warm
@@ -437,13 +437,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12593** current (is always resident if you include the entire registry) · ↻ bodies 302369 current · ⌥ on-demand 826122 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12593** current (is always resident if you include the entire registry) · ↻ bodies 302367 current · ⌥ on-demand 826122 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1267 | 24385 | 9169 |
+| `general` | 22 | 1267 | 24383 | 9169 |
 | `repository-bootstrap` | 14 | 1047 | 30515 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |

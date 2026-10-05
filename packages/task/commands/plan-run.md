@@ -23,6 +23,13 @@ one commit per item, inside the item's scope.
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
 8. One scoped commit (plan JSON + product files), then the next item of the batch.
 
+**Units (optional)**
+- Split an item only into independent pieces that own separate files and checks; `plan.py unit <plan> <item> add --title … --json …`.
+- Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give its
+  `phases/<Pn>/<Pn.m>/<U#>/brief.md` to a native subagent of your own provider; parallel-safe units are listed in the pack.
+- You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`.
+- `finish` is refused while a unit is `dispatched` or `returned`. Python starts no agent; `plan.py stats` shows the numbers.
+
 **Rules**
 - Run under the session route; never switch the model. The item route is the minimum.
 - Change plan state only through `plan.py`; JSON is the source of truth.

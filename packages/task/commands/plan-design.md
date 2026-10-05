@@ -23,6 +23,8 @@ context pack alone, and `plan.py check` passes.
 5. Detail each target item: summary, why, scope include/exclude, reads (path, section, why, required),
    task_files, rules, guidance, examples, validation (`V#`, exact command, expect, `kind: acceptance`),
    deliverables, route (`economy|implementation|frontier` + effort), authority, depends_on/related.
+   Optional units for a large item: `plan.py unit <plan> <Pn.m> add --title … --json '{"files": […], "mode": "delegate|self|either", …}'`;
+   independent units need disjoint `files` and their own checks; `check` enforces it.
 6. Batches: `plan.py batches <plan> <Pn> --json '[{"id": "B1", "items": […], "mode": "recommended"}]'`.
 7. `plan.py check <plan>` until 0 errors, then `plan.py design-done <plan> <Pn>`.
 

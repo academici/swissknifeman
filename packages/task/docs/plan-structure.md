@@ -84,12 +84,22 @@ Every provider is told to ignore generated files: the global instruction `task.p
 `AGENTS.md`/`CLAUDE.md`, and harness hooks (`lifecycle.plan-guard` blocks writes to generated files,
 `lifecycle.plan-regen` runs `check` and `render` after JSON edits).
 
-## Work units (opt-in; verbs arrive with P4)
+## Work units (opt-in)
 
-The schema lets an item be split into units in `phases/<Pn>/<Pn.m>/`: each unit owns disjoint `files`, has a minimum
-route and a lifecycle `todo → dispatched → returned → accepted | reworked | rejected`. The item executor
-stays the integrator: it reviews and tests every returned piece and alone finishes the item. `check`
-enforces unique ids, acyclic `depends_on` and non-overlapping `files` of independent units.
+The schema lets an item be split into units in a workspace folder next to the item file:
+
+```text
+phases/P1/P1.1.json            item; "units": ["U1", "U2"]
+phases/P1/P1.1/U1.json         unit: files, depends_on, checks, route, mode, status, outcome
+phases/P1/P1.1/U1/brief.md     generated at dispatch, read only by the worker
+phases/P1/P1.1/U1/report.md    written by the worker (plus any logs or scratch)
+```
+
+Each unit owns disjoint `files`, has a minimum route and a lifecycle `todo → dispatched → returned → accepted |
+rejected` (`rework` returns a piece to `dispatched`). The item executor stays the integrator: it reviews and tests
+every returned piece and alone finishes the item (`UNITS_OPEN` while a unit is `dispatched` or `returned`). `check`
+enforces unique ids, acyclic `depends_on` and non-overlapping `files` of independent units. Verbs: `plan.py unit …`
+and `plan.py stats`; see [Workflows](./workflows).
 
 ## Contracts and portability
 

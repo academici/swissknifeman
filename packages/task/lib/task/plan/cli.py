@@ -12,8 +12,11 @@ import re
 import sys
 
 
-from . import check, context, lifecycle, ops, store, views
+from . import check, context, lifecycle, ops, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
+
+
+_UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
 
 
 class UsageError(Exception):
@@ -248,6 +251,49 @@ def cmd_finish(args) -> int:
     return 0
 
 
+def cmd_unit(args) -> int:
+    plan_dir = _plan_dir(args)
+    if args.target == "add":
+        if args.action:
+            raise UsageError("unit … add takes no further verb")
+        if not args.title:
+            raise UsageError("add needs --title")
+        unit_id = units.add_unit(plan_dir, args.item, args.title, _json_value(args.json, args.file, required=False))
+        print(f"{args.item}/{unit_id} added")
+        return 0
+    if not re.fullmatch(r"U[0-9]+", args.target) or args.action not in _UNIT_VERBS:
+        raise UsageError(f"expected: unit <plan> <item> add | <U#> {'|'.join(_UNIT_VERBS)}")
+    ref = f"{args.item}/{args.target}"
+    if args.action == "dispatch":
+        if not args.agent:
+            raise UsageError("dispatch needs --agent PROVIDER/MODEL[/EFFORT]")
+        print(f"{ref} dispatched; brief: {lifecycle.shown_path(units.dispatch(plan_dir, args.item, args.target, args.agent, actor=args.actor))}")
+        return 0
+    if args.action in ("rework", "reject") and args.notes is None:
+        raise UsageError(f"{args.action} needs --notes")
+    notes = args.notes or ""
+    if args.action == "return":
+        units.return_unit(plan_dir, args.item, args.target, notes=notes, changed=args.changed, minutes=args.minutes,
+                          actor=args.actor)
+    elif args.action == "accept":
+        units.accept(plan_dir, args.item, args.target, notes=notes, minutes=args.minutes, actor=args.actor)
+    elif args.action == "rework":
+        units.rework(plan_dir, args.item, args.target, notes=notes, actor=args.actor)
+    else:
+        units.reject(plan_dir, args.item, args.target, notes=notes, actor=args.actor)
+    print(f"{ref} {args.action}")
+    return 0
+
+
+def cmd_stats(args) -> int:
+    collected = stats.collect(store.load_plan(_plan_dir(args)))
+    if args.json:
+        _print_json(collected)
+    else:
+        print(stats.text(collected))
+    return 0
+
+
 def cmd_log(args) -> int:
     lifecycle.log(_plan_dir(args), args.target, args.type, args.summary, impact=args.impact, next=args.next,
                   refs=args.ref, actor=args.actor)
@@ -392,6 +438,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--commit", action="append", default=[], metavar="SHA")
     p.add_argument("--decision", metavar="D#", help="accepted decision that skips the item (skipped)")
     actor_arg(p)
+    p.add_argument("--json", action="store_true")
+
+    p = verb("unit", cmd_unit, "split an item into units and move them: add | <U#> dispatch|return|accept|rework|reject")
+    p.add_argument("item")
+    p.add_argument("target", metavar="add|U#")
+    p.add_argument("action", nargs="?", metavar="dispatch|return|accept|rework|reject")
+    p.add_argument("--title", help="add: unit title")
+    value_args(p, False)
+    p.add_argument("--agent", metavar="PROVIDER/MODEL[/EFFORT]", help="dispatch: the worker")
+    p.add_argument("--notes")
+    p.add_argument("--changed", action="append", default=[], metavar="PATH", help="return: a changed path (repeatable)")
+    p.add_argument("--minutes", type=int)
+    actor_arg(p)
+
+    p = verb("stats", cmd_stats, "scout, unit and friction numbers of a plan (read-only)")
     p.add_argument("--json", action="store_true")
 
     p = verb("log", cmd_log, "record friction for an item or phase")

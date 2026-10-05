@@ -286,7 +286,7 @@ def _commit(p: store.Plan, changes: list[tuple[str, str | None, dict]], events: 
         if kind in ("plan", "brief"):
             setattr(p, kind, doc)
         else:
-            {"phase": p.phases, "item": p.items, "decision": p.decisions}[kind][key] = doc
+            {"phase": p.phases, "item": p.items, "decision": p.decisions, "unit": p.units}[kind][key] = doc
     for event in events:
         store.append_log(p.root, event, lock=lock)
 
@@ -496,6 +496,12 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             raise PlanError("NOT_STARTED", f"{item_id} is {current}; start it first"
                                            + (" (use reopen to redo a finished item)" if current in TERMINAL else ""))
         phase_id = _item_phase(item_id)
+        if status in ("done", "done_with_deviations"):
+            open_units = sorted(key.split("/")[1] for key, unit in p.units.items()
+                                if key.startswith(f"{item_id}/") and unit.get("status") in ("dispatched", "returned"))
+            if open_units:
+                raise PlanError("UNITS_OPEN", f"{item_id} has units still out: {', '.join(open_units)} "
+                                              "(plan.py unit … accept|reject|rework)")
         known = {c["id"] for c in item.get("validation", []) if isinstance(c, dict)}
         known |= {c["id"] for c in p.phases[phase_id].get("validation", []) if isinstance(c, dict)}
         unknown = sorted(set(checks) - known)

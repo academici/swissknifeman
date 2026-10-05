@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:8a0ea5ea4e4d14f6470e686782855b5c38679a2db3d46c73935eed1b30c6809d
+Canonical SHA-256: sha256:0e7ec24601eb19b8ea917da7dfefb611506c3dc6904ea62685ddab8f8ef4106f
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -42,6 +42,8 @@ context pack alone, and `plan.py check` passes.
 5. Detail each target item: summary, why, scope include/exclude, reads (path, section, why, required),
    task_files, rules, guidance, examples, validation (`V#`, exact command, expect, `kind: acceptance`),
    deliverables, route (`economy|implementation|frontier` + effort), authority, depends_on/related.
+   Optional units for a large item: `plan.py unit <plan> <Pn.m> add --title … --json '{"files": […], "mode": "delegate|self|either", …}'`;
+   independent units need disjoint `files` and their own checks; `check` enforces it.
 6. Batches: `plan.py batches <plan> <Pn> --json '[{"id": "B1", "items": […], "mode": "recommended"}]'`.
 7. `plan.py check <plan>` until 0 errors, then `plan.py design-done <plan> <Pn>`.
 

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:4d57b8f4c83a0ca04519023a8df00a5e88d439d55d214fe17428f4d2ba1e5c2e
+Canonical SHA-256: sha256:b93cfe5909174190d3bc1875f88a76793e573ad43fd4c0d4a2d0825df237bcc2
 Adapter: task.codex-command/1.0.17
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -49,6 +49,13 @@ one commit per item, inside the item's scope.
 7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…"`
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
 8. One scoped commit (plan JSON + product files), then the next item of the batch.
+
+**Units (optional)**
+- Split an item only into independent pieces that own separate files and checks; `plan.py unit <plan> <item> add --title … --json …`.
+- Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give its
+  `phases/<Pn>/<Pn.m>/<U#>/brief.md` to a native subagent of your own provider; parallel-safe units are listed in the pack.
+- You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`.
+- `finish` is refused while a unit is `dispatched` or `returned`. Python starts no agent; `plan.py stats` shows the numbers.
 
 **Rules**
 - Run under the session route; never switch the model. The item route is the minimum.

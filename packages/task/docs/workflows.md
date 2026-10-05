@@ -55,6 +55,27 @@ writes code or decisions, and the default start makes no model call.
 - Read the outcomes in `log.jsonl`: events of type `scout` with `data: {provider, model, outcome: ok|failed|skipped,
   seconds, lines}` (`plan.py stats` summarises them from P4.2).
 
+## Units and subagents
+
+Opt-in orchestration inside one item (decision D3). The item executor may split the item into units that other
+agents build, and stays the integrator: it reviews and tests every returned piece and alone finishes the item.
+
+- Split only into independent pieces: each unit owns its `files` (disjoint from every unit it has no `depends_on`
+  path to; `plan.py check` and `unit … add` enforce it) and has its own checks and minimum route.
+- Verbs: `plan.py unit <plan> <item> add --title T --json '{"files": […], "mode": "delegate"}'`, then
+  `unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, `return --notes … --changed …` (the worker),
+  `accept|rework|reject --notes …` (the executor). `rework` sends the piece back to `dispatched` and rewrites its brief;
+  every transition logs a `delegate` event. `mode: self` units are never dispatched (`UNIT_SELF`).
+- `dispatch` writes `phases/<Pn>/<Pn.m>/<U#>/brief.md`: goal, owned files, reads, item rules and decisions, checks,
+  where to report. Python starts no agent: hand the brief to a native subagent of your provider (Claude Code Task
+  tool, Codex, Cursor or Grok subagents) and run parallel-safe units together (the pack's Units section lists them).
+- `finish --status done|done_with_deviations` is refused with `UNITS_OPEN` while a unit is `dispatched` or `returned`.
+- `plan.py stats <plan> [--json]` reads `log.jsonl` only: friction by type and item, scout outcomes and mean seconds,
+  unit outcomes (accepted, reworked, rejected) and median minutes per class and model. No thresholds: turning scout or
+  delegation on by default is a later owner decision based on these numbers.
+- Roadmap trigger (not implemented): if units are used in at least N plans and `stats` shows an accepted share of at
+  least X, consider `packages/artifex` as a deterministic dispatcher that takes `units[]` as its slice source.
+
 ## Bundles
 
 - Review profiles for `wf-audit-adversarial.js` (constitution + measurements by type

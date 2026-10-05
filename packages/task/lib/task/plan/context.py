@@ -11,7 +11,7 @@ import glob as _glob
 from pathlib import Path
 import re
 
-from . import lifecycle, store, views
+from . import lifecycle, store, units, views
 from .model import ITEM_ID, SATISFYING, TERMINAL, PlanError, id_sort_key, item_phase, parse_ref
 from .templating import render as _render_template
 
@@ -293,7 +293,7 @@ def _model(plan: store.Plan, item_id: str, max_lines: int, *, with_scout: bool =
         "decisions": {"items": decisions} if decisions else None,
         "upstream": {"items": upstream} if upstream else None,
         "reads": {"items": reads} if reads else None,
-        "files": _block(hints), "artifacts": _block(artifacts),
+        "files": _block(hints), "units": units.pack_section(plan, item_id), "artifacts": _block(artifacts),
         "lessons": {"items": lessons} if lessons else None,
         "guide": guide if any(guide.values()) else None,
         "checks": checks, "deliverables": "; ".join(views.line(d) for d in _list(item.get("deliverables"))),

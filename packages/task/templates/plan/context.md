@@ -87,6 +87,20 @@ Plan rules:
 - {{.}}
 {{/items}}
 {{/files}}
+{{#units}}
+
+## Units
+
+| Unit | Title | Mode | Route | Status | Files |
+|:--|:--|:--|:--|:--|:--|
+{{#rows}}
+{{.}}
+{{/rows}}
+{{#parallel}}
+
+Parallel-safe: {{.}}
+{{/parallel}}
+{{/units}}
 {{#artifacts}}
 
 ## Artifacts

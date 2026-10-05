@@ -1,0 +1,55 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "Lifecycle: next/start/finish/log/decide/grant/design-done/reopen/archive",
+  "status": "done",
+  "summary": "`task.plan.lifecycle` реализует §6 досье: `next()` вычисляет одну семантическую Next, `start()` переводит пункты в работу после проверки фазы/зависимостей/owner-gate/пула моделей, `finish()` закрывает пункт только с записанными acceptance-проверками и сам закрывает фазу и план, плюс `log`, `decide`, `supersede`, `grant`, `design_done`, `reopen`, `archive`; все глаголы доступны в CLI.",
+  "why": "B2, B8; D1 п.4, п.7; D2 (сохранённые ограничения в минимальной форме). Это заменяет `prepare/finalize`, batch receipts и route evidence, которые ломали продолжение батча (`roadmap/2026-10-02-task-plan-run-rigidity.md`).",
+  "scope": {
+    "include": [
+      "`lib/task/plan/lifecycle.py`: `Next` (kind ∈ `run-items, design-phase, waiting, archive, terminal`; items; route; command `task:plan-run <ID> <items>` / `task:plan-design <ID> <Pn>` / `task:plan-close <ID> archive`; reason), `next(plan)`, `start(...)`, `finish(...)`, `log(...)`, `decide(...)`, `supersede(...)`, `grant(...)`, `design_done(...)`, `reopen(...)`, `archive(...)` — правила и коды отказа §6 досье (`ROUTE_UNDERSHOOT`, `DEPENDENCY_NOT_READY`, `PHASE_NOT_DETAILED`, `GATE_NOT_GRANTED`, `CHECKS_MISSING`, `CHECKS_RED`, `NOT_STARTED`, `DECISION_REQUIRED`, `ESCALATION_REQUIRED`).",
+      "Пул моделей: функция `admitted_class(provider, model)` читает `packages/task/configs/command-routing.json` через `task.command_catalog.load_routing_metadata` (id → patterns → max роль; `status: retired` пропускается).",
+      "`views.py`: `_next_batch` удаляется, `handoff.md`/`roadmap.md` используют `lifecycle.next` и состояние батчей.",
+      "CLI: подкоманды `start, finish, log, decide, grant, design-done, reopen, archive` (§8 досье); `start` пока печатает только подтверждение (пак — P2.2); `--actor P/M[/E]`, `--session auto` → `task.session_context.resolve()` если доступно, иначе пусто.",
+      "Тесты `tests/engine/test_lifecycle.py` (каждый код отказа; resume; закрытие фазы worst-of; plan done; archive перемещает каталог; reopen снимает `closed`), `test_cli.py` дополнен сквозным сценарием."
+    ],
+    "exclude": ["построение пака (P2.2); scout (P4.1); `stats` (P4.2); любые дайджесты/receipts/leases (D2)."]
+  },
+  "depends_on": ["P1.3"],
+  "reads": [
+    {"path": "@plan/research/00-design.md", "section": "§6, §8", "why": "правила lifecycle и CLI", "required": true},
+    {"path": "@plan/decisions/D2.json", "why": "таблица «Retained» — сохранённые ограничения", "required": true},
+    {"path": "packages/task/lib/task/command_catalog.py", "section": "`load_routing_metadata` и `_validate_model_inventory`", "why": "пул моделей из конфига маршрутизации", "required": true},
+    {"path": "packages/task/configs/command-routing.json", "section": "`mappings.*.model_inventory`", "why": "инвентарь моделей провайдеров", "required": true},
+    {"path": "packages/task/lib/task/session_context.py", "why": "`--session auto`", "required": true},
+    {"path": "packages/task/lib/task/plan/views.py", "why": "виды из P1.3", "required": true},
+    {"path": "@plan/artifacts/design/examples.md", "section": "E5, E6", "why": "примеры lifecycle", "required": false},
+    {"path": "@plan/phases/P2/phase.json", "why": "контракт фазы", "required": false}
+  ],
+  "task_files": [
+    {"path": "packages/task/lib/task/plan/lifecycle.py", "change": "create"},
+    {"path": "packages/task/lib/task/plan/{views,cli,__init__}.py", "change": "any"},
+    {"path": "packages/task/templates/plan/{handoff,roadmap}.md", "change": "any", "note": "при необходимости"},
+    {"path": "packages/task/tests/engine/{test_lifecycle,test_cli}.py", "change": "any"},
+    {"path": "packages/task/tests/engine/fixtures/**", "change": "any"}
+  ],
+  "rules": [
+    "Отказ любого глагола — до записи; отказ печатается `CODE: message` и не пишет событие лога.",
+    "Все записи lifecycle — через `store` под одной блокировкой на вызов (item + phase + plan + log согласованы).",
+    "Lifecycle-поля (`status`, `result`, `phase.closed`, `phase.design`, `plan.status`) пишет только этот модуль.",
+    "`grant` фиксирует только явное сообщение владельца: `--note` обязателен и цитирует его.",
+    "Никакой проверки «точного вызова команды» в логе провайдера."
+  ],
+  "guidance": "`next()` — чистая функция от `Plan` (без IO) — её используют виды; `start/finish` возвращают dataclass с полями для CLI-вывода. Худший статус фазы: порядок `blocked > done_with_deviations > done`, все `skipped` → `skipped`. `archive`: `shutil.move(plan_dir, plans_root/\"archive\"/plan_id)` после записи статуса и события.",
+  "validation": [
+    {"id": "V1", "cmd": "PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine -p 'test_lifecycle.py'", "expect": "OK", "kind": "acceptance"},
+    {"id": "V2", "cmd": "PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine -p 'test_cli.py'", "expect": "OK (сквозной сценарий new → design-done → start → log → finish → phase closed → archive)", "kind": "acceptance"}
+  ],
+  "deliverables": ["`task.plan.lifecycle`, CLI lifecycle-глаголы, обновлённые виды handoff/roadmap, тесты."],
+  "route": {"class": "implementation", "effort": "high"},
+  "review": {"mode": "none"},
+  "authority": {"kind": "routine"},
+  "rag": {"need": "none", "status": "not_needed"},
+  "result": {"finished_at": "2026-10-05T07:19:55Z", "notes": "P2.1 GREEN: task.plan.lifecycle (next/start/finish/log/decide/supersede/grant/design_done/reopen/archive), CLI verbs, views on lifecycle.next; engine 276 tests."},
+  "updated_at": "2026-10-05T10:40:00Z"
+}

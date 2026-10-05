@@ -1,0 +1,56 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "JSON Schemas v1 + валидатор закрытого профиля + model",
+  "status": "done",
+  "summary": "В `packages/task/schemas/plan/v1/` лежат схемы `defs, plan, brief, phase, item, unit, decision, log-event` ровно по досье §2 (включая §2.5.1 unit), а `task.plan.schema.validate(doc, kind)` проверяет документ по закрытому профилю §3 и возвращает список `ValidationIssue` с JSON pointer; `task.plan.model` даёт ID, enum'ы и порядок классов.",
+  "why": "B1, B3, B4, B6, B18, B19 (`brief/00-brief.md`); D1 п.1, п.5. Схема — контракт для всех провайдеров и основа API; без неё JSON снова станет «каждый пишет по-своему». Валидатор свой (R7 `research/01-rag.md`): `lib/task` stdlib-only.",
+  "scope": {
+    "include": [
+      "8 файлов `*.schema.json` (Draft 2020-12, `$id` = `urn:swissknifeman:task:plan:<kind>:v1`), поля/типы/required/enum/pattern ровно по таблицам досье §2.1–§2.7 и §2.5.1; `additionalProperties: false` во всех объектах; `description` у каждого поля (одна строка — для редакторов и для слабых моделей).",
+      "`lib/task/plan/__init__.py` (пакет; публичный API реэкспортируется по мере появления модулей).",
+      "`lib/task/plan/schema.py`: `Registry`, `load_registry()`, `validate()`, `SchemaProfileError`, коды ошибок §3.",
+      "`lib/task/plan/model.py`: regex ID (`ITEM_ID`, `PHASE_ID`, `DECISION_ID`, `REF`, `PLAN_ID`, `SHORT_ID`), `parse_ref()`, `item_phase()`, `id_sort_key()`, `ItemStatus`/`TERMINAL`/`SATISFYING` (done, done_with_deviations, skipped), `STATUS_LABEL` (эмодзи-строки v2), `CLASS_ORDER`, `EFFORT_ORDER`, `phase_status(statuses)` (§6.3 досье: worst-of).",
+      "Тесты `tests/engine/test_schema.py`, `tests/engine/test_model.py`; фикстуры — примеры E1–E5 и E3a досье как JSON-файлы в `tests/engine/fixtures/valid/` и намеренно сломанные в `tests/engine/fixtures/invalid/` (по одному на код ошибки)."
+    ],
+    "exclude": ["store/ops/check (P1.2); шаблоны и CLI (P1.3); lifecycle (P2.1)."]
+  },
+  "reads": [
+    {"path": "@plan/research/00-design.md", "section": "§1–§3", "why": "layout, схемы и закрытый профиль валидатора", "required": true},
+    {"path": "@plan/artifacts/design/examples.md", "section": "E1–E5", "why": "примеры для фикстур", "required": true},
+    {"path": "packages/task/lib/task/plan_numbering.py", "why": "regex Plan ID/Short ID — переиспользовать литералы", "required": true},
+    {"path": "packages/task/lib/task/command_catalog.py", "section": "строки 1–60", "why": "стиль модулей пакета", "required": true},
+    {"path": "@plan/decisions/D1.json", "why": "решение D1: JSON-first движок", "required": false},
+    {"path": "@plan/research/01-rag.md", "section": "R7", "why": "свой валидатор вместо jsonschema", "required": false}
+  ],
+  "task_files": [
+    {"path": "packages/task/schemas/plan/v1/{defs,plan,brief,phase,item,unit,decision,log-event}.schema.json", "change": "any"},
+    {"path": "packages/task/lib/task/plan/__init__.py", "change": "any"},
+    {"path": "packages/task/lib/task/plan/schema.py", "change": "any"},
+    {"path": "packages/task/lib/task/plan/model.py", "change": "any"},
+    {"path": "packages/task/tests/engine/test_schema.py", "change": "any"},
+    {"path": "packages/task/tests/engine/test_model.py", "change": "any"},
+    {"path": "packages/task/tests/engine/fixtures/**", "change": "any"}
+  ],
+  "rules": [
+    "Только stdlib; без глобального состояния, кроме кэша реестра по пути каталога схем.",
+    "Неизвестное ключевое слово в схеме → `SchemaProfileError` при загрузке; `additionalProperties` допускает только `false`.",
+    "`integer`: `isinstance(x, int) and not isinstance(x, bool)`; `number` аналогично с `float`.",
+    "`pattern` — `re.search` (семантика JSON Schema), шаблоны в схемах уже якорные `^…$`.",
+    "Каждая ошибка — `ValidationIssue(path, code, message)`; валидатор собирает все ошибки, не останавливается на первой."
+  ],
+  "guidance": "рекурсивная функция `_check(node_schema, value, pointer, out)`; `$ref` резолвится через `registry.resolve(ref, base_id)` (локальный `#/$defs/x` → текущая схема, `urn:…:defs:v1#/$defs/x` → defs); `oneOf` — ровно одна ветка без ошибок, иначе одна ошибка `one_of` с числом совпавших веток; схемы грузятся `json.load` из `Path(__file__).parents[3] / \"schemas/plan/v1\"` (корень пакета task).",
+  "validation": [
+    {"id": "V1", "cmd": "PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine -p 'test_schema.py'", "expect": "OK (каждый файл `fixtures/valid` без ошибок; каждый `fixtures/invalid/<code>-*.json` даёт ровно ожидаемый код)", "kind": "acceptance"},
+    {"id": "V2", "cmd": "PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine -p 'test_model.py'", "expect": "OK", "kind": "acceptance"},
+    {"id": "V3", "cmd": "python3 -c \"import json,glob;[json.load(open(f)) for f in glob.glob('packages/task/schemas/plan/v1/*.json')]\"", "expect": "exit 0", "kind": "acceptance"},
+    {"id": "V4", "cmd": "PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine -p 'test_schema.py'", "expect": "негативный контроль: добавить в копию схемы ключ `if` → `load_registry` бросает `SchemaProfileError` (тест)", "kind": "acceptance"}
+  ],
+  "deliverables": ["8 схем v1; `task.plan.schema`, `task.plan.model`; тесты и фикстуры."],
+  "route": {"class": "implementation", "effort": "high"},
+  "review": {"mode": "none"},
+  "authority": {"kind": "routine"},
+  "rag": {"need": "none", "status": "not_needed"},
+  "result": {"finished_at": "2026-10-05T06:37:56Z", "notes": "P1.1 GREEN: 8 schemas v1, task.plan.schema/model, 38 engine tests; closed profile fail-closed."},
+  "updated_at": "2026-10-05T10:40:00Z"
+}

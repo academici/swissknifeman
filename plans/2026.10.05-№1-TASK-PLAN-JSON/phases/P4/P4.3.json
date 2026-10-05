@@ -1,0 +1,66 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.3",
+  "title": "Перенос канона plan-protocol в packages/task",
+  "status": "todo",
+  "summary": "Канон plan-protocol живёт в packages/task как собственный источник: каталог packages/skiller/skills/general/plan-protocol/ перенесён, копирование _PLAN_PROTOCOL_SOURCE и provenance.json убраны из render-provider-commands.py, skill удалён из реестра skiller.",
+  "why": "Заметка владельца (P3.1): канон плана принадлежит пакету task, а не skiller; копия через provenance — лишнее звено.",
+  "scope": {
+    "include": [
+      "Перенос packages/skiller/skills/general/plan-protocol/ в packages/task",
+      "render-provider-commands.py без _PLAN_PROTOCOL_SOURCE и provenance.json",
+      "skiller registry без skill plan-protocol"
+    ],
+    "exclude": [
+      "Изменение текста канона"
+    ]
+  },
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/general/plan-protocol",
+      "change": "delete"
+    },
+    {
+      "path": "packages/task/runtime/plan-protocol",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/scripts/render-provider-commands.py",
+      "change": "modify"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "validate: OK",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/skiller/scripts/validate.sh",
+      "expect": "OK",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Канон plan-protocol как источник в packages/task",
+    "Реестр skiller без plan-protocol"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T11:36:25Z"
+}

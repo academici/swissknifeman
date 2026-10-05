@@ -96,7 +96,6 @@ docs/analyst/
 .swissknifeman/task-terminal/
 
 # Local-only working documents (never tracked)
-/plans/
 /roadmap/
 /tasks/
 /.cursor/plans/

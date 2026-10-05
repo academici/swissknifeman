@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Ядро v3: схемы, store, проверки, шаблоны, виды, CLI",
+  "design": "detailed",
+  "goal": "Новый пакет `packages/task/lib/task/plan/` рядом со старым runtime (старое не трогается до P3.2) строит всё, что нужно дизайнеру плана.",
+  "context": "Фаза строит JSON Schemas всех носителей и валидатор закрытого профиля, store с каноническим JSON, блокировкой и атомарной записью, авторские мутации и `check`, mini-Mustache шаблоны, шесть генерируемых видов и CLI `scripts/plan.py` с авторскими глаголами. Результат фазы: можно создать v3-план, наполнить его фазами/пунктами/решениями, проверить и отрендерить виды — только через API.\n\nОкружение: Python 3.12+ stdlib; тесты `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine` (из корня репозитория). Нормы: `research/00-design.md` §1–§5, §8; D1.",
+  "contract": {
+    "consumes": ["D1, досье §1–§5/§8, примеры E1–E7, `plan_numbering.next_identity` (как образец алгоритма)."],
+    "produces": ["`schemas/plan/v1/*.schema.json`, `task.plan.{schema,model,store,ops,check,templating,views,cli}`, `templates/plan/*`, `scripts/plan.py`, `tests/engine/`."],
+    "boundaries": ["lifecycle-глаголы (`next/start/finish/…`) и контекст-пак — P2; старые модули и команды не меняются."]
+  },
+  "scope": {
+    "include": [
+      "Схемы `defs, plan, brief, phase, item, decision, log-event` + валидатор профиля (P1.1).",
+      "`model`, `store` (lock, canonical JSON, atomic save, append_log), `ops` (new/add/patch/push/batches), `check` (P1.2).",
+      "`templating` (Mustache subset), шаблоны и partials, `views.render_all`, CLI авторских глаголов (P1.3)."
+    ],
+    "exclude": [
+      "Lifecycle (`next/start/finish/log/decide/grant/design-done/reopen/archive`) — P2.1 (кроме локального `_next_batch` для handoff/roadmap, §5 досье); контекст-пак — P2.2; команды/канон/удаление v2 — P3; scout — P4."
+    ]
+  },
+  "depends_on": [],
+  "pitfalls": [
+    "Канонический порядок ключей берётся из `properties` схемы, а не из `sort_keys` — иначе виды/диффы нечитаемы.",
+    "`additionalProperties: false` во всех объектах; неизвестное ключевое слово схемы — ошибка загрузки (fail closed).",
+    "`bool` — не `integer`/`number` в Python; проверять `type(x) is bool` до числовых типов.",
+    "Нумерация планов должна видеть v2-планы (`| Short ID | PLANn |` в `plan.md`) — v3-вид `plan.md` рендерит ту же строку.",
+    "Standalone-строки секций/partials удаляются вместе с переводом строки, иначе таблицы рвутся пустыми строками.",
+    "`|` и переводы строк в ячейках таблиц экранируются во view-model, не в шаблоне."
+  ],
+  "validation": [
+    {"id": "V1", "cmd": "PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests/engine", "expect": "OK", "kind": "acceptance"},
+    {"id": "V2", "cmd": "bash packages/task/scripts/validate.sh", "expect": "validate: OK (старый runtime не сломан)", "kind": "acceptance"}
+  ],
+  "deliverables": [
+    "Схемы v1, пакет `task.plan` (ядро), шаблоны видов, `scripts/plan.py`, тесты `tests/engine/` с golden-видами демо-плана."
+  ],
+  "items": ["P1.1", "P1.2", "P1.3"],
+  "batches": [
+    {"id": "B1", "items": ["P1.1", "P1.2", "P1.3"], "mode": "recommended", "note": "схемы и валидатор — основа P1.2/P1.3; store/ops/check поверх схем; шаблоны, виды и CLI замыкают ядро; последний пункт гоняет validate.sh"}
+  ],
+  "closed": {"at": "2026-10-05T07:03:22Z", "result": "done", "summary": "3 item(s): 3 done"}
+}

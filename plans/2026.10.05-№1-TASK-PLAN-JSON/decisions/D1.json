@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D1",
+  "title": "JSON-first plan engine (layout v3) with a Python API and generated Markdown views",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "decision": "1. A plan is a directory of JSON documents — `plan.json`, `brief.json`, `phases/<Pn>/phase.json`, `phases/<Pn>/<Pn.m>.json` (one file per item), `phases/<Pn>/<Pn.m>/<U#>.json` (work units), `decisions/<D#>.json` — plus append-only `log.jsonl`. Every document validates against a JSON Schema in `packages/task/schemas/plan/v1/` (Draft 2020-12, closed keyword profile). JSON is the only source of truth.\n2. Agents and humans change a plan only through `packages/task/scripts/plan.py` / `task.plan` Python API. Each mutation validates, writes canonical JSON (schema key order, indent 2, UTF-8) atomically under a file lock, and regenerates the views.\n3. Exactly six human views — `index.md`, `plan.md`, `roadmap.md`, `status.md`, `handoff.md`, `open-questions.md` — are rendered from JSON by templates with partials (own Mustache subset).\n4. The item spec and its volatile `result` live in the same item file; history lives in `log.jsonl`. There are no generated state files, bundles, decision views or digest seals.\n5. Item schema is the maximal union of the 16 v2 fields plus `related` (typed links incl. `P1.2` and qualified refs), `task_files` (hint, not a write limit), `artifacts` (relative paths), `decisions`, `rag {need,status}`, `review {mode,reviewer}`, `authority`, `units` (work units in the item workspace `phases/<Pn>/<Pn.m>/`, D3), `examples`.\n6. The executor's input is a generated context pack (`context/<item>.md`) built from JSON at `start`, ordered Goal → Scope → Context → Decisions → Upstream → Reads → Files → Lessons → Done-when.\n7. Log: lifecycle events are written by the API; agents write only sparse friction events (`deviation, blocker, difficulty, assumption, note`) with one command; the next context pack replays them.\n8. Generated files (views, plan-local `AGENTS.md`/`CLAUDE.md`, `context/`, `_v2/`) are regenerated on every mutation and on out-of-band JSON edits (harness hooks, `check`/`render`), and every provider is told to ignore them through a global instruction, plan-local guard files and hooks (`research/00-design.md` §13; owner M2).\n9. The layout is called `v3`; v2 is not readable by the new runtime (no legacy, D4).",
+  "rationale": "- Markdown carriers are parsed by regex and re-formatted differently by each provider; JSON + schema + API gives one canonical shape and machine checks (R2) — this is the owner's core pain (B1, B2).\n- No existing tool provides schema-validated plans with generated views; Task Master's field set and beads' \"one source of truth, views are exports\" lesson are adopted (R1). Vendoring was rejected: `lib/task` stays stdlib-only and the needed schema/template subsets are small (R7).\n- Keeping `result` inside the item file removes the v2 spec/state split whose digests caused `BATCH_STALE` and byte-fresh failures (`roadmap/2026-10-02-task-plan-run-rigidity.md`).\n- Codex guidance favours short instructions and task context in Goal/Context/Constraints/Done-when form (R5): protocol logic moves into code; the context pack carries the task-specific context.\n- Rejected: YAML (needs a parser outside stdlib); SQLite/Dolt (not diffable, not reviewable in PRs); one big `plan.json` (B4 wants per-item files); generated per-item state files (two owners of one fact).",
+  "consequences": [
+    "New package areas: `lib/task/plan/`, `schemas/plan/v1/`, `templates/plan/`, `scripts/plan.py`, `tests/engine/` (P1, P2).",
+    "Commands, canon and adapters are rewritten to the API (P3.1); the v2 runtime is deleted (P3.2, D2).",
+    "Consumers `harness` (review-gate, Stop hook) and `artifex` (slice compiler) move to `plan.py` (P3.1)."
+  ],
+  "evidence": [
+    {"kind": "rag", "ref": "@plan/artifacts/design-rag/pplx-01.md", "note": "RAG ✅ 2026-10-05 perplexity-web; synthesis `research/01-rag.md` R1–R3, R5–R7"},
+    {"kind": "rag", "ref": "@plan/artifacts/design-rag/pplx-03.md"},
+    {"kind": "rag", "ref": "@plan/artifacts/design-rag/pplx-04.md"},
+    {"kind": "rag", "ref": "@plan/artifacts/design-rag/pplx-05.md"},
+    {"kind": "repo", "ref": "@plan/research/01-rag.md", "note": "repository facts, no RAG"},
+    {"kind": "owner", "ref": "@plan/brief.json", "note": "owner messages B1–B8, B10, B15–B17"}
+  ],
+  "applies_to": ["P1", "P1.1", "P1.2", "P1.3", "P2", "P2.1", "P2.2", "P3", "P3.1", "P3.2"],
+  "supersedes": [],
+  "superseded_by": null,
+  "actor": {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
+}

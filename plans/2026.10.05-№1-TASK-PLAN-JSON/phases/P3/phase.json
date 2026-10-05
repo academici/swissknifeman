@@ -1,0 +1,112 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Cutover на v3: команды, канон, потребители, миграция, удаление v2",
+  "design": "detailed",
+  "goal": "Фаза переключает экосистему на v3 и удаляет v2 без legacy (D4, D2).",
+  "context": "P3.1 (последний пункт под v2 runtime) переписывает команды Task и канон на глаголы `plan.py`, перегенерирует проекции провайдеров, переводит потребителей (harness hooks/review-gate/инструкции, artifex) на JSON, добавляет события перегенерации и правила игнорирования сгенерированных файлов (досье §13) и пишет инструкцию миграции для слабых моделей. P3.2 начинается с миграции этого плана (PLAN1) по инструкции — dogfood-проверка — и уже под v3 удаляет старый runtime, тесты, конфиги и доки, обновляет `validate.sh`, CHANGELOG и версию плагина.\n\nОкружение: монорепо swissknifeman; проверки пакетов `bash packages/<pkg>/scripts/validate.sh`; проекции команд `python3 packages/task/scripts/render-provider-commands.py --write --repair-owned --root .`. Нормы: досье §9–§11, §13; D1, D2, D4.",
+  "contract": {
+    "consumes": [
+      "весь `task.plan` (P1, P2), инструкция `docs/migration/v2-to-v3.md` (P3.1 → P3.2)."
+    ],
+    "produces": [
+      "короткие команды `plan-design/plan-run/plan-close/plan-audit`, канон v3, проекции codex/cursor/grok, harness hooks (regen/guard/check), инструкция `task.plan-files`, artifex на `plan.py show --json`, инструкция миграции, PLAN1 в v3, пакет без v2 runtime, версия плагина 0.28.0."
+    ],
+    "boundaries": [
+      "планы соседних репозиториев не мигрируются; push/tag — только владелец."
+    ]
+  },
+  "scope": {
+    "include": [
+      "Команды, канон, проекции, harness/artifex, инструкции провайдерам, хуки перегенерации, инструкция миграции (P3.1).",
+      "Самомиграция PLAN1, удаление v2 (код, скрипты, конфиги, тесты, доки), `validate.sh`, CHANGELOG, версия (P3.2)."
+    ],
+    "exclude": [
+      "Миграция планов chatom/corex/azguard/vaulter (владелец по инструкции); scout/делегирование (P4); релизный тег и push."
+    ]
+  },
+  "depends_on": [
+    "P2"
+  ],
+  "pitfalls": [
+    "P3.1 не удаляет и не ломает v2 runtime: этот план исполняется им до закрытия P3.1.",
+    "Проекции команд генерируются, не правятся руками; `render-provider-commands --check` должен быть зелёным.",
+    "Инструкции в `CLAUDE.md`/`AGENTS.md` пакетов генерирует harness из каталога — править каталог, затем регенерировать.",
+    "Удаление по карте §10 досье: каждый удаляемый конфиг/модуль сначала `grep -rn` по монорепо; живая ссылка из оставшегося кода — либо правка ссылки, либо файл остаётся.",
+    "Самомиграция — строго по инструкции, без «улучшений» по памяти: найденная неясность чинится в инструкции (это и есть тест)."
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "validate: OK",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/harness/scripts/validate.sh",
+      "expect": "OK",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/artifex/scripts/validate.sh",
+      "expect": "OK",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/artifex/scripts/test.sh",
+      "expect": "OK",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 packages/task/scripts/plan.py check PLAN1",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Команды и канон v3, проекции провайдеров, обновлённые harness/artifex, `packages/task/docs/migration/v2-to-v3.md`, PLAN1 в формате v3, пакет `task` без v2 runtime, CHANGELOG `[Unreleased]`, `plugin_version` 0.28.0."
+  ],
+  "assurance": {
+    "impact": "public-contract",
+    "seams": [
+      "commands",
+      "provider-projections",
+      "harness-hooks",
+      "artifex",
+      "instructions-catalog"
+    ],
+    "live": false,
+    "note": "Audit Intent: direct-close-eligible. Меняется публичный контракт команд Task для всех провайдеров и соседних пакетов; обратимо через git, поэтому без отдельного аудита; риск назван, рекомендация владельцу — `task:review` по диффу P3 при желании."
+  },
+  "items": [
+    "P3.1",
+    "P3.2"
+  ],
+  "batches": [
+    {
+      "id": "BP3-1",
+      "items": [
+        "P3.1"
+      ],
+      "mode": "required",
+      "note": "последний пункт, исполняемый v2 runtime (D4); тексты команд/канона и инструкция миграции для слабых моделей — frontier"
+    },
+    {
+      "id": "BP3-2",
+      "items": [
+        "P3.2"
+      ],
+      "mode": "required",
+      "note": "начинается с самомиграции плана в v3 (D4) — граница runtime, отдельный запуск"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-05T11:36:35Z",
+    "result": "done_with_deviations",
+    "summary": "2 item(s): 2 done_with_deviations"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.1",
+  "title": "Команды и канон на `plan.py`, проекции, harness/artifex, ignore-правила, инструкция миграции",
+  "status": "done_with_deviations",
+  "summary": "Команды `plan-design`, `plan-run`, `plan-close`, `plan-audit` и канон `runtime/plan-protocol` описывают работу только глаголами `plan.py` и укладываются в целевые размеры §9 досье; проекции codex/cursor/grok перегенерированы; harness получает инструкцию `task.plan-files`, хуки перегенерации/защиты сгенерированных файлов и review-gate на `plan.py check`, Stop-хук terminal admission удалён; artifex читает item JSON через `plan.py show --json`; написана инструкция миграции v2→v3 для слабой модели. v2 runtime при этом цел.",
+  "why": "B10 (Codex путается в перегруженных инструкциях — R5), B12 (миграция инструкцией), B16–B17 (события перегенерации и правила игнорирования для провайдеров), D1 п.8, D2, D4 п.1–п.3. Hard risk: публичный контракт команд для всех провайдеров — расширенная валидация ниже; владельцу рекомендован `task:review` по диффу.",
+  "scope": {
+    "include": [
+      "`packages/task/commands/{plan-design,plan-run,plan-close,plan-audit}.md`: структура Goal → Steps (глаголы `plan.py`) → Rules (≤6) → Done when; размеры ≤ 60/45/20/30 строк; `plan-run` без model/effort (наследует сессию); `--review` — opt-in как сейчас; plan-run: `next` → `start --actor` → читать только `context/<item>.md` и его Reads → реализация → `log` только при friction (5 типов, когда меняется план/допущение/блок) → проверки → `finish --check …` → один коммит → следующий пункт батча; plan-design: `new`/`add-*`/`set`/`push`/`batches`/`check`/`design-done`, детализация по §2.5, опциональные supporting-файлы; plan-close: `archive` и ручное закрытие фазы через `finish`/`reopen`; plan-audit: read-only verdict-файл + `log --type note`. Каждая команда: строка-стоп для v2-плана (нет `plan.json`) со ссылкой на инструкцию миграции (D4 п.1).",
+      "`packages/task/configs/command-routing.json`: описания/контракты затронутых команд; `command_catalog`/`command_render` — только если рендер требует (например, удалить `render_continuity_decision`, если команды больше её не используют — модуль `plan_continuity` при этом остаётся до P3.2).",
+      "Канон: `runtime/plan-protocol/SKILL.md` ≤ ~120 строк по §9; `references/{common-principles,design-mode,execution-mode,review-mode}.md` ≤ 30 строк каждая; `work-references.md` обновлена (`plan.py new` вместо `plan-id.py`); `plan-layout-v2.md` и `snippets/` удалены; `provenance.json` обновлён; runtime-копии/проекции канона перегенерированы штатным путём (`skiller registry`, если канон проецируется).",
+      "Проекции: `python3 packages/task/scripts/render-provider-commands.py --write --repair-owned --root .` (codex/cursor/grok, docs provider-commands/provider-model-roles).",
+      "Harness (досье §13): инструкция `task.plan-files` в `packages/harness/configs/common/instructions/catalog.json` (текст §13 слой 1), `task.layout`/`task.schema-ownership` переписаны без `plan_lint.py`; регенерация инструкций (`packages/harness/scripts/generate-provider-instructions.py`); два новых lifecycle-binding по образцу `lifecycle.pack-guard`: `lifecycle.plan-guard` (PreToolUse Edit|Write|MultiEdit — блок записи в сгенерированные файлы плана с `plan.json`) и `lifecycle.plan-regen` (PostToolUse Edit|Write|MultiEdit на `plans/**/*.json` → `plan.py check` и `render`, ошибки возвращаются агенту); `review-gate/checks/plan-lint.sh` → запуск `plan.py check` для изменённых v3-планов; `plan-citations.sh` удалён; Stop-адаптер `_terminal_admission*` и `lifecycle.terminal-admission` удалены вместе с конфигами/тестами; поддержка провайдеров — по существующим поверхностям hooks.py.",
+      "Artifex: `observe_sources` — `plan.py show <plan> <item> --json` вместо `plan-lint.py --json` и `task.task_contract build`; `_item` читает поля item JSON (маппинг §10 досье); фикстуры `tests/fixtures_data/plan/` переведены на v3 JSON (созданы через `plan.py`); тесты artifex зелёные.",
+      "Инструкция `packages/task/docs/migration/v2-to-v3.md` для слабой модели: предусловия; шаги 1…N строго командами (`mkdir _v2` + `git mv`/`mv` старых носителей; `plan.py new --plan-id --short-id …`; `add-phase`/`add-item --file`/`add-decision --file`/`batches`; статусы, `result`, `design` и `closed` — одной командой `plan.py import-state <plan> --file state.json` (см. Code Guidance); `check` после каждой фазы; финальный `render`, `next`); таблица маппинга E9; полностью разобранный пример одного item; чек-лист «стоп и спроси владельца» (неоднозначный статус, решение без Solution); пометка «удалить файл после миграции всех планов».",
+      "`lib/task/plan/ops.py` + CLI: глагол `import-state` (только для миграции: пишет `status`, `result`, `phase.closed`, `phase.design` из файла, валидирует, логирует `migrated`; удаляется вместе с инструкцией) — единственный способ корректно перенести историю без нарушения `FIELD_OWNED`."
+    ],
+    "exclude": ["удаление v2 модулей/скриптов/тестов (P3.2); миграция любых планов (P3.2 — только PLAN1); scout/делегирование (P4)."]
+  },
+  "depends_on": ["P2.2"],
+  "reads": [
+    {"path": "@plan/research/00-design.md", "section": "§9–§11, §13", "why": "размеры команд, карта удаления, cutover, guard для провайдеров", "required": true},
+    {"path": "packages/task/commands/plan-run.md", "why": "что заменить", "required": true},
+    {"path": "packages/task/commands/plan-design.md", "why": "что заменить", "required": true},
+    {"path": "packages/harness/lib/harness/hooks.py", "section": "binding `lifecycle.pack-guard`, `_terminal_admission*`", "why": "образец binding и удаляемый Stop-адаптер", "required": true},
+    {"path": "packages/harness/scripts/generate-provider-instructions.py", "section": "docstring", "why": "регенерация инструкций", "required": true},
+    {"path": "packages/artifex/lib/artifex/compiler.py", "section": "строки 1–140", "why": "`observe_sources` и `_item`", "required": true},
+    {"path": "@plan/artifacts/design/examples.md", "section": "E9", "why": "пример миграции", "required": true},
+    {"path": "packages/task/scripts/render-provider-commands.py", "section": "docstring", "why": "проекции команд", "required": true},
+    {"path": "@plan/artifacts/design/examples.md", "section": "E6", "why": "пример вывода CLI", "required": false},
+    {"path": "@plan/decisions/D1.json", "why": "решение D1: JSON-first движок", "required": false},
+    {"path": "@plan/decisions/D2.json", "why": "решение D2: снятые ограничения", "required": false},
+    {"path": "@plan/decisions/D4.json", "why": "решение D4: cutover и самомиграция", "required": false},
+    {"path": "@plan/research/01-rag.md", "section": "R5", "why": "короткие команды для Codex", "required": false}
+  ],
+  "task_files": [
+    {"path": "packages/task/commands/{plan-design,plan-run,plan-close,plan-audit}.md", "change": "any"},
+    {"path": "packages/task/configs/command-routing.json", "change": "any"},
+    {"path": "packages/task/lib/task/{command_render,command_catalog}.py", "change": "any"},
+    {"path": "packages/task/lib/task/plan/{ops,cli}.py", "change": "any"},
+    {"path": "packages/task/runtime/plan-protocol/**", "change": "any"},
+    {"path": "packages/task/adapters/**", "change": "any"},
+    {"path": "packages/task/docs/reference/{provider-commands,provider-model-roles}.md", "change": "any"},
+    {"path": "packages/task/docs/migration/v2-to-v3.md", "change": "create"},
+    {"path": "packages/task/tests/**", "change": "any", "note": "адаптерные/рендер-тесты, `tests/engine/test_cli.py`"},
+    {"path": "packages/harness/configs/common/instructions/catalog.json", "change": "any"},
+    {"path": "packages/harness/lib/harness/hooks.py", "change": "any"},
+    {"path": "packages/harness/configs/claude-code/hooks/**", "change": "any"},
+    {"path": "packages/harness/tests/**", "change": "any"},
+    {"path": "CLAUDE.md", "change": "any", "note": "сгенерированные CLAUDE.md/AGENTS.md"},
+    {"path": "packages/artifex/lib/artifex/compiler.py", "change": "any"},
+    {"path": "packages/artifex/tests/**", "change": "any"}
+  ],
+  "rules": [
+    "Сначала команды и канон, затем проекции генератором; ручная правка сгенерированных проекций запрещена.",
+    "v2 runtime (модули, `plan-work.py`, `plan-views.py`, lint) не удаляется и не меняется по поведению — им закрывается этот пункт.",
+    "Инструкция миграции пишется для слабой модели: каждая операция — одна команда с плейсхолдерами `<…>`, ожидаемый вывод, что делать при ошибке; без «по аналогии».",
+    "Тексты команд не упоминают journal, bundle, receipt, digest, lease, continuity, write-site.",
+    "Nested-загрузка `AGENTS.md`/`CLAUDE.md` провайдерами проверяется по их документации (VERIFY-AT-EXEC, досье §13); результат — строка в Completion Notes."
+  ],
+  "guidance": "каталог инструкций большой (≈124 KB) — читать только записи `task.*` (`grep -n '\"id\": \"task\\.' …catalog.json` и окрестности), не целиком. Guard-хук: путь цели ∈ {`index.md, plan.md, roadmap.md, status.md, handoff.md, open-questions.md, AGENTS.md, CLAUDE.md`} в каталоге с `plan.json`, или внутри `context/`/`_v2/` такого каталога, или `phases/*/*/U*/brief.md` → блок с сообщением §13; regen-хук: найти ближайший предок с `plan.json`, вызвать `python3 <task>/scripts/plan.py check <dir> --json`, при ошибках вернуть первые 5 и не рендерить, иначе `render`. `import-state` принимает `{\"items\": {\"P1.1\": {\"status\": …, \"result\": …}}, \"phases\": {\"P1\": {\"design\": …, \"closed\": …}}}`.",
+  "validation": [
+    {"id": "V1", "cmd": "bash packages/task/scripts/validate.sh", "expect": "validate: OK (включает `render-provider-commands --check` и тесты движка)", "kind": "acceptance"},
+    {"id": "V2", "cmd": "bash packages/harness/scripts/validate.sh", "expect": "OK", "kind": "acceptance"},
+    {"id": "V3", "cmd": "bash packages/harness/scripts/test.sh", "expect": "OK", "kind": "acceptance"},
+    {"id": "V4", "cmd": "bash packages/artifex/scripts/validate.sh", "expect": "OK", "kind": "acceptance"},
+    {"id": "V5", "cmd": "bash packages/artifex/scripts/test.sh", "expect": "OK", "kind": "acceptance"},
+    {"id": "V6", "cmd": "wc -l packages/task/commands/{plan-run,plan-design,plan-close,plan-audit}.md packages/task/runtime/plan-protocol/SKILL.md", "expect": "в пределах §9 досье (±10%)", "kind": "acceptance"},
+    {"id": "V7", "cmd": "grep -rnE \"plan-work\\.py|plan-views\\.py|plan-lint\\.py|bundle|receipt|lease|continuity\" packages/task/commands packages/task/runtime/plan-protocol", "expect": "пусто", "kind": "acceptance"}
+  ],
+  "deliverables": [
+    "команды и канон v3, проекции провайдеров, инструкция `task.plan-files` и хуки plan-guard/plan-regen, review-gate на `plan.py check`, artifex на v3, `docs/migration/v2-to-v3.md`, глагол `import-state`."
+  ],
+  "route": {"class": "frontier", "effort": "high"},
+  "review": {"mode": "none"},
+  "authority": {"kind": "routine"},
+  "rag": {"need": "none", "status": "not_needed"},
+  "result": {
+    "finished_at": "2026-10-05T08:57:04Z",
+    "notes": "Deviations: no import-state/v2 stop line (owner rule, manual migration); plan-lint --conflicts dropped from validate.sh; Opus/Sonnet split; plan-regen Claude-only; route not re-captured. Details: artifacts/handoff/P3.1-completion.md",
+    "deviations": [
+      "no import-state/v2 stop line (owner rule, manual migration)",
+      "plan-lint --conflicts dropped from validate.sh",
+      "Opus/Sonnet split",
+      "plan-regen Claude-only",
+      "route not re-captured"
+    ]
+  },
+  "updated_at": "2026-10-05T10:40:00Z"
+}

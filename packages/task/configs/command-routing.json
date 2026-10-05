@@ -447,6 +447,12 @@
           "verified_at": "2026-07-21",
           "scope": "Codex command routing and invocation",
           "claim": "selectors and the mandatory `$ ` invocation prefix are fixed"
+        },
+        {
+          "source": "codex --help; codex exec --help (codex-cli 0.160.0)",
+          "verified_at": "2026-10-05",
+          "scope": "Opt-in Codex scout invocation",
+          "claim": "exec runs non-interactively; omitted PROMPT or '-' reads stdin; --sandbox read-only; global -a never; --model, -c and --ephemeral are documented"
         }
       ]
     },
@@ -681,6 +687,12 @@
         "model": "haiku",
         "effort": "low",
         "argv": ["claude", "-p", "--model", "{model}", "--effort", "{effort}", "--tools", "", "--no-session-persistence"],
+        "timeout_s": 300
+      },
+      "codex": {
+        "model": "gpt-5.6-luna",
+        "effort": "low",
+        "argv": ["codex", "-a", "never", "exec", "--sandbox", "read-only", "--model", "{model}", "-c", "model_reasoning_effort=\"{effort}\"", "--ephemeral", "-"],
         "timeout_s": 300
       }
     }

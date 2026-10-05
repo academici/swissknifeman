@@ -126,10 +126,27 @@ class RunTests(ScoutCase):
 
     def test_a_provider_without_an_entry_is_skipped(self):
         runner = FakeRunner(completed(ANSWER))
-        result = self.run_scout(runner, provider="codex")
+        doc = json.loads(ConfigTests.ROUTING.read_text(encoding="utf-8"))
+        doc["orchestration"]["scout"].pop("codex", None)
+        routing = self.plans.parent / "routing.json"
+        routing.write_text(json.dumps(doc), encoding="utf-8")
+        result = scout.run(self.root, "P1.1", "codex", runner=runner, routing_path=routing)
         self.assertEqual(result.outcome, "skipped")
         self.assertEqual(runner.calls, [])
         self.assertEqual(self.events()[0]["data"]["outcome"], "skipped")
+
+    def test_codex_scout_uses_read_only_stdin_without_approvals(self):
+        runner = FakeRunner(completed(ANSWER))
+        result = self.run_scout(runner, provider="codex")
+        self.assertEqual(result.outcome, "ok")
+        argv, kwargs = runner.calls[0]
+        self.assertEqual(argv[:4], ["codex", "-a", "never", "exec"])
+        self.assertEqual(argv[argv.index("--sandbox") + 1], "read-only")
+        self.assertEqual(argv[argv.index("-c") + 1], 'model_reasoning_effort="low"')
+        self.assertEqual(argv[-1], "-")
+        self.assertIn("--ephemeral", argv)
+        self.assertIn("=== CONTEXT PACK PLAN", kwargs["input"])
+        self.assertNotIn(kwargs["input"], argv)
 
     def test_an_unreadable_config_is_a_failure_not_an_exception(self):
         bad = Path(tempfile.mkdtemp()) / "routing.json"

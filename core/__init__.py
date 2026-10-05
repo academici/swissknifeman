@@ -42,7 +42,7 @@ from .provider.distribution import (ConnectChannelSpec, DistributionCatalog,
                                     vendor_channel)
 from .provider.projection import (CommandInvocationPolicy, InstructionProjectionPolicy,
                                   ProjectionCatalog, ProviderProjectionSpec,
-                                  RouteEvidencePolicy, load_projection_catalog,
+                                  load_projection_catalog,
                                   projection_spec, project_common_instructions)
 from .provider.artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
                                 ArtifactRenderRequest, ArtifactRenderResult,
@@ -98,7 +98,7 @@ __all__ = [
     "load_distribution_catalog", "provider_distribution", "connect_channel",
     "vendor_channel",
     "ProjectionCatalog", "ProviderProjectionSpec", "InstructionProjectionPolicy",
-    "RouteEvidencePolicy", "CommandInvocationPolicy", "load_projection_catalog",
+    "CommandInvocationPolicy", "load_projection_catalog",
     "projection_spec", "project_common_instructions",
     "shared_config_path",
     "ArtifactSource", "ArtifactTarget", "ArtifactAdapterIdentity",

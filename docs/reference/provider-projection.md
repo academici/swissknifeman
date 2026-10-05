@@ -1,7 +1,7 @@
 # Provider projection policies
 
-Cross-package SSOT for **how each provider projects shared semantics** (instructions,
-route evidence, command invocation). Packages read this catalog through
+Cross-package SSOT for **how each provider projects shared semantics** (instructions
+and command invocation). Packages read this catalog through
 `core.provider.projection`; they must not hardcode provider-specific `if/elif` dispatch.
 
 ## Location
@@ -10,17 +10,16 @@ route evidence, command invocation). Packages read this catalog through
 - Loader: `core/provider/projection.py`
 - Consumers:
   - `packages/harness/lib/harness/instructions.py` — `project_common_instructions`
-  - `packages/task/lib/task/route_evidence.py` — route adapter + semantic prefix
   - `packages/task/lib/task/command_render.py` — invocation style dispatch
 
 ## Shape
 
-| Provider | Project common instructions | Route prefix | Invocation style |
-|:--|:--|:--|:--|
-| `claude-code` | yes | `/` | `slash` |
-| `codex` | no (on-demand via packages/skills/commands) | `$ ` | `dollar` |
-| `cursor` | no (Codex-sibling) | *(empty)* | `semantic` |
-| `grok` | no | `/` | `slash` |
+| Provider | Project common instructions | Invocation style |
+|:--|:--|:--|
+| `claude-code` | yes | `slash` |
+| `codex` | no (on-demand via packages/skills/commands) | `dollar` |
+| `cursor` | no (Codex-sibling) | `semantic` |
+| `grok` | no | `slash` |
 
 Grok is already in [`configs/provider-projection.json`](../../configs/provider-projection.json).
 A further provider still means extending that catalog and registering its
@@ -46,7 +45,7 @@ models and forbid slash syntax.
 |:--|:--|
 | `configs/provider-capabilities.json` | 36-capability matrix |
 | `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
-| `configs/provider-projection.json` | Instruction/route/command projection policies |
+| `configs/provider-projection.json` | Instruction/command projection policies |
 | `packages/task/configs/command-routing.json` | Task command routing SSOT |
 | `configs/profile-catalog.json` | Harness profile catalog SSOT |
 

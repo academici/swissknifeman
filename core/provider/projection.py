@@ -15,12 +15,6 @@ class InstructionProjectionPolicy:
 
 
 @dataclass(frozen=True)
-class RouteEvidencePolicy:
-    adapter: str
-    semantic_prefix: str
-
-
-@dataclass(frozen=True)
 class CommandInvocationPolicy:
     style: str
 
@@ -28,7 +22,6 @@ class CommandInvocationPolicy:
 @dataclass(frozen=True)
 class ProviderProjectionSpec:
     instructions: InstructionProjectionPolicy
-    route_evidence: RouteEvidencePolicy
     command_invocation: CommandInvocationPolicy
 
 
@@ -41,22 +34,15 @@ def _parse_provider(raw: object) -> ProviderProjectionSpec:
     if not isinstance(raw, dict):
         raise ValueError("PPROJ_PROVIDER_INVALID")
     instructions_raw = raw.get("instructions")
-    route_raw = raw.get("route_evidence")
     command_raw = raw.get("command_invocation")
     if (not isinstance(instructions_raw, dict)
             or not isinstance(instructions_raw.get("project_common"), bool)):
         raise ValueError("PPROJ_INSTRUCTIONS_INVALID")
-    if (not isinstance(route_raw, dict)
-            or not isinstance(route_raw.get("adapter"), str)
-            or not isinstance(route_raw.get("semantic_prefix"), str)):
-        raise ValueError("PPROJ_ROUTE_INVALID")
     if (not isinstance(command_raw, dict)
             or not isinstance(command_raw.get("style"), str)):
         raise ValueError("PPROJ_COMMAND_INVALID")
     return ProviderProjectionSpec(
         InstructionProjectionPolicy(project_common=instructions_raw["project_common"]),
-        RouteEvidencePolicy(adapter=route_raw["adapter"],
-                            semantic_prefix=route_raw["semantic_prefix"]),
         CommandInvocationPolicy(style=command_raw["style"]),
     )
 

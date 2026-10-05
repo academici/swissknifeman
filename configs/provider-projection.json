@@ -4,22 +4,18 @@
   "providers": {
     "claude-code": {
       "instructions": {"project_common": true},
-      "route_evidence": {"adapter": "route_evidence_claude", "semantic_prefix": "/"},
       "command_invocation": {"style": "slash"}
     },
     "codex": {
       "instructions": {"project_common": false},
-      "route_evidence": {"adapter": "route_evidence_codex", "semantic_prefix": "$ "},
       "command_invocation": {"style": "dollar"}
     },
     "cursor": {
       "instructions": {"project_common": false},
-      "route_evidence": {"adapter": "route_evidence_cursor", "semantic_prefix": ""},
       "command_invocation": {"style": "semantic"}
     },
     "grok": {
       "instructions": {"project_common": false},
-      "route_evidence": {"adapter": "route_evidence_grok", "semantic_prefix": "/"},
       "command_invocation": {"style": "slash"}
     }
   }

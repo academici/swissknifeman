@@ -1,0 +1,132 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.8",
+  "title": "Standalone-проверка Skiller: корневой скрипт, CI job, тесты без монорепо",
+  "status": "todo",
+  "summary": "Корневой `scripts/skiller-standalone-check.sh` копирует отслеживаемые файлы Skiller и core/ во временную раскладку без .git/packages/host-конфига и запускает test.sh и validate.sh Skiller; job `skiller-standalone` в test.yml; тесты, падающие вне монорепо, получают временный host-конфиг/tmp git или явный skip.",
+  "why": "Цель фазы «проходит validate/test в отдельном checkout» (D16) доказывается только запуском. Hard risk: скрытые зависимости тестов от монорепо (git root, соседние пакеты, PYTHONPATH окружения) — проверка обязана сбрасывать окружение.",
+  "scope": {
+    "include": [
+      "§standalone пп. 1–5",
+      "CI job",
+      "починка тестов Skiller, падающих в standalone"
+    ],
+    "exclude": [
+      "публикация Skiller в новый репозиторий",
+      "упаковка core (D20 roadmap)"
+    ]
+  },
+  "depends_on": [
+    "P8.3",
+    "P8.4",
+    "P8.5",
+    "P8.6",
+    "P8.7"
+  ],
+  "decisions": [
+    "D16",
+    "D20"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "standalone",
+      "why": "раскладка, запуск, ожидания",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "invariants",
+      "why": "I2, I5",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/scripts/test.sh",
+      "why": "поиск core",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "why": "гейты, зависящие от окружения",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "why": "куда добавить job",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_test_isolation_guard.py",
+      "why": "guard изоляции тестов",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/skiller-standalone-check.sh",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any",
+      "note": "починка standalone-падений"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "any",
+      "note": "только явные SKIP для хост-гейтов"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика и тексты в коде английские; core разрешён (D20)",
+    "Скрипт Skiller не знает про standalone-проверку (она в корне)",
+    "Сбрасывать PYTHONPATH и SKILLER_HOST_CONFIG; копировать только git-отслеживаемые файлы",
+    "Тест чинится временным host-конфигом / tmp git init / skipUnless с причиной — не удалением проверки"
+  ],
+  "guidance": "Исполнитель: Sonnet/Sol (implementation/high). Сначала запустить скрипт и собрать падения в @plan/artifacts/P8.8/first-run.log; каждое классифицировать (хост / git / соседний пакет). Соседний пакет после P8.4–P8.6 быть не должен — если есть, `plan.py log --type blocker` с путём.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash scripts/skiller-standalone-check.sh",
+      "expect": "exit 0; test.sh и validate.sh в копии зелёные",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/skiller/scripts/test.sh",
+      "expect": "exit 0; `tests: OK (Ran N tests)`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    }
+  ],
+  "deliverables": [
+    "scripts/skiller-standalone-check.sh",
+    "CI job skiller-standalone"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T16:12:03Z"
+}

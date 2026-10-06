@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D22",
+  "title": "repository-bootstrap skills — к пакету-владельцу или в корневой bootstrap/skills",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "Куда переносить canonical repository-bootstrap skills (14), сохраняя проекции .claude/skills и .agents/skills?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Skill исключительно о пакете → packages/<owner>/dev-skills/<id>/SKILL.md (task-development-philosophy → task, harness-operations → harness, maind-overview → maind); остальные (о репозитории целиком) → корневой bootstrap/skills/<id>/SKILL.md; dev-skills не входят в раздаваемые buckets и plugin-проекции"
+    },
+    {
+      "id": "B",
+      "text": "Все 14 → корневой bootstrap/skills/",
+      "cons": "владение по пакетам откладывается"
+    }
+  ],
+  "context": "Опрос владельца в /task:plan-design P8 (2026-10-06); D16 «к владельцу … или в корневой bootstrap».",
+  "decision": "A — Skill исключительно о пакете → packages/<owner>/dev-skills/<id>/SKILL.md (task-development-philosophy → task, harness-operations → harness, maind-overview → maind); остальные (о репозитории целиком) → корневой bootstrap/skills/<id>/SKILL.md; dev-skills не входят в раздаваемые buckets и plugin-проекции",
+  "rationale": "Владелец выбрал «К владельцу + корень (Recommended)», как в D16.",
+  "applies_to": [
+    "P8"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

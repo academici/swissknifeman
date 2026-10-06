@@ -1,0 +1,255 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.6",
+  "title": "repository-bootstrap skills к владельцам и в bootstrap/skills; рендерер от корневого конфига",
+  "status": "todo",
+  "summary": "14 canonical skills переносятся `git mv` по D22 (3 → packages/<owner>/dev-skills, 11 → bootstrap/skills), bootstrap-конфиг и lock — в корень (`configs/repository-bootstrap-skills.json` v2, `bootstrap/publication-lock.json`), рендерер читает canonical-пути из конфига через `host.bootstrap`. Проекции .claude/skills и .agents/skills сохраняются, меняются только строки путей.",
+  "why": "D16/D22: repo-специфичные skills не принадлежат Skiller. Hard risk: проекции загружаются в каждую сессию (first-turn бюджет) и проверяются lock/completeness; потеря identity или неверный canonical ломает обнаружение skill провайдером. Task-skill обязан пройти boundary-тест Task.",
+  "scope": {
+    "include": [
+      "§bootstrap-move целиком: размещение, конфиг v2, lock, рендерер, удаление из Skiller, бюджет",
+      "регенерация `skiller registry` (skills.json −14, проекции, lock)",
+      "удаление записей P8.6 (вкл. `skills/repository-bootstrap`) из allowlist"
+    ],
+    "exclude": [
+      "переписывание содержания skills (кроме относительных ссылок и минимальной нейтрализации для Task boundary)",
+      "новые identities"
+    ]
+  },
+  "depends_on": [
+    "P8.3"
+  ],
+  "decisions": [
+    "D22",
+    "D21"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "bootstrap-move",
+      "why": "размещение, формат конфига, рендерер, байтовый инвариант",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "invariants",
+      "why": "I1, I6",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/configs/repository-bootstrap-skills.json",
+      "why": "текущий формат (identities, class_b, lock_path)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "why": "load_repository_bootstrap_config, render_repository_bootstrap_projections, assert_root_bootstrap_set_completeness",
+      "required": true,
+      "section": "1160-1363"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "why": "build_repository_bootstrap_publication и вызовы",
+      "required": true,
+      "section": "440-560, 750-760"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "why": "projection↔canon (835–850), private_source_only (1005–1011)",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_boundary.py",
+      "why": "токены, которым должен соответствовать Task-skill",
+      "required": true
+    },
+    {
+      "path": ".claude/skills/package-architecture/SKILL.md",
+      "why": "форма проекции (что меняется)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/host.py",
+      "why": "host.bootstrap",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/repository-bootstrap/**",
+      "change": "delete",
+      "note": "git mv к новым местам"
+    },
+    {
+      "path": "packages/task/dev-skills/task-development-philosophy/SKILL.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/dev-skills/harness-operations/SKILL.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/maind/dev-skills/maind-overview/SKILL.md",
+      "change": "create"
+    },
+    {
+      "path": "bootstrap/skills/*/SKILL.md",
+      "change": "create",
+      "note": "11 identities"
+    },
+    {
+      "path": "configs/repository-bootstrap-skills.json",
+      "change": "create",
+      "note": "git mv + v2"
+    },
+    {
+      "path": "packages/skiller/configs/repository-bootstrap-skills.json",
+      "change": "delete"
+    },
+    {
+      "path": "bootstrap/publication-lock.json",
+      "change": "create",
+      "note": "git mv"
+    },
+    {
+      "path": "packages/skiller/adapters/repository-bootstrap/**",
+      "change": "delete"
+    },
+    {
+      "path": "packages/skiller/configs/publication-versions.json",
+      "change": "modify",
+      "note": "ключ units.repository-bootstrap → bootstrap-конфиг"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/lock.py",
+      "change": "modify",
+      "note": "комментарий"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/status.py",
+      "change": "modify",
+      "note": "комментарий"
+    },
+    {
+      "path": "packages/skiller/buckets.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "modify",
+      "note": "регенерация"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": ".claude/skills/*/SKILL.md",
+      "change": "modify",
+      "note": "регенерация"
+    },
+    {
+      "path": ".agents/skills/*/SKILL.md",
+      "change": "modify",
+      "note": "регенерация"
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "change": "any",
+      "note": "bootstrap"
+    },
+    {
+      "path": "packages/skiller/tests/test_*bootstrap*.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/tests/test_publication.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/tests/boundary_allowlist.json",
+      "change": "any",
+      "note": "создаётся в P8.1/P8.2; правка существующего файла"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика и тексты в коде английские; core разрешён (D20)",
+    "Allowlist только убывает: удалить свои записи `P8.<n>` из packages/skiller/tests/boundary_allowlist.json; новые записи не добавлять (кроме P8.1)",
+    "Без breaking changes (R21): поведение CLI в монорепо прежнее — @plan/knowledge/skiller-p8 §invariants",
+    "Перенос только `git mv`; содержимое skills не переписывается, кроме относительных ссылок и минимальной нейтрализации под boundary Task",
+    "Diff проекций .claude/skills и .agents/skills — только строки canonical/путей/sha (для skills с правкой ссылок) и generator; сохранить `git diff -U0` в @plan/artifacts/P8.6/projections.diff",
+    "Число identities в проекциях = 14 + class_b, как до переноса",
+    "dev-skills не попадают ни в один plugin-манифест и marketplace"
+  ],
+  "guidance": "Исполнитель: Opus (frontier/high). Порядок: (1) конфиг v2 + рендерер читают canonical из конфига — пока со старыми путями, `registry --check` зелёный; (2) `git mv` skills по таблице, обновить конфиг, `skiller registry`, проверить diff проекций; (3) lock/versions в корень; (4) удалить остатки из Skiller и validate.sh; (5) budget до/после в @plan/artifacts/P8.6/. Перед размещением прочитать каждый skill: если он не исключительно о пакете из таблицы — в корень, лог assumption.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "packages/skiller/bin/skiller registry --check",
+      "expect": "exit 0 (нет дрейфа)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "test ! -e packages/skiller/skills/repository-bootstrap && test -f packages/task/dev-skills/task-development-philosophy/SKILL.md && test -f configs/repository-bootstrap-skills.json && test \"$(ls .claude/skills | wc -l)\" -ge 14",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0 (Task boundary с новым dev-skill)",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "packages/skiller/bin/skiller budget --first-turn",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    },
+    {
+      "id": "V6",
+      "cmd": "bash packages/skiller/scripts/test.sh",
+      "expect": "exit 0; `tests: OK (Ran N tests)`",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "bootstrap skills у владельцев",
+    "configs/repository-bootstrap-skills.json v2",
+    "bootstrap/publication-lock.json",
+    "Skiller без repository-bootstrap"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T16:12:22Z"
+}

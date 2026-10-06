@@ -1,0 +1,113 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.1",
+  "title": "Boundary-тест Skiller и временный allowlist фактических нарушений",
+  "status": "todo",
+  "summary": "Тест `packages/skiller/tests/test_boundary.py` по правилу §boundary (две зоны: код и контент; core разрешён по D20) и `tests/boundary_allowlist.json` с фактическими нарушениями, у каждой записи владелец P8.2–P8.9. Код Skiller не меняется.",
+  "why": "D16: Skiller не ссылается на другие пакеты и пути монорепо. Тест закрепляет цель фазы и даёт каждому следующему item измеримый остаток (allowlist убывает, устаревшая запись — красный тест). Hard risk: неверная зона/токен даст ложные срабатывания на тексте сторонних skills (`packages/core` в Laravel/vitest-примерах) — токены ограничены именами пакетов монорепо.",
+  "scope": {
+    "include": [
+      "tests/test_boundary.py по @plan/knowledge/skiller-p8 §boundary (зоны, токены C1–C6, K1–K2, исключения, allowlist-семантика)",
+      "tests/boundary_allowlist.json = фактические нарушения; reason `P8.<n>: …` по §coupling-map",
+      "self-тест allowlist: устаревшая запись (нет файла / файл чист) → fail; glob-ключи → fail"
+    ],
+    "exclude": [
+      "исправление нарушений (P8.2–P8.9)",
+      "boundary других пакетов"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D16",
+    "D20"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "boundary",
+      "why": "правило, токены, исключения, ожидаемый список",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "coupling-map",
+      "why": "владельцы записей allowlist",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "item-map",
+      "why": "номера item-владельцев",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_boundary.py",
+      "why": "образец реализации (обход, отчёт path:line, allowlist)",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges.json",
+      "why": "принцип чистых пакетов",
+      "required": true,
+      "section": "principle"
+    },
+    {
+      "path": "packages/skiller/scripts/test.sh",
+      "why": "как тест попадёт в suite (discover tests/test_*.py)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/tests/test_boundary.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/tests/boundary_allowlist.json",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика и тексты в коде английские; core разрешён (D20)",
+    "Обход файловой системы (`rglob`), не `git ls-files` — тест обязан работать в tmp-копии без .git (P8.8)",
+    "Тест сам себя и allowlist не сканирует; бинарные файлы пропускаются",
+    "Каждый ключ allowlist — конкретный путь относительно packages/skiller; reason начинается с `P8.<n>:`; владелец — по §coupling-map, при сомнении — более поздний item",
+    "Код и контент Skiller в этом item не меняются"
+  ],
+  "guidance": "Исполнитель: Sonnet/Sol (implementation/high). Порядок: реализовать тест с пустым allowlist → запустить → собрать фактические нарушения → сверить со списком §boundary → записать allowlist с владельцами. Нарушение вне списка — запись с владельцем по смыслу (код монорепо-раскладки → P8.4/P8.5, контент → P8.9) и `plan.py log <plan> P8.1 --type assumption`. K2 (каталог skills/repository-bootstrap) — одна запись `skills/repository-bootstrap` с владельцем P8.6; файлы внутри него не перечислять.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/skiller/scripts/test.sh",
+      "expect": "exit 0; `tests: OK (Ran N tests)`",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "tests/test_boundary.py",
+    "tests/boundary_allowlist.json"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T16:12:00Z"
+}

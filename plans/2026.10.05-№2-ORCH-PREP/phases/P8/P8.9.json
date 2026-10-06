@@ -1,0 +1,187 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.9",
+  "title": "Документация, CHANGELOG, architecture-bridges, удаление allowlist и широкий validate P8",
+  "status": "todo",
+  "summary": "Контент Skiller (docs, README, references, skills general/system/quality, .swissknifeman.example) без путей `packages/<x>`; allowlist удалён; docs Skiller про host-конфиг и resolve; architecture-bridges/knowledge обновлены; CHANGELOG [Unreleased]; широкие validate Skiller и Task, корневые гейты, standalone.",
+  "why": "Закрывает D16: boundary без allowlist. Документация host-конфига — контракт для будущего хоста после переезда.",
+  "scope": {
+    "include": [
+      "контентная зона §boundary K1: замена путей на имена инструментов/нейтральный текст (docs/audits не трогать)",
+      "docs Skiller: раздел host-конфига (поля, обнаружение, standalone), `skiller resolve` в cli.md (если P8.7 не добавил подробно)",
+      "удаление tests/boundary_allowlist.json и поддержки отсутствующего файла не менять",
+      "CHANGELOG.md [Unreleased] (корень) — по release-discipline",
+      "knowledge architecture-bridges / bridges §roadmap: core-вендоринг при переезде (D20)"
+    ],
+    "exclude": [
+      "содержательная переработка skills"
+    ]
+  },
+  "depends_on": [
+    "P8.8"
+  ],
+  "decisions": [
+    "D16",
+    "D20",
+    "D21",
+    "D22"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "boundary",
+      "why": "контентная зона и исключения",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "validation",
+      "why": "команды фазы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/architecture-bridges.json",
+      "why": "куда дописать Skiller/host",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges.json",
+      "why": "roadmap",
+      "required": true,
+      "section": "roadmap"
+    },
+    {
+      "path": "packages/skiller/docs/guide/cli.md",
+      "why": "справочник команд",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "why": "формат [Unreleased]",
+      "required": true,
+      "section": "Unreleased"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/docs/**",
+      "change": "modify",
+      "note": "кроме docs/audits"
+    },
+    {
+      "path": "packages/skiller/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/references/mattpocock-skills.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/skills/general/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/skills/system/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/skills/quality/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/.swissknifeman.example/config.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/boundary_allowlist.json",
+      "change": "delete"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "any",
+      "note": "регенерация sha после правки skills"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/knowledge/*.json",
+      "change": "any",
+      "note": "только через plan.py add-document/set"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика и тексты в коде английские; core разрешён (D20)",
+    "Правки skills — только пути `packages/<x>`; после правки `skiller registry` и `skiller budget --first-turn` (описания не менять)",
+    "Знания плана меняются только через plan.py",
+    "Широкий validate.sh — здесь (последний item фазы)"
+  ],
+  "guidance": "Исполнитель: Sonnet/Sol (implementation/high). Начать с запуска boundary-теста без allowlist — список оставшихся нарушений и есть объём. Docs про host-конфиг — один раздел в docs/guide (installation или polyglot-monorepo), с примером из configs/skiller-host.json.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e packages/skiller/tests/boundary_allowlist.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/skiller/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0; `validate: OK`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "bash scripts/skiller-standalone-check.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 scripts/test-agent-framework-freshness.py && python3 scripts/test-task-plugin-cache-revision.py && python3 scripts/test-public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "packages/skiller/bin/skiller registry --check",
+      "expect": "exit 0 (нет дрейфа)",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Skiller без ссылок на другие пакеты (boundary без allowlist)",
+    "docs host-конфига",
+    "CHANGELOG"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T16:12:03Z"
+}

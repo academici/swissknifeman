@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D21",
+  "title": "Монорепо-функции Skiller — через корневой host-конфиг (configs/skiller-host.json)",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "Куда деть монорепо-функции внутри Skiller: агрегация plugins packages/* в marketplace, root-bootstrap проекции, sync версии Task в release, grok/codex install и fleet-доставка Task-плагина, делегирование harness/analyst?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Host-конфиг в корне: Skiller обобщается и читает корневой configs/skiller-host.json (plugin_dirs, default_command_plugins, version_files, machine_plugins, commands, bootstrap); код Skiller нейтрален, имена пакетов только в корневом конфиге; нет конфига → функции выключены (standalone)"
+    },
+    {
+      "id": "B",
+      "text": "Вынести логику в корневые scripts/ и bin/swissknifeman",
+      "cons": "крупный перенос publication/delivery/release; Skiller теряет функции"
+    }
+  ],
+  "context": "Опрос владельца в /task:plan-design P8 (2026-10-06). D16: интеграции — в мосты потребителя или корневые скрипты; конфиг корня — артефакт монорепо.",
+  "decision": "A — Host-конфиг в корне: Skiller обобщается и читает корневой configs/skiller-host.json (plugin_dirs, default_command_plugins, version_files, machine_plugins, commands, bootstrap); код Skiller нейтрален, имена пакетов только в корневом конфиге; нет конфига → функции выключены (standalone)",
+  "rationale": "Владелец выбрал «Host-конфиг в корне (Recommended)»: минимальный перенос кода, код Skiller нейтрален, монорепо-знание в корневом конфиге; без конфига Skiller работает standalone.",
+  "applies_to": [
+    "P8",
+    "P11"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

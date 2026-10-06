@@ -1,0 +1,212 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.5",
+  "title": "Делегирование harness/analyst через commands, MCP-данные maind в хосте, межпакетный гейт agent-packs → корень",
+  "status": "todo",
+  "summary": "common.apply_permissions, doctor (--settings facade, проверка окружения, trace-quality), integrate используют `host_command`; budget берёт данные maind из `host.mcp_servers`; гейт свежести agent-packs (validate.sh 1370–1460) переезжает в корневой `scripts/agent-framework-freshness.py` + hygiene CI.",
+  "why": "Skiller не должен знать harness/analyst/maind (D16), но `skiller connect`/`doctor --settings` обязаны работать как раньше (R21). Hard risk: budget first-turn — числа участвуют в гейте контекста (CLAUDE.md root.claude-code.context-budget); они не должны измениться.",
+  "scope": {
+    "include": [
+      "§delegations пп. 1–7",
+      "тесты test_doctor_settings_facade, test_doctor_standalone_diagnostics, test_budget*, test_integrate на синтетический host",
+      "удаление записей P8.5 из allowlist"
+    ],
+    "exclude": [
+      "изменение поведения harness/analyst",
+      "перенос docs/agent-framework (контент — P8.9)"
+    ]
+  },
+  "depends_on": [
+    "P8.2"
+  ],
+  "decisions": [
+    "D21",
+    "D16"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "delegations",
+      "why": "спецификация",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "host-config",
+      "why": "поле commands и mcp_servers",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "invariants",
+      "why": "I2",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "why": "harness_bin, apply_permissions",
+      "required": true,
+      "section": "180-230"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/doctor.py",
+      "why": "facade, environment check, trace-quality",
+      "required": true,
+      "section": "13-35, 460-545, 860-880, 1005-1040"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "why": "KNOWN_MCP_TOOLS, server instructions",
+      "required": true,
+      "section": "200-270"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "why": "гейт agent-packs",
+      "required": true,
+      "section": "1295-1470"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/host.py",
+      "why": "host_command",
+      "required": true
+    },
+    {
+      "path": "scripts/test-public-hygiene.py",
+      "why": "образец корневого теста",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/doctor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/integrate.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/quality/analyze.py",
+      "change": "modify",
+      "note": "комментарий"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "modify",
+      "note": "удалить гейт agent-packs"
+    },
+    {
+      "path": "scripts/agent-framework-freshness.py",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-agent-framework-freshness.py",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "change": "modify"
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/tests/test_doctor_settings_facade.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/test_doctor_standalone_diagnostics.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/test_budget.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/tests/test_budget_first_turn.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/test_integrate.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/boundary_allowlist.json",
+      "change": "any",
+      "note": "создаётся в P8.1/P8.2; правка существующего файла"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика и тексты в коде английские; core разрешён (D20)",
+    "Allowlist только убывает: удалить свои записи `P8.<n>` из packages/skiller/tests/boundary_allowlist.json; новые записи не добавлять (кроме P8.1)",
+    "Без breaking changes (R21): поведение CLI в монорепо прежнее — @plan/knowledge/skiller-p8 §invariants",
+    "Внешние команды вызываются только subprocess-ом с argv из хоста; никаких импортов пакетов",
+    "Тексты warn без имён пакетов; install_hint берётся из хоста",
+    "Гейт agent-packs в корне — тот же алгоритм и те же сообщения об ошибках (перенос, не переписывание)"
+  ],
+  "guidance": "Исполнитель: Sonnet/Sol (implementation/high). До правок budget сохранить `packages/skiller/bin/skiller budget --first-turn` (и `--with-plugins`) в @plan/artifacts/P8.5/budget-before.txt, после — budget-after.txt; числа совпадают (V3). Сравнить `skiller doctor --settings` до/после (вывод проходит от harness).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_doctor_settings_facade tests.test_doctor_standalone_diagnostics tests.test_budget tests.test_budget_first_turn tests.test_integrate -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/test-agent-framework-freshness.py -v && python3 scripts/agent-framework-freshness.py",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "diff plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.5/budget-before.txt @plan/artifacts/P8.5/budget-after.txt",
+      "expect": "exit 0 (числа бюджета прежние)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    },
+    {
+      "id": "V5",
+      "cmd": "bash packages/skiller/scripts/test.sh",
+      "expect": "exit 0; `tests: OK (Ran N tests)`",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "harness/analyst/maind только через host",
+    "корневой гейт agent-framework-freshness"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T16:12:21Z"
+}

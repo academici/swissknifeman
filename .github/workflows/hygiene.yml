@@ -31,6 +31,11 @@ jobs:
       - name: Test docs-impact gate
         run: python3 scripts/test-docs-impact.py -v
 
+      - name: managed-blocks (canonical exports ↔ generated copies)
+        run: |
+          python3 scripts/test-sync-managed-blocks.py -v
+          python3 scripts/sync-managed-blocks.py --check --root .
+
       - name: status-check (capability matrix)
         run: |
           python3 scripts/test-status-check.py -v

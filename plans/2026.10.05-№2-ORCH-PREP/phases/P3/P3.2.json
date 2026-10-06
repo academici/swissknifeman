@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.2",
   "title": "Инструмент managed-блоков: sync-managed-blocks.py + gate",
-  "status": "todo",
+  "status": "done",
   "summary": "Корневой stdlib-скрипт `scripts/sync-managed-blocks.py --check|--write` и конфиг `configs/managed-blocks.json` (пока пустой список блоков); тесты в tmpdir; gate в validate.sh Task и шаг в hygiene CI.",
   "why": "D3: canonical текст у нового владельца, копия у старого — генерируется и проверяется, а не правится руками (I9, R21).",
   "scope": {
@@ -112,6 +112,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:28Z"
+  "result": {
+    "started_at": "2026-10-06T10:16:22Z",
+    "finished_at": "2026-10-06T10:33:29Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "f768310a-b742-4778-8123-fbba6bf54cbd"
+    },
+    "notes": "sync-managed-blocks.py (--check/--write, atomic write, CRLF-safe), empty configs/managed-blocks.json, 18 unittest tests, gate [7/7] in Task validate.sh (steps renumbered /7), hygiene CI step, docs/develop.md section. Route model sonnet-5-5 not in route table (ROUTE_MODEL_UNKNOWN warning on start).",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T10:33:29Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T10:33:29Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T10:33:29Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T10:33:29Z"
 }

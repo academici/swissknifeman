@@ -5,7 +5,7 @@
   "title": "Plan №2 — Подготовка к оркестрации: контракты, разделение пакетов, привязки к движкам",
   "status": "active",
   "created": "2026-10-05",
-  "updated_at": "2026-10-06T05:11:53Z",
+  "updated_at": "2026-10-06T11:08:21Z",
   "repository": "swissknifeman",
   "owner": "repository owner",
   "authoring": {
@@ -13,7 +13,7 @@
     "model": "opus",
     "effort": "high"
   },
-  "goal": "Подготовить репозиторий к оркестрации без breaking changes: нейтральные контракты exec/v1 и Engine Port в новом внутреннем пакете packages/orch; Task как поставщик данных (brief-проекция, полнота, resolver ссылок, раздельные actor, evidence, идемпотентная регистрация); разделение инструкций Task/Skiller/Harness по ролям с сохранением всех обязанностей записи; launch catalog роль × provider и skiller resolve --role; развязка monorepo-путей; доказательство переносимости одного execution-input на bindings native / CAO / Claude-only; документация и итоговый вывод.",
+  "goal": "Подготовить репозиторий к оркестрации без breaking changes: нейтральные контракты exec/v1 и Engine Port в новом внутреннем пакете packages/orch; Task как поставщик данных (brief-проекция, полнота, resolver ссылок, раздельные actor, evidence, идемпотентная регистрация); разделение инструкций Task/Skiller/Harness по ролям с сохранением всех обязанностей записи; launch catalog роль × provider и skiller resolve --role; развязка monorepo-путей; доказательство переносимости одного execution-input на bindings native / CAO / Claude-only; документация и итоговый вывод. Расширение 2026-10-06 (D12–D17, knowledge/bridges): пакеты чистые, межпакетные связи только через именованные мосты <package>/bridges/<partner>/; оркестратор заменяем (task/bridges/<orchestrator>/); Skiller — чистый пакет общих skills, готовый к переезду в другой репозиторий; git-дисциплина (каждая операция завершается коммитом); хелперы команд запуска codex/claude/grok; рефакторинг конфигов; параллельность по цепочкам зависимостей на уровне данных.",
   "context": "Решения: orch/DECISIONS.md (свой тонкий native-движок, CAO — опциональный adapter, контракты + Engine Port), требования R1–R28 и I1–I15 (brief, knowledge/coverage). Дизайн-досье плана — knowledge/architecture, contracts, engine-port, task-changes, instruction-split, coverage; дословные копии orch/ — knowledge/sources; Perplexity Q11–Q15 — @plan/research/. Исполнители: Opus (контракты/семантика lifecycle/перенос со сменой смысла/итог), Sonnet (реализация по контракту), GPT-Sol 6.1 (механика по таблицам, независимые review P1 и P2). Plan 2 (движок) составляется отдельно.",
   "non_goals": [
     "Запуск native-движка, live stream, recovery, CAO server, платные прогоны моделей (Plan 2)",
@@ -39,7 +39,12 @@
     "P6",
     "P3",
     "P4",
-    "P5"
+    "P5",
+    "P7",
+    "P8",
+    "P9",
+    "P10",
+    "P11"
   ],
   "settings": {
     "design_audit": "none",

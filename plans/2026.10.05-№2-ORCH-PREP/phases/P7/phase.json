@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P7",
+  "title": "Мосты: правило границ и связь Task ↔ orch",
+  "design": "skeleton",
+  "goal": "Пакеты чистые (D13): инфраструктура именованных мостов, boundary-тесты, Task ↔ orch только через packages/task/bridges/orch (D14, D15).",
+  "context": "Дизайн: knowledge/bridges (§principle, §layout, §coupling-inventory, §item-mapping, §p7). Перерабатывает выполненные P2.1/P2.2 (exec/v1-проекция из ядра Task в мост) и заменяет пропущенные P3.3/P3.4.",
+  "scope": {
+    "include": [
+      "Формат bridge.json и общий диспетчер `plan.py bridge`",
+      "boundary-тесты Task и orch",
+      "перенос brief-проекции и обратной регистрации отчёта в task/bridges/orch",
+      "dedupe reviewer-абзаца (F5/F20, внутри Task)",
+      "executor handoff в task/bridges/orch",
+      "orch-роли без имён Skiller-skills в ядре",
+      "обновление knowledge/architecture §dependency-rule через новый документ."
+    ],
+    "exclude": [
+      "Реальный запуск моделей и движка (Plan 2)",
+      "packages/artifex (заморожен, I15)"
+    ]
+  },
+  "depends_on": [
+    "P3"
+  ],
+  "deliverables": [
+    "bridge.json формат + диспетчер",
+    "boundary-тесты task/orch",
+    "task/bridges/orch (brief, report→plan, handoff)",
+    "dedupe reviewer-абзаца"
+  ],
+  "items": [],
+  "batches": []
+}

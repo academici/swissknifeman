@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P11",
+  "title": "Рефакторинг конфигов: инвентаризация, владельцы, удаление лишнего",
+  "design": "skeleton",
+  "goal": "Каждый конфиг имеет владельца и потребителя; неиспользуемые и дублирующиеся удалены; конфиги оркестрации и мостов на своих местах (D17 п.4, B50).",
+  "context": "knowledge/bridges §p11. Корневые configs/: gitignore-policy, managed-blocks, profile-catalog, provider-capabilities, provider-distribution, provider-projection, release-units; пакетные: task/command-routing.json, skiller/{core-policy,publication-versions,repository-bootstrap-skills}.json, harness/configs/{claude-code,codex,common,cursor,grok}.",
+  "scope": {
+    "include": [
+      "Инвентаризация (кто читает, кто пишет, дубли)",
+      "решение по каждому (оставить/перенести/слить/удалить) в knowledge-документе",
+      "выполнение без поломки выпущенных поверхностей",
+      "validate всех пакетов."
+    ],
+    "exclude": [
+      "Поломка выпущенных конфиг-поверхностей без deprecation"
+    ]
+  },
+  "depends_on": [
+    "P4",
+    "P8",
+    "P9"
+  ],
+  "deliverables": [
+    "инвентаризация конфигов",
+    "удалены лишние",
+    "конфиги по владельцам"
+  ],
+  "items": [],
+  "batches": []
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P9",
+  "title": "Git-дисциплина: каждая операция завершается коммитом",
+  "design": "skeleton",
+  "goal": "Контракт, хелперы и правила: исполнитель, ревьюер и исправление по ревью завершают свою операцию scoped-коммитом (D17 п.2, B48).",
+  "context": "knowledge/bridges §p9 (модель коммитов, конвенция сообщения, конфликты plan JSON и log.jsonl при параллельной работе).",
+  "scope": {
+    "include": [
+      "Поля политики коммитов в exec/v1 (run-policy, stage-result) — аддитивно",
+      "хелпер коммита в ядре Task (план + task_files item, роль executor|reviewer|fix, конвенция сообщения, `finish --commit`)",
+      "правила в текстах ролей orch и командах Task",
+      "merge-политика для log.jsonl."
+    ],
+    "exclude": [
+      "Принудительное соблюдение коммитов движком (Plan 2)",
+      "Push, merge, release"
+    ]
+  },
+  "depends_on": [
+    "P7"
+  ],
+  "deliverables": [
+    "контракт commit policy",
+    "хелпер коммита Task",
+    "правила в ролях и командах"
+  ],
+  "items": [],
+  "batches": []
+}

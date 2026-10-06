@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P8",
+  "title": "Skiller: чистый пакет общих skills, готовый к переезду",
+  "design": "skeleton",
+  "goal": "Skiller не ссылается на другие пакеты и пути монорепо, проходит validate/test в отдельном checkout; repo-специфичные skills у владельцев (D16).",
+  "context": "knowledge/bridges §coupling-inventory (skiller → task 23 файлов, → harness 21, → maind 10, → analyst 1) и §p8. Заменяет P4.4 общим `skiller resolve <skill…>` без ролей.",
+  "scope": {
+    "include": [
+      "Инвентаризация и перенос связей Skiller в мосты потребителей/корневые скрипты",
+      "перенос repository-bootstrap skills к владельцам (task-development-philosophy → packages/task и т.д.) с сохранением проекций",
+      "общий resolve по skill ids",
+      "standalone validate/CI",
+      "boundary-тест Skiller."
+    ],
+    "exclude": [
+      "Связи maind/analyst/harness между собой (roadmap в knowledge/bridges §roadmap)",
+      "Публикация Skiller в новом репозитории — сам переезд"
+    ]
+  },
+  "depends_on": [
+    "P7"
+  ],
+  "deliverables": [
+    "Skiller без ссылок на другие пакеты",
+    "repo-skills у владельцев",
+    "skiller resolve <skill…>",
+    "standalone validate"
+  ],
+  "items": [],
+  "batches": []
+}

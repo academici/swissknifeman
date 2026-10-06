@@ -3,7 +3,7 @@
   "id": "D6",
   "title": "Где launch catalog в Plan 1",
   "date": "2026-10-05",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Launch catalog роль × provider: в Task command-routing.json или сразу в orch?",
   "options": [
     {
@@ -21,6 +21,7 @@
     "P4",
     "P5"
   ],
+  "superseded_by": "D17",
   "actor": {
     "provider": "claude-code",
     "model": "opus",

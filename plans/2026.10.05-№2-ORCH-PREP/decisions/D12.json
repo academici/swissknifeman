@@ -20,7 +20,9 @@
   "decision": "B — Task самодостаточен: F11 и F13 остаются canonical в Task; Skiller не является источником текста или managed-блоков для Task; quality:code-review / quality:artifact-review не меняются этим планом.",
   "rationale": "Владелец: «в дальнейшем я планирую skiller вынести из репозитория, в skiller будут только общие скиллы, а task должен быть самодостаточным, поэтому он не должен быть завязан на skiller, а хранить все внутри».",
   "applies_to": [
-    "P3"
+    "P3",
+    "P7",
+    "P8"
   ],
   "supersedes": [
     "D3"

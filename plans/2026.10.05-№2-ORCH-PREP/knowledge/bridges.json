@@ -1,0 +1,71 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "bridges",
+  "title": "Мосты между пакетами, чистота пакетов и расширение Plan №2 (D12–D17)",
+  "sections": [
+    {
+      "id": "principle",
+      "title": "Принцип: чистые пакеты и именованные мосты",
+      "text": "Решения D12–D17; требования B44–B51 (сообщения владельца M5–M9).\n\n- **Ядро пакета** — всё вне `bridges/`: lib, scripts, bin, commands, skills, references, configs, docs. Ядро не упоминает\n  другие пакеты репозитория (имена, пути `packages/<x>`, импорты, CLI других пакетов, их форматы как свои).\n- **Мост** — `<package>/bridges/<partner>/`: единственное место, знающее партнёра. Мост вызывает партнёра только через его\n  публичный CLI/JSON (subprocess, файлы), никогда не импортирует его код.\n- **Владение мостом:** мост живёт у пакета, которому нужна связь и который остаётся стабильным центром.\n  Task ↔ оркестратор: `packages/task/bridges/<orchestrator>/` (D14). orch ↔ движки: существующие bindings orch.\n  orch ↔ Skiller: `packages/orch/bridges/skiller/`. Skiller мостов к пакетам репозитория не имеет (D16).\n- **Заменяемость:** альтернативный оркестратор (например AWS CLI Agent Orchestrator) = новый мост\n  `task/bridges/<name>/`, ядро Task не меняется. Мост можно удалить без поломки ядра.\n- **Managed-блоки** (scripts/sync-managed-blocks.py, P3.2) допустимы только внутри одного пакета; между пакетами\n  текст не копируется — либо он принадлежит пакету, либо живёт в мосту.\n- Правило заменяет knowledge/architecture §dependency-rule (прежние «разрешённые сцепления» D3/D7 — устарели)."
+    },
+    {
+      "id": "layout",
+      "title": "Формат моста, диспетчер, boundary-тест",
+      "text": "```text\n<package>/bridges/<partner>/\n  bridge.json        # {\"name\",\"partner\",\"direction\":\"out|in|both\",\"contract\":\"<urn или версия>\",\"entrypoints\":{verb: \"script relative path\"},\"requires\":{\"cli\":\"…\",\"min_version\":\"…\"}}\n  README.md          # что связывает, как найти партнёра, что ломается при его отсутствии\n  <code>             # stdlib; только subprocess/файлы к партнёру\n  tests/             # тесты моста; конформанс с партнёром skipUnless партнёр найден\n```\n- Поиск партнёра — внутри моста: env `SKM_<PARTNER>_ROOT` → PATH-команда → (только в монорепо) соседний пакет; при\n  отсутствии — понятная ошибка `BRIDGE_PARTNER_UNAVAILABLE`, ядро продолжает работать.\n- **Диспетчер Task:** `plan.py bridge list` и `plan.py bridge <name> <verb> [args]` — находит мосты сканированием\n  `packages/task/bridges/*/bridge.json`, имён партнёров в ядре нет. Ядро отдаёт мостам нейтральные данные:\n  context pack, Read API (get/list/links/neighborhood/schema) и lifecycle-глаголы (finish/log/unit) как API записи.\n- **Boundary-тест** (в каждом пакете, в его test-suite): обход файлов ядра (кроме `bridges/`, CHANGELOG, исторических\n  docs/audits — список исключений явный и короткий); запрещены `packages/<other>`, `import <other>`, вызовы CLI других\n  пакетов, имена их форматов (например `exec/v1` в ядре Task). Тест падает с путём и строкой.\n- Схему `bridge.json` держит каждый пакет у себя (маленькая, дублирование дешевле общего владельца) или общий формат в\n  корне репозитория — решает P7.1 по минимальной стоимости; Skiller формат не знает."
+    },
+    {
+      "id": "coupling-inventory",
+      "title": "Инвентаризация связей (2026-10-06)",
+      "text": "Подсчёт файлов с упоминанием `packages/<x>`, `import <x>`, `bin/<x>` (без fixtures_data):\n\n| Пакет → | task | skiller | harness | orch | maind | analyst | artifex |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| task | — | 1 | 0 | 1 | 1 | 0 | 1 |\n| skiller | 23 | — | 21 | 0 | 10 | 1 | 0 |\n| harness | 15 | 11 | — | 0 | 6 | 8 | 6 |\n| orch | (subprocess Task в tests/discovery) | 0 | 0 | — | 0 | 0 | 0 |\n| maind | 0 | 10 | 7 | 0 | — | 0 | 0 |\n| analyst | 5 | 3 | 3 | 0 | 3 | — | 0 |\n| artifex | 5 | 0 | 2 | 0 | 0 | 0 | — |\n\nКлючевые места Skiller (P8): `lib/skiller/release.py:169` (читает task/configs/command-routing.json),\n`delivery.py:518` (grok plugin install packages/task), `update.py:104,296` (task adapters), `common.py:185-199`,\n`doctor.py:25,534,541,1023` (harness, analyst), `budget.py:216,260` (maind), `hub.py:208`, `integrate.py:90`,\n`scripts/validate.sh:1299-1500` (harness agent-packs, sibling task), тесты `test_codex_consumer_acceptance.py`,\n`test_codex_publication.py`, `test_task_plugin_cache_revision.py`, `test_release.py`, `test_install.py`, `test_integrate.py`;\nskills `repository-bootstrap/*` (package-architecture, harness-operations, task-development-philosophy, ecosystem-*,\nmaind-overview, project-tooling-runbook, docs-maintenance, cross-project-optimizer), `system/agent-packs`,\n`system/swissknifeman-locator`, `general/git-safety`, `general/workflow-craft`, `quality/code-simplifier`.\nTask: `lib/task/command_render.py:1257` (ссылка на /skiller/adapters/cursor в docs), `docs/workflows.md:82`\n(skill quality/artifact-review), `scripts/validate.sh` шаг 7 (корневой sync-managed-blocks через MONOREPO_ROOT),\nexec/v1 в `plan.py brief` (P2.1/P2.2), Skiller-skill `task-development-philosophy` принадлежит Task.\norch: `roles/reviewer.md` называет `quality:code-review`/`quality:artifact-review` (Skiller) — в ядре orch."
+    },
+    {
+      "id": "item-mapping",
+      "title": "Старые пункты → новая структура",
+      "text": "| Пункт | Статус | Решение |\n| --- | --- | --- |\n| P2.1, P2.2 | done | Переработка в P7: exec/v1-проекция и конформанс переезжают в task/bridges/orch (D15); `plan.py brief` не выпущен — без deprecation |\n| P2.4–P2.5 | done | Остаются в ядре: раздельные actor, evidence, attempt id — нейтральные данные Task |\n| P3.1 | done | Роли orch остаются; reviewer.md: имена Skiller-skills — в orch/bridges/skiller (P7/P4), ядро роли нейтрально |\n| P3.2 | done | Инструмент остаётся; область — внутри пакета; шаг 7 Task validate пересматривается в P7 (ядро Task не зовёт корневые скрипты) |\n| P3.3 | skipped (D13) | Guard «Task без Skiller» входит в boundary-тест Task (P7) |\n| P3.4 | skipped (D13) | F5/F20 dedupe (внутри Task) и executor handoff (через task/bridges/orch) — в P7 |\n| P4.1 | todo → redesign | Launch catalog + хелперы codex/claude/grok — в orch (D17 п.3); scout Task получает argv через мост или остаётся с собственным legacy-конфигом |\n| P4.2, P4.3 | todo → сверить | Role manifests и capability seeds — в orch; убрать ссылки на harness roles.json из ядра, если нужны — через мост |\n| P4.4 | todo → replace | Общий `skiller resolve <skill…>` (P8) + `orch/bridges/skiller` раскрывает роли |\n| P5.1 | todo → redesign | Discovery — в мостах (orch/bridges/task? или task/bridges/orch отдаёт данные сам), harness — harness/bridges/task |\n| P5.2–P5.4 | todo → redesign | Переносимость через task/bridges/orch + заглушка второго оркестратора-моста (без запуска) |\n| P5.5, P5.6 | todo → расширить | Docs/CHANGELOG всех пакетов; вывод сверяет B44–B51 и boundary-тесты |"
+    },
+    {
+      "id": "p7",
+      "title": "P7 — мосты и Task ↔ orch: кандидаты пунктов",
+      "text": "1. Формат bridge.json, диспетчер `plan.py bridge`, boundary-тест Task (с временным allowlist текущих нарушений, который P7 же опустошает) и orch.\n2. task/bridges/orch: перенос exec/v1-проекции (`brief`) и конформанса из ядра Task; orch-тесты вызывают мост; ядро без exec/v1.\n3. task/bridges/orch: обратная регистрация stage-result/отчёта → finish/log/unit (то, что registrar делает руками) + executor handoff (бывший P3.4 F10).\n4. Dedupe reviewer-абзаца F5/F20 (внутри Task) и нейтрализация orch reviewer.md (имена skills — через orch/bridges/skiller или роль-манифест).\nRoute: frontier/high для 1–3 (границы и контракты), implementation для 4. Последний пункт фазы — широкий validate Task и orch."
+    },
+    {
+      "id": "p8",
+      "title": "P8 — Skiller к переезду: кандидаты пунктов",
+      "text": "1. Boundary-тест Skiller + перенос repo-специфичных skills к владельцам (task-development-philosophy → packages/task; package-architecture, harness-operations, ecosystem-* и т.п. → корневой bootstrap или пакет-владелец) с сохранением проекций `.claude/skills`, `.codex`.\n2. Интеграции публикации/доставки Task-плагина и codex consumer acceptance — из Skiller в мост потребителя (task/bridges/skiller-delivery? или корневые scripts/) — без ссылки Skiller → Task.\n3. harness/maind/analyst-зависимости Skiller (doctor, budget, integrate, common) → опциональные внешние команды по PATH/env без путей монорепо, либо мосты на стороне harness.\n4. Общий `skiller resolve <skill…> [--json]` (замыкание requires) — замена P4.4.\n5. Standalone-проверка: validate/test Skiller в чистом checkout без соседних пакетов (CI job).\nПроверка: boundary-тест Skiller зелёный; skiller validate в tmp-копии пакета."
+    },
+    {
+      "id": "p9",
+      "title": "P9 — git-дисциплина: модель",
+      "text": "- Операции и коммиты: executor — код + plan JSON item (`finish` пишет sha через `--commit`); reviewer — отчёт (knowledge doc + log note) в плане;\n  fix — исправление по отчёту + plan JSON. Каждая операция = один scoped коммит; push/merge/release — вне правила.\n- Хелпер ядра Task: `plan.py commit <plan> <item> [--unit U#] --role executor|reviewer|fix` — собирает пути (plan-файлы item + task_files/units files,\n  фактический diff ∩ разрешённые пути; лишние → отказ), сообщение по конвенции `<type>(<scope>): <summary> (PLANn.Pn.m[/U#]) [role]` + attribution из\n  настроек, возвращает sha; без `git add -A`. Кто вызывает — роль/мост; движок принуждает позже (Plan 2).\n- Контракт exec/v1 (аддитивно): `run-policy.commit = {required: bool, scope: item|unit, message_convention}`; `stage-result.commits[] = {sha, role, paths_digest}`.\n- Параллельные ветки: конфликты plan JSON минимальны (файл на item), но `log.jsonl` — append-only общий файл → нужна политика (`.gitattributes merge=union`\n  или журнал по файлам событий) — решение в P9 с тестом."
+    },
+    {
+      "id": "p10",
+      "title": "P10 — параллельность: модель инвариантов (заготовка)",
+      "text": "Hard risk: конкурентная запись. До детализации пунктов дописать модель:\n- Операции: `start`, `finish`, `log`, `unit …`, `commit`, `next`. Ресурсы: plan JSON item/phase, log.jsonl, plan.lock, рабочее дерево/ветка.\n- Инвариант 1: два параллельно выполняемых item не имеют пересечения task_files (glob-пересечение консервативно) и не зависят друг от друга транзитивно.\n- Инвариант 2: каждая параллельная работа — в своём worktree/ветке; plan.lock — внутри одного дерева; интеграция — последовательная, в порядке\n  топологической сортировки, с повторной проверкой affected checks после rebase.\n- Данные Task: optional `depends_on` между пунктами разных фаз; phase `depends_on` уже есть; `next` → готовый набор по всему плану\n  (`--parallel N`), отдельно помечая конфликтующие пары.\n- Пары интерференции: finish(A) ∥ finish(B) в разных деревьях → конфликт только в общих файлах (phase.json closed, log.jsonl) — нужна стратегия\n  (phase close выполняет интегратор; log — см. P9)."
+    },
+    {
+      "id": "p11",
+      "title": "P11 — конфиги: подход",
+      "text": "1. Инвентаризация (knowledge-документ `configs`): для каждого файла — владелец, кто читает (grep по коду и скриптам), кто пишет/генерирует,\n   дубли полей между файлами (provider-* в корне, harness/configs/*, task/command-routing.json, skiller/*.json), статус выпуска.\n2. Решения по каждому: оставить / перенести к владельцу / слить / удалить. Удаление выпущенного — только с deprecation-заметкой в CHANGELOG.\n3. Выполнение по владельцам + validate всех пакетов. Идёт после P4/P8/P9, т.к. мосты и launch catalog двигают конфиги."
+    },
+    {
+      "id": "roadmap",
+      "title": "Вне плана (roadmap)",
+      "text": "- Связи harness ↔ maind/analyst/artifex и maind/analyst → skiller/harness переводятся на мосты в отдельном плане; триггер — вынос соответствующего пакета из репозитория.\n- Сам переезд Skiller в новый репозиторий — после P8 (Skiller уже standalone).\n- Реальный параллельный запуск, worktree-менеджмент, принудительные коммиты — Plan 2 (движок)."
+    },
+    {
+      "id": "design-order",
+      "title": "Порядок детализации",
+      "text": "Детализировать по фазе, опираясь на реальный код: P7 → (выполнение) → P8 → P4 (перепроектирование) → P9 → P10 → P11 → P5 (перепроектирование).\nP8, P9, P10 после P7 независимы друг от друга и могут детализироваться/выполняться параллельно (разные task_files).\nДля каждой фазы: `/task:plan-design 2026.10.05-№2-ORCH-PREP <Pn>`."
+    }
+  ],
+  "applies_to": [
+    "P4",
+    "P5",
+    "P7",
+    "P8",
+    "P9",
+    "P10",
+    "P11"
+  ]
+}

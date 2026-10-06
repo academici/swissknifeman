@@ -4,7 +4,7 @@
   "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
   "design": "detailed",
   "goal": "Одна точка данных запуска роль × provider (launch catalog), пять role manifests, capability seeds для трёх bindings и `skiller resolve --role` с офлайн-проверкой closure; `start --scout` работает как раньше.",
-  "context": "DECISIONS §5.2 (catalog), §6 (S1, S3 offline); D5 (manifests в orch), D6 (catalog в command-routing.json). Значения capability — knowledge/engine-port §binding-matrix, факты Q12–Q15.",
+  "context": "ПЕРЕПРОЕКТИРОВАТЬ до выполнения по D13–D17 и knowledge/bridges §item-mapping: launch catalog и хелперы запуска codex/claude/grok — в orch, не в Task (заменяет D6 для P4.1); P4.4 заменяется мостом orch/bridges/skiller поверх общего skiller resolve из P8; P4.2/P4.3 сверить с правилом мостов.\n\nИсходный контекст: DECISIONS §5.2 (catalog), §6 (S1, S3 offline); D5 (manifests в orch), D6 (catalog в command-routing.json). Значения capability — knowledge/engine-port §binding-matrix, факты Q12–Q15.",
   "scope": {
     "include": [
       "packages/task/configs/command-routing.json orchestration.launch, command_catalog.py, scout.py",
@@ -17,6 +17,10 @@
       "перенос catalog в orch (Plan 2)"
     ]
   },
+  "depends_on": [
+    "P7",
+    "P8"
+  ],
   "pitfalls": [
     "Scout должен получить побайтно прежний argv (текстовый вывод, filter_answer)",
     "`--bare` запрещён (I12)",

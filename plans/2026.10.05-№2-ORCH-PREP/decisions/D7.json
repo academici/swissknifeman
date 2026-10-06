@@ -3,7 +3,7 @@
   "id": "D7",
   "title": "Discovery Task для потребителей",
   "date": "2026-10-05",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Как harness/run и orch находят Task без хардкода monorepo-путей (I13)?",
   "options": [
     {
@@ -20,6 +20,7 @@
   "applies_to": [
     "P5"
   ],
+  "superseded_by": "D13",
   "actor": {
     "provider": "claude-code",
     "model": "opus",

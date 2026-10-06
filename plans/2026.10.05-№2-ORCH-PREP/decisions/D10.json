@@ -3,7 +3,7 @@
   "id": "D10",
   "title": "Форма brief и где конформанс",
   "date": "2026-10-05",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Что выдаёт plan.py brief и кто проверяет соответствие exec/v1?",
   "options": [
     {
@@ -21,6 +21,7 @@
     "P2",
     "P5"
   ],
+  "superseded_by": "D15",
   "actor": {
     "provider": "claude-code",
     "model": "opus",

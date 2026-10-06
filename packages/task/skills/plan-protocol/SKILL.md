@@ -76,7 +76,7 @@ requires compatible explicit selections. `plan-run` itself has no fixed model.
 | Purpose | Verbs |
 |:--|:--|
 | author | `new`, `set`, `push`, `apply`, `add-phase`, `add-item`, `add-decision`, `add-document`, `batches`, `design-done` |
-| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `check [--json]`, `render [--check]` |
+| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `brief <item> [--unit U#] [--inline-reads] [--out FILE]`, `check [--json]`, `render [--check]` |
 | execute | `start <items…> --actor …`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit>` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
 | transfer | `export`, `import --file <current-format-snapshot.json> [--replace]` |
@@ -139,7 +139,15 @@ or explicitly rejected before an item finishes. Children finish before their par
 `export` returns the complete current-format graph and event log; `import <directory> --file
 snapshot.json` restores a validated graph, preserving historical state and supporting evidence.
 `--replace` is required to restore an existing JSON plan. Import never interprets Markdown.
-`plan.py --output json <verb>` returns a structured success/error envelope.
+`brief <item>` is the read-only worker input (`exec/v1` execution-input): the item's task, scope, checks,
+reads with `sha256`, decisions and upstream results, without lifecycle instructions; the full pack stays
+reachable through its `context_refs`. `--out FILE` must name a file outside the plan directory (`OUT_INVALID`).
+
+`plan.py --output json <verb>` prints exactly one envelope for every verb, validated against
+`schemas/plan/v1/envelope.schema.json` (kind `envelope`) before it is printed:
+`{"ok": true, "data": <verb result>}` or `{"ok": false, "error": {"code", "message", "issues"?}}`.
+Exit codes stay 0 / 1 (refusal) / 2 (usage). Input is validated by the API (ids, refs, paths, documents),
+never by the caller; plan files are written only by `plan.py` verbs.
 
 There is no read count, inline-section cap, lesson truncation, phase-size quota or spend gate.
 Read supporting code/docs as necessary; keep the contract self-contained and add newly discovered

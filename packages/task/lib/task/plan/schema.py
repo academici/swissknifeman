@@ -13,7 +13,7 @@ from typing import Any, NamedTuple
 
 SCHEMA_URN_PREFIX = "urn:swissknifeman:task:plan:"
 DIALECT = "https://json-schema.org/draft/2020-12/schema"
-KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot")
+KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot", "envelope")
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
                "min_length", "one_of", "ref")
 SUPPORTED_KEYWORDS = frozenset({

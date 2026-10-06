@@ -14,7 +14,7 @@ import re
 import sys
 
 
-from . import brief, check, context, lifecycle, ops, snapshot, stats, store, units, views
+from . import brief, check, context, lifecycle, ops, schema, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -242,14 +242,10 @@ def cmd_context(args) -> int:
 
 def cmd_brief(args) -> int:
     plan = store.load_plan(_plan_dir(args))
-    if args.unit is not None and not re.fullmatch(r"U[0-9]+", args.unit):
-        raise UsageError(f"invalid unit id {args.unit!r}")
-    text = brief.render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads)
-    if args.out is not None:
-        store.atomic_write(args.out, text)
-        print(args.out)
+    if args.out is None:
+        print(brief.render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads), end="")
     else:
-        print(text, end="")
+        print(brief.write(plan, args.item, args.out, unit_id=args.unit, inline_reads=args.inline_reads))
     return 0
 
 
@@ -556,14 +552,29 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _emit(envelope: dict) -> None:
+    """Print the ``--output json`` envelope; one that leaves ``schemas/plan/v1/envelope.schema.json`` is a bug."""
+    issues = schema.validate(envelope, "envelope")
+    if issues:
+        raise RuntimeError("ENVELOPE_INVALID: " + "; ".join(f"{i.path or '/'}: {i.message}" for i in issues[:3]))
+    _print_json(envelope)
+
+
+def _failure(code: str, message: str, issues=()) -> dict:
+    error = {"code": code, "message": message}
+    listed = [i._asdict() if hasattr(i, "_asdict") else i for i in issues if hasattr(i, "_asdict") or isinstance(i, dict)]
+    return {"ok": False, "error": {**error, **({"issues": listed} if listed else {})}}
+
+
 def main(argv=None) -> int:
     parser = build_parser()
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:  # argparse: 0 for --help, 2 for usage
         return int(exc.code or 0)
+    as_json = args.output == "json"
     try:
-        if args.output == "json":
+        if as_json:
             output = io.StringIO()
             with redirect_stdout(output):
                 code = args.handler(args)
@@ -572,25 +583,28 @@ def main(argv=None) -> int:
                 data = json.loads(raw)
             except ValueError:
                 data = {"message": raw}
-            _print_json({"ok": code == 0, "data": data})
+            if code == 0:
+                _emit({"ok": True, "data": data})
+            else:  # a verb that reports its refusal on stdout (check --json); keep its issues
+                issues = data.get("issues") if isinstance(data, dict) else None
+                _emit(_failure("VERB_FAILED", f"{args.command} exited {code}", issues if isinstance(issues, list) else ()))
             return code
         return args.handler(args)
     except UsageError as exc:
-        if args.output == "json":
-            _print_json({"ok": False, "error": {"code": "USAGE", "message": str(exc)}})
+        if as_json:
+            _emit(_failure("USAGE", str(exc)))
         else:
             print(f"plan.py {args.command}: error: {exc}", file=sys.stderr)
         return 2
     except PlanError as exc:
-        if args.output == "json":
-            _print_json({"ok": False, "error": {"code": exc.code, "message": exc.message,
-                        "issues": [i._asdict() for i in exc.issues if hasattr(i, "_asdict")]}})
-            return 1
-        print(f"{exc.code}: {exc.message}", file=sys.stderr)
+        if as_json:
+            _emit(_failure(exc.code, exc.message, exc.issues))
+        else:
+            print(f"{exc.code}: {exc.message}", file=sys.stderr)
         return 1
     except OSError as exc:
-        if args.output == "json":
-            _print_json({"ok": False, "error": {"code": "IO_ERROR", "message": str(exc)}})
+        if as_json:
+            _emit(_failure("IO_ERROR", str(exc)))
         else:
             print(f"IO_ERROR: {exc}", file=sys.stderr)
         return 1

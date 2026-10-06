@@ -10,9 +10,10 @@ import copy
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 
 from . import context, store
-from .model import PlanError, item_phase
+from .model import ITEM_ID, PlanError, item_phase
 
 SCHEMA = "urn:swissknifeman:orch:exec:execution-input:v1"
 CONTRACT_VERSION = "exec/v1"
@@ -20,6 +21,7 @@ TOOL = "task/plan.py brief"
 REPORT = ["summary", "changed_paths", "checks_run", "evidence", "open_issues"]
 ESCALATION = ["A required read is missing or contradicts the goal",
               "An acceptance check cannot pass without leaving scope"]
+_UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
 _LESSON_KEYS = ("type", "summary", "ts", "item", "impact", "next")
 
@@ -120,10 +122,14 @@ def _upstream(pack: dict) -> list[dict]:
 def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_reads: bool = False,
           repos=None) -> dict:
     """Execution-input of ``item_id`` (or of its unit ``unit_id``). ``repos`` is reserved for the resolver of P2.3."""
+    if not isinstance(item_id, str) or not ITEM_ID.fullmatch(item_id):
+        raise PlanError("REF_INVALID", f"invalid item id {item_id!r}")
     if item_id not in plan.items:
         raise PlanError("REF_UNKNOWN", f"unknown item {item_id!r}")
     unit = None
     if unit_id is not None:
+        if not isinstance(unit_id, str) or not _UNIT_ID.fullmatch(unit_id):
+            raise PlanError("REF_INVALID", f"invalid unit id {unit_id!r}")
         if f"{item_id}/{unit_id}" not in plan.units:
             raise PlanError("REF_UNKNOWN", f"unknown unit {item_id}/{unit_id!r}")
         unit = plan.units[f"{item_id}/{unit_id}"]
@@ -180,3 +186,25 @@ def render(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline
            repos=None) -> str:
     doc = build(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos)
     return json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
+
+
+def check_out(plan: store.Plan, out: str | Path) -> Path:
+    """Destination of ``--out``: a new or existing file outside the plan directory (plan data is written by the API only)."""
+    if not str(out).strip():
+        raise PlanError("OUT_INVALID", "--out needs a file path")
+    target = Path(out).expanduser().resolve()
+    if target.is_dir():
+        raise PlanError("OUT_INVALID", f"{out} is a directory; name a file")
+    try:
+        target.relative_to(plan.root.resolve())
+    except ValueError:
+        return target
+    raise PlanError("OUT_INVALID", f"{out} is inside the plan directory; plan files are written only by plan.py verbs")
+
+
+def write(plan: store.Plan, item_id: str, out: str | Path, *, unit_id: str | None = None,
+          inline_reads: bool = False, repos=None) -> Path:
+    """Build, then atomically write the brief to ``out``; every refusal happens before anything is written."""
+    target = check_out(plan, out)
+    store.atomic_write(target, render(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos))
+    return target

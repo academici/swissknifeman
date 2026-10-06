@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.1",
   "title": "plan.py brief: проекция execution-input (T1, T3)",
-  "status": "done_with_deviations",
+  "status": "done",
   "summary": "Новый read-only глагол `plan.py brief <plan> <item> [--unit U#] [--inline-reads] [--out FILE]` выдаёт exec/v1 execution-input из полного context pack по таблице полей; без report_api и lifecycle-инструкций.",
   "why": "R1, R3, I1, I3: worker должен получать задание, а не плановый процесс; полный pack остаётся рядом и доступен по ссылке. D10: форма brief = exec/v1.",
   "scope": {
@@ -10,7 +10,10 @@
       "lib/task/plan/brief.py: build(), render(), canonical_digest()",
       "CLI-глагол brief в lib/task/plan/cli.py (рядом с context), `--output json` конверт",
       "отказы REF_UNKNOWN, PHASE_NOT_DETAILED, READ_MISSING, HUMAN_VIEW",
-      "tests/engine/test_brief.py (mapping-кейсы)"
+      "tests/engine/test_brief.py (mapping-кейсы)",
+      "schemas/plan/v1/envelope.schema.json и kind `envelope` в schema.py: конверт --output json (ok/data/error) проверяется перед печатью",
+      "валидация --out (OUT_INVALID): не каталог и не внутри каталога плана",
+      "tests/engine/test_envelope.py: конверт каждого глагола и вход brief соответствуют схеме; описание в plan-protocol"
     ],
     "exclude": [
       "verify/BRIEF_INCOMPLETE (P2.2)",
@@ -79,6 +82,26 @@
     {
       "path": "packages/task/tests/engine/test_brief.py",
       "change": "create"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/envelope.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_envelope.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
     }
   ],
   "artifacts": [
@@ -121,6 +144,20 @@
       "cmd": "python3 packages/task/scripts/plan.py brief --help",
       "expect": "exit 0; usage mentions --unit and --inline-reads",
       "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_envelope.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V6",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_schema.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
     }
   ],
   "deliverables": [
@@ -143,40 +180,47 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-06T04:53:10Z",
-    "finished_at": "2026-10-06T04:56:11Z",
+    "started_at": "2026-10-06T04:59:35Z",
+    "finished_at": "2026-10-06T05:07:19Z",
     "executor": {
       "provider": "claude",
       "model": "sonnet-5-5",
       "effort": "high",
       "session": "d04ee04c-fe18-4361-a6ae-aef30f6f3032"
     },
-    "notes": "brief.py (build/render/canonical_digest), CLI verb brief with --unit/--inline-reads/--out, 25 mapping tests; read-only, no PlanLock.",
-    "deviations": [
-      "--output json envelope keeps the shared plan.py shape {ok,data}; brief-verb text said {ok,result}. --repo not added (P2.3)."
-    ],
+    "notes": "brief.py + verb brief; envelope schema and validated output for all verbs (coverage test per verb); --out refuses plan dir; ids validated in API; SKILL.md updated; validate.sh OK",
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-06T04:56:11Z"
+        "at": "2026-10-06T05:07:19Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-06T04:56:11Z"
+        "at": "2026-10-06T05:07:19Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-06T04:56:11Z"
+        "at": "2026-10-06T05:07:19Z"
       },
       {
         "id": "V4",
         "exit": 0,
-        "at": "2026-10-06T04:56:11Z"
+        "at": "2026-10-06T05:07:19Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T05:07:19Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-06T05:07:19Z"
       }
     ]
   },
-  "updated_at": "2026-10-06T04:56:11Z"
+  "updated_at": "2026-10-06T05:07:19Z"
 }

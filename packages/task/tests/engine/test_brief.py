@@ -275,8 +275,10 @@ class CliTests(BriefCase):
         self.assertEqual(text.returncode, 1)
         self.assertTrue(text.stderr.startswith("PHASE_NOT_DETAILED:"))
 
-    def test_malformed_unit_id_is_a_usage_error(self):
-        self.assertEqual(self.run_cli("P1.1", "--unit", "x").returncode, 2)
+    def test_malformed_unit_id_is_refused_by_the_api(self):
+        result = self.run_cli("P1.1", "--unit", "x")
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(result.stderr.startswith("REF_INVALID:"))
 
 
 if __name__ == "__main__":

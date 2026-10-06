@@ -155,10 +155,10 @@ class ProfileTests(unittest.TestCase):
     def schema_files(self):
         return sorted(SCHEMA_DIR.glob("*.schema.json"))
 
-    def test_eight_schema_files_exist_and_parse(self):
+    def test_schema_files_exist_and_parse(self):
         names = [p.name for p in self.schema_files()]
         self.assertEqual(names, sorted(f"{k}.schema.json" for k in
-                                       ("defs", "plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot")))
+                                       ("defs", "plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot", "envelope")))
         for path in self.schema_files():
             self.assertIsInstance(load(path), dict)
 

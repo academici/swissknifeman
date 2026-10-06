@@ -203,6 +203,15 @@
         "text"
       ],
       "additionalProperties": false
+    },
+    "commitRole": {
+      "description": "Operation role associated with a scoped commit.",
+      "type": "string",
+      "enum": [
+        "executor",
+        "reviewer",
+        "fix"
+      ]
     }
   }
 }

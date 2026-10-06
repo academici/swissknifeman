@@ -1,0 +1,50 @@
+[1/6] python compile
+[2/6] bash syntax
+[3/6] required files
+[4/6] schemas load
+[5/6] fixtures
+enum: /stream: must be one of "supported", "adapted", "unsupported", "unknown"
+CAPABILITY_EVIDENCE: declared supported capabilities require doc or code evidence
+EVIDENCE_CARRIER: command evidence requires exit without verdict
+EVIDENCE_CARRIER: manual evidence requires verdict and observation without exit
+additional: /unexpected: unexpected property 'unexpected'
+RECEIPT_RECONCILE: unknown effect outcome requires a reconciliation method
+one_of: /provenance: matches 0 of 3 oneOf branches, expected exactly 1
+DIGEST_MISMATCH: digest does not match canonical JSON
+additional: /unexpected: unexpected property 'unexpected'
+LIFECYCLE_LEAK: lifecycle instruction is present in execution input
+required: /: missing required property 'goal'
+INPUT_AUTHORITY: read-only input requires write_authority none
+enum: /stages/0/transport: must be one of "jsonl", "acp", "tui", "prompt", "none"
+type: environment variable value must be a string
+required: /: missing required property 'refusals'
+additional: /instructions/0/body: unexpected property 'body'
+ROLE_AUTHORITY: write authority conflicts with tool permissions
+ATTEMPT_RANGE: attempt must be at least 1
+enum: /kind: must be one of "started", "model_wait", "output", "tool", "question", "check", "quota_block", "auth_block", "provider_error", "timeout", "cancelled", "unknown_outcome", "completed", "failed"
+COMMIT_POLICY_CONFLICT: commit policy requires git_action commit
+POLICY_REQUIRED_REFUSE: required stages must refuse when unavailable
+POLICY_REVIEW_LIMIT: max_rounds must not exceed 2
+POLICY_PRIMARY: policy must have exactly one primary stage
+enum: /commits/0/role: must be one of "executor", "reviewer", "fix"
+COMMIT_SHA_DUPLICATE: commit hashes must be unique
+COMPLETED_PARSE_ERROR: completed stage cannot contain a parse error
+COST_FORMAT: cost_usd must be a decimal string
+USAGE_UNKNOWN_NUMERIC: unknown usage must not include token counts or cost
+[6/6] tests
+..............................................................................F.
+======================================================================
+FAIL: test_shared_definitions (tests.test_schema_profile.SchemaProfileTests.test_shared_definitions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/tests/test_schema_profile.py", line 45, in test_shared_definitions
+    self.assertEqual(set(root["$defs"]), set(valid))
+AssertionError: Items in the first set but not the second:
+'commitRole'
+
+----------------------------------------------------------------------
+Ran 80 tests in 0.360s
+
+FAILED (failures=1)
+  FAIL: unittest
+validate: FAILURE

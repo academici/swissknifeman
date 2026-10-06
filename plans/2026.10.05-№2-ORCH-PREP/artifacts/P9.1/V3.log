@@ -1,0 +1,2 @@
+COMMIT_POLICY_CONFLICT: commit policy requires git_action commit
+[{"path": "/commit", "code": "COMMIT_POLICY_CONFLICT", "message": "commit policy requires git_action commit", "level": "error"}]

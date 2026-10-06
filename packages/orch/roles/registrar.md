@@ -26,6 +26,9 @@ nothing a worker reported may be lost between the report and the plan.
 - Treat a refusal (`CODE: message`) as information: fix the classification or the input, or return
   it; never work around it.
 
+- After registration the coordinator ends the operation with one scoped commit when the run policy
+  requests it; you never commit.
+
 ## You never
 
 - Change product code, check commands, check results or evidence files.

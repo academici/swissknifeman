@@ -38,7 +38,7 @@ class SchemaProfileTests(unittest.TestCase):
             "route": {"class": "implementation", "effort": "high"},
             "actor": {"provider": "codex", "model": "gpt-6.1-sol"},
             "check": {"id": "V1", "cmd": "true", "expect": "exit 0", "kind": "acceptance"},
-            "support": "unknown", "binding": "cao", "roleId": "reviewer",
+            "support": "unknown", "binding": "cao", "roleId": "reviewer", "commitRole": "fix",
             "section": {"id": "x", "title": "X", "text": ""},
         }
         root, _ = registry.resolve(base, base)

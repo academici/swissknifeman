@@ -1,0 +1,10 @@
+test_digest_canonical_bytes_and_no_mutation (tests.test_schema_profile.SchemaProfileTests.test_digest_canonical_bytes_and_no_mutation) ... ok
+test_registry_cache_includes_route_parameters (tests.test_schema_profile.SchemaProfileTests.test_registry_cache_includes_route_parameters) ... ok
+test_schema_and_semantic_dispatch (tests.test_schema_profile.SchemaProfileTests.test_schema_and_semantic_dispatch) ... ok
+test_shared_definitions (tests.test_schema_profile.SchemaProfileTests.test_shared_definitions) ... ok
+test_unsupported_keyword_fails_closed (tests.test_schema_profile.SchemaProfileTests.test_unsupported_keyword_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.003s
+
+OK

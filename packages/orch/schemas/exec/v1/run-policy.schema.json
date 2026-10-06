@@ -205,6 +205,40 @@
         "register"
       ],
       "additionalProperties": false
+    },
+    "commit": {
+      "type": "object",
+      "description": "Optional scoped commit policy.",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "item",
+            "unit"
+          ],
+          "description": "Operation scope to commit."
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/commitRole",
+            "description": "Operation role to commit."
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Distinct operation roles requiring commits."
+        },
+        "message_convention": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+          "description": "Commit message convention identifier."
+        }
+      },
+      "required": [
+        "scope",
+        "roles",
+        "message_convention"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

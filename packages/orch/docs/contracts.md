@@ -15,7 +15,7 @@ Engine operations and run states are described in [engine-port.md](engine-port.m
 - `canonical_digest(doc)` is sha256 of sorted compact JSON without `digest`, with the `@digest`
   suffix removed from `input_id`.
 - Shared definitions (`id`, `sha256`, `ts`, `path`, `provider`, `modelClass`, `effort`, `route`,
-  `check`, `support`, `binding`, `roleId`) live in [`defs.schema.json`](../schemas/exec/v1/defs.schema.json).
+  `check`, `support`, `binding`, `roleId`, `commitRole`) live in [`defs.schema.json`](../schemas/exec/v1/defs.schema.json).
 
 Validate a document: `python3 packages/orch/scripts/orch.py validate <kind> <file.json>`.
 Diagnostics include `path`, `code`, `message` and `level`. Warning-only documents return exit 0;
@@ -60,9 +60,12 @@ generator name and plan-rule constraints (warning there). `scope.read_only: true
 | `review` | * | `enabled`, `independent_provider`, `max_rounds` ≤ 2, `max_corrections` ≤ 1 |
 | `retries_budget`, `git_action`, `finalize` | * | retry total, `none`/`commit`, deterministic registration |
 | `applies_to` | | reference patterns |
+| `commit` | | `scope: item\|unit`, distinct non-empty `roles` (`executor`, `reviewer`, `fix`), `message_convention` identifier; all three fields required when present |
 
 Semantic: exactly one `primary`; required stages refuse when unavailable; acyclic known dependencies;
-`review.enabled` matches a review stage; integers are non-negative.
+`review.enabled` matches a review stage; integers are non-negative. A `commit` policy with
+`git_action: none` is refused with `COMMIT_POLICY_CONFLICT`; `git_action: commit` without the
+optional policy remains valid.
 
 ### role-manifest
 
@@ -117,9 +120,13 @@ parsed becomes `unknown_outcome`, never `completed`.
 | `route` | * | `requested`; optional `resolved` and `observed` with its `source` |
 | `hashes` | * | `input` (= execution-input digest), `instructions`, optional `policy` |
 | `usage` | * | `reported` with numbers, or `unknown` without numbers (unknown ≠ 0) |
+| `commits` | | optional array of `{sha, role, ref, paths_digest}`; all four fields required per entry; roles are `executor`, `reviewer`, `fix` |
 | `session`, `changed_paths`, `artifacts`, `checks`, `errors`, `report`, `started_at`, `finished_at` | | evidence of the attempt |
 
-Semantic: `completed` has no `parse` error; `cost_usd` is a decimal string.
+Semantic: `completed` has no `parse` error; `cost_usd` is a decimal string. Commit hashes must
+be unique (`COMMIT_SHA_DUPLICATE`). `paths_digest` is lowercase SHA-256 of the UTF-8 string
+formed by sorting repository-relative POSIX paths and joining them with `\n`, without a trailing
+newline. For `a.py` and `b.py`, hash the bytes `a.py\nb.py`.
 
 ### effect-receipt
 
@@ -149,5 +156,7 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 
 ## Changelog контрактов
 
+- exec/v1 — optional `run-policy.commit` and `stage-result.commits`, shared `commitRole`,
+  commit policy conflict and duplicate hash checks; existing documents remain valid.
 - exec/v1 — initial (PLAN2): nine document kinds, shared definitions, closed schema profile and
   semantic checks.

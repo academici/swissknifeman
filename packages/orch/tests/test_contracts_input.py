@@ -10,6 +10,8 @@ from orch import contracts
 ROOT = Path(__file__).resolve().parents[1]
 KINDS = ("execution-input", "run-policy", "role-manifest", "capability-record")
 EXPECTED = {
+    "run-policy/commit-with-git-none.json": "COMMIT_POLICY_CONFLICT",
+
     "execution-input/missing-goal.json": "required",
     "execution-input/extra-field.json": "additional",
     "execution-input/lifecycle-leak.json": "LIFECYCLE_LEAK",
@@ -181,6 +183,25 @@ class InputContractTests(unittest.TestCase):
             doc = fixture("run-policy", "solo")
             doc["stages"][1].update(extra)
             self.assert_code("run-policy", doc, "POLICY_NEGATIVE")
+
+    def test_commit_policy_shape_roles_and_legacy_compatibility(self):
+        self.assertEqual(contracts.validate(fixture("run-policy", "solo"), "run-policy"), [])
+        for scope in ("item", "unit"):
+            doc = fixture("run-policy", "commit-policy")
+            doc["commit"]["scope"] = scope
+            self.assertEqual(contracts.validate(doc, "run-policy"), [])
+        for field in ("scope", "roles", "message_convention"):
+            doc = fixture("run-policy", "commit-policy")
+            del doc["commit"][field]
+            self.assert_code("run-policy", doc, "required")
+        for roles in ([], ["executor", "executor"], ["coordinator"]):
+            doc = fixture("run-policy", "commit-policy")
+            doc["commit"]["roles"] = roles
+            self.assertTrue(contracts.validate(doc, "run-policy"))
+        for value in (None, [], "wrong", 1):
+            doc = fixture("run-policy", "commit-policy")
+            doc["commit"] = value
+            self.assert_code("run-policy", doc, "type")
 
     def test_role_authority_both_directions_and_read_only(self):
         doc = fixture("role-manifest", "executor-minimal")

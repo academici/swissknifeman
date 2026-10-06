@@ -316,6 +316,39 @@
     "finished_at": {
       "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
       "description": "Stage finish timestamp."
+    },
+    "commits": {
+      "type": "array",
+      "description": "Optional scoped operation commits with unique hashes.",
+      "items": {
+        "type": "object",
+        "description": "Scoped operation commit.",
+        "properties": {
+          "sha": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/gitSha",
+            "description": "Git commit hash."
+          },
+          "role": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/commitRole",
+            "description": "Committed operation role."
+          },
+          "ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Committed item or unit reference."
+          },
+          "paths_digest": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+            "description": "SHA-256 of sorted repository-relative POSIX paths joined with newlines, without a trailing newline."
+          }
+        },
+        "required": [
+          "sha",
+          "role",
+          "ref",
+          "paths_digest"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

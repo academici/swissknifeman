@@ -125,6 +125,9 @@ def _run_policy(doc: object) -> list[Issue]:
     for path, value in _walk(doc):
         if isinstance(value, int) and not isinstance(value, bool) and value < 0:
             issues.append(Issue(path, "POLICY_NEGATIVE", "policy integers must be non-negative"))
+    if "commit" in doc and doc.get("git_action") == "none":
+        issues.append(Issue("/commit", "COMMIT_POLICY_CONFLICT",
+                            "commit policy requires git_action commit"))
     stages = doc.get("stages")
     if not isinstance(stages, list):
         return issues
@@ -227,6 +230,17 @@ def _stage_result(doc: object) -> list[Issue]:
     if not isinstance(doc, dict):
         return []
     issues = _attempt_range(doc)
+    commits = doc.get("commits")
+    if isinstance(commits, list):
+        seen = set()
+        for index, commit in enumerate(commits):
+            commit_sha = commit.get("sha") if isinstance(commit, dict) else None
+            if not isinstance(commit_sha, str):
+                continue
+            if commit_sha in seen:
+                issues.append(Issue(f"/commits/{index}/sha", "COMMIT_SHA_DUPLICATE",
+                                    "commit hashes must be unique"))
+            seen.add(commit_sha)
     usage = doc.get("usage")
     if isinstance(usage, dict):
         if usage.get("status") == "unknown" and any(

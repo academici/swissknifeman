@@ -10,6 +10,9 @@ from orch import contracts
 ROOT = Path(__file__).resolve().parents[1]
 KINDS = ("run-event", "stage-result", "effect-receipt", "check-evidence", "launch-plan")
 EXPECTED = {
+    "stage-result/commit-bad-role.json": "enum",
+    "stage-result/commit-duplicate-sha.json": "COMMIT_SHA_DUPLICATE",
+
     "run-event/bad-kind.json": "enum",
     "run-event/attempt-zero.json": "ATTEMPT_RANGE",
     "stage-result/usage-unknown-with-tokens.json": "USAGE_UNKNOWN_NUMERIC",
@@ -100,6 +103,31 @@ class OutputContractTests(unittest.TestCase):
             if name == "native-claude-code-ok":
                 self.assertEqual(events[-1]["data"]["usage"], {"input_tokens": 100, "output_tokens": 25})
         self.assertEqual(len(run_ids), 1)
+
+    def test_commit_entries_shape_digest_and_duplicate_pointer(self):
+        doc = fixture("stage-result", "with-commits")
+        doc["commits"][1]["sha"] = doc["commits"][0]["sha"]
+        self.assertEqual([(i.path, i.code) for i in contracts.validate(doc, "stage-result")],
+                         [("/commits/1/sha", "COMMIT_SHA_DUPLICATE")])
+        for field in ("sha", "role", "ref", "paths_digest"):
+            doc = fixture("stage-result", "with-commits")
+            del doc["commits"][0][field]
+            self.assert_code("stage-result", doc, "required")
+        for field, value in (("sha", "xyz"), ("ref", ""), ("paths_digest", "abc")):
+            doc = fixture("stage-result", "with-commits")
+            doc["commits"][0][field] = value
+            self.assertTrue(contracts.validate(doc, "stage-result"))
+        for value in (None, {}, "wrong", 1):
+            doc = fixture("stage-result", "with-commits")
+            doc["commits"] = value
+            self.assert_code("stage-result", doc, "type")
+        for value in (None, [], "wrong", 1, {"sha": []}):
+            doc = fixture("stage-result", "with-commits")
+            doc["commits"] = [value]
+            self.assertTrue(contracts.validate(doc, "stage-result"))
+        doc = fixture("stage-result", "with-commits")
+        doc["commits"] = []
+        self.assertEqual(contracts.validate(doc, "stage-result"), [])
 
     def test_attempt_and_sequence_ranges_and_types(self):
         for kind in ("run-event", "stage-result"):

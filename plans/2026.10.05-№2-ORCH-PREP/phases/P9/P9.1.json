@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.1",
   "title": "exec/v1 аддитивно: run-policy.commit, stage-result.commits, семантика, fixtures, docs",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "В orch добавить optional `run-policy.commit {scope, roles, message_convention}` и `stage-result.commits[] {sha, role, ref, paths_digest}`, `$defs/commitRole`, семантические проверки, fixtures и строки docs/contracts.md; registrar.md получает одну нейтральную строку о коммите координатора.",
   "why": "Контракт D17 п.2 фиксируется до движка (Plan 2). Hard risk: публичная схема exec/v1 — только аддитивно, старые документы обязаны проходить (R21).",
   "scope": {
@@ -207,6 +207,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T19:12:44Z"
+  "result": {
+    "started_at": "2026-10-06T20:39:04Z",
+    "finished_at": "2026-10-06T20:47:52Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a112f0-0f95-7910-9771-cfc20963dfda"
+    },
+    "notes": "Added optional run-policy.commit, stage-result.commits and commitRole without changing existing required fields or git_action enum. Enforced distinct policy roles, COMMIT_POLICY_CONFLICT and COMMIT_SHA_DUPLICATE; five fixtures and malformed-input/compatibility tests added. Contract docs and neutral coordinator-commit registrar line updated. Existing valid fixtures unchanged and GREEN; orch and only its Task bridge checked. Final native Grok 4.7/high review GREEN, one full-scope round without context argument, actual session ea3b50ef-52c5-4fdf-8c83-b233767e2e94. Check/review artifacts persisted under artifacts/P9.1. Phase CHANGELOG and wider documentation remain P9.7.",
+    "deviations": [
+      "Updated additional owning test tests/test_schema_profile.py to include commitRole. V4 uses one validate.sh (includes test.sh); initial exact-definition failure fixed and only affected schema-profile tests rerun, with other GREEN evidence reused. Full initial exit and delta preserved in artifacts/P9.1/validation.json."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T20:47:52Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T20:47:52Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T20:47:52Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T20:47:52Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T20:47:52Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T20:47:52Z"
 }

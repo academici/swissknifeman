@@ -1,0 +1,165 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.7",
+  "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P9",
+  "status": "todo",
+  "summary": "Документация Task (plan-structure: .gitattributes и trailers; workflows: commit/commits; json-plan-design при необходимости) в packages/task/docs и docs/task, CHANGELOG [Unreleased] по фактическому diff P9, knowledge/architecture-bridges (строка о commit-мосте), широкий validate Task и orch.",
+  "why": "Закрытие фазы: новые глаголы и правило коммитов видимы владельцу и провайдерам; широкий прогон ловит регрессии между пакетами.",
+  "scope": {
+    "include": [
+      "packages/task/docs/**",
+      "docs/task/**",
+      "CHANGELOG.md",
+      "knowledge/architecture-bridges через plan.py",
+      "широкий validate"
+    ],
+    "exclude": [
+      "новые возможности",
+      "редизайн при красном прогоне"
+    ]
+  },
+  "depends_on": [
+    "P9.1",
+    "P9.2",
+    "P9.3",
+    "P9.4",
+    "P9.5",
+    "P9.6"
+  ],
+  "decisions": [
+    "D17",
+    "D23",
+    "D24"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "что документировать",
+      "required": true,
+      "section": "item-map"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "ограничения union и GitHub",
+      "required": true,
+      "section": "log-union"
+    },
+    {
+      "path": "packages/task/docs/plan-structure.md",
+      "why": "раздел layout файлов плана",
+      "required": true
+    },
+    {
+      "path": "packages/task/docs/workflows.md",
+      "why": "раздел исполнения item",
+      "required": true
+    },
+    {
+      "path": "docs/task/plan-structure.md",
+      "why": "зеркальная страница корня",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "why": "формат [Unreleased]",
+      "required": true,
+      "section": "1-60"
+    },
+    {
+      "path": "@plan/knowledge/architecture-bridges.json",
+      "why": "разделы dependency-rule, supersedes",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/docs/**",
+      "change": "modify"
+    },
+    {
+      "path": "docs/task/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "modify",
+      "note": "только если P9.1 оставил пробел"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/knowledge/architecture-bridges.json",
+      "change": "modify",
+      "note": "только через plan.py add-document/set"
+    }
+  ],
+  "rules": [
+    "Plan-файлы — только через plan.py",
+    "CHANGELOG — по фактическому diff (`plan.py commits 2026.10.05-№2-ORCH-PREP` и git log по PLAN2.P9), без обещаний",
+    "Красный широкий прогон — repair у владельца в той же сессии; не редизайн"
+  ],
+  "guidance": "Исполнитель: economy/medium. Запустить `python3 scripts/docs-impact.py` при наличии подсказки. Явно описать: интеграция параллельных веток плана — локально (GitHub web-merge не применяет union).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root . && python3 scripts/sync-managed-blocks.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "grep -q 'plan.py commit' packages/task/docs/workflows.md && grep -q 'merge=union' packages/task/docs/plan-structure.md && grep -q 'plan.py commit' CHANGELOG.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP",
+      "expect": "exit 0; 0 errors",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "docs Task",
+    "CHANGELOG",
+    "architecture-bridges",
+    "зелёный широкий validate"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T19:12:46Z"
+}

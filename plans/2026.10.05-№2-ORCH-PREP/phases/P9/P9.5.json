@@ -1,0 +1,150 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.5",
+  "title": "Мост task/bridges/orch: глагол commit → stage-result.commits[]",
+  "status": "todo",
+  "summary": "Новый entrypoint моста `commit` вызывает `plan.py commit … --json` и печатает `{\"commits\": [{sha, role, ref, paths_digest}]}`, совместимый со stage-result exec/v1; тест конформанса валидирует фрагмент через orch.",
+  "why": "Единственное место, где Task знает exec/v1 (D13/D14): координатор orch получает коммит операции в форме контракта без знания Task.",
+  "scope": {
+    "include": [
+      "bridges/orch/commit.py",
+      "bridge.json entrypoint commit",
+      "README раздел commit",
+      "tests/test_commit.py"
+    ],
+    "exclude": [
+      "изменение register/brief",
+      "ядро Task и orch"
+    ]
+  },
+  "depends_on": [
+    "P9.1",
+    "P9.3"
+  ],
+  "decisions": [
+    "D13",
+    "D14",
+    "D23"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "контракт моста и тест",
+      "required": true,
+      "section": "bridge"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "форма stage-result.commits и paths_digest",
+      "required": true,
+      "section": "exec-contract"
+    },
+    {
+      "path": "packages/task/bridges/orch/register.py",
+      "why": "как мост вызывает Task CLI и пробрасывает ошибки",
+      "required": true
+    },
+    {
+      "path": "packages/task/bridges/orch/partner.py",
+      "why": "вызов orch CLI (validate)",
+      "required": true
+    },
+    {
+      "path": "packages/task/bridges/orch/bridge.json",
+      "why": "entrypoints",
+      "required": true
+    },
+    {
+      "path": "packages/task/bridges/orch/README.md",
+      "why": "формат разделов",
+      "required": true
+    },
+    {
+      "path": "packages/task/bridges/orch/tests/bridge_fixture.py",
+      "why": "синтетический план для тестов",
+      "required": true
+    },
+    {
+      "path": "packages/task/bridges/orch/tests/test_conformance.py",
+      "why": "валидация документов через orch",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/bridges/orch/commit.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/bridges/orch/bridge.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/bridges/orch/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/bridges/orch/tests/test_commit.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/bridges/orch/tests/bridge_fixture.py",
+      "change": "modify",
+      "note": "только если нужен git-репо в фикстуре"
+    }
+  ],
+  "rules": [
+    "Мост вызывает Task и orch только через их CLI, без импорта кода ядра (D13)",
+    "Ошибки Task пробрасываются как есть: stderr `CODE: message`, exit 1",
+    "stdlib-only"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Тест: tmp git-репо с фикстурным планом, изменить task_files-файл, `plan.py bridge orch commit <plan> P1.1 --role executor`, взять фрагмент, вставить в копию valid stage-result fixture orch и проверить `orch.py validate stage-result`; paths_digest пересчитать независимо.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 packages/task/scripts/plan.py bridge list | grep -q 'commit'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "bridge orch commit",
+    "test_commit.py моста"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T19:12:45Z"
+}

@@ -1,0 +1,178 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.4",
+  "title": "Task: глагол чтения plan.py commits (trailers + result.commits)",
+  "status": "todo",
+  "summary": "Read-глагол `plan.py commits <plan> [<ref>] [--role R] [--json]` находит коммиты плана по trailers Plan/Plan-Ref/Plan-Role в истории HEAD и добавляет legacy `result.commits` item; схема данных read-commits.schema.json и регистрация в каталоге.",
+  "why": "D23: sha не хранится в плане, поэтому связь план → коммиты должна читаться детерминированно для движка, аудита и close.",
+  "scope": {
+    "include": [
+      "gitops.py: list_commits",
+      "cli.py verb commits",
+      "catalog.py (read, ошибки)",
+      "schemas/plan/v1/read-commits.schema.json + регистрация как у других read-*",
+      "tests/engine/test_commits_read.py"
+    ],
+    "exclude": [
+      "изменение finish",
+      "проверка «у каждого done item есть коммит» (Plan 2)"
+    ]
+  },
+  "depends_on": [
+    "P9.3"
+  ],
+  "decisions": [
+    "D23"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "контракт verb",
+      "required": true,
+      "section": "commits-read"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "формат trailers",
+      "required": true,
+      "section": "message"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "сценарии",
+      "required": true,
+      "section": "validation"
+    },
+    {
+      "path": "packages/task/lib/task/plan/gitops.py",
+      "why": "общие git-хелперы из P9.3",
+      "required": true
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-events.schema.json",
+      "why": "образец read-схемы",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "why": "регистрация KINDS/read-схем",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "why": "cmd_events/_read_result как образец read-verb",
+      "required": true,
+      "section": "170-200"
+    },
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "why": "VERB_MODES/VERB_ERRORS",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/engine/test_envelope.py",
+      "why": "проверка data по read-схеме",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/gitops.py",
+      "change": "modify",
+      "note": "создаётся в P9.3 (depends_on)"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-commits.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_commits_read.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_catalog.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_envelope.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_schema.py",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Только чтение; без `--grep` по сообщению — фильтр по извлечённым trailers",
+    "stdlib-only; закрытый профиль схем (как остальные read-*)",
+    "Пустой результат — exit 0"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Разбор `git log -z` с разделителями %x1f/%x1e из §commits-read. Тест: tmp-репо, 3 коммита через gitops (executor P1.1, fix P1.1, executor P1.1/U1) + один чужой; ref P1.1 → 3, --role fix → 1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_commits_read.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_catalog.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_envelope.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_schema.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 packages/task/scripts/plan.py commits 2026.10.05-№2-ORCH-PREP --json | python3 -c \"import json,sys; d=json.load(sys.stdin); d=d.get('data', d); assert isinstance(d['commits'], list); print('ok')\"",
+      "expect": "exit 0; `ok`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/plan.py schema --verbs | grep -q '\"commits\"'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "plan.py commits",
+    "read-commits.schema.json"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T19:13:00Z"
+}

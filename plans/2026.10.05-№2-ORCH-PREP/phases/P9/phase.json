@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P9",
   "title": "Git-дисциплина: каждая операция завершается коммитом",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Контракт, хелперы и правила: исполнитель, ревьюер и исправление по ревью завершают свою операцию scoped-коммитом (D17 п.2, B48).",
   "context": "knowledge/bridges §p9 (модель коммитов, конвенция сообщения, конфликты plan JSON и log.jsonl при параллельной работе).",
   "scope": {
@@ -25,6 +25,52 @@
     "хелпер коммита Task",
     "правила в ролях и командах"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P9.1",
+    "P9.2",
+    "P9.3",
+    "P9.4",
+    "P9.5",
+    "P9.6",
+    "P9.7"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P9.1",
+        "P9.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P9.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P9.4",
+        "P9.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P9.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P9.7"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

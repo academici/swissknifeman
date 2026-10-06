@@ -1,0 +1,212 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.1",
+  "title": "exec/v1 аддитивно: run-policy.commit, stage-result.commits, семантика, fixtures, docs",
+  "status": "todo",
+  "summary": "В orch добавить optional `run-policy.commit {scope, roles, message_convention}` и `stage-result.commits[] {sha, role, ref, paths_digest}`, `$defs/commitRole`, семантические проверки, fixtures и строки docs/contracts.md; registrar.md получает одну нейтральную строку о коммите координатора.",
+  "why": "Контракт D17 п.2 фиксируется до движка (Plan 2). Hard risk: публичная схема exec/v1 — только аддитивно, старые документы обязаны проходить (R21).",
+  "scope": {
+    "include": [
+      "defs.schema.json: commitRole",
+      "run-policy.schema.json: optional commit",
+      "stage-result.schema.json: optional commits",
+      "contracts.semantic_checks: COMMIT_POLICY_CONFLICT, COMMIT_SHA_DUPLICATE",
+      "fixtures valid/invalid + EXPECTED в тестах",
+      "docs/contracts.md строки",
+      "roles/registrar.md одна строка"
+    ],
+    "exclude": [
+      "Task, мосты, plan.py",
+      "изменение required-полей и enum git_action",
+      "принуждение коммитов движком"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D17",
+    "D23"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "форма полей, семантика, paths_digest, строка registrar",
+      "required": true,
+      "section": "exec-contract"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "модель операций и ролей",
+      "required": true,
+      "section": "commit-model"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/run-policy.schema.json",
+      "why": "куда добавить commit; git_action",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/stage-result.schema.json",
+      "why": "куда добавить commits",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/defs.schema.json",
+      "why": "gitSha, sha256, id, roleId",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "why": "semantic_checks: стиль кодов и Issue",
+      "required": true,
+      "section": "38-120"
+    },
+    {
+      "path": "packages/orch/tests/test_contracts_output.py",
+      "why": "EXPECTED invalid fixtures и assert_code",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_contracts_input.py",
+      "why": "тесты run-policy (входной контракт)",
+      "required": true
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "why": "таблицы полей run-policy/stage-result",
+      "required": true
+    },
+    {
+      "path": "packages/orch/roles/registrar.md",
+      "why": "раздел You do",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "why": "FORBIDDEN: никаких plan.py/task:… в orch",
+      "required": true,
+      "section": "15-30"
+    },
+    {
+      "path": "packages/orch/tests/test_roles_text.py",
+      "why": "проверки текстов ролей",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/exec/v1/defs.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/run-policy.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/stage-result.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/valid/run-policy/commit-policy.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/valid/stage-result/with-commits.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/invalid/run-policy/commit-with-git-none.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/invalid/stage-result/commit-bad-role.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/invalid/stage-result/commit-duplicate-sha.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_contracts_output.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_contracts_input.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/registrar.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "stdlib-only; только аддитивные optional поля; required и enum существующих полей не меняются",
+    "Все существующие valid fixtures остаются valid без правок",
+    "Тексты orch не называют Task, plan.py, task:… (boundary orch); значение конвенции в fixture — строка `task-plan-commit/v1` допустима",
+    "Каждый invalid fixture даёт ровно одну ожидаемую ошибку (EXPECTED)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала fixtures и EXPECTED (красные), затем схемы и semantic_checks. Код ошибки схемы для bad-role — тот, что выдаёт валидатор для enum (посмотреть по существующему EXPECTED, обычно `enum`). paths_digest в fixture — sha256 от `a.py\\nb.py` (посчитать `printf 'a.py\\nb.py' | sha256sum`).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_contracts_output tests.test_contracts_input tests.test_roles_text tests.test_boundaries -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 packages/orch/scripts/orch.py validate stage-result packages/orch/fixtures/exec/v1/valid/stage-result/with-commits.json --quiet && python3 packages/orch/scripts/orch.py validate run-policy packages/orch/fixtures/exec/v1/valid/run-policy/commit-policy.json --quiet",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 packages/orch/scripts/orch.py validate run-policy packages/orch/fixtures/exec/v1/invalid/run-policy/commit-with-git-none.json 2>&1 | grep -q COMMIT_POLICY_CONFLICT",
+      "expect": "exit 0 (ошибка найдена)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0 (мост совместим со схемами)",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "run-policy.commit",
+    "stage-result.commits",
+    "fixtures",
+    "docs/contracts.md"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T19:12:44Z"
+}

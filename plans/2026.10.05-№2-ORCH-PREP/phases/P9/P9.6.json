@@ -1,0 +1,175 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.6",
+  "title": "Правила коммитов в командах Task и plan-protocol + проекции адаптеров",
+  "status": "todo",
+  "summary": "plan-run.md, plan-protocol (SKILL.md, execution-mode, review-mode) и executor-handoff описывают завершение каждой операции через `plan.py commit --role executor|reviewer|fix` и запреты (add -A, no-verify, amend, push); проекции адаптеров перегенерированы.",
+  "why": "B48: правило должно дойти до исполнителей всех провайдеров; тексты рендерятся в адаптеры, поэтому правка только через генератор.",
+  "scope": {
+    "include": [
+      "commands/plan-run.md шаги 6, 8, Units, Rules по §rules-text",
+      "skills/plan-protocol/SKILL.md, references/execution-mode.md, review-mode.md",
+      "references/executor-handoff.md (строка, если нет)",
+      "адаптеры/golden через render-provider-commands --write"
+    ],
+    "exclude": [
+      "commands/review.md, fix.md, dev.md, plan-close.md",
+      "orch roles (P9.1)"
+    ]
+  },
+  "depends_on": [
+    "P9.3",
+    "P9.4"
+  ],
+  "decisions": [
+    "D17",
+    "D23"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "точные формулировки",
+      "required": true,
+      "section": "rules-text"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "роли операций",
+      "required": true,
+      "section": "commit-model"
+    },
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "why": "текущие шаги 6–8 и Rules",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "why": "куда вставить строку",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/execution-mode.md",
+      "why": "раздел о коммите/закрытии item",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "why": "запись отчёта ревью",
+      "required": true
+    },
+    {
+      "path": "packages/task/references/executor-handoff.md",
+      "why": "запрет коммита воркеру",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_canon_literals.py",
+      "why": "обязательные фразы plan-run",
+      "required": true
+    },
+    {
+      "path": "packages/task/scripts/render-provider-commands.py",
+      "why": "генерация проекций",
+      "required": true,
+      "section": "1-20"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/execution-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/references/executor-handoff.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/adapters/**",
+      "change": "any",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/task/tests/fixtures_data/**",
+      "change": "any",
+      "note": "golden только генератором"
+    },
+    {
+      "path": "packages/task/tests/test_canon_literals.py",
+      "change": "modify",
+      "note": "только если добавляется новый обязательный литерал"
+    }
+  ],
+  "rules": [
+    "Сохранить литерал «One scoped commit» и прочие канонические фразы (test_canon_literals, test_record_parity моста)",
+    "Проекции и golden — только `python3 packages/task/scripts/render-provider-commands.py --write --root .`",
+    "Тексты английские, по одной-две строки на место; без нового раздела-методички"
+  ],
+  "guidance": "Исполнитель: economy→implementation/medium. Вставить формулировки §rules-text почти дословно; если plan-protocol skill регистрируется в publication-lock/adapters — запустить генератор, он обновит хэши.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "grep -q 'plan.py commit <plan> <item> --role executor' packages/task/commands/plan-run.md && grep -q -- '--role reviewer' packages/task/commands/plan-run.md && grep -q -- '--role fix' packages/task/commands/plan-run.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_canon_literals.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_provider_command_parity.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_record_parity.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V5",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "правила в plan-run и plan-protocol",
+    "проекции адаптеров"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T19:12:45Z"
+}

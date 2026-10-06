@@ -1,0 +1,16 @@
+
+━━━ FIRST-TURN BUDGET ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Project: /home/vostrikov/projects/packages/swissknifeman
+Provider: claude-code
+
+  skills meta (⊕ always)          534 current  (16 skills, in the listing 14)
+    excluded records: 2 (by field disable-model-invocation: 2)   -103 current out of listing
+  .claude/agents                  574 current  (6 agents)
+  CLAUDE.md + .claude/rules       732 current  (CLAUDE.md=732)
+  SessionStart-hooks (live run)    152 current  (1 hook(ov))
+  MCP tool-defs                   264 current  (1 server(ov): maind)
+    tool search                deferred (source: default) — lower bound (deferred: tool names + server instructions)
+
+Total:   2256 current — OK  (target ≤16000 · warn >23000)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+

@@ -26,7 +26,7 @@ The framework is developed through periodic audits Perplexity. Promt and loop:
 - Promt: [workflows/framework-audit](../workflows/framework-audit) — paste into
   Perplexity, for entry you give `framework-overview` + `decisions-ledger`.
 - Archive of runs: [audits/](../audits/) (raw + triage for each).
-- Ledger sources: `packages/skiller/references/framework-audits.md`.
+- Ledger sources: `references/framework-audits.md`.
 
 The loop is self-anchoring: each audit starts from a post-previous state, so
 does not re-offer something that is already ready or rejected.

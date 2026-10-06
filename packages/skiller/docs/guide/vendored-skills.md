@@ -40,10 +40,10 @@ events, and the operator is required to distinguish between them. The code is on
 
 ```bash
 # person
-bash packages/skiller/scripts/update-upstreams.sh --check
+bash scripts/update-upstreams.sh --check
 
 # machine (JSON in stdout, human report in stderr)
-bash packages/skiller/scripts/update-upstreams.sh --check --json | python3 -m json.tool
+bash scripts/update-upstreams.sh --check --json | python3 -m json.tool
 ```
 
 ## Four threat classes

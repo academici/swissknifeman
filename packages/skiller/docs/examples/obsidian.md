@@ -23,7 +23,7 @@ Autodetect sees `.obsidian/` → profile `obsidian-vault` → bucket-s
 For vault-but enough `base` — there are no code stacks here:
 
 ```bash
-~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target ~/vaults/brain
+harness permissions --target ~/vaults/brain
 ```
 
 Autodetect will not find stack markers and will only apply `base`: git, file

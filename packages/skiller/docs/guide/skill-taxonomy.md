@@ -130,7 +130,7 @@ explicit `/skill-name`), not a batch: registry §P3.4,
 `when_to_use`, cap first-party 1 536 char; `when_to_use` — «Appended to `description` in the
 skill listing», code.claude.com/docs/en/skills §Frontmatter reference). Transfer
 trigger phrases from `description` in `when_to_use` by itself does NOT provide savings - it does provide savings
-CUMULATIVE record compression only (`packages/skiller/scripts/validate.sh` length gates/trigger
+CUMULATIVE record compression only (`scripts/validate.sh` length gates/trigger
 consider this exact amount, P3.5).
 
 **Formula** (verified Perplexity + first-party

@@ -21,9 +21,9 @@ Statuses: ✅ yes · 🔜 in progress (plan phase) · ⏸ deferred.
   0.2.3, `role-tech-lead/pack.json` 0.2.3).
 - ✅ **lock** — `.claude/agent-pack.lock.json` in project: version + interview answers +
   `sha256` rendered files → upgrade without diff-engine (hash comparison + CHANGELOG).
-  Carrier - `packages/harness/lib/harness/agentpacks.py`.
+  Carrier - the Harness agent-packs renderer.
 - ⏸ **profiles-inheritance** (`extends`) — as data, not engine (deferred); in
-  `profiles/*.json` not used (`grep -l extends packages/skiller/profiles/*.json` — empty).
+  `profiles/*.json` not used (`grep -l extends profiles/*.json` — empty).
 
 ## Skills and their visibility
 
@@ -35,10 +35,10 @@ Statuses: ✅ yes · 🔜 in progress (plan phase) · ⏸ deferred.
   unknown/disabled name - skip + entry in debug-log, not quiet no-op without a trace
   (first-party `https://code.claude.com/docs/en/sub-agents`, verified 2026-07-29) — from here
   regression «skills are not visible», names are not verified yet.
-- ✅ **Fix visibility** (Phase 1, `packages/skiller/scripts/generate-hub.sh`): hub gets
+- ✅ **Fix visibility** (Phase 1, `scripts/generate-hub.sh`): hub gets
   agent-routing slice + name matching `skills:` with `skills.json` (`⚠` on inconsistency) +
   freshness-stamp; `skiller doctor` flagit drift (`generate-hub.sh:194` freshness-hash,
-  `:253-255` `⚠` on inconsistency; `packages/skiller/lib/skiller/doctor.py:1062-1090` hub drift).
+  `:253-255` `⚠` on inconsistency; `lib/skiller/doctor.py:1062-1090` hub drift).
 
 ## Roles and orchestration
 
@@ -53,12 +53,12 @@ Statuses: ✅ yes · 🔜 in progress (plan phase) · ⏸ deferred.
 - 🔜 **path-scoped rules** (`.claude/rules/`, native) — five have subtle rules on paths
   packs (`agent-packs/{_common,backend-laravel,dart-flutter,laravel-package,node-frontend,
   python-backend}/rules`), **rules index in hub no** (`grep -n rules
-  packages/skiller/scripts/generate-hub.sh` — empty).
+  scripts/generate-hub.sh` — empty).
 
 ## Hooks and gates
 
-- ✅ **auto-approve** (PreToolUse), **memory**, **notify**, **log** (`packages/harness/configs/claude-code/hooks/`).
-- ✅ **review-gate** (SubagentStop, off|warn|strict, `packages/harness/configs/claude-code/hooks/review-gate/review-gate.sh`)
+- ✅ **auto-approve** (PreToolUse), **memory**, **notify**, **log** (Harness hooks).
+- ✅ **review-gate** (SubagentStop, off|warn|strict, the Harness review-gate hook)
   — full generic-runner, 128 lines, dispatcher `checks/`.
 - ✅ **Agent Teams** (opt., experiment, CC ≥2.1.178, default `teammateMode` — `in-process`
   with v2.1.179): preset `harness/configs/claude-code/settings.agent-teams.json` (env-flag +
@@ -92,7 +92,7 @@ verified 2026-07-29)
 - ✅ `quality/code-simplifier`, `general/anti-drift`.
 - ✅ **ponytail-discipline** (YAGNI-ladder + over-engineering-passage, `agent-packs/{backend-laravel,laravel-package}/agents/reviewer.md`)
   absorbed into reviewer-role; optional skill `quality/lean-code` is not started and
-  was planned to be mandatory (`packages/skiller/skills/quality/` — 11 skills, `lean-code`
+  was planned to be mandatory (`skills/quality/` — 11 skills, `lean-code`
   is not among them).
 
 ## Tested against tree: 2026-07-30
@@ -110,6 +110,7 @@ verified 2026-07-29)
 | role-maintainer | 0.2.3 |
 | role-tech-lead | 0.2.3 |
 
-Table - freshness gate machine anchor (P3.3): versions are checked against `pack.json` of each pack
-in `packages/harness/configs/claude-code/agent-packs/*/pack.json`. Update this file and stamp
+Table - freshness gate machine anchor (P3.3): the host check
+`python3 scripts/agent-framework-freshness.py` compares versions with the installed
+Harness agent-pack manifests (`pack.json`). Update this file and stamp
 at the end of each phase/audit - it is the input of the next audit.

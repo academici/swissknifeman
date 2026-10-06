@@ -11,7 +11,7 @@ cd ~/projects/packages/my-package
 skiller vendor --agent claude
 
 # Permissions: base + php-package
-~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
+harness permissions --target .
 ```
 
 Profile `php-package` puts bucket-s **oss-dev, php, quality, devops**:

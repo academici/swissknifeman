@@ -29,7 +29,7 @@ local modifications. Distinguish project-local authoring, managed vendored skill
 plugins, user skills, and provider-generated adapters. Matching names alone do not justify
 removing a local skill; compare meaning and preserve unowned edits.
 
-In Swissknifeman, registry skills are authored under `packages/skiller/skills/`; registry and
+In Swissknifeman, registry skills are authored under the Skiller package's `skills/`; registry and
 provider projections are generated. Consumer projects may select native plugins or managed
 copies. Use their existing `.swissknife.json` / `.swissknifeman/config.json` and the owning
 worktree-local Skiller CLI; inspect its help for the operation. Do not mix both delivery

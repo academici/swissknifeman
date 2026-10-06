@@ -11,31 +11,102 @@ the registry does not need to know about your projects.
 ## Step 1. CLI (once per machine)
 
 ```bash
-cd ~/projects/packages/swissknifeman
+cd /path/to/skiller
 ./install.sh
 ```
 
-`install.sh` creates a symlink `~/.local/bin/skiller → <repo>/bin/skiller`,
-status directory `~/.swissknifeman/` and, when the CLIs are present, machine
-plugins. Codex gets the local marketplace `swissknifeman` and basic plugins
-`core` + `task`, so `$ task:*` is available in a new Codex session. Grok gets
-the same marketplace plus `grok plugin install packages/task --trust` and the
-`prefix-hold` plugin, so a new Grok session loads `/task:design`, `/task:dev`,
-`/task:plan-design` and the other Task commands. Marketplace `core`
-is not installed for Grok: its source is the monorepo root, and a path install
-would copy the whole repository. Symlink means: after `git pull` the CLI is
-always fresh, and it determines the path to the registry itself (via `readlink`).
-The repository has moved — restart `./install.sh` from the new location to update
-the Codex marketplace source and the Grok plugin path.
+`install.sh` creates a symlink `~/.local/bin/skiller → <package>/bin/skiller`
+and the state directory `~/.swissknifeman/`. When provider CLIs are present, it
+registers the local marketplace and installs the configured machine plugins.
+Codex selection combines CORE policy with the host's `default_command_plugins`;
+Grok source paths and optional hold plugins come from `machine_plugins.grok`.
+For the ecosystem host, these include Task and `prefix-hold`, exposing `$ task:*`
+in Codex and `/task:*` in Grok. Standalone installs have no host command plugins.
+Grok does not install the root `core` plugin or profile plugins.
 
-Flags: `--bin-dir DIR` (default `~/.local/bin`), `--force` (replace
-someone else's file without question), `--no-codex-plugins` (skip Codex
-`core` + `task`), `--no-grok-plugins` (skip the Grok `task` and `prefix-hold`
-plugins). An additional
-Codex plugin can be made repeatable `./packages/skiller/install.sh --codex-plugin NAME`;
-basic plugins in this case are saved. A second Grok install that reports
-`already configured` or `already installed` is success. If `~/.local/bin` is not
-in `PATH`, the installer prints the shell command. Installation check: `skiller doctor`.
+After moving the checkout, rerun `./install.sh` to refresh the symlink and native
+marketplace/plugin paths. Flags: `--bin-dir DIR` (default `~/.local/bin`),
+`--force` (replace an occupied binary path), `--no-codex-plugins`, and
+`--no-grok-plugins`. Add a global Codex plugin with repeatable
+`./install.sh --codex-plugin NAME`; default selection remains enabled.
+An already configured or installed Grok plugin counts as success.
+If `~/.local/bin` is absent from `PATH`, the installer prints the shell command.
+Check the installation with `skiller doctor`.
+
+## Host configuration and standalone installs
+
+Skiller reads optional host-repository integration data from `configs/skiller-host.json`.
+This is separate from a consumer project's `.swissknife.json` and
+`.swissknifeman/config.json`: those select skills and providers for that project.
+The host config describes the repository containing the **Skiller installation**.
+
+Discovery starts at the installed package root and finds its enclosing repository.
+When Skiller is nested in that repository, it reads the root's
+`configs/skiller-host.json`. A repository rooted at Skiller itself has no implicit
+host. `SKILLER_HOST_CONFIG` overrides discovery and must point to an existing
+file by absolute path. Paths inside the document remain relative to the detected
+repository root (or the Skiller package root when no repository is found), regardless
+of the override file's location. Discovery never uses the target consumer project.
+
+Only `schema_version: 1` is required. Omitted fields disable their corresponding
+integrations. The schema is `schema/host.schema.json` (`urn:skiller:host:v1`).
+The following example uses the host's integration fields with an illustrative
+`plugins/` and `tools/` layout; replace paths and plugin names with your host's data:
+
+```json
+{
+  "schema_version": 1,
+  "plugin_dirs": ["plugins/*"],
+  "default_command_plugins": ["task"],
+  "version_files": [{"path": "plugins/task/configs/command-routing.json", "key": "plugin_version"}],
+  "machine_plugins": {
+    "grok": [{"name": "task", "path": "plugins/task", "holds": ["plugins/task/adapters/grok/prefix-hold"]}]
+  },
+  "runtime_projection_plugins": ["task"],
+  "codex_link_roots": ["plugins/task/adapters/codex/skills"],
+  "legacy_runtime_links": [{"link": "plugins/task", "plugin": "task", "source": "plugins/task"}],
+  "commands": {
+    "permissions": {"argv": ["tools/harness/bin/harness", "permissions"], "env_override": "SKM_HARNESS_BIN", "install_hint": "tools/harness/install.sh"},
+    "settings_doctor": {"argv": ["tools/harness/bin/harness", "doctor", "--settings"], "env_override": "SKM_HARNESS_BIN"},
+    "environment": {"argv": ["tools/harness/bin/harness"], "env_override": "SKM_HARNESS_BIN"},
+    "environment_doctor": {"argv": ["tools/harness/bin/harness", "--help"], "env_override": "SKM_HARNESS_BIN"},
+    "trace_doctor": {"argv": ["tools/analyst/bin/analyst", "doctor"]}
+  },
+  "mcp_servers": {"maind": {"tools": 11, "instructions_tokens": 0}},
+  "bootstrap": "configs/repository-bootstrap-skills.json"
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `plugin_dirs` | Repository-relative globs for sibling plugins containing `.claude-plugin/plugin.json`; Skiller itself is excluded. |
+| `default_command_plugins` | Command plugins added to the default install and delivery selection. |
+| `version_files` | JSON files and top-level keys updated to the umbrella release version. |
+| `machine_plugins` | Provider-keyed arrays of plugin `name`, source `path`, and optional `holds` paths for machine installation. |
+| `runtime_projection_plugins` | Plugins whose generated runtime projections join release and delivery evidence. |
+| `codex_link_roots` | Host source directories used to recognize and retire legacy Codex skill links. |
+| `legacy_runtime_links` | Legacy `link`, owning `plugin`, and `source` records used during runtime migration. |
+| `commands` | Named external commands: `argv`, optional binary `env_override`, and optional `install_hint`. |
+| `mcp_servers` | Optional per-server `tools` and `instructions_tokens` counts for first-turn budget estimates. |
+| `bootstrap` | Repository-relative config for source-only repository skill identities and their generated projections. |
+
+For `commands`, an `argv[0]` containing `/` resolves from the host root; a bare
+command name resolves through `PATH`. A configured `env_override` takes precedence
+when set. Other argv entries are passed unchanged. An unconfigured or unavailable
+external command is skipped by its owning optional integration.
+
+Validation is closed: unknown fields, wrong types, absolute document paths, and
+`..` path components fail with `HOST_CONFIG_INVALID`. A bad explicit override also
+fails; it never falls back silently. Commands needing host data stop on invalid
+config, while `skiller --help` and `skiller version` remain available.
+
+With no host config, Skiller uses an empty host. Registry, skill resolution and
+consumer skill operations remain available; host plugin aggregation, version-file
+updates, machine plugin additions, bootstrap projections and command delegations
+are disabled. Host-dependent validation reports a standalone skip. The current
+standalone layout includes the shared `core/` dependency and its provider catalogs;
+packaging or vendoring that dependency belongs to the actual repository move.
+See [`skiller resolve`](./cli#skiller-resolve) for the read-only skill-resolution API.
 
 ## Step 2. Connecting the project
 

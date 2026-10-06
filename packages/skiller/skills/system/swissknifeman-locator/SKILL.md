@@ -42,8 +42,8 @@ if [ -z "$SKM" ] || [ ! -f "$SKM/config.json" ]; then
   done
 fi
 
-# Proof of root: config.json + packages/skiller + packages/maind
-[ -n "$SKM" ] && [ -f "$SKM/config.json" ] && [ -d "$SKM/packages/skiller" ] \
+# Proof of root: ecosystem project registry + umbrella launcher
+[ -n "$SKM" ] && [ -f "$SKM/config.json" ] && [ -f "$SKM/bin/swissknifeman" ] \
   && cd "$SKM" || echo "swissknifeman not found: set \$SWISSKNIFEMAN_ROOT"
 ```
 

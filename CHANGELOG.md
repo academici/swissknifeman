@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Границы Skiller без allowlist:** документация и общие skills используют пути
+  от корня пакета и имена внешних инструментов; migration allowlist удалён.
+  Каталог `skills.json` проверяется как контент: пути монорепозитория запрещены,
+  descriptions и имена внешних инструментов сохранены. В installation guide описаны
+  поля host-конфига, обнаружение, валидация и standalone-режим; упаковка `core`
+  остаётся задачей самого переезда Skiller.
 - **Standalone-проверка Skiller:** корневой `scripts/skiller-standalone-check.sh`
   и CI job `skiller-standalone` проверяют отслеживаемую копию Skiller с `core`
   и тремя общими provider-каталогами без Git, соседних пакетов и host-конфига.

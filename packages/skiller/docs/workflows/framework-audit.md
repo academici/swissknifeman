@@ -16,7 +16,7 @@ proposed to build an already standing ([triage](../audits/2026-07-29-harness-agn
 meta find). Manual reminder «update review» this failure class has not been caught once -
 so the freshness of the input is checked by the machine:
 
-1. Drive away `bash packages/skiller/scripts/validate.sh`. **Red gate of canon freshness**
+1. From the ecosystem host root, run `python3 scripts/agent-framework-freshness.py`. **Red gate of canon freshness**
    (section «framework canon: table „pack → version“ vs `pack.json`») — run does NOT run:
    first the table is repaired in `framework-overview.md`, the gate message carries a fix string.
 2. Take the stamp `## Tested against tree: <DATE>` from `framework-overview.md` and substitute
@@ -35,14 +35,14 @@ argues, so step 5 of the cycle below remains the responsibility of the individua
 
 ## Loop (what to do with the result)
 
-1. Ran the promt → saved output verbatim in `packages/skiller/docs/audits/<YYYY-MM-DD>-<topic>.raw.md`.
+1. Ran the promt → saved output verbatim in `docs/audits/<YYYY-MM-DD>-<topic>.raw.md`.
 2. Triage: create `<YYYY-MM-DD>-<topic>.md` next - table absorb-now/later/reject + where it landed.
 3. Update `decisions-ledger.md` (so that the next audit does not ask again) and
-   `packages/skiller/references/framework-audits.md` (ledger-string).
+   `references/framework-audits.md` (ledger-string).
 4. Implement absorb-now → CHANGELOG pack + bump versions.
 5. Update `framework-overview.md` (including table «pack → version» and stamp
    `## Tested against tree: <DATE>`) → is the input of the NEXT audit, and its freshness
-   holds the gate `validate.sh` from pre-flight. The loop has closed.
+   holds the host freshness gate from pre-flight. The loop has closed.
 
 ## Promt (insert into Perplexity)
 

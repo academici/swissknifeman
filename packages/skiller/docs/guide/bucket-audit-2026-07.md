@@ -27,7 +27,7 @@ artificial `--since`.
 ⚠ **[POSSIBLE-DEFECT] discrepancy with the problem statement.** Objective of this plan item
 assumed «telemetry SCHEMA=2 enabled 2026-07-02 - window ~1 day». Verified
 reading the code (repo-grounded, not an external fact): `SCHEMA=2` — is a separate format
-run-report package hook `harness` (`packages/harness/configs/claude-code/hooks/run-report/_lib.py`,
+run-report package hook `harness` (the Harness run-report hook library,
 `usage-trend.ndjson`), and its commit (`070e529`) is actually dated today. But
 `bucket-audit.collect_usage` **does not read** this source - it uses much more
 old mechanism (`analyze.py::agent_stats`, explicit calls Skill-tool in transcripts),
@@ -218,7 +218,7 @@ body tokens on-trigger» from Phase Context P7 (matches up to rounding).
 `thin` by signal priority in `verdict()`) and status «monolith ≥50KB». For P7.3 this
 not a blocker: translation to thin-navigator and solution for alias/merge —
 independent axes; see [controversial case №1](#1-merge-verdict-by-3-super-skill-monoliths--probable-false-positive).
-Paths - from package root `packages/skiller/`.
+Paths are relative to the Skiller package root (`SKILLER_ROOT`).
 
 ## Controversial cases
 
@@ -350,7 +350,7 @@ plan (`Inputs`) assumed the second source SCHEMA=2-trend/run-reports
 (`<project>/.claude/analyze/usage-trend.ndjson`). Read repo-grounded: format
 trend lines - `{ts, session, in, out, cache_read, cache_creation, by_model,
 tools_total, files_changed, agents, wall_s, retr_chars}` (writes
-`packages/harness/configs/claude-code/hooks/run-report/run-report.py` +
+the Harness run-report hook entry point +
 `_lib.py`, docstring `analyst/token_report.py`) — it carries tokens/timings/tool-
 counters AGGREGATE, but **does not carry per-skill call/load signal in general** (hook not
 detect `Skill`-tool calls, only `skills-lock.json`-managed paths for
@@ -405,7 +405,7 @@ cont.usage» according to its own spec.
 **How to get the current numbers again:**
 
 ```bash
-cd packages/skiller
+cd "$SKILLER_ROOT"
 PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-audit --json \
   | python3 -c "import json,sys; d=json.load(sys.stdin); \
       from collections import Counter; print(Counter(r['verdict'] for r in d['items'])); \
@@ -456,11 +456,11 @@ than ~36), and ONLY he goes to OQ-10.
 **Control reconciliation (play):**
 
 ```bash
-cd <REPO_ROOT>
-PYTHONPATH=packages/skiller/lib python3 -c "
+cd "$SKILLER_ROOT"
+PYTHONPATH=lib python3 -c "
 from pathlib import Path
 from skiller.common import parse_frontmatter
-root = Path('packages/skiller/skills')
+root = Path('skills')
 enabled = {'frontend','frontend-backend','frontend-linting','frontend-naive-ui',
            'frontend-tailwind','frontend-vite','frontend-vue','frontend-wayfinder',
            'laravel-architecture','laravel-auth','laravel-data-layer',
@@ -483,7 +483,7 @@ Sources: §0/§3
 ## How to reproduce
 
 ```bash
-cd packages/skiller
+cd "$SKILLER_ROOT"
 PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-audit --json
 # human-readable render:
 PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-audit
@@ -493,7 +493,7 @@ PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-au
 
 > Observations during the preparation of this document: `bin/skiller` (bash-launcher) at the time
 > run **didn't know** command `bucket-audit` — whitelist commands in `case "$CMD" in
-> connect|vendor|…)` (string ~58 `packages/skiller/bin/skiller`) was not expanded
+> connect|vendor|…)` (string ~58 `skiller`) was not expanded
 > along with adding the command to `lib/skiller/cli.py::COMMANDS`. Summary CLI
 > reached `python3 -m skiller <repo_root> bucket-audit …` directly, bypassing
 > launcher - the command is fully working, but the end user through `skiller

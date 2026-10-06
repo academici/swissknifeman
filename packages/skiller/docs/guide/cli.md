@@ -40,15 +40,17 @@ skiller connect [--profile P | --plugins a,b]
 
 ### `./install.sh [--no-codex-plugins] [--no-grok-plugins]`
 
-Machine installation adds the marketplace of the current checkout in Codex and
-installs basic plugins from CORE-policy (`core` + `task`). The same checkout is
-added for Grok, and `packages/task` plus `prefix-hold` are installed with
-`--trust`, so Task commands are `/task:*`. If either CLI
-is missing, that step is skipped without breaking the other CLIs.
-`--no-codex-plugins` and `--no-grok-plugins` are explicit opt-outs. An additional
-global Codex plugin is installed with repeatable
-`./packages/skiller/install.sh --codex-plugin NAME`. Grok does not receive
-`core` or the profile plugins.
+Machine installation registers the current checkout's marketplace in Codex.
+Its default plugin selection combines CORE policy with the host's
+`default_command_plugins`. Grok installs the sources and optional holds declared
+in `machine_plugins.grok` with `--trust`; standalone has no host machine plugins.
+The ecosystem host supplies Task (`/task:*`) and `prefix-hold`.
+If a provider CLI is missing, its step is skipped.
+`--no-codex-plugins` and `--no-grok-plugins` opt out. Add a global Codex plugin
+with repeatable `./install.sh --codex-plugin NAME`.
+Grok does not receive `core` or the profile plugins.
+See [host configuration and standalone installs](./installation#host-configuration-and-standalone-installs)
+for discovery and field definitions.
 
 `connect`, `sync`, `update`, `doctor` and `--dry-run` user-global Codex state not
 are changing. Profile plugins are not automatically installed globally.

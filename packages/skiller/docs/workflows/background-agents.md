@@ -62,7 +62,7 @@ Incident 2026-07-01 (project chatom): `dev-loop`-run under server-side rate-limi
 Anthropic auto-retrail `agent()`-calls ~10 hours → 0 commits, without an early signal.
 Reason: runtime Workflow itself retracts transient errors (including rate-limit) to
 high burl; at a stable throttling this is a watch wall-clock without durable-progress.
-Parsing - `packages/skiller/docs/audits/2026-07-01-workflow-resilience-ratelimit.md`.
+Parsing - `docs/audits/2026-07-01-workflow-resilience-ratelimit.md`.
 
 Verified by industry patterns 2025–2026 (RAG): 429 — is a signal
 backpressure, is not a single request glitch; unbounded auto-retry = self-DoS; reliable

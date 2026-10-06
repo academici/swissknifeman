@@ -1,6 +1,6 @@
 """Behavioral checks for the optional source-owned symlink publisher.
 
-Run: python3 packages/skiller/skills/general/skills-ssot/evals/test_symlink_sync.py
+Run: python3 skills/general/skills-ssot/evals/test_symlink_sync.py
 """
 from pathlib import Path
 import subprocess

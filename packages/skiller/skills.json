@@ -2168,8 +2168,8 @@
       "path": "skills/general/git-safety/SKILL.md",
       "version": "0.1.0",
       "description": "Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/reset --hard/clean -f/branch -D/checkout ./rebase --onto BEFORE execution. Activate on project init (esp. production/embedded) or when asked to add git guardrails / forbid dangerous git.",
-      "sha256": "ef42871a927bd0f2f5f500a59175fa688f03f1061a10cc0faf64b34e448aed29",
-      "content_sha256": "d52524eb67426d42d4067c45d4fea2b90fdd7cc0a3541f1fbda223efe706f93c",
+      "sha256": "6dd3ba44728433fb6dc145338d6ad67981b43356b7ce5206f222f769275d5048",
+      "content_sha256": "9001634deb745c6332102e9b45fc8771cfcce7eae626ae32c82bf9123cbcccaa",
       "tags": [
         "git",
         "safety",
@@ -2343,8 +2343,8 @@
       "path": "skills/general/skills-ssot/SKILL.md",
       "version": "0.3.0",
       "description": "Resolve duplicate or drifting skill delivery by inspecting each source, generator, and provider owner.",
-      "sha256": "95433062ba8881709027fba57a9b9b4e2bb46415aea680c8997660dc38bbaefd",
-      "content_sha256": "d790cee80bf24822e7e6d2fe80b6334bcfedc327d4be881230e570016b18f25f",
+      "sha256": "fbbc9eeb14030feb1a8530005069f199af9efac33b70266616d283bd0d09dc70",
+      "content_sha256": "50e903087328b54ccf020cc92729a229fbe60b14feb0de2cfbd07d3dc7b65689",
       "tags": [
         "ai-context",
         "skills",
@@ -2420,8 +2420,8 @@
       "path": "skills/general/workflow-craft/SKILL.md",
       "version": "0.3.0",
       "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
-      "sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
-      "content_sha256": "b4a85e9416b619816d05544c492cc78d72cc16415cd6d51a9dd0195851c9972a",
+      "sha256": "7f784751d1e91794f380d227851f5906b04aa4c3be3604067d8e8ba53a3b093d",
+      "content_sha256": "7f088d7969b86073458ba88f850ed22faa464ef3f64759f95e6c204b2d8f15d1",
       "tags": [
         "workflow",
         "orchestration",
@@ -4412,8 +4412,8 @@
       "path": "skills/system/swissknifeman-locator/SKILL.md",
       "version": "0.1.0",
       "description": "Reach swissknifeman (skills node) from an external repo — non-hardcoded path resolution, root config.json as registry of linked projects, project↔hub link scheme",
-      "sha256": "540faa609aac94e4aa6fb5d5b23e38e6424cd948cfa32b7214c9efe4cfc1dcf4",
-      "content_sha256": "26e2e084cc6fab8aeb1dabc422e41f3dd86e5dc8a20f349f6c67f1e55feec2ec",
+      "sha256": "dd1517838f9268c95005187dc5bb0e6e32de0cda9edc4424c3bd4388d233933d",
+      "content_sha256": "a7558d25a9c402a73f0880396d3a7342a95029a3ad8daa64847463fceff78e85",
       "tags": [
         "swissknifeman",
         "skills",

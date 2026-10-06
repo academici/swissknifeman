@@ -30,7 +30,7 @@ skiller vendor --list
 ## Step 2. Permissions
 
 ```bash
-~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
+harness permissions --target .
 ```
 
 Auto detect by markers: `artisan` → `laravel`, `package.json` → `node`,
@@ -44,10 +44,11 @@ pour in `base + laravel + node (+ docker)`:
 
 ## Step 3. Commit the configuration (optional)
 
+Set `SKILLER_ROOT` to the installed Skiller package directory.
 So that any clone of the project restores the same environment:
 
 ```bash
-cp ~/projects/packages/swissknifeman/packages/skiller/.swissknife.example.json .swissknife.json
+cp "$SKILLER_ROOT/.swissknife.example.json" .swissknife.json
 # edit for the project and commit
 ```
 
@@ -79,5 +80,5 @@ skills architect, write tests according to `laravel-testing`, run `artisan`,
 skiller vendor --profile laravel-project --exclude botkit
 
 # Add docker-preset, if the auto detector did not see it
-~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target . --preset docker
+harness permissions --target . --preset docker
 ```

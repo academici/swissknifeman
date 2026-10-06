@@ -125,8 +125,8 @@ Rolling out to other similarly structured projects (`flexcrm`, `sova` and others
 ## Explicit design choice Codex plugins
 
 ```bash
-packages/skiller/bin/skiller connect --target /path/to/project --native-codex --dry-run
-packages/skiller/bin/skiller connect --target /path/to/project --native-codex
+skiller connect --target /path/to/project --native-codex --dry-run
+skiller connect --target /path/to/project --native-codex
 ```
 
 `--native-codex` requires Python 3.11+ (stdlib `tomllib`) and agrees `[plugins."<name>@swissknifeman"].enabled` in the design
@@ -166,7 +166,7 @@ invisible to native marketplace discovery. Package-level GREEN without going thr
 `source → marketplace → install/cache → clean consumer → fresh session` is not release
 GREEN.
 
-**What it checks** `packages/skiller/tests/test_codex_consumer_acceptance.py`:
+**What it checks** `tests/test_codex_consumer_acceptance.py`:
 
 1. Independent (not via `publication.render_codex_publication`) inventory expected
    Codex-plugins - compiled directly from disk (`buckets.json`, `configs/core-policy.json`,
@@ -197,8 +197,8 @@ consumer. For committed provider distribution, first inspect the generated root
 `docs/provider-support.md` matrix and run a no-write command:
 
 ```bash
-packages/skiller/bin/skiller connect --dry-run
-packages/skiller/bin/skiller sync --target <project> --dry-run
+skiller connect --dry-run
+skiller sync --target <project> --dry-run
 ```
 
 `connect` updates the Claude Code marketplace projection; `sync` writes selected managed skill

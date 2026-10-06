@@ -5,7 +5,7 @@ and which **non-obvious questions** are resolved during onboarding. The goal is 
 wondered «what to connect». Full configuration tree - [onboarding-decision-tree](/maind/guide/onboarding-decision-tree);
 skill channel selection (connect/vendor) — always **ask the user** (see project-tooling-runbook).
 
-> Source of Recipe Truth - `packages/skiller/profiles/*.json` (detect — `core/project.py`).
+> Source of Recipe Truth - `profiles/*.json` (detect — `core/project.py`).
 > The table below should match them; If there is a discrepancy, edit the profile, not the table.
 
 ## Through non-obvious forks (for any archetype)

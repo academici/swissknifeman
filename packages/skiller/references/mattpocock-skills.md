@@ -44,7 +44,7 @@ tests/mocking, HTML-REPORT) → ours `snippets/` (tier-2 on-demand).
 ## B harness, not a skill
 
 - **git-guardrails-claude-code** — we have hooks/permissions belong to the package `harness`.
-  Script `block-dangerous-git.sh` + PreToolUse-preset → `packages/harness/configs/claude-code/hooks/`,
+  Script `block-dangerous-git.sh` + PreToolUse-preset → Harness hooks,
   is distributed through `harness hooks` (+ opt. thin `general/git-safety`, `lifecycle:init`).
 
 ## Do not take

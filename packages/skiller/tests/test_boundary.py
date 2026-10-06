@@ -36,6 +36,10 @@ OWNER_REASON = re.compile(r"^P8\.[2-9]: \S")
 
 
 def code_zone(relative: str) -> bool:
+    # Generated skill metadata preserves the content's external tool names.
+    # Its paths still obey K1; other root JSON remains in the code zone.
+    if relative == "skills.json":
+        return False
     path = Path(relative)
     return (path.parts[0] in CODE_DIRS or relative in CODE_FILES
             or len(path.parts) == 1 and path.suffix == ".json")
@@ -163,6 +167,15 @@ class BoundaryScannerTests(unittest.TestCase):
                  "harnessing", "Maind", "task:plan-run", "task = 'example'")
         self.write("lib/module.py", "\n".join(lines))
         self.assertEqual(violations(self.root), {})
+
+    def test_registry_metadata_uses_content_rules_only(self):
+        self.write("skills.json", json.dumps({"description": "harness maind",
+                                             "path": "skills/system/example/SKILL.md"}))
+        self.assertEqual(violations(self.root), {})
+        self.write("skills.json", json.dumps({"path": "packages/skiller/skills/example"}))
+        self.assertIn(": K1:", violations(self.root)["skills.json"][0])
+        self.write("root.json", json.dumps({"command": "harness"}))
+        self.assertIn(": C3:", violations(self.root)["root.json"][0])
 
     def test_skipped_files_directories_and_binary(self):
         paths = list(SKIPPED_FILES - {ALLOWLIST}) + [

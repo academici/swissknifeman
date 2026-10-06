@@ -1,0 +1,12 @@
+baseline v0.28.3, working tree umbrella 0.28.3
+  NOT-BUMPED analyst: 0.3.0 -> 0.3.0
+  NOT-BUMPED core: 0.21.1 -> 0.21.1
+  NOT-BUMPED general: 0.16.2 -> 0.16.2
+  NOT-BUMPED package.analyst: 0.3.0 -> 0.3.0
+  NOT-BUMPED package.harness: 0.7.1 -> 0.7.1
+  NOT-BUMPED package.maind: 0.6.0 -> 0.6.0
+  NOT-BUMPED package.skiller: 0.19.2 -> 0.19.2
+  NOT-BUMPED system: 0.4.2 -> 0.4.2
+  NOT-BUMPED task: 0.28.3 -> 0.28.3
+  2 changed unit(s) already bumped (--all to list)
+9 unit(s) changed without a version bump: run `version-guard.py bump <unit>`

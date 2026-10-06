@@ -253,6 +253,6 @@ of the translated skill, but also anyone who closes unrelated work at that momen
 
 Solutions «take / adapt / reject / trust upstream» for each external
 to the source repository are maintained in the directory
-[`packages/skiller/references/README.md`](https://github.com/academici/swissknifeman/blob/main/packages/skiller/references/README.md)
+`references/README.md` relative to the Skiller package root
 (table `Source | Value | Status`). This is the source of truth by selection; per-skill
 passports - in `upstream.json` next to each imported `SKILL.md`.

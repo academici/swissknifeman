@@ -46,7 +46,7 @@ under `self-host-apply` / `repo:swissknifeman`.
 ./install.sh
 ```
 
-This installs the Grok marketplace, `packages/task`, and `prefix-hold`
+This installs the Grok marketplace, the host-configured command plugin, and `prefix-hold`
 (`--trust`), so a new session lists `/task:*`. Opt out with
 `--no-grok-plugins`. The script does not enable Grok on a project.
 
@@ -95,11 +95,14 @@ or `root.cursor.*` launch text from `AGENTS.md` in a Grok session.
 
 ## Diagnostics
 
+For the optional Task projection check, set `TASK_ROOT` to the installed Task
+package directory and `SWISSKNIFEMAN_ROOT` to its host repository.
+
 ```bash
 skiller budget --first-turn --provider grok --target .
 maind health --cwd
 harness doctor --settings --provider grok --target .
-python3 packages/task/scripts/render-provider-commands.py --check --root .
+python3 "$TASK_ROOT/scripts/render-provider-commands.py" --check --root "$SWISSKNIFEMAN_ROOT"
 ```
 
 ## See also

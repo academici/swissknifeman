@@ -5,7 +5,7 @@ identity, not to a universal filesystem location.
 
 | Existing project model | Authoritative source | Regeneration |
 |---|---|---|
-| Swissknifeman registry | `packages/skiller/skills/` | Worktree-local Skiller registry/publisher |
+| Swissknifeman registry | Skiller package's `skills/` | Worktree-local Skiller registry/publisher |
 | Project-authored `.ai` model | `.ai/skills/`, `.ai/guidelines/` | Its declared sync/compiler |
 | Laravel Boost integration | Installed-version supported inputs/config | Verified project Boost pipeline |
 | Native plugins | Selected package source/manifest | Package publisher and provider update |

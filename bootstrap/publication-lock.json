@@ -233,8 +233,8 @@
       "target": ".agents/skills/workflow-craft/SKILL.md",
       "source_class": "public-bucket",
       "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
-      "canonical_sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
-      "rendered_sha256": "a284fea973dcd173fdbc86405e532cca76094696c5c038eb58490d832c6a9b70"
+      "canonical_sha256": "7f784751d1e91794f380d227851f5906b04aa4c3be3604067d8e8ba53a3b093d",
+      "rendered_sha256": "29ed4c1c15a096faefa42d3bcd25b26da002abbd81b32ab2ebd01c0ea38a6ea4"
     }
   ]
 }

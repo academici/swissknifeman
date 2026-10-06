@@ -55,7 +55,7 @@ Or by explicit request «add git-guardrails / ban dangerous git».
    If settings already exists - merge into an existing array `hooks.PreToolUse`, without grinding the rest.
 3. Check: `echo '{"tool_input":{"command":"git push origin main"}}' | ~/.claude/hooks/git-guardrails/block-dangerous-git.sh` → exit 2 + BLOCKED.
 
-> Customization of the list of patterns - editing the script (source: `packages/harness/configs/claude-code/hooks/git-guardrails/`).
+> Customization of the list of patterns - editing the script (source: the git-guardrails hook shipped by Harness).
 > Follow-up: flag `harness hooks --git-guardrails on` for auto-registration in settings.
 
 ## Related skills

@@ -116,7 +116,7 @@ IDE checklist (trusted): workspace root → Run Everything → MCP health → pi
 
 ## Models and Auto
 
-Hand-verified inventory in `packages/task/configs/command-routing.json` →
+Hand-verified inventory in the Task package's `configs/command-routing.json` →
 `mappings.cursor.model_inventory`. Full guide (pins + inventory + Auto policy):
 [Provider model roles](/task/reference/provider-model-roles).
 
@@ -128,11 +128,14 @@ Main `SKILL.md` remains provider-neutral. Format - in
 
 ## Diagnostics
 
+For the optional Task projection check, set `TASK_ROOT` to the installed Task
+package directory and `SWISSKNIFEMAN_ROOT` to its host repository.
+
 ```bash
 skiller budget --provider cursor --target .
 maind health --cwd
 harness doctor --settings --provider cursor --target .
-python3 packages/task/scripts/render-provider-commands.py --check --root .
+python3 "$TASK_ROOT/scripts/render-provider-commands.py" --check --root "$SWISSKNIFEMAN_ROOT"
 ```
 
 ## See also

@@ -147,7 +147,7 @@ Matrix CI should reflect the real boundaries of dependencies, and not drive ever
 ## Skiller-integration
 
 For a project of this form (`services/` + `packages/js|php|flutter/` + `apps/` + `infra/`) in skiller
-already exists **project_type `platform-service`** ([profile](https://github.com/academici/swissknifeman/blob/main/packages/skiller/profiles/platform-service.json)) —
+already exists **project_type `platform-service`** (Skiller profile `profiles/platform-service.json`) —
 includes buckets `architect, ai, oss-dev, general, php, php-packages, frontend, frontend-vue,
 frontend-backend, devops` + MCP `context7`. Usage:
 

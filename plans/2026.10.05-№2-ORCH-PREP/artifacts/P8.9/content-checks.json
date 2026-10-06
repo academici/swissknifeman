@@ -1,0 +1,7 @@
+{
+  "host_example": "validated with skiller.host.parse_host",
+  "skill_names_and_descriptions": "unchanged against HEAD registry",
+  "first_turn_budget": "before/after byte-identical",
+  "git_diff_check": "exit 0",
+  "initial_boundary_without_allowlist": "failed with content paths and generated metadata misclassification; corrected at owning scanner"
+}

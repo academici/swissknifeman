@@ -17,9 +17,9 @@ sha256: ""
 # Workflow-craft
 
 A thin pointer skill to the canonical workflow-template constructor
-(`packages/task/workflows/`). This is DISCIPLINE for activation and choice,
+(the Task package's `workflows/`). This is DISCIPLINE for activation and choice,
 NOT a copy of template contents — template bodies and slot rules live in
-`packages/task/workflows/README.md`; this skill points to them.
+the Task package's `workflows/README.md`; this skill points to them.
 
 ## When to activate
 
@@ -57,7 +57,7 @@ A free-form phrasing doesn't match any existing trigger — this skill's
 
 ### 1. Match the 4 canonical templates first
 
-Open `packages/task/workflows/README.md` — 4 parameterizable templates:
+Open the Task package's `workflows/README.md` — 4 parameterizable templates:
 `wf-research-fanout.js`, `wf-author-by-spec.js`, `wf-audit-adversarial.js`,
 `wf-dev-slice.js`. The constructor is a **library of portable templates, not
 a code generator**: a task almost always fits one template or a pipeline of
@@ -93,7 +93,7 @@ shared invariant model, and completed review rounds are bounded by Task's two-co
 resume retains review history and unchanged evidence; it never resets a cap or broad-replays
 previously accepted work. See the workflow README for slot details.
 
-**Don't invent mandatory stages beyond this table** (source: `packages/task/workflows/README.md`) — if it seems
+**Don't invent mandatory stages beyond this table** (source: the Task package's `workflows/README.md`) — if it seems
 like another mandatory stage is needed, propose a matrix edit explicitly,
 don't quietly bolt it onto one script.
 
@@ -142,7 +142,7 @@ recommended but not mandatory; embedded config instead of an args string;
 structured-summary-by-schema for **control-flow agents**, action/mechanical
 agents may return prose; judge-panel only for high-stakes; max-iteration on
 every loop-until; top-level `return report` is a sanctioned runtime idiom, not
-a defect) — see `packages/task/workflows/README.md` §"Slot-filling rules".
+a defect) — see the Task package's `workflows/README.md` §"Slot-filling rules".
 Started retelling these rules here instead of linking — stop, that's a
 constructor duplicate.
 

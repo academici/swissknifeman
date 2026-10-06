@@ -160,7 +160,7 @@ flowchart LR
     context_economy["context-economy<br/>⊕39 ↻488"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻432"]:::mild
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1077"]:::cool
-    git_safety["git-safety<br/>⊕84 ↻570"]:::warm
+    git_safety["git-safety<br/>⊕84 ↻565"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻858"]:::warm
     implement["implement<br/>⊕83 ↻543"]:::warm
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
@@ -169,11 +169,11 @@ flowchart LR
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
-    skills_ssot["skills-ssot<br/>⊕34 ↻941"]:::mild
+    skills_ssot["skills-ssot<br/>⊕34 ↻942"]:::mild
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
     task_brief_template["task-brief-template<br/>⊕47 ↻1176"]:::warm
     verify_claims["verify-claims<br/>⊕41 ↻341"]:::warm
-    workflow_craft["workflow-craft<br/>⊕48 ↻3610"]:::warm
+    workflow_craft["workflow-craft<br/>⊕48 ↻3617"]:::warm
     writing_style["writing-style<br/>⊕98 ↻1819"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -420,13 +420,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 217 skills · ⊕ always **11513** current (is always resident if you include the entire registry) · ↻ bodies 270559 current · ⌥ on-demand 824510 current (snippets + references).
+**Total:** 217 skills · ⊕ always **11513** current (is always resident if you include the entire registry) · ↻ bodies 270562 current · ⌥ on-demand 824510 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 21 | 1234 | 23090 | 7557 |
+| `general` | 21 | 1234 | 23093 | 7557 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
@@ -498,7 +498,7 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `workflow-craft` | general | 3610 |
+| `workflow-craft` | general | 3617 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |

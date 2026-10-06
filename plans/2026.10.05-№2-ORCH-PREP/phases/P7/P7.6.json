@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.6",
   "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P7",
-  "status": "todo",
+  "status": "done",
   "summary": "Фаза закрыта одним широким проходом: CHANGELOG [Unreleased] Task и orch (глагол bridge, мост orch с brief/register/register-review, удалённый невыпущенный brief ядра, evidence по полям, нейтральные роли orch), docs/develop.md без шага [7/7] Task, новый knowledge-документ `architecture-bridges` (§dependency-rule по D13–D18, заменяет knowledge/architecture §dependency-rule), отметка в knowledge item-mapping через лог; широкие validate Task и orch зелёные.",
   "why": "Broad checks run once (philosophy): одна полная проверка фазы, переиспользуемая P8+. Документация и CHANGELOG фиксируют публичные изменения CLI (release-discipline). Правило зависимостей должно иметь одного актуального владельца в плане.",
   "scope": {
@@ -159,6 +159,53 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T11:23:50Z"
+  "result": {
+    "started_at": "2026-10-06T15:18:46Z",
+    "finished_at": "2026-10-06T15:36:02Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "af3c6685-281a-43ae-87be-d9708295204f"
+    },
+    "notes": "Широкий прогон P7 зелёный (V3: 87 тестов, без skipped). CHANGELOG [Unreleased] уже отражал P7.1–P7.5 — правок не потребовалось. docs/develop.md: убран шаг [7/7] Task, добавлен абзац Package bridges. Создан knowledge architecture-bridges (dependency-rule, supersedes). docs/task не затронут. Лог P7 note записан.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-06T15:36:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T15:36:02Z"
 }

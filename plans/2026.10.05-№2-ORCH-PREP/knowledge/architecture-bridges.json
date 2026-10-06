@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "architecture-bridges",
+  "title": "Архитектура: чистые пакеты и именованные мосты (правило зависимостей после P7)",
+  "sections": [
+    {
+      "id": "dependency-rule",
+      "title": "Правило зависимостей",
+      "text": "Источник: bridges §principle, D13–D15, D18, D19. Решения владельца M5–M9.\n\n- **Ядро пакета** — всё вне `bridges/`. Ядро не упоминает другие пакеты репозитория (имена, пути `packages/<x>`, импорты, CLI, их форматы как свои). Проверяется boundary-тестами в test-suite Task и orch (allowlist-файл удалён).\n- **Мост** — `<package>/bridges/<partner>/` с манифестом `bridge.json`: единственное место, знающее партнёра. Партнёра вызывает только через публичный CLI/JSON (subprocess, файлы), код партнёра не импортирует. Обнаружение и запуск — диспетчер `plan.py bridge list|<partner> <verb>`.\n- **Мост → своё ядро разрешён:** мост может импортировать ядро собственного пакета (Task bridges/orch использует lib Task), обратное запрещено.\n- **core разрешён (D18):** корневая `core/` — общий фундамент репозитория, а не пакет из `packages/`; ядро Task может использовать `core.*`. Вынос/вендоринг — roadmap с триггером «Task уходит из репозитория».\n- **Evidence по полям (D19):** ядро Task проверяет check-evidence по собственному контракту (ключевые поля, `plan.py schema check-evidence`), без URN orch; документ orch проходит без конвертации, совместимость проверяет тест моста.\n- **Владение мостами (D14):** Task ↔ оркестратор — `packages/task/bridges/<orchestrator>/` (сейчас `orch`: brief, register, register-review); альтернативный оркестратор = новый мост, ядро Task не меняется. Skiller мостов к пакетам репозитория не имеет (D16).\n- **Managed-блоки** допустимы только внутри одного пакета; между пакетами текст не копируется.\n- orch нейтрален: роли и ядро не называют Skiller-skills; связь с Skiller — только в `orch/bridges/skiller/` (P8)."
+    },
+    {
+      "id": "supersedes",
+      "title": "Что заменяется",
+      "text": "Заменяет knowledge/architecture §dependency-rule: прежние «разрешённые сцепления» (build-time generated copy между пакетами, конформанс-тесты orch, вызывающие Task CLI, и схема `task ↛ orch-код` с общим JSON-форматом как связью) устарели. Конформанс-тесты Task ↔ orch живут в мосте Task (`packages/task/bridges/orch/tests`). Статус item-mapping: P2.1/P2.2 переработаны (проекция в мосте), P3.3/P3.4 заменены."
+    }
+  ],
+  "applies_to": [
+    "P4",
+    "P5",
+    "P8",
+    "P11"
+  ]
+}

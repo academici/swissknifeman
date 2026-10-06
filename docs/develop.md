@@ -327,13 +327,18 @@ lists of rules - data:
   `release-tag` (`on: push: tags: ['v*']`) — red on the release tag stops publishing
   before the version diverges from the title.
 
-**Managed blocks (`scripts/sync-managed-blocks.py`, step `managed-blocks` in job `hygiene` and `[7/7]` in
-`packages/task/scripts/validate.sh`).** A canonical text is marked `<!-- export:begin <anchor> -->` …
+**Managed blocks (`scripts/sync-managed-blocks.py`, step `managed-blocks` in job `hygiene`).** A canonical text is marked `<!-- export:begin <anchor> -->` …
 `<!-- export:end <anchor> -->` in its owner file; the target holds a generated copy between
 `<!-- managed:begin id=<id> source=<path>#<anchor> sha256=<hex> -->` and `<!-- managed:end id=<id> -->`.
 Blocks are listed in `configs/managed-blocks.json`. `--check` prints `DRIFT`/`MISSING <id>` and exits 1;
 `--write` regenerates only the text between the managed markers (the block itself is inserted by hand once).
 Never edit a managed block directly — edit the source and run `--write`.
+
+**Package bridges.** A package core stays pure: it never names other repository packages. All knowledge
+about a partner lives in `<package>/bridges/<partner>/` (manifest `bridge.json`), which talks to the partner only
+through its public CLI/JSON. List bridges with `python3 packages/task/scripts/plan.py bridge list`
+(Task ↔ orchestrator: `packages/task/bridges/orch`, verbs `brief`, `register`, `register-review`). Boundary tests in the
+Task and orch test suites enforce the rule.
 
 Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion
 artifacts made of wood - a separate decision of the owner (not auto-editing the gate).

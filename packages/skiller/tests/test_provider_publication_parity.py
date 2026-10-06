@@ -54,7 +54,7 @@ class TestProviderPublicationParity(unittest.TestCase):
         # unit/plugin — exclude them from the expected marketplace-plugin set below.
         private_buckets = {name for name, data in buckets_meta.items()
                            if isinstance(data, dict) and data.get("private_source_only")}
-        self.assertIn("repository-bootstrap", private_buckets)
+        self.assertNotIn("repository-bootstrap", buckets_meta)
         expected_ids = tuple(sorted(f"{item['bucket']}/{item['name']}"
                                     for item in registry_disk["skills"]))
         expected_buckets = tuple(sorted({item["bucket"] for item in registry_disk["skills"]}))

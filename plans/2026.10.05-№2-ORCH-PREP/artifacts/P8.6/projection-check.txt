@@ -1,0 +1,3 @@
+PASS: only canonical, canonical_sha256 and body canonical/hash lines changed.
+Claude=14; Codex=15 (one class-B).
+Changed canonical hashes: cross-project-optimizer, decision-verification, ecosystem-integration, ecosystem-mcp, ecosystem-setup, harness-operations, maind-overview, package-architecture, project-tooling-runbook, skill-authoring, task-development-philosophy

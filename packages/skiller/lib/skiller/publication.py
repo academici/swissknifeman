@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -20,7 +21,7 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
                   ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
                   CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
-                  connect_channel, find_monorepo_root, load_distribution_catalog,
+                  connect_channel, find_repo_root, load_distribution_catalog,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
                   provider_config_catalog, vendor_channel)
 from core.provider.lock import LOCK_RELATIVE_PATH
@@ -67,7 +68,7 @@ _DISTRIBUTION_CATALOG = None
 def _distribution_catalog():
     global _DISTRIBUTION_CATALOG
     if _DISTRIBUTION_CATALOG is None:
-        root = find_monorepo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
+        root = find_repo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
         _DISTRIBUTION_CATALOG = load_distribution_catalog(root / "configs/provider-distribution.json")
     return _DISTRIBUTION_CATALOG
 
@@ -1092,35 +1093,57 @@ def _root_bootstrap_body(identity: str, description: str, canonical_path: str,
     return "\n".join(lines).encode("utf-8")
 
 
-def load_repository_bootstrap_config(package_root: Path) -> dict:
-    """Read+validate `configs/repository-bootstrap-skills.json` (schema v1, D38-shaped).
+def _bootstrap_path(repo_root: Path, value: object) -> Path:
+    """Resolve a host-relative carrier without allowing traversal or escaping symlinks."""
+    if (not isinstance(value, str) or not value or "\\" in value
+            or Path(value).is_absolute() or any(p in {"", ".", ".."} for p in value.split("/"))):
+        raise ValueError("bootstrap config: expected a repository-relative path")
+    path = repo_root / value
+    if not path.resolve().is_relative_to(repo_root.resolve()):
+        raise ValueError(f"bootstrap config: path escapes repository: {value}")
+    return path
 
-    The class-A `identities` list is the D38-frozen 13-identity set (byte-identical rules
-    unchanged by). `class_b` is an OPTIONAL, separate list of public-bucket
-    canon records that are not part of the class-A count/formula at all — validated here so a
-    malformed record fails closed before any render, but never merged into `identities`.
-    """
-    config_path = package_root / "configs" / "repository-bootstrap-skills.json"
+
+def load_repository_bootstrap_config(repo_root: Path, host) -> dict:
+    """Read host-selected schema v2: explicit canon paths and a host-owned unit version."""
+    config_path = _bootstrap_path(repo_root, host.bootstrap)
     try:
         config = json.loads(config_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError(f"repository-bootstrap-skills.json: unreadable: {error}") from error
-    if not isinstance(config, dict) or config.get("schema_version") != 1 \
+    if not isinstance(config, dict) or type(config.get("schema_version")) is not int \
+            or config.get("schema_version") != 2 \
             or config.get("bucket") != "repository-bootstrap":
         raise ValueError("repository-bootstrap-skills.json: unsupported schema")
     identities = config.get("identities")
     if (not isinstance(identities, list) or not identities
-            or not all(isinstance(item, str) for item in identities)
-            or sorted(identities) != identities or len(set(identities)) != len(identities)):
+            or not all(isinstance(item, dict) and isinstance(item.get("identity"), str)
+                       and item["identity"] and set(item) == {"identity", "canonical"}
+                       for item in identities)):
+        raise ValueError("bootstrap config: identities must contain identity/canonical records")
+    names = [item["identity"] for item in identities]
+    if sorted(names) != names or len(set(names)) != len(names):
         raise ValueError("repository-bootstrap-skills.json: identities must be a sorted, "
-                         "unique, non-empty list of strings")
-    if not isinstance(config.get("lock_path"), str) or not isinstance(config.get("generator"), str):
-        raise ValueError("repository-bootstrap-skills.json: lock_path/generator are required")
+                         "unique, non-empty list")
+    for record in identities:
+        _bootstrap_path(repo_root, record["canonical"])
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", record["identity"]):
+            raise ValueError("bootstrap config: invalid identity")
+    _bootstrap_path(repo_root, config.get("lock_path"))
+    if not isinstance(config.get("unit_version"), str) or not config["unit_version"]:
+        raise ValueError("bootstrap config: unit_version is required")
     if not isinstance(config.get("class_a_content_version"), str) or not config["class_a_content_version"]:
         raise ValueError("repository-bootstrap-skills.json: class_a_content_version is required "
                          "(D38-frozen — never the umbrella publication-versions.json value)")
-    for record in config.get("class_b", ()):
-        _validate_class_b_record(record, identities)
+    class_b = config.get("class_b", [])
+    if not isinstance(class_b, list):
+        raise ValueError("bootstrap config: class_b must be a list")
+    for record in class_b:
+        _validate_class_b_record(record, names)
+        if record["identity"] in names:
+            raise ValueError("bootstrap config: duplicate identity")
+        names.append(record["identity"])
+        _bootstrap_path(repo_root, record["canonical"])
     return config
 
 
@@ -1128,7 +1151,7 @@ def _validate_class_b_record(record: object, class_a_identities: Sequence[str]) 
     if not isinstance(record, dict):
         raise ValueError("repository-bootstrap-skills.json: class_b record must be an object")
     identity = record.get("identity")
-    if not isinstance(identity, str) or not identity:
+    if not isinstance(identity, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", identity):
         raise ValueError("repository-bootstrap-skills.json: class_b record needs a non-empty identity")
     if identity in class_a_identities:
         raise ValueError(f"repository-bootstrap-skills.json: class_b identity {identity!r} "
@@ -1144,6 +1167,8 @@ def _validate_class_b_record(record: object, class_a_identities: Sequence[str]) 
             or not all(isinstance(item, str) for item in providers):
         raise ValueError(f"repository-bootstrap-skills.json: class_b {identity!r}: "
                          "providers must be a non-empty list of strings")
+    if len(set(providers)) != len(providers) or not set(providers) <= {"claude", "codex"}:
+        raise ValueError(f"bootstrap config: class_b {identity!r}: invalid providers")
     if not isinstance(record.get("asymmetry_reason"), str) or not record["asymmetry_reason"]:
         raise ValueError(f"repository-bootstrap-skills.json: class_b {identity!r}: "
                          "asymmetry_reason is required")
@@ -1195,21 +1220,9 @@ def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path
     return "\n".join(lines).encode("utf-8")
 
 
-def _repository_bootstrap_unit_version(package_root: Path) -> str:
-    versions_path = package_root / "configs" / "publication-versions.json"
-    try:
-        versions = json.loads(versions_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
-        raise ValueError(f"publication-versions.json: unreadable: {error}") from error
-    unit_version = (versions.get("units") or {}).get("repository-bootstrap") \
-        if isinstance(versions, dict) else None
-    if not isinstance(unit_version, str) or not unit_version:
-        raise ValueError("publication-versions.json: units.repository-bootstrap is required")
-    return unit_version
-
-
 def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Path,
                                             manifest_path=None,
+                                            host=None,
                                             donor_enabled: Mapping[str, bool] | None = None
                                             ) -> tuple[RootBootstrapArtifact, ...]:
     """Render two class-A projections per configured identity plus the class-B public-bucket projections, and their one combined lock.
@@ -1232,8 +1245,11 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     validate_publication_capabilities(ProviderId.CODEX, manifest_path=manifest_path)
     repo_root = repo_root.resolve()
     package_root = package_root.resolve()
-    config = load_repository_bootstrap_config(package_root)
-    unit_version = _repository_bootstrap_unit_version(package_root)
+    if host is None:
+        from .host import load_host
+        host = load_host(package_root)
+    config = load_repository_bootstrap_config(repo_root, host)
+    unit_version = config["unit_version"]
     # D38-frozen: class-A's OWN embedded version/publication_unit literal never tracks the
     # umbrella `unit_version` bump — that decoupling is what keeps
     # the existing class-A projection bytes byte-identical across the P1.5 owner bump.
@@ -1243,9 +1259,9 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
 
     artifacts: list[RootBootstrapArtifact] = []
     lock_records: list[dict[str, object]] = []
-    for identity in config["identities"]:
-        base = package_root / "skills" / "repository-bootstrap" / identity
-        en_path = base / "SKILL.md"
+    for record in config["identities"]:
+        identity = record["identity"]
+        en_path = _bootstrap_path(repo_root, record["canonical"])
         if not en_path.is_file():
             raise ValueError(f"repository-bootstrap identity {identity!r}: canonical source "
                              f"is missing ({en_path})")
@@ -1293,7 +1309,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
             raise ValueError(
                 f"repository-bootstrap class_b {identity!r}: precondition violated — "
                 f"unit {donor_bucket!r} is enabled ({record['precondition']})")
-        canonical_path = repo_root / canonical_rel_str
+        canonical_path = _bootstrap_path(repo_root, canonical_rel_str)
         if not canonical_path.is_file():
             raise ValueError(f"repository-bootstrap class_b {identity!r}: canonical source "
                              f"is missing ({canonical_path})")
@@ -1342,11 +1358,11 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     lock_data = {
         "contract_version": "1.0.0",
         "publication_unit": f"repository-bootstrap@{unit_version}",
-        "generator": config["generator"],
+        "generator": _generator(package_rel(repo_root, package_root)).removeprefix("generator: "),
         "records": sorted(lock_records, key=lambda item: (item["identity"], item["provider"])),
     }
     lock_bytes = _manifest_text(lock_data)
-    lock_target = repo_root / config["lock_path"]
+    lock_target = _bootstrap_path(repo_root, config["lock_path"])
     artifacts.append(RootBootstrapArtifact(
         lock_target, "", "lock", lock_bytes,
         "sha256:" + hashlib.sha256(_manifest_text(

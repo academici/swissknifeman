@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Repository bootstrap у владельцев:** 14 canonical skills перенесены из Skiller:
+  11 в корневой `bootstrap/skills`, три в `dev-skills` Task, Harness и mAInd.
+  Рендерер и cold-discovery читают явные пути из host-конфига v2; версия bootstrap
+  и publication lock принадлежат корню. Identity-проекции провайдеров сохранены,
+  first-turn budget не вырос; bootstrap больше не входит в registry Skiller.
 - **Skiller resolve:** новая команда раскрывает запрошенные skill IDs и их
   транзитивные `requires` из registry без записи файлов. Поддерживает `bucket/name`,
   `bucket:name`, уникальные короткие имена и JSON `skiller.resolve/v1` с причинами

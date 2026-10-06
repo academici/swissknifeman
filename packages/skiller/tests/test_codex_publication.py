@@ -166,11 +166,10 @@ class TestCodexPublication(unittest.TestCase):
 
     def test_repository_bootstrap_bucket_never_leaks_into_normal_codex_publication(self):
         """P1.2 (D31): the private/source-only bucket must never surface as an ordinary
-        Codex unit/plugin/marketplace entry, even though `build_registry` indexes its 14
-        members for ownership/hash lookup."""
+        Codex unit/plugin/marketplace entry. Its sources now belong to the host."""
         member_ids = {skill["path"] for skill in self.registry["skills"]
                       if skill["bucket"] == "repository-bootstrap"}
-        self.assertEqual(len(member_ids), 14)
+        self.assertEqual(member_ids, set())
         first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         marketplace = json.loads(next(item.managed_bytes for item in first
                                       if item.target.name == "marketplace.json"))
@@ -189,7 +188,7 @@ def _build_isolated_bootstrap_fixture(tmp):
     canon (P1.5 negative fixture: canon drift without a unit-version bump)."""
     repo_root = tmp
     package_root = tmp / "pkg"
-    canon_dir = package_root / "skills" / "repository-bootstrap" / "alpha"
+    canon_dir = repo_root / "bootstrap" / "skills" / "alpha"
     canon_dir.mkdir(parents=True)
     (canon_dir / "SKILL.ru.md").write_text("RU body\n", encoding="utf-8")
     (canon_dir / "SKILL.md").write_text(
@@ -199,12 +198,13 @@ def _build_isolated_bootstrap_fixture(tmp):
     (donor_dir / "SKILL.md").write_text(
         "---\nname: beta\ndescription: Beta desc\n---\n\nBeta canon body v1.\n", encoding="utf-8")
     (package_root / "configs").mkdir()
-    (package_root / "configs" / "repository-bootstrap-skills.json").write_text(json.dumps({
-        "schema_version": 1, "bucket": "repository-bootstrap",
-        "publication_unit": "repository-bootstrap", "generator": "gen",
-        "lock_path": "adapters/repository-bootstrap/publication-lock.json",
+    (repo_root / "configs").mkdir(exist_ok=True)
+    (repo_root / "configs" / "repository-bootstrap-skills.json").write_text(json.dumps({
+        "schema_version": 2, "bucket": "repository-bootstrap",
+        "publication_unit": "repository-bootstrap", "unit_version": "0.1.0",
+        "lock_path": "bootstrap/publication-lock.json",
         "class_a_content_version": "0.1.0",
-        "identities": ["alpha"],
+        "identities": [{"identity": "alpha", "canonical": "bootstrap/skills/alpha/SKILL.md"}],
         "class_b": [{
             "identity": "beta", "source_class": "public-bucket",
             "canonical": "pkg/skills/general/beta/SKILL.md",
@@ -214,8 +214,11 @@ def _build_isolated_bootstrap_fixture(tmp):
     }), encoding="utf-8")
     (package_root / "configs" / "publication-versions.json").write_text(json.dumps({
         "default_unit_version": "0.1.0",
-        "units": {"repository-bootstrap": "0.1.0"},
+        "units": {},
     }), encoding="utf-8")
+    (repo_root / "configs" / "skiller-host.json").write_text(
+        json.dumps({"schema_version": 1, "bootstrap": "configs/repository-bootstrap-skills.json"}))
+    (repo_root / ".git").mkdir()
     return repo_root, package_root
 
 
@@ -244,9 +247,9 @@ class ClassBCanonDriftCase(unittest.TestCase):
             lock_second = next(a for a in second if a.provider == "lock")
 
             # same declared unit tuple (version untouched)…
-            versions = json.loads((package_root / "configs" /
-                                   "publication-versions.json").read_text())
-            self.assertEqual(versions["units"]["repository-bootstrap"], "0.1.0")
+            versions = json.loads((repo_root / "configs" /
+                                   "repository-bootstrap-skills.json").read_text())
+            self.assertEqual(versions["unit_version"], "0.1.0")
             # …but the rendered bytes AND lock hashes moved — never a same-tuple silent reuse.
             self.assertNotEqual(beta_first.managed_bytes, beta_second.managed_bytes)
             self.assertNotEqual(beta_first.rendered_hash, beta_second.rendered_hash)
@@ -260,10 +263,11 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         self.repo_root = Path(__file__).resolve().parents[3]
         self.package_root = self.repo_root / "packages" / "skiller"
         self.env = Env(self.package_root)
-        self.config = load_repository_bootstrap_config(self.package_root)
+        from skiller.host import load_host
+        self.config = load_repository_bootstrap_config(self.repo_root, load_host(self.package_root))
 
     def test_config_names_exactly_fourteen_sorted_unique_identities(self):
-        identities = self.config["identities"]
+        identities = [row["identity"] for row in self.config["identities"]]
         self.assertEqual(len(identities), 14)
         self.assertEqual(identities, sorted(identities))
         self.assertEqual(len(set(identities)), 14)
@@ -281,8 +285,8 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
                 continue  # class-B (P1.5), asserted separately below
             by_provider.setdefault(artifact.provider, set()).add(artifact.identity)
         self.assertEqual(by_provider.keys(), {"claude", "codex"})
-        self.assertEqual(by_provider["claude"], set(self.config["identities"]))
-        self.assertEqual(by_provider["codex"], set(self.config["identities"]))
+        self.assertEqual(by_provider["claude"], {row["identity"] for row in self.config["identities"]})
+        self.assertEqual(by_provider["codex"], {row["identity"] for row in self.config["identities"]})
         self.assertIsNotNone(lock_artifact)
         self.assertEqual(lock_artifact.target, self.repo_root / self.config["lock_path"])
         lock_data = json.loads(lock_artifact.managed_bytes)
@@ -291,14 +295,14 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
             if artifact.provider == "lock" or artifact.identity == "workflow-craft":
                 continue
             body = artifact.managed_bytes.decode("utf-8")
-            canonical = self.package_root / "skills" / "repository-bootstrap" / \
-                artifact.identity / "SKILL.md"
+            record = next(row for row in self.config["identities"]
+                          if row["identity"] == artifact.identity)
+            canonical = self.repo_root / record["canonical"]
             canonical_body = canonical.read_text(encoding="utf-8")
             # The projection is thin: it must not carry the canonical file's own prose body
             # (checked via a body-only marker line unlikely to appear in a pointer stub).
             self.assertNotIn("## Provenance (root-bootstrap, P1.2)", body)
-            self.assertIn(f"canonical: packages/skiller/skills/repository-bootstrap/"
-                          f"{artifact.identity}/SKILL.md", body)
+            self.assertIn(f"canonical: {record['canonical']}", body)
             self.assertIn("## Provenance (root-bootstrap, P1.2)", canonical_body)
 
     def test_targets_are_exactly_the_declared_29_and_globally_unique(self):
@@ -307,7 +311,8 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         self.assertEqual(len(targets), 29)  # 28 class-A + 1 class-B
         self.assertEqual(len(set(targets)), 29)
         expected = set()
-        for identity in self.config["identities"]:
+        for row in self.config["identities"]:
+            identity = row["identity"]
             expected.add(self.repo_root / ".claude" / "skills" / identity / "SKILL.md")
             expected.add(self.repo_root / ".agents" / "skills" / identity / "SKILL.md")
         expected.add(self.repo_root / ".agents" / "skills" / "workflow-craft" / "SKILL.md")
@@ -348,7 +353,7 @@ class TestClassBRootBootstrapProjection(unittest.TestCase):
         self.assertNotIn("Match the 4 canonical templates first", body)
         self.assertIn("Match the 4 canonical templates first", canonical_body)
         self.assertIn(f"canonical_sha256: {canonical_sha256}", body)
-        self.assertIn("canonical: packages/skiller/skills/general/workflow-craft/SKILL.md", body)
+        self.assertIn(f"canonical: {canonical.relative_to(self.repo_root).as_posix()}", body)
 
     def test_precondition_fails_closed_when_donor_bucket_is_enabled(self):
         with self.assertRaises(ValueError) as ctx:

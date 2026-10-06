@@ -448,7 +448,8 @@ def _manifest_text(data):
 def _has_repository_bootstrap_config(root):
     """Standalone/fixture roots predating carry no root-bootstrap config — skip the
     renderer entirely rather than fail closed on a file that was never meant to exist there."""
-    return (root / "configs" / "repository-bootstrap-skills.json").is_file()
+    host = load_host(root)
+    return host.bootstrap is not None and (host.root / host.bootstrap).is_file()
 
 
 def _prune_publication_artifacts(artifacts):
@@ -597,7 +598,7 @@ def render_index(registry, bucket_meta):
 
 def _docs_root(p):
     """Nearest up directory with docs/guide (package itself; fallback — p). Parity with
-    budget._docs_root (both docs live in packages/skiller/docs)."""
+    budget._docs_root (both docs live in the package's docs directory)."""
     for cand in (p, *p.parents):
         if (cand / "docs" / "guide").is_dir():
             return cand

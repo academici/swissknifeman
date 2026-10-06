@@ -70,10 +70,9 @@ class TestClaudePublicationGolden(unittest.TestCase):
 
 
 class TestRepositoryBootstrapExclusion(unittest.TestCase):
-    """P1.2 (D31): build_registry indexes the class-A identities for ownership/hash lookup,
-    but normal Claude bucket/core/marketplace publication carries zero of them."""
+    """Host bootstrap identities live outside the package and never enter its registry."""
 
-    def test_registry_indexes_14_but_claude_publication_carries_zero(self):
+    def test_host_bootstrap_is_absent_from_registry_and_publication(self):
         repo_root = Path(__file__).resolve().parents[3]
         package_root = repo_root / "packages" / "skiller"
         from skiller.common import Env
@@ -81,8 +80,8 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
         registry, metadata, buckets = build_registry(env)
         private_members = [item for item in registry["skills"]
                            if item["bucket"] == "repository-bootstrap"]
-        self.assertEqual(len(private_members), 14)
-        self.assertIn("repository-bootstrap", buckets)  # a real dir, indexed — but never a unit
+        self.assertEqual(private_members, [])
+        self.assertNotIn("repository-bootstrap", buckets)
 
         artifacts = build_claude_publication(env, metadata, buckets, registry)
         marketplace = json.loads(next(item.managed_bytes for item in artifacts

@@ -9,6 +9,16 @@
 
 **Rules conflict → wins more specific source: project > Boost > registry.**
 
+Repository bootstrap skills are host-owned and listed in
+`configs/repository-bootstrap-skills.json` (schema v2), selected by `bootstrap` in
+`configs/skiller-host.json`. Canonical files live in `bootstrap/skills/<identity>/`
+or the owner's `packages/<owner>/dev-skills/<identity>/`; these development skills
+are excluded from distributed registries and plugins. `skiller registry` generates
+the thin `.claude/skills` and `.agents/skills` pointers and
+`bootstrap/publication-lock.json`. `skiller registry --check` verifies their paths,
+hashes, bytes and complete identity sets. The bootstrap unit version belongs to the
+host config; the fixed class-A content version remains separate.
+
 ## Architectural layers: what goes where (anti-sprawl stop rule)
 
 swissknifeman — **four-pack umbrella**, and not one «core». Before you add something, decide in which

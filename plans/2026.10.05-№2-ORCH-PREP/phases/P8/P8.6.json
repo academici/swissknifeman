@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.6",
   "title": "repository-bootstrap skills к владельцам и в bootstrap/skills; рендерер от корневого конфига",
-  "status": "todo",
+  "status": "done",
   "summary": "14 canonical skills переносятся `git mv` по D22 (3 → packages/<owner>/dev-skills, 11 → bootstrap/skills), bootstrap-конфиг и lock — в корень (`configs/repository-bootstrap-skills.json` v2, `bootstrap/publication-lock.json`), рендерер читает canonical-пути из конфига через `host.bootstrap`. Проекции .claude/skills и .agents/skills сохраняются, меняются только строки путей.",
   "why": "D16/D22: repo-специфичные skills не принадлежат Skiller. Hard risk: проекции загружаются в каждую сессию (first-turn бюджет) и проверяются lock/completeness; потеря identity или неверный canonical ломает обнаружение skill провайдером. Task-skill обязан пройти boundary-тест Task.",
   "scope": {
@@ -250,6 +250,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T16:12:22Z"
+  "result": {
+    "started_at": "2026-10-06T19:04:36Z",
+    "finished_at": "2026-10-06T19:23:59Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a11299-c4e5-7e42-81b1-83dd4d63815e"
+    },
+    "notes": "14 canonical dirs перенесены git mv: 11 bootstrap/skills, 3 task/harness/maind dev-skills. Host bootstrap config schema v2 задаёт canonical records/unit_version/lock; bootstrap/publication-lock.json принадлежит корню. Skiller registry/publication/cold-discovery используют host.bootstrap; registry 231→217, bucket и P8.6 allowlist удалены. Общий private_source_only сохранён для синтетических fixtures. Содержание сохранено кроме относительных/перенесённых путей и одной минимальной нейтрализации Task boundary. SHA изменены у 11 skills с такими правками, список в projection-check.txt; diff проекций только canonical/path/hash. V1 registry --check=0; V2 размещение=0; V3 Task boundary 5 tests=0; V4 first-turn до/после 2256=0; V5 Skiller boundary/path tests 16 tests=0; V6 Skiller 802 tests=0. validate.sh bash -n, compile и структурный gate=0, git diff --check=0. docs/routing.md и CHANGELOG updated. Scope-only final Grok grok-4.7/high review PASS (session b1a02d60-acb5-407d-843d-a766007c288d), без context CLI flag; artifacts/P8.6/review-final.json. Другие package suites и широкие фазовые validate не запускались по указанию владельца.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T19:23:59Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T19:23:59Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T19:23:59Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T19:23:59Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T19:23:59Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-06T19:23:59Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T19:23:59Z"
 }

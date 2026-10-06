@@ -109,14 +109,18 @@ class HostPublicationCase(unittest.TestCase):
 
     def test_bootstrap_generator_in_relocated_package(self):
         from tests.fixtures import write_skill
-        write_skill(self.root / "skills/repository-bootstrap/alpha", "alpha")
-        config_dir = self.root / "configs"
+        write_skill(self.repo / "bootstrap/skills/alpha", "alpha")
+        config_dir = self.repo / "configs"
         config_dir.mkdir()
+        config_dir.joinpath("skiller-host.json").write_text(json.dumps({
+            "schema_version": 1, "bootstrap": "configs/repository-bootstrap-skills.json",
+        }))
         config_dir.joinpath("repository-bootstrap-skills.json").write_text(json.dumps({
-            "schema_version": 1, "identities": ["alpha"],
+            "schema_version": 2, "identities": [
+                {"identity": "alpha", "canonical": "bootstrap/skills/alpha/SKILL.md"}],
             "providers": ["claude", "codex"], "class_a_content_version": "0.1.0",
             "publication_unit": "repository-bootstrap", "class_b": [],
-            "bucket": "repository-bootstrap", "generator": "fixture",
+            "bucket": "repository-bootstrap", "unit_version": "0.1.0",
             "lock_path": "bootstrap/publication-lock.json",
         }), encoding="utf-8")
         config_dir.joinpath("publication-versions.json").write_text(json.dumps({

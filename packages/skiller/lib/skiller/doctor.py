@@ -640,26 +640,24 @@ def _sibling_identities(repo_root, sibling, *, manifest_name):
 
 
 def _materialize_repository_bootstrap_sources(*, repo_root, package_root, tmp_root):
-    """Copy exactly the bytes `render_repository_bootstrap_projections` reads (class-A
-    config + 13 canonical EN-only carriers; class-B canon at its real repo-relative path)
-    into `tmp_root`, never the live repo — `render_repository_bootstrap_projections`
-    calls `.resolve()` on `package_root`, which would defeat a symlink and silently read
-    the real tree, so a real (small) copy is the only way to keep the read genuinely
-    cold. Returns the fixture's `package_root` Path."""
+    """Copy the configured host bootstrap sources for cold discovery, never live symlinks."""
+    from .host import load_host
+    from .publication import load_repository_bootstrap_config
     rel_pkg = package_root.relative_to(repo_root)
     fixture_package_root = tmp_root / rel_pkg
     if fixture_package_root.exists():
         return fixture_package_root
-    (fixture_package_root / "configs").mkdir(parents=True, exist_ok=True)
-    for name in ("repository-bootstrap-skills.json", "publication-versions.json"):
-        shutil.copy2(package_root / "configs" / name, fixture_package_root / "configs" / name)
-    shutil.copytree(package_root / "skills" / "repository-bootstrap",
-                    fixture_package_root / "skills" / "repository-bootstrap")
-    workflow_craft_src = package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
-    if workflow_craft_src.is_file():
-        dest = fixture_package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
+    fixture_package_root.mkdir(parents=True)
+    host = load_host(package_root)
+    if host.bootstrap is None:
+        return fixture_package_root
+    config = load_repository_bootstrap_config(repo_root, host)
+    sources = [host.bootstrap, *(row["canonical"] for row in config["identities"]),
+               *(row["canonical"] for row in config.get("class_b", []))]
+    for relative in sources:
+        dest = tmp_root / relative
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(workflow_craft_src, dest)
+        shutil.copy2(repo_root / relative, dest)
     return fixture_package_root
 
 
@@ -696,8 +694,13 @@ def build_provider_carrier_map(catalog, *, repo_root, package_root, provider, tm
 
     fixture_package_root = _materialize_repository_bootstrap_sources(
         repo_root=repo_root, package_root=package_root, tmp_root=tmp_root)
+    from dataclasses import replace
+    from .host import load_host
+    host = replace(load_host(package_root), root=tmp_root)
+    if host.bootstrap is None:
+        return {identity: sorted(values) for identity, values in carriers.items()}
     bootstrap_artifacts = render_repository_bootstrap_projections(
-        repo_root=tmp_root, package_root=fixture_package_root)
+        repo_root=tmp_root, package_root=fixture_package_root, host=host)
     root_provider_key = "claude" if provider == "claude-code" else "codex"
     for artifact in bootstrap_artifacts:
         if artifact.provider != root_provider_key:
@@ -729,9 +732,15 @@ def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
     pairs = detect_core_donor_collisions(catalog, enabled=worst_case)
     fixture_package_root = _materialize_repository_bootstrap_sources(
         repo_root=repo_root, package_root=package_root, tmp_root=tmp_root)
+    from dataclasses import replace
+    from .host import load_host
+    host = replace(load_host(package_root), root=tmp_root)
+    if host.bootstrap is None:
+        return pairs, None
     try:
         render_repository_bootstrap_projections(
             repo_root=tmp_root, package_root=fixture_package_root,
+            host=host,
             donor_enabled={"general": True})
         workflow_craft_error = None
     except ValueError as exc:

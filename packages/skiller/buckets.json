@@ -343,12 +343,6 @@
       "security"
     ]
   },
-  "repository-bootstrap": {
-    "description": "P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections.",
-    "category": "meta",
-    "tags": ["root-bootstrap", "private", "source-only", "generated"],
-    "private_source_only": true
-  },
   "system": {
     "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
     "category": "meta",

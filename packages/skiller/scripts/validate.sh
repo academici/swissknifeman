@@ -630,15 +630,25 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
 # Taxonomy Canon - core.project.PROJECT_TYPES; here is a self-contained take
 # (heredoc chases to PYTHONPATH on core — we do not consciously import; hold
 #  in sync with core/project.py). Links to presets/packs/mcp live in the package
-# harness — we check only if it is in place (monorepo), otherwise graceful skip.
+# configured environment publisher — checked only when available in this host.
 PROJECT_TYPE_IDS = {
     "obsidian-vault", "laravel-project", "php-package", "dart-flutter",
     "python-backend", "node-frontend", "node-package", "standalone",
 }
 AA_MODES = {"strict", "permissive", "bypass", "off"}
-MEM_MODES = {"file", "federation", "agentmemory", "maind", "off"}
+MEM_MODES = {"file", "federation", "agentmemory", "off"}
 MODEL_TIERS = {"inherit", "opus", "sonnet", "haiku"}
-hc_dir = repo_root / "packages" / "harness" / "configs" / "claude-code"
+# Host-selected publisher; no repository partner names or fixed package layout.
+hc_dir = None
+_host = None
+if (root / "lib" / "skiller" / "host.py").is_file():
+    sys.path[:0] = [str(root / "lib"), str(repo_root)]
+    from skiller.host import load_host, host_plugin_dirs
+    _host = load_host(root)
+    MEM_MODES.update(_host.mcp_servers)
+    _environment = _host.commands.get("environment")
+    if _environment is not None and "/" in _environment.argv[0]:
+        hc_dir = (_host.root / _environment.argv[0]).parent.parent / "configs" / "claude-code"
 profile_names = set()
 profiles_dir = root / "profiles"
 if profiles_dir.is_dir():
@@ -664,10 +674,10 @@ if profiles_dir.is_dir():
         if pack is not None and not isinstance(pack, (str, list)):
             errors.append(f"{rel}: agent_pack must be a string or list")
         packs = [pack] if isinstance(pack, str) else (pack if isinstance(pack, list) else [])
-        if hc_dir.is_dir():
+        if hc_dir is not None and hc_dir.is_dir():
             for pk in packs:
                 if not (hc_dir / "agent-packs" / str(pk) / "pack.json").exists():
-                    errors.append(f"{rel}: agent_pack '{pk}' — no pack.json in harness")
+                    errors.append(f"{rel}: agent_pack '{pk}' — no pack.json in environment publisher")
             for preset in data.get("harness_presets", []) or []:
                 if not (hc_dir / f"settings.{preset}.json").exists():
                     errors.append(f"{rel}: harness_preset '{preset}' — no settings.{preset}.json")
@@ -831,62 +841,7 @@ for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
             warnings.append(f"{rel_sd}: should_trigger {q!r} is not covered by any "
                             f"pressure-script (field triggers[])")
 
-# --- 5d. Thin projections do not duplicate canon -----------------
-# Couples «projection↔canon» from publication-lock.json (repository-bootstrap), when
-# its absence - configs/repository-bootstrap-skills.json. There are projections,
-# no source ⇒ ERROR (inconsistent state); no projections, no source
-# ⇒ check silently skipped (standalone-package layout).
-PROJECTION_MAX_BODY_LINES = 15
-_proj_lock = root / "adapters" / "repository-bootstrap" / "publication-lock.json"
-_proj_lock_fallback = root / "configs" / "repository-bootstrap-skills.json"
-_proj_glob = list(repo_root.glob(".claude/skills/*/SKILL.md")) + \
-             list(repo_root.glob(".agents/skills/*/SKILL.md"))
-if _proj_glob:
-    _proj_source = _proj_lock if _proj_lock.is_file() else (
-        _proj_lock_fallback if _proj_lock_fallback.is_file() else None)
-    if _proj_source is None:
-        errors.append(f"projections ({len(_proj_glob)}) exists, but no declared source "
-                      f"steam (adapters/repository-bootstrap/publication-lock.json or "
-                      f"configs/repository-bootstrap-skills.json)")
-    else:
-        try:
-            _proj_data = json.loads(_proj_source.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as _pe:
-            errors.append(f"{_proj_source.relative_to(repo_root)}: invalid JSON: {_pe}")
-            _proj_data = {}
-        _proj_records = _proj_data.get("records", []) if isinstance(_proj_data, dict) else []
-        for _pr in _proj_records:
-            _p_target = _pr.get("target")
-            _p_canon = _pr.get("canonical_en")
-            if not _p_target or not _p_canon:
-                continue
-            _p_path = repo_root / _p_target
-            if not _p_path.is_file():
-                continue  # projection not generated - out scope P8.8 (is not a generator gate)
-            _p_text = _p_path.read_text(encoding="utf-8")
-            _p_lines = _p_text.splitlines()
-            _p_start = 0
-            if _p_lines and _p_lines[0].strip() == "---":
-                for _i in range(1, len(_p_lines)):
-                    if _p_lines[_i].strip() == "---":
-                        _p_start = _i + 1
-                        break
-            _p_body = [ln for ln in _p_lines[_p_start:] if ln.strip()]
-            if len(_p_body) > PROJECTION_MAX_BODY_LINES:
-                errors.append(f"{_p_target}: body {len(_p_body)} lines "
-                              f"(> {PROJECTION_MAX_BODY_LINES}) — projection duplicates "
-                              f"canon {_p_canon}")
-            if _p_canon not in _p_text:
-                errors.append(f"{_p_target}: no link to canon {_p_canon}")
-            _p_canon_path = repo_root / _p_canon
-            if _p_canon_path.is_file():
-                _p_canon_headings = {m.group(1).strip() for m in
-                                     HEADING2_RE.finditer(_p_canon_path.read_text(encoding="utf-8"))}
-                _p_proj_headings = {m.group(1).strip() for m in HEADING2_RE.finditer(_p_text)}
-                _p_dup = _p_canon_headings & _p_proj_headings
-                if _p_dup:
-                    errors.append(f"{_p_target}: projection reproduces canon titles "
-                                  f"{sorted(_p_dup)} — body <projection> duplicates canon {_p_canon}")
+# Host bootstrap projections, hashes and completeness are owned by registry --check.
 
 # --- 6. buckets.json --------------------------------------------------------
 KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -1019,18 +974,14 @@ if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
 # without skills-fields; them plugin.json — source of truth, registry adds them to marketplace.
 # Here we only collect their names for match-checks (full validation - in their package).
 sibling_plugin_names = []
-pkgs_dir = repo_root / "packages"
-if root != repo_root and pkgs_dir.is_dir():
-    for pkg in sorted(pkgs_dir.iterdir()):
-        if not pkg.is_dir() or pkg.name == root.name:
-            continue
+if _host is not None:
+    for pkg in host_plugin_dirs(repo_root, root, _host):
         pj = pkg / ".claude-plugin" / "plugin.json"
-        if pj.exists():
-            try:
-                sibling_plugin_names.append(
-                    json.loads(pj.read_text(encoding="utf-8")).get("name", pkg.name))
-            except json.JSONDecodeError as e:
-                errors.append(f"packages/{pkg.name}/.claude-plugin/plugin.json: invalid JSON: {e}")
+        try:
+            sibling_plugin_names.append(
+                json.loads(pj.read_text(encoding="utf-8")).get("name", pkg.name))
+        except json.JSONDecodeError as e:
+            errors.append(f"{pj.relative_to(repo_root)}: invalid JSON: {e}")
 
 for plugin_name, plugin_root in sorted(plugin_roots.items()):
     pj = plugin_root / ".claude-plugin" / "plugin.json"
@@ -1083,7 +1034,7 @@ else:
                 f"({STALE_HINT})")
         for p in entries:
             src = p.get("source", "")
-            # source-paths are relative to the repo root (./packages/skiller/... or ./ for curated)
+            # source-paths are relative to the repo root (./<package>/... or ./ for curated)
             if not (repo_root / src).is_dir():
                 errors.append(
                     f".claude-plugin/marketplace.json: {p.get('name')}: "

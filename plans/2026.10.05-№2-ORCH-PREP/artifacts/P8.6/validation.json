@@ -1,0 +1,19 @@
+{
+  "item": "P8.6",
+  "checks": {
+    "V1": 0,
+    "V2": 0,
+    "V3": 0,
+    "V4": 0,
+    "V5": 0,
+    "V6": 0
+  },
+  "skiller_tests": 802,
+  "budget_before": 2256,
+  "budget_after": 2256,
+  "claude_identities": 14,
+  "codex_identities": 15,
+  "structural_validation": 0,
+  "docs": "docs/routing.md updated; CHANGELOG updated",
+  "scope": "Only Skiller suite, Task boundary and projection/host invariants; broad other-package checks omitted per owner."
+}

@@ -1,8 +1,5 @@
 {
   ".swissknifeman.example/config.json": "P8.9: neutralize monorepo paths in distributed content",
-  "adapters/repository-bootstrap/publication-lock.json": "P8.6: move and regenerate bootstrap publication lock",
-  "configs/publication-versions.json": "P8.6: move bootstrap unit version and neutralize self-path documentation",
-  "configs/repository-bootstrap-skills.json": "P8.6: move bootstrap configuration to the host repository",
   "docs/adapters/cursor.md": "P8.9: neutralize monorepo paths in distributed content",
   "docs/adapters/grok.md": "P8.9: neutralize monorepo paths in distributed content",
   "docs/agent-framework/framework-overview.md": "P8.9: neutralize monorepo paths in distributed content",
@@ -21,10 +18,7 @@
   "docs/multi-provider-distribution.md": "P8.9: neutralize monorepo paths in distributed content",
   "docs/workflows/background-agents.md": "P8.9: neutralize monorepo paths in distributed content",
   "docs/workflows/framework-audit.md": "P8.9: neutralize monorepo paths in distributed content",
-  "lib/skiller/publication.py": "P8.6: remove remaining package/layout coupling in the owning module",
-  "lib/skiller/registry.py": "P8.6: remove remaining package/layout coupling in the owning module",
   "references/mattpocock-skills.md": "P8.9: neutralize monorepo paths in distributed content",
-  "scripts/validate.sh": "P8.6: finish host-driven gates and bootstrap validation after P8.4-P8.5",
   "skills.json": "P8.9: regenerate registry after bootstrap removal and portable content cleanup",
   "skills/general/git-safety/SKILL.md": "P8.9: neutralize monorepo paths in distributed content",
   "skills/general/git-safety/upstream.json": "P8.9: neutralize monorepo paths in distributed content",
@@ -33,8 +27,5 @@
   "skills/general/skills-ssot/references/ssot-source-layout.md": "P8.9: neutralize monorepo paths in distributed content",
   "skills/general/workflow-craft/SKILL.md": "P8.9: neutralize monorepo paths in distributed content",
   "skills/quality/tdd-discipline/upstream.json": "P8.9: neutralize monorepo paths in distributed content",
-  "skills/repository-bootstrap": "P8.6: move repository-only skills to their canonical owners",
-  "skills/system/swissknifeman-locator/SKILL.md": "P8.9: neutralize monorepo paths in distributed content",
-  "tests/test_codex_publication.py": "P8.6: make owning test fixtures and comments portable",
-  "tests/test_provider_distribution.py": "P8.6: make owning test fixtures and comments portable"
+  "skills/system/swissknifeman-locator/SKILL.md": "P8.9: neutralize monorepo paths in distributed content"
 }

@@ -383,7 +383,7 @@ flowchart LR
 
 **In the column:** 129 skills, 88 ribs requires, 92 ribs produces_for.
 
-## Isolated skills (102)
+## Isolated skills (88)
 
 Skills without connections `requires`/`produces_for` — are self-sufficient.
 
@@ -417,7 +417,6 @@ Skills without connections `requires`/`produces_for` — are self-sufficient.
 | php-packages | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | pm | `pm-super-skill` |
 | quality | `artifact-review` |
-| repository-bootstrap | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring`, `task-development-philosophy` |
 | research | `research-knowledge-super-skill` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | sales | `sales-super-skill` |

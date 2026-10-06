@@ -15,7 +15,7 @@ from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
 
 # The hub's memory-tool sync writes these at fixed paths; they share registry names with
-# repository-bootstrap but are NOT skiller-vendored copies (see skilldoc.py).
+# host bootstrap but are NOT skiller-vendored copies (see skilldoc.py).
 MAIND_MANAGED_SKILL_NAMES = frozenset({"ecosystem-mcp", "ecosystem-setup"})
 
 

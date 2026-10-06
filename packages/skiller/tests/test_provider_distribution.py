@@ -138,12 +138,13 @@ class ProviderDistributionCase(unittest.TestCase):
             "source": f"./skills/{name}",
             "description": name,
             "category": "engineering",
-        } for name in ("core", "general", "task")]}
+        } for name in ("core", "general", "example-command")]}
         marketplace_path.write_text(json.dumps(marketplace), encoding="utf-8")
-        with contextlib.redirect_stderr(io.StringIO()):
+        with contextlib.redirect_stderr(io.StringIO()), mock.patch(
+                "skiller.connect.default_command_plugins", return_value=("example-command",)):
             prepared = prepare_connect_selection(
                 self.env, self.project, {"plugins": "general"}, load_config(self.env, self.project))
-        self.assertEqual(prepared["plugins"], ("core", "task"))
+        self.assertEqual(prepared["plugins"], ("core", "example-command"))
 
     def test_native_selection_parse_failure_precedes_connect_mutations(self):
         self.write_provider_config(providers())
@@ -854,7 +855,9 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
             self.assertNotIn("oss-dev", record["units"])
             self.assertIn("core", record["units"])
             self.assertIn("architect", record["units"])
-            self.assertIn("task", record["units"])
+            from skiller.host import load_host
+            for command_plugin in load_host(self.env.root).default_command_plugins:
+                self.assertIn(command_plugin, record["units"])
 
     def test_positive_fixture_has_zero_catalog_wide_collisions_and_zero_undeclared_roots(self):
         from skiller.doctor import run_effective_runtime_gate

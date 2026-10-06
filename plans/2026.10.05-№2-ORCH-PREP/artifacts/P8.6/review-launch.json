@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "grok",
+    "--cwd",
+    "/home/vostrikov/projects/packages/swissknifeman",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "--tools",
+    "read_file,grep,list_dir",
+    "--deny",
+    "MCPTool(*)",
+    "--always-approve",
+    "--no-subagents",
+    "--disable-web-search",
+    "--max-turns",
+    "24",
+    "--output-format",
+    "json",
+    "--session-id",
+    "b1a02d60-acb5-407d-843d-a766007c288d",
+    "--prompt-file",
+    "plans/2026.10.05-\u21162-ORCH-PREP/artifacts/P8.6/review-prompt.txt"
+  ],
+  "session_id": "b1a02d60-acb5-407d-843d-a766007c288d",
+  "context_parameter": null,
+  "role": "read-only reviewer",
+  "round": 1,
+  "readonly_enforcement": "only read_file/grep/list_dir; MCPTool denied; no shell or edit tools"
+}

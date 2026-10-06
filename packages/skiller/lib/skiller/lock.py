@@ -21,7 +21,7 @@ LOCK_VERSION = 1
 
 def _registry_map(env):
     """skills.json registry → {skill_name: bucket}. Private/source-only records
-    (`buckets.json` `private_source_only`, — now: `repository-bootstrap`)
+    (`buckets.json` `private_source_only`)
     excluded: they are never legit swissknifeman-source installed
     copies in the consumer project (the only manufacturer - root-bootstrap
     renderer `publication.py`, not this composer)."""

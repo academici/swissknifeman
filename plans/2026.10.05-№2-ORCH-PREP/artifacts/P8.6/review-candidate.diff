@@ -1,0 +1,2532 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index db2162cc..805a4e64 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -4,6 +4,11 @@
+ 
+ ### Added
+ 
++- **Repository bootstrap у владельцев:** 14 canonical skills перенесены из Skiller:
++  11 в корневой `bootstrap/skills`, три в `dev-skills` Task, Harness и mAInd.
++  Рендерер и cold-discovery читают явные пути из host-конфига v2; версия bootstrap
++  и publication lock принадлежат корню. Identity-проекции провайдеров сохранены,
++  first-turn budget не вырос; bootstrap больше не входит в registry Skiller.
+ - **Skiller resolve:** новая команда раскрывает запрошенные skill IDs и их
+   транзитивные `requires` из registry без записи файлов. Поддерживает `bucket/name`,
+   `bucket:name`, уникальные короткие имена и JSON `skiller.resolve/v1` с причинами
+diff --git a/bootstrap/publication-lock.json b/bootstrap/publication-lock.json
+new file mode 100644
+index 00000000..2d8bdc17
+--- /dev/null
++++ b/bootstrap/publication-lock.json
+@@ -0,0 +1,240 @@
++{
++  "contract_version": "1.0.0",
++  "publication_unit": "repository-bootstrap@0.3.1",
++  "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
++  "records": [
++    {
++      "identity": "cross-project-optimizer",
++      "provider": "claude",
++      "target": ".claude/skills/cross-project-optimizer/SKILL.md",
++      "canonical": "bootstrap/skills/cross-project-optimizer/SKILL.md",
++      "canonical_sha256": "02d54b47bc0ff54baf86e0caa7c2da44c11a95174a5fe61a51edf23ec4bdc582",
++      "rendered_sha256": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6"
++    },
++    {
++      "identity": "cross-project-optimizer",
++      "provider": "codex",
++      "target": ".agents/skills/cross-project-optimizer/SKILL.md",
++      "canonical": "bootstrap/skills/cross-project-optimizer/SKILL.md",
++      "canonical_sha256": "02d54b47bc0ff54baf86e0caa7c2da44c11a95174a5fe61a51edf23ec4bdc582",
++      "rendered_sha256": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6"
++    },
++    {
++      "identity": "decision-verification",
++      "provider": "claude",
++      "target": ".claude/skills/decision-verification/SKILL.md",
++      "canonical": "bootstrap/skills/decision-verification/SKILL.md",
++      "canonical_sha256": "7195e75a107df92f5605e93beffa6a2bb23d8d2b8f7f38f4190610518f41d59e",
++      "rendered_sha256": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a"
++    },
++    {
++      "identity": "decision-verification",
++      "provider": "codex",
++      "target": ".agents/skills/decision-verification/SKILL.md",
++      "canonical": "bootstrap/skills/decision-verification/SKILL.md",
++      "canonical_sha256": "7195e75a107df92f5605e93beffa6a2bb23d8d2b8f7f38f4190610518f41d59e",
++      "rendered_sha256": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a"
++    },
++    {
++      "identity": "docs-maintenance",
++      "provider": "claude",
++      "target": ".claude/skills/docs-maintenance/SKILL.md",
++      "canonical": "bootstrap/skills/docs-maintenance/SKILL.md",
++      "canonical_sha256": "d85bb036dfa56dad11077e0f9de3028ca4c2e036ceeba13b957e2b952fd4b28c",
++      "rendered_sha256": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10"
++    },
++    {
++      "identity": "docs-maintenance",
++      "provider": "codex",
++      "target": ".agents/skills/docs-maintenance/SKILL.md",
++      "canonical": "bootstrap/skills/docs-maintenance/SKILL.md",
++      "canonical_sha256": "d85bb036dfa56dad11077e0f9de3028ca4c2e036ceeba13b957e2b952fd4b28c",
++      "rendered_sha256": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10"
++    },
++    {
++      "identity": "ecosystem-integration",
++      "provider": "claude",
++      "target": ".claude/skills/ecosystem-integration/SKILL.md",
++      "canonical": "bootstrap/skills/ecosystem-integration/SKILL.md",
++      "canonical_sha256": "5a11d97f96bff21d33f000f207cf93e4e76def85e9ae0e6c5245f07bd8921a5a",
++      "rendered_sha256": "2f5dcb7396827f1411c33251c2ffc07f5137698b1a492785d4ce8fd062467b3c"
++    },
++    {
++      "identity": "ecosystem-integration",
++      "provider": "codex",
++      "target": ".agents/skills/ecosystem-integration/SKILL.md",
++      "canonical": "bootstrap/skills/ecosystem-integration/SKILL.md",
++      "canonical_sha256": "5a11d97f96bff21d33f000f207cf93e4e76def85e9ae0e6c5245f07bd8921a5a",
++      "rendered_sha256": "2f5dcb7396827f1411c33251c2ffc07f5137698b1a492785d4ce8fd062467b3c"
++    },
++    {
++      "identity": "ecosystem-mcp",
++      "provider": "claude",
++      "target": ".claude/skills/ecosystem-mcp/SKILL.md",
++      "canonical": "bootstrap/skills/ecosystem-mcp/SKILL.md",
++      "canonical_sha256": "c3ee1bc5b2290b5ded6666e87658543152d778f26cf587aa9229e9a0365be630",
++      "rendered_sha256": "69d00a15e2ebadbf485a02a5ce967d3170f96d3cfab089ec01d026646b2fd90c"
++    },
++    {
++      "identity": "ecosystem-mcp",
++      "provider": "codex",
++      "target": ".agents/skills/ecosystem-mcp/SKILL.md",
++      "canonical": "bootstrap/skills/ecosystem-mcp/SKILL.md",
++      "canonical_sha256": "c3ee1bc5b2290b5ded6666e87658543152d778f26cf587aa9229e9a0365be630",
++      "rendered_sha256": "69d00a15e2ebadbf485a02a5ce967d3170f96d3cfab089ec01d026646b2fd90c"
++    },
++    {
++      "identity": "ecosystem-setup",
++      "provider": "claude",
++      "target": ".claude/skills/ecosystem-setup/SKILL.md",
++      "canonical": "bootstrap/skills/ecosystem-setup/SKILL.md",
++      "canonical_sha256": "f5c9eb5443cd5db3ea819c967a0bcf0876a97f4fbce0448f50a82a980df4027a",
++      "rendered_sha256": "42b4651cb5c5b5e9fde7d288dc200ebdf8194cad5501120a9d23ce95147d758d"
++    },
++    {
++      "identity": "ecosystem-setup",
++      "provider": "codex",
++      "target": ".agents/skills/ecosystem-setup/SKILL.md",
++      "canonical": "bootstrap/skills/ecosystem-setup/SKILL.md",
++      "canonical_sha256": "f5c9eb5443cd5db3ea819c967a0bcf0876a97f4fbce0448f50a82a980df4027a",
++      "rendered_sha256": "42b4651cb5c5b5e9fde7d288dc200ebdf8194cad5501120a9d23ce95147d758d"
++    },
++    {
++      "identity": "field-feedback-loop",
++      "provider": "claude",
++      "target": ".claude/skills/field-feedback-loop/SKILL.md",
++      "canonical": "bootstrap/skills/field-feedback-loop/SKILL.md",
++      "canonical_sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
++      "rendered_sha256": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35"
++    },
++    {
++      "identity": "field-feedback-loop",
++      "provider": "codex",
++      "target": ".agents/skills/field-feedback-loop/SKILL.md",
++      "canonical": "bootstrap/skills/field-feedback-loop/SKILL.md",
++      "canonical_sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
++      "rendered_sha256": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35"
++    },
++    {
++      "identity": "harness-operations",
++      "provider": "claude",
++      "target": ".claude/skills/harness-operations/SKILL.md",
++      "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md",
++      "canonical_sha256": "da5ae9537152d4ed42d1ed34c11b19715ca45038f5541d0cac366cfb21aac362",
++      "rendered_sha256": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f"
++    },
++    {
++      "identity": "harness-operations",
++      "provider": "codex",
++      "target": ".agents/skills/harness-operations/SKILL.md",
++      "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md",
++      "canonical_sha256": "da5ae9537152d4ed42d1ed34c11b19715ca45038f5541d0cac366cfb21aac362",
++      "rendered_sha256": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f"
++    },
++    {
++      "identity": "maind-overview",
++      "provider": "claude",
++      "target": ".claude/skills/maind-overview/SKILL.md",
++      "canonical": "packages/maind/dev-skills/maind-overview/SKILL.md",
++      "canonical_sha256": "e556246789cb54b497583070c5c11e3feab5970b8a0a8588cb67f5dd6e3749bc",
++      "rendered_sha256": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f"
++    },
++    {
++      "identity": "maind-overview",
++      "provider": "codex",
++      "target": ".agents/skills/maind-overview/SKILL.md",
++      "canonical": "packages/maind/dev-skills/maind-overview/SKILL.md",
++      "canonical_sha256": "e556246789cb54b497583070c5c11e3feab5970b8a0a8588cb67f5dd6e3749bc",
++      "rendered_sha256": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f"
++    },
++    {
++      "identity": "package-architecture",
++      "provider": "claude",
++      "target": ".claude/skills/package-architecture/SKILL.md",
++      "canonical": "bootstrap/skills/package-architecture/SKILL.md",
++      "canonical_sha256": "a1e463d25dff22415f59b546e67b62844a3df241fb4d1c6def5215c5cb46769d",
++      "rendered_sha256": "067d62d2563dd2d4f9d6a4a484e0f7ae807ea7a477ad776db02d6480a2c6d213"
++    },
++    {
++      "identity": "package-architecture",
++      "provider": "codex",
++      "target": ".agents/skills/package-architecture/SKILL.md",
++      "canonical": "bootstrap/skills/package-architecture/SKILL.md",
++      "canonical_sha256": "a1e463d25dff22415f59b546e67b62844a3df241fb4d1c6def5215c5cb46769d",
++      "rendered_sha256": "067d62d2563dd2d4f9d6a4a484e0f7ae807ea7a477ad776db02d6480a2c6d213"
++    },
++    {
++      "identity": "project-tooling-runbook",
++      "provider": "claude",
++      "target": ".claude/skills/project-tooling-runbook/SKILL.md",
++      "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md",
++      "canonical_sha256": "be47994cdbd612448992ea4412e88d9481b69374148a1f028f7b5d4cc3b2a089",
++      "rendered_sha256": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02"
++    },
++    {
++      "identity": "project-tooling-runbook",
++      "provider": "codex",
++      "target": ".agents/skills/project-tooling-runbook/SKILL.md",
++      "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md",
++      "canonical_sha256": "be47994cdbd612448992ea4412e88d9481b69374148a1f028f7b5d4cc3b2a089",
++      "rendered_sha256": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02"
++    },
++    {
++      "identity": "release-discipline",
++      "provider": "claude",
++      "target": ".claude/skills/release-discipline/SKILL.md",
++      "canonical": "bootstrap/skills/release-discipline/SKILL.md",
++      "canonical_sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
++      "rendered_sha256": "09b2161b86fc527a97e694e8b9900c31ceff81c882d4c4af1be2b96093929efa"
++    },
++    {
++      "identity": "release-discipline",
++      "provider": "codex",
++      "target": ".agents/skills/release-discipline/SKILL.md",
++      "canonical": "bootstrap/skills/release-discipline/SKILL.md",
++      "canonical_sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
++      "rendered_sha256": "09b2161b86fc527a97e694e8b9900c31ceff81c882d4c4af1be2b96093929efa"
++    },
++    {
++      "identity": "skill-authoring",
++      "provider": "claude",
++      "target": ".claude/skills/skill-authoring/SKILL.md",
++      "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
++      "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
++      "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
++    },
++    {
++      "identity": "skill-authoring",
++      "provider": "codex",
++      "target": ".agents/skills/skill-authoring/SKILL.md",
++      "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
++      "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
++      "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
++    },
++    {
++      "identity": "task-development-philosophy",
++      "provider": "claude",
++      "target": ".claude/skills/task-development-philosophy/SKILL.md",
++      "canonical": "packages/task/dev-skills/task-development-philosophy/SKILL.md",
++      "canonical_sha256": "d5644dddff49ae21447ebd7d0989c6f337a74aa4786708415bb482cf150e6a50",
++      "rendered_sha256": "cc30252821edb8f0eb004cab7a6594f8f0848641c7b41a47166ee46c6c431b3e"
++    },
++    {
++      "identity": "task-development-philosophy",
++      "provider": "codex",
++      "target": ".agents/skills/task-development-philosophy/SKILL.md",
++      "canonical": "packages/task/dev-skills/task-development-philosophy/SKILL.md",
++      "canonical_sha256": "d5644dddff49ae21447ebd7d0989c6f337a74aa4786708415bb482cf150e6a50",
++      "rendered_sha256": "cc30252821edb8f0eb004cab7a6594f8f0848641c7b41a47166ee46c6c431b3e"
++    },
++    {
++      "identity": "workflow-craft",
++      "provider": "codex",
++      "target": ".agents/skills/workflow-craft/SKILL.md",
++      "source_class": "public-bucket",
++      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
++      "canonical_sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
++      "rendered_sha256": "a284fea973dcd173fdbc86405e532cca76094696c5c038eb58490d832c6a9b70"
++    }
++  ]
++}
+diff --git a/packages/skiller/skills/repository-bootstrap/cross-project-optimizer/SKILL.md b/bootstrap/skills/cross-project-optimizer/SKILL.md
+similarity index 94%
+rename from packages/skiller/skills/repository-bootstrap/cross-project-optimizer/SKILL.md
+rename to bootstrap/skills/cross-project-optimizer/SKILL.md
+index 7a6efcd3..3edd7bd1 100644
+--- a/packages/skiller/skills/repository-bootstrap/cross-project-optimizer/SKILL.md
++++ b/bootstrap/skills/cross-project-optimizer/SKILL.md
+@@ -41,7 +41,7 @@ guideline ([ecosystem-mcp] → "Cross-project task"): `maind memory recall --sco
+ (SessionStart digest does NOT carry it by default, D10 — [docs/guide/memory.md]).
+ 
+ [ecosystem-mcp]: ../ecosystem-mcp/SKILL.md
+-[docs/guide/memory.md]: ../../../../../packages/maind/docs/guide/memory.md
++[docs/guide/memory.md]: ../../../packages/maind/docs/guide/memory.md
+ 
+ ### 3. Duplicates — what exactly repeats
+ ```bash
+@@ -69,7 +69,7 @@ symlinks). Fix call sites in consumers. Log the result:
+ - **Write to shared memory** what you extracted — so the next pass sees history and doesn't
+   duplicate work.
+ - You already have access to all repositories (hub workspace trust). More —
+-  [code graph](../../../../../packages/maind/docs/guide/code-graph.md), [fleet](../../../../../packages/maind/docs/guide/fleet.md).
++  [code graph](../../../packages/maind/docs/guide/code-graph.md), [fleet](../../../packages/maind/docs/guide/fleet.md).
+ 
+ ## Provenance (root-bootstrap, P1.2)
+ 
+diff --git a/packages/skiller/skills/repository-bootstrap/decision-verification/SKILL.md b/bootstrap/skills/decision-verification/SKILL.md
+similarity index 92%
+rename from packages/skiller/skills/repository-bootstrap/decision-verification/SKILL.md
+rename to bootstrap/skills/decision-verification/SKILL.md
+index 83ee525b..44bff78c 100644
+--- a/packages/skiller/skills/repository-bootstrap/decision-verification/SKILL.md
++++ b/bootstrap/skills/decision-verification/SKILL.md
+@@ -18,7 +18,7 @@ sha256: ""
+ 
+ Read code and recorded evidence for repository claims. For a changing external
+ premise, apply the single policy in
+-[verify-claims](../../general/verify-claims/SKILL.md). Record external design
++[verify-claims](../../../packages/skiller/skills/general/verify-claims/SKILL.md). Record external design
+ provenance in `docs/reference.md`. Do not repeat a research ladder or require an
+ empty verification footer on local implementation work.
+ 
+diff --git a/packages/skiller/skills/repository-bootstrap/docs-maintenance/SKILL.md b/bootstrap/skills/docs-maintenance/SKILL.md
+similarity index 100%
+rename from packages/skiller/skills/repository-bootstrap/docs-maintenance/SKILL.md
+rename to bootstrap/skills/docs-maintenance/SKILL.md
+diff --git a/packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md b/bootstrap/skills/ecosystem-integration/SKILL.md
+similarity index 95%
+rename from packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md
+rename to bootstrap/skills/ecosystem-integration/SKILL.md
+index 3df0b5b3..b286a1dc 100644
+--- a/packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md
++++ b/bootstrap/skills/ecosystem-integration/SKILL.md
+@@ -23,7 +23,7 @@ commands. Run them from the maind hub directory (or the absolute path `bin/maind
+ ## Decision tree (before onboarding)
+ 
+ Full scenario tree (10 layers, conditional branches) — canonical doc
+-["Decision tree: project setup"](../../../../../packages/maind/docs/guide/onboarding-decision-tree.md).
++["Decision tree: project setup"](../../../packages/maind/docs/guide/onboarding-decision-tree.md).
+ Briefly, before running: **type** (detect → profile; unrecognized → don't do "everything", pick
+ explicitly) → **memory** (maind/native/off) → **namespaces** (shared + personal) → **skills
+ channel** (connect/vendor — ASK) → **buckets** (optimal for the stack, not maximal) →
+@@ -89,7 +89,7 @@ the service: `maind service install`).
+ 
+ The systemd daemon starts on login; to come up **on OS boot** (SSH server) — enable linger once:
+ `loginctl enable-linger $USER` (check: `loginctl show-user $USER -p Linger` → `yes`). See
+-[systemd guide](../../../../../packages/maind/docs/guide/systemd.md).
++[systemd guide](../../../packages/maind/docs/guide/systemd.md).
+ 
+ ## Drift gate — mandatory before calling onboarding/integration done
+ 
+@@ -122,7 +122,7 @@ A separate per-project CODE graph MCP (symbols/references/implementations). Defa
+ `uvx` on PATH; missing → correct `skipped-not-installed` skip, everything else still works). The
+ engine can be overridden per project (`code_command` / `code_args` with `{root}` /
+ `code_server_name`) — e.g. a stack-specific server. More —
+-[code graph](../../../../../packages/maind/docs/guide/code-graph.md).
++[code graph](../../../packages/maind/docs/guide/code-graph.md).
+ 
+ ## Memo
+ 
+@@ -132,7 +132,7 @@ engine can be overridden per project (`code_command` / `code_args` with `{root}`
+   (`shared_max=0`, D10) — only `project:<id>`; group-wide context is raised EXPLICITLY via
+   `recall --scope ns:<name>` when the task is genuinely cross-project (guideline — skill
+   [ecosystem-mcp] → "Cross-project task", doctrine —
+-  [docs/guide/memory.md](../../../../../packages/maind/docs/guide/memory.md)).
++  [docs/guide/memory.md](../../../packages/maind/docs/guide/memory.md)).
+ - MCP is passive: the project's own agent calls `recall`/`store`/graph tools — no automatic
+   "interception".
+ - Store only temporary useful context (default 48 hours, maximum 72 hours, 800 characters).
+diff --git a/packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md b/bootstrap/skills/ecosystem-mcp/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md
+rename to bootstrap/skills/ecosystem-mcp/SKILL.md
+index 52b88fba..eb629c35 100644
+--- a/packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md
++++ b/bootstrap/skills/ecosystem-mcp/SKILL.md
+@@ -19,7 +19,7 @@ sha256: ""
+ This project (`swissknifeman`) is a node of the **academici** ecosystem, connected to the
+ **mAInd** hub. Two independent linking mechanisms flow through the hub; both are rolled out here
+ as MCP servers (see `.mcp.json`). For swissknifeman as a self-host repo, this file's canonical
+-source is `packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md`
++source is `bootstrap/skills/ecosystem-mcp/SKILL.md`
+ (edit there, regenerate `skiller registry`, P1.2/D31); the onboarding template
+ `packages/maind/templates/skills/ecosystem-mcp/SKILL.md` is the same content for OTHER ecosystem
+ projects (`maind onboard`/`maind sync`) — do not conflate the two sources.
+diff --git a/packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md b/bootstrap/skills/ecosystem-setup/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md
+rename to bootstrap/skills/ecosystem-setup/SKILL.md
+index 457f88cb..541a6a98 100644
+--- a/packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md
++++ b/bootstrap/skills/ecosystem-setup/SKILL.md
+@@ -18,7 +18,7 @@ sha256: ""
+ 
+ This project is a node of the **academici** ecosystem, connected to the **mAInd** hub. For
+ swissknifeman as a self-host repo, this file's canonical source is
+-`packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md` (edit there,
++`bootstrap/skills/ecosystem-setup/SKILL.md` (edit there,
+ regenerate `skiller registry`, P1.2/D31); the onboarding template
+ `packages/maind/templates/skills/ecosystem-setup/SKILL.md` is the same content for OTHER
+ ecosystem projects (`maind onboard`/`maind sync`) — do not conflate the two sources.
+diff --git a/packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md b/bootstrap/skills/field-feedback-loop/SKILL.md
+similarity index 100%
+rename from packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md
+rename to bootstrap/skills/field-feedback-loop/SKILL.md
+diff --git a/packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md b/bootstrap/skills/package-architecture/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md
+rename to bootstrap/skills/package-architecture/SKILL.md
+index 15a10b86..6e212ce3 100644
+--- a/packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md
++++ b/bootstrap/skills/package-architecture/SKILL.md
+@@ -65,7 +65,7 @@ source-only records instead of copying them into a consumer project. The sole pr
+ projections is `registry.py` → `publication.py`'s root-bootstrap renderer from
+ `configs/repository-bootstrap-skills.json`; `skillset.py` implements only the consumer exclusion,
+ never this self-host producer (see
+-[semantic-identity-ownership-v1](../../../../../)).
++[semantic-identity-ownership-v1](../../../)).
+ 
+ ## Two project configs (don't confuse, don't merge)
+ 
+@@ -132,7 +132,7 @@ removed: brain is an ordinary consuming project.
+ | `skills.json` (registry v5: sha256 + content_sha256, provenance, requires/produces_for, optional `level`) | `skiller registry` |
+ | `skills/*/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | `skiller registry` |
+ | `docs/guide/graph.md` (Mermaid dependency graph) | `skiller registry` → `scripts/generate-graph.sh` |
+-| 28 thin root-bootstrap projections (`.claude/skills/<id>/`+`.agents/skills/<id>/`) + `adapters/repository-bootstrap/publication-lock.json` | `skiller registry` → `publication.py`'s root-bootstrap renderer |
++| 28 thin root-bootstrap projections (`.claude/skills/<id>/`+`.agents/skills/<id>/`) + `bootstrap/publication-lock.json` | `skiller registry` → `publication.py`'s root-bootstrap renderer |
+ | Project hub (managed CLAUDE.md block or `.ai/guidelines/swissknifeman-hub.md`) | `scripts/generate-hub.sh` |
+ | Permissions/MCP/hooks in a project | package **`harness`** (`harness permissions\|mcp\|hooks`); skiller delegates via subprocess |
+ 
+diff --git a/packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md b/bootstrap/skills/project-tooling-runbook/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md
+rename to bootstrap/skills/project-tooling-runbook/SKILL.md
+index 028ba327..34d8882a 100644
+--- a/packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md
++++ b/bootstrap/skills/project-tooling-runbook/SKILL.md
+@@ -20,8 +20,8 @@ You manage this. The maind hub (onboarding/memory/graph) is separate, see [ecosy
+ This skill covers **project role skills** (from several sources) and **documentation sync**.
+ 
+ [ecosystem-integration]: ../ecosystem-integration/SKILL.md
+-[harness-operations]: ../harness-operations/SKILL.md
+-[maind-overview]: ../maind-overview/SKILL.md
++[harness-operations]: ../../../packages/harness/dev-skills/harness-operations/SKILL.md
++[maind-overview]: ../../../packages/maind/dev-skills/maind-overview/SKILL.md
+ [field-feedback-loop]: ../field-feedback-loop/SKILL.md
+ 
+ ## Project skills — source COMPOSITION (not just swissknifeman)
+@@ -136,7 +136,7 @@ noise: they clutter context and devalue curation.
+ > project→project-local, connect=coarse/vendor=fine, lean SKILL.md) — canon in skiller docs
+ > `guide/skill-taxonomy.md`. Full tree of every setup layer (memory/ns/channel/environment/graph)
+ > with branches — canonical maind doc
+-> ["Decision tree: project setup"](../../../../../packages/maind/docs/guide/onboarding-decision-tree.md).
++> ["Decision tree: project setup"](../../../packages/maind/docs/guide/onboarding-decision-tree.md).
+ 
+ CLI — `swissknifeman` (run from the project directory; root is searched upward from CWD):
+ 
+@@ -362,7 +362,7 @@ four:
+ ## Control surface: status → point re-sync
+ 
+ All 4 project layers' state in one command, and point repair of each. Canon —
+-[Project control surface](../../../../../docs/control-surface.md) (umbrella doc).
++[Project control surface](../../../docs/control-surface.md) (umbrella doc).
+ 
+ ```bash
+ swissknifeman status <id>            # 4 layers: status·mcp[a/m/c]·skills·packs·trust + drift→fix
+@@ -382,7 +382,7 @@ that's a separate fleet-wide gate: [ecosystem-integration] §Drift-gate (`skille
+ 
+ ## Links
+ 
+-- [Project control surface](../../../../../docs/control-surface.md) — unified 4-layer status +
++- [Project control surface](../../../docs/control-surface.md) — unified 4-layer status +
+   point re-sync.
+ - [ecosystem-integration] — connecting a project to the mAInd hub (memory/graph/MCP).
+ - [harness-operations] — the agent-packs subsystem (roles/agents), permissions/mcp/hooks presets.
+diff --git a/packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md b/bootstrap/skills/release-discipline/SKILL.md
+similarity index 100%
+rename from packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md
+rename to bootstrap/skills/release-discipline/SKILL.md
+diff --git a/packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md b/bootstrap/skills/skill-authoring/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md
+rename to bootstrap/skills/skill-authoring/SKILL.md
+index bc9b54b7..72fcc1c3 100644
+--- a/packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md
++++ b/bootstrap/skills/skill-authoring/SKILL.md
+@@ -46,7 +46,7 @@ skills/<bucket>/<name>/
+ └── evals/            # optional behavioral evals
+ ```
+ 
+-Root-bootstrap identities live under `skills/repository-bootstrap/<id>/` and project into the
++Root-bootstrap identities live under `bootstrap/skills/<id>/` or `packages/<owner>/dev-skills/<id>/` and project into the
+ repository `.agents/skills/` bootstrap surface through the registry generator. The projection is
+ not the source of truth.
+ 
+diff --git a/configs/repository-bootstrap-skills.json b/configs/repository-bootstrap-skills.json
+new file mode 100644
+index 00000000..eecc7482
+--- /dev/null
++++ b/configs/repository-bootstrap-skills.json
+@@ -0,0 +1,81 @@
++{
++  "_doc": "Private host-owned bootstrap identities with explicit repository-relative canonical sources. Thin provider projections and one combined publication lock are generated by the configured publisher.",
++  "schema_version": 2,
++  "bucket": "repository-bootstrap",
++  "publication_unit": "repository-bootstrap",
++  "lock_path": "bootstrap/publication-lock.json",
++  "class_a_content_version": "0.1.0",
++  "_class_a_content_version_doc": "Frozen class-A projection version; only class-B projections and the combined lock track unit_version.",
++  "identities": [
++    {
++      "identity": "cross-project-optimizer",
++      "canonical": "bootstrap/skills/cross-project-optimizer/SKILL.md"
++    },
++    {
++      "identity": "decision-verification",
++      "canonical": "bootstrap/skills/decision-verification/SKILL.md"
++    },
++    {
++      "identity": "docs-maintenance",
++      "canonical": "bootstrap/skills/docs-maintenance/SKILL.md"
++    },
++    {
++      "identity": "ecosystem-integration",
++      "canonical": "bootstrap/skills/ecosystem-integration/SKILL.md"
++    },
++    {
++      "identity": "ecosystem-mcp",
++      "canonical": "bootstrap/skills/ecosystem-mcp/SKILL.md"
++    },
++    {
++      "identity": "ecosystem-setup",
++      "canonical": "bootstrap/skills/ecosystem-setup/SKILL.md"
++    },
++    {
++      "identity": "field-feedback-loop",
++      "canonical": "bootstrap/skills/field-feedback-loop/SKILL.md"
++    },
++    {
++      "identity": "harness-operations",
++      "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md"
++    },
++    {
++      "identity": "maind-overview",
++      "canonical": "packages/maind/dev-skills/maind-overview/SKILL.md"
++    },
++    {
++      "identity": "package-architecture",
++      "canonical": "bootstrap/skills/package-architecture/SKILL.md"
++    },
++    {
++      "identity": "project-tooling-runbook",
++      "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md"
++    },
++    {
++      "identity": "release-discipline",
++      "canonical": "bootstrap/skills/release-discipline/SKILL.md"
++    },
++    {
++      "identity": "skill-authoring",
++      "canonical": "bootstrap/skills/skill-authoring/SKILL.md"
++    },
++    {
++      "identity": "task-development-philosophy",
++      "canonical": "packages/task/dev-skills/task-development-philosophy/SKILL.md"
++    }
++  ],
++  "class_b": [
++    {
++      "_doc": "A public-bucket canon whose unit (`general`) is not enabled — the root carrier has no owner/provenance/hash otherwise. Codex-only by declared asymmetry (a Claude root projection changes first-turn budget, requires `skiller budget --first-turn`, outside this scope). `precondition` is enforced against an explicitly-passed enabled-inventory only — this renderer never reads a live provider profile/cache.",
++      "identity": "workflow-craft",
++      "source_class": "public-bucket",
++      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
++      "providers": [
++        "codex"
++      ],
++      "asymmetry_reason": "a Claude root projection changes the first-turn budget and requires `skiller budget --first-turn` (CLAUDE.md), which is outside this scope; the asymmetry is declared, not accidental",
++      "precondition": "no enabled unit serves this identity"
++    }
++  ],
++  "unit_version": "0.3.1"
++}
+diff --git a/docs/routing.md b/docs/routing.md
+index 956eccb0..c584ee5c 100644
+--- a/docs/routing.md
++++ b/docs/routing.md
+@@ -9,6 +9,16 @@
+ 
+ **Rules conflict → wins more specific source: project > Boost > registry.**
+ 
++Repository bootstrap skills are host-owned and listed in
++`configs/repository-bootstrap-skills.json` (schema v2), selected by `bootstrap` in
++`configs/skiller-host.json`. Canonical files live in `bootstrap/skills/<identity>/`
++or the owner's `packages/<owner>/dev-skills/<identity>/`; these development skills
++are excluded from distributed registries and plugins. `skiller registry` generates
++the thin `.claude/skills` and `.agents/skills` pointers and
++`bootstrap/publication-lock.json`. `skiller registry --check` verifies their paths,
++hashes, bytes and complete identity sets. The bootstrap unit version belongs to the
++host config; the fixed class-A content version remains separate.
++
+ ## Architectural layers: what goes where (anti-sprawl stop rule)
+ 
+ swissknifeman — **four-pack umbrella**, and not one «core». Before you add something, decide in which
+diff --git a/packages/skiller/skills/repository-bootstrap/harness-operations/SKILL.md b/packages/harness/dev-skills/harness-operations/SKILL.md
+similarity index 96%
+rename from packages/skiller/skills/repository-bootstrap/harness-operations/SKILL.md
+rename to packages/harness/dev-skills/harness-operations/SKILL.md
+index 9e307814..b0248208 100644
+--- a/packages/skiller/skills/repository-bootstrap/harness-operations/SKILL.md
++++ b/packages/harness/dev-skills/harness-operations/SKILL.md
+@@ -21,9 +21,9 @@ Internal skill (not exported). Facts only — the `harness` package's capability
+ configures the Claude Code ENVIRONMENT in a project (permissions, MCP, hooks, agent-packs);
+ skiller delegates to it via subprocess.
+ 
+-[package-architecture]: ../package-architecture/SKILL.md
+-[ecosystem-integration]: ../ecosystem-integration/SKILL.md
+-[project-tooling-runbook]: ../project-tooling-runbook/SKILL.md
++[package-architecture]: ../../../../bootstrap/skills/package-architecture/SKILL.md
++[ecosystem-integration]: ../../../../bootstrap/skills/ecosystem-integration/SKILL.md
++[project-tooling-runbook]: ../../../../bootstrap/skills/project-tooling-runbook/SKILL.md
+ 
+ ## When to activate
+ 
+diff --git a/packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md b/packages/maind/dev-skills/maind-overview/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md
+rename to packages/maind/dev-skills/maind-overview/SKILL.md
+index 570abd86..92ffb703 100644
+--- a/packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md
++++ b/packages/maind/dev-skills/maind-overview/SKILL.md
+@@ -47,8 +47,8 @@ session unasked). Group-wide context is raised EXPLICITLY when the task is genui
+ cross-project — guideline and commands: [ecosystem-mcp] → "Cross-project task", doctrine —
+ [docs/guide/memory.md].
+ 
+-[ecosystem-mcp]: ../ecosystem-mcp/SKILL.md
+-[docs/guide/memory.md]: ../../../../../packages/maind/docs/guide/memory.md
++[ecosystem-mcp]: ../../../../bootstrap/skills/ecosystem-mcp/SKILL.md
++[docs/guide/memory.md]: ../../docs/guide/memory.md
+ 
+ ## Key commands
+ 
+diff --git a/packages/skiller/adapters/repository-bootstrap/publication-lock.json b/packages/skiller/adapters/repository-bootstrap/publication-lock.json
+deleted file mode 100644
+index 9f13e21c..00000000
+--- a/packages/skiller/adapters/repository-bootstrap/publication-lock.json
++++ /dev/null
+@@ -1,240 +0,0 @@
+-{
+-  "contract_version": "1.0.0",
+-  "publication_unit": "repository-bootstrap@0.3.1",
+-  "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
+-  "records": [
+-    {
+-      "identity": "cross-project-optimizer",
+-      "provider": "claude",
+-      "target": ".claude/skills/cross-project-optimizer/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/cross-project-optimizer/SKILL.md",
+-      "canonical_sha256": "cd7b28ae96a9c7915e036ce720acfd1f67f3f24b2489a1a8e83627e88be38667",
+-      "rendered_sha256": "2b2b4bc9bab15507ba0b622d27fd9547070a7ecef5122f82dab5e9a8bc905e4c"
+-    },
+-    {
+-      "identity": "cross-project-optimizer",
+-      "provider": "codex",
+-      "target": ".agents/skills/cross-project-optimizer/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/cross-project-optimizer/SKILL.md",
+-      "canonical_sha256": "cd7b28ae96a9c7915e036ce720acfd1f67f3f24b2489a1a8e83627e88be38667",
+-      "rendered_sha256": "2b2b4bc9bab15507ba0b622d27fd9547070a7ecef5122f82dab5e9a8bc905e4c"
+-    },
+-    {
+-      "identity": "decision-verification",
+-      "provider": "claude",
+-      "target": ".claude/skills/decision-verification/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/decision-verification/SKILL.md",
+-      "canonical_sha256": "e7b84da46c946810ad9be8d0f25aef8936595854db50ec67df4b8eb17576910b",
+-      "rendered_sha256": "4f2f27434f148421455c06b32e9dc96442f9e21df4dd38751439673d1c83dec0"
+-    },
+-    {
+-      "identity": "decision-verification",
+-      "provider": "codex",
+-      "target": ".agents/skills/decision-verification/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/decision-verification/SKILL.md",
+-      "canonical_sha256": "e7b84da46c946810ad9be8d0f25aef8936595854db50ec67df4b8eb17576910b",
+-      "rendered_sha256": "4f2f27434f148421455c06b32e9dc96442f9e21df4dd38751439673d1c83dec0"
+-    },
+-    {
+-      "identity": "docs-maintenance",
+-      "provider": "claude",
+-      "target": ".claude/skills/docs-maintenance/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/docs-maintenance/SKILL.md",
+-      "canonical_sha256": "d85bb036dfa56dad11077e0f9de3028ca4c2e036ceeba13b957e2b952fd4b28c",
+-      "rendered_sha256": "80f81ed8faee377cbf90e81c899efda2b8503750868be7228bcc088ee77d5dc2"
+-    },
+-    {
+-      "identity": "docs-maintenance",
+-      "provider": "codex",
+-      "target": ".agents/skills/docs-maintenance/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/docs-maintenance/SKILL.md",
+-      "canonical_sha256": "d85bb036dfa56dad11077e0f9de3028ca4c2e036ceeba13b957e2b952fd4b28c",
+-      "rendered_sha256": "80f81ed8faee377cbf90e81c899efda2b8503750868be7228bcc088ee77d5dc2"
+-    },
+-    {
+-      "identity": "ecosystem-integration",
+-      "provider": "claude",
+-      "target": ".claude/skills/ecosystem-integration/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md",
+-      "canonical_sha256": "b0f1ba4bd0fa95061c3c800e9ceb4350f4911f68659624365e503a780b88caac",
+-      "rendered_sha256": "9c5d883fda0b3bf8ff6d656b8fa7fd06bda4c198ec0debb5587cc7f9bb6887a1"
+-    },
+-    {
+-      "identity": "ecosystem-integration",
+-      "provider": "codex",
+-      "target": ".agents/skills/ecosystem-integration/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md",
+-      "canonical_sha256": "b0f1ba4bd0fa95061c3c800e9ceb4350f4911f68659624365e503a780b88caac",
+-      "rendered_sha256": "9c5d883fda0b3bf8ff6d656b8fa7fd06bda4c198ec0debb5587cc7f9bb6887a1"
+-    },
+-    {
+-      "identity": "ecosystem-mcp",
+-      "provider": "claude",
+-      "target": ".claude/skills/ecosystem-mcp/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
+-      "canonical_sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+-      "rendered_sha256": "29a61a56501ba16e3a9c0a59323ad8d1cbe5942be41da74129757d94289969f7"
+-    },
+-    {
+-      "identity": "ecosystem-mcp",
+-      "provider": "codex",
+-      "target": ".agents/skills/ecosystem-mcp/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
+-      "canonical_sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+-      "rendered_sha256": "29a61a56501ba16e3a9c0a59323ad8d1cbe5942be41da74129757d94289969f7"
+-    },
+-    {
+-      "identity": "ecosystem-setup",
+-      "provider": "claude",
+-      "target": ".claude/skills/ecosystem-setup/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md",
+-      "canonical_sha256": "1aaff539e9148d1300b1aafea7e282cbfc21ef40cee67b0f6b7f1f5879a3e885",
+-      "rendered_sha256": "d13ae7745ac36f744258d7da38473ee0b349aaa95ee4dc595b1366ea2314d8da"
+-    },
+-    {
+-      "identity": "ecosystem-setup",
+-      "provider": "codex",
+-      "target": ".agents/skills/ecosystem-setup/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md",
+-      "canonical_sha256": "1aaff539e9148d1300b1aafea7e282cbfc21ef40cee67b0f6b7f1f5879a3e885",
+-      "rendered_sha256": "d13ae7745ac36f744258d7da38473ee0b349aaa95ee4dc595b1366ea2314d8da"
+-    },
+-    {
+-      "identity": "field-feedback-loop",
+-      "provider": "claude",
+-      "target": ".claude/skills/field-feedback-loop/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+-      "canonical_sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
+-      "rendered_sha256": "801b67e58bdc9fa3a12e53becad500f1ed9fef6664ec88cb326fd321240c00f4"
+-    },
+-    {
+-      "identity": "field-feedback-loop",
+-      "provider": "codex",
+-      "target": ".agents/skills/field-feedback-loop/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+-      "canonical_sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
+-      "rendered_sha256": "801b67e58bdc9fa3a12e53becad500f1ed9fef6664ec88cb326fd321240c00f4"
+-    },
+-    {
+-      "identity": "harness-operations",
+-      "provider": "claude",
+-      "target": ".claude/skills/harness-operations/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/harness-operations/SKILL.md",
+-      "canonical_sha256": "b57a532998ed905340c143929201a660659ba0073293ecc1f641f645d761fda9",
+-      "rendered_sha256": "195c8dffecca239e16b44806c4ec6fb7e5e298e7af4b722ac9c98e717e74079a"
+-    },
+-    {
+-      "identity": "harness-operations",
+-      "provider": "codex",
+-      "target": ".agents/skills/harness-operations/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/harness-operations/SKILL.md",
+-      "canonical_sha256": "b57a532998ed905340c143929201a660659ba0073293ecc1f641f645d761fda9",
+-      "rendered_sha256": "195c8dffecca239e16b44806c4ec6fb7e5e298e7af4b722ac9c98e717e74079a"
+-    },
+-    {
+-      "identity": "maind-overview",
+-      "provider": "claude",
+-      "target": ".claude/skills/maind-overview/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md",
+-      "canonical_sha256": "fcb147b84f6b0c66fa05c68e2db728be4aeda2fa15f70158107d26340ccb1550",
+-      "rendered_sha256": "9526b297efbcec786eec8d884197cdd9c46a733597819971f3b4d6d79aab216e"
+-    },
+-    {
+-      "identity": "maind-overview",
+-      "provider": "codex",
+-      "target": ".agents/skills/maind-overview/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md",
+-      "canonical_sha256": "fcb147b84f6b0c66fa05c68e2db728be4aeda2fa15f70158107d26340ccb1550",
+-      "rendered_sha256": "9526b297efbcec786eec8d884197cdd9c46a733597819971f3b4d6d79aab216e"
+-    },
+-    {
+-      "identity": "package-architecture",
+-      "provider": "claude",
+-      "target": ".claude/skills/package-architecture/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
+-      "canonical_sha256": "a4b74be065941b47cf1b9e3d68f669ba63a9af6ea745787e0ac3e28957643941",
+-      "rendered_sha256": "988516d7888443ebc5007aa5a871797cd5076b6b6d68f8364bb1a69f52de0309"
+-    },
+-    {
+-      "identity": "package-architecture",
+-      "provider": "codex",
+-      "target": ".agents/skills/package-architecture/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
+-      "canonical_sha256": "a4b74be065941b47cf1b9e3d68f669ba63a9af6ea745787e0ac3e28957643941",
+-      "rendered_sha256": "988516d7888443ebc5007aa5a871797cd5076b6b6d68f8364bb1a69f52de0309"
+-    },
+-    {
+-      "identity": "project-tooling-runbook",
+-      "provider": "claude",
+-      "target": ".claude/skills/project-tooling-runbook/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
+-      "canonical_sha256": "143c37d15c8f1ae444a1c1a817e42e22459f520a597e9e488c2c8b45df0069b8",
+-      "rendered_sha256": "12e0f01052fd5e73def53ffbd17153d980fddcd59b4f3a3c9f7b9442197916e2"
+-    },
+-    {
+-      "identity": "project-tooling-runbook",
+-      "provider": "codex",
+-      "target": ".agents/skills/project-tooling-runbook/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
+-      "canonical_sha256": "143c37d15c8f1ae444a1c1a817e42e22459f520a597e9e488c2c8b45df0069b8",
+-      "rendered_sha256": "12e0f01052fd5e73def53ffbd17153d980fddcd59b4f3a3c9f7b9442197916e2"
+-    },
+-    {
+-      "identity": "release-discipline",
+-      "provider": "claude",
+-      "target": ".claude/skills/release-discipline/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
+-      "canonical_sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
+-      "rendered_sha256": "b756859461852d05f4067ad0b474fa46c32241c9192e9de87ca7f28b3827b245"
+-    },
+-    {
+-      "identity": "release-discipline",
+-      "provider": "codex",
+-      "target": ".agents/skills/release-discipline/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
+-      "canonical_sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
+-      "rendered_sha256": "b756859461852d05f4067ad0b474fa46c32241c9192e9de87ca7f28b3827b245"
+-    },
+-    {
+-      "identity": "skill-authoring",
+-      "provider": "claude",
+-      "target": ".claude/skills/skill-authoring/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
+-      "canonical_sha256": "1c8b2e54255fcf1c5a0569045cddba3c1345795f7b5a43ee394f358f2e0f0d64",
+-      "rendered_sha256": "f9581dc921fb93e74da73d3ad4bbc58580154ae00852fa49434741f118d7e765"
+-    },
+-    {
+-      "identity": "skill-authoring",
+-      "provider": "codex",
+-      "target": ".agents/skills/skill-authoring/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
+-      "canonical_sha256": "1c8b2e54255fcf1c5a0569045cddba3c1345795f7b5a43ee394f358f2e0f0d64",
+-      "rendered_sha256": "f9581dc921fb93e74da73d3ad4bbc58580154ae00852fa49434741f118d7e765"
+-    },
+-    {
+-      "identity": "task-development-philosophy",
+-      "provider": "claude",
+-      "target": ".claude/skills/task-development-philosophy/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+-      "canonical_sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+-      "rendered_sha256": "6cc25f70205d0a42da4b1dcd11c5cf7841e32a08b0bb80ebdeb5099c2edd8fc7"
+-    },
+-    {
+-      "identity": "task-development-philosophy",
+-      "provider": "codex",
+-      "target": ".agents/skills/task-development-philosophy/SKILL.md",
+-      "canonical": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+-      "canonical_sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+-      "rendered_sha256": "6cc25f70205d0a42da4b1dcd11c5cf7841e32a08b0bb80ebdeb5099c2edd8fc7"
+-    },
+-    {
+-      "identity": "workflow-craft",
+-      "provider": "codex",
+-      "target": ".agents/skills/workflow-craft/SKILL.md",
+-      "source_class": "public-bucket",
+-      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+-      "canonical_sha256": "76c975800b753fde1385c52b8f0cefc5fbf1823fe2483e4a176b5aea09d6f8f3",
+-      "rendered_sha256": "a284fea973dcd173fdbc86405e532cca76094696c5c038eb58490d832c6a9b70"
+-    }
+-  ]
+-}
+diff --git a/packages/skiller/buckets.json b/packages/skiller/buckets.json
+index 241e0a85..c1d49dfe 100644
+--- a/packages/skiller/buckets.json
++++ b/packages/skiller/buckets.json
+@@ -343,12 +343,6 @@
+       "security"
+     ]
+   },
+-  "repository-bootstrap": {
+-    "description": "P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections.",
+-    "category": "meta",
+-    "tags": ["root-bootstrap", "private", "source-only", "generated"],
+-    "private_source_only": true
+-  },
+   "system": {
+     "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
+     "category": "meta",
+diff --git a/packages/skiller/configs/publication-versions.json b/packages/skiller/configs/publication-versions.json
+index 132254aa..a905c9ad 100644
+--- a/packages/skiller/configs/publication-versions.json
++++ b/packages/skiller/configs/publication-versions.json
+@@ -1,5 +1,5 @@
+ {
+-  "_doc": "D27: per-publication-unit version map, separated from the skiller package API SemVer (packages/skiller/package.json). `default_unit_version` freezes the exact pre-migration value every generated unit's manifest carried before this map existed (skiller API was 0.4.0 at freeze time and every unit's rendered `version` field inherited it uniformly); a unit NOT listed under `units` stays pinned to that frozen baseline, so an unrelated owner's package-API bump never touches its manifest bytes (byte-identical guard, generated-artifact-version-v1.md). Only an owner item's Implementation Rules may add/bump an entry here, and each bump is read from the repo, not assumed (P1.1 ledger).",
++  "_doc": "D27: per-publication-unit version map, separated from the skiller package API SemVer (package.json). `default_unit_version` freezes the exact pre-migration value every generated unit's manifest carried before this map existed (skiller API was 0.4.0 at freeze time and every unit's rendered `version` field inherited it uniformly); a unit NOT listed under `units` stays pinned to that frozen baseline, so an unrelated owner's package-API bump never touches its manifest bytes (byte-identical guard, generated-artifact-version-v1.md). Only an owner item's Implementation Rules may add/bump an entry here, and each bump is read from the repo, not assumed (P1.1 ledger).",
+   "default_unit_version": "0.4.0",
+   "units": {
+     "ai": "0.4.1",
+@@ -41,7 +41,6 @@
+     "general": "0.16.2",
+     "azguard": "0.4.1",
+     "pm": "0.4.1",
+-    "repository-bootstrap": "0.3.1",
+     "frontend-nuxt": "0.4.1"
+   }
+ }
+diff --git a/packages/skiller/configs/repository-bootstrap-skills.json b/packages/skiller/configs/repository-bootstrap-skills.json
+deleted file mode 100644
+index 1574ffd1..00000000
+--- a/packages/skiller/configs/repository-bootstrap-skills.json
++++ /dev/null
+@@ -1,37 +0,0 @@
+-{
+-  "_doc": "P1.2/D31/D38, updated by P6.5/D93 and 2026-08-14 owner direction: private/source-only class-A root-bootstrap identities. One canonical EN-only SKILL.md and two thin provider projections are derived formulaically from identity. Sole producer: registry.py -> publication.py root-bootstrap renderer. Canonical: packages/skiller/skills/repository-bootstrap/<identity>/SKILL.md. Projections: .claude/skills/<identity>/SKILL.md and .agents/skills/<identity>/SKILL.md.",
+-  "schema_version": 1,
+-  "bucket": "repository-bootstrap",
+-  "publication_unit": "repository-bootstrap",
+-  "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
+-  "lock_path": "packages/skiller/adapters/repository-bootstrap/publication-lock.json",
+-  "class_a_content_version": "0.1.0",
+-  "_class_a_content_version_doc": "D38-frozen per-record `canonical_content_version`/`publication_unit` literal for the class-A identities (`repository-bootstrap-map.json`) — embedded into every class-A projection body and NEVER moves, even when `configs/publication-versions.json` units.repository-bootstrap (the umbrella/lock version) advances. Decoupling this from the umbrella version keeps existing class-A projection BYTES byte-identical across an owner bump; only the new identity, combined lock and class-B projections track the expanded inventory.",
+-  "identities": [
+-    "cross-project-optimizer",
+-    "decision-verification",
+-    "docs-maintenance",
+-    "ecosystem-integration",
+-    "ecosystem-mcp",
+-    "ecosystem-setup",
+-    "field-feedback-loop",
+-    "harness-operations",
+-    "maind-overview",
+-    "package-architecture",
+-    "project-tooling-runbook",
+-    "release-discipline",
+-    "skill-authoring",
+-    "task-development-philosophy"
+-  ],
+-  "class_b": [
+-    {
+-      "_doc": "A public-bucket canon whose unit (`general`) is not enabled — the root carrier has no owner/provenance/hash otherwise. Codex-only by declared asymmetry (a Claude root projection changes first-turn budget, requires `skiller budget --first-turn`, outside this scope). `precondition` is enforced against an explicitly-passed enabled-inventory only — this renderer never reads a live provider profile/cache.",
+-      "identity": "workflow-craft",
+-      "source_class": "public-bucket",
+-      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+-      "providers": ["codex"],
+-      "asymmetry_reason": "a Claude root projection changes the first-turn budget and requires `skiller budget --first-turn` (CLAUDE.md), which is outside this scope; the asymmetry is declared, not accidental",
+-      "precondition": "no enabled unit serves this identity"
+-    }
+-  ]
+-}
+diff --git a/packages/skiller/docs/guide/budget.md b/packages/skiller/docs/guide/budget.md
+index 2d8ed9d1..fc71893a 100644
+--- a/packages/skiller/docs/guide/budget.md
++++ b/packages/skiller/docs/guide/budget.md
+@@ -20,7 +20,7 @@ flowchart LR
+   end
+   subgraph architect["architect"]
+     agent_design["agent-design<br/>⊕29 ↻1078"]:::cool
+-    api_design["api-design<br/>⊕32 ↻788"]:::cool
++    api_design["api-design<br/>⊕32 ↻788"]:::mild
+     architecture["architecture<br/>⊕33 ↻785"]:::mild
+     codebase_design["codebase-design<br/>⊕117 ↻1978"]:::hot
+     data_schema["data-schema<br/>⊕34 ↻879"]:::mild
+@@ -70,7 +70,7 @@ flowchart LR
+     ci_cd["ci-cd<br/>⊕55 ↻1123"]:::warm
+     db_test_preflight["db-test-preflight<br/>⊕104 ↻1676"]:::hot
+     docker["docker<br/>⊕66 ↻400"]:::warm
+-    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻924"]:::mild
++    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻924"]:::warm
+     docker_php["docker-php<br/>⊕40 ↻767"]:::mild
+     docker_postgres["docker-postgres<br/>⊕43 ↻807"]:::warm
+     docker_services["docker-services<br/>⊕48 ↻858"]:::warm
+@@ -86,13 +86,13 @@ flowchart LR
+     adversarial_check["adversarial-check<br/>⊕55 ↻1134"]:::warm
+     competitive_analysis["competitive-analysis<br/>⊕37 ↻1315"]:::mild
+     customer_discovery["customer-discovery<br/>⊕55 ↻1280"]:::warm
+-    defensibility["defensibility<br/>⊕42 ↻1124"]:::mild
++    defensibility["defensibility<br/>⊕42 ↻1124"]:::warm
+     idea_audit["idea-audit<br/>⊕61 ↻2474"]:::warm
+     idea_discovery["idea-discovery<br/>⊕35 ↻1630"]:::mild
+     new_project["new-project<br/>⊕31 ↻1447"]:::cool
+-    pitch_deck["pitch-deck<br/>⊕32 ↻1549"]:::cool
++    pitch_deck["pitch-deck<br/>⊕32 ↻1549"]:::mild
+     risk_assessment["risk-assessment<br/>⊕40 ↻1275"]:::mild
+-    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1748"]:::mild
++    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1748"]:::warm
+   end
+   subgraph frontend["frontend"]
+     document_writer["document-writer<br/>⊕88 ↻1283"]:::warm
+@@ -145,7 +145,7 @@ flowchart LR
+     vue["vue<br/>⊕25 ↻852"]:::cool
+     vue_best_practices["vue-best-practices<br/>⊕33 ↻2546"]:::mild
+     vue_composition_api["vue-composition-api<br/>⊕33 ↻502"]:::mild
+-    vue_dynamic_icons["vue-dynamic-icons<br/>⊕32 ↻1275"]:::cool
++    vue_dynamic_icons["vue-dynamic-icons<br/>⊕32 ↻1275"]:::mild
+     vue_router_best_practices["vue-router-best-practices<br/>⊕36 ↻2569"]:::mild
+     vue_testing_best_practices["vue-testing-best-practices<br/>⊕34 ↻2215"]:::mild
+     vueuse_functions["vueuse-functions<br/>⊕30 ↻400"]:::cool
+@@ -158,10 +158,10 @@ flowchart LR
+     compact_responses["compact-responses<br/>⊕40 ↻227"]:::mild
+     complex_task_orchestrator["complex-task-orchestrator<br/>⊕33 ↻630"]:::mild
+     context_economy["context-economy<br/>⊕39 ↻488"]:::mild
+-    cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻432"]:::cool
++    cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻432"]:::mild
+     git_commit_rules["git-commit-rules<br/>⊕30 ↻1077"]:::cool
+     git_safety["git-safety<br/>⊕84 ↻570"]:::warm
+-    grill_with_docs["grill-with-docs<br/>⊕98 ↻858"]:::hot
++    grill_with_docs["grill-with-docs<br/>⊕98 ↻858"]:::warm
+     implement["implement<br/>⊕83 ↻543"]:::warm
+     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
+     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
+@@ -172,9 +172,9 @@ flowchart LR
+     skills_ssot["skills-ssot<br/>⊕34 ↻941"]:::mild
+     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
+     task_brief_template["task-brief-template<br/>⊕47 ↻1176"]:::warm
+-    verify_claims["verify-claims<br/>⊕41 ↻341"]:::mild
++    verify_claims["verify-claims<br/>⊕41 ↻341"]:::warm
+     workflow_craft["workflow-craft<br/>⊕48 ↻3610"]:::warm
+-    writing_style["writing-style<br/>⊕98 ↻1819"]:::hot
++    writing_style["writing-style<br/>⊕98 ↻1819"]:::warm
+   end
+   subgraph laravel_architecture["laravel-architecture"]
+     config_driven_abstraction["config-driven-abstraction<br/>⊕114 ↻460"]:::hot
+@@ -187,7 +187,7 @@ flowchart LR
+   subgraph laravel_auth["laravel-auth"]
+     attribute_authorization["attribute-authorization<br/>⊕34 ↻2102"]:::mild
+     laravel_permissions["laravel-permissions<br/>⊕30 ↻398"]:::cool
+-    laravel_security_audit["laravel-security-audit<br/>⊕32 ↻775"]:::cool
++    laravel_security_audit["laravel-security-audit<br/>⊕32 ↻775"]:::mild
+   end
+   subgraph laravel_data_layer["laravel-data-layer"]
+     laravel_broadcasting["laravel-broadcasting<br/>⊕31 ↻1210"]:::cool
+@@ -220,10 +220,10 @@ flowchart LR
+     figma_to_flutter["figma-to-flutter<br/>⊕107 ↻840"]:::hot
+   end
+   subgraph operator["operator"]
+-    capacity_planning["capacity-planning<br/>⊕41 ↻2051"]:::mild
+-    incident_response["incident-response<br/>⊕41 ↻1817"]:::mild
++    capacity_planning["capacity-planning<br/>⊕41 ↻2051"]:::warm
++    incident_response["incident-response<br/>⊕41 ↻1817"]:::warm
+     oncall_rotation["oncall-rotation<br/>⊕37 ↻1667"]:::mild
+-    operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻597"]:::hot
++    operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻597"]:::warm
+     postmortem["postmortem<br/>⊕43 ↻1883"]:::warm
+     runbook["runbook<br/>⊕36 ↻1720"]:::mild
+   end
+@@ -233,17 +233,17 @@ flowchart LR
+     gh_review["gh-review<br/>⊕30 ↻1135"]:::cool
+     github_flow["github-flow<br/>⊕30 ↻2063"]:::cool
+     issue_triage["issue-triage<br/>⊕29 ↻2147"]:::cool
+-    oss_development["oss-development<br/>⊕32 ↻1327"]:::cool
+-    oss_governance["oss-governance<br/>⊕32 ↻1568"]:::cool
++    oss_development["oss-development<br/>⊕32 ↻1327"]:::mild
++    oss_governance["oss-governance<br/>⊕32 ↻1568"]:::mild
+     release_engineering["release-engineering<br/>⊕34 ↻2145"]:::mild
+     resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕34 ↻327"]:::mild
+-    to_issues["to-issues<br/>⊕32 ↻1175"]:::cool
++    to_issues["to-issues<br/>⊕32 ↻1175"]:::mild
+   end
+   subgraph php["php"]
+     code_style_spatie["code-style-spatie<br/>⊕31 ↻1032"]:::cool
+-    cursor_pagination_design["cursor-pagination-design<br/>⊕32 ↻385"]:::cool
++    cursor_pagination_design["cursor-pagination-design<br/>⊕32 ↻385"]:::mild
+     database["database<br/>⊕28 ↻933"]:::cool
+-    dependency_injection["dependency-injection<br/>⊕32 ↻1425"]:::cool
++    dependency_injection["dependency-injection<br/>⊕32 ↻1425"]:::mild
+     laravel["laravel<br/>⊕29 ↻1691"]:::cool
+     laravel_best_practices["laravel-best-practices<br/>⊕34 ↻535"]:::mild
+     laravel_structure["laravel-structure<br/>⊕27 ↻2138"]:::cool
+@@ -260,19 +260,19 @@ flowchart LR
+   end
+   subgraph php_packages["php-packages"]
+     laravel_package_compatibility["laravel-package-compatibility<br/>⊕35 ↻446"]:::mild
+-    laravel_package_docs["laravel-package-docs<br/>⊕32 ↻713"]:::cool
++    laravel_package_docs["laravel-package-docs<br/>⊕32 ↻713"]:::mild
+     laravel_package_expressive["laravel-package-expressive<br/>⊕36 ↻578"]:::mild
+     laravel_package_generate_skill["laravel-package-generate-skill<br/>⊕35 ↻804"]:::mild
+     laravel_package_release["laravel-package-release<br/>⊕35 ↻382"]:::mild
+     laravel_package_scaffold["laravel-package-scaffold<br/>⊕36 ↻615"]:::mild
+     laravel_package_service_provider["laravel-package-service-provider<br/>⊕38 ↻551"]:::mild
+     laravel_package_testing["laravel-package-testing<br/>⊕36 ↻538"]:::mild
+-    laravel_packages["laravel-packages<br/>⊕32 ↻761"]:::cool
++    laravel_packages["laravel-packages<br/>⊕32 ↻761"]:::mild
+   end
+   subgraph pm["pm"]
+     brd["brd<br/>⊕34 ↻563"]:::mild
+     business_process["business-process<br/>⊕33 ↻535"]:::mild
+-    go_to_market["go-to-market<br/>⊕32 ↻1298"]:::cool
++    go_to_market["go-to-market<br/>⊕32 ↻1298"]:::mild
+     monetization_design["monetization-design<br/>⊕36 ↻1355"]:::mild
+     pm_super_skill["pm-super-skill<br/>⊕120 ↻618"]:::hot
+     pmf_diagnostics["pmf-diagnostics<br/>⊕53 ↻1390"]:::warm
+@@ -298,22 +298,6 @@ flowchart LR
+     test_strategy["test-strategy<br/>⊕33 ↻1022"]:::mild
+     testing_safety_report["testing-safety-report<br/>⊕34 ↻723"]:::mild
+   end
+-  subgraph repository_bootstrap["repository-bootstrap"]
+-    cross_project_optimizer["cross-project-optimizer<br/>⊕95 ↻1015"]:::warm
+-    decision_verification["decision-verification<br/>⊕39 ↻293"]:::mild
+-    docs_maintenance["docs-maintenance<br/>⊕88 ↻1005"]:::warm
+-    ecosystem_integration["ecosystem-integration<br/>⊕77 ↻2035"]:::warm
+-    ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1855"]:::warm
+-    ecosystem_setup["ecosystem-setup<br/>⊕89 ↻1103"]:::warm
+-    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1357"]:::warm
+-    harness_operations["harness-operations<br/>⊕87 ↻2093"]:::warm
+-    maind_overview["maind-overview<br/>⊕80 ↻1738"]:::warm
+-    package_architecture["package-architecture<br/>⊕85 ↻3698"]:::warm
+-    project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7466"]:::mild
+-    release_discipline["release-discipline<br/>⊕64 ↻1488"]:::warm
+-    skill_authoring["skill-authoring<br/>⊕44 ↻1846"]:::warm
+-    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3785"]:::warm
+-  end
+   subgraph research["research"]
+     query_craft["query-craft<br/>⊕35 ↻257"]:::mild
+     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕97 ↻569"]:::warm
+@@ -436,14 +420,13 @@ flowchart LR
+   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
+ ```
+ 
+-**Total:** 231 skills · ⊕ always **12560** current (is always resident if you include the entire registry) · ↻ bodies 301336 current · ⌥ on-demand 824510 current (snippets + references).
++**Total:** 217 skills · ⊕ always **11513** current (is always resident if you include the entire registry) · ↻ bodies 270559 current · ⌥ on-demand 824510 current (snippets + references).
+ 
+ ## By buckets
+ 
+ | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
+ |---|--:|--:|--:|--:|
+ | `general` | 21 | 1234 | 23090 | 7557 |
+-| `repository-bootstrap` | 14 | 1047 | 30777 | 0 |
+ | `architect` | 15 | 937 | 19786 | 33082 |
+ | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
+ | `blender-modeling` | 7 | 582 | 11542 | 13519 |
+@@ -515,9 +498,6 @@ The heaviest bodies are loaded when using the skill.
+ 
+ | Skill | Bucket | current |
+ |---|---|--:|
+-| `project-tooling-runbook` | repository-bootstrap | 7466 |
+-| `task-development-philosophy` | repository-bootstrap | 3785 |
+-| `package-architecture` | repository-bootstrap | 3698 |
+ | `workflow-craft` | general | 3610 |
+ | `mcp-advisor` | general | 3188 |
+ | `voice-ai` | voice-ai | 3165 |
+@@ -525,3 +505,6 @@ The heaviest bodies are loaded when using the skill.
+ | `laravel-testing` | laravel-testing | 3024 |
+ | `build-loop` | blender-modeling | 2847 |
+ | `spatie-settings` | laravel-extras | 2677 |
++| `vue-router-best-practices` | frontend-vue | 2569 |
++| `mcp-builder` | ai | 2560 |
++| `mutation-testing` | quality | 2552 |
+diff --git a/packages/skiller/docs/guide/graph.md b/packages/skiller/docs/guide/graph.md
+index 0ed52c7f..eed970aa 100644
+--- a/packages/skiller/docs/guide/graph.md
++++ b/packages/skiller/docs/guide/graph.md
+@@ -383,7 +383,7 @@ flowchart LR
+ 
+ **In the column:** 129 skills, 88 ribs requires, 92 ribs produces_for.
+ 
+-## Isolated skills (102)
++## Isolated skills (88)
+ 
+ Skills without connections `requires`/`produces_for` — are self-sufficient.
+ 
+@@ -417,7 +417,6 @@ Skills without connections `requires`/`produces_for` — are self-sufficient.
+ | php-packages | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
+ | pm | `pm-super-skill` |
+ | quality | `artifact-review` |
+-| repository-bootstrap | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring`, `task-development-philosophy` |
+ | research | `research-knowledge-super-skill` |
+ | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+ | sales | `sales-super-skill` |
+diff --git a/packages/skiller/lib/skiller/doctor.py b/packages/skiller/lib/skiller/doctor.py
+index a7d0d1f5..bf18e78e 100644
+--- a/packages/skiller/lib/skiller/doctor.py
++++ b/packages/skiller/lib/skiller/doctor.py
+@@ -640,26 +640,24 @@ def _sibling_identities(repo_root, sibling, *, manifest_name):
+ 
+ 
+ def _materialize_repository_bootstrap_sources(*, repo_root, package_root, tmp_root):
+-    """Copy exactly the bytes `render_repository_bootstrap_projections` reads (class-A
+-    config + 13 canonical EN-only carriers; class-B canon at its real repo-relative path)
+-    into `tmp_root`, never the live repo — `render_repository_bootstrap_projections`
+-    calls `.resolve()` on `package_root`, which would defeat a symlink and silently read
+-    the real tree, so a real (small) copy is the only way to keep the read genuinely
+-    cold. Returns the fixture's `package_root` Path."""
++    """Copy the configured host bootstrap sources for cold discovery, never live symlinks."""
++    from .host import load_host
++    from .publication import load_repository_bootstrap_config
+     rel_pkg = package_root.relative_to(repo_root)
+     fixture_package_root = tmp_root / rel_pkg
+     if fixture_package_root.exists():
+         return fixture_package_root
+-    (fixture_package_root / "configs").mkdir(parents=True, exist_ok=True)
+-    for name in ("repository-bootstrap-skills.json", "publication-versions.json"):
+-        shutil.copy2(package_root / "configs" / name, fixture_package_root / "configs" / name)
+-    shutil.copytree(package_root / "skills" / "repository-bootstrap",
+-                    fixture_package_root / "skills" / "repository-bootstrap")
+-    workflow_craft_src = package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
+-    if workflow_craft_src.is_file():
+-        dest = fixture_package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
++    fixture_package_root.mkdir(parents=True)
++    host = load_host(package_root)
++    if host.bootstrap is None:
++        return fixture_package_root
++    config = load_repository_bootstrap_config(repo_root, host)
++    sources = [host.bootstrap, *(row["canonical"] for row in config["identities"]),
++               *(row["canonical"] for row in config.get("class_b", []))]
++    for relative in sources:
++        dest = tmp_root / relative
+         dest.parent.mkdir(parents=True, exist_ok=True)
+-        shutil.copy2(workflow_craft_src, dest)
++        shutil.copy2(repo_root / relative, dest)
+     return fixture_package_root
+ 
+ 
+@@ -696,8 +694,13 @@ def build_provider_carrier_map(catalog, *, repo_root, package_root, provider, tm
+ 
+     fixture_package_root = _materialize_repository_bootstrap_sources(
+         repo_root=repo_root, package_root=package_root, tmp_root=tmp_root)
++    from dataclasses import replace
++    from .host import load_host
++    host = replace(load_host(package_root), root=tmp_root)
++    if host.bootstrap is None:
++        return {identity: sorted(values) for identity, values in carriers.items()}
+     bootstrap_artifacts = render_repository_bootstrap_projections(
+-        repo_root=tmp_root, package_root=fixture_package_root)
++        repo_root=tmp_root, package_root=fixture_package_root, host=host)
+     root_provider_key = "claude" if provider == "claude-code" else "codex"
+     for artifact in bootstrap_artifacts:
+         if artifact.provider != root_provider_key:
+@@ -729,9 +732,15 @@ def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
+     pairs = detect_core_donor_collisions(catalog, enabled=worst_case)
+     fixture_package_root = _materialize_repository_bootstrap_sources(
+         repo_root=repo_root, package_root=package_root, tmp_root=tmp_root)
++    from dataclasses import replace
++    from .host import load_host
++    host = replace(load_host(package_root), root=tmp_root)
++    if host.bootstrap is None:
++        return pairs, None
+     try:
+         render_repository_bootstrap_projections(
+             repo_root=tmp_root, package_root=fixture_package_root,
++            host=host,
+             donor_enabled={"general": True})
+         workflow_craft_error = None
+     except ValueError as exc:
+diff --git a/packages/skiller/lib/skiller/lock.py b/packages/skiller/lib/skiller/lock.py
+index 02135362..786c84a7 100644
+--- a/packages/skiller/lib/skiller/lock.py
++++ b/packages/skiller/lib/skiller/lock.py
+@@ -21,7 +21,7 @@ LOCK_VERSION = 1
+ 
+ def _registry_map(env):
+     """skills.json registry → {skill_name: bucket}. Private/source-only records
+-    (`buckets.json` `private_source_only`, — now: `repository-bootstrap`)
++    (`buckets.json` `private_source_only`)
+     excluded: they are never legit swissknifeman-source installed
+     copies in the consumer project (the only manufacturer - root-bootstrap
+     renderer `publication.py`, not this composer)."""
+diff --git a/packages/skiller/lib/skiller/publication.py b/packages/skiller/lib/skiller/publication.py
+index f07d79c0..e9c93baa 100644
+--- a/packages/skiller/lib/skiller/publication.py
++++ b/packages/skiller/lib/skiller/publication.py
+@@ -11,6 +11,7 @@ from __future__ import annotations
+ from dataclasses import dataclass
+ import hashlib
+ import json
++import re
+ import shutil
+ import subprocess
+ from pathlib import Path
+@@ -20,7 +21,7 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
+                   ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
+                   ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
+                   CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
+-                  connect_channel, find_monorepo_root, load_distribution_catalog,
++                  connect_channel, find_repo_root, load_distribution_catalog,
+                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
+                   provider_config_catalog, vendor_channel)
+ from core.provider.lock import LOCK_RELATIVE_PATH
+@@ -67,7 +68,7 @@ _DISTRIBUTION_CATALOG = None
+ def _distribution_catalog():
+     global _DISTRIBUTION_CATALOG
+     if _DISTRIBUTION_CATALOG is None:
+-        root = find_monorepo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
++        root = find_repo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
+         _DISTRIBUTION_CATALOG = load_distribution_catalog(root / "configs/provider-distribution.json")
+     return _DISTRIBUTION_CATALOG
+ 
+@@ -1092,35 +1093,57 @@ def _root_bootstrap_body(identity: str, description: str, canonical_path: str,
+     return "\n".join(lines).encode("utf-8")
+ 
+ 
+-def load_repository_bootstrap_config(package_root: Path) -> dict:
+-    """Read+validate `configs/repository-bootstrap-skills.json` (schema v1, D38-shaped).
++def _bootstrap_path(repo_root: Path, value: object) -> Path:
++    """Resolve a host-relative carrier without allowing traversal or escaping symlinks."""
++    if (not isinstance(value, str) or not value or "\\" in value
++            or Path(value).is_absolute() or any(p in {"", ".", ".."} for p in value.split("/"))):
++        raise ValueError("bootstrap config: expected a repository-relative path")
++    path = repo_root / value
++    if not path.resolve().is_relative_to(repo_root.resolve()):
++        raise ValueError(f"bootstrap config: path escapes repository: {value}")
++    return path
+ 
+-    The class-A `identities` list is the D38-frozen 13-identity set (byte-identical rules
+-    unchanged by). `class_b` is an OPTIONAL, separate list of public-bucket
+-    canon records that are not part of the class-A count/formula at all — validated here so a
+-    malformed record fails closed before any render, but never merged into `identities`.
+-    """
+-    config_path = package_root / "configs" / "repository-bootstrap-skills.json"
++
++def load_repository_bootstrap_config(repo_root: Path, host) -> dict:
++    """Read host-selected schema v2: explicit canon paths and a host-owned unit version."""
++    config_path = _bootstrap_path(repo_root, host.bootstrap)
+     try:
+         config = json.loads(config_path.read_text(encoding="utf-8"))
+     except (OSError, json.JSONDecodeError) as error:
+         raise ValueError(f"repository-bootstrap-skills.json: unreadable: {error}") from error
+-    if not isinstance(config, dict) or config.get("schema_version") != 1 \
++    if not isinstance(config, dict) or type(config.get("schema_version")) is not int \
++            or config.get("schema_version") != 2 \
+             or config.get("bucket") != "repository-bootstrap":
+         raise ValueError("repository-bootstrap-skills.json: unsupported schema")
+     identities = config.get("identities")
+     if (not isinstance(identities, list) or not identities
+-            or not all(isinstance(item, str) for item in identities)
+-            or sorted(identities) != identities or len(set(identities)) != len(identities)):
++            or not all(isinstance(item, dict) and isinstance(item.get("identity"), str)
++                       and item["identity"] and set(item) == {"identity", "canonical"}
++                       for item in identities)):
++        raise ValueError("bootstrap config: identities must contain identity/canonical records")
++    names = [item["identity"] for item in identities]
++    if sorted(names) != names or len(set(names)) != len(names):
+         raise ValueError("repository-bootstrap-skills.json: identities must be a sorted, "
+-                         "unique, non-empty list of strings")
+-    if not isinstance(config.get("lock_path"), str) or not isinstance(config.get("generator"), str):
+-        raise ValueError("repository-bootstrap-skills.json: lock_path/generator are required")
++                         "unique, non-empty list")
++    for record in identities:
++        _bootstrap_path(repo_root, record["canonical"])
++        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", record["identity"]):
++            raise ValueError("bootstrap config: invalid identity")
++    _bootstrap_path(repo_root, config.get("lock_path"))
++    if not isinstance(config.get("unit_version"), str) or not config["unit_version"]:
++        raise ValueError("bootstrap config: unit_version is required")
+     if not isinstance(config.get("class_a_content_version"), str) or not config["class_a_content_version"]:
+         raise ValueError("repository-bootstrap-skills.json: class_a_content_version is required "
+                          "(D38-frozen — never the umbrella publication-versions.json value)")
+-    for record in config.get("class_b", ()):
+-        _validate_class_b_record(record, identities)
++    class_b = config.get("class_b", [])
++    if not isinstance(class_b, list):
++        raise ValueError("bootstrap config: class_b must be a list")
++    for record in class_b:
++        _validate_class_b_record(record, names)
++        if record["identity"] in names:
++            raise ValueError("bootstrap config: duplicate identity")
++        names.append(record["identity"])
++        _bootstrap_path(repo_root, record["canonical"])
+     return config
+ 
+ 
+@@ -1128,7 +1151,7 @@ def _validate_class_b_record(record: object, class_a_identities: Sequence[str])
+     if not isinstance(record, dict):
+         raise ValueError("repository-bootstrap-skills.json: class_b record must be an object")
+     identity = record.get("identity")
+-    if not isinstance(identity, str) or not identity:
++    if not isinstance(identity, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", identity):
+         raise ValueError("repository-bootstrap-skills.json: class_b record needs a non-empty identity")
+     if identity in class_a_identities:
+         raise ValueError(f"repository-bootstrap-skills.json: class_b identity {identity!r} "
+@@ -1144,6 +1167,8 @@ def _validate_class_b_record(record: object, class_a_identities: Sequence[str])
+             or not all(isinstance(item, str) for item in providers):
+         raise ValueError(f"repository-bootstrap-skills.json: class_b {identity!r}: "
+                          "providers must be a non-empty list of strings")
++    if len(set(providers)) != len(providers) or not set(providers) <= {"claude", "codex"}:
++        raise ValueError(f"bootstrap config: class_b {identity!r}: invalid providers")
+     if not isinstance(record.get("asymmetry_reason"), str) or not record["asymmetry_reason"]:
+         raise ValueError(f"repository-bootstrap-skills.json: class_b {identity!r}: "
+                          "asymmetry_reason is required")
+@@ -1195,21 +1220,9 @@ def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path
+     return "\n".join(lines).encode("utf-8")
+ 
+ 
+-def _repository_bootstrap_unit_version(package_root: Path) -> str:
+-    versions_path = package_root / "configs" / "publication-versions.json"
+-    try:
+-        versions = json.loads(versions_path.read_text(encoding="utf-8"))
+-    except (OSError, json.JSONDecodeError) as error:
+-        raise ValueError(f"publication-versions.json: unreadable: {error}") from error
+-    unit_version = (versions.get("units") or {}).get("repository-bootstrap") \
+-        if isinstance(versions, dict) else None
+-    if not isinstance(unit_version, str) or not unit_version:
+-        raise ValueError("publication-versions.json: units.repository-bootstrap is required")
+-    return unit_version
+-
+-
+ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Path,
+                                             manifest_path=None,
++                                            host=None,
+                                             donor_enabled: Mapping[str, bool] | None = None
+                                             ) -> tuple[RootBootstrapArtifact, ...]:
+     """Render two class-A projections per configured identity plus the class-B public-bucket projections, and their one combined lock.
+@@ -1232,8 +1245,11 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
+     validate_publication_capabilities(ProviderId.CODEX, manifest_path=manifest_path)
+     repo_root = repo_root.resolve()
+     package_root = package_root.resolve()
+-    config = load_repository_bootstrap_config(package_root)
+-    unit_version = _repository_bootstrap_unit_version(package_root)
++    if host is None:
++        from .host import load_host
++        host = load_host(package_root)
++    config = load_repository_bootstrap_config(repo_root, host)
++    unit_version = config["unit_version"]
+     # D38-frozen: class-A's OWN embedded version/publication_unit literal never tracks the
+     # umbrella `unit_version` bump — that decoupling is what keeps
+     # the existing class-A projection bytes byte-identical across the P1.5 owner bump.
+@@ -1243,9 +1259,9 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
+ 
+     artifacts: list[RootBootstrapArtifact] = []
+     lock_records: list[dict[str, object]] = []
+-    for identity in config["identities"]:
+-        base = package_root / "skills" / "repository-bootstrap" / identity
+-        en_path = base / "SKILL.md"
++    for record in config["identities"]:
++        identity = record["identity"]
++        en_path = _bootstrap_path(repo_root, record["canonical"])
+         if not en_path.is_file():
+             raise ValueError(f"repository-bootstrap identity {identity!r}: canonical source "
+                              f"is missing ({en_path})")
+@@ -1293,7 +1309,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
+             raise ValueError(
+                 f"repository-bootstrap class_b {identity!r}: precondition violated — "
+                 f"unit {donor_bucket!r} is enabled ({record['precondition']})")
+-        canonical_path = repo_root / canonical_rel_str
++        canonical_path = _bootstrap_path(repo_root, canonical_rel_str)
+         if not canonical_path.is_file():
+             raise ValueError(f"repository-bootstrap class_b {identity!r}: canonical source "
+                              f"is missing ({canonical_path})")
+@@ -1342,11 +1358,11 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
+     lock_data = {
+         "contract_version": "1.0.0",
+         "publication_unit": f"repository-bootstrap@{unit_version}",
+-        "generator": config["generator"],
++        "generator": _generator(package_rel(repo_root, package_root)).removeprefix("generator: "),
+         "records": sorted(lock_records, key=lambda item: (item["identity"], item["provider"])),
+     }
+     lock_bytes = _manifest_text(lock_data)
+-    lock_target = repo_root / config["lock_path"]
++    lock_target = _bootstrap_path(repo_root, config["lock_path"])
+     artifacts.append(RootBootstrapArtifact(
+         lock_target, "", "lock", lock_bytes,
+         "sha256:" + hashlib.sha256(_manifest_text(
+diff --git a/packages/skiller/lib/skiller/registry.py b/packages/skiller/lib/skiller/registry.py
+index b59846fd..ea2adedf 100644
+--- a/packages/skiller/lib/skiller/registry.py
++++ b/packages/skiller/lib/skiller/registry.py
+@@ -448,7 +448,8 @@ def _manifest_text(data):
+ def _has_repository_bootstrap_config(root):
+     """Standalone/fixture roots predating carry no root-bootstrap config — skip the
+     renderer entirely rather than fail closed on a file that was never meant to exist there."""
+-    return (root / "configs" / "repository-bootstrap-skills.json").is_file()
++    host = load_host(root)
++    return host.bootstrap is not None and (host.root / host.bootstrap).is_file()
+ 
+ 
+ def _prune_publication_artifacts(artifacts):
+@@ -597,7 +598,7 @@ def render_index(registry, bucket_meta):
+ 
+ def _docs_root(p):
+     """Nearest up directory with docs/guide (package itself; fallback — p). Parity with
+-    budget._docs_root (both docs live in packages/skiller/docs)."""
++    budget._docs_root (both docs live in the package's docs directory)."""
+     for cand in (p, *p.parents):
+         if (cand / "docs" / "guide").is_dir():
+             return cand
+diff --git a/packages/skiller/lib/skiller/status.py b/packages/skiller/lib/skiller/status.py
+index e45f9f9d..570581ff 100644
+--- a/packages/skiller/lib/skiller/status.py
++++ b/packages/skiller/lib/skiller/status.py
+@@ -15,7 +15,7 @@ from .state import db_records, print_registry_state
+ from .update import detect_marketplace_file, detect_vendor_path
+ 
+ # The hub's memory-tool sync writes these at fixed paths; they share registry names with
+-# repository-bootstrap but are NOT skiller-vendored copies (see skilldoc.py).
++# host bootstrap but are NOT skiller-vendored copies (see skilldoc.py).
+ MAIND_MANAGED_SKILL_NAMES = frozenset({"ecosystem-mcp", "ecosystem-setup"})
+ 
+ 
+diff --git a/packages/skiller/scripts/validate.sh b/packages/skiller/scripts/validate.sh
+index 2d8b2642..1ff66f45 100755
+--- a/packages/skiller/scripts/validate.sh
++++ b/packages/skiller/scripts/validate.sh
+@@ -630,15 +630,25 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
+ # Taxonomy Canon - core.project.PROJECT_TYPES; here is a self-contained take
+ # (heredoc chases to PYTHONPATH on core — we do not consciously import; hold
+ #  in sync with core/project.py). Links to presets/packs/mcp live in the package
+-# harness — we check only if it is in place (monorepo), otherwise graceful skip.
++# configured environment publisher — checked only when available in this host.
+ PROJECT_TYPE_IDS = {
+     "obsidian-vault", "laravel-project", "php-package", "dart-flutter",
+     "python-backend", "node-frontend", "node-package", "standalone",
+ }
+ AA_MODES = {"strict", "permissive", "bypass", "off"}
+-MEM_MODES = {"file", "federation", "agentmemory", "maind", "off"}
++MEM_MODES = {"file", "federation", "agentmemory", "off"}
+ MODEL_TIERS = {"inherit", "opus", "sonnet", "haiku"}
+-hc_dir = repo_root / "packages" / "harness" / "configs" / "claude-code"
++# Host-selected publisher; no repository partner names or fixed package layout.
++hc_dir = None
++_host = None
++if (root / "lib" / "skiller" / "host.py").is_file():
++    sys.path[:0] = [str(root / "lib"), str(repo_root)]
++    from skiller.host import load_host, host_plugin_dirs
++    _host = load_host(root)
++    MEM_MODES.update(_host.mcp_servers)
++    _environment = _host.commands.get("environment")
++    if _environment is not None and "/" in _environment.argv[0]:
++        hc_dir = (_host.root / _environment.argv[0]).parent.parent / "configs" / "claude-code"
+ profile_names = set()
+ profiles_dir = root / "profiles"
+ if profiles_dir.is_dir():
+@@ -664,10 +674,10 @@ if profiles_dir.is_dir():
+         if pack is not None and not isinstance(pack, (str, list)):
+             errors.append(f"{rel}: agent_pack must be a string or list")
+         packs = [pack] if isinstance(pack, str) else (pack if isinstance(pack, list) else [])
+-        if hc_dir.is_dir():
++        if hc_dir is not None and hc_dir.is_dir():
+             for pk in packs:
+                 if not (hc_dir / "agent-packs" / str(pk) / "pack.json").exists():
+-                    errors.append(f"{rel}: agent_pack '{pk}' — no pack.json in harness")
++                    errors.append(f"{rel}: agent_pack '{pk}' — no pack.json in environment publisher")
+             for preset in data.get("harness_presets", []) or []:
+                 if not (hc_dir / f"settings.{preset}.json").exists():
+                     errors.append(f"{rel}: harness_preset '{preset}' — no settings.{preset}.json")
+@@ -831,62 +841,7 @@ for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
+             warnings.append(f"{rel_sd}: should_trigger {q!r} is not covered by any "
+                             f"pressure-script (field triggers[])")
+ 
+-# --- 5d. Thin projections do not duplicate canon -----------------
+-# Couples «projection↔canon» from publication-lock.json (repository-bootstrap), when
+-# its absence - configs/repository-bootstrap-skills.json. There are projections,
+-# no source ⇒ ERROR (inconsistent state); no projections, no source
+-# ⇒ check silently skipped (standalone-package layout).
+-PROJECTION_MAX_BODY_LINES = 15
+-_proj_lock = root / "adapters" / "repository-bootstrap" / "publication-lock.json"
+-_proj_lock_fallback = root / "configs" / "repository-bootstrap-skills.json"
+-_proj_glob = list(repo_root.glob(".claude/skills/*/SKILL.md")) + \
+-             list(repo_root.glob(".agents/skills/*/SKILL.md"))
+-if _proj_glob:
+-    _proj_source = _proj_lock if _proj_lock.is_file() else (
+-        _proj_lock_fallback if _proj_lock_fallback.is_file() else None)
+-    if _proj_source is None:
+-        errors.append(f"projections ({len(_proj_glob)}) exists, but no declared source "
+-                      f"steam (adapters/repository-bootstrap/publication-lock.json or "
+-                      f"configs/repository-bootstrap-skills.json)")
+-    else:
+-        try:
+-            _proj_data = json.loads(_proj_source.read_text(encoding="utf-8"))
+-        except json.JSONDecodeError as _pe:
+-            errors.append(f"{_proj_source.relative_to(repo_root)}: invalid JSON: {_pe}")
+-            _proj_data = {}
+-        _proj_records = _proj_data.get("records", []) if isinstance(_proj_data, dict) else []
+-        for _pr in _proj_records:
+-            _p_target = _pr.get("target")
+-            _p_canon = _pr.get("canonical_en")
+-            if not _p_target or not _p_canon:
+-                continue
+-            _p_path = repo_root / _p_target
+-            if not _p_path.is_file():
+-                continue  # projection not generated - out scope P8.8 (is not a generator gate)
+-            _p_text = _p_path.read_text(encoding="utf-8")
+-            _p_lines = _p_text.splitlines()
+-            _p_start = 0
+-            if _p_lines and _p_lines[0].strip() == "---":
+-                for _i in range(1, len(_p_lines)):
+-                    if _p_lines[_i].strip() == "---":
+-                        _p_start = _i + 1
+-                        break
+-            _p_body = [ln for ln in _p_lines[_p_start:] if ln.strip()]
+-            if len(_p_body) > PROJECTION_MAX_BODY_LINES:
+-                errors.append(f"{_p_target}: body {len(_p_body)} lines "
+-                              f"(> {PROJECTION_MAX_BODY_LINES}) — projection duplicates "
+-                              f"canon {_p_canon}")
+-            if _p_canon not in _p_text:
+-                errors.append(f"{_p_target}: no link to canon {_p_canon}")
+-            _p_canon_path = repo_root / _p_canon
+-            if _p_canon_path.is_file():
+-                _p_canon_headings = {m.group(1).strip() for m in
+-                                     HEADING2_RE.finditer(_p_canon_path.read_text(encoding="utf-8"))}
+-                _p_proj_headings = {m.group(1).strip() for m in HEADING2_RE.finditer(_p_text)}
+-                _p_dup = _p_canon_headings & _p_proj_headings
+-                if _p_dup:
+-                    errors.append(f"{_p_target}: projection reproduces canon titles "
+-                                  f"{sorted(_p_dup)} — body <projection> duplicates canon {_p_canon}")
++# Host bootstrap projections, hashes and completeness are owned by registry --check.
+ 
+ # --- 6. buckets.json --------------------------------------------------------
+ KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+@@ -1019,18 +974,14 @@ if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
+ # without skills-fields; them plugin.json — source of truth, registry adds them to marketplace.
+ # Here we only collect their names for match-checks (full validation - in their package).
+ sibling_plugin_names = []
+-pkgs_dir = repo_root / "packages"
+-if root != repo_root and pkgs_dir.is_dir():
+-    for pkg in sorted(pkgs_dir.iterdir()):
+-        if not pkg.is_dir() or pkg.name == root.name:
+-            continue
++if _host is not None:
++    for pkg in host_plugin_dirs(repo_root, root, _host):
+         pj = pkg / ".claude-plugin" / "plugin.json"
+-        if pj.exists():
+-            try:
+-                sibling_plugin_names.append(
+-                    json.loads(pj.read_text(encoding="utf-8")).get("name", pkg.name))
+-            except json.JSONDecodeError as e:
+-                errors.append(f"packages/{pkg.name}/.claude-plugin/plugin.json: invalid JSON: {e}")
++        try:
++            sibling_plugin_names.append(
++                json.loads(pj.read_text(encoding="utf-8")).get("name", pkg.name))
++        except json.JSONDecodeError as e:
++            errors.append(f"{pj.relative_to(repo_root)}: invalid JSON: {e}")
+ 
+ for plugin_name, plugin_root in sorted(plugin_roots.items()):
+     pj = plugin_root / ".claude-plugin" / "plugin.json"
+@@ -1083,7 +1034,7 @@ else:
+                 f"({STALE_HINT})")
+         for p in entries:
+             src = p.get("source", "")
+-            # source-paths are relative to the repo root (./packages/skiller/... or ./ for curated)
++            # source-paths are relative to the repo root (./<package>/... or ./ for curated)
+             if not (repo_root / src).is_dir():
+                 errors.append(
+                     f".claude-plugin/marketplace.json: {p.get('name')}: "
+diff --git a/packages/skiller/skills.json b/packages/skiller/skills.json
+index d2c4b40f..9cdfdd13 100644
+--- a/packages/skiller/skills.json
++++ b/packages/skiller/skills.json
+@@ -214,11 +214,6 @@
+       "count": 11,
+       "status": "active"
+     },
+-    "repository-bootstrap": {
+-      "description": "P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections.",
+-      "count": 14,
+-      "status": "active"
+-    },
+     "research": {
+       "description": "Research and knowledge management",
+       "count": 2,
+@@ -4150,234 +4145,6 @@
+       ],
+       "source": "local"
+     },
+-    {
+-      "name": "cross-project-optimizer",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/cross-project-optimizer/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Cross-project optimization across ~N similar ecosystem projects (shared core packages): find duplicated code/schemas and extract into core. Use to analyze projects for duplicates/shared patterns, correlate similar features, or decide what to extract into a shared package (corex/azguard/vaulter).",
+-      "sha256": "cd7b28ae96a9c7915e036ce720acfd1f67f3f24b2489a1a8e83627e88be38667",
+-      "content_sha256": "253dcc7d89fb8b94e49b310ef3214f9ff79202783f6f120977db78680e1cd58b",
+-      "tags": [
+-        "ecosystem",
+-        "fleet",
+-        "dedup",
+-        "shared-package",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "decision-verification",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/decision-verification/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Use when a repository decision rests on a changing external premise; route to the shared verify-claims policy.",
+-      "sha256": "e7b84da46c946810ad9be8d0f25aef8936595854db50ec67df4b8eb17576910b",
+-      "content_sha256": "98cca988d3059b5494fbbcd7b07054f2751abfc563d717470dda07966546a243",
+-      "tags": [
+-        "rag",
+-        "verification",
+-        "epistemics",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "docs-maintenance",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/docs-maintenance/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "After every completed task in a repository with a docs/ directory at its root: assess whether something worth documenting changed (processes, install capabilities, schemas, features for understanding the project), and update docs/. Not for every task — only for substantive changes.",
+-      "sha256": "d85bb036dfa56dad11077e0f9de3028ca4c2e036ceeba13b957e2b952fd4b28c",
+-      "content_sha256": "3372c217d973b846584aa450569200f785d4247312c68abfbe048a41d5d106a0",
+-      "tags": [
+-        "docs",
+-        "maintenance",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "ecosystem-integration",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/ecosystem-integration/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "How to connect (onboard) a new project to the academici ecosystem via the mAInd hub - shared memory + graph + MCP tools + skills. Use to onboard a project, add it to mAInd, roll out memory/graph, or fix/update an already-connected project.",
+-      "sha256": "b0f1ba4bd0fa95061c3c800e9ceb4350f4911f68659624365e503a780b88caac",
+-      "content_sha256": "3572e6e9b7193773b26b1322cad3ab96f315ca75873d56b0eb20d456d5d4a4ce",
+-      "tags": [
+-        "ecosystem",
+-        "maind",
+-        "onboarding",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "ecosystem-mcp",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "What MCP tools are available here (agent-memory = shared memory/context, serena = code graph), when to call them, which ecosystem projects this one links to, and how to fix a broken link. Use in any ecosystem project to raise past-decision context, navigate code, or diagnose missing memory/graph.",
+-      "sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+-      "content_sha256": "a469c43e98d3f29a7e9c186329f9f0e241742789cb88fff48b444934828fcf86",
+-      "tags": [
+-        "ecosystem",
+-        "mcp",
+-        "maind",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "ecosystem-setup",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/ecosystem-setup/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "How to configure/reconfigure THIS academici ecosystem project - decision tree for skills, plugins, memory, namespaces, environment, graph. Use to connect/change skills or plugins, change memory/namespaces, add a role, or diagnose the connection. Pick the OPTIMAL set; ask when unclear.",
+-      "sha256": "1aaff539e9148d1300b1aafea7e282cbfc21ef40cee67b0f6b7f1f5879a3e885",
+-      "content_sha256": "6dbcb99747808806b5ea865a5e44816234968c3d258240089475cbc3fb28627c",
+-      "tags": [
+-        "ecosystem",
+-        "setup",
+-        "maind",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "field-feedback-loop",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Feedback loop from field work: implementing/integrating/syncing a project (skiller connect|vendor, maind onboard|sync, harness, setup) and reality diverges from promised behavior - route it, don't swallow it. Obvious bug -> fix now; new/uncertain -> propose, don't implement speculatively.",
+-      "sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
+-      "content_sha256": "2d73227e92f940dabc683c02257022f721c7eaa6172d54744fc0a3e7021dc6af",
+-      "tags": [
+-        "field-feedback",
+-        "improvement-loop",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "harness-operations",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/harness-operations/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Operational map of the harness package (Claude Code environment setup): permissions/mcp/hooks/agent-packs/doctor commands, preset catalog, agent-packs subsystem. Activate for any task touching packages/harness/ or when deciding which preset/MCP/mode to connect to a project.",
+-      "sha256": "b57a532998ed905340c143929201a660659ba0073293ecc1f641f645d761fda9",
+-      "content_sha256": "586e5f3127e8382ebc754a403fd666e06c3ecd92abe3714e4114782e899fc19e",
+-      "tags": [
+-        "harness",
+-        "permissions",
+-        "mcp",
+-        "hooks",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "maind-overview",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/maind-overview/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Brief overview of the mAInd hub - two linking mechanisms (code graph/Serena, agent-memory), the namespace model, and key commands. Use when working in maind or any ecosystem project to understand shared memory, the connection graph, and namespace isolation.",
+-      "sha256": "fcb147b84f6b0c66fa05c68e2db728be4aeda2fa15f70158107d26340ccb1550",
+-      "content_sha256": "55508e0b809c05329cb246bb36a36d25f423b9d809a320a57f3f42385b866bb8",
+-      "tags": [
+-        "maind",
+-        "ecosystem",
+-        "memory",
+-        "graph",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "package-architecture",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/package-architecture/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, generated artifacts and what regenerates them. Activate at the start of any task in this repository touching skills/, bin/, scripts/, configs/, profiles/, the registry, or manifests.",
+-      "sha256": "a4b74be065941b47cf1b9e3d68f669ba63a9af6ea745787e0ac3e28957643941",
+-      "content_sha256": "fcb02ea7cb175900182ab531d98037a80993e99b02a269788b5c3053791cc159",
+-      "tags": [
+-        "skiller",
+-        "architecture",
+-        "distribution",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "project-tooling-runbook",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
+-      "version": "0.1.1",
+-      "description": "Use when configuring ecosystem skill delivery, agent-packs, or Brain docs sync; preserve existing channel ownership.",
+-      "sha256": "143c37d15c8f1ae444a1c1a817e42e22459f520a597e9e488c2c8b45df0069b8",
+-      "content_sha256": "0f7da8414382599ff6df9f8f0444d9661494623200eeade79b07fe987488216d",
+-      "tags": [
+-        "runbook",
+-        "skills",
+-        "docs-sync",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "release-discipline",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/release-discipline/SKILL.md",
+-      "version": "0.1.0",
+-      "description": "Closing out any substantive change in this repository: validate.sh → skiller registry → CHANGELOG [Unreleased] → PR; semver tag rules. Activate before every commit/PR and when preparing a release.",
+-      "sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
+-      "content_sha256": "077f476c846db67e8c2f4e322f8846d043d42b33f696a3e2272f5c50dc8368e0",
+-      "tags": [
+-        "release",
+-        "changelog",
+-        "validate",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "skill-authoring",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/skill-authoring/SKILL.md",
+-      "version": "3.0.1",
+-      "description": "Rules for creating or editing EN-only registry skills, references, snippets, metadata, provenance, tests, and generated projections.",
+-      "sha256": "1c8b2e54255fcf1c5a0569045cddba3c1345795f7b5a43ee394f358f2e0f0d64",
+-      "content_sha256": "c1e724af130655177ce91ed17071f0f728824209ef2826a5c03d587de528f119",
+-      "tags": [
+-        "skill-authoring",
+-        "en-only",
+-        "upstream",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+-    {
+-      "name": "task-development-philosophy",
+-      "bucket": "repository-bootstrap",
+-      "path": "skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+-      "version": "0.5.0",
+-      "description": "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy.",
+-      "sha256": "0ba61ede8f331c92e9c946c18311d299aacaddce2032d3fb68051f46f9c79a1b",
+-      "content_sha256": "7c24e9a56d48d11c44c7cc3f1525a5c3e40a1e69f121eadc4c24b7c117b19eb8",
+-      "tags": [
+-        "task",
+-        "philosophy",
+-        "planning",
+-        "proportionality",
+-        "evidence-reuse",
+-        "anti-loop",
+-        "root-bootstrap"
+-      ],
+-      "source": "local"
+-    },
+     {
+       "name": "query-craft",
+       "bucket": "research",
+diff --git a/packages/skiller/skills/_index.md b/packages/skiller/skills/_index.md
+index 74fe0c99..0bec8722 100644
+--- a/packages/skiller/skills/_index.md
++++ b/packages/skiller/skills/_index.md
+@@ -4,7 +4,7 @@
+ 
+ Source of truth for ported skills (machine registry - `skills.json`). Distribution to projects: `skiller connect` (plugin buckets) / `vendor` (physical. transfer). CORE-set of token skills (`general`/`oss-dev`) is heard by default - see `connect`/`vendor`.
+ 
+-Total: 231 skills in 49 buckets.
++Total: 217 skills in 48 buckets.
+ 
+ ## Skills for buckets
+ 
+@@ -419,25 +419,6 @@ Total: 231 skills in 49 buckets.
+ | `test-strategy` | Design or revise a test suite strategy; choose checks by behavior and risk, not fixed per… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
+ | `testing-safety-report` | Use after a risky schema, layer, or dependency change to report checks and remaining risk… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
+ 
+-### repository-bootstrap — P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections. (14)
+-
+-| Skill | Description | Tags |
+-|:--|:--|:--|
+-| `cross-project-optimizer` | Cross-project optimization across ~N similar ecosystem projects (shared core packages): f… | `ecosystem`, `fleet`, `dedup`, `shared-package`, `root-bootstrap` |
+-| `decision-verification` | Use when a repository decision rests on a changing external premise; route to the shared … | `rag`, `verification`, `epistemics`, `root-bootstrap` |
+-| `docs-maintenance` | After every completed task in a repository with a docs/ directory at its root: assess whe… | `docs`, `maintenance`, `root-bootstrap` |
+-| `ecosystem-integration` | How to connect (onboard) a new project to the academici ecosystem via the mAInd hub - sha… | `ecosystem`, `maind`, `onboarding`, `root-bootstrap` |
+-| `ecosystem-mcp` | What MCP tools are available here (agent-memory = shared memory/context, serena = code gr… | `ecosystem`, `mcp`, `maind`, `root-bootstrap` |
+-| `ecosystem-setup` | How to configure/reconfigure THIS academici ecosystem project - decision tree for skills,… | `ecosystem`, `setup`, `maind`, `root-bootstrap` |
+-| `field-feedback-loop` | Feedback loop from field work: implementing/integrating/syncing a project (skiller connec… | `field-feedback`, `improvement-loop`, `root-bootstrap` |
+-| `harness-operations` | Operational map of the harness package (Claude Code environment setup): permissions/mcp/h… | `harness`, `permissions`, `mcp`, `hooks`, `root-bootstrap` |
+-| `maind-overview` | Brief overview of the mAInd hub - two linking mechanisms (code graph/Serena, agent-memory… | `maind`, `ecosystem`, `memory`, `graph`, `root-bootstrap` |
+-| `package-architecture` | Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, gene… | `skiller`, `architecture`, `distribution`, `root-bootstrap` |
+-| `project-tooling-runbook` | Use when configuring ecosystem skill delivery, agent-packs, or Brain docs sync; preserve … | `runbook`, `skills`, `docs-sync`, `root-bootstrap` |
+-| `release-discipline` | Closing out any substantive change in this repository: validate.sh → skiller registry → C… | `release`, `changelog`, `validate`, `root-bootstrap` |
+-| `skill-authoring` | Rules for creating or editing EN-only registry skills, references, snippets, metadata, pr… | `skill-authoring`, `en-only`, `upstream`, `root-bootstrap` |
+-| `task-development-philosophy` | Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before … | `task`, `philosophy`, `planning`, `proportionality`, `evidence-reuse`, `anti-loop`, `root-bootstrap` |
+-
+ ### research — Research and knowledge management (2)
+ 
+ | Skill | Description | Tags |
+@@ -505,9 +486,8 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `ai-context` | `skills-ssot` |
+ | `alerting` | `observability-design` |
+ | `anti-bloat` | `package-contribution-protocol` |
+-| `anti-loop` | `task-development-philosophy` |
+ | `api` | `api-design`, `dart-package-development`, `dx-design`, `laravel-data`, `version-gotchas` |
+-| `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `package-architecture`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
++| `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
+ | `async` | `transactional-outbox-relay` |
+ | `attribute` | `attribute-authorization` |
+ | `attributes` | `eloquent-accessors`, `enum-attributes` |
+@@ -535,7 +515,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `cad` | `build-loop`, `config-conventions`, `model-rules`, `model-verification`, `parametric-config`, `scene-conventions` |
+ | `camera` | `mcp-blender` |
+ | `casts` | `laravel-data` |
+-| `changelog` | `release-discipline`, `release-engineering` |
++| `changelog` | `release-engineering` |
+ | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
+ | `chromedriver` | `laravel-dusk` |
+ | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
+@@ -581,7 +561,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `ddd` | `domain-modeling` |
+ | `debugging` | `diagnosing-bugs` |
+ | `decomposition` | `to-issues` |
+-| `dedup` | `cross-project-optimizer` |
+ | `deep-modules` | `codebase-design` |
+ | `dependencies` | `dependency-audit`, `packages-stack`, `tech-debt-audit`, `venv-dependencies` |
+ | `deployment` | `architecture` |
+@@ -594,10 +573,8 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `diagnostics` | `diagnosing-bugs` |
+ | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
+ | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
+-| `distribution` | `package-architecture` |
+ | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
+-| `docs` | `artifact-review`, `brain-locator`, `docs-maintenance`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
+-| `docs-sync` | `project-tooling-runbook` |
++| `docs` | `artifact-review`, `brain-locator`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
+ | `doctrine` | `axioma-doctrine` |
+ | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
+ | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
+@@ -608,26 +585,21 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `dynamic-component` | `vue-dynamic-icons` |
+ | `e2e` | `laravel-dusk`, `playwright-e2e` |
+ | `echo` | `laravel-broadcasting` |
+-| `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `cross-project-optimizer`, `ecosystem-integration`, `ecosystem-map`, `ecosystem-mcp`, `ecosystem-reuse-gate`, `ecosystem-setup`, `maind-overview`, `swissknifeman-locator` |
++| `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
+ | `eloquent` | `eloquent-accessors` |
+-| `en-only` | `skill-authoring` |
+ | `entities` | `data-schema` |
+ | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
+-| `epistemics` | `decision-verification` |
+ | `erd` | `data-schema` |
+ | `eslint` | `eslint-flat-config`, `wayfinder` |
+ | `evidence` | `model-verification` |
+-| `evidence-reuse` | `task-development-philosophy` |
+ | `fdm` | `build-loop`, `config-conventions`, `model-verification`, `parametric-config`, `threading` |
+ | `feature-flags` | `pennant-development` |
+ | `feedback-loop` | `diagnosing-bugs` |
+-| `field-feedback` | `field-feedback-loop` |
+ | `figma` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue` |
+ | `filament` | `filament`, `modular-architecture`, `spatie-settings`, `vite-multi-build` |
+ | `file-upload` | `filepond-upload` |
+ | `filepond` | `filepond-upload` |
+ | `flat-config` | `eslint-flat-config` |
+-| `fleet` | `cross-project-optimizer` |
+ | `flutter` | `figma-to-flutter` |
+ | `forms` | `filepond-upload` |
+ | `frontend` | `backend-type-sync`, `docker-vite`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `laravel-echo-client`, `livewire-blade-attributes`, `naive-ui-theming`, `pinia-stores`, `playwright-e2e`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `wayfinder` |
+@@ -643,20 +615,18 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `glossary` | `axioma-glossary`, `domain-modeling` |
+ | `gotchas` | `livewire-blade-attributes`, `version-gotchas` |
+ | `governance` | `issue-triage`, `package-contribution-protocol` |
+-| `graph` | `maind-overview` |
+ | `grilling` | `grill-with-docs` |
+ | `gtm` | `competitive-analysis`, `go-to-market`, `new-project`, `pitch-deck`, `product-roadmap` |
+ | `guardrails` | `git-safety` |
+ | `handoff` | `gh-review`, `oncall-rotation`, `session-handoff` |
+-| `harness` | `agent-packs`, `harness-operations` |
++| `harness` | `agent-packs` |
+ | `headless` | `reka-ui-cva` |
+ | `health` | `health-checks` |
+-| `hooks` | `git-safety`, `harness-operations`, `shell` |
++| `hooks` | `git-safety`, `shell` |
+ | `icons` | `vue-dynamic-icons` |
+ | `image-preview` | `filepond-upload` |
+ | `images` | `medialibrary` |
+ | `implementation` | `implement` |
+-| `improvement-loop` | `field-feedback-loop` |
+ | `incident` | `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
+ | `inertia` | `filepond-upload`, `inertia-vue`, `laravel-data`, `wayfinder` |
+ | `infection` | `mutation-testing` |
+@@ -684,15 +654,13 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `lock` | `agent-packs` |
+ | `logging` | `observability-design` |
+ | `lucide` | `vue-dynamic-icons` |
+-| `maind` | `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `maind-overview` |
+-| `maintenance` | `docs-maintenance` |
+ | `make` | `makefile` |
+ | `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-audit`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
+ | `matchmedia` | `dark-mode` |
+ | `materials` | `scene-conventions` |
+-| `mcp` | `ai-agents`, `build-loop`, `ecosystem-mcp`, `figma-mcp-core`, `harness-operations`, `mcp-advisor`, `mcp-blender` |
++| `mcp` | `ai-agents`, `build-loop`, `figma-mcp-core`, `mcp-advisor`, `mcp-blender` |
+ | `media` | `medialibrary` |
+-| `memory` | `maind-overview`, `shared-memory` |
++| `memory` | `shared-memory` |
+ | `merge` | `resolving-merge-conflicts` |
+ | `meta` | `local-topology` |
+ | `metrics` | `eval-design`, `observability-design` |
+@@ -720,7 +688,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
+ | `observer` | `session-observer` |
+ | `obsidian` | `brain-locator` |
+-| `onboarding` | `ecosystem-integration`, `mcp-advisor` |
++| `onboarding` | `mcp-advisor` |
+ | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
+ | `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead`, `workflow-craft` |
+ | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
+@@ -735,16 +703,15 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `patterns` | `eloquent-accessors`, `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
+ | `pennant` | `pennant-development` |
+ | `performance` | `diagnosing-bugs` |
+-| `permissions` | `attribute-authorization`, `azguard`, `harness-operations`, `laravel-permissions` |
++| `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
+ | `perplexity` | `query-craft` |
+ | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+ | `pest` | `test-strategy` |
+-| `philosophy` | `task-development-philosophy` |
+ | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `config-driven-abstraction`, `cursor-pagination-design`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `namespace-refactor-safety`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `production-readiness-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard`, `transactional-outbox-relay` |
+ | `phpstan` | `php-upgrade-checklist` |
+ | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
+ | `plan` | `artifact-review` |
+-| `planning` | `task-development-philosophy`, `to-issues`, `verify-claims` |
++| `planning` | `to-issues`, `verify-claims` |
+ | `plans` | `ecosystem-map` |
+ | `playwright` | `playwright-e2e` |
+ | `pnpm` | `node-pnpm-preflight` |
+@@ -755,14 +722,13 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `privacy` | `legal-compliance`, `security-design` |
+ | `production` | `production-readiness-checklist` |
+ | `prompt-engineering` | `ai-agents` |
+-| `proportionality` | `task-development-philosophy` |
+ | `pub` | `dart-package-development` |
+ | `pusher` | `laravel-echo-client` |
+ | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
+ | `quality` | `artifact-review`, `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
+ | `query` | `query-craft` |
+ | `queue` | `docker-services`, `transactional-outbox-relay` |
+-| `rag` | `ai-agents`, `decision-verification`, `query-craft`, `verify-claims` |
++| `rag` | `ai-agents`, `query-craft`, `verify-claims` |
+ | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
+ | `readability` | `named-arguments`, `naming-conventions`, `php-naming-conventions` |
+ | `readiness` | `health-checks` |
+@@ -778,7 +744,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `registry` | `config-driven-abstraction`, `swissknifeman-locator` |
+ | `regulatory` | `legal-compliance` |
+ | `reka-ui` | `reka-ui-cva` |
+-| `release` | `ci-cd`, `github-flow`, `model-verification`, `open-source-maintainer`, `release-discipline`, `release-engineering` |
++| `release` | `ci-cd`, `github-flow`, `model-verification`, `open-source-maintainer`, `release-engineering` |
+ | `reliability` | `production-readiness-checklist`, `transactional-outbox-relay` |
+ | `reporting` | `testing-safety-report` |
+ | `repository` | `repositories` |
+@@ -789,12 +755,11 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
+ | `review` | `artifact-review`, `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
+ | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+-| `root-bootstrap` | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring`, `task-development-philosophy` |
+ | `router` | `docker` |
+ | `routes` | `wayfinder` |
+ | `routing` | `project-map`, `vue-router-best-practices` |
+ | `rules` | `model-rules` |
+-| `runbook` | `observability-design`, `project-tooling-runbook` |
++| `runbook` | `observability-design` |
+ | `russian` | `writing-style` |
+ | `russian-stack` | `voice-ai` |
+ | `safety` | `git-safety`, `namespace-refactor-safety`, `shell`, `test-isolation-guard`, `testing-safety-report` |
+@@ -810,13 +775,9 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
+ | `session-analysis` | `session-observer` |
+ | `settings` | `spatie-settings` |
+-| `setup` | `ecosystem-setup` |
+ | `severity` | `artifact-review` |
+-| `shared-package` | `cross-project-optimizer` |
+ | `shell` | `shell` |
+-| `skill-authoring` | `skill-authoring` |
+-| `skiller` | `package-architecture` |
+-| `skills` | `laravel-packages`, `project-tooling-runbook`, `skills-ssot`, `swissknifeman-locator` |
++| `skills` | `laravel-packages`, `skills-ssot`, `swissknifeman-locator` |
+ | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `model-verification`, `oncall-rotation`, `parametric-config`, `threading` |
+ | `slo` | `observability-design` |
+ | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
+@@ -837,7 +798,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `swissknifeman` | `swissknifeman-locator` |
+ | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
+ | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
+-| `task` | `task-development-philosophy` |
+ | `taxonomy` | `artifact-review` |
+ | `tdd` | `implement`, `tdd-discipline` |
+ | `tech-radar` | `axioma-stack` |
+@@ -867,15 +827,13 @@ Search for skills by tag (load pointwise, not the whole bucket).
+ | `units` | `parametric-config` |
+ | `upgrade` | `agent-packs`, `php-upgrade-checklist` |
+ | `uploads` | `filepond-upload`, `medialibrary` |
+-| `upstream` | `skill-authoring` |
+ | `vad` | `voice-ai` |
+-| `validate` | `release-discipline` |
+ | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
+ | `variants` | `reka-ui-cva` |
+ | `vault` | `brain-locator` |
+ | `vendor-vs-build` | `ecosystem-reuse-gate` |
+ | `venv` | `venv-dependencies` |
+-| `verification` | `decision-verification`, `model-verification`, `testing-safety-report`, `verify-claims` |
++| `verification` | `model-verification`, `testing-safety-report`, `verify-claims` |
+ | `version` | `php-upgrade-checklist`, `version-gotchas` |
+ | `versioning` | `agent-packs` |
+ | `vertical-slices` | `tdd-discipline`, `to-issues` |
+diff --git a/packages/skiller/tests/boundary_allowlist.json b/packages/skiller/tests/boundary_allowlist.json
+index 81e241de..10c6dcb7 100644
+--- a/packages/skiller/tests/boundary_allowlist.json
++++ b/packages/skiller/tests/boundary_allowlist.json
+@@ -1,8 +1,5 @@
+ {
+   ".swissknifeman.example/config.json": "P8.9: neutralize monorepo paths in distributed content",
+-  "adapters/repository-bootstrap/publication-lock.json": "P8.6: move and regenerate bootstrap publication lock",
+-  "configs/publication-versions.json": "P8.6: move bootstrap unit version and neutralize self-path documentation",
+-  "configs/repository-bootstrap-skills.json": "P8.6: move bootstrap configuration to the host repository",
+   "docs/adapters/cursor.md": "P8.9: neutralize monorepo paths in distributed content",
+   "docs/adapters/grok.md": "P8.9: neutralize monorepo paths in distributed content",
+   "docs/agent-framework/framework-overview.md": "P8.9: neutralize monorepo paths in distributed content",
+@@ -21,10 +18,7 @@
+   "docs/multi-provider-distribution.md": "P8.9: neutralize monorepo paths in distributed content",
+   "docs/workflows/background-agents.md": "P8.9: neutralize monorepo paths in distributed content",
+   "docs/workflows/framework-audit.md": "P8.9: neutralize monorepo paths in distributed content",
+-  "lib/skiller/publication.py": "P8.6: remove remaining package/layout coupling in the owning module",
+-  "lib/skiller/registry.py": "P8.6: remove remaining package/layout coupling in the owning module",
+   "references/mattpocock-skills.md": "P8.9: neutralize monorepo paths in distributed content",
+-  "scripts/validate.sh": "P8.6: finish host-driven gates and bootstrap validation after P8.4-P8.5",
+   "skills.json": "P8.9: regenerate registry after bootstrap removal and portable content cleanup",
+   "skills/general/git-safety/SKILL.md": "P8.9: neutralize monorepo paths in distributed content",
+   "skills/general/git-safety/upstream.json": "P8.9: neutralize monorepo paths in distributed content",
+@@ -33,8 +27,5 @@
+   "skills/general/skills-ssot/references/ssot-source-layout.md": "P8.9: neutralize monorepo paths in distributed content",
+   "skills/general/workflow-craft/SKILL.md": "P8.9: neutralize monorepo paths in distributed content",
+   "skills/quality/tdd-discipline/upstream.json": "P8.9: neutralize monorepo paths in distributed content",
+-  "skills/repository-bootstrap": "P8.6: move repository-only skills to their canonical owners",
+-  "skills/system/swissknifeman-locator/SKILL.md": "P8.9: neutralize monorepo paths in distributed content",
+-  "tests/test_codex_publication.py": "P8.6: make owning test fixtures and comments portable",
+-  "tests/test_provider_distribution.py": "P8.6: make owning test fixtures and comments portable"
++  "skills/system/swissknifeman-locator/SKILL.md": "P8.9: neutralize monorepo paths in distributed content"
+ }
+diff --git a/packages/skiller/tests/test_codex_publication.py b/packages/skiller/tests/test_codex_publication.py
+index 8d4bdc9b..5f92203a 100644
+--- a/packages/skiller/tests/test_codex_publication.py
++++ b/packages/skiller/tests/test_codex_publication.py
+@@ -166,11 +166,10 @@ class TestCodexPublication(unittest.TestCase):
+ 
+     def test_repository_bootstrap_bucket_never_leaks_into_normal_codex_publication(self):
+         """P1.2 (D31): the private/source-only bucket must never surface as an ordinary
+-        Codex unit/plugin/marketplace entry, even though `build_registry` indexes its 14
+-        members for ownership/hash lookup."""
++        Codex unit/plugin/marketplace entry. Its sources now belong to the host."""
+         member_ids = {skill["path"] for skill in self.registry["skills"]
+                       if skill["bucket"] == "repository-bootstrap"}
+-        self.assertEqual(len(member_ids), 14)
++        self.assertEqual(member_ids, set())
+         first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
+         marketplace = json.loads(next(item.managed_bytes for item in first
+                                       if item.target.name == "marketplace.json"))
+@@ -189,7 +188,7 @@ def _build_isolated_bootstrap_fixture(tmp):
+     canon (P1.5 negative fixture: canon drift without a unit-version bump)."""
+     repo_root = tmp
+     package_root = tmp / "pkg"
+-    canon_dir = package_root / "skills" / "repository-bootstrap" / "alpha"
++    canon_dir = repo_root / "bootstrap" / "skills" / "alpha"
+     canon_dir.mkdir(parents=True)
+     (canon_dir / "SKILL.ru.md").write_text("RU body\n", encoding="utf-8")
+     (canon_dir / "SKILL.md").write_text(
+@@ -199,12 +198,13 @@ def _build_isolated_bootstrap_fixture(tmp):
+     (donor_dir / "SKILL.md").write_text(
+         "---\nname: beta\ndescription: Beta desc\n---\n\nBeta canon body v1.\n", encoding="utf-8")
+     (package_root / "configs").mkdir()
+-    (package_root / "configs" / "repository-bootstrap-skills.json").write_text(json.dumps({
+-        "schema_version": 1, "bucket": "repository-bootstrap",
+-        "publication_unit": "repository-bootstrap", "generator": "gen",
+-        "lock_path": "adapters/repository-bootstrap/publication-lock.json",
++    (repo_root / "configs").mkdir(exist_ok=True)
++    (repo_root / "configs" / "repository-bootstrap-skills.json").write_text(json.dumps({
++        "schema_version": 2, "bucket": "repository-bootstrap",
++        "publication_unit": "repository-bootstrap", "unit_version": "0.1.0",
++        "lock_path": "bootstrap/publication-lock.json",
+         "class_a_content_version": "0.1.0",
+-        "identities": ["alpha"],
++        "identities": [{"identity": "alpha", "canonical": "bootstrap/skills/alpha/SKILL.md"}],
+         "class_b": [{
+             "identity": "beta", "source_class": "public-bucket",
+             "canonical": "pkg/skills/general/beta/SKILL.md",
+@@ -214,8 +214,11 @@ def _build_isolated_bootstrap_fixture(tmp):
+     }), encoding="utf-8")
+     (package_root / "configs" / "publication-versions.json").write_text(json.dumps({
+         "default_unit_version": "0.1.0",
+-        "units": {"repository-bootstrap": "0.1.0"},
++        "units": {},
+     }), encoding="utf-8")
++    (repo_root / "configs" / "skiller-host.json").write_text(
++        json.dumps({"schema_version": 1, "bootstrap": "configs/repository-bootstrap-skills.json"}))
++    (repo_root / ".git").mkdir()
+     return repo_root, package_root
+ 
+ 
+@@ -244,9 +247,9 @@ class ClassBCanonDriftCase(unittest.TestCase):
+             lock_second = next(a for a in second if a.provider == "lock")
+ 
+             # same declared unit tuple (version untouched)…
+-            versions = json.loads((package_root / "configs" /
+-                                   "publication-versions.json").read_text())
+-            self.assertEqual(versions["units"]["repository-bootstrap"], "0.1.0")
++            versions = json.loads((repo_root / "configs" /
++                                   "repository-bootstrap-skills.json").read_text())
++            self.assertEqual(versions["unit_version"], "0.1.0")
+             # …but the rendered bytes AND lock hashes moved — never a same-tuple silent reuse.
+             self.assertNotEqual(beta_first.managed_bytes, beta_second.managed_bytes)
+             self.assertNotEqual(beta_first.rendered_hash, beta_second.rendered_hash)
+@@ -260,10 +263,11 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
+         self.repo_root = Path(__file__).resolve().parents[3]
+         self.package_root = self.repo_root / "packages" / "skiller"
+         self.env = Env(self.package_root)
+-        self.config = load_repository_bootstrap_config(self.package_root)
++        from skiller.host import load_host
++        self.config = load_repository_bootstrap_config(self.repo_root, load_host(self.package_root))
+ 
+     def test_config_names_exactly_fourteen_sorted_unique_identities(self):
+-        identities = self.config["identities"]
++        identities = [row["identity"] for row in self.config["identities"]]
+         self.assertEqual(len(identities), 14)
+         self.assertEqual(identities, sorted(identities))
+         self.assertEqual(len(set(identities)), 14)
+@@ -281,8 +285,8 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
+                 continue  # class-B (P1.5), asserted separately below
+             by_provider.setdefault(artifact.provider, set()).add(artifact.identity)
+         self.assertEqual(by_provider.keys(), {"claude", "codex"})
+-        self.assertEqual(by_provider["claude"], set(self.config["identities"]))
+-        self.assertEqual(by_provider["codex"], set(self.config["identities"]))
++        self.assertEqual(by_provider["claude"], {row["identity"] for row in self.config["identities"]})
++        self.assertEqual(by_provider["codex"], {row["identity"] for row in self.config["identities"]})
+         self.assertIsNotNone(lock_artifact)
+         self.assertEqual(lock_artifact.target, self.repo_root / self.config["lock_path"])
+         lock_data = json.loads(lock_artifact.managed_bytes)
+@@ -291,14 +295,14 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
+             if artifact.provider == "lock" or artifact.identity == "workflow-craft":
+                 continue
+             body = artifact.managed_bytes.decode("utf-8")
+-            canonical = self.package_root / "skills" / "repository-bootstrap" / \
+-                artifact.identity / "SKILL.md"
++            record = next(row for row in self.config["identities"]
++                          if row["identity"] == artifact.identity)
++            canonical = self.repo_root / record["canonical"]
+             canonical_body = canonical.read_text(encoding="utf-8")
+             # The projection is thin: it must not carry the canonical file's own prose body
+             # (checked via a body-only marker line unlikely to appear in a pointer stub).
+             self.assertNotIn("## Provenance (root-bootstrap, P1.2)", body)
+-            self.assertIn(f"canonical: packages/skiller/skills/repository-bootstrap/"
+-                          f"{artifact.identity}/SKILL.md", body)
++            self.assertIn(f"canonical: {record['canonical']}", body)
+             self.assertIn("## Provenance (root-bootstrap, P1.2)", canonical_body)
+ 
+     def test_targets_are_exactly_the_declared_29_and_globally_unique(self):
+@@ -307,7 +311,8 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
+         self.assertEqual(len(targets), 29)  # 28 class-A + 1 class-B
+         self.assertEqual(len(set(targets)), 29)
+         expected = set()
+-        for identity in self.config["identities"]:
++        for row in self.config["identities"]:
++            identity = row["identity"]
+             expected.add(self.repo_root / ".claude" / "skills" / identity / "SKILL.md")
+             expected.add(self.repo_root / ".agents" / "skills" / identity / "SKILL.md")
+         expected.add(self.repo_root / ".agents" / "skills" / "workflow-craft" / "SKILL.md")
+@@ -348,7 +353,7 @@ class TestClassBRootBootstrapProjection(unittest.TestCase):
+         self.assertNotIn("Match the 4 canonical templates first", body)
+         self.assertIn("Match the 4 canonical templates first", canonical_body)
+         self.assertIn(f"canonical_sha256: {canonical_sha256}", body)
+-        self.assertIn("canonical: packages/skiller/skills/general/workflow-craft/SKILL.md", body)
++        self.assertIn(f"canonical: {canonical.relative_to(self.repo_root).as_posix()}", body)
+ 
+     def test_precondition_fails_closed_when_donor_bucket_is_enabled(self):
+         with self.assertRaises(ValueError) as ctx:
+diff --git a/packages/skiller/tests/test_host_publication.py b/packages/skiller/tests/test_host_publication.py
+index 3345e0b8..fd0e1d79 100644
+--- a/packages/skiller/tests/test_host_publication.py
++++ b/packages/skiller/tests/test_host_publication.py
+@@ -109,14 +109,18 @@ class HostPublicationCase(unittest.TestCase):
+ 
+     def test_bootstrap_generator_in_relocated_package(self):
+         from tests.fixtures import write_skill
+-        write_skill(self.root / "skills/repository-bootstrap/alpha", "alpha")
+-        config_dir = self.root / "configs"
++        write_skill(self.repo / "bootstrap/skills/alpha", "alpha")
++        config_dir = self.repo / "configs"
+         config_dir.mkdir()
++        config_dir.joinpath("skiller-host.json").write_text(json.dumps({
++            "schema_version": 1, "bootstrap": "configs/repository-bootstrap-skills.json",
++        }))
+         config_dir.joinpath("repository-bootstrap-skills.json").write_text(json.dumps({
+-            "schema_version": 1, "identities": ["alpha"],
++            "schema_version": 2, "identities": [
++                {"identity": "alpha", "canonical": "bootstrap/skills/alpha/SKILL.md"}],
+             "providers": ["claude", "codex"], "class_a_content_version": "0.1.0",
+             "publication_unit": "repository-bootstrap", "class_b": [],
+-            "bucket": "repository-bootstrap", "generator": "fixture",
++            "bucket": "repository-bootstrap", "unit_version": "0.1.0",
+             "lock_path": "bootstrap/publication-lock.json",
+         }), encoding="utf-8")
+         config_dir.joinpath("publication-versions.json").write_text(json.dumps({
+diff --git a/packages/skiller/tests/test_provider_distribution.py b/packages/skiller/tests/test_provider_distribution.py
+index 6a18d031..582e56e3 100644
+--- a/packages/skiller/tests/test_provider_distribution.py
++++ b/packages/skiller/tests/test_provider_distribution.py
+@@ -138,12 +138,13 @@ class ProviderDistributionCase(unittest.TestCase):
+             "source": f"./skills/{name}",
+             "description": name,
+             "category": "engineering",
+-        } for name in ("core", "general", "task")]}
++        } for name in ("core", "general", "example-command")]}
+         marketplace_path.write_text(json.dumps(marketplace), encoding="utf-8")
+-        with contextlib.redirect_stderr(io.StringIO()):
++        with contextlib.redirect_stderr(io.StringIO()), mock.patch(
++                "skiller.connect.default_command_plugins", return_value=("example-command",)):
+             prepared = prepare_connect_selection(
+                 self.env, self.project, {"plugins": "general"}, load_config(self.env, self.project))
+-        self.assertEqual(prepared["plugins"], ("core", "task"))
++        self.assertEqual(prepared["plugins"], ("core", "example-command"))
+ 
+     def test_native_selection_parse_failure_precedes_connect_mutations(self):
+         self.write_provider_config(providers())
+@@ -854,7 +855,9 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
+             self.assertNotIn("oss-dev", record["units"])
+             self.assertIn("core", record["units"])
+             self.assertIn("architect", record["units"])
+-            self.assertIn("task", record["units"])
++            from skiller.host import load_host
++            for command_plugin in load_host(self.env.root).default_command_plugins:
++                self.assertIn(command_plugin, record["units"])
+ 
+     def test_positive_fixture_has_zero_catalog_wide_collisions_and_zero_undeclared_roots(self):
+         from skiller.doctor import run_effective_runtime_gate
+diff --git a/packages/skiller/tests/test_provider_publication_parity.py b/packages/skiller/tests/test_provider_publication_parity.py
+index 51e581af..aff06cdb 100644
+--- a/packages/skiller/tests/test_provider_publication_parity.py
++++ b/packages/skiller/tests/test_provider_publication_parity.py
+@@ -54,7 +54,7 @@ class TestProviderPublicationParity(unittest.TestCase):
+         # unit/plugin — exclude them from the expected marketplace-plugin set below.
+         private_buckets = {name for name, data in buckets_meta.items()
+                            if isinstance(data, dict) and data.get("private_source_only")}
+-        self.assertIn("repository-bootstrap", private_buckets)
++        self.assertNotIn("repository-bootstrap", buckets_meta)
+         expected_ids = tuple(sorted(f"{item['bucket']}/{item['name']}"
+                                     for item in registry_disk["skills"]))
+         expected_buckets = tuple(sorted({item["bucket"] for item in registry_disk["skills"]}))
+diff --git a/packages/skiller/tests/test_publication.py b/packages/skiller/tests/test_publication.py
+index a1e57f53..3edaf11d 100644
+--- a/packages/skiller/tests/test_publication.py
++++ b/packages/skiller/tests/test_publication.py
+@@ -70,10 +70,9 @@ class TestClaudePublicationGolden(unittest.TestCase):
+ 
+ 
+ class TestRepositoryBootstrapExclusion(unittest.TestCase):
+-    """P1.2 (D31): build_registry indexes the class-A identities for ownership/hash lookup,
+-    but normal Claude bucket/core/marketplace publication carries zero of them."""
++    """Host bootstrap identities live outside the package and never enter its registry."""
+ 
+-    def test_registry_indexes_14_but_claude_publication_carries_zero(self):
++    def test_host_bootstrap_is_absent_from_registry_and_publication(self):
+         repo_root = Path(__file__).resolve().parents[3]
+         package_root = repo_root / "packages" / "skiller"
+         from skiller.common import Env
+@@ -81,8 +80,8 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
+         registry, metadata, buckets = build_registry(env)
+         private_members = [item for item in registry["skills"]
+                            if item["bucket"] == "repository-bootstrap"]
+-        self.assertEqual(len(private_members), 14)
+-        self.assertIn("repository-bootstrap", buckets)  # a real dir, indexed — but never a unit
++        self.assertEqual(private_members, [])
++        self.assertNotIn("repository-bootstrap", buckets)
+ 
+         artifacts = build_claude_publication(env, metadata, buckets, registry)
+         marketplace = json.loads(next(item.managed_bytes for item in artifacts
+diff --git a/packages/skiller/tests/test_repository_bootstrap.py b/packages/skiller/tests/test_repository_bootstrap.py
+new file mode 100644
+index 00000000..b81d1402
+--- /dev/null
++++ b/packages/skiller/tests/test_repository_bootstrap.py
+@@ -0,0 +1,95 @@
++"""Host bootstrap relocation and fail-closed carrier validation."""
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from unittest import mock
++
++from skiller.host import Host
++from skiller.publication import render_repository_bootstrap_projections
++from skiller.registry import check_drift
++from tests.test_codex_publication import _build_isolated_bootstrap_fixture
++
++
++class BootstrapConfigTests(unittest.TestCase):
++    def setUp(self):
++        temporary = tempfile.TemporaryDirectory()
++        self.addCleanup(temporary.cleanup)
++        self.repo, self.package = _build_isolated_bootstrap_fixture(Path(temporary.name))
++        self.path = self.repo / "configs/repository-bootstrap-skills.json"
++        self.config = json.loads(self.path.read_text())
++        self.host = Host(root=self.repo, bootstrap="configs/repository-bootstrap-skills.json")
++
++    def write(self):
++        self.path.write_text(json.dumps(self.config))
++
++    def render(self):
++        return render_repository_bootstrap_projections(
++            repo_root=self.repo, package_root=self.package, host=self.host)
++
++    def test_all_carrier_paths_reject_absolute_traversal_and_symlink_escape(self):
++        outside = self.repo.parent / (self.repo.name + "-missing")
++        (self.repo / "escape").symlink_to(outside)
++        for bad in ("/tmp/canon", "../canon", "escape/canon", "", "a\\b"):
++            for carrier in ("canonical", "class_b", "lock_path"):
++                with self.subTest(path=bad, carrier=carrier):
++                    config = json.loads(self.path.read_text())
++                    try:
++                        if carrier == "canonical":
++                            config["identities"][0]["canonical"] = bad
++                        elif carrier == "class_b":
++                            config["class_b"][0]["canonical"] = bad
++                        else:
++                            config[carrier] = bad
++                        self.path.write_text(json.dumps(config))
++                        with self.assertRaises(ValueError):
++                            self.render()
++                    finally:
++                        self.write()
++
++    def test_names_duplicates_and_missing_versions_fail_closed(self):
++        cases = [
++            ("unit_version", ""), ("schema_version", True),
++            ("identities", [self.config["identities"][0]] * 2),
++            ("identities", [{"identity": "../alpha", "canonical": "bootstrap/skills/alpha/SKILL.md"}]),
++        ]
++        for key, value in cases:
++            with self.subTest(key=key, value=value):
++                config = dict(self.config, **{key: value})
++                self.path.write_text(json.dumps(config))
++                with self.assertRaises(ValueError):
++                    self.render()
++        self.write()
++        self.config["class_b"][0]["identity"] = "../beta"
++        self.write()
++        with self.assertRaises(ValueError):
++            self.render()
++
++    def test_missing_or_mismatched_canon_fails_before_writing(self):
++        canon = self.repo / self.config["identities"][0]["canonical"]
++        canon.write_text("---\nname: wrong\ndescription: Test\n---\n")
++        with self.assertRaisesRegex(ValueError, "frontmatter name"):
++            self.render()
++        self.config["identities"][0]["canonical"] = "missing/SKILL.md"
++        self.write()
++        with self.assertRaisesRegex(ValueError, "missing"):
++            self.render()
++        self.assertFalse((self.repo / ".agents").exists())
++
++    def test_registry_selects_host_bootstrap_and_preserves_standalone(self):
++        from tests.fixtures import make_registry
++        # Synthetic package catalog, with the host-owned carriers outside that package.
++        root, env = make_registry(self.repo / "registry-fixture")
++        with mock.patch("skiller.registry.load_host", return_value=self.host):
++            from skiller.registry import _has_repository_bootstrap_config
++            self.assertTrue(_has_repository_bootstrap_config(root))
++        with mock.patch("skiller.registry.load_host", return_value=Host.empty()):
++            self.assertFalse(_has_repository_bootstrap_config(root))
++            # No host bootstrap: normal standalone drift checking needs no canon.
++            drift = check_drift(env)
++        self.assertTrue(drift)
++        self.assertFalse(any("bootstrap" in path for path in drift))
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md b/packages/task/dev-skills/task-development-philosophy/SKILL.md
+similarity index 98%
+rename from packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md
+rename to packages/task/dev-skills/task-development-philosophy/SKILL.md
+index 608f391a..d715d491 100644
+--- a/packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md
++++ b/packages/task/dev-skills/task-development-philosophy/SKILL.md
+@@ -143,9 +143,9 @@ expired live receipt are not by themselves reasons to replay the whole phase. Re
+ gate at its boundary; keep deterministic product evidence reusable.
+ 
+ For the measured repeat-audit contract and thresholds, read
+-[`2026.08.14-repeat-audit-evidence-reuse-budget.md`](../../../../../)
++[`2026.08.14-repeat-audit-evidence-reuse-budget.md`](../../../../)
+ when changing audit policy. For evidence-anchor topology, also read
+-[`2026.08.10-plan-evidence-anchor-audit-loop.md`](../../../../../).
++[`2026.08.10-plan-evidence-anchor-audit-loop.md`](../../../../).
+ 
+ ## Repair and escalation
+ 
+@@ -234,5 +234,5 @@ Record a decision or `## Discussion` only when a real trade-off exists. Do not a
+ Repository-authored internal philosophy, grounded in field regressions captured in
+ the archived `2026.08.10-plan-evidence-anchor-audit-loop.md` and
+ `2026.08.14-repeat-audit-evidence-reuse-budget.md` source records linked above. It is source-only and projects to thin
+-Claude/Codex root-bootstrap pointers through `skiller registry`; it is not published to consumer
++Claude/Codex root-bootstrap pointers through the host registry generator; it is not published to consumer
+ projects as an ordinary skill.

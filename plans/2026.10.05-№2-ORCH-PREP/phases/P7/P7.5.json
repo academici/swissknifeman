@@ -1,0 +1,189 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.5",
+  "title": "Чистое ядро orch: фразы lifecycle, reviewer без skills, boundary-тест orch",
+  "status": "todo",
+  "summary": "Ядро orch не знает Task и Skiller: LIFECYCLE_PHRASES без команд Task, reviewer.md без имён skills (через role manifest), docs/README/schema descriptions говорят «plan store / plan bridge», тесты и fixture lifecycle-leak нейтральны; test_boundaries.py получает текстовый boundary-обход ядра orch без allowlist.",
+  "why": "D13: пакеты чистые, orch заменяем и выносим. После P7.2–P7.3 тесты, читавшие Task, уже в мосту; остаётся текст ядра orch. Мост Task держит более строгий список фраз (P7.2 проверяет bridge ⊇ orch).",
+  "scope": {
+    "include": [
+      "таблица @plan/knowledge/bridges-p7 §orch-neutral целиком",
+      "packages/orch/tests/test_boundaries.py: обход ядра по §boundary (orch)",
+      "проверить registrar.md (нейтрален после P7.3)",
+      "все fixtures/exec/v1/*/execution-input/*.json с `\"tool\": \"task/plan.py brief\"` (plan-bound, extra-field, digest-mismatch, bad-provenance, missing-goal, lifecycle-leak): `provenance.generated_by.tool` → `plan-bridge brief`; у valid fixture пересчитать `digest` и суффикс `input_id` через `contracts.canonical_digest`; invalid остаются invalid по прежней причине (digest-mismatch сохраняет несовпадение)"
+    ],
+    "exclude": [
+      "структура exec/v1 схем (меняются только description)",
+      "role manifests и orch/bridges/skiller (P4)",
+      "packages/task/** кроме прогона тестов моста"
+    ]
+  },
+  "depends_on": [
+    "P7.3"
+  ],
+  "decisions": [
+    "D13",
+    "D16"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "orch-neutral",
+      "why": "точные правки",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "boundary",
+      "why": "токены orch",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "why": "LIFECYCLE_PHRASES и их проверка",
+      "required": true
+    },
+    {
+      "path": "packages/orch/roles/reviewer.md",
+      "why": "строки 14–15",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_roles_text.py",
+      "why": "ожидания к ролям",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "why": "существующий import-тест",
+      "required": true
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "why": "упоминания Task/Skiller/harness",
+      "required": true
+    },
+    {
+      "path": "packages/task/bridges/orch/tests/test_conformance.py",
+      "why": "тест bridge ⊇ orch LIFECYCLE_PHRASES должен остаться зелёным",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/engine-port.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/reviewer.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/registrar.md",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/role-manifest.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/invalid/execution-input/lifecycle-leak.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/**",
+      "change": "any",
+      "note": "только если digest fixture зависит от изменённого текста"
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_roles_text.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_cli_validate.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_contracts_input.py",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Схемы exec/v1: меняются только description; контракт (поля, required, enum) неизменен",
+    "lifecycle-leak fixture остаётся invalid по той же причине (LIFECYCLE_LEAK или текущий код)",
+    "Тесты моста Task (bridge ⊇ orch phrases) зелёные",
+    "Никаких имён Skiller-skills в ядре orch; значения для P4 записаны в knowledge §orch-neutral"
+  ],
+  "guidance": "Исполнитель: implementation/high. Сначала boundary-тест orch (красный, список нарушений), затем правки по таблице до зелёного. Если fixture с digest меняет текст — пересчитать digest тем же способом, что в существующих fixtures (contracts.canonical_digest), и не менять смысл.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0; все valid/invalid fixtures ведут себя как прежде",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "! grep -rnE 'plan\\.py|\\btask:[a-z]|\\bquality:|packages/(task|skiller|harness)' packages/orch --include=*.py --include=*.md --include=*.json --include=*.jsonl --exclude-dir=__pycache__",
+      "expect": "exit 0 (нет совпадений)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "нейтральное ядро orch",
+    "текстовый boundary-тест orch"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T11:22:32Z"
+}

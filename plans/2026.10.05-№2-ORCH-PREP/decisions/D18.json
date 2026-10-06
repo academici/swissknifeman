@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D18",
+  "title": "Корневая библиотека core/ — разрешённая зависимость ядра Task (не пакет из packages/)",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "Считать ли корневую core/ (core.provider в command_render.py, render-provider-commands.py, 2 теста) «другим пакетом» для boundary-теста Task?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Разрешить: core — общий фундамент репозитория; boundary-тест разрешает core.*; вынос/вендоринг — roadmap с триггером «Task уходит из репозитория»"
+    },
+    {
+      "id": "B",
+      "text": "Запретить, временный allowlist до P11",
+      "cons": "allowlist живёт несколько фаз"
+    },
+    {
+      "id": "C",
+      "text": "Запретить и вендорить core.provider в P7",
+      "cons": "заметно расширяет P7 (command_render 1782 строки)"
+    }
+  ],
+  "context": "Опрос владельца в /task:plan-design P7 (2026-10-06).",
+  "decision": "A — Разрешить: core — общий фундамент репозитория; boundary-тест разрешает core.*; вынос/вендоринг — roadmap с триггером «Task уходит из репозитория»",
+  "rationale": "Владелец выбрал «Разрешить core (Recommended)» в design-сессии P7.",
+  "applies_to": [
+    "P7",
+    "P11"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

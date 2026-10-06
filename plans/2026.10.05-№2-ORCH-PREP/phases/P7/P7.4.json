@@ -1,0 +1,261 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.4",
+  "title": "Чистое ядро Task: dedupe reviewer, executor handoff, нейтрализация, без allowlist",
+  "status": "todo",
+  "summary": "Ядро Task чистое: абзац --reviewer заменён ссылкой на reviewer-selection.md (F5/F20), Task-собственный `references/executor-handoff.md` и новая строка Units в plan-run.md (F10), unit brief без `report_api`, упоминания других пакетов и Skiller-skills нейтрализованы, шаг 7 (корневой скрипт) убран из validate.sh, проекции перегенерированы; `tests/boundary_allowlist.json` удалён, boundary-тест Task зелёный без исключений.",
+  "why": "Заменяет пропущенные P3.3/P3.4 (D12, D13): I9 — одна копия текста; R1 — subagent не получает lifecycle (report_api); D12 — Task самодостаточен без Skiller; ядро не зовёт корневые скрипты.",
+  "scope": {
+    "include": [
+      "F5/F20 dedupe по @plan/knowledge/bridges-p7 §task-internal",
+      "references/executor-handoff.md (точный текст §task-internal) и замена строки Units в commands/plan-run.md",
+      "units.brief без report_api; tests/engine/test_units.py",
+      "таблица нейтрализации §task-internal (command_render.py, docs, commands, workflows, tests, fixtures)",
+      "scripts/validate.sh: удалить шаг 7, перенумеровать шаги, убрать ссылку на maind в комментарии",
+      "render-provider-commands --write (adapters, golden, docs/reference)",
+      "удалить tests/boundary_allowlist.json и поддержку пустого/отсутствующего файла оставить в тесте"
+    ],
+    "exclude": [
+      "references/reviewer-selection.md (не меняется)",
+      "design-mode.md, common-principles.md",
+      "core.* импорты (D18)",
+      "packages/orch/**"
+    ]
+  },
+  "depends_on": [
+    "P7.3"
+  ],
+  "decisions": [
+    "D12",
+    "D13",
+    "D18"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "task-internal",
+      "why": "точные тексты и таблица замен",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "boundary",
+      "why": "что должно стать зелёным без allowlist",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "inventory",
+      "why": "F5, F10, F20 — места копий",
+      "required": true
+    },
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "why": "строка Units",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_canon_literals.py",
+      "why": "ограничения на plan-run.md",
+      "required": true
+    },
+    {
+      "path": "packages/task/references/reviewer-selection.md",
+      "why": "canonical источник абзаца (не менять)",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/units.py",
+      "section": "brief",
+      "why": "report_api",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/command_render.py",
+      "why": "тексты Cursor/Grok (~1250–1290)",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_plan_protocol_runtime.py",
+      "why": "guard без имени skiller",
+      "required": true
+    },
+    {
+      "path": "packages/task/scripts/validate.sh",
+      "why": "шаг 7 и нумерация",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/execution-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/docs/methodology.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/docs/workflows.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/docs/index.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/docs/.vitepress/config.mts",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/docs/reference/provider-model-roles.md",
+      "change": "any",
+      "note": "generated"
+    },
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/commands/research.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/commands/make-workflow.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/commands/dev.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/references/executor-handoff.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/units.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/command_render.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/workflows/wf-author-by-spec.js",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/fixtures.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/test_plan_protocol_runtime.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_units.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/fixtures/valid/plan-full.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/**",
+      "change": "any",
+      "note": "если тест сверяет donor"
+    },
+    {
+      "path": "packages/task/tests/test_boundary.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/tests/boundary_allowlist.json",
+      "change": "delete"
+    },
+    {
+      "path": "packages/task/adapters/**",
+      "change": "any",
+      "note": "generated"
+    },
+    {
+      "path": "packages/task/tests/fixtures_data/**",
+      "change": "any",
+      "note": "generated/golden"
+    }
+  ],
+  "rules": [
+    "Только замены из §task-internal; иной выбор формулировки — `plan.py log --type deviation` с причиной",
+    "Проекции и golden — только генератором `python3 packages/task/scripts/render-provider-commands.py --write --root .`",
+    "test_canon_literals и test_record_parity (мост) зелёные: plan-run.md сохраняет обязательные фразы",
+    "executor-handoff.md — собственный текст Task без managed-маркеров; configs/managed-blocks.json не меняется"
+  ],
+  "guidance": "Исполнитель: implementation/high — механика по готовым таблицам. Порядок: dedupe → handoff + plan-run → units → нейтрализация → validate.sh → генератор → удалить allowlist → boundary-тест. Проверка дубля: `grep -rn 'exact native route; without an explicit review request no review runs' packages/task/skills packages/task/docs packages/task/commands` пуст. Если после генератора boundary-тест находит нарушение в сгенерированном файле — чинить источник (commands/*.md или command_render.py), не результат.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "! grep -rn 'exact native route; without an explicit review request no review runs' packages/task/skills packages/task/docs packages/task/commands",
+      "expect": "exit 0 (нет совпадений)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "test ! -e packages/task/tests/boundary_allowlist.json && cd packages/task && PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -n 'references/executor-handoff.md' packages/task/commands/plan-run.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0; `validate: OK`; шагов managed blocks нет",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "dedupe F5/F20",
+    "executor-handoff.md + plan-run Units",
+    "unit brief без report_api",
+    "ядро Task без упоминаний других пакетов",
+    "allowlist удалён"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T11:21:59Z"
+}

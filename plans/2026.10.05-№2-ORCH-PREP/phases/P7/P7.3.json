@@ -1,0 +1,252 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.3",
+  "title": "Обратная регистрация в мосту (register), evidence по полям, нейтральный registrar",
+  "status": "todo",
+  "summary": "Мост orch получает обратную регистрацию: `plan.py bridge orch register` (stage-report → log + finish | unit return) и `register-review` (review-findings → add-document + log note), идемпотентно по attempt-id; ядро Task принимает check-evidence по своему полевому контракту без URN orch (D19, kind `check-evidence`); record-parity-тест переехал из orch в мост; orch registrar.md нейтрален и передаёт отчёт мосту.",
+  "why": "D13–D15, D19: маппинг отчёта worker → план принадлежит мосту, а не ядру orch; ядро Task не знает exec/v1. R27/W1–W12: ни одна обязанность записи не теряется — теперь её исполняет код, а не только текст роли. Hard risk: целостность записи плана (частичная регистрация, дубли событий при повторе, потеря open_issues).",
+  "scope": {
+    "include": [
+      "bridges/orch/register.py, register_review.py, entrypoints в bridge.json, таблица в README по @plan/knowledge/bridges-p7 §register",
+      "bridges/orch/tests/test_register.py: item done / done_with_deviations / blocked, unit return, evidence, все kinds issues, dry-run argv, повтор с тем же attempt-id (один finish, без дублей log), отказы REGISTER_*; review: add-document + note",
+      "lifecycle.py и cli.py help по §evidence; schemas/plan/v1/check-evidence.schema.json + kind в KINDS; fixtures evidence и test_evidence.py",
+      "bridges/orch/tests/test_conformance.py: valid check-evidence orch принимается ядром Task (skipUnless orch)",
+      "orch/tests/test_record_parity.py → bridges/orch/tests/test_record_parity.py по §parity (+ dry-run полнота)",
+      "orch/roles/registrar.md — нейтральный текст по §register; orch/tests/test_roles_text.py — ожидания registrar под новый текст",
+      "удалить записи P7.3 из tests/boundary_allowlist.json"
+    ],
+    "exclude": [
+      "изменение семантики finish/log/unit в ядре (только приём evidence)",
+      "LIFECYCLE_PHRASES и reviewer.md orch (P7.5)",
+      "реальный запуск ролей/движка (Plan 2)"
+    ]
+  },
+  "depends_on": [
+    "P7.2"
+  ],
+  "decisions": [
+    "D13",
+    "D15",
+    "D19"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "register",
+      "why": "CLI, форматы входа, маппинг, идемпотентность, receipt, отказы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "parity",
+      "why": "перенос record-parity",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges-p7.json",
+      "section": "evidence",
+      "why": "полевой контракт evidence в ядре",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "recording-obligations",
+      "why": "W1–W12, которые нельзя потерять",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "recording-map",
+      "why": "исходный маппинг registrar",
+      "required": true
+    },
+    {
+      "path": "packages/orch/roles/registrar.md",
+      "why": "текущий текст и фразы parity",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_record_parity.py",
+      "why": "переносимый тест",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "section": "_load_evidence",
+      "why": "что меняется в проверке evidence",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/engine/test_evidence.py",
+      "why": "тесты evidence",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/engine/test_actors_attempts.py",
+      "why": "поведение attempt-id в finish/unit return",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/check-evidence.schema.json",
+      "why": "поля exec/v1 для совместимости схемы Task",
+      "required": true
+    },
+    {
+      "path": "packages/orch/roles/executor.md",
+      "why": "stage-report поля (`result_contract.report`)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/bridges/orch/register.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/bridges/orch/register_review.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/bridges/orch/bridge.json",
+      "change": "any",
+      "note": "создан в P7.2"
+    },
+    {
+      "path": "packages/task/bridges/orch/README.md",
+      "change": "any",
+      "note": "создан в P7.2"
+    },
+    {
+      "path": "packages/task/bridges/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/check-evidence.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_evidence.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/fixtures/evidence/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_schema.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/tests/engine/test_catalog.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "any",
+      "note": "строка про evidence без exec/v1"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/api.md",
+      "change": "any"
+    },
+    {
+      "path": "packages/task/tests/boundary_allowlist.json",
+      "change": "any",
+      "note": "создан в P7.1"
+    },
+    {
+      "path": "packages/task/adapters/**",
+      "change": "any",
+      "note": "generated"
+    },
+    {
+      "path": "packages/orch/roles/registrar.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_record_parity.py",
+      "change": "delete"
+    },
+    {
+      "path": "packages/orch/tests/test_roles_text.py",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Мост пишет план только через `TASK_PLAN_PY` (subprocess); ни одной записи в файлы плана напрямую",
+    "Сначала все `log`, затем один `finish`/`unit return`; первый отказ останавливает регистрацию, receipt отражает каждый вызов",
+    "Неклассифицированный issue — отказ, а не догадка",
+    "Коды REGISTER_* — коды моста, не добавляются в ERROR_CODES ядра",
+    "Существующие finish/unit тесты ядра зелёные без изменений поведения (кроме проверки $schema evidence)",
+    "registrar.md сохраняет `Never manufacture evidence` и не содержит `plan.py`"
+  ],
+  "guidance": "Исполнитель: frontier/high. Порядок: evidence в ядре (D19) + fixtures → register.py c --dry-run (чистая функция `plan_calls(report, args) -> list[argv]`, тестируется без subprocess) → исполнение вызовов и receipt → register_review → перенос parity → registrar.md. Тесты регистрации — на копии demo-плана в tmpdir (как bridge_fixture из P7.2), item сначала стартует через `plan.py start`. Если API `events` не даёт фильтр, нужный для дедупликации, — `plan.py log --type deviation` и выбрать `REGISTER_ATTEMPT_REQUIRED` + отказ повтора с issues (вариант, описанный в §register).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_*.py' && PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "! grep -rn -e 'exec/v1' -e 'urn:swissknifeman:orch' packages/task/lib packages/task/skills packages/task/docs packages/task/schemas packages/task/tests/engine",
+      "expect": "exit 0 (нет совпадений)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "! grep -n 'plan.py' packages/orch/roles/registrar.md",
+      "expect": "exit 0 (нет совпадений)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "register / register-review в мосту",
+    "evidence по полям в ядре + kind check-evidence",
+    "record-parity в мосту",
+    "нейтральный registrar.md"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T11:23:49Z"
+}

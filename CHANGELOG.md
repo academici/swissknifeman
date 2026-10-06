@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Standalone-проверка Skiller:** корневой `scripts/skiller-standalone-check.sh`
+  и CI job `skiller-standalone` проверяют отслеживаемую копию Skiller с `core`
+  и тремя общими provider-каталогами без Git, соседних пакетов и host-конфига.
+  Внешние `PYTHONPATH` и `SKILLER_HOST_CONFIG` сбрасываются; тесты публикации
+  используют фактический корень пакета, а проверки host bootstrap явно пропускаются.
 - **Repository bootstrap у владельцев:** 14 canonical skills перенесены из Skiller:
   11 в корневой `bootstrap/skills`, три в `dev-skills` Task, Harness и mAInd.
   Рендерер и cold-discovery читают явные пути из host-конфига v2; версия bootstrap

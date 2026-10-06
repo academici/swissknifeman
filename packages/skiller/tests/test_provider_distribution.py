@@ -15,6 +15,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from skiller.host import load_host
+from core import find_repo_root
+from skiller.common import Env
 from skiller.config import load_config
 from skiller.connect import do_connect, prepare_connect_selection
 from skiller.publication import run_codex_native_install
@@ -740,9 +743,8 @@ class CoreDonorMutualExclusionCase(unittest.TestCase):
     never a repair, never a live-profile read."""
 
     def setUp(self):
-        self.repo_root = Path(__file__).resolve().parents[3]
-        self.package_root = self.repo_root / "packages" / "skiller"
-        from skiller.common import Env
+        self.package_root = Path(__file__).resolve().parents[1]
+        self.repo_root = find_repo_root(self.package_root) or self.package_root
         self.env = Env(self.package_root)
 
     def _catalog(self):
@@ -821,6 +823,8 @@ class ProviderDistributionDoctorSelectionCase(unittest.TestCase):
         self.assertNotIn("SPUB_BUNDLE_INCOMPLETE", output.getvalue())
 
 
+@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
+                     "no host bootstrap config (standalone)")
 class EffectiveRuntimeGateCase(unittest.TestCase):
     """P1.4 (D51/D62/D63): cold per-provider install/discover of the declared fixture
     (repo marketplace minus the three donor buckets) proves catalog-wide identity
@@ -831,9 +835,8 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
     root-bootstrap config nor the `task` sibling this gate must cover."""
 
     def setUp(self):
-        self.repo_root = Path(__file__).resolve().parents[3]
-        self.package_root = self.repo_root / "packages" / "skiller"
-        from skiller.common import Env
+        self.package_root = Path(__file__).resolve().parents[1]
+        self.repo_root = find_repo_root(self.package_root) or self.package_root
         self.env = Env(self.package_root)
 
     def _catalog(self):

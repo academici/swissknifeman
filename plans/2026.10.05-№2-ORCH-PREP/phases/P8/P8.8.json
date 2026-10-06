@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.8",
   "title": "Standalone-проверка Skiller: корневой скрипт, CI job, тесты без монорепо",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Корневой `scripts/skiller-standalone-check.sh` копирует отслеживаемые файлы Skiller и core/ во временную раскладку без .git/packages/host-конфига и запускает test.sh и validate.sh Skiller; job `skiller-standalone` в test.yml; тесты, падающие вне монорепо, получают временный host-конфиг/tmp git или явный skip.",
   "why": "Цель фазы «проходит validate/test в отдельном checkout» (D16) доказывается только запуском. Hard risk: скрытые зависимости тестов от монорепо (git root, соседние пакеты, PYTHONPATH окружения) — проверка обязана сбрасывать окружение.",
   "scope": {
@@ -127,6 +127,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T16:12:03Z"
+  "result": {
+    "started_at": "2026-10-06T19:25:39Z",
+    "finished_at": "2026-10-06T19:39:54Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a112ac-fd38-78e0-a476-cc69eed8b26a"
+    },
+    "notes": "Added tracked standalone copy + CI job; portable publication test roots and explicit absent-host skips. Standalone and monorepo tests pass (802 each), boundary passes (12); standalone validate retains registry drift checks and prints consumer acceptance SKIP. Fixed validator core import bootstrap with cleared PYTHONPATH. Final native Grok 4.7/high review GREEN, no context argument; artifacts/P8.8 includes logs, checks and route/verdict. CI docs and CHANGELOG updated; host generated artifacts untouched.",
+    "deviations": [
+      "D20 core runtime requires three tracked root provider data catalogs; copy these without host config or sibling packages. Render standalone publication inside disposable copy before validate because marketplaces live outside package in host checkout. Existing P8.9 boundary allowlist retained for its owning item."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T19:39:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T19:39:54Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T19:39:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T19:39:54Z"
 }

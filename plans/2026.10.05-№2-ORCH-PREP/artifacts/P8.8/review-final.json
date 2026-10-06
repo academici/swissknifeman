@@ -1,0 +1,38 @@
+{
+  "item": "P8.8",
+  "verdict": "GREEN",
+  "findings": [],
+  "reviewer": {
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "high",
+    "session": "e862e0b5-6644-4085-bc2f-019fd5719678"
+  },
+  "completed_rounds": 1,
+  "transport_continuations": 2,
+  "context_parameter": null,
+  "scope": [
+    "scripts/skiller-standalone-check.sh",
+    ".github/workflows/test.yml",
+    "packages/skiller/scripts/validate.sh",
+    "packages/skiller/tests/test_codex_publication.py",
+    "packages/skiller/tests/test_provider_distribution.py",
+    "packages/skiller/tests/test_provider_publication_parity.py",
+    "packages/skiller/tests/test_publication.py",
+    "packages/skiller/docs/guide/ci.md",
+    "CHANGELOG.md"
+  ],
+  "candidate_sha256": {
+    "scripts/skiller-standalone-check.sh": "b6cd966ff011157beb4f05c103ccd27a2d08f33a86ad27f2222cb695a4a5821f",
+    ".github/workflows/test.yml": "39b78bde9a606a468fea3bd51b0e315cdc6c59cc2a442887392d0b43acc1cfb9",
+    "packages/skiller/scripts/validate.sh": "3d2610cb3d791acdf510021e0fed00022b3795ef1b944fda8d14612d40327688",
+    "packages/skiller/tests/test_codex_publication.py": "93e6daf62dafdf4ab292f524888b13345973974dbb765165cac787c26ed8dd1f",
+    "packages/skiller/tests/test_provider_distribution.py": "408bb99ad14805ee5d4c3201e14e1bed9d5cc09a849d511a68bacaeffb5943d5",
+    "packages/skiller/tests/test_provider_publication_parity.py": "779838e4e2170a6ada4ba7710585525bdd7c349970093dcf89bf742942d8dc5d",
+    "packages/skiller/tests/test_publication.py": "2b00ba4ae51d53d970fb2f0e64d34c9c50e95719b18d301d587caaffd2ee42f0",
+    "packages/skiller/docs/guide/ci.md": "56f367f49b82f4a91b7ffd853b631e173183c6e9a2fdde0cb48ed782bd338397",
+    "CHANGELOG.md": "0a6bc414386a9f82d4733085f48d8cc00f1fc1f15776db0d517ae7eececb105c"
+  },
+  "native_verdict": "review-native.json",
+  "validation": "validation.json"
+}

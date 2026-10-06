@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from core import find_repo_root
 from skiller.common import Env
 from skiller.publication import run_codex_native_install
 from skiller.publication import validate_publication_capabilities
@@ -39,8 +40,8 @@ def _digest(artifacts, repo_root):
 
 class TestProviderPublicationParity(unittest.TestCase):
     def setUp(self):
-        self.repo_root = Path(__file__).resolve().parents[3]
-        self.package_root = self.repo_root / "packages" / "skiller"
+        self.package_root = Path(__file__).resolve().parents[1]
+        self.repo_root = find_repo_root(self.package_root) or self.package_root
         self.env = Env(self.package_root)
         self.cases = json.loads((Path(__file__).parent / "fixtures_data" /
                                  "provider-publication-cases.json").read_text(encoding="utf-8"))
@@ -79,7 +80,7 @@ class TestProviderPublicationParity(unittest.TestCase):
             | {policy["core_plugin"], "generate-skill", "skm"}
         expected_plugins.update(
             json.loads((package / ".codex-plugin" / "plugin.json").read_text())["name"]
-            for package in (self.repo_root / "packages").iterdir()
+            for package in (self.repo_root / "packages").glob("*")
             if package != self.package_root
             and (package / ".claude-plugin" / "plugin.json").is_file()
             and (package / ".codex-plugin" / "plugin.json").is_file())
@@ -134,7 +135,7 @@ class TestProviderPublicationParity(unittest.TestCase):
                                          for path in manifest.get("skills", [])))
 
     def test_manifest_gate_refuses_missing_unsupported_and_catalog_mismatch_before_write(self):
-        source = json.loads((self.repo_root / "configs/provider-capabilities.json").read_text())
+        source = json.loads((Path(__file__).resolve().parents[3] / "configs/provider-capabilities.json").read_text())
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             sentinel = root / "sentinel"

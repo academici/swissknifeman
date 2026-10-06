@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from core import find_repo_root
 from skiller.common import Env
 from skiller.host import load_host
 from skiller.publication import (_codex_skill_runtime_files,
@@ -17,8 +18,8 @@ from skiller.registry import (build_codex_publication, build_registry,
 
 class TestCodexPublication(unittest.TestCase):
     def setUp(self):
-        self.repo_root = Path(__file__).resolve().parents[3]
-        self.package_root = self.repo_root / "packages" / "skiller"
+        self.package_root = Path(__file__).resolve().parents[1]
+        self.repo_root = find_repo_root(self.package_root) or self.package_root
         self.env = Env(self.package_root)
         self.registry, self.metadata, self.buckets = build_registry(self.env)
         self.golden = json.loads((Path(__file__).parent / "fixtures_data" /
@@ -70,7 +71,7 @@ class TestCodexPublication(unittest.TestCase):
         self.assertTrue(manifests)
         # D27: per-unit manifest version now comes from configs/publication-versions.json —
         # a bumped unit (core/skm) diverges from the frozen default every other unit keeps.
-        versions = json.loads((self.repo_root / "packages" / "skiller" / "configs" /
+        versions = json.loads((self.package_root / "configs" /
                                "publication-versions.json").read_text(encoding="utf-8"))
         unit_versions, default_version = versions["units"], versions["default_unit_version"]
         for item in manifests:
@@ -256,12 +257,14 @@ class ClassBCanonDriftCase(unittest.TestCase):
             self.assertNotEqual(lock_first.managed_bytes, lock_second.managed_bytes)
 
 
+@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
+                     "no host bootstrap config (standalone)")
 class TestRepositoryBootstrapPublication(unittest.TestCase):
     """P1.2 (D31/D38): the sole root-bootstrap producer — thin projections + 1 lock."""
 
     def setUp(self):
-        self.repo_root = Path(__file__).resolve().parents[3]
-        self.package_root = self.repo_root / "packages" / "skiller"
+        self.package_root = Path(__file__).resolve().parents[1]
+        self.repo_root = find_repo_root(self.package_root) or self.package_root
         self.env = Env(self.package_root)
         from skiller.host import load_host
         self.config = load_repository_bootstrap_config(self.repo_root, load_host(self.package_root))
@@ -325,13 +328,15 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
                          [(a.target, a.managed_bytes) for a in second])
 
 
+@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
+                     "no host bootstrap config (standalone)")
 class TestClassBRootBootstrapProjection(unittest.TestCase):
     """P1.5 (D43): the one class-B record (`workflow-craft`) — thin, Codex-only, provenance-
     hashed, precondition-gated. Class-A byte/count guards are asserted separately above."""
 
     def setUp(self):
-        self.repo_root = Path(__file__).resolve().parents[3]
-        self.package_root = self.repo_root / "packages" / "skiller"
+        self.package_root = Path(__file__).resolve().parents[1]
+        self.repo_root = find_repo_root(self.package_root) or self.package_root
         self.env = Env(self.package_root)
 
     def _class_b_artifacts(self):
@@ -373,20 +378,22 @@ class TestClassBRootBootstrapProjection(unittest.TestCase):
         self.assertTrue(record["rendered_sha256"])
 
 
+@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
+                     "no host bootstrap config (standalone)")
 class RootBootstrapCompletenessCase(unittest.TestCase):
     """P1.5 (D40 invariant i): the declared root-bootstrap target set is exact, not a floor —
     an undeclared root directory is a hard failure naming the path, never a silent pass."""
 
     def test_real_repo_root_set_is_currently_clean(self):
-        repo_root = Path(__file__).resolve().parents[3]
-        package_root = repo_root / "packages" / "skiller"
+        package_root = Path(__file__).resolve().parents[1]
+        repo_root = find_repo_root(package_root) or package_root
         env = Env(package_root)
         artifacts = build_repository_bootstrap_publication(env)
         self.assertEqual(assert_root_bootstrap_set_completeness(repo_root, artifacts), [])
 
     def test_undeclared_directory_is_named_as_a_failure(self):
-        repo_root = Path(__file__).resolve().parents[3]
-        package_root = repo_root / "packages" / "skiller"
+        package_root = Path(__file__).resolve().parents[1]
+        repo_root = find_repo_root(package_root) or package_root
         env = Env(package_root)
         artifacts = build_repository_bootstrap_publication(env)
         with tempfile.TemporaryDirectory() as tmp:

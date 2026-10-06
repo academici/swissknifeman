@@ -1,0 +1,503 @@
+Perform the single final independent read-only review of P8.8, covering the entire implementation diff. Do not change files, run checks, delegate, call external services or propose unrelated changes. You can read relevant files with read_file if needed. Focus on real correctness/isolation problems, regressions, false GREEN, weakened checks. Return a verdict GREEN or FINDINGS, each finding with severity, exact file/line and evidence. Distinguish nonblocking limitations from must-fix findings. No context-size argument was supplied by owner request.
+
+Task contract:
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.8",
+  "title": "Standalone-проверка Skiller: корневой скрипт, CI job, тесты без монорепо",
+  "status": "todo",
+  "summary": "Корневой `scripts/skiller-standalone-check.sh` копирует отслеживаемые файлы Skiller и core/ во временную раскладку без .git/packages/host-конфига и запускает test.sh и validate.sh Skiller; job `skiller-standalone` в test.yml; тесты, падающие вне монорепо, получают временный host-конфиг/tmp git или явный skip.",
+  "why": "Цель фазы «проходит validate/test в отдельном checkout» (D16) доказывается только запуском. Hard risk: скрытые зависимости тестов от монорепо (git root, соседние пакеты, PYTHONPATH окружения) — проверка обязана сбрасывать окружение.",
+  "scope": {
+    "include": [
+      "§standalone пп. 1–5",
+      "CI job",
+      "починка тестов Skiller, падающих в standalone"
+    ],
+    "exclude": [
+      "публикация Skiller в новый репозиторий",
+      "упаковка core (D20 roadmap)"
+    ]
+  },
+  "depends_on": [
+    "P8.3",
+    "P8.4",
+    "P8.5",
+    "P8.6",
+    "P8.7"
+  ],
+  "decisions": [
+    "D16",
+    "D20"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "standalone",
+      "why": "раскладка, запуск, ожидания",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/skiller-p8.json",
+      "section": "invariants",
+      "why": "I2, I5",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/scripts/test.sh",
+      "why": "поиск core",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "why": "гейты, зависящие от окружения",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "why": "куда добавить job",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_test_isolation_guard.py",
+      "why": "guard изоляции тестов",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/skiller-standalone-check.sh",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any",
+      "note": "починка standalone-падений"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "any",
+      "note": "только явные SKIP для хост-гейтов"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика и тексты в коде английские; core разрешён (D20)",
+    "Скрипт Skiller не знает про standalone-проверку (она в корне)",
+    "Сбрасывать PYTHONPATH и SKILLER_HOST_CONFIG; копировать только git-отслеживаемые файлы",
+    "Тест чинится временным host-конфигом / tmp git init / skipUnless с причиной — не удалением проверки"
+  ],
+  "guidance": "Исполнитель: Sonnet/Sol (implementation/high). Сначала запустить скрипт и собрать падения в @plan/artifacts/P8.8/first-run.log; каждое классифицировать (хост / git / соседний пакет). Соседний пакет после P8.4–P8.6 быть не должен — если есть, `plan.py log --type blocker` с путём.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash scripts/skiller-standalone-check.sh",
+      "expect": "exit 0; test.sh и validate.sh в копии зелёные",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/skiller/scripts/test.sh",
+      "expect": "exit 0; `tests: OK (Ran N tests)`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/skiller"
+    }
+  ],
+  "deliverables": [
+    "scripts/skiller-standalone-check.sh",
+    "CI job skiller-standalone"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T16:12:03Z"
+}
+Recorded justified deviations: core is permitted by D20, and needs three root provider data catalogs (provider-capabilities, provider-distribution, provider-projection); copy only those tracked catalogs alongside tracked core and package files. No sibling packages, .git or skiller-host config are included. Host marketplaces are outside tracked package files; regenerate publication inside disposable copy before validate, so static marketplace checks and registry --check remain active. Existing nonempty boundary_allowlist belongs to upcoming P8.9; do not delete or expand it in P8.8. Root product changes are the script, CI and release/docs bookkeeping. A tiny validator import bootstrap was necessary with cleared PYTHONPATH. No product lib/core code was changed.
+
+Validation actually completed: V1=0 standalone test.sh (802 tests), standalone registry regeneration and validate.sh (includes tests, registry --check, budget and explicit consumer acceptance SKIP); V2=0 monorepo test.sh (802 tests); V3=0 package boundary tests (15 tests). PHP isolation guard tests are included and package-relative already. No unrelated package checks were run. Requested review is at the end of all changes.
+
+Full tracked product diff:
+diff --git a/.github/workflows/test.yml b/.github/workflows/test.yml
+index a75a8c2d..a2719601 100644
+--- a/.github/workflows/test.yml
++++ b/.github/workflows/test.yml
+@@ -38,6 +38,18 @@ jobs:
+       - name: Test core (stdlib foundation)
+         run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
+ 
++  skiller-standalone:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++
++      - uses: actions/setup-python@v5
++        with:
++          python-version: '3.12'
++
++      - name: Test and validate standalone Skiller
++        run: bash scripts/skiller-standalone-check.sh
++
+   task:
+     runs-on: ubuntu-latest
+     strategy:
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 805a4e64..7822f80e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -4,6 +4,11 @@
+ 
+ ### Added
+ 
++- **Standalone-проверка Skiller:** корневой `scripts/skiller-standalone-check.sh`
++  и CI job `skiller-standalone` проверяют отслеживаемую копию Skiller с `core`
++  и тремя общими provider-каталогами без Git, соседних пакетов и host-конфига.
++  Внешние `PYTHONPATH` и `SKILLER_HOST_CONFIG` сбрасываются; тесты публикации
++  используют фактический корень пакета, а проверки host bootstrap явно пропускаются.
+ - **Repository bootstrap у владельцев:** 14 canonical skills перенесены из Skiller:
+   11 в корневой `bootstrap/skills`, три в `dev-skills` Task, Harness и mAInd.
+   Рендерер и cold-discovery читают явные пути из host-конфига v2; версия bootstrap
+diff --git a/packages/skiller/docs/guide/ci.md b/packages/skiller/docs/guide/ci.md
+index 9187e252..dc69457c 100644
+--- a/packages/skiller/docs/guide/ci.md
++++ b/packages/skiller/docs/guide/ci.md
+@@ -6,6 +6,7 @@ registry.
+ | Workflow | Trigger | Purpose |
+ |---|---|---|
+ | `validate.yml` | push / PR | `scripts/validate.sh`: frontmatter, upstream.json, profiles, manifests |
++| `test.yml` | push / PR | Package tests and the `skiller-standalone` isolation job |
+ | `upstream-sync.yml` | weekly | checking upstreams → PR with diff |
+ | `sha256-update.yml` | push | recalculation of registry hashes |
+ | `scanner-pr.yml` | weekly | PR with scanner candidates |
+@@ -24,6 +25,15 @@ changes:
+ `./scripts/validate.sh` — the same script locally and in CI. If it's green
+ locally, `validate.yml` will also pass. Run before each PR.
+ 
++The host repository also runs `bash scripts/skiller-standalone-check.sh` from its
++root. It copies tracked Skiller files and the shared `core` dependency into a
++temporary directory, including the three shared provider data catalogs required
++by `core`. The copy contains no Git repository, sibling packages or host config.
++It clears `PYTHONPATH` and `SKILLER_HOST_CONFIG`, runs the package tests, renders
++publication for the standalone layout, then validates it with drift checks enabled.
++Host bootstrap and consumer acceptance checks explicitly skip
++when their host configuration is absent; package tests still run.
++
+ ## Exit-codes for automation
+ 
+ `update-upstreams.sh --check` returns `10`, if there are outdated upstreams, -
+diff --git a/packages/skiller/scripts/validate.sh b/packages/skiller/scripts/validate.sh
+index 1ff66f45..815b1821 100755
+--- a/packages/skiller/scripts/validate.sh
++++ b/packages/skiller/scripts/validate.sh
+@@ -643,6 +643,9 @@ hc_dir = None
+ _host = None
+ if (root / "lib" / "skiller" / "host.py").is_file():
+     sys.path[:0] = [str(root / "lib"), str(repo_root)]
++    core_root = root.parent.parent
++    if (core_root / "core").is_dir():
++        sys.path.insert(0, str(core_root))
+     from skiller.host import load_host, host_plugin_dirs
+     _host = load_host(root)
+     MEM_MODES.update(_host.mcp_servers)
+diff --git a/packages/skiller/tests/test_codex_publication.py b/packages/skiller/tests/test_codex_publication.py
+index 5f92203a..1e8f1846 100644
+--- a/packages/skiller/tests/test_codex_publication.py
++++ b/packages/skiller/tests/test_codex_publication.py
+@@ -5,6 +5,7 @@ import tempfile
+ import unittest
+ from pathlib import Path
+ 
++from core import find_repo_root
+ from skiller.common import Env
+ from skiller.host import load_host
+ from skiller.publication import (_codex_skill_runtime_files,
+@@ -17,8 +18,8 @@ from skiller.registry import (build_codex_publication, build_registry,
+ 
+ class TestCodexPublication(unittest.TestCase):
+     def setUp(self):
+-        self.repo_root = Path(__file__).resolve().parents[3]
+-        self.package_root = self.repo_root / "packages" / "skiller"
++        self.package_root = Path(__file__).resolve().parents[1]
++        self.repo_root = find_repo_root(self.package_root) or self.package_root
+         self.env = Env(self.package_root)
+         self.registry, self.metadata, self.buckets = build_registry(self.env)
+         self.golden = json.loads((Path(__file__).parent / "fixtures_data" /
+@@ -70,7 +71,7 @@ class TestCodexPublication(unittest.TestCase):
+         self.assertTrue(manifests)
+         # D27: per-unit manifest version now comes from configs/publication-versions.json —
+         # a bumped unit (core/skm) diverges from the frozen default every other unit keeps.
+-        versions = json.loads((self.repo_root / "packages" / "skiller" / "configs" /
++        versions = json.loads((self.package_root / "configs" /
+                                "publication-versions.json").read_text(encoding="utf-8"))
+         unit_versions, default_version = versions["units"], versions["default_unit_version"]
+         for item in manifests:
+@@ -256,12 +257,14 @@ class ClassBCanonDriftCase(unittest.TestCase):
+             self.assertNotEqual(lock_first.managed_bytes, lock_second.managed_bytes)
+ 
+ 
++@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
++                     "no host bootstrap config (standalone)")
+ class TestRepositoryBootstrapPublication(unittest.TestCase):
+     """P1.2 (D31/D38): the sole root-bootstrap producer — thin projections + 1 lock."""
+ 
+     def setUp(self):
+-        self.repo_root = Path(__file__).resolve().parents[3]
+-        self.package_root = self.repo_root / "packages" / "skiller"
++        self.package_root = Path(__file__).resolve().parents[1]
++        self.repo_root = find_repo_root(self.package_root) or self.package_root
+         self.env = Env(self.package_root)
+         from skiller.host import load_host
+         self.config = load_repository_bootstrap_config(self.repo_root, load_host(self.package_root))
+@@ -325,13 +328,15 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
+                          [(a.target, a.managed_bytes) for a in second])
+ 
+ 
++@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
++                     "no host bootstrap config (standalone)")
+ class TestClassBRootBootstrapProjection(unittest.TestCase):
+     """P1.5 (D43): the one class-B record (`workflow-craft`) — thin, Codex-only, provenance-
+     hashed, precondition-gated. Class-A byte/count guards are asserted separately above."""
+ 
+     def setUp(self):
+-        self.repo_root = Path(__file__).resolve().parents[3]
+-        self.package_root = self.repo_root / "packages" / "skiller"
++        self.package_root = Path(__file__).resolve().parents[1]
++        self.repo_root = find_repo_root(self.package_root) or self.package_root
+         self.env = Env(self.package_root)
+ 
+     def _class_b_artifacts(self):
+@@ -373,20 +378,22 @@ class TestClassBRootBootstrapProjection(unittest.TestCase):
+         self.assertTrue(record["rendered_sha256"])
+ 
+ 
++@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
++                     "no host bootstrap config (standalone)")
+ class RootBootstrapCompletenessCase(unittest.TestCase):
+     """P1.5 (D40 invariant i): the declared root-bootstrap target set is exact, not a floor —
+     an undeclared root directory is a hard failure naming the path, never a silent pass."""
+ 
+     def test_real_repo_root_set_is_currently_clean(self):
+-        repo_root = Path(__file__).resolve().parents[3]
+-        package_root = repo_root / "packages" / "skiller"
++        package_root = Path(__file__).resolve().parents[1]
++        repo_root = find_repo_root(package_root) or package_root
+         env = Env(package_root)
+         artifacts = build_repository_bootstrap_publication(env)
+         self.assertEqual(assert_root_bootstrap_set_completeness(repo_root, artifacts), [])
+ 
+     def test_undeclared_directory_is_named_as_a_failure(self):
+-        repo_root = Path(__file__).resolve().parents[3]
+-        package_root = repo_root / "packages" / "skiller"
++        package_root = Path(__file__).resolve().parents[1]
++        repo_root = find_repo_root(package_root) or package_root
+         env = Env(package_root)
+         artifacts = build_repository_bootstrap_publication(env)
+         with tempfile.TemporaryDirectory() as tmp:
+diff --git a/packages/skiller/tests/test_provider_distribution.py b/packages/skiller/tests/test_provider_distribution.py
+index 582e56e3..12e6683a 100644
+--- a/packages/skiller/tests/test_provider_distribution.py
++++ b/packages/skiller/tests/test_provider_distribution.py
+@@ -15,6 +15,9 @@ import unittest
+ from pathlib import Path
+ from unittest import mock
+ 
++from skiller.host import load_host
++from core import find_repo_root
++from skiller.common import Env
+ from skiller.config import load_config
+ from skiller.connect import do_connect, prepare_connect_selection
+ from skiller.publication import run_codex_native_install
+@@ -740,9 +743,8 @@ class CoreDonorMutualExclusionCase(unittest.TestCase):
+     never a repair, never a live-profile read."""
+ 
+     def setUp(self):
+-        self.repo_root = Path(__file__).resolve().parents[3]
+-        self.package_root = self.repo_root / "packages" / "skiller"
+-        from skiller.common import Env
++        self.package_root = Path(__file__).resolve().parents[1]
++        self.repo_root = find_repo_root(self.package_root) or self.package_root
+         self.env = Env(self.package_root)
+ 
+     def _catalog(self):
+@@ -821,6 +823,8 @@ class ProviderDistributionDoctorSelectionCase(unittest.TestCase):
+         self.assertNotIn("SPUB_BUNDLE_INCOMPLETE", output.getvalue())
+ 
+ 
++@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
++                     "no host bootstrap config (standalone)")
+ class EffectiveRuntimeGateCase(unittest.TestCase):
+     """P1.4 (D51/D62/D63): cold per-provider install/discover of the declared fixture
+     (repo marketplace minus the three donor buckets) proves catalog-wide identity
+@@ -831,9 +835,8 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
+     root-bootstrap config nor the `task` sibling this gate must cover."""
+ 
+     def setUp(self):
+-        self.repo_root = Path(__file__).resolve().parents[3]
+-        self.package_root = self.repo_root / "packages" / "skiller"
+-        from skiller.common import Env
++        self.package_root = Path(__file__).resolve().parents[1]
++        self.repo_root = find_repo_root(self.package_root) or self.package_root
+         self.env = Env(self.package_root)
+ 
+     def _catalog(self):
+diff --git a/packages/skiller/tests/test_provider_publication_parity.py b/packages/skiller/tests/test_provider_publication_parity.py
+index aff06cdb..87d5a80c 100644
+--- a/packages/skiller/tests/test_provider_publication_parity.py
++++ b/packages/skiller/tests/test_provider_publication_parity.py
+@@ -12,6 +12,7 @@ import unittest
+ from pathlib import Path
+ from unittest import mock
+ 
++from core import find_repo_root
+ from skiller.common import Env
+ from skiller.publication import run_codex_native_install
+ from skiller.publication import validate_publication_capabilities
+@@ -39,8 +40,8 @@ def _digest(artifacts, repo_root):
+ 
+ class TestProviderPublicationParity(unittest.TestCase):
+     def setUp(self):
+-        self.repo_root = Path(__file__).resolve().parents[3]
+-        self.package_root = self.repo_root / "packages" / "skiller"
++        self.package_root = Path(__file__).resolve().parents[1]
++        self.repo_root = find_repo_root(self.package_root) or self.package_root
+         self.env = Env(self.package_root)
+         self.cases = json.loads((Path(__file__).parent / "fixtures_data" /
+                                  "provider-publication-cases.json").read_text(encoding="utf-8"))
+@@ -79,7 +80,7 @@ class TestProviderPublicationParity(unittest.TestCase):
+             | {policy["core_plugin"], "generate-skill", "skm"}
+         expected_plugins.update(
+             json.loads((package / ".codex-plugin" / "plugin.json").read_text())["name"]
+-            for package in (self.repo_root / "packages").iterdir()
++            for package in (self.repo_root / "packages").glob("*")
+             if package != self.package_root
+             and (package / ".claude-plugin" / "plugin.json").is_file()
+             and (package / ".codex-plugin" / "plugin.json").is_file())
+@@ -134,7 +135,7 @@ class TestProviderPublicationParity(unittest.TestCase):
+                                          for path in manifest.get("skills", [])))
+ 
+     def test_manifest_gate_refuses_missing_unsupported_and_catalog_mismatch_before_write(self):
+-        source = json.loads((self.repo_root / "configs/provider-capabilities.json").read_text())
++        source = json.loads((Path(__file__).resolve().parents[3] / "configs/provider-capabilities.json").read_text())
+         with tempfile.TemporaryDirectory() as directory:
+             root = Path(directory)
+             sentinel = root / "sentinel"
+diff --git a/packages/skiller/tests/test_publication.py b/packages/skiller/tests/test_publication.py
+index 3edaf11d..4c88383d 100644
+--- a/packages/skiller/tests/test_publication.py
++++ b/packages/skiller/tests/test_publication.py
+@@ -5,6 +5,8 @@ import tempfile
+ import unittest
+ from pathlib import Path
+ 
++from core import find_repo_root
++from skiller.host import load_host
+ from skiller.publication import PublicationCatalog, build_publication_catalog
+ from skiller.registry import (build_claude_publication, build_plugin_manifests,
+                               build_registry)
+@@ -55,10 +57,12 @@ class TestPublicationCatalog(unittest.TestCase):
+             self.assertTrue(all(item.rendered_hash.startswith("sha256:") for item in first))
+ 
+ 
++@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).root,
++                     "golden includes host publications (standalone)")
+ class TestClaudePublicationGolden(unittest.TestCase):
+     def test_repository_claude_artifacts_match_pre_refactor_byte_golden(self):
+-        repo_root = Path(__file__).resolve().parents[3]
+-        package_root = repo_root / "packages" / "skiller"
++        package_root = Path(__file__).resolve().parents[1]
++        repo_root = find_repo_root(package_root) or package_root
+         from skiller.common import Env
+         env = Env(package_root)
+         registry, metadata, buckets = build_registry(env)
+@@ -73,8 +77,7 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
+     """Host bootstrap identities live outside the package and never enter its registry."""
+ 
+     def test_host_bootstrap_is_absent_from_registry_and_publication(self):
+-        repo_root = Path(__file__).resolve().parents[3]
+-        package_root = repo_root / "packages" / "skiller"
++        package_root = Path(__file__).resolve().parents[1]
+         from skiller.common import Env
+         env = Env(package_root)
+         registry, metadata, buckets = build_registry(env)
+
+New root script (untracked):
+#!/usr/bin/env bash
+# Prove Skiller works with only its tracked files and the shared core dependency.
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+standalone_tmp="$(mktemp -d /tmp/skiller-standalone.XXXXXXXX)"
+trap 'rm -rf "$standalone_tmp"' EXIT
+
+python3 - "$REPO_ROOT" "$standalone_tmp" <<'PY'
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+root, destination = map(Path, sys.argv[1:])
+tracked = subprocess.check_output(
+    ["git", "ls-files", "-z", "--", "packages/skiller", "core",
+     "configs/provider-capabilities.json", "configs/provider-distribution.json",
+     "configs/provider-projection.json"], cwd=root)
+for entry in tracked.decode("utf-8").split("\0"):
+    if not entry:
+        continue
+    relative = Path(entry)
+    if "node_modules" in relative.parts:
+        continue
+    if relative.parts[:2] == ("packages", "skiller"):
+        target = destination / "vendor" / "skiller" / relative.relative_to("packages/skiller")
+    else:
+        target = destination / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(root / relative, target, follow_symlinks=False)
+PY
+
+cd "$standalone_tmp/vendor/skiller"
+echo "Standalone Skiller: tracked package + core (including shared provider data), no repository or host config"
+env -u PYTHONPATH -u SKILLER_HOST_CONFIG bash scripts/test.sh
+# Marketplaces live outside the package in the host checkout. Render them for
+# this standalone layout so validation retains its publication drift checks.
+env -u PYTHONPATH -u SKILLER_HOST_CONFIG bash bin/skiller registry
+env -u PYTHONPATH -u SKILLER_HOST_CONFIG bash scripts/validate.sh
+
+Validation tail:
+WARN: skills/quality/code-review: should_trigger 'which blocks the merging of these changes' is not covered by any pressure-script (field triggers[])
+WARN: skills/quality/code-review: should_trigger 'look at the diffs and give comments on severity' is not covered by any pressure-script (field triggers[])
+evals coverage: 12/161 local skills have evals/ (7%) — eval-first for new (skiller eval <skill>)
+218 skills checked — all valid (152 warning(s))
+CLI + shell scripts: syntax OK
+tests: OK (Ran 802 tests)
+registry --check: artifacts are relevant (skills.json/_index.md/manifests/graph.md/budget.md)
+bucket-path drift: no rotten php/<skill>|frontend/<skill> links
+CORE resident (⊕ tier-0): 138 current / target 750 — OK (4/4 skills)
+WARN: 7 profile(to her) listings exceed fallback detection budget Codex (8 000 char) — structural search:
+  laravel-project: 13118 char (×1.6)
+  node-frontend: 13115 char (×1.6)
+  obsidian-vault: 11861 char (×1.5)
+  php-package: 10448 char (×1.3)
+  platform-service: 18170 char (×2.3)
+  python-backend: 10190 char (×1.3)
+  standalone: 39921 char (×5.0)
+SKIP: Codex publication consumer-acceptance gate - no host config (standalone)

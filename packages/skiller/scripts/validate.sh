@@ -643,6 +643,9 @@ hc_dir = None
 _host = None
 if (root / "lib" / "skiller" / "host.py").is_file():
     sys.path[:0] = [str(root / "lib"), str(repo_root)]
+    core_root = root.parent.parent
+    if (core_root / "core").is_dir():
+        sys.path.insert(0, str(core_root))
     from skiller.host import load_host, host_plugin_dirs
     _host = load_host(root)
     MEM_MODES.update(_host.mcp_servers)

@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "grok",
+    "--cwd",
+    "/home/vostrikov/projects/packages/swissknifeman",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "--sandbox",
+    "off",
+    "--permission-mode",
+    "plan",
+    "--no-subagents",
+    "--disable-web-search",
+    "--tools",
+    "read_file",
+    "--max-turns",
+    "8",
+    "--resume",
+    "e862e0b5-6644-4085-bc2f-019fd5719678",
+    "--output-format",
+    "json",
+    "--prompt-file",
+    "/home/vostrikov/projects/packages/swissknifeman/plans/2026.10.05-\u21162-ORCH-PREP/artifacts/P8.8/review-continue.txt"
+  ],
+  "session_id": "e862e0b5-6644-4085-bc2f-019fd5719678",
+  "reason": "max turns before verdict; same native session resumed, no completed round",
+  "context_parameter": null
+}

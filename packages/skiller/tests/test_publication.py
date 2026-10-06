@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from core import find_repo_root
+from skiller.host import load_host
 from skiller.publication import PublicationCatalog, build_publication_catalog
 from skiller.registry import (build_claude_publication, build_plugin_manifests,
                               build_registry)
@@ -55,10 +57,12 @@ class TestPublicationCatalog(unittest.TestCase):
             self.assertTrue(all(item.rendered_hash.startswith("sha256:") for item in first))
 
 
+@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).root,
+                     "golden includes host publications (standalone)")
 class TestClaudePublicationGolden(unittest.TestCase):
     def test_repository_claude_artifacts_match_pre_refactor_byte_golden(self):
-        repo_root = Path(__file__).resolve().parents[3]
-        package_root = repo_root / "packages" / "skiller"
+        package_root = Path(__file__).resolve().parents[1]
+        repo_root = find_repo_root(package_root) or package_root
         from skiller.common import Env
         env = Env(package_root)
         registry, metadata, buckets = build_registry(env)
@@ -73,8 +77,7 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
     """Host bootstrap identities live outside the package and never enter its registry."""
 
     def test_host_bootstrap_is_absent_from_registry_and_publication(self):
-        repo_root = Path(__file__).resolve().parents[3]
-        package_root = repo_root / "packages" / "skiller"
+        package_root = Path(__file__).resolve().parents[1]
         from skiller.common import Env
         env = Env(package_root)
         registry, metadata, buckets = build_registry(env)

@@ -1,0 +1,10 @@
+{
+  "info": {
+    "id": "e862e0b5-6644-4085-bc2f-019fd5719678",
+    "cwd": "/home/vostrikov/projects/packages/swissknifeman"
+  },
+  "current_model_id": "grok-4.7",
+  "reasoning_effort": "high",
+  "session_kind": "headless",
+  "sandbox_profile": "off"
+}

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.1",
   "title": "Boundary-тест Skiller и временный allowlist фактических нарушений",
-  "status": "todo",
+  "status": "done",
   "summary": "Тест `packages/skiller/tests/test_boundary.py` по правилу §boundary (две зоны: код и контент; core разрешён по D20) и `tests/boundary_allowlist.json` с фактическими нарушениями, у каждой записи владелец P8.2–P8.9. Код Skiller не меняется.",
   "why": "D16: Skiller не ссылается на другие пакеты и пути монорепо. Тест закрепляет цель фазы и даёт каждому следующему item измеримый остаток (allowlist убывает, устаревшая запись — красный тест). Hard risk: неверная зона/токен даст ложные срабатывания на тексте сторонних skills (`packages/core` в Laravel/vitest-примерах) — токены ограничены именами пакетов монорепо.",
   "scope": {
@@ -108,6 +108,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T16:12:00Z"
+  "result": {
+    "started_at": "2026-10-06T17:26:15Z",
+    "finished_at": "2026-10-06T17:46:39Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1123e-fddf-7df1-a0ce-3e27418cf66b"
+    },
+    "notes": "Добавлен stdlib boundary-тест Skiller: filesystem rglob, две зоны C1–C6/K1, структурный K2, разрешённый core, точные исключения и английские path:line diagnostics. Allowlist содержит 89 фактических путей / 384 исходных line hits, включая одну запись repository-bootstrap; владельцы P8.3–P8.6/P8.9 по карте и позднему owning item. 11 self-тестов покрывают зоны, токены, бинарные/исключённые файлы, glob и неканонические ключи, missing/clean stale entries и K2. V1 GREEN: 12 тестов после reason-only коррекции; V2 GREEN: 742 теста Skiller, остальные 730 не повторялись после правки только owners. Grok 4.7/high final GREEN без параметра контекста, две completed rounds / одна owning correction. Продуктовый код/skills не менялся; широкий validate и чужие пакеты не запускались; docs/CHANGELOG принадлежат P8.9. Все результаты и reviewer provenance — artifacts/P8.1/.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T17:46:39Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T17:46:39Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T17:46:39Z"
 }

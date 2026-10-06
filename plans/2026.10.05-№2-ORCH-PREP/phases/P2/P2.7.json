@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.7",
   "title": "Review P2: независимая проверка Task lifecycle",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Read-only review диффа P2 с фокусом на модель инвариантов (INV-1..INV-7) и совместимость; вердикт в knowledge `review-p2` и note-событие.",
   "why": "Task lifecycle — публичный контракт и data integrity (запрошено владельцем, PLAN1-PROMPT §5). I10: ≤2 раунда, 1 исправление.",
   "scope": {
@@ -102,6 +102,35 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:30Z"
+  "result": {
+    "started_at": "2026-10-06T07:37:31Z",
+    "finished_at": "2026-10-06T07:44:38Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1101f-ea16-7f80-9d4c-ae9013a18af8"
+    },
+    "notes": "Один свежий независимый read-only reviewer /root/review_p2; унаследован codex/gpt-6.1-sol/high, parent UUID не выдаётся за reviewer identity. knowledge/review-p2: ATTENTION, findings severity/confidence/path:line/CLI-reproducer/owning item, 10 адресных сценариев, исходный скрипт и полный transcript, ограничения и git-object receipt. Note-событие P2 записано. V1 show PLAN2 knowledge/review-p2 exit 0. V2 переиспользован из P2.6 V1: 494 engine tests exit 0; полный validate 579+494 OK и orch 75 OK не повторялись — HEAD f06c0f6e и 11 входных git objects совпадают, код/tests/tools/config не менялись. Дополнительно plan.py check — 0 ошибок/предупреждений; reviewer diff/projection checks OK. Исторические human_view ошибки архивного №1 отмечены отдельно, не новая P2 regression. Исправлений/re-review не было. docs not needed: регистрируется только read-only вердикт, поведение продукта не изменено.",
+    "deviations": [
+      "Независимый вердикт ATTENTION: подтверждены F1 Major (brief route.settings не проходит exec/v1) и F2 Minor (argparse usage без JSON envelope); GREEN не заявлен, продукт не исправлялся."
+    ],
+    "pending": [
+      "F1: owning P2.1, coverage P2.2 — проекция route.minimum должна соответствовать exec/v1 при native settings (item и unit).",
+      "F2: owning P2.1 — --output json должен возвращать USAGE envelope при malformed --repo и missing required argument."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T07:44:38Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T07:44:38Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T07:44:38Z"
 }

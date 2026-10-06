@@ -1,4 +1,4 @@
-"""Check evidence for finish and unit accept (T6): exec/v1 check-evidence files and plan.settings.evidence."""
+"""Check evidence for finish and unit accept (T6): Task check-evidence field contract and plan.settings.evidence."""
 import copy
 import io
 import itertools
@@ -15,7 +15,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task.plan import cli, lifecycle, ops, store, units  # noqa: E402
+from task.plan import cli, lifecycle, ops, schema, store, units  # noqa: E402
 from task.plan.model import PlanError  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "evidence"
@@ -157,8 +157,8 @@ class FinishEvidenceTests(EvidenceCase):
 
     def test_structural_violations_are_invalid(self):
         cases = {
-            "schema": {"$schema": "urn:other"},
-            "contract": {"contract_version": "exec/v2"},
+            "no-schema": {"$schema": None},
+            "empty-schema": {"$schema": " "},
             "head": {"candidate": {"head": "ABC1234"}},
             "short-head": {"candidate": {"head": "abc12"}},
             "both": {"procedure": {"cmd": "true", "procedure": "look"}},
@@ -187,6 +187,12 @@ class FinishEvidenceTests(EvidenceCase):
             with self.subTest(name):
                 path = self.evidence("procedure-pass", name=name, **changes)
                 self.refused("EVIDENCE_INVALID", lifecycle.finish, "P1.1", "done", evidence={"V1": path})
+
+    def test_any_schema_marker_and_contract_version_pass(self):
+        """D19: Task checks the key fields only; a producer's own ``$schema`` and ``contract_version`` pass."""
+        path = self.evidence("cmd-pass", name="foreign", **{"$schema": "urn:example:check-evidence:v9",
+                                                            "contract_version": "x/v9"})
+        lifecycle.finish(self.root, "P1.1", "done", evidence={"V1": path})
 
     def test_missing_unreadable_or_escaping_files_are_invalid(self):
         (self.root / "artifacts").mkdir(exist_ok=True)
@@ -335,11 +341,12 @@ class CliEvidenceTests(EvidenceCase):
 
 class FixtureTests(unittest.TestCase):
     def test_every_fixture_is_loadable_by_task(self):
-        """Each fixture passes ``_load_evidence`` for its own subject (orch checks them against exec/v1)."""
+        """Each fixture passes ``_load_evidence`` for its own subject and the check-evidence schema."""
         plan = mock.Mock(plan={"short_id": "PLAN1"})
         for fixture in sorted(FIXTURES.glob("*.json")):
             with self.subTest(fixture.name):
                 doc = json.loads(fixture.read_text(encoding="utf-8"))
+                self.assertEqual(schema.validate(doc, "check-evidence"), [])
                 item_ref = doc["subject"].split(".", 1)[1]
                 with mock.patch("task.plan.context._resolve", return_value=fixture):
                     code = lifecycle._load_evidence(plan, item_ref, doc["check_id"], f"@plan/{fixture.name}")

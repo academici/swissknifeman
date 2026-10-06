@@ -73,6 +73,17 @@ class RolesTextTests(unittest.TestCase):
         self.assertIn("quality:code-review", text)
         self.assertIn("quality:artifact-review", text)
 
+    def test_registrar_hands_the_report_to_the_plan_bridge(self):
+        text = _text("registrar")
+        self.assertNotIn("plan.py", text)
+        self.assertIn("Never manufacture evidence", text)
+        for phrase in ("`register`", "`register-review`", "registration-receipt"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, text)
+        for kind in ("pending", "deviation", "blocker", "difficulty", "assumption", "note", "escalation"):
+            with self.subTest(kind=kind):
+                self.assertIn(kind, text)
+
     def test_marker_parser_rejects_unpaired_markers(self):
         for text in ("<!-- export:begin a -->", "<!-- export:end a -->",
                      "<!-- export:begin a --><!-- export:begin b --><!-- export:end b --><!-- export:end a -->"):

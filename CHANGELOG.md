@@ -15,10 +15,15 @@
 - **Task execution-input:** мост `plan.py bridge orch brief` выдаёт `exec/v1 execution-input`
   с проверкой полноты и разрешением ссылок на другие планы; ядро Task не знает `exec/v1`
   (глагол `plan.py brief` до выпуска перенесён в `packages/task/bridges/orch`).
+  Обратная регистрация: `plan.py bridge orch register` переносит stage-report worker-а
+  в `log` + `finish`/`unit … return`, `register-review` — review-findings в knowledge-документ
+  и note-событие; запись только через `plan.py`, повтор с тем же attempt-id — no-op,
+  результат — registration-receipt. Роль registrar orch нейтральна и передаёт отчёт мосту.
 - **Task actor, попытки и evidence:** добавлены `--executed-by`, `--registrar`,
   `--attempt-id` и check evidence (`--evidence`, `settings.evidence`): раздельные
   исполнитель и регистратор, идемпотентная регистрация и опциональная обязательность
-  доказательств acceptance-проверок.
+  доказательств acceptance-проверок. Evidence проверяется по собственному полевому
+  контракту Task (`plan.py schema check-evidence`) с любым `$schema`.
 - **Внутренние контракты orch exec/v1:** добавлены девять схем документов и общие
   определения, stdlib-валидатор, CLI `validate`, semantic checks, fixtures и три
   synthetic traces, контракт Engine Port и его trace-валидатор. CI проверяет пакет.

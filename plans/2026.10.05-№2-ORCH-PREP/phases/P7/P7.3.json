@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.3",
   "title": "Обратная регистрация в мосту (register), evidence по полям, нейтральный registrar",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Мост orch получает обратную регистрацию: `plan.py bridge orch register` (stage-report → log + finish | unit return) и `register-review` (review-findings → add-document + log note), идемпотентно по attempt-id; ядро Task принимает check-evidence по своему полевому контракту без URN orch (D19, kind `check-evidence`); record-parity-тест переехал из orch в мост; orch registrar.md нейтрален и передаёт отчёт мосту.",
   "why": "D13–D15, D19: маппинг отчёта worker → план принадлежит мосту, а не ядру orch; ядро Task не знает exec/v1. R27/W1–W12: ни одна обязанность записи не теряется — теперь её исполняет код, а не только текст роли. Hard risk: целостность записи плана (частичная регистрация, дубли событий при повторе, потеря open_issues).",
   "scope": {
@@ -247,6 +247,47 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T11:23:49Z"
+  "result": {
+    "started_at": "2026-10-06T12:47:35Z",
+    "finished_at": "2026-10-06T13:10:41Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "97be2aee-af3b-4e59-a73e-dd33b1dcebf2"
+    },
+    "notes": "Bridge orch: register.py (pure plan_calls + receipt, log-before-finish, journal dedupe by type+summary, REGISTER_* refusals) and register_review.py (add-document + note, repeat no-op); bridge.json entrypoints, README map. Core: D19 evidence field contract (any non-empty $schema), schemas/plan/v1/check-evidence.schema.json + KINDS, cli help, fixtures, test_evidence. Conformance: orch valid check-evidence accepted by Task, Task schema covers orch fields. Record parity moved to the bridge with dry-run completeness. orch registrar.md neutral; test_roles_text registrar case. Allowlist P7.3 entries removed. Widened: Task validate.sh OK.",
+    "deviations": [
+      "register-review sends the review document as add-document --json text, not a temp file",
+      "Outside task_files: root CHANGELOG [Unreleased] and packages/task/docs/plan-structure.md evidence paragraph"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T13:10:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T13:10:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T13:10:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T13:10:41Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T13:10:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T13:10:41Z"
 }

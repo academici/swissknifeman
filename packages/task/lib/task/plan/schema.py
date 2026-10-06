@@ -14,7 +14,8 @@ from typing import Any, NamedTuple
 SCHEMA_URN_PREFIX = "urn:swissknifeman:task:plan:"
 DIALECT = "https://json-schema.org/draft/2020-12/schema"
 KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot", "envelope",
-         "bridge", "read-get", "read-list", "read-events", "read-artifact", "read-links", "read-neighborhood", "read-catalog")
+         "bridge", "check-evidence", "read-get", "read-list", "read-events", "read-artifact", "read-links",
+         "read-neighborhood", "read-catalog")
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
                "min_length", "one_of", "ref")
 SUPPORTED_KEYWORDS = frozenset({

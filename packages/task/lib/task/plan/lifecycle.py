@@ -29,8 +29,6 @@ FINISH_STATUSES = ("done", "done_with_deviations", "blocked", "skipped")
 _OPTION_ID = re.compile(r"^[A-Z]$")
 _GATE = re.compile(r"^[A-Z0-9-]+$")
 ATTEMPT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$", re.ASCII)  # schemas/plan/v1 defs.attemptId
-EVIDENCE_SCHEMA = "urn:swissknifeman:orch:exec:check-evidence:v1"
-EVIDENCE_CONTRACT = "exec/v1"
 _CHECK_ID = re.compile(r"^V[0-9]+$")
 _GIT_SHA = re.compile(r"^[0-9a-f]{7,40}$")
 _EVIDENCE_KEYS = ("evidence_id", "started_at", "finished_at")
@@ -348,9 +346,10 @@ def _text(value: Any) -> bool:
 def _load_evidence(p: store.Plan, item_ref: str, check_id: str, path: str) -> int:
     """Exit of check ``check_id`` proven by the check-evidence file at ``path`` (repo-relative or ``@plan/``).
 
-    A structural stdlib check of the exec/v1 key fields (D9; orch is never imported): a command carries its
-    observed ``exit``; a manual procedure carries a ``verdict``, mapped to 0 (``pass``) or 1 (``fail``) — no shell
-    exit is invented for it. ``item_ref`` is ``P1.2`` or ``P1.2/U1``; the evidence must name it and the check.
+    Task check-evidence field contract (schemas/plan/v1/check-evidence.schema.json): a structural stdlib check of
+    the key fields; any non-empty ``$schema`` passes (D19), so documents of external producers need no conversion.
+    A command carries its observed ``exit``; a manual procedure carries a ``verdict``, mapped to 0 (``pass``) or 1
+    (``fail``) — no shell exit is invented for it. ``item_ref`` is ``P1.2`` or ``P1.2/U1``; the evidence must name it and the check.
     """
     from . import context  # context imports this module for scheduling
 
@@ -366,10 +365,8 @@ def _load_evidence(p: store.Plan, item_ref: str, check_id: str, path: str) -> in
         raise invalid("file", f"is not readable JSON ({error})") from None
     if not isinstance(doc, dict):
         raise invalid("document", "must be a JSON object")
-    if doc.get("$schema") != EVIDENCE_SCHEMA:
-        raise invalid("$schema", f"must be {EVIDENCE_SCHEMA}")
-    if doc.get("contract_version") != EVIDENCE_CONTRACT:
-        raise invalid("contract_version", f"must be {EVIDENCE_CONTRACT}")
+    if not _text(doc.get("$schema")):
+        raise invalid("$schema", "is required")
     for field in _EVIDENCE_KEYS:
         if not _text(doc.get(field)):
             raise invalid(field, "is required")

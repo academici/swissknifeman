@@ -1,4 +1,4 @@
-"""Conformance of the bridge's ``brief`` and of Task's check-evidence with the orch exec/v1 contract.
+"""Conformance of the bridge's ``brief`` with the orch exec/v1 contract, and of exec/v1 check-evidence with Task.
 
 orch is never imported: documents are checked with ``orch.py validate <kind> <file>``; orch's lifecycle phrases are
 read from its source with ``ast``.
@@ -14,9 +14,9 @@ import unittest
 import bridge_fixture
 import brief
 import partner
+from task.plan import lifecycle, schema, store
 
 ORCH = partner.find_orch_root()
-EVIDENCE_FIXTURES = bridge_fixture.TASK / "tests/engine/fixtures/evidence"
 
 
 def _write(directory: str, name: str, doc: dict) -> Path:
@@ -59,17 +59,38 @@ class BriefConformance(unittest.TestCase):
         self.assertTrue(set(brief.LIFECYCLE_PHRASES) >= set(found[0]))
 
 
-@unittest.skipUnless(ORCH and EVIDENCE_FIXTURES.is_dir(), "orch or Task evidence fixtures not found")
+@unittest.skipUnless(ORCH, "orch not found")
 class EvidenceConformance(unittest.TestCase):
-    """Every check-evidence file Task accepts in its tests is valid exec/v1 check-evidence."""
+    """Valid exec/v1 check-evidence passes Task's field contract (D19) without conversion."""
 
-    def test_task_evidence_fixtures_are_valid_check_evidence(self):
-        fixtures = sorted(EVIDENCE_FIXTURES.glob("*.json"))
+    def test_orch_valid_check_evidence_is_accepted_by_task(self):
+        fixtures = sorted((ORCH / "fixtures/exec/v1/valid/check-evidence").glob("*.json"))
         self.assertTrue(fixtures)
-        for fixture in fixtures:
-            with self.subTest(fixture.name):
-                code, out = partner.orch_validate("check-evidence", fixture)
-                self.assertEqual(code, 0, out)
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_dir = bridge_fixture.demo_plan(tmp)
+            plan = store.load_plan(plan_dir)
+            for fixture in fixtures:
+                with self.subTest(fixture.name):
+                    doc = json.loads(fixture.read_text(encoding="utf-8"))
+                    self.assertTrue(doc["$schema"].startswith("urn:swissknifeman:orch:"))
+                    doc["subject"] = f"{plan.plan['short_id']}.P2.1"  # only the subject names the test plan
+                    target = plan_dir / "artifacts" / "evidence" / fixture.name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text(json.dumps(doc), encoding="utf-8")
+                    path = f"@plan/artifacts/evidence/{fixture.name}"
+                    proven = lifecycle.load_evidence(plan, "P2.1", {doc["check_id"]: path}, [doc["check_id"]])
+                    expected = doc["exit"] if "exit" in doc else {"pass": 0, "fail": 1}[doc["verdict"]]
+                    self.assertEqual(proven, {doc["check_id"]: expected})
+
+    def test_task_schema_names_every_orch_field(self):
+        orch = json.loads((ORCH / "schemas/exec/v1/check-evidence.schema.json").read_text(encoding="utf-8"))
+        task = schema.load_registry().for_kind("check-evidence")[0]
+        self.assertLessEqual(set(orch["properties"]), set(task["properties"]))
+        self.assertLessEqual(set(task["required"]), set(orch["required"]))
+        for name, node in orch["properties"].items():
+            if "properties" in node:
+                with self.subTest(field=name):
+                    self.assertLessEqual(set(node["properties"]), set(task["properties"][name]["properties"]))
 
 
 if __name__ == "__main__":

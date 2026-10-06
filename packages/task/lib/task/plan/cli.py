@@ -675,7 +675,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="who executed the item; route-checked, replaces result.executor")
     p.add_argument("--attempt-id", metavar="ID", help="registration attempt; a repeat of it is a no-op")
     p.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V1=PATH",
-                   help="check-evidence file (exec/v1) whose exit is the check result (repeatable)")
+                   help="check-evidence file (Task field contract; see `plan.py schema check-evidence`) whose "
+                        "exit is the check result (repeatable)")
     p.add_argument("--json", action="store_true")
 
     p = verb("unit", cmd_unit, "split an item into units and move them: add | <U#> dispatch|return|accept|rework|reject")
@@ -692,7 +693,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="return: who did the work when not the dispatched worker; route-checked")
     p.add_argument("--attempt-id", metavar="ID", help="return|accept: registration attempt; a repeat is a no-op")
     p.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V1=PATH",
-                   help="accept: check-evidence file (exec/v1) of the unit (repeatable)")
+                   help="accept: check-evidence file of the unit (Task field contract; see "
+                        "`plan.py schema check-evidence`; repeatable)")
     actor_arg(p)
 
     p = verb("stats", cmd_stats, "scout, unit and friction numbers of a plan (read-only)")

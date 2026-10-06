@@ -95,7 +95,7 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
 `start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.
 `finish --status done` needs every acceptance check recorded with exit 0.
-`settings.evidence: required` makes `finish` demand check evidence; a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
+`settings.evidence: required` makes `finish` demand check evidence (field contract: `schema check-evidence`); a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
 Friction (`log --type deviation|blocker|difficulty|assumption|note`) is written only when reality
 changes the plan, an assumption or a blocker; it feeds the next items' Lessons.
 Queries and `schema` always return `{ok,data|error}`; other verbs use `--output json` for it.

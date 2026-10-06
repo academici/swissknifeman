@@ -1,6 +1,5 @@
 {
-  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
-  "contract_version": "exec/v1",
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
   "check_id": "V1",
   "candidate": {
     "head": "abc1234"

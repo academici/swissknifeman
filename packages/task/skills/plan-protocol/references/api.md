@@ -42,7 +42,8 @@ core never names a partner. `plan.py bridge list` validates every `bridge.json` 
 unchanged; the bridge owns its output and exit code, and the dispatcher sets `TASK_ROOT`,
 `TASK_PLAN_PY` and `PYTHONPATH`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
 `BRIDGE_UNKNOWN`, `BRIDGE_VERB_UNKNOWN`.
-Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
+Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor and registers its
+reports back through `plan.py` only (see the bridge's README).
 
 ## Responses
 

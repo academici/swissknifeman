@@ -6,6 +6,8 @@ replacing the orchestrator means adding another bridge under `bridges/`, not edi
 | Verb | Entrypoint | Direction |
 | --- | --- | --- |
 | `brief` | `brief.py` | Task → orch: plan item or unit as an `execution-input` |
+| `register` | `register.py` | orch → Task: a worker's stage-report into `log` + `finish` or `unit … return` |
+| `register-review` | `register_review.py` | orch → Task: review-findings into `add-document` + a `note` event |
 
 Run a verb through the Task dispatcher: `plan.py bridge orch <verb> [args…]`. `plan.py bridge list`
 validates `bridge.json` and lists the verbs.
@@ -38,6 +40,79 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
 Exit codes: 0 ok, 1 refusal (stderr `CODE: message`), 2 usage. The dispatcher passes output and exit
 code through unchanged, also under `plan.py --output json`.
 
+## register
+
+```text
+plan.py bridge orch register <plan> <item>[/<U#>] --report REPORT.json --status STATUS --actor P/M[/E]
+        [--executed-by P/M[/E]] [--attempt-id ID] [--evidence V#=PATH …] [--plans-root DIR] [--dry-run]
+```
+
+The orch registrar role classifies the report and hands it here; the bridge maps every field into the plan
+and writes **only** through `plan.py` (`TASK_PLAN_PY`, a subprocess), never into plan files.
+Never manufacture evidence: a check that did not run is not in `checks_run`, and the bridge invents no exit
+or verdict.
+
+REPORT.json is the executor's stage-report (`result_contract.report`), closed — an unknown field is refused
+so nothing is lost:
+
+```text
+{summary: str, changed_paths: [str], checks_run: [{id: V#, cmd, exit: int} | {id: V#, procedure, verdict: pass|fail}],
+ evidence: [path], open_issues: [{text, kind: pending|deviation|blocker|difficulty|assumption|note|escalation, impact?, next?}]}
+```
+
+| Report field | Plan call (item) |
+| --- | --- |
+| `summary` + `changed_paths` | `finish … --notes "<summary>\nChanged: a, b"` |
+| `checks_run` entry without evidence | `--check V#=<exit>` (`verdict` pass → 0, fail → 1) |
+| `--evidence V#=PATH` argument | `--evidence V#=PATH`; the evidence file carries the exit, so no `--check` for that check |
+| `evidence` path without a `--evidence` argument | named in `--notes` (`Evidence: …`) |
+| issue `pending` | `--pending <text>` |
+| issue `deviation` | `log <plan> <item> --type deviation --summary <text> [--impact] [--next]` and `--deviation <text>` (needs `--status done_with_deviations`) |
+| issue `blocker`, `difficulty`, `assumption`, `note` | friction: `log <plan> <item> --type <kind> --summary <text> [--impact] [--next]` |
+| issue `escalation` | `--escalation <text>` (needs `--status blocked`; several are joined with `; `) |
+| worker, registrar, delivery | `--executed-by`, `--actor`, `--attempt-id` on `finish`; `--actor` on each `log` |
+
+A unit (`<item>/<U#>`) ends with `unit <plan> <item> <U#> return --notes <summary> --changed <path>…
+[--executed-by] [--attempt-id]`. Checks and evidence are named in its notes: the integrator records them with
+`unit … accept|rework|reject` (`accept --evidence V#=PATH`), and the bridge prints that hint. Issues become
+`log` events (`pending` as a `note` prefixed `pending: `); an escalation and any `--status` other than `done`
+are refused for a unit.
+
+Order: every `log`, then one `finish` or `return`. Idempotency: a repeat with the same `--attempt-id` is a
+no-op in the core for `finish` and `return`; `log` is not deduplicated by the core, so a report with
+`open_issues` needs `--attempt-id`, and before writing the bridge reads `plan.py --output json events <plan>
+--item <item> --type <types>` and skips a `log` whose `type` and `summary` the item already has.
+
+`--dry-run` prints the JSON list of `plan.py` argv and writes nothing. Otherwise stdout is the
+registration-receipt `{"plan", "ref", "calls": [{"argv", "exit", "result": "recorded|no-op|refused",
+"error"?}], "next"}`, where `next` is the `plan.py next <plan>` line. The first refused call stops the
+registration (exit 1, receipt without `next`); a repeat with the same attempt id completes it.
+
+## register-review
+
+```text
+plan.py bridge orch register-review <plan> <item|phase> --findings FINDINGS.json --actor P/M[/E] [--plans-root DIR] [--dry-run]
+```
+
+FINDINGS.json: `{verdict: GREEN|ATTENTION|RED, reviewer: {route, session}, findings: [{severity, confidence,
+location, failure_scenario, basis}], date: YYYY-MM-DD}`. The bridge records
+
+1. `add-document <plan> --json <doc>`: knowledge `review-<ref with . and / as ->-<date>`, title
+   `Review <ref> <date>`, `applies_to: [<ref>]`, sections `verdict` and `findings` (the findings as JSON). The
+   document travels as `--json` text, so no temporary file appears next to the plan;
+2. `log <plan> <ref> --type note --summary "review <verdict>: @plan/knowledge/<id>.json; reviewer <route>
+   session <session>"` — the actual reviewer route and session, not the requested one.
+
+A repeat is a no-op: an identical stored document and a note already in the journal are skipped.
+
+## Refusals of register and register-review
+
+Bridge codes (stderr `CODE: message`, exit 1, nothing written): `REGISTER_REPORT_INVALID`,
+`REGISTER_UNCLASSIFIED` (an `open_issues` entry without a known `kind` — classify, never guess),
+`REGISTER_STATUS_MISMATCH`, `REGISTER_ATTEMPT_REQUIRED`, `REGISTER_FINDINGS_INVALID`. They are bridge codes,
+not core `ERROR_CODES`. A refusal of a `plan.py` call (`CODE: message` of the core) lands in the receipt as
+`refused` with its `error`.
+
 ## Finding orch
 
 `brief` needs no orch: the bridge knows the format. orch is needed only for the conformance tests.
@@ -49,7 +124,9 @@ code through unchanged, also under `plan.py --output json`.
 
 The bridge never imports orch; it calls `python3 <orch>/scripts/orch.py validate <kind> <file>`. When orch
 is required and missing, `require_orch()` prints `BRIDGE_PARTNER_UNAVAILABLE: orch not found (set
-SKM_ORCH_ROOT)` and exits 3. Check-evidence formats are described in orch's `docs/contracts.md`.
+SKM_ORCH_ROOT)` and exits 3. Check-evidence: the Task core checks its own field contract
+(`plan.py schema check-evidence`) with any `$schema`, so exec/v1 check-evidence passes unconverted;
+`test_conformance.py` proves it on orch's fixtures.
 
 ## Tests
 
@@ -58,6 +135,8 @@ cd packages/task
 PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py'
 ```
 
-`test_brief.py` works without orch. `test_conformance.py` (documents valid for `orch.py validate`, lifecycle
-phrases of the bridge ⊇ orch's) and `test_schema_profile.py` (orch's closed schema profile ⊇ Task's) skip
-when orch is not found. `validate.sh` of Task runs these tests.
+`test_brief.py` and `test_register.py` work without orch. `test_conformance.py` (documents valid for
+`orch.py validate`, lifecycle phrases of the bridge ⊇ orch's, orch check-evidence accepted by Task) and
+`test_schema_profile.py` (orch's closed schema profile ⊇ Task's) skip when orch is not found.
+`test_record_parity.py` pins every recording obligation W1–W12 to its owner; rows owned by orch roles or by
+this repository's plan skip when those are absent. `validate.sh` of Task runs these tests.

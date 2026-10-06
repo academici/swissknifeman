@@ -87,7 +87,7 @@ Bridges: `plan.py bridge list`; a bridge projects plan data for an external exec
 `start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
 A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.
 `finish` / `unit accept --evidence V#=PATH` accept check evidence; `settings.evidence: required` makes finish require evidence for every acceptance check (default: optional).
-The check-evidence file format is documented by the bridge that produces it (see `plan.py bridge list`).
+The check-evidence file follows Task's field contract (`plan.py schema check-evidence`): `$schema` is any non-empty marker, so files of an external executor pass without conversion; the key fields (`subject`, `check_id`, `candidate.head`, `procedure`, `exit` or `verdict`) are checked.
 
 ## Lifecycle and scheduling
 

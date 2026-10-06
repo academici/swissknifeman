@@ -69,12 +69,18 @@ class MappingTests(BriefCase):
             {"text": "no network", "source": "item.rules[0]"}])
 
     def test_decisions_upstream_and_lessons(self):
-        ops.patch(self.root, "P1.2", {"decisions": ["PLAN3.D4"]})
+        other = ops.new_plan("OTHER", "Other", plans_root=self.plans, repository="r", owner="o",
+                             authoring=test_lifecycle.OPUS, message="m", date="2026.10.08").root
+        ops.add_decision(other, "Elsewhere", data={"options": [{"id": "A", "text": "yes"}]})
+        lifecycle.decide(other, "D1", "A", "why", by="owner", actor=test_lifecycle.OPUS)
+        ops.patch(self.root, "P1.2", {"decisions": ["PLAN2.D1"]})
         self.start("P1.1")
         self.finish("P1.1", "done", notes="shipped")
         lifecycle.log(self.root, "P1.1", "difficulty", "slow", impact="minor")
         doc = self.brief("P1.2")
-        self.assertIn({"ref": "PLAN3.D4", "loaded": False}, doc["decisions"])
+        foreign = doc["decisions"][0]
+        self.assertEqual((foreign["ref"], foreign["loaded"], foreign["status"], foreign["title"]),
+                         ("PLAN2.D1", True, "accepted", "Elsewhere"))
         self.assertEqual(doc["upstream"][0]["ref"], "P1.1")
         self.assertEqual(doc["upstream"][0]["status"], "done")
         self.assertEqual(doc["upstream"][0]["notes"], "shipped")

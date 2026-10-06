@@ -125,7 +125,9 @@ class JsonContextTests(test_lifecycle.LifeCase):
         ops.patch(self.root, "P1.2", {"decisions": ["PLAN3.D4"]})
         value = context.collect(self.load(), "P1.2")
         self.assertEqual(value["upstream"][0]["result"]["deviations"], ["slow"])
-        self.assertEqual(value["decisions"], [{"ref": "PLAN3.D4", "loaded": False}])
+        entry, = value["decisions"]  # superset of the former {"ref", "loaded": False}; the resolver adds a reason
+        self.assertEqual((entry["ref"], entry["loaded"]), ("PLAN3.D4", False))
+        self.assertTrue(entry["reason"].startswith("PLAN_NOT_FOUND: "))
 
     def test_start_and_resume_build_json_inputs(self):
         started = self.start("P1.1", "P1.2")

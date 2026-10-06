@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.3",
   "title": "Resolver ссылок на другие планы (T4)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "refs.resolve загружает решения/items других планов (тот же repo — live и archive; чужой — --repo или SKM_PLAN_REPOS) с источником и sha256; context отдаёт надмножество прежней записи; brief отказывает REF_UNRESOLVED для неразрешённой обязательной decision.",
   "why": "Связи между планами сейчас приходят как `{ref, loaded: false}` (context.py:141) — worker не получает внешние решения. D8.",
   "scope": {
@@ -122,6 +122,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:25Z"
+  "result": {
+    "started_at": "2026-10-06T05:25:53Z",
+    "finished_at": "2026-10-06T05:33:02Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "7be09927-f81a-417d-907b-f048e5761b5f"
+    },
+    "notes": "refs.resolve (live/archive/--repo/SKM_PLAN_REPOS, superseded-цепочка ≤8, CYCLE), context отдаёт надмножество, brief → REF_UNRESOLVED, --repo у context и brief. Полный tests/ task: 521 OK; orch conformance 4 OK.",
+    "deviations": [
+      "Обновлены существующие test_context.py/test_brief.py (ожидали литерал {ref, loaded:false}); brief фильтрует внешние decisions до ключей exec/v1"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T05:33:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T05:33:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T05:33:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T05:33:02Z"
 }

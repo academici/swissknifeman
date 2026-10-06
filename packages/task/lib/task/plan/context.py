@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 
-from . import store
+from . import refs, store
 from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
@@ -130,7 +130,7 @@ def read_entry(plan: store.Plan, read: dict) -> dict:
     return entry
 
 
-def selected_decisions(plan: store.Plan, item_id: str) -> list[dict]:
+def selected_decisions(plan: store.Plan, item_id: str, *, repos=None) -> list[dict]:
     selected, foreign = [], []
     item = plan.items[item_id]
     for ref in item.get("decisions", []):
@@ -138,7 +138,7 @@ def selected_decisions(plan: store.Plan, item_id: str) -> list[dict]:
         if parsed.plan is None and parsed.target in plan.decisions:
             selected.append(parsed.target)
         else:
-            foreign.append({"ref": ref, "loaded": False})
+            foreign.append(refs.resolve(plan, ref, repos=repos))
     for key, doc in plan.decisions.items():
         applies = doc.get("applies_to", [])
         if doc.get("status") == "accepted" and (not applies or item_id in applies or item_phase(item_id) in applies):
@@ -146,7 +146,7 @@ def selected_decisions(plan: store.Plan, item_id: str) -> list[dict]:
     return [copy.deepcopy(plan.decisions[k]) for k in dict.fromkeys(selected)] + foreign
 
 
-def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True) -> dict:
+def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=None) -> dict:
     if item_id not in plan.items:
         raise PlanError("REF_UNKNOWN", f"unknown item {item_id!r}")
     from . import lifecycle, units
@@ -165,7 +165,7 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True) -> dict:
     result = {
         "ref": f"{plan.plan.get('short_id') or plan.plan['id']}.{item_id}", "plan": copy.deepcopy(plan.plan),
         "brief": copy.deepcopy(plan.brief), "phase": copy.deepcopy(plan.phases.get(phase_id, {})),
-        "item": copy.deepcopy(item), "decisions": selected_decisions(plan, item_id), "upstream": upstream,
+        "item": copy.deepcopy(item), "decisions": selected_decisions(plan, item_id, repos=repos), "upstream": upstream,
         "phase_dependencies": [copy.deepcopy(plan.phases[d]) for d in lifecycle._phase_deps(plan, phase_id)
                                if d in plan.phases],
         "reads": [read_entry(plan, r) for r in _reads(item)], "lessons": lessons,
@@ -180,11 +180,11 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True) -> dict:
     return result
 
 
-def render(plan: store.Plan, item_id: str, *, with_scout: bool = True) -> str:
-    return json.dumps(collect(plan, item_id, with_scout=with_scout), ensure_ascii=False, indent=2) + "\n"
+def render(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=None) -> str:
+    return json.dumps(collect(plan, item_id, with_scout=with_scout, repos=repos), ensure_ascii=False, indent=2) + "\n"
 
 
-def build(plan: store.Plan, item_id: str) -> Path:
+def build(plan: store.Plan, item_id: str, *, repos=None) -> Path:
     path = plan.root / PACK_DIR / f"{item_id}.json"
-    store.atomic_write(path, render(plan, item_id))
+    store.atomic_write(path, render(plan, item_id, repos=repos))
     return path

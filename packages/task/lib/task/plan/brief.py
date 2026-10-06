@@ -26,6 +26,7 @@ LIFECYCLE_PHRASES = (
 )
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
+_FOREIGN_KEYS = ("ref", "loaded", *_DECISION_KEYS, "source", "reason")
 _LESSON_KEYS = ("type", "summary", "ts", "item", "impact", "next")
 
 
@@ -86,12 +87,20 @@ def _constraints(pack: dict, unit: dict | None) -> list[dict]:
 def _decisions(pack: dict) -> list[dict]:
     refs = []
     for doc in pack["decisions"]:
-        if "loaded" in doc:  # foreign reference; the resolver of external plans is P2.3
-            refs.append(copy.deepcopy(doc))
+        if "loaded" in doc:  # reference to another plan, resolved by refs.resolve
+            refs.append({key: copy.deepcopy(doc[key]) for key in _FOREIGN_KEYS if key in doc})  # exec/v1 is closed
         else:
             refs.append({"ref": doc["id"], "loaded": True,
                          **{key: doc[key] for key in _DECISION_KEYS if doc.get(key) is not None}})
     return refs
+
+
+def _unresolved(plan: store.Plan, pack: dict) -> list[str]:
+    """Other-plan decisions the item requires that did not load as accepted; the coordinator must not guess them."""
+    required = set(pack["item"].get("decisions", []))
+    return [f"{d['ref']} ({d.get('reason') or 'status ' + str(d.get('status'))})" for d in pack["decisions"]
+            if d.get("ref") in required and context.parse_ref(d["ref"]).plan is not None
+            and (not d.get("loaded") or d.get("status") != "accepted")]
 
 
 def _checks(item: dict, unit: dict | None) -> list[dict]:
@@ -187,7 +196,7 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
 
 def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_reads: bool = False,
           repos=None) -> dict:
-    """Execution-input of ``item_id`` (or of its unit ``unit_id``). ``repos`` is reserved for the resolver of P2.3."""
+    """Execution-input of ``item_id`` (or of its unit ``unit_id``). ``repos`` maps repository names to roots (``refs.resolve``)."""
     if not isinstance(item_id, str) or not ITEM_ID.fullmatch(item_id):
         raise PlanError("REF_INVALID", f"invalid item id {item_id!r}")
     if item_id not in plan.items:
@@ -205,7 +214,10 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     missing = context.missing_reads(plan, item_id)
     if missing:
         raise PlanError("READ_MISSING", f"required reads are missing: {', '.join(missing)}")
-    pack = context.collect(plan, item_id, with_scout=True)
+    pack = context.collect(plan, item_id, with_scout=True, repos=repos)
+    unresolved = _unresolved(plan, pack)
+    if unresolved:
+        raise PlanError("REF_UNRESOLVED", f"required decisions of other plans are not resolved: {'; '.join(unresolved)}")
     item, short = pack["item"], plan.plan.get("short_id") or plan.plan["id"]
     plan_dir = _plan_dir(plan)
     read_only = bool(unit is not None and not unit.get("files"))
@@ -224,7 +236,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "input_id": f"{short}.{item_id}" + (f"/{unit_id}" if unit_id else ""),
         "provenance": {"kind": "plan", "plan": short, "plan_dir": plan_dir, "item": item_id,
                        **({"unit": unit_id} if unit_id else {}),
-                       "source_digest": sha256(context.render(plan, item_id, with_scout=False).encode("utf-8")).hexdigest(),
+                       "source_digest": sha256(context.render(plan, item_id, with_scout=False, repos=repos).encode("utf-8")).hexdigest(),
                        "generated_by": {"tool": TOOL, "task_version": _task_version()}},
         "goal": unit["goal"] if unit is not None else f"{item['title']}: {item['summary']}",
         "scope": scope,

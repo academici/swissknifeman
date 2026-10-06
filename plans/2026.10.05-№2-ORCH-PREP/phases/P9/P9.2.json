@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.2",
   "title": "Task: .gitattributes плана (log.jsonl merge=union) и тест слияния параллельных веток",
-  "status": "todo",
+  "status": "done",
   "summary": "Новый и импортированный план получает `<plan>/.gitattributes` со строкой `log.jsonl merge=union`; функция `store.ensure_gitattributes(root)` идемпотентно дописывает строку; тест доказывает, что две ветки, дописавшие события, сливаются merge и rebase без конфликта и журнал читается целиком. Текущий план получает файл.",
   "why": "D24: общий append-only журнал — единственный неизбежный конфликт параллельных веток плана (P10). Hard risk: целостность журнала — union не гарантирует порядок; читатели не должны требовать монотонности ts.",
   "scope": {
@@ -174,6 +174,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T19:12:44Z"
+  "result": {
+    "started_at": "2026-10-06T19:52:31Z",
+    "finished_at": "2026-10-06T19:53:50Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "229c4f1f-0eda-4356-bbf1-7a72c33d9d7e"
+    },
+    "notes": "store.ensure_gitattributes; new/import write plan .gitattributes; test_log_union (merge+rebase, non-monotonic ts, check clean); no reader required monotonic ts, check.py unchanged",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T19:53:50Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T19:53:50Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T19:53:50Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T19:53:50Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T19:53:50Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T19:53:50Z"
 }

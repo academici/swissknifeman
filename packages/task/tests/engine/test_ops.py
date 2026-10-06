@@ -84,10 +84,11 @@ class NewPlanTests(RootCase):
     def test_creates_plan_brief_gitignore_and_log(self):
         plan = self.new(channel="chat")
         root = plan.root
-        source = {".gitignore", ".lock", "brief.json", "log.jsonl", "plan.json"}
+        source = {".gitattributes", ".gitignore", ".lock", "brief.json", "log.jsonl", "plan.json"}
         self.assertEqual({p.name for p in root.iterdir()}, source | {"views", ".ignore", ".cursorignore"})
         self.assertEqual(views.render_all(plan, check=True), [])
         self.assertEqual((root / ".gitignore").read_text(encoding="utf-8"), "context/\n.lock\nviews/\n")
+        self.assertEqual((root / ".gitattributes").read_text(encoding="utf-8"), "log.jsonl merge=union\n")
         self.assertEqual(plan.brief["messages"], [{"id": "M1", "date": "2026-10-05",
                                                     "text": "Make config errors aggregate.", "channel": "chat"}])
         events = store.read_log(root)

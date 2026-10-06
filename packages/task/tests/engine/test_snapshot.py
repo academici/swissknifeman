@@ -30,6 +30,7 @@ class SnapshotTests(UnitCase):
         self.assertEqual((target / "evidence.txt").read_text(), "existing evidence")
         self.assertIn("private/\n", (target / ".ignore").read_text())
         self.assertIn("*.md\n", (target / ".ignore").read_text())
+        self.assertEqual((target / ".gitattributes").read_text(), "log.jsonl merge=union\n")
         self.assertEqual([i for i in check.check(restored) if i.level == "error"], [])
         with self.assertRaises(PlanError) as caught:
             snapshot.import_snapshot(target, value)

@@ -105,7 +105,7 @@ def _identities(plans_root: Path) -> list[dict]:
 def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: str, owner: str,
              authoring: dict, message: str, date: str | None = None, message_date: str | None = None,
              channel: str | None = None) -> store.Plan:
-    """Create plan.json, brief.json, .gitignore and log.jsonl for a new plan.
+    """Create plan.json, brief.json, .gitignore, .gitattributes and log.jsonl for a new plan.
 
     The identity is allocated from the plans already present: the next ``№N`` of the day and the next
     ``PLAN<N>`` above every live and archived plan.
@@ -151,6 +151,7 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
         (root / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
         for name in (".ignore", ".cursorignore"):
             (root / name).write_text(store.SEARCH_IGNORE, encoding="utf-8")
+        store.ensure_gitattributes(root)
         store.append_log(root, event, lock=lock)
         plan = store.load_plan(root)
         _after_mutation(plan)

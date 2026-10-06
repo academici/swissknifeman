@@ -87,6 +87,7 @@ def import_snapshot(root: str | Path, value: dict, *, replace: bool = False) -> 
                 updated = previous + ("\n" if previous and not previous.endswith("\n") else "")
                 updated += "".join(line + "\n" for line in added)
                 store.atomic_write(path, updated)
+            store.ensure_gitattributes(staging)
             views.render_all(staged)
             errors = [i for i in check.check(store.load_plan(staging)) if i.level == "error"]
             if errors:

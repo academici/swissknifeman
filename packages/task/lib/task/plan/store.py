@@ -23,6 +23,7 @@ LOG = "log.jsonl"
 LOCK = ".lock"
 ARCHIVE = "archive"
 SEARCH_IGNORE = "views/\ncontext/\n*.md\n.lock\n"
+GITATTRIBUTES = "log.jsonl merge=union"
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
 
 
@@ -313,6 +314,16 @@ def atomic_write(path: Path, text: str) -> None:
     finally:
         if tmp.exists():
             tmp.unlink()
+
+
+def ensure_gitattributes(root: str | Path) -> bool:
+    """Make ``<root>/.gitattributes`` carry ``log.jsonl merge=union``; True when the file was written."""
+    path = Path(root) / ".gitattributes"
+    previous = path.read_text(encoding="utf-8") if path.is_file() else ""
+    if GITATTRIBUTES in previous.splitlines():
+        return False
+    atomic_write(path, previous + ("\n" if previous and not previous.endswith("\n") else "") + GITATTRIBUTES + "\n")
+    return True
 
 
 # ---------------------------------------------------------------- event log

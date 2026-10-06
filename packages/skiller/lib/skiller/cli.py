@@ -12,6 +12,7 @@ from .integrate import cmd_integrate
 from .listing import cmd_list
 from .lock import cmd_lock
 from .registry import cmd_registry
+from .resolve import cmd_resolve
 from .release import cmd_release
 from .release_attestation import cmd_attest, cmd_version
 from .delivery import cmd_deliver
@@ -36,6 +37,7 @@ COMMANDS = {
     "eval": cmd_eval,
     "list": cmd_list,
     "registry": cmd_registry,
+    "resolve": cmd_resolve,
     "doctor": cmd_doctor,
     "topology": cmd_topology,
     "release": cmd_release,

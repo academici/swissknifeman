@@ -53,6 +53,31 @@ global Codex plugin is installed with repeatable
 `connect`, `sync`, `update`, `doctor` and `--dry-run` user-global Codex state not
 are changing. Profile plugins are not automatically installed globally.
 
+### `skiller resolve`
+
+Reads the package's `skills.json` and resolves requested skills plus their transitive
+`requires`, without changing files. Accepts `bucket/name`, `bucket:name`, or a unique
+bare name. Ambiguous names report `SKILL_AMBIGUOUS` with the candidate IDs.
+
+```bash
+skiller resolve quality/code-review [SKILL ...] [--provider claude-code|codex|grok] [--json]
+```
+
+JSON uses `schema: "skiller.resolve/v1"` and contains normalized `requested` IDs,
+`provider` (null when omitted), sorted `skills`, and `diagnostics`. Each skill includes
+its ID, name, bucket, package-relative `path`, `requested` flag, and sorted immediate
+`required_by` IDs. The default text output shows IDs and their selection reason.
+
+Unknown requested skills report `SKILL_UNKNOWN` and exit 1; ambiguous names also
+exit 1. JSON still includes diagnostics and any successfully resolved skills.
+Missing transitive requirements produce `SKILL_REQUIRED_UNKNOWN` warnings and exit 0.
+No skill arguments or invalid options exit 2; `--help` describes the command.
+
+`--provider` echoes the provider and, when a registry entry declares `adapters`, warns
+with `SKILL_PROVIDER_UNSUPPORTED` for an unsupported provider while keeping that skill
+in the result. The `claude` adapter accepts `claude-code`. Entries without adapter
+metadata remain available without a warning.
+
 ### `skiller vendor`
 
 Vendors skills to the project (Cursor and other agents): profiles, autodetection,

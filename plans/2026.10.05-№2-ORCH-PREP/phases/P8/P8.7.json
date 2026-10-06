@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.7",
   "title": "skiller resolve <skill…> [--provider] [--json] — closure requires (замена P4.4)",
-  "status": "todo",
+  "status": "done",
   "summary": "Новая команда Skiller раскрывает транзитивные requires заданных skills через существующий `resolve_requires_bfs` и печатает `skiller.resolve/v1` JSON; ролей не знает (их раскроет orch/bridges/skiller).",
   "why": "Общий примитив для будущего моста orch → Skiller (D16, §item-mapping P4.4). Новый публичный CLI — формат вывода фиксируется сейчас.",
   "scope": {
@@ -150,6 +150,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T16:12:29Z"
+  "result": {
+    "started_at": "2026-10-06T18:09:11Z",
+    "finished_at": "2026-10-06T18:17:58Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a11266-6027-7462-80cd-1347b5ea8d4a"
+    },
+    "notes": "Implemented skiller resolve with registry-only identity lookup, colon/slash normalization, unique bare names, deterministic v1 JSON/text output and qualified-token shared resolve_requires_bfs closure. required_by aggregates all immediate parents; unknown/ambiguous requested identities error with partial JSON, unknown transitive dependencies warn; provider metadata warnings retain skills. Current registry lacks adapters, --provider is echo-only (assumption logged). Shell/Python command registration and help work. All V1–V5 GREEN: full suite 783 tests; resolve/requires 18 tests. Evidence artifacts/P8.7/validation.json and V1–V5.log. CLI docs and CHANGELOG updated; plan check and help GREEN. Public JSON contract risk: task:review recommended; review not requested. Broad validate reserved for last phase item.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T18:17:58Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T18:17:58Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T18:17:58Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T18:17:58Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T18:17:58Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T18:17:58Z"
 }

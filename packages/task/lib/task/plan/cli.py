@@ -228,7 +228,7 @@ def cmd_start(args) -> int:
     if session:
         actor["session"] = session
     plan_dir = _plan_dir(args)
-    result = lifecycle.start(plan_dir, args.items, actor, grants=args.grant, scout=args.scout)
+    result = lifecycle.start(plan_dir, args.items, actor, grants=args.grant, scout=args.scout, registrar=args.registrar)
     if args.json:
         _print_json({"items": list(result.items), "phase": result.phase, "batch": result.batch, "route": result.route,
                      "resumed": list(result.resumed), "packs": [str(path) for path in result.packs],
@@ -266,10 +266,11 @@ def cmd_finish(args) -> int:
     result = lifecycle.finish(
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
         deviations=args.deviation, pending=args.pending, escalation=args.escalation, commits=args.commit,
-        decision=args.decision, actor=args.actor)
+        decision=args.decision, actor=args.actor, executed_by=args.executed_by, attempt_id=args.attempt_id)
     if args.json:
         _print_json({"item": result.item, "status": result.status, "phase_closed": result.phase_closed,
-                     "plan_done": result.plan_done, "next": result.next.as_dict()})
+                     "plan_done": result.plan_done, "next": result.next.as_dict(),
+                     **({"already_registered": True} if result.already_registered else {})})
     else:
         print(result.text())
     return 0
@@ -301,17 +302,24 @@ def cmd_unit(args) -> int:
         return 0
     if args.action in ("rework", "reject") and args.notes is None:
         raise UsageError(f"{args.action} needs --notes")
+    if args.executed_by and args.action != "return":
+        raise UsageError("--executed-by belongs to unit … return")
+    if args.attempt_id and args.action not in ("return", "accept"):
+        raise UsageError("--attempt-id belongs to unit … return|accept")
     notes = args.notes or ""
+    already = False
     if args.action == "return":
-        units.return_unit(plan_dir, args.item, args.target, notes=notes, changed=args.changed, minutes=args.minutes,
-                          actor=args.actor)
+        already = units.return_unit(plan_dir, args.item, args.target, notes=notes, changed=args.changed,
+                                    minutes=args.minutes, actor=args.actor, executed_by=args.executed_by,
+                                    attempt_id=args.attempt_id)
     elif args.action == "accept":
-        units.accept(plan_dir, args.item, args.target, notes=notes, minutes=args.minutes, actor=args.actor)
+        already = units.accept(plan_dir, args.item, args.target, notes=notes, minutes=args.minutes, actor=args.actor,
+                               attempt_id=args.attempt_id)
     elif args.action == "rework":
         units.rework(plan_dir, args.item, args.target, notes=notes, actor=args.actor)
     else:
         units.reject(plan_dir, args.item, args.target, notes=notes, actor=args.actor)
-    print(f"{ref} {args.action}")
+    print(f"{ref} already registered (attempt {args.attempt_id})" if already else f"{ref} {args.action}")
     return 0
 
 
@@ -478,6 +486,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("start", cmd_start, "start (or resume) items of one detailed phase")
     p.add_argument("items", nargs="+", metavar="item")
     actor_arg(p, required=True, text="PROVIDER/MODEL[/EFFORT] running the items")
+    p.add_argument("--registrar", type=_actor, metavar="PROVIDER/MODEL[/EFFORT]",
+                   help="who registers the start when it is not the executor (event registered_by)")
     p.add_argument("--session", help="provider session id, or auto")
     p.add_argument("--grant", action="append", default=[], metavar="GATE", help="record an owner gate grant now")
     p.add_argument("--scout", action=argparse.BooleanOptionalAction, default=None,
@@ -509,7 +519,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--escalation", help="what the owner must decide or provide (blocked)")
     p.add_argument("--commit", action="append", default=[], metavar="SHA")
     p.add_argument("--decision", metavar="D#", help="accepted decision that skips the item (skipped)")
-    actor_arg(p)
+    actor_arg(p, text="PROVIDER/MODEL[/EFFORT] registering the outcome (default: the item executor)")
+    p.add_argument("--executed-by", type=_actor, metavar="PROVIDER/MODEL[/EFFORT]",
+                   help="who executed the item; route-checked, replaces result.executor")
+    p.add_argument("--attempt-id", metavar="ID", help="registration attempt; a repeat of it is a no-op")
     p.add_argument("--json", action="store_true")
 
     p = verb("unit", cmd_unit, "split an item into units and move them: add | <U#> dispatch|return|accept|rework|reject")
@@ -522,6 +535,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--notes")
     p.add_argument("--changed", action="append", default=[], metavar="PATH", help="return: a changed path (repeatable)")
     p.add_argument("--minutes", type=int)
+    p.add_argument("--executed-by", type=_actor, metavar="PROVIDER/MODEL[/EFFORT]",
+                   help="return: who did the work when not the dispatched worker; route-checked")
+    p.add_argument("--attempt-id", metavar="ID", help="return|accept: registration attempt; a repeat is a no-op")
     actor_arg(p)
 
     p = verb("stats", cmd_stats, "scout, unit and friction numbers of a plan (read-only)")

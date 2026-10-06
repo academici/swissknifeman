@@ -249,6 +249,16 @@
           "type": "string",
           "description": "Document language hint.",
           "minLength": 1
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Whether check outcomes need evidence files; absent means optional.",
+          "minLength": 1,
+          "enum": [
+            "optional",
+            "required"
+          ],
+          "default": "optional"
         }
       },
       "required": [

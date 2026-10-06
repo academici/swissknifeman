@@ -230,6 +230,12 @@
       "additionalProperties": false,
       "description": "section contract."
     },
+    "attemptId": {
+      "type": "string",
+      "description": "Caller-chosen id of one registration attempt; repeating it makes the registration idempotent.",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
     "provenance": {
       "type": "object",
       "properties": {

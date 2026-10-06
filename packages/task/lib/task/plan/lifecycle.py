@@ -27,6 +27,7 @@ FRICTION_TYPES = ("deviation", "blocker", "difficulty", "assumption", "note")
 FINISH_STATUSES = ("done", "done_with_deviations", "blocked", "skipped")
 _OPTION_ID = re.compile(r"^[A-Z]$")
 _GATE = re.compile(r"^[A-Z0-9-]+$")
+ATTEMPT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$", re.ASCII)  # schemas/plan/v1 defs.attemptId
 
 
 # ---------------------------------------------------------------- reading a plan
@@ -313,6 +314,26 @@ def _actor_doc(p: store.Plan, actor: Mapping | None, item: str | None = None) ->
     return dict(authoring) if isinstance(authoring, dict) else {"provider": "unknown", "model": "unknown"}
 
 
+def _given_actor(actor: Mapping | None) -> dict | None:
+    """``actor`` without empty fields, or None when nothing was given."""
+    cleaned = {k: v for k, v in dict(actor or {}).items() if v}
+    return cleaned or None
+
+
+def same_actor(a: Mapping | None, b: Mapping | None) -> bool:
+    """Same provider and model, and no field both name differently (a registrar rarely knows the session)."""
+    if not a or not b:
+        return False
+    return all(a[k] == b[k] for k in a.keys() & b.keys()) and all(a.get(k) == b.get(k) for k in ("provider", "model"))
+
+
+def need_attempt(attempt_id: str | None) -> str | None:
+    """``attempt_id`` when it is a valid ``defs.attemptId``; ``ATTEMPT_ID_INVALID`` otherwise."""
+    if attempt_id is not None and not ATTEMPT_ID.fullmatch(attempt_id):
+        raise PlanError("ATTEMPT_ID_INVALID", f"--attempt-id {attempt_id!r} must match {ATTEMPT_ID.pattern}")
+    return attempt_id
+
+
 def _need_phase(p: store.Plan, phase_id: str) -> dict:
     if phase_id not in p.phases:
         raise PlanError("REF_UNKNOWN", f"unknown phase {phase_id!r}")
@@ -381,18 +402,24 @@ class StartResult:
 
 
 def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
-          scout: bool | None = None) -> StartResult:
+          scout: bool | None = None, registrar: Mapping | None = None) -> StartResult:
     """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed.
+
+    ``actor`` is the executor (route-checked, stored as ``result.executor``); ``registrar`` is who called and
+    only lands in the ``start`` event as ``registered_by``.
 
     ``scout`` asks the provider's weak model for a context map after the start (D3); ``None`` follows
     ``plan.settings.scout``. A scout failure never fails the start.
     """
     requested = list(items)
     grants = list(grants)
+    registrar = _given_actor(registrar)
     with _mutation(plan) as (p, lock):
         actor = {k: v for k, v in dict(actor).items() if v}
         if not actor.get("provider") or not actor.get("model"):
             raise PlanError("ACTOR_REQUIRED", "start needs --actor PROVIDER/MODEL[/EFFORT]")
+        if registrar is not None and not (registrar.get("provider") and registrar.get("model")):
+            raise PlanError("ACTOR_REQUIRED", "--registrar needs PROVIDER/MODEL[/EFFORT]")
         if not requested:
             raise PlanError("ITEMS_REQUIRED", "name at least one item to start")
         if len(set(requested)) != len(requested):
@@ -459,9 +486,12 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             doc["status"], doc["result"] = "in_progress", result
             changes.append(("item", item_id, doc))
             batch_id = next_batch_id(p, phase_id, item_id)
-            events.append(store.new_event(
+            event = store.new_event(
                 "start", f"start {item_id}" + (f" (batch {batch_id})" if batch_id else ""), actor,
-                item=item_id, phase=phase_id, data={"requested": requested, "route": verdict}))
+                item=item_id, phase=phase_id, data={"requested": requested, "route": verdict})
+            if registrar is not None:
+                event["registered_by"] = registrar
+            events.append(event)
         _commit(p, changes, gate_events + events, lock)
         packs = tuple(context.build(p, item_id) for item_id in requested)
         result = StartResult(tuple(requested), phase_id, next_batch_id(p, phase_id, requested[0]), verdict,
@@ -489,8 +519,12 @@ class FinishResult:
     phase_closed: str | None  # closure result when this finish closed the phase
     plan_done: bool
     next: Next
+    already_registered: bool = False  # the same attempt was registered before: nothing was written
+    attempt_id: str | None = None
 
     def text(self) -> str:
+        if self.already_registered:
+            return f"{self.item} already registered (attempt {self.attempt_id})\nnext: {self.next.exact}"
         lines = [f"{self.item} {self.status}"]
         if self.phase_closed:
             lines.append(f"phase {_item_phase(self.item)} closed: {self.phase_closed}")
@@ -512,13 +546,28 @@ def _closure_summary(statuses: list[str]) -> str:
 
 def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[str, int] | None = None,
            deviations: Iterable[str] = (), pending: Iterable[str] = (), escalation: str | None = None,
-           commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None) -> FinishResult:
-    """Record the outcome of ``item_id``; closes the phase, and the plan, when it was the last open piece."""
+           commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None,
+           executed_by: Mapping | None = None, attempt_id: str | None = None) -> FinishResult:
+    """Record the outcome of ``item_id``; closes the phase, and the plan, when it was the last open piece.
+
+    ``actor`` is the registrar; ``executed_by`` (route-checked) replaces ``result.executor``. A repeat of the
+    recorded ``attempt_id`` with the same status and checks writes nothing (``already_registered``); any other
+    repeat of it is ``ATTEMPT_CONFLICT``.
+    """
     checks, deviations, pending, commits = dict(checks or {}), list(deviations), list(pending), list(commits)
+    registrar, executed_by, attempt_id = _given_actor(actor), _given_actor(executed_by), need_attempt(attempt_id)
     with _mutation(plan) as (p, lock):
         item = copy.deepcopy(_need_item(p, item_id))
         if status not in FINISH_STATUSES:
             raise PlanError("STATUS_INVALID", f"status must be one of {', '.join(FINISH_STATUSES)}")
+        prior = item.get("result") if isinstance(item.get("result"), dict) else {}
+        if attempt_id is not None and prior.get("attempt_id") == attempt_id:
+            recorded = _recorded_checks(item)
+            if item.get("status") != status or any(recorded.get(i) != code for i, code in checks.items()):
+                raise PlanError("ATTEMPT_CONFLICT", f"attempt {attempt_id} already registered {item_id} as "
+                                                    f"{item.get('status')} with other outcome")
+            return FinishResult(item_id, item["status"], None, p.plan.get("status") == "done", next(p),
+                                already_registered=True, attempt_id=attempt_id)
         current = item.get("status", "todo")
         if current != "in_progress" and not (status == "skipped" and current == "todo"):
             raise PlanError("NOT_STARTED", f"{item_id} is {current}; start it first"
@@ -565,9 +614,24 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             if ref.plan is None and p.decisions.get(ref.target, {}).get("status") != "accepted":
                 raise PlanError("DECISION_REQUIRED", f"decision {decision} is not an accepted decision of this plan")
 
+        if executed_by is not None:
+            _route_verdict(p, [item_id], executed_by)
+            validate_route(item.get("route") or {}, executed_by, item_id)
+
         now = store.now()
-        prior = item.get("result") if isinstance(item.get("result"), dict) else {}
         result = {key: prior[key] for key in ("started_at", "executor") if key in prior}
+        if executed_by is not None:
+            result["executor"] = executed_by
+        executor = result.get("executor")
+        # New keys appear only with explicit flags, so the record of the old flow stays byte-compatible.
+        attribution = {}
+        if (executed_by or registrar) and executor:
+            attribution["executed_by"] = executor
+        if registrar and not same_actor(registrar, executor):
+            attribution["registered_by"] = registrar
+        if attempt_id is not None:
+            attribution["attempt_id"] = attempt_id
+        result.update({k: v for k, v in attribution.items() if k != "executed_by"})
         result["finished_at"] = now
         for key, value in (("notes", notes), ("deviations", deviations), ("pending", pending),
                            ("escalation", escalation), ("commits", commits), ("decision", decision)):
@@ -579,10 +643,11 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
         if recorded:
             result["checks"] = [{"id": i, "exit": recorded[i], "at": stamped.get(i, now)} for i in ordered]
         item["status"], item["result"] = status, result
-        actor_doc = _actor_doc(p, actor, item_id)
+        actor_doc = _actor_doc(p, registrar or executed_by, item_id)
         changes: list[tuple[str, str | None, dict]] = [("item", item_id, item)]
         events = [store.new_event("finish", f"{item_id} {status}", actor_doc, item=item_id, phase=phase_id,
                                   data={"status": status, "checks": {i: recorded[i] for i in ordered}})]
+        events[0].update(attribution)
 
         after = {**{i: status_of(p, i) for i in phase_items(p, phase_id)}, item_id: status}
         closure = phase_status(after.values())

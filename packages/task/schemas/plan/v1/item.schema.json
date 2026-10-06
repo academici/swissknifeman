@@ -440,6 +440,14 @@
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
           "description": "Actor that executed the item."
         },
+        "registered_by": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+          "description": "Actor that registered the outcome, when it differs from the executor."
+        },
+        "attempt_id": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/attemptId",
+          "description": "Attempt that registered the outcome; a repeat of it is a no-op."
+        },
         "notes": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
           "description": "Completion notes."
@@ -490,6 +498,10 @@
               "summary": {
                 "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
                 "description": "Short outcome."
+              },
+              "evidence": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+                "description": "Evidence file of the check run."
               }
             },
             "required": [

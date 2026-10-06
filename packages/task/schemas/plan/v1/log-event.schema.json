@@ -73,6 +73,18 @@
     "data": {
       "type": "object",
       "description": "Small free-form payload for lifecycle events."
+    },
+    "executed_by": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Who executed the work, when the registrar or worker was named explicitly."
+    },
+    "registered_by": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Who registered the transition, when it differs from the executor."
+    },
+    "attempt_id": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/attemptId",
+      "description": "Attempt the transition registers; a repeat of the same attempt is a no-op."
     }
   },
   "required": [

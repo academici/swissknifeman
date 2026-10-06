@@ -155,6 +155,20 @@ def _agent(text: str | Mapping) -> dict:
     return agent
 
 
+def _check_worker(need: Mapping, worker: Mapping, target: str) -> None:
+    """``validate_route`` plus the pool class and the effort minimum of the unit route (``ROUTE_UNDERSHOOT``)."""
+    lifecycle.validate_route(dict(need), worker, target)
+    admitted = lifecycle.admitted_class(worker["provider"], worker["model"])
+    if admitted is not None and lifecycle._rank(lifecycle.CLASS_ORDER, admitted) < lifecycle._rank(
+            lifecycle.CLASS_ORDER, need.get("class")):
+        raise PlanError("ROUTE_UNDERSHOOT", f"{target} needs class {need.get('class')}; "
+                                            f"{worker['provider']}/{worker['model']} is admitted as {admitted}")
+    if worker.get("effort") and lifecycle._rank(lifecycle.EFFORT_ORDER, worker["effort"]) < lifecycle._rank(
+            lifecycle.EFFORT_ORDER, need.get("effort")):
+        raise PlanError("ROUTE_UNDERSHOOT", f"{target} needs effort {need.get('effort')}; "
+                                            f"worker runs {worker['effort']}")
+
+
 def _delegate(p: store.Plan, item_id: str, unit_id: str, status: str, doc: dict, actor: dict, **extra) -> dict:
     agent = (doc.get("outcome") or {}).get("agent") or actor
     klass = lifecycle.admitted_class(agent["provider"], agent["model"]) or "unknown"
@@ -218,15 +232,7 @@ def dispatch(plan, item_id: str, unit_id: str, agent, *, actor: Mapping | None =
         if policy_limit is not None and sum(d.get("status") == "dispatched" for k, d in p.units.items()
                                             if k.startswith(f"{item_id}/")) >= policy_limit:
             raise PlanError("PARALLEL_LIMIT", "all configured dispatch slots are occupied")
-        admitted = lifecycle.admitted_class(worker["provider"], worker["model"])
-        if admitted is not None and lifecycle._rank(lifecycle.CLASS_ORDER, admitted) < lifecycle._rank(
-                lifecycle.CLASS_ORDER, need.get("class")):
-            raise PlanError("ROUTE_UNDERSHOOT", f"{item_id}/{unit_id} needs class {need.get('class')}; "
-                                                f"{worker['provider']}/{worker['model']} is admitted as {admitted}")
-        if worker.get("effort") and lifecycle._rank(lifecycle.EFFORT_ORDER, worker["effort"]) < lifecycle._rank(
-                lifecycle.EFFORT_ORDER, need.get("effort")):
-            raise PlanError("ROUTE_UNDERSHOOT", f"{item_id}/{unit_id} needs effort {need.get('effort')}; "
-                                                f"worker runs {worker['effort']}")
+        _check_worker(need, worker, f"{item_id}/{unit_id}")
         unit["status"], unit["outcome"] = "dispatched", {"agent": worker, "at": store.now()}
         executor = lifecycle._actor_doc(p, actor, item_id)
         event = _delegate(p, item_id, unit_id, "dispatched", unit, executor)
@@ -235,12 +241,48 @@ def dispatch(plan, item_id: str, unit_id: str, agent, *, actor: Mapping | None =
         return brief_path(p.root, item_id, unit_id)
 
 
+def _attempt_seen(p: store.Plan, item_id: str, unit_id: str, attempt_id: str) -> str | None:
+    """Status the ``delegate`` event of ``attempt_id`` registered for the unit, or None (latest wins)."""
+    seen = None
+    for _, event, _ in store.log_lines(p.root):
+        if (event and event.get("type") == "delegate" and event.get("item") == item_id
+                and event.get("attempt_id") == attempt_id and (event.get("data") or {}).get("unit") == unit_id):
+            seen = (event.get("data") or {}).get("status")
+    return seen
+
+
+def _outcome_differs(outcome: Mapping, status: str, attempt_id: str, notes: str, changed: Iterable[str]) -> bool:
+    """Whether a repeat of the latest transition reports other notes or paths than the recorded outcome."""
+    if outcome.get("attempt_id") != attempt_id:
+        return False  # later transitions replaced the outcome; the logged status is all that is left to compare
+    changed = list(changed)
+    if status == "returned":  # a return replaces both fields, so absence must match too
+        return outcome.get("notes", "") != (notes or "") or outcome.get("changed", []) != changed
+    return bool(notes and outcome.get("notes") != notes or changed and outcome.get("changed") != changed)
+
+
 def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[str, ...], *, notes: str = "",
                 changed: Iterable[str] = (), minutes: int | None = None, need_notes: bool = False,
-                actor: Mapping | None = None, back_to: str | None = None) -> None:
-    """Move a unit to ``status`` (stored as ``back_to`` when set: a rework goes straight back to ``dispatched``)."""
+                actor: Mapping | None = None, back_to: str | None = None, executed_by: Mapping | None = None,
+                attempt_id: str | None = None) -> bool:
+    """Move a unit to ``status`` (stored as ``back_to`` when set: a rework goes straight back to ``dispatched``).
+
+    True when ``attempt_id`` already registered this transition and nothing was written. The attempt is looked
+    up in the log, so a repeat stays a no-op after later transitions; while it is still the latest transition its
+    notes and changed paths must match too, else ``ATTEMPT_CONFLICT``.
+    """
+    registrar = lifecycle._given_actor(actor)
+    executed_by = lifecycle._given_actor(executed_by)
+    attempt_id = lifecycle.need_attempt(attempt_id)
     with lifecycle._mutation(plan) as (p, lock):
         unit = copy.deepcopy(_need_unit(p, item_id, unit_id))
+        if attempt_id is not None:
+            seen = _attempt_seen(p, item_id, unit_id, attempt_id)
+            if seen is not None:
+                if seen != status or _outcome_differs(unit.get("outcome") or {}, status, attempt_id, notes, changed):
+                    raise PlanError("ATTEMPT_CONFLICT", f"attempt {attempt_id} already registered "
+                                                        f"{item_id}/{unit_id} {seen} with other outcome")
+                return True
         if unit.get("status") not in allowed:
             raise PlanError("UNIT_STATE", f"{item_id}/{unit_id} is {unit.get('status')}; "
                                           f"{status} needs {' or '.join(allowed)}")
@@ -251,7 +293,12 @@ def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[st
         executor = lifecycle._actor_doc(p, actor, item_id)
         outcome = dict(unit.get("outcome") or {})
         outcome.setdefault("agent", executor)
+        if executed_by is not None and not (executed_by["provider"] == outcome["agent"].get("provider")
+                                            and executed_by["model"] == outcome["agent"].get("model")):
+            _check_worker(unit.get("route") or {}, executed_by, f"{item_id}/{unit_id}")
         outcome["at"] = store.now()
+        for key in ("registered_by", "attempt_id", "evidence"):  # they describe one transition only
+            outcome.pop(key, None)
         if status == "returned":  # a fresh report replaces the notes of an earlier round
             outcome.pop("notes", None)
             outcome.pop("changed", None)
@@ -267,25 +314,37 @@ def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[st
                              if e and e.get("type") == "delegate" and e.get("item") == item_id
                              and (e.get("data") or {}).get("unit") == unit_id
                              and (e.get("data") or {}).get("status") == "reworked")
+        acting = outcome["agent"] if status == "returned" else executor
+        attribution = {}
+        if executed_by is not None:
+            attribution["executed_by"] = executed_by
+        if registrar is not None and not lifecycle.same_actor(registrar, acting):
+            attribution["registered_by"] = registrar
+        if attempt_id is not None:
+            attribution["attempt_id"] = attempt_id
+        outcome.update({k: v for k, v in attribution.items() if k != "executed_by"})
         unit["status"], unit["outcome"] = back_to or status, outcome
-        event = _delegate(p, item_id, unit_id, status, unit, outcome["agent"] if status == "returned" else executor,
-                          minutes=minutes, rework=round_no)
+        event = _delegate(p, item_id, unit_id, status, unit, acting, minutes=minutes, rework=round_no)
+        event.update(attribution)
         lifecycle._commit(p, [("unit", f"{item_id}/{unit_id}", unit)], [event], lock)
         if status == "reworked":
             _write_brief(p, item_id, unit_id, rework=True)
+        return False
 
 
 def return_unit(plan, item_id: str, unit_id: str, *, notes: str = "", changed: Iterable[str] = (),
-                minutes: int | None = None, actor: Mapping | None = None) -> None:
-    """The worker reports: ``dispatched -> returned``."""
-    _transition(plan, item_id, unit_id, "returned", ("dispatched",), notes=notes, changed=changed, minutes=minutes,
-                actor=actor)
+                minutes: int | None = None, actor: Mapping | None = None, executed_by: Mapping | None = None,
+                attempt_id: str | None = None) -> bool:
+    """The worker reports: ``dispatched -> returned``; True when ``attempt_id`` was already registered."""
+    return _transition(plan, item_id, unit_id, "returned", ("dispatched",), notes=notes, changed=changed,
+                       minutes=minutes, actor=actor, executed_by=executed_by, attempt_id=attempt_id)
 
 
 def accept(plan, item_id: str, unit_id: str, *, notes: str = "", minutes: int | None = None,
-           actor: Mapping | None = None) -> None:
-    """The executor reviewed and tested the piece: ``returned -> accepted``."""
-    _transition(plan, item_id, unit_id, "accepted", ("returned",), notes=notes, minutes=minutes, actor=actor)
+           actor: Mapping | None = None, attempt_id: str | None = None) -> bool:
+    """The executor reviewed and tested the piece: ``returned -> accepted``; True when already registered."""
+    return _transition(plan, item_id, unit_id, "accepted", ("returned",), notes=notes, minutes=minutes, actor=actor,
+                       attempt_id=attempt_id)
 
 
 def rework(plan, item_id: str, unit_id: str, *, notes: str, actor: Mapping | None = None) -> None:

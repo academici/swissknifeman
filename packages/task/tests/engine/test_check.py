@@ -253,6 +253,19 @@ class ReferenceTests(CheckCase):
             reads=[{"ref": "knowledge/design#validation", "section": "validation", "why": "w", "required": True}]))
         self.assertFound("reads_ref", "P1.2.json/reads/0/section", count=1)
 
+    def test_read_ref_section_key_must_name_an_existing_id_or_title(self):
+        demo.write_doc(self.root / "knowledge" / "design.json",
+                       {"$schema": "urn:swissknifeman:task:plan:document:v1", "id": "design", "title": "D",
+                        "sections": [{"id": "validation", "title": "Validation", "text": "t"}]}, "document")
+        for section in ("validation", "Validation", "missing"):
+            with self.subTest(section=section):
+                self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[
+                    {"ref": "knowledge/design", "section": section, "why": "w", "required": True}]))
+                if section == "missing":
+                    self.assertFound("ref_unknown", "P1.2.json/reads/0/section", count=1)
+                else:
+                    self.assertEqual(self.found("ref_unknown"), [])
+
     def test_log_events_must_point_at_existing_items_and_phases(self):
         with open(self.root / "log.jsonl", "a", encoding="utf-8") as handle:
             handle.write('{"v":1,"ts":"2026-10-05T10:00:00Z","type":"note","item":"P1.7","phase":"P5","actor":{"provider":"p","model":"m"},"summary":"s"}\n')

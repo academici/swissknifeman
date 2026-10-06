@@ -124,10 +124,15 @@ def _pending_producer(plan: store.Plan, item_id: str, path: str) -> str | None:
 def missing_reads(plan: store.Plan, item_id: str) -> list[str]:
     missing = []
     for read in _reads(plan.items[item_id]):
+        if not read.get("required"):
+            continue
         path = normalize_read(plan, read).get("path")
-        if read.get("required") and (path is None or not _exists(plan, path)
-                                     and _pending_producer(plan, item_id, path) is None):
+        exists = path is not None and _exists(plan, path)
+        if path is None or (not exists and _pending_producer(plan, item_id, path) is None):
             missing.append(path or read["ref"])
+        elif read.get("ref") and exists and read_entry(plan, read).get("error"):
+            # An existing JSON source does not guarantee that its required section is readable.
+            missing.append(read["ref"] + (f"#{read['section']}" if read.get("section") else ""))
     return missing
 
 
@@ -149,8 +154,9 @@ def read_entry(plan: store.Plan, read: dict) -> dict:
             value = json.loads(target.read_text(encoding="utf-8"))
             if read.get("section") and isinstance(value, dict) and "sections" in value:
                 sections = value["sections"] if isinstance(value["sections"], list) else []
+                fragment = parse_ref(read["ref"]).section if read.get("ref") else None
                 selected = [s for s in sections if isinstance(s, dict) and
-                            (s.get("id") == read["section"] or s.get("title") == read["section"])]
+                            (s.get("id") == read["section"] or (not fragment and s.get("title") == read["section"]))]
                 if not selected:
                     entry["error"] = "section not found"
                 value = {**value, "sections": selected}

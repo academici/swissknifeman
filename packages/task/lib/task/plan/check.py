@@ -192,6 +192,13 @@ class _Context:
             self.error("reads_ref", f"{where}/ref", f"read ref {read['ref']} must name data of this plan")
         if parsed.section and read.get("section"):
             self.error("reads_ref", f"{where}/section", "a read ref with #section takes no section key")
+        if parsed.plan is None and parsed.kind == "knowledge" and not parsed.section and read.get("section"):
+            doc = self.p.documents.get(parsed.target)
+            sections = doc.get("sections") if isinstance(doc, dict) else None
+            if isinstance(sections, list) and not any(
+                    isinstance(s, dict) and read["section"] in (s.get("id"), s.get("title")) for s in sections):
+                self.error("ref_unknown", f"{where}/section",
+                           f"unknown section {read['section']!r} in {read['ref']}")
 
     def backlinks(self) -> None:
         """A stored back-pointer must be matched by the forward field of the document it names, and vice versa."""

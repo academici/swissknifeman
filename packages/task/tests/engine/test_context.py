@@ -167,6 +167,37 @@ class JsonContextTests(test_lifecycle.LifeCase):
         self.assertNotIn("ref", read)
         self.assertEqual((read["path"], read["section"]), ("@plan/knowledge/design.json", "steps"))
 
+    def test_required_ref_sections_refuse_start_and_brief_without_mutation(self):
+        from task.plan import brief
+        self.add_design()
+        for extra in ({"ref": "knowledge/design#missing"},
+                      {"ref": "knowledge/design", "section": "missing"},
+                      {"ref": "knowledge/design#Steps"}):  # fragments name ids, not titles
+            with self.subTest(extra=extra):
+                ops.patch(self.root, "P1.1", {"reads": [{**extra, "why": "needed", "required": True}]})
+                self.assertTrue(context.missing_reads(self.load(), "P1.1"))
+                self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+                self.refused("READ_MISSING", lambda root: brief.build(self.load(), "P1.1"))
+
+    def test_required_ref_section_titles_remain_readable_via_section_key(self):
+        from task.plan import brief
+        self.add_design()
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"ref": "knowledge/design", "section": "Steps", "why": "needed", "required": True}]})
+        self.assertEqual(context.missing_reads(self.load(), "P1.1"), [])
+        self.assertEqual(brief.build(self.load(), "P1.1")["reads"][0]["content"]["sections"][0]["id"], "steps")
+
+    def test_unresolved_optional_ref_refuses_brief_but_declared_missing_file_is_allowed(self):
+        from task.plan import brief
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"ref": "artifact/catalog", "why": "optional", "required": False}]})
+        self.refused("REF_UNRESOLVED", lambda root: brief.build(self.load(), "P1.1"))
+        ops.patch(self.root, "P1.2", {"artifacts": [
+            {"id": "catalog", "path": "catalog.json", "role": "output"}]})
+        read, = brief.build(self.load(), "P1.1")["reads"]
+        self.assertEqual((read["path"], read["exists"]), ("catalog.json", False))
+        self.assertNotIn("ref", read)
+
     def test_views_never_supply_agent_input(self):
         ops.patch(self.root, "P1.1", {"reads": [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad", "required": False}]})
         self.refused("HUMAN_VIEW", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))

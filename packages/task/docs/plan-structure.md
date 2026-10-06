@@ -38,6 +38,12 @@ repository-relative or `@plan/…`; `..` is rejected. Stable identities may cont
 A section is `{id, title, text}` and retains its complete body, including code/examples.
 A knowledge read can select its section id or exact title. A document without `applies_to`
 is global context; otherwise it applies to the named phases/items.
+An item read names exactly one of `path` or `ref`. Local refs include phases, items,
+units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
+The separate `section` key accepts a knowledge section id or exact title; it cannot
+accompany a ref fragment. `check` resolves both ref forms, and `start` and `brief`
+refuse an unreadable required section in a ref read with `READ_MISSING` before
+writing any state.
 
 An item's optional `skills` is a unique list of skill or capability names, such as
 `skill-creator` or `blender:mcp-blender`. These names declare what the executor must load;
@@ -72,6 +78,9 @@ survive import exactly. Import is a data API; source-format conversion is never 
 It includes the task, scope, acceptance checks, constraints, reads, decisions and upstream results; completeness is checked without truncation.
 Lifecycle instructions, `report_api`, the full plan and owner messages are excluded; the full coordinator pack is reachable through `context_refs`.
 Cross-plan decisions resolve in the current repository or through repeatable `--repo NAME=PATH` / `SKM_PLAN_REPOS`; unresolved required decisions refuse the brief.
+Read refs become paths in `exec/v1`. A ref with no source path refuses the brief with
+`REF_UNRESOLVED`, including optional reads; a declared optional artifact may still
+have an absent file (`exists: false`). The full context pack retains the original ref.
 `--out FILE` writes outside the plan directory; otherwise the read-only verb prints to stdout without changing plan state.
 `start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
 A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.

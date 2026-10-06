@@ -77,6 +77,11 @@
 
 ### Fixed
 
+- **Task reads по ref:** `start` и `brief` отказывают с `READ_MISSING`, если
+  обязательная секция knowledge отсутствует; `check` проверяет отдельный `section`,
+  а `#section` разрешается по id. Неразрешимая ссылка теперь вызывает
+  `REF_UNRESOLVED` вместо brief, нарушающего схему `exec/v1` без `reads[].path`.
+
 - **Проверка контрактов orch:** read-only execution-input отклоняется с `INPUT_AUTHORITY`,
   если разрешает запись. CLI принимает документы только с warning, сохраняет `level`
   в JSON-диагностике и возвращает exit 1 при error.

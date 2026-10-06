@@ -57,6 +57,8 @@ def _plan_dir(plan: store.Plan) -> str:
 def _read(plan: store.Plan, entry: dict, inline: bool) -> dict:
     """Existing files get ``sha256`` of their bytes; ``inline`` adds the full UTF-8 text when no content is attached."""
     entry = copy.deepcopy(entry)
+    if not isinstance(entry.get("path"), str):
+        raise PlanError("REF_UNRESOLVED", f"read ref {entry.get('ref')!r} has no readable source path")
     entry.pop("ref", None)  # exec/v1 reads are closed and path-based; the ref only lives in the context pack
     target = context._resolve(plan, entry["path"]) if entry.get("exists") else None
     if target is None or not target.is_file():

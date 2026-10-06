@@ -74,6 +74,8 @@ requires compatible explicit selections. `plan-run` itself has no fixed model.
 
 ## 5. API verbs
 
+For read queries, schema discovery and the parser-derived catalog, see [references/api.md](references/api.md).
+
 | Purpose | Verbs |
 |:--|:--|
 | author | `new`, `set`, `push`, `apply`, `add-phase`, `add-item`, `add-decision`, `add-document`, `batches`, `design-done` |

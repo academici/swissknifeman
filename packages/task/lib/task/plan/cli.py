@@ -14,12 +14,12 @@ import re
 import sys
 
 
-from . import brief, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
+from . import brief, catalog, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
 _UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
-_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood")
+_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema")
 
 
 class UsageError(Exception):
@@ -202,6 +202,18 @@ def cmd_links(args) -> int:
 
 def cmd_neighborhood(args) -> int:
     return _read_result(query.neighborhood(store.load_plan(_plan_dir(args)), args.item), "read-neighborhood")
+
+
+def cmd_schema(args) -> int:
+    if args.kind is None:
+        return _read_result(catalog.verbs(build_parser()), "read-catalog")
+    registry = schema.load_registry()
+    if args.kind == "defs":
+        document, _base = registry.resolve(f"{schema.SCHEMA_URN_PREFIX}defs:v1", "")
+    else:
+        document, _base = registry.for_kind(args.kind)
+    _print_json(document)  # The registry has already checked the schema's closed profile.
+    return 0
 
 
 def cmd_set(args) -> int:
@@ -530,6 +542,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("neighborhood", cmd_neighborhood, "read an item's graph and applicable documents (JSON envelope)")
     p.add_argument("item")
+
+    p = verb("schema", cmd_schema, "read a document schema or the API catalog (JSON envelope)", plan=False)
+    selection = p.add_mutually_exclusive_group()
+    selection.add_argument("kind", nargs="?", choices=(*schema.KINDS, "defs"), help="plan/v1 schema kind")
+    selection.add_argument("--verbs", action="store_true", help="describe all verbs (default when no kind is given)")
 
     p = verb("set", cmd_set, "merge-patch plan, brief, a phase, item, decision or unit")
     p.add_argument("ref", help="plan | brief | Pn | Pn.m | D# | Pn.m/U#")

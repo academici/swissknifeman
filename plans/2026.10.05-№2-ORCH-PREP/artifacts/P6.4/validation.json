@@ -1,0 +1,58 @@
+{
+  "item": "P6.4",
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "validated_at": "2026-10-06T09:29:33.809111+00:00",
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_catalog.py'",
+      "cwd": "packages/task",
+      "exit_code": 0,
+      "tests": 13,
+      "log": "@plan/artifacts/P6.4/V1.log"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_envelope.py'",
+      "cwd": "packages/task",
+      "exit_code": 0,
+      "tests": 12,
+      "log": "@plan/artifacts/P6.4/V2.log"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_canon_literals.py'",
+      "cwd": "packages/task",
+      "exit_code": 0,
+      "tests": 4,
+      "log": "@plan/artifacts/P6.4/V3.log"
+    },
+    {
+      "id": "schema-profile",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_schema.py'",
+      "cwd": "packages/task",
+      "exit_code": 0,
+      "tests": 28,
+      "log": "@plan/artifacts/P6.4/schema-profile.log"
+    }
+  ],
+  "provider_projection_check": {
+    "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+    "exit_code": 0,
+    "stdout": "render-provider-commands: check OK (no-op)"
+  },
+  "smoke": {
+    "schema --verbs": "exit 0; 35 verbs",
+    "schema read-catalog": "exit 0; urn:swissknifeman:task:plan:read-catalog:v1"
+  },
+  "canon_budget": {
+    "bytes": 20974,
+    "cap": 105795
+  },
+  "review": "not_requested; owner explicitly requested no review",
+  "docs": "Added EN plan-protocol/references/api.md and one-line SKILL.md link; main Task docs, CHANGELOG, versions and broad validation owned by P6.6"
+}

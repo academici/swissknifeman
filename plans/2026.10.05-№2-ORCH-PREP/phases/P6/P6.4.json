@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.4",
   "title": "Каталог API: глагол schema",
-  "status": "todo",
+  "status": "done",
   "summary": "`schema [<kind>] | --verbs` печатает схему документа или машиночитаемый каталог глаголов (аргументы, коды отказов, kind схемы data), собранный из parser; описание API для агента — в references/.",
   "why": "D11, R2: «схемы API, как им пользоваться» — агент узнаёт API у самого API, а не из prose.",
   "scope": {
@@ -132,6 +132,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:11:52Z"
+  "result": {
+    "started_at": "2026-10-06T09:20:48Z",
+    "finished_at": "2026-10-06T09:29:33Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1106b-188a-7371-8f82-c784741e2bc2"
+    },
+    "notes": "Добавлены catalog.py (verbs(parser), VERB_DATA, VERB_MODES, VERB_ERRORS, ERROR_CODES), CLI schema без обязательного плана и read-catalog schema. schema --verbs/default выдаёт 35 глаголов с parser summary/args/choices/required/aliases/nargs/scope/exclusive groups, default mode, optional dedicated data_kind и зарегистрированными errors. schema kind отдаёт полную схему, включая defs; каждый ответ envelope, аргументы kind/verbs взаимоисключающие. Legacy polymorphic payloads не изменены, brief остаётся внешним exec/v1 контрактом; data_kind schema относится к --verbs/default. Проверены parser parity, fail-closed metadata/summary, все data kinds, все 86 PlanError literals + 3 CLI codes, отсутствие plan discovery/lock/writes. Добавлена EN references/api.md, SKILL.md только одна строка ссылки. V1=0 (13), V2=0 (12), V3=0 (4), дополнительно schema-profile=0 (28), всего 57 тестов. Provider projection check=0, no-op; smoke schema verbs/read-catalog=0; canon budget 20974/105795. Логи и validation.json: @plan/artifacts/P6.4/. Основные Task docs, CHANGELOG, версии и широкий validate закреплены за P6.6. Ревью не запускалось по указанию владельца.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T09:29:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T09:29:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T09:29:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T09:29:33Z"
 }

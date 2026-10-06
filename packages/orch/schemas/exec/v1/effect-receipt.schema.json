@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:effect-receipt:v1",
+  "title": "effect-receipt",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:effect-receipt:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "effect_key": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Idempotent effect identity: run:stage:kind:target."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "git_commit",
+        "git_worktree",
+        "task_finish",
+        "task_unit_transition",
+        "task_log",
+        "file_write"
+      ],
+      "description": "Effect kind."
+    },
+    "intent": {
+      "type": "object",
+      "properties": {
+        "input_digest": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Execution input digest."
+        },
+        "target": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Effect target."
+        },
+        "expected_prior": {
+          "type": "object",
+          "description": "Expected prior target state."
+        }
+      },
+      "required": [
+        "input_digest",
+        "target",
+        "expected_prior"
+      ],
+      "additionalProperties": false,
+      "description": "Declared effect intent."
+    },
+    "precondition_checked": {
+      "type": "boolean",
+      "description": "Whether the precondition was checked."
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "applied",
+        "already_applied",
+        "failed",
+        "unknown"
+      ],
+      "description": "Observed effect outcome."
+    },
+    "result": {
+      "type": "object",
+      "description": "Open observed effect result."
+    },
+    "reconcile": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "git_rev_parse",
+            "task_show",
+            "file_hash",
+            "none"
+          ],
+          "description": "Method for reconciling the effect."
+        },
+        "checked_at": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+          "description": "Reconciliation timestamp."
+        }
+      },
+      "required": [
+        "method"
+      ],
+      "additionalProperties": false,
+      "description": "Effect reconciliation."
+    },
+    "recorded_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Receipt timestamp."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "effect_key",
+    "kind",
+    "intent",
+    "precondition_checked",
+    "outcome",
+    "reconcile",
+    "recorded_at"
+  ],
+  "additionalProperties": false,
+  "description": "Engine-neutral effect-receipt contract."
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:effect-receipt:v1",
+  "contract_version": "exec/v1",
+  "effect_key": "synthetic-run:git:git_commit:fixture-target",
+  "kind": "git_commit",
+  "intent": {
+    "input_digest": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
+    "target": "fixture-target",
+    "expected_prior": {
+      "head": "abc1234"
+    }
+  },
+  "precondition_checked": true,
+  "outcome": "applied",
+  "result": {
+    "commit": "def5678"
+  },
+  "reconcile": {
+    "method": "git_rev_parse",
+    "checked_at": "2026-10-05T17:00:00Z"
+  },
+  "recorded_at": "2026-10-05T17:00:00Z"
+}

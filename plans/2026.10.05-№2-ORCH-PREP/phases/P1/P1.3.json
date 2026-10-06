@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.3",
   "title": "Схемы выхода: run-event, stage-result, effect-receipt, check-evidence, launch-plan + traces",
-  "status": "todo",
+  "status": "done",
   "summary": "Пять схем выходной стороны exec/v1 с semantic checks, fixtures и тремя synthetic traces run-event (ok, quota, unknown).",
   "why": "R2, R8, I4, I6, I14: наблюдаемость, доказательства проверок, эффекты и различение quota/auth/unknown от провала задаются контрактом до движка.",
   "scope": {
@@ -87,7 +87,7 @@
   ],
   "rules": [
     "Поле, которого нет в knowledge/contracts, не добавлять",
-    "`data`, `extensions`, `expected_prior`, `result` — открытые объекты; остальное закрыто",
+    "`data`, `extensions`, `expected_prior`, `result`, `env` — открытые объекты; env значения только строки (semantic type), producer не передаёт секреты; остальное закрыто",
     "Traces — synthetic, без сырых данных реальных CLI"
   ],
   "guidance": "Исполнитель: Sol допустим вместо Sonnet (codex gpt-6.1-sol, effort high — route implementation/high разрешает без правки плана): перенос таблиц полей в JSON Schema и fixtures, коды заданы. Если тесты красные или записан blocker — перезапуск item на Sonnet.\n\n- Semantic коды: stage-result — `USAGE_UNKNOWN_NUMERIC` (status unknown и есть числа), `COMPLETED_PARSE_ERROR`, `COST_FORMAT` (`^\\d+(\\.\\d+)?$`); effect-receipt — `RECEIPT_RECONCILE` (outcome unknown и method none); check-evidence — `EVIDENCE_CARRIER` (cmd ⇒ exit без verdict; procedure ⇒ verdict+observation без exit; не ровно одно из cmd/procedure); run-event / stage-result — `ATTEMPT_RANGE` (attempt < 1, seq < 0).\n- Valid fixtures: run-event `started.json`, `quota-block.json`; stage-result `completed-reported.json`, `quota-unknown-usage.json`; effect-receipt `git-commit-applied.json`, `task-finish-unknown.json` (reconcile `task_show`); check-evidence `cmd-pass.json`, `procedure-pass.json`; launch-plan `claude-only-solo.json` (dry_run true, stages executor с transport `prompt`).\n- Invalid: stage-result `usage-unknown-with-tokens.json`→`USAGE_UNKNOWN_NUMERIC`; check-evidence `procedure-with-exit.json`→`EVIDENCE_CARRIER`, `cmd-without-exit.json`→`EVIDENCE_CARRIER`; effect-receipt `unknown-without-reconcile.json`→`RECEIPT_RECONCILE`; run-event `bad-kind.json`→`enum`, `attempt-zero.json`→`ATTEMPT_RANGE`; launch-plan `missing-refusals.json`→`required`.\n- Traces (`run_id` одинаковый, `seq` 0..n): `native-claude-code-ok.jsonl`: started → model_wait → tool → output → completed (с `data.usage` input_tokens/output_tokens); `native-codex-quota.jsonl`: started → model_wait → quota_block; `native-grok-unknown.jsonl`: started → output (без терминального события).\n- `tests/test_contracts_output.py`: таблица EXPECTED как в P1.2; каждая строка каждого trace валидна по run-event.",
@@ -101,8 +101,8 @@
     },
     {
       "id": "V2",
-      "cmd": "python3 packages/orch/scripts/orch.py validate check-evidence packages/orch/fixtures/exec/v1/invalid/check-evidence/procedure-with-exit.json",
-      "expect": "exit 1; output contains EVIDENCE_CARRIER",
+      "cmd": "python3 -c 'import subprocess; p = subprocess.run([\"python3\", \"packages/orch/scripts/orch.py\", \"validate\", \"check-evidence\", \"packages/orch/fixtures/exec/v1/invalid/check-evidence/procedure-with-exit.json\"], capture_output=True, text=True); print(\"observed CLI exit:\", p.returncode); print(p.stdout, end=\"\"); print(p.stderr, end=\"\"); raise SystemExit(0 if p.returncode == 1 and \"EVIDENCE_CARRIER\" in p.stdout + p.stderr else 1)'",
+      "expect": "exit 0; asserts CLI exit 1 and EVIDENCE_CARRIER",
       "kind": "acceptance"
     }
   ],
@@ -126,6 +126,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:28Z"
+  "result": {
+    "started_at": "2026-10-05T19:50:47Z",
+    "finished_at": "2026-10-05T19:57:08Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a10d53-1cb4-7e83-b2f6-447b63114cff"
+    },
+    "notes": "Добавлены 5 выходных схем exec/v1 и semantic checks ATTEMPT_RANGE, USAGE_UNKNOWN_NUMERIC, COMPLETED_PARSE_ERROR, COST_FORMAT, RECEIPT_RECONCILE, EVIDENCE_CARRIER. По решению владельца launch-plan.env открыт, его значения проверяются как строки (type), отсутствие секретов обеспечивает producer; knowledge/contracts и item.rules синхронизированы через plan.py. Созданы 21 fixture (9 valid, 12 invalid с ровно одной ожидаемой ошибкой) и 3 synthetic traces (10 валидных run-event строк: ok/quota/unknown). V1/V2 exit 0, V2 assertion подтверждает реальный CLI exit 1 и EVIDENCE_CARRIER. Всего 37 тестов GREEN. Evidence: @plan/artifacts/P1.3/. Ревью не запускалось; широкий validate не повторялся. Изменения только в scope P1.3 и согласованном JSON-контракте; документация полного пакета — в последующих items, root docs/CHANGELOG вне scope. Прежние изменения Task сохранены.",
+    "pending": [
+      "Унаследованное ограничение P1.2: CLI из P1.1 отклоняет warning-only issues. CLI вне scope P1.3 и не изменён; contracts API сохраняет level=warning."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-05T19:57:08Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-05T19:57:08Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-05T19:57:08Z"
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 from typing import Callable, NamedTuple
 
 from orch import CONTRACT_VERSION
@@ -202,4 +203,88 @@ SEMANTIC.update({
     "run-policy": _run_policy,
     "role-manifest": _role_manifest,
     "capability-record": _capability_record,
+})
+
+
+def _attempt_range(doc: dict, *, event: bool = False) -> list[Issue]:
+    issues = []
+    for name, minimum in (("attempt", 1), ("seq", 0)) if event else (("attempt", 1),):
+        value = doc.get(name)
+        if isinstance(value, int) and not isinstance(value, bool) and value < minimum:
+            issues.append(Issue(f"/{name}", "ATTEMPT_RANGE", f"{name} must be at least {minimum}"))
+    return issues
+
+
+def _run_event(doc: object) -> list[Issue]:
+    return _attempt_range(doc, event=True) if isinstance(doc, dict) else []
+
+
+def _stage_result(doc: object) -> list[Issue]:
+    if not isinstance(doc, dict):
+        return []
+    issues = _attempt_range(doc)
+    usage = doc.get("usage")
+    if isinstance(usage, dict):
+        if usage.get("status") == "unknown" and any(
+                name in usage for name in ("input_tokens", "output_tokens", "cost_usd")):
+            issues.append(Issue("/usage", "USAGE_UNKNOWN_NUMERIC",
+                                "unknown usage must not include token counts or cost"))
+        cost = usage.get("cost_usd")
+        if isinstance(cost, str) and re.fullmatch(r"\d+(\.\d+)?", cost, re.ASCII) is None:
+            issues.append(Issue("/usage/cost_usd", "COST_FORMAT", "cost_usd must be a decimal string"))
+    errors = doc.get("errors")
+    if doc.get("status") == "completed" and isinstance(errors, list):
+        for index, error in enumerate(errors):
+            if isinstance(error, dict) and error.get("class") == "parse":
+                issues.append(Issue(f"/errors/{index}", "COMPLETED_PARSE_ERROR",
+                                    "completed stage cannot contain a parse error"))
+    return issues
+
+
+def _effect_receipt(doc: object) -> list[Issue]:
+    if not isinstance(doc, dict):
+        return []
+    reconcile = doc.get("reconcile")
+    if doc.get("outcome") == "unknown" and isinstance(reconcile, dict) and reconcile.get("method") == "none":
+        return [Issue("/reconcile/method", "RECEIPT_RECONCILE",
+                      "unknown effect outcome requires a reconciliation method")]
+    return []
+
+
+def _check_evidence(doc: object) -> list[Issue]:
+    if not isinstance(doc, dict) or not isinstance(doc.get("procedure"), dict):
+        return []
+    procedure = doc["procedure"]
+    command, manual = "cmd" in procedure, "procedure" in procedure
+    if command == manual:
+        return [Issue("/procedure", "EVIDENCE_CARRIER", "exactly one of cmd or procedure is required")]
+    if command and ("exit" not in doc or "verdict" in doc):
+        return [Issue("/procedure", "EVIDENCE_CARRIER", "command evidence requires exit without verdict")]
+    if manual and ("verdict" not in doc or "observation" not in doc or "exit" in doc):
+        return [Issue("/procedure", "EVIDENCE_CARRIER",
+                      "manual evidence requires verdict and observation without exit")]
+    return []
+
+
+def _launch_plan(doc: object) -> list[Issue]:
+    if not isinstance(doc, dict) or not isinstance(doc.get("stages"), list):
+        return []
+    issues = []
+    for index, stage in enumerate(doc["stages"]):
+        if not isinstance(stage, dict) or not isinstance(stage.get("env"), dict):
+            continue
+        for name, value in stage["env"].items():
+            if not isinstance(value, str):
+                escaped = name.replace("~", "~0").replace("/", "~1")
+                issues.append(Issue(f"/stages/{index}/env/{escaped}", "type",
+                                    "environment variable value must be a string"))
+    return issues
+
+
+SEMANTIC.update({
+    "run-event": _run_event,
+    "stage-result": _stage_result,
+    "effect-receipt": _effect_receipt,
+    "check-evidence": _check_evidence,
+    "launch-plan": _launch_plan,
 })

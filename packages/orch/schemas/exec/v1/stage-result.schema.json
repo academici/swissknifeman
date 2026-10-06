@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:stage-result:v1",
+  "title": "stage-result",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:stage-result:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "run_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Run identifier."
+    },
+    "stage_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Stage identifier."
+    },
+    "attempt": {
+      "type": "integer",
+      "description": "Stage attempt, at least one."
+    },
+    "role": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+      "description": "Executed role."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "cancelled",
+        "timeout",
+        "quota_blocked",
+        "auth_blocked",
+        "unknown_outcome",
+        "refused"
+      ],
+      "description": "Final stage outcome."
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "requested": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/route",
+          "description": "Requested execution route."
+        },
+        "resolved": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+              "description": "Resolved provider."
+            },
+            "model": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Resolved model."
+            },
+            "effort": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+              "description": "Resolved effort."
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ],
+          "additionalProperties": false,
+          "description": "Resolved execution route."
+        },
+        "observed": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+              "description": "Observed provider."
+            },
+            "model": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Observed model."
+            },
+            "effort": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+              "description": "Observed effort."
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "event",
+                "cli_flag",
+                "report",
+                "unknown"
+              ],
+              "description": "Route observation source."
+            }
+          },
+          "required": [
+            "provider",
+            "source"
+          ],
+          "additionalProperties": false,
+          "description": "Observed execution route."
+        }
+      },
+      "required": [
+        "requested"
+      ],
+      "additionalProperties": false,
+      "description": "Requested and observed routing."
+    },
+    "hashes": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Execution input digest."
+        },
+        "instructions": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Instruction digest."
+        },
+        "policy": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Run policy digest."
+        }
+      },
+      "required": [
+        "input",
+        "instructions"
+      ],
+      "additionalProperties": false,
+      "description": "Execution provenance hashes."
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "native_id": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Provider session identifier."
+        },
+        "terminal_id": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Terminal identifier."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Session identity."
+    },
+    "changed_paths": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+        "description": "Changed repository path."
+      },
+      "description": "Changed product paths."
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Artifact path."
+          },
+          "kind": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Artifact kind."
+          },
+          "sha256": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+            "description": "Artifact byte digest."
+          }
+        },
+        "required": [
+          "path",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "description": "Produced artifact."
+      },
+      "description": "Produced artifacts."
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^V[0-9]+$",
+            "description": "Check identifier."
+          },
+          "evidence_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Check evidence document path."
+          },
+          "exit": {
+            "type": "integer",
+            "description": "Observed command exit code."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail"
+            ],
+            "description": "Observed procedure verdict."
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false,
+        "description": "Reported check."
+      },
+      "description": "Reported checks."
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "reported",
+            "unknown"
+          ],
+          "description": "Whether usage was reported."
+        },
+        "input_tokens": {
+          "type": "integer",
+          "description": "Reported input tokens."
+        },
+        "output_tokens": {
+          "type": "integer",
+          "description": "Reported output tokens."
+        },
+        "cost_usd": {
+          "type": "string",
+          "description": "Reported decimal cost in USD."
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "description": "Provider usage; unknown has no numeric fields."
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "type": "string",
+            "enum": [
+              "quota",
+              "auth",
+              "provider",
+              "transport",
+              "timeout",
+              "task",
+              "parse"
+            ],
+            "description": "Error category."
+          },
+          "message": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Error message."
+          },
+          "raw_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Raw error source path."
+          }
+        },
+        "required": [
+          "class",
+          "message"
+        ],
+        "additionalProperties": false,
+        "description": "Observed error."
+      },
+      "description": "Observed errors."
+    },
+    "report": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Stage report summary."
+        },
+        "open_issues": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Open issue."
+          },
+          "description": "Unresolved issues."
+        }
+      },
+      "required": [
+        "summary"
+      ],
+      "additionalProperties": false,
+      "description": "Stage report."
+    },
+    "started_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Stage start timestamp."
+    },
+    "finished_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Stage finish timestamp."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "run_id",
+    "stage_id",
+    "attempt",
+    "role",
+    "status",
+    "route",
+    "hashes",
+    "usage"
+  ],
+  "additionalProperties": false,
+  "description": "Engine-neutral stage-result contract."
+}

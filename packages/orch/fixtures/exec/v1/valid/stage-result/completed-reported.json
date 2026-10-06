@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:stage-result:v1",
+  "contract_version": "exec/v1",
+  "run_id": "synthetic-run",
+  "stage_id": "primary",
+  "attempt": 1,
+  "role": "executor",
+  "status": "completed",
+  "route": {
+    "requested": {
+      "class": "implementation",
+      "effort": "high"
+    },
+    "resolved": {
+      "provider": "claude-code",
+      "model": "synthetic-model"
+    },
+    "observed": {
+      "provider": "claude-code",
+      "model": "synthetic-model",
+      "source": "event"
+    }
+  },
+  "hashes": {
+    "input": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
+    "instructions": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "usage": {
+    "status": "reported",
+    "input_tokens": 100,
+    "output_tokens": 25,
+    "cost_usd": "0.001"
+  },
+  "report": {
+    "summary": "Synthetic successful stage."
+  },
+  "started_at": "2026-10-05T17:00:00Z",
+  "finished_at": "2026-10-05T17:00:00Z"
+}

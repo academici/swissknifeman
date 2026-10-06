@@ -1,0 +1,2 @@
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":0,"ts":"2026-10-05T17:00:00Z","kind":"started","route_observed":{"provider":"grok"}}
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":1,"ts":"2026-10-05T17:00:00Z","kind":"output","data":{"text":"Synthetic partial output; stream ends without a terminal event."}}

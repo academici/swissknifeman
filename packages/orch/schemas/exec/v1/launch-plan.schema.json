@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:launch-plan:v1",
+  "title": "launch-plan",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:launch-plan:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "binding": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/binding",
+      "description": "Engine binding."
+    },
+    "run_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Prepared run identifier."
+    },
+    "input_digest": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+      "description": "Execution input digest."
+    },
+    "policy_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+      "description": "Run policy identifier."
+    },
+    "dry_run": {
+      "type": "boolean",
+      "description": "Whether preparation is a dry run; always true in Plan 1."
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Stage identifier."
+          },
+          "role": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Stage role."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "context",
+              "scout",
+              "primary",
+              "bounded",
+              "checks",
+              "review",
+              "registrar",
+              "git"
+            ],
+            "description": "Pipeline stage kind."
+          },
+          "provider": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+            "description": "Stage provider."
+          },
+          "model": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Selected model."
+          },
+          "effort": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+            "description": "Selected effort."
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "jsonl",
+              "acp",
+              "tui",
+              "prompt",
+              "none"
+            ],
+            "description": "Prepared stage transport."
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Command argument."
+            },
+            "description": "Prepared command arguments."
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables with string values only; producer excludes secrets."
+          },
+          "prompt_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Rendered prompt path."
+          },
+          "profile_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Rendered profile path."
+          },
+          "capability_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Capability record path."
+          },
+          "delivery": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "native_plugin_dir",
+                  "isolated_home",
+                  "project_dir",
+                  "profile_skills",
+                  "prompt_inline",
+                  "unsupported",
+                  "unknown"
+                ],
+                "description": "Skill delivery mode."
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+                  "description": "Skill delivery path."
+                },
+                "description": "Skill delivery paths."
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "additionalProperties": false,
+            "description": "Prepared skill delivery."
+          }
+        },
+        "required": [
+          "stage_id",
+          "role",
+          "kind",
+          "transport"
+        ],
+        "additionalProperties": false,
+        "description": "Prepared stage."
+      },
+      "description": "Prepared stages."
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Refused stage identifier."
+          },
+          "capability": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Unavailable capability."
+          },
+          "reason": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Refusal reason."
+          }
+        },
+        "required": [
+          "stage_id",
+          "capability",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "description": "Capability refusal."
+      },
+      "description": "Capability refusals; may be empty."
+    },
+    "created_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Preparation timestamp."
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Open binding-specific extension data."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "binding",
+    "run_id",
+    "input_digest",
+    "policy_id",
+    "dry_run",
+    "stages",
+    "refusals",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "description": "Engine-neutral launch-plan contract."
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "synthetic-run:V2",
+  "check_id": "V2",
+  "subject": "PLAN2.P1.3",
+  "procedure": {
+    "procedure": "Inspect the synthetic result artifact."
+  },
+  "candidate": {
+    "head": "abc1234"
+  },
+  "started_at": "2026-10-05T17:00:00Z",
+  "finished_at": "2026-10-05T17:00:00Z",
+  "producer": {
+    "kind": "human"
+  },
+  "verdict": "pass",
+  "observation": "Synthetic artifact contains the expected fields."
+}

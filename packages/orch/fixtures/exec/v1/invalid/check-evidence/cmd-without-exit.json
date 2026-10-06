@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "synthetic-run:V1",
+  "check_id": "V1",
+  "subject": "PLAN2.P1.3",
+  "procedure": {
+    "cmd": "python3 -m unittest tests.test_contracts_output",
+    "cwd": "packages/orch"
+  },
+  "candidate": {
+    "head": "abc1234"
+  },
+  "started_at": "2026-10-05T17:00:00Z",
+  "finished_at": "2026-10-05T17:00:00Z",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "synthetic-model",
+      "effort": "high"
+    }
+  }
+}

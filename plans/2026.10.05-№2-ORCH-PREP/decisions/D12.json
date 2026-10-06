@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D12",
+  "title": "Task самодостаточен: review-методика остаётся в Task, без зависимости от Skiller",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "Где canonical review-методика Task (F11 commands/review.md 12–38, F13 review-mode.md п.4), если Skiller будет вынесен из репозитория?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Canonical в Skiller skill; в Task — managed-блок (бывший D3)",
+      "cons": "Task зависит от Skiller: sync/--check требует packages/skiller, после выноса Skiller gate ломается"
+    },
+    {
+      "id": "B",
+      "text": "Оставить в Task: методика canonical в Task, Skiller хранит только свои общие skills без синхронизации с Task"
+    }
+  ],
+  "context": "Сообщение владельца 2026-10-06 во время выполнения P3.3; заменяет D3 (option A — canonical в Skiller + managed-блок в Task).",
+  "decision": "B — Task самодостаточен: F11 и F13 остаются canonical в Task; Skiller не является источником текста или managed-блоков для Task; quality:code-review / quality:artifact-review не меняются этим планом.",
+  "rationale": "Владелец: «в дальнейшем я планирую skiller вынести из репозитория, в skiller будут только общие скиллы, а task должен быть самодостаточным, поэтому он не должен быть завязан на skiller, а хранить все внутри».",
+  "applies_to": [
+    "P3"
+  ],
+  "supersedes": [
+    "D3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

@@ -3,7 +3,7 @@
   "id": "D3",
   "title": "Перенос методики ревью без breaking",
   "date": "2026-10-05",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Как перенести review-методику из Task commands/review.md в quality:code-review, не обеднив task-only потребителя?",
   "options": [
     {
@@ -24,6 +24,7 @@
   "applies_to": [
     "P3"
   ],
+  "superseded_by": "D12",
   "actor": {
     "provider": "claude-code",
     "model": "opus",

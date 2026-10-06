@@ -84,6 +84,24 @@ Bridges: `plan.py bridge list`; a bridge projects plan data for an external exec
 
 ## Attempts and evidence
 
+`plan.py commit PLAN1 P1.1 --role executor` makes one scoped Git commit containing the item's
+declared `task_files` and operation-owned plan files; a unit ref uses its `files` instead.
+Roles are `executor`, `reviewer` and `fix`; reviewers commit operation-owned plan files,
+knowledge reports and artifacts.
+Foreign dirty paths return `OUTSIDE_SCOPE`; `--leave-outside` preserves them, including staged
+content. Use repeated `--path` for explicit extra paths and record a deviation with `plan.py log`.
+`--dry-run --json` previews paths, message and `paths_digest` without writes.
+Plan and Git index locks protect the operation; a private index keeps failed staging/commit
+attempts from changing existing staged work. Git hooks remain enabled.
+
+Messages use `task-plan-commit/v1` with `Plan`, `Plan-Ref` and `Plan-Role` trailers.
+Optional `settings.commit` sets `scope` and attribution `trailers`; CLI overrides include
+`--type`, `--scope`, `--summary`, `--trailer` and `--actor`. The helper prints the resulting SHA
+without changing the journal afterward. Existing `finish --commit SHA` remains available for
+commits made before finish. Plans receive `.gitattributes` with `log.jsonl merge=union`;
+parallel journal changes integrate through local Git merge/rebase, with timestamps allowed
+to appear out of order.
+
 `start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
 A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.
 `finish` / `unit accept --evidence V#=PATH` accept check evidence; `settings.evidence: required` makes finish require evidence for every acceptance check (default: optional).

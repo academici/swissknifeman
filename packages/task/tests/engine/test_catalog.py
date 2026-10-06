@@ -98,7 +98,7 @@ class ParserCatalogTests(unittest.TestCase):
         rows = {v["name"]: v for v in catalog.verbs(cli.build_parser())["verbs"]}
         for name in ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "export"):
             self.assertEqual(rows[name]["mode"], "read")
-        for name in ("context", "render", "unit", "start", "finish", "set", "import"):
+        for name in ("context", "render", "unit", "start", "finish", "set", "import", "commit"):
             self.assertEqual(rows[name]["mode"], "write")
 
     def test_catalog_has_no_shared_mutable_parser_metadata(self):

@@ -35,6 +35,15 @@ def codes(issues):
 
 
 class FixtureTests(unittest.TestCase):
+    def test_commit_settings_are_optional_and_closed(self):
+        plan = load(FIXTURES / "valid/plan-e1.json")
+        self.assertEqual(schema.validate(plan, "plan"), [])
+        plan["settings"]["commit"] = {"scope": "task", "trailers": ["Reviewed-By: Test"]}
+        self.assertEqual(schema.validate(plan, "plan"), [])
+        for invalid in ({"scope": ""}, {"trailers": [4]}, {"unknown": True}):
+            plan["settings"]["commit"] = invalid
+            self.assertTrue(schema.validate(plan, "plan"), invalid)
+
     def test_valid_fixtures_have_no_issues(self):
         files = sorted((FIXTURES / "valid").glob("*.json"))
         self.assertGreaterEqual(len(files), 10)

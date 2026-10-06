@@ -15,7 +15,7 @@ VERB_DATA = {
     "add-document": None, "link": None, "unlink": None, "add-artifact": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
-    "supersede": None, "grant": None, "design-done": None, "reopen": None, "archive": None,
+    "supersede": None, "grant": None, "design-done": None, "reopen": None, "archive": None, "commit": None,
 }
 
 # Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
@@ -27,7 +27,7 @@ VERB_MODES = {
     "check": "read", "render": "write", "next": "read", "start": "write", "context": "write",
     "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
-    "archive": "write",
+    "archive": "write", "commit": "write",
 }
 
 # Maintained refusal registry. Tests compare it with PlanError literals across lib/task/plan.
@@ -38,6 +38,7 @@ DECISION_NOT_ACCEPTED DECISION_NOT_OPEN DECISION_REQUIRED DECISION_SELF_SUPERSED
 DEPENDENCY_NOT_READY DEPTH_INVALID DESIGN_INCOMPLETE DEVIATION_REQUIRED DIRECTION_INVALID
 ESCALATION_REQUIRED EVIDENCE_CONFLICT EVIDENCE_INVALID EVIDENCE_REQUIRED EVIDENCE_SUBJECT EXTERNAL_GATE
 FIELD_NOT_ARRAY FIELD_OWNED FIELD_UNKNOWN GATE_INVALID GATE_NOT_GRANTED GATE_UNKNOWN HUMAN_VIEW
+GIT_UNAVAILABLE GIT_BUSY GIT_CONFLICT GIT_FAILED OUTSIDE_SCOPE NOTHING_TO_COMMIT
 ID_DUPLICATE ITEMS_DUPLICATE ITEMS_REQUIRED ITEMS_SPAN_PHASES ITEM_NOT_IN_PROGRESS ITEM_NOT_STARTABLE
 KIND_UNKNOWN LIMIT_INVALID LINK_INVALID LOG_INVALID LOG_TYPE_INVALID MESSAGE_REQUIRED MINUTES_INVALID NOTES_REQUIRED
 NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN PARALLEL_LIMIT PATCH_INVALID
@@ -103,6 +104,8 @@ VERB_ERRORS = {
     "design-done": _PLAN | _WRITE | {"REF_UNKNOWN", "DESIGN_INCOMPLETE"},
     "reopen": _PLAN | _WRITE | {"REF_UNKNOWN", "NOT_TERMINAL", "REASON_REQUIRED"},
     "archive": _PLAN | _WRITE | {"ALREADY_ARCHIVED", "ARCHIVE_EXISTS", "PLAN_NOT_DONE", "REASON_REQUIRED"},
+    "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",
+                       "GIT_UNAVAILABLE", "GIT_BUSY", "GIT_CONFLICT", "GIT_FAILED", "OUTSIDE_SCOPE", "NOTHING_TO_COMMIT"},
 }
 
 

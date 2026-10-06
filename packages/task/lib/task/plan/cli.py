@@ -14,7 +14,7 @@ import re
 import sys
 
 
-from . import bridges, catalog, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
+from . import bridges, catalog, check, context, gitops, lifecycle, ops, query, schema, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -498,6 +498,16 @@ def cmd_add_document(args) -> int:
 
 # ---------------------------------------------------------------- parser
 
+def cmd_commit(args) -> int:
+    result = gitops.commit(_plan_dir(args), args.ref, role=args.role, paths=args.path,
+                           leave_outside=args.leave_outside, dry_run=args.dry_run, commit_type=args.type,
+                           scope=args.scope, summary=args.summary, trailers=args.trailer, actor=args.actor)
+    if args.json or args.output == "json":
+        _print_json(result)
+    else:
+        print(f"{result['sha'] or 'dry-run'} {result['ref']} {result['role']} ({len(result['paths'])} paths)")
+    return 0
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="plan.py", description="Task plan (layout v4): authoring and lifecycle verbs.")
     parser.add_argument("--output", choices=("text", "json"), default="text", help="structured success/error envelope")
@@ -641,6 +651,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     def actor_arg(p, required=False, text="PROVIDER/MODEL[/EFFORT] (default: the item executor, else plan authoring)"):
         p.add_argument("--actor", type=_actor, required=required, help=text)
+
+    p = verb("commit", cmd_commit, "create one scoped Git commit for an item or unit operation")
+    p.add_argument("ref", help="local Pn.m or Pn.m/U#")
+    p.add_argument("--role", required=True, choices=("executor", "reviewer", "fix"))
+    p.add_argument("--type", help="Conventional Commit type (default: feat, docs or fix by role)")
+    p.add_argument("--scope", help="commit scope (default: settings.commit.scope or plan codename)")
+    p.add_argument("--summary", help="commit subject (default: item or unit title)")
+    p.add_argument("--trailer", action="append", default=[], metavar="KEY: VALUE")
+    p.add_argument("--path", action="append", default=[], metavar="PATH", help="explicit extra ownership path")
+    p.add_argument("--leave-outside", action="store_true", help="leave foreign dirty paths untouched")
+    p.add_argument("--dry-run", action="store_true", help="show selection and message without writing")
+    actor_arg(p)
+    p.add_argument("--json", action="store_true")
 
     p = verb("start", cmd_start, "start (or resume) items of one detailed phase")
     p.add_argument("items", nargs="+", metavar="item")

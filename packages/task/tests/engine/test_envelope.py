@@ -69,6 +69,7 @@ class VerbCoverageTests(EnvelopeCase):
             ("neighborhood", ["neighborhood", plan, "P1.1"], 0),
             ("schema", ["schema", "--verbs"], 0),
             ("bridge", ["bridge", "list"], 0),
+            ("commit", ["commit", plan, "P1.1", "--role", "executor", "--dry-run"], 1),  # outside Git
             ("check", ["check", plan], 0),
             ("next", ["next", plan], 0),
             ("stats", ["stats", plan], 0),

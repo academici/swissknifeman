@@ -1,0 +1,93 @@
+test_registered_codes_match_plan_error_literals_and_cli_refusals (test_catalog.ErrorRegistryTests.test_registered_codes_match_plan_error_literals_and_cli_refusals) ... ok
+test_arguments_preserve_required_flags_choices_cardinality_and_aliases (test_catalog.ParserCatalogTests.test_arguments_preserve_required_flags_choices_cardinality_and_aliases) ... ok
+test_catalog_contains_every_parser_verb_and_matches_descriptions (test_catalog.ParserCatalogTests.test_catalog_contains_every_parser_verb_and_matches_descriptions) ... ok
+test_catalog_has_no_shared_mutable_parser_metadata (test_catalog.ParserCatalogTests.test_catalog_has_no_shared_mutable_parser_metadata) ... ok
+test_catalog_reflects_live_parser_changes_without_copied_argument_tables (test_catalog.ParserCatalogTests.test_catalog_reflects_live_parser_changes_without_copied_argument_tables) ... ok
+test_each_declared_data_kind_resolves_to_a_real_schema (test_catalog.ParserCatalogTests.test_each_declared_data_kind_resolves_to_a_real_schema) ... ok
+test_mode_honestly_marks_default_writes_and_read_queries (test_catalog.ParserCatalogTests.test_mode_honestly_marks_default_writes_and_read_queries) ... ok
+test_new_verb_missing_metadata_and_missing_summary_fail_closed (test_catalog.ParserCatalogTests.test_new_verb_missing_metadata_and_missing_summary_fail_closed) ... ok
+test_every_schema_is_returned_completely_without_plan_discovery (test_catalog.SchemaCliTests.test_every_schema_is_returned_completely_without_plan_discovery) ... ok
+test_invalid_catalog_data_is_refused_before_printing (test_catalog.SchemaCliTests.test_invalid_catalog_data_is_refused_before_printing) ... ok
+test_read_catalog_schema_rejects_unregistered_codes_and_unknown_fields (test_catalog.SchemaCliTests.test_read_catalog_schema_rejects_unregistered_codes_and_unknown_fields) ... ok
+test_schema_no_args_and_verbs_return_the_same_valid_catalog (test_catalog.SchemaCliTests.test_schema_no_args_and_verbs_return_the_same_valid_catalog) ... ok
+test_unknown_schema_conflicting_selection_and_extra_plan_are_usage_errors (test_catalog.SchemaCliTests.test_unknown_schema_conflicting_selection_and_extra_plan_are_usage_errors) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.292s
+
+OK
+test_a_failing_check_keeps_its_issues (test_envelope.ErrorEnvelopeTests.test_a_failing_check_keeps_its_issues) ... ok
+test_an_envelope_outside_the_schema_is_a_bug_not_output (test_envelope.ErrorEnvelopeTests.test_an_envelope_outside_the_schema_is_a_bug_not_output) ... ok
+test_read_verbs_validate_data_before_printing (test_envelope.ErrorEnvelopeTests.test_read_verbs_validate_data_before_printing) ... ok
+test_refusals_keep_their_code_and_issues (test_envelope.ErrorEnvelopeTests.test_refusals_keep_their_code_and_issues) ... ok
+test_the_envelope_schema_rejects_malformed_answers (test_envelope.ErrorEnvelopeTests.test_the_envelope_schema_rejects_malformed_answers) ... ok
+test_usage_errors_are_enveloped_with_exit_2 (test_envelope.ErrorEnvelopeTests.test_usage_errors_are_enveloped_with_exit_2) ... ok
+test_every_verb_answers_with_the_envelope (test_envelope.VerbCoverageTests.test_every_verb_answers_with_the_envelope) ... ok
+test_every_verb_has_a_case (test_envelope.VerbCoverageTests.test_every_verb_has_a_case) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.562s
+
+OK
+test_commit_settings_are_optional_and_closed (test_schema.FixtureTests.test_commit_settings_are_optional_and_closed) ... ok
+test_every_valid_fixture_is_canonical_json (test_schema.FixtureTests.test_every_valid_fixture_is_canonical_json) ... ok
+test_invalid_fixtures_yield_exactly_their_code (test_schema.FixtureTests.test_invalid_fixtures_yield_exactly_their_code) ... ok
+test_valid_fixtures_have_no_issues (test_schema.FixtureTests.test_valid_fixtures_have_no_issues) ... ok
+test_additional_properties_true_is_rejected (test_schema.ProfileTests.test_additional_properties_true_is_rejected) ... ok
+test_bad_pattern_and_empty_directory_fail_closed (test_schema.ProfileTests.test_bad_pattern_and_empty_directory_fail_closed) ... ok
+test_defs_patterns_match_model_regexes (test_schema.ProfileTests.test_defs_patterns_match_model_regexes) ... ok
+test_every_object_is_closed_and_every_field_is_described (test_schema.ProfileTests.test_every_object_is_closed_and_every_field_is_described) ... ok
+test_ids_follow_the_urn_convention (test_schema.ProfileTests.test_ids_follow_the_urn_convention) ... ok
+test_schema_files_exist_and_parse (test_schema.ProfileTests.test_schema_files_exist_and_parse) ... ok
+test_unknown_keyword_fails_closed_negative_control (test_schema.ProfileTests.test_unknown_keyword_fails_closed_negative_control) ... ok
+test_unknown_keyword_in_nested_property_fails_closed (test_schema.ProfileTests.test_unknown_keyword_in_nested_property_fails_closed) ... ok
+test_read_data_schemas_accept_results_and_reject_broken_contracts (test_schema.ReadDataTests.test_read_data_schemas_accept_results_and_reject_broken_contracts) ... ok
+test_a_read_names_exactly_one_of_path_or_ref (test_schema.ValidatorTests.test_a_read_names_exactly_one_of_path_or_ref) ... ok
+test_artifact_ids_are_optional_and_pattern_checked (test_schema.ValidatorTests.test_artifact_ids_are_optional_and_pattern_checked) ... ok
+test_boolean_does_not_equal_const_one (test_schema.ValidatorTests.test_boolean_does_not_equal_const_one) ... ok
+test_booleans_are_not_integers_or_numbers (test_schema.ValidatorTests.test_booleans_are_not_integers_or_numbers) ... ok
+test_collects_all_issues (test_schema.ValidatorTests.test_collects_all_issues) ... ok
+test_dangling_ref_yields_ref_issue (test_schema.ValidatorTests.test_dangling_ref_yields_ref_issue) ... ok
+test_migration_preserves_fractional_timestamps_procedures_and_missing_routes (test_schema.ValidatorTests.test_migration_preserves_fractional_timestamps_procedures_and_missing_routes) ... ok
+test_nullable_fields_accept_null_and_objects (test_schema.ValidatorTests.test_nullable_fields_accept_null_and_objects) ... ok
+test_object_data_payload_is_free_form (test_schema.ValidatorTests.test_object_data_payload_is_free_form) ... ok
+test_pointer_escapes_special_characters (test_schema.ValidatorTests.test_pointer_escapes_special_characters) ... ok
+test_pointer_points_into_nested_arrays (test_schema.ValidatorTests.test_pointer_points_into_nested_arrays) ... ok
+test_ref_fields_take_the_whole_grammar_and_nothing_else (test_schema.ValidatorTests.test_ref_fields_take_the_whole_grammar_and_nothing_else) ... ok
+test_registry_is_cached_per_directory (test_schema.ValidatorTests.test_registry_is_cached_per_directory) ... ok
+test_root_type_error_uses_empty_pointer (test_schema.ValidatorTests.test_root_type_error_uses_empty_pointer) ... ok
+test_trailing_newline_does_not_satisfy_anchored_pattern (test_schema.ValidatorTests.test_trailing_newline_does_not_satisfy_anchored_pattern) ... ok
+test_unknown_kind_is_a_profile_error (test_schema.ValidatorTests.test_unknown_kind_is_a_profile_error) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.021s
+
+OK
+test_add_decision_and_show_by_reference (test_cli.AuthoringFlowTests.test_add_decision_and_show_by_reference) ... ok
+test_default_plans_root_is_found_upwards_from_cwd (test_cli.AuthoringFlowTests.test_default_plans_root_is_found_upwards_from_cwd) ... ok
+test_json_values_may_come_from_files (test_cli.AuthoringFlowTests.test_json_values_may_come_from_files) ... ok
+test_new_add_set_batches_check_render_next (test_cli.AuthoringFlowTests.test_new_add_set_batches_check_render_next) ... ok
+test_new_reads_the_message_from_a_file (test_cli.AuthoringFlowTests.test_new_reads_the_message_from_a_file) ... ok
+test_plans_are_found_by_id_by_short_id_and_by_path (test_cli.AuthoringFlowTests.test_plans_are_found_by_id_by_short_id_and_by_path) ... ok
+test_show_overview_text_and_json (test_cli.AuthoringFlowTests.test_show_overview_text_and_json) ... ok
+test_check_errors_exit_1_with_codes_on_stderr_and_json_mode (test_cli.CheckAndRenderTests.test_check_errors_exit_1_with_codes_on_stderr_and_json_mode) ... ok
+test_check_warnings_do_not_fail_and_are_listed (test_cli.CheckAndRenderTests.test_check_warnings_do_not_fail_and_are_listed) ... ok
+test_negative_control_hand_edited_view_fails_render_check_with_its_name (test_cli.CheckAndRenderTests.test_negative_control_hand_edited_view_fails_render_check_with_its_name) ... ok
+test_next_text_and_json (test_cli.CheckAndRenderTests.test_next_text_and_json) ... ok
+test_every_verb_has_help (test_cli.HelpAndUsageTests.test_every_verb_has_help) ... ok
+test_help_lists_the_authoring_verbs (test_cli.HelpAndUsageTests.test_help_lists_the_authoring_verbs) ... ok
+test_invalid_json_input_exits_2 (test_cli.HelpAndUsageTests.test_invalid_json_input_exits_2) ... ok
+test_usage_errors_exit_2 (test_cli.HelpAndUsageTests.test_usage_errors_exit_2) ... ok
+test_decide_grant_reopen_flow (test_cli.LifecycleFlowTests.test_decide_grant_reopen_flow) ... ok
+test_full_flow_from_design_to_archive (test_cli.LifecycleFlowTests.test_full_flow_from_design_to_archive) ... ok
+test_help_lists_the_lifecycle_verbs (test_cli.LifecycleFlowTests.test_help_lists_the_lifecycle_verbs) ... ok
+test_json_output_of_start_and_finish (test_cli.LifecycleFlowTests.test_json_output_of_start_and_finish) ... ok
+test_lifecycle_refusals_exit_1_and_usage_errors_exit_2 (test_cli.LifecycleFlowTests.test_lifecycle_refusals_exit_1_and_usage_errors_exit_2) ... ok
+test_add_item_with_malformed_phase_is_a_usage_error (test_cli.RefusalTests.test_add_item_with_malformed_phase_is_a_usage_error) ... ok
+test_json_envelopes_include_schema_and_input_errors (test_cli.RefusalTests.test_json_envelopes_include_schema_and_input_errors) ... ok
+test_refusals_exit_1_with_code_and_message_on_stderr (test_cli.RefusalTests.test_refusals_exit_1_with_code_and_message_on_stderr) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 7.882s
+
+OK

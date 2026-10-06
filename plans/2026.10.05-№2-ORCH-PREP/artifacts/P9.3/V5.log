@@ -1,0 +1,10 @@
+test_allowlist_entries_name_their_owner (tests.test_boundary.BoundaryTests.test_allowlist_entries_name_their_owner) ... ok
+test_allowlist_only_shrinks (tests.test_boundary.BoundaryTests.test_allowlist_only_shrinks) ... ok
+test_core_names_no_other_package (tests.test_boundary.BoundaryTests.test_core_names_no_other_package) ... ok
+test_root_core_library_stays_allowed (tests.test_boundary.BoundaryTests.test_root_core_library_stays_allowed) ... ok
+test_tokens_are_caught_and_longer_words_are_not (tests.test_boundary.BoundaryTests.test_tokens_are_caught_and_longer_words_are_not) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.094s
+
+OK

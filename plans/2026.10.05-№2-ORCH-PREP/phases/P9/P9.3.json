@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.3",
   "title": "Task: глагол plan.py commit — scoped-коммит операции executor|reviewer|fix",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Новый модуль lib/task/plan/gitops.py и глагол `plan.py commit <plan> <Pn.m|Pn.m/U#> --role …`: собирает разрешённые пути (plan-owned + task_files/unit files + --path), сверяет с `git status --porcelain=v2 -z`, отказывает при чужих грязных путях, коммитит `--only` с сообщением task-plan-commit/v1 и trailers, печатает sha и paths_digest. Optional `plan.settings.commit {scope, trailers}`.",
   "why": "B48/D17 п.2, D23: каждая операция заканчивается одним scoped-коммитом без `git add -A`. Hard risk: git-запись и целостность — коммит не должен захватить чужие staged/dirty файлы или разойтись со снимком плана (инварианты I1–I5).",
   "scope": {
@@ -210,6 +210,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T19:12:44Z"
+  "result": {
+    "started_at": "2026-10-06T20:56:04Z",
+    "finished_at": "2026-10-06T21:24:15Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a112ff-8312-7e60-bb1f-5f7abbd76e94"
+    },
+    "notes": "Implemented scoped plan.py commit with item/unit ownership, executor/reviewer/fix roles, literal NUL pathspecs, Plan trailers, SHA and paths_digest JSON, optional settings.commit, plan lock plus real Git index lock and private staging index. Foreign staged content and refusal state preserved; rename overlap regressions fixed. All V1–V5 GREEN (106 tests plus CLI help/dry-run), two native grok/grok-4.7/high completed review rounds, final GREEN, actual session recorded in artifacts/P9.3/review-r2.json. Docs and CHANGELOG updated; broad validation deferred to P9.7.",
+    "deviations": [
+      "Required API discovery parity extends task_files with read-catalog.schema.json and test_envelope.py; closeout documentation adds packages/task/docs/plan-structure.md and CHANGELOG.md. These explicit extra paths are logged and included with --path in the scoped commit. Preflight occurs before attribute writes and private staging under the real index lock replaces direct shared-index staging to meet refusal/concurrency invariants."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T21:24:15Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T21:24:15Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T21:24:15Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T21:24:15Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T21:24:15Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T21:24:15Z"
 }

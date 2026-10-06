@@ -250,6 +250,16 @@
           "description": "Document language hint.",
           "minLength": 1
         },
+        "commit": {
+          "type": "object",
+          "description": "Optional defaults for task-plan-commit/v1 messages.",
+          "properties": {
+            "scope": {"type": "string", "minLength": 1, "description": "Default Conventional Commit scope."},
+            "trailers": {"type": "array", "description": "Additional Key: value attribution trailers.", "items": {"type": "string", "minLength": 1}}
+          },
+          "required": [],
+          "additionalProperties": false
+        },
         "evidence": {
           "type": "string",
           "description": "Whether check outcomes need evidence files; absent means optional.",

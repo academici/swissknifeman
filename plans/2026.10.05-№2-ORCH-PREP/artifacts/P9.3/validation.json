@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "id": "V1",
+      "exit": 0,
+      "output": "V1.log",
+      "tests": [
+        28
+      ]
+    },
+    {
+      "id": "V2",
+      "exit": 0,
+      "output": "V2.log",
+      "tests": [
+        13,
+        8,
+        29,
+        23
+      ]
+    },
+    {
+      "id": "V3",
+      "exit": 0,
+      "output": "V3.log",
+      "tests": []
+    },
+    {
+      "id": "V4",
+      "exit": 0,
+      "output": "V4.log",
+      "tests": []
+    },
+    {
+      "id": "V5",
+      "exit": 0,
+      "output": "V5.log",
+      "tests": [
+        5
+      ]
+    }
+  ],
+  "additional_plan_check": "0 errors, 0 warnings before closeout",
+  "docs": "Updated Task plan-structure and root CHANGELOG; necessary extra paths logged as deviation.",
+  "broad_validation": "Deferred to last phase item P9.7 by owner plan rule."
+}

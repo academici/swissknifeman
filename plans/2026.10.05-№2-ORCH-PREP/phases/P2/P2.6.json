@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.6",
   "title": "Синхронизация plan-protocol, docs и CHANGELOG; широкий validate Task",
-  "status": "todo",
+  "status": "done",
   "summary": "plan-protocol SKILL.md и Task docs описывают brief, новые флаги и settings.evidence; CHANGELOG [Unreleased]; широкий validate Task и тесты orch зелёные; Task не импортирует orch.",
   "why": "task.schema-ownership: схема и plan-protocol меняются вместе. R21: широкий прогон пакета в последнем item фазы.",
   "scope": {
@@ -115,6 +115,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:30Z"
+  "result": {
+    "started_at": "2026-10-06T07:32:27Z",
+    "finished_at": "2026-10-06T07:35:01Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1101f-ea16-7f80-9d4c-ae9013a18af8"
+    },
+    "notes": "Синхронизированы plan-protocol §5 (brief --repo, --registrar, --executed-by, --attempt-id, --evidence, settings.evidence и повтор с совпадающим результатом), Task docs Execution input (brief) и CHANGELOG [Unreleased] (Task и Engine Port orch). V1: полный validate Task — validate: OK, 579 package tests и 494 engine tests; V2: 75 orch tests OK; V3: импортов orch в Task нет. Логи: @plan/artifacts/P2.6/V1.log, V2.log, V3.log. Дополнительно: git diff --check OK; render-provider-commands --check OK (no-op); skiller registry без изменений; canon budget 20862/105795 байт. Документация обновлена в packages/task/docs/plan-structure.md. Независимое ревью не запускалось по указанию владельца. Отклонений и pending нет.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T07:35:01Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T07:35:01Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T07:35:01Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T07:35:01Z"
 }

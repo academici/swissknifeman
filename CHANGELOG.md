@@ -4,10 +4,16 @@
 
 ### Added
 
+- **Task execution-input:** `plan.py brief` выдаёт `exec/v1 execution-input`
+  с проверкой полноты и разрешением ссылок на другие планы.
+- **Task actor, попытки и evidence:** добавлены `--executed-by`, `--registrar`,
+  `--attempt-id` и check evidence (`--evidence`, `settings.evidence`): раздельные
+  исполнитель и регистратор, идемпотентная регистрация и опциональная обязательность
+  доказательств acceptance-проверок.
 - **Внутренние контракты orch exec/v1:** добавлены девять схем документов и общие
   определения, stdlib-валидатор, CLI `validate`, semantic checks, fixtures и три
-  synthetic traces. CI проверяет пакет. `packages/orch` пока не публикуется;
-  движок исполнения не запускается.
+  synthetic traces, контракт Engine Port и его trace-валидатор. CI проверяет пакет.
+  `packages/orch` пока не публикуется; движок исполнения не запускается.
 - **Task skills и внешние gates:** item принимает опциональный список `skills`.
   `authority.kind: external_gate` возвращает ожидание внешнего evidence;
   `start` отказывает с `EXTERNAL_GATE`, а owner `grant` такой gate не открывает.

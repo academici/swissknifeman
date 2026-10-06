@@ -77,8 +77,8 @@ requires compatible explicit selections. `plan-run` itself has no fixed model.
 | Purpose | Verbs |
 |:--|:--|
 | author | `new`, `set`, `push`, `apply`, `add-phase`, `add-item`, `add-decision`, `add-document`, `batches`, `design-done` |
-| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `brief <item> [--unit U#] [--inline-reads] [--out FILE]`, `check [--json]`, `render [--check]` |
-| execute | `start <items…> --actor …`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit>` |
+| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `brief <item> [--unit U#] [--inline-reads] [--repo NAME=PATH] [--out FILE]`, `check [--json]`, `render [--check]` |
+| execute | `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
 | transfer | `export`, `import --file <current-format-snapshot.json> [--replace]` |
 
@@ -86,6 +86,7 @@ requires compatible explicit selections. `plan-run` itself has no fixed model.
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
 `start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.
 `finish --status done` needs every acceptance check recorded with exit 0.
+`brief` returns the worker input (exec/v1 execution-input) without lifecycle instructions; `settings.evidence: required` makes `finish` demand check evidence; a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
 Friction (`log --type deviation|blocker|difficulty|assumption|note`) is written only when reality
 changes the plan, an assumption or a blocker; it feeds the next items' Lessons.
 Exit codes: 0 ok, 1 refusal or check errors (`CODE: message` on stderr), 2 usage.

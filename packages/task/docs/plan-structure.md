@@ -66,6 +66,18 @@ snapshot, stages the destination with supporting files, then publishes it with r
 publication failure. Existing JSON requires `--replace`. Historical dates, states and evidence
 survive import exactly. Import is a data API; source-format conversion is never runtime behavior.
 
+## Execution input (brief)
+
+`plan.py brief <plan> <item> [--unit U#] [--inline-reads] [--repo NAME=PATH]` returns the worker's `exec/v1` execution-input as JSON.
+It includes the task, scope, acceptance checks, constraints, reads, decisions and upstream results; completeness is checked without truncation.
+Lifecycle instructions, `report_api`, the full plan and owner messages are excluded; the full coordinator pack is reachable through `context_refs`.
+Cross-plan decisions resolve in the current repository or through repeatable `--repo NAME=PATH` / `SKM_PLAN_REPOS`; unresolved required decisions refuse the brief.
+`--out FILE` writes outside the plan directory; otherwise the read-only verb prints to stdout without changing plan state.
+`start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
+A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.
+`finish` / `unit accept --evidence V#=PATH` accept check evidence; `settings.evidence: required` makes finish require evidence for every acceptance check (default: optional).
+See [exec/v1 contracts](../../orch/docs/contracts.md) (`packages/orch/docs/contracts.md`) for the execution-input and check-evidence formats.
+
 ## Lifecycle and scheduling
 
 Items: `todo → in_progress → done | done_with_deviations | blocked | skipped`.

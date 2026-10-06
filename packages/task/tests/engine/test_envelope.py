@@ -66,6 +66,8 @@ class VerbCoverageTests(EnvelopeCase):
             ("list", ["list", plan, "items"], 0),
             ("events", ["events", plan], 0),
             ("artifact", ["artifact", plan, "artifact/absent"], 1),
+            ("links", ["links", plan, "P1.1"], 0),
+            ("neighborhood", ["neighborhood", plan, "P1.1"], 0),
             ("check", ["check", plan], 0),
             ("next", ["next", plan], 0),
             ("stats", ["stats", plan], 0),
@@ -120,7 +122,9 @@ class ErrorEnvelopeTests(EnvelopeCase):
         for name, call, invalid in (("get", ["get", self.root, "P1.1"], {"doc": {}}),
                                     ("list_rows", ["list", self.root, "items"], [{"ref": 3}]),
                                     ("events", ["events", self.root], [{"type": "note"}]),
-                                    ("artifact", ["artifact", self.root, "artifact/a"], {"exists": True})):
+                                    ("artifact", ["artifact", self.root, "artifact/a"], {"exists": True}),
+                                    ("links", ["links", self.root, "P1.1"], {"ref": "P1.1"}),
+                                    ("neighborhood", ["neighborhood", self.root, "P1.1"], {"item": {}})):
             with self.subTest(name=name), mock.patch.object(query, name, return_value=invalid):
                 doc = self.envelope(*call, code=1)
                 self.assertEqual(doc["error"]["code"], "SCHEMA_INVALID")

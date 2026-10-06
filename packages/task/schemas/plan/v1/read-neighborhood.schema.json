@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-neighborhood:v1",
+  "title": "Read Neighborhood",
+  "type": "object",
+  "description": "One local item, its depth-one graph, and full relevant local decisions and knowledge.",
+  "properties": {
+    "ref": {
+      "description": "Requested graph root reference.",
+      "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/graphRef"
+    },
+    "edges": {
+      "type": "array",
+      "description": "Unique edges sorted by kind, from, to, relation and note.",
+      "items": {
+        "description": "One typed edge.",
+        "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/edge"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Root and every edge endpoint, sorted by reference.",
+      "items": {
+        "description": "One lightweight node.",
+        "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/node"
+      }
+    },
+    "item": {
+      "description": "Complete owning item.",
+      "$ref": "urn:swissknifeman:task:plan:item:v1"
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Explicit local decisions and accepted decisions applicable to this item or its phase, including global decisions.",
+      "items": {
+        "description": "Full decision document.",
+        "$ref": "urn:swissknifeman:task:plan:decision:v1"
+      }
+    },
+    "documents": {
+      "type": "array",
+      "description": "Global or applicable knowledge and explicitly consumed knowledge documents, with complete sections.",
+      "items": {
+        "description": "Full knowledge document.",
+        "$ref": "urn:swissknifeman:task:plan:document:v1"
+      }
+    }
+  },
+  "required": [
+    "ref",
+    "edges",
+    "nodes",
+    "item",
+    "decisions",
+    "documents"
+  ],
+  "additionalProperties": false
+}

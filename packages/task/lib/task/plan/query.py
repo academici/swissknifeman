@@ -173,3 +173,108 @@ def artifact(plan: store.Plan, ref: str, *, inline: bool = False,
             else:
                 result["content"] = text
     return result
+
+
+def _graph_ref(plan: store.Plan, ref: str) -> str:
+    """Resolve local graph roots; foreign nodes are references only, never loaded."""
+    try:
+        local = _normalized_ref(plan, ref)
+    except ValueError:
+        raise PlanError("REF_INVALID", f"invalid reference {ref!r}") from None
+    if local in ("plan", "brief") or parse_ref(local).plan is None:
+        get(plan, local)  # includes section existence checks
+    return local
+
+
+def _node(plan: store.Plan, ref: str) -> dict:
+    doc = None
+    if ref in ("plan", "brief"):
+        doc = getattr(plan, ref)
+    elif ref.startswith("brief/"):
+        doc = next((r for r in plan.brief.get("requirements", []) if r.get("id") == ref[6:]), None)
+    elif parse_ref(ref).plan is None:
+        doc = edges.locate(plan, ref)
+    doc = doc or {}
+    return {"ref": ref, "title": doc.get("title", doc.get("text")), "status": doc.get("status")}
+
+
+def _links(plan: store.Plan, ref: str, graph: list[edges.Edge], *, direction: str,
+           kinds: Sequence[str] | None, depth: int) -> dict:
+    if direction not in ("out", "in", "both"):
+        raise PlanError("DIRECTION_INVALID", "direction must be out, in or both")
+    if isinstance(depth, bool) or not isinstance(depth, int) or depth < 1:
+        raise PlanError("DEPTH_INVALID", "depth must be an integer >= 1")
+    if kinds is not None and (not kinds or any(k not in edges.EDGE_KINDS for k in kinds)):
+        raise PlanError("KIND_UNKNOWN", f"edge kinds must be among {', '.join(edges.EDGE_KINDS)}")
+    root = _graph_ref(plan, ref)
+    adjacent = {}
+    for edge in graph:
+        if kinds is not None and edge.kind not in kinds:
+            continue
+        source = _normalized_ref(plan, edge.source) if not edge.source.startswith("brief/") else edge.source
+        target = _normalized_ref(plan, edge.target)
+        key = (edge.kind, source, target, edge.relation or "", edge.note or "")
+        data = {"from": source, "to": target, "kind": edge.kind}
+        if edge.relation is not None:
+            data["relation"] = edge.relation
+        if edge.note is not None:
+            data["note"] = edge.note
+        if direction in ("out", "both"):
+            adjacent.setdefault(source, []).append((target, key, data))
+        if direction in ("in", "both"):
+            adjacent.setdefault(target, []).append((source, key, data))
+    visited, frontier, found = {root}, {root}, {}
+    for _ in range(depth):
+        following = set()
+        for node in sorted(frontier):
+            for other, key, data in adjacent.get(node, []):
+                found[key] = data
+                if other not in visited:
+                    following.add(other)
+        visited.update(following)
+        frontier = following
+        if not frontier:
+            break
+    node_refs = {root}
+    for edge in found.values():
+        node_refs.update((edge["from"], edge["to"]))
+    return {"ref": ref, "edges": [found[key] for key in sorted(found)],
+            "nodes": [_node(plan, node) for node in sorted(node_refs)]}
+
+
+def links(plan: store.Plan, ref: str, *, direction: str = "both", kinds: Sequence[str] | None = None,
+          depth: int = 1) -> dict:
+    """Bounded BFS of the local edge table, preserving original edge direction and foreign refs."""
+    return _links(plan, ref, edges.edges(plan), direction=direction, kinds=kinds, depth=depth)
+
+
+def neighborhood(plan: store.Plan, item: str) -> dict:
+    """Item, depth-one graph, and complete local decisions/knowledge relevant to it."""
+    local = _graph_ref(plan, item)
+    if local in ("plan", "brief") or parse_ref(local).kind != "item":
+        raise PlanError("REF_INVALID", "neighborhood requires an item reference")
+    if parse_ref(local).plan is not None:
+        raise PlanError("REF_QUALIFIED", "neighborhood requires an item of this plan")
+    graph = edges.edges(plan)
+    result = _links(plan, item, graph, direction="both", kinds=None, depth=1)
+    applicable, explicit_decisions, explicit_documents = {}, set(), set()
+    for edge in graph:
+        source = _normalized_ref(plan, edge.source) if not edge.source.startswith("brief/") else edge.source
+        target = _normalized_ref(plan, edge.target)
+        if edge.kind == "applies_to":
+            applicable.setdefault(source, set()).add(target)
+        if source == local:
+            if edge.kind == "decision":
+                explicit_decisions.add(target)
+            elif edge.kind == "consumes" and target.startswith("knowledge/"):
+                explicit_documents.add(target.split("#", 1)[0])
+    phase = local.split(".", 1)[0]
+    decisions, documents = [], []
+    for kind, _key, ref, doc in edges.documents(plan):
+        targets = applicable.get(ref, set())
+        applies = not targets or local in targets or phase in targets
+        if kind == "decision" and (ref in explicit_decisions or doc.get("status") == "accepted" and applies):
+            decisions.append(copy.deepcopy(doc))
+        elif kind == "document" and (applies or ref in explicit_documents):
+            documents.append(copy.deepcopy(doc))
+    return {**result, "item": copy.deepcopy(plan.items[local]), "decisions": decisions, "documents": documents}

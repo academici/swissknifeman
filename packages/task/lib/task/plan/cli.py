@@ -19,7 +19,7 @@ from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
 _UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
-_READ_VERBS = ("get", "list", "events", "artifact")
+_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood")
 
 
 class UsageError(Exception):
@@ -193,6 +193,15 @@ def cmd_events(args) -> int:
 def cmd_artifact(args) -> int:
     return _read_result(query.artifact(store.load_plan(_plan_dir(args)), args.ref, inline=args.inline,
                                       repos=_repos(args)), "read-artifact")
+
+
+def cmd_links(args) -> int:
+    return _read_result(query.links(store.load_plan(_plan_dir(args)), args.ref, direction=args.direction,
+                                   kinds=args.kind, depth=args.depth), "read-links")
+
+
+def cmd_neighborhood(args) -> int:
+    return _read_result(query.neighborhood(store.load_plan(_plan_dir(args)), args.item), "read-neighborhood")
 
 
 def cmd_set(args) -> int:
@@ -512,6 +521,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("ref")
     p.add_argument("--inline", action="store_true")
     p.add_argument("--repo", action="append", type=_repo_mapping, default=[], metavar="NAME=PATH")
+
+    p = verb("links", cmd_links, "read typed links around a reference (JSON envelope)")
+    p.add_argument("ref")
+    p.add_argument("--direction", choices=("out", "in", "both"), default="both")
+    p.add_argument("--kind", type=_csv, help="comma-separated edge kinds")
+    p.add_argument("--depth", type=int, default=1, help="graph traversal depth (integer >= 1)")
+
+    p = verb("neighborhood", cmd_neighborhood, "read an item's graph and applicable documents (JSON envelope)")
+    p.add_argument("item")
 
     p = verb("set", cmd_set, "merge-patch plan, brief, a phase, item, decision or unit")
     p.add_argument("ref", help="plan | brief | Pn | Pn.m | D# | Pn.m/U#")

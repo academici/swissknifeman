@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.3",
   "title": "Связи: links и neighborhood",
-  "status": "todo",
+  "status": "done",
   "summary": "`links <ref> [--direction out|in|both] [--kind] [--depth]` отдаёт типизированные рёбра, включая обратные, из таблицы edges; `neighborhood <item>` — item, его рёбра глубины 1, действующие decisions и knowledge.",
   "why": "D11, R2: «связанные пункты» запрашиваются API, а не разбором JSON; обратные рёбра (кто зависит от X) в файлах не хранятся.",
   "scope": {
@@ -140,6 +140,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:12:12Z"
+  "result": {
+    "started_at": "2026-10-06T09:05:16Z",
+    "finished_at": "2026-10-06T09:14:29Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1106b-188a-7371-8f82-c784741e2bc2"
+    },
+    "notes": "Реализованы query.links и query.neighborhood поверх единой таблицы edges.py, CLI links/neighborhood и схемы read-links/read-neighborhood с проверкой data до вывода envelope. links: направления out/in/both (default both), фильтр kind, depth целое >=1 (default 1), BFS без зацикливания, уникальные рёбра с исходным направлением и сортировкой kind/from/to; nodes отсортированы по ref. Foreign refs остаются ссылками с null metadata без загрузки чужих планов; self-qualified refs нормализованы. neighborhood: полный local item, depth-1 graph, explicit/local accepted applicable decisions, global/applicable/consumed knowledge. context.collect не менялся. Независимый обход полей и fixture на каждый тип ребра совпадают с links для всех направлений и глубин. V1=0 (12), V2=0 (12), V3=0 (16); дополнительно schema-profile=0 (28), всего 68 тестов. Smoke links/neighborhood на текущем плане: exit 0. Логи и validation.json: @plan/artifacts/P6.3/. Две ошибки подготовки первого тестового прогона исправлены, записаны в difficulty и V1-first.log. Документация, CHANGELOG, версии и широкий validate закреплены за P6.6. Ревью не запускалось по указанию владельца.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T09:14:29Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T09:14:29Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T09:14:29Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T09:14:29Z"
 }

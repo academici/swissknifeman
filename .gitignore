@@ -94,6 +94,7 @@ docs/analyst/
 .plan-cache/history/
 # Project-local Task terminal-admission runtime state (leases and hash-only events).
 .swissknifeman/task-terminal/
+.swissknifeman/terminal-admission/
 
 # Local-only working documents (never tracked)
 /roadmap/

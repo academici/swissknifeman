@@ -57,6 +57,7 @@ def _plan_dir(plan: store.Plan) -> str:
 def _read(plan: store.Plan, entry: dict, inline: bool) -> dict:
     """Existing files get ``sha256`` of their bytes; ``inline`` adds the full UTF-8 text when no content is attached."""
     entry = copy.deepcopy(entry)
+    entry.pop("ref", None)  # exec/v1 reads are closed and path-based; the ref only lives in the context pack
     target = context._resolve(plan, entry["path"]) if entry.get("exists") else None
     if target is None or not target.is_file():
         return entry
@@ -165,8 +166,10 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
         missing.append("constraints: missing unit.instructions")
     reads = {(r.get("path"), r.get("section")) for r in doc.get("reads", [])}
     for read in (item.get("reads") or []) + ((unit or {}).get("reads") or []):
-        if read.get("required") and (read["path"], read.get("section")) not in reads:
-            missing.append(f"reads: missing {read['path']}" + (f"#{read['section']}" if read.get("section") else ""))
+        read = context.normalize_read(plan, read)
+        if read.get("required") and (read.get("path"), read.get("section")) not in reads:
+            missing.append(f"reads: missing {read.get('path') or read.get('ref')}"
+                           + (f"#{read['section']}" if read.get("section") else ""))
     refs = {d.get("ref") for d in doc.get("decisions", [])}
     for ref in item.get("decisions", []):
         parsed = context.parse_ref(ref)

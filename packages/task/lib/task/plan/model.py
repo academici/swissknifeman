@@ -14,9 +14,15 @@ SHORT_ID = re.compile(r"^PLAN[1-9][0-9]*$", re.ASCII)
 PHASE_ID = re.compile(r"^P[0-9]+$", re.ASCII)
 ITEM_ID = re.compile(r"^P[0-9]+\.[0-9]+$", re.ASCII)
 DECISION_ID = re.compile(r"^D[0-9]+$", re.ASCII)
-REF = re.compile(r"^((?:[a-z0-9-]+:)?PLAN[0-9]+\.)?(P[0-9]+(\.[0-9]+)?|D[0-9]+)$", re.ASCII)
-_REF_PARTS = re.compile(r"^(?:(?:(?P<repo>[a-z0-9-]+):)?(?P<plan>PLAN[0-9]+)\.)?(?P<target>[A-Z]+[0-9]+(?:\.[0-9]+)?)$",
-                        re.ASCII)
+# Reference grammar (knowledge/read-api#ref-grammar): [[repo:]PLAN<N>.] Pn | Pn.m | Pn.m/U# | D# | knowledge/<id>[#<section>] | artifact/<id>
+REF = re.compile(r"^((?:[a-z0-9-]+:)?PLAN[0-9]+\.)?(P[0-9]+(\.[0-9]+(/U[0-9]+)?)?|D[0-9]+"
+                 r"|knowledge/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(#[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?"
+                 r"|artifact/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)$", re.ASCII)
+_REF_PARTS = re.compile(
+    r"^(?:(?:(?P<repo>[a-z0-9-]+):)?(?P<plan>PLAN[0-9]+)\.)?"
+    r"(?:(?P<unit>P[0-9]+\.[0-9]+/U[0-9]+)|(?P<local>P[0-9]+(?:\.[0-9]+)?|D[0-9]+)"
+    r"|knowledge/(?P<knowledge>[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)(?:#(?P<section>[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?))?"
+    r"|artifact/(?P<artifact>[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?))$", re.ASCII)
 _SORTABLE = re.compile(r"^(?P<prefix>[A-Z]+)(?P<nums>[0-9]+(?:\.[0-9]+)*)$", re.ASCII)
 
 CLASS_ORDER = ("economy", "implementation", "frontier")
@@ -64,8 +70,9 @@ class PlanError(Exception):
 class Ref(NamedTuple):
     repo: str | None
     plan: str | None
-    target: str
-    kind: str  # "phase" | "item" | "decision"
+    target: str  # Pn | Pn.m | Pn.m/U# | D# | knowledge id | artifact id
+    kind: str  # "phase" | "item" | "unit" | "decision" | "knowledge" | "artifact"
+    section: str | None = None  # knowledge sections only
 
 
 def parse_ref(ref: str) -> Ref:
@@ -74,7 +81,13 @@ def parse_ref(ref: str) -> Ref:
         raise ValueError(f"invalid ref: {ref!r}")
     parts = _REF_PARTS.fullmatch(ref)
     assert parts is not None  # REF guarantees the shape
-    target = parts["target"]
+    if parts["unit"]:
+        return Ref(parts["repo"], parts["plan"], parts["unit"], "unit")
+    if parts["knowledge"]:
+        return Ref(parts["repo"], parts["plan"], parts["knowledge"], "knowledge", parts["section"])
+    if parts["artifact"]:
+        return Ref(parts["repo"], parts["plan"], parts["artifact"], "artifact")
+    target = parts["local"]
     kind = "decision" if target.startswith("D") else ("item" if "." in target else "phase")
     return Ref(parts["repo"], parts["plan"], target, kind)
 

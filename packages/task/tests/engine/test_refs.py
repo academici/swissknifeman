@@ -172,6 +172,11 @@ class ForeignRepositoryTests(RefsCase):
         self.assertEqual((entry["loaded"], entry["reason"].split(":")[0]), (False, "REPO_UNKNOWN"))
         self.assertEqual(set(entry), {"ref", "loaded", "reason"})
 
+    def test_refs_of_other_kinds_are_reported_unsupported_not_raised(self):
+        for ref in ("PLAN1.P1.1/U1", "PLAN1.knowledge/design", "PLAN1.artifact/catalog"):
+            entry = self.resolve(ref)
+            self.assertEqual((entry["loaded"], entry["reason"].split(":")[0]), (False, "REF_UNSUPPORTED"), ref)
+
     def test_invalid_environment_json_makes_every_foreign_repository_unknown(self):
         repo, _ = self.foreign_repo()
         with mock.patch.dict(os.environ, {refs.ENV_REPOS: "{not json"}):

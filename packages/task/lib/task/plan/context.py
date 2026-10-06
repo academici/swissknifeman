@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 
-from . import refs, store
+from . import edges, refs, store
 from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
@@ -74,7 +74,36 @@ def _exists(plan: store.Plan, path: str) -> bool:
 
 
 def _reads(item: dict) -> list[dict]:
-    return [r for r in item.get("reads", []) if isinstance(r, dict) and isinstance(r.get("path"), str)]
+    return [r for r in item.get("reads", []) if isinstance(r, dict)
+            and (isinstance(r.get("path"), str) or isinstance(r.get("ref"), str))]
+
+
+def normalize_read(plan: store.Plan, read: dict) -> dict:
+    """A read by ``ref`` becomes the read of its JSON source by ``path`` (the ``ref`` is kept); a path read is returned
+    as is. A ref that does not resolve to a source gets no ``path``."""
+    ref = read.get("ref")
+    if not isinstance(ref, str):
+        return read
+    entry = copy.deepcopy(read)
+    try:
+        parsed = parse_ref(ref)
+    except ValueError:
+        return entry
+    path = None
+    if parsed.plan is None:
+        if parsed.kind == "knowledge":
+            source = plan.path("document", parsed.target)
+        elif parsed.kind == "artifact":
+            found = edges.locate(plan, ref)
+            source = found.get("path") if found else None
+        else:
+            source = plan.path(parsed.kind, parsed.target)
+        path = f"@plan/{plan.rel(source)}" if isinstance(source, Path) else source
+    if path:
+        entry["path"] = path
+    if parsed.section and not entry.get("section"):
+        entry["section"] = parsed.section
+    return entry
 
 
 def _pending_producer(plan: store.Plan, item_id: str, path: str) -> str | None:
@@ -93,14 +122,21 @@ def _pending_producer(plan: store.Plan, item_id: str, path: str) -> str | None:
 
 
 def missing_reads(plan: store.Plan, item_id: str) -> list[str]:
-    return [r["path"] for r in _reads(plan.items[item_id])
-            if r.get("required") and not _exists(plan, r["path"])
-            and _pending_producer(plan, item_id, r["path"]) is None]
+    missing = []
+    for read in _reads(plan.items[item_id]):
+        path = normalize_read(plan, read).get("path")
+        if read.get("required") and (path is None or not _exists(plan, path)
+                                     and _pending_producer(plan, item_id, path) is None):
+            missing.append(path or read["ref"])
+    return missing
 
 
 def read_entry(plan: store.Plan, read: dict) -> dict:
     """Inline requested supporting sections, with no reading quota or content truncation."""
-    path = read["path"]
+    read = normalize_read(plan, read)
+    path = read.get("path")
+    if path is None:  # a ref that names no readable source
+        return {**copy.deepcopy(read), "exists": False}
     if human_view(plan, path):
         raise PlanError("HUMAN_VIEW", f"{path} is human-only plan content; reference its JSON source")
     entry = copy.deepcopy(read)

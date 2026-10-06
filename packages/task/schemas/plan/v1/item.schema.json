@@ -134,7 +134,11 @@
         "properties": {
           "path": {
             "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
-            "description": "File to read."
+            "description": "File to read; exclusive with ref."
+          },
+          "ref": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref",
+            "description": "Plan data to read by reference (knowledge/<id>[#section], artifact/<id>, Pn.m, D#); exclusive with path."
           },
           "section": {
             "type": "string",
@@ -151,9 +155,22 @@
           }
         },
         "required": [
-          "path",
           "why",
           "required"
+        ],
+        "oneOf": [
+          {
+            "description": "A repository or plan file by path.",
+            "required": [
+              "path"
+            ]
+          },
+          {
+            "description": "Plan data by reference.",
+            "required": [
+              "ref"
+            ]
+          }
         ],
         "additionalProperties": false
       }
@@ -199,6 +216,12 @@
         "type": "object",
         "description": "One artifact.",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Optional artifact id, addressed as artifact/<id>; an output declares it (unique in the plan), an input cites it.",
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+          },
           "path": {
             "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
             "description": "Artifact path."

@@ -250,7 +250,9 @@ def resolve_target(p: store.Plan, ref: str) -> tuple[str, str, dict]:
     if parsed.plan is not None:
         raise PlanError("REF_QUALIFIED", f"{ref!r} points to another plan")
     kind = parsed.kind
-    table = {"phase": p.phases, "item": p.items, "decision": p.decisions}[kind]
+    table = {"phase": p.phases, "item": p.items, "decision": p.decisions}.get(kind)
+    if table is None:
+        raise PlanError("REF_INVALID", f"{ref!r} names a {kind}, not a phase, item, decision or unit")
     if ref not in table:
         raise PlanError("REF_UNKNOWN", f"unknown {kind} {ref!r}")
     return kind, ref, table[ref]

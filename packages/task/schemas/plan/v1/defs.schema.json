@@ -24,9 +24,9 @@
     },
     "ref": {
       "type": "string",
-      "description": "Local or qualified reference to a phase, item or decision (PLAN7.P2.3, repo:PLAN7.D4).",
+      "description": "Local or qualified reference to a phase, item, unit, decision, knowledge document or section, or artifact (PLAN7.P2.3, P2.3/U1, repo:PLAN7.D4, knowledge/design#validation, artifact/catalog).",
       "minLength": 1,
-      "pattern": "^((?:[a-z0-9-]+:)?PLAN[0-9]+\\.)?(P[0-9]+(\\.[0-9]+)?|D[0-9]+)$"
+      "pattern": "^((?:[a-z0-9-]+:)?PLAN[0-9]+\\.)?(P[0-9]+(\\.[0-9]+(/U[0-9]+)?)?|D[0-9]+|knowledge/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(#[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?|artifact/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)$"
     },
     "path": {
       "type": "string",

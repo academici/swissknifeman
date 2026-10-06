@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
   "title": "Грамматика ref и таблица рёбер: edges.py, resolve в check",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Единая грамматика ссылок (phase, item, unit, decision, knowledge/<id>[#section], artifact/<id>) и таблица рёбер `edges.py`; `check` разрешает каждую ссылку и сверяет обратные рёбра; optional `reads[].ref` и `artifacts[].id`.",
   "why": "D11, R1: связи должны быть жёсткими и одинаково читаться любым глаголом; сейчас defs.ref покрывает phase/item/decision, а ссылки на unit, knowledge, artifact — свободные строки.",
   "scope": {
@@ -161,6 +161,42 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:11:51Z"
+  "result": {
+    "started_at": "2026-10-06T06:50:08Z",
+    "finished_at": "2026-10-06T07:05:58Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f7010513-221d-4d54-af84-580506f60c40"
+    },
+    "notes": "Ref grammar extended (unit, knowledge[#section], artifact); edges.py table of 14 link rows over 9 closed edge kinds; check resolves every link via the table (ref_unknown, ref_kind, backlink_mismatch, artifact_duplicate, artifact_path, reads_ref); optional reads[].ref (oneOf with path) and artifacts[].id; context.read_entry/missing_reads resolve reads[].ref. Full task suite: 615 OK; plans №2 check clean, archive plan unchanged (only pre-existing human_view).",
+    "deviations": [
+      "Edge fields are source/target (from is a Python keyword; as_dict emits from/to) plus where; extra helpers tagged/locate/declared_artifacts/documents/BACKLINKS in edges.py",
+      "Guards outside the listed files: ops.resolve_target, refs.resolve (new ref kinds, no KeyError), brief.py (reads by ref normalized, ref stripped from exec/v1 reads)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T07:05:58Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T07:05:58Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T07:05:58Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T07:05:58Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T07:05:58Z"
 }

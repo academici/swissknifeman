@@ -243,6 +243,7 @@ class PatchTests(DemoCase):
         self.assertRefused("REF_UNKNOWN", ops.patch, self.plan, "P1.9", {"title": "x"})
         self.assertRefused("REF_UNKNOWN", ops.patch, self.plan, "P1.1/U9", {"title": "x"})
         self.assertRefused("REF_INVALID", ops.patch, self.plan, "nonsense", {"title": "x"})
+        self.assertRefused("REF_INVALID", ops.patch, self.plan, "artifact/catalog", {"title": "x"})  # not a patchable document
         self.assertRefused("REF_QUALIFIED", ops.patch, self.plan, "PLAN3.P1.1", {"title": "x"})
         self.assertRefused("PATCH_INVALID", ops.patch, self.plan, "P1.2", ["title"])
 

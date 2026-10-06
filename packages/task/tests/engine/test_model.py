@@ -44,8 +44,19 @@ class RefTests(unittest.TestCase):
         self.assertEqual(model.parse_ref("swissknifeman:PLAN7.P2.3"),
                          model.Ref("swissknifeman", "PLAN7", "P2.3", "item"))
 
+    def test_parse_unit_knowledge_and_artifact_refs(self):
+        self.assertEqual(model.parse_ref("P2.3/U1"), model.Ref(None, None, "P2.3/U1", "unit"))
+        self.assertEqual(model.parse_ref("PLAN7.P2.3/U12"), model.Ref(None, "PLAN7", "P2.3/U12", "unit"))
+        self.assertEqual(model.parse_ref("knowledge/read-api"), model.Ref(None, None, "read-api", "knowledge"))
+        self.assertEqual(model.parse_ref("knowledge/read-api#ref-grammar"),
+                         model.Ref(None, None, "read-api", "knowledge", "ref-grammar"))
+        self.assertEqual(model.parse_ref("repo:PLAN7.knowledge/a.b#c"), model.Ref("repo", "PLAN7", "a.b", "knowledge", "c"))
+        self.assertEqual(model.parse_ref("artifact/error-catalog"), model.Ref(None, None, "error-catalog", "artifact"))
+
     def test_malformed_refs_raise(self):
-        for bad in ("", "X1", "PLAN7", "PLAN7.", "repo:P1", "P1.2.3", "P1\n", None, 5):
+        for bad in ("", "X1", "PLAN7", "PLAN7.", "repo:P1", "P1.2.3", "P1\n", None, 5,
+                    "P1/U1", "P1.2/U", "P1.2/U1/U2", "U1", "knowledge/", "knowledge/x#", "knowledge/-x", "knowledge/x.",
+                    "knowledge/x#y#z", "artifact/", "artifact/a b", "artifact/a\n", "Knowledge/x"):
             with self.subTest(bad):
                 with self.assertRaises(ValueError):
                     model.parse_ref(bad)

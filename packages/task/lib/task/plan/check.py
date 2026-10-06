@@ -10,6 +10,7 @@ from fnmatch import fnmatchcase
 import re
 from typing import Any, Iterator, NamedTuple
 
+from . import edges as _edges
 from . import schema as _schema
 from . import store
 from .model import ITEM_ID, TERMINAL, parse_ref
@@ -146,57 +147,94 @@ class _Context:
             if ITEM_ID.fullmatch(item_id) and owner not in p.phases:
                 self.error("phase_items", self.file_of("item", item_id), f"item {item_id} lies in unknown phase {owner}")
 
-    def known(self, ref: str) -> bool:
-        try:
-            parsed = parse_ref(ref)
-        except ValueError:
-            return True  # a malformed ref is a schema error already
-        if parsed.plan is not None:
-            return True  # qualified foreign refs are syntax-checked only
-        table = {"phase": self.p.phases, "item": self.p.items, "decision": self.p.decisions}[parsed.kind]
-        return parsed.target in table
-
-    def check_refs(self, where: str, refs: Any) -> None:
-        for index, ref in enumerate(refs if isinstance(refs, list) else []):
-            if isinstance(ref, str) and not self.known(ref):
-                self.error("ref_unknown", f"{where}/{index}", f"unknown reference {ref}")
-
     def references(self) -> None:
         p = self.p
-        for key, doc in p.items.items():
+        for field, edge in _edges.tagged(p):
+            self.check_edge(field, edge)
+        self.backlinks()
+        self.artifacts()
+        for key, item in p.items.items():
             rel = self.file_of("item", key)
-            self.check_refs(f"{rel}/depends_on", doc.get("depends_on"))
-            self.check_refs(f"{rel}/decisions", doc.get("decisions"))
-            related = doc.get("related")
-            for index, link in enumerate(related if isinstance(related, list) else []):
-                if isinstance(link, dict) and isinstance(link.get("ref"), str) and not self.known(link["ref"]):
-                    self.error("ref_unknown", f"{rel}/related/{index}/ref", f"unknown reference {link['ref']}")
-            result = doc.get("result")
-            if isinstance(result, dict) and isinstance(result.get("decision"), str) and not self.known(result["decision"]):
-                self.error("ref_unknown", f"{rel}/result/decision", f"unknown reference {result['decision']}")
-        for key, doc in p.phases.items():
-            self.check_refs(f"{self.file_of('phase', key)}/depends_on", doc.get("depends_on"))
-        for key, doc in p.decisions.items():
-            rel = self.file_of("decision", key)
-            self.check_refs(f"{rel}/applies_to", doc.get("applies_to"))
-            self.check_refs(f"{rel}/supersedes", doc.get("supersedes"))
-            if isinstance(doc.get("superseded_by"), str) and not self.known(doc["superseded_by"]):
-                self.error("ref_unknown", f"{rel}/superseded_by", f"unknown reference {doc['superseded_by']}")
-        requirements = p.brief.get("requirements")
-        for index, requirement in enumerate(requirements if isinstance(requirements, list) else []):
-            if isinstance(requirement, dict):
-                self.check_refs(f"brief.json/requirements/{index}/owners", requirement.get("owners"))
+            for index, read in enumerate(item.get("reads") if isinstance(item.get("reads"), list) else []):
+                self.check_read_ref(f"{rel}/reads/{index}", read)
         for key, doc in p.units.items():
             rel = self.file_of("unit", key)
-            siblings = {k.split("/")[1] for k in p.units if k.split("/")[0] == key.split("/")[0]}
-            for index, dep in enumerate(doc.get("depends_on") if isinstance(doc.get("depends_on"), list) else []):
-                if isinstance(dep, str) and dep not in siblings:
-                    self.error("ref_unknown", f"{rel}/depends_on/{index}", f"unknown unit {dep} in {key.split('/')[0]}")
             item = p.items.get(key.split("/")[0])
             declared = {c["id"] for c in (item or {}).get("validation", []) if isinstance(c, dict) and "id" in c}
             for index, entry in enumerate(doc.get("checks") if isinstance(doc.get("checks"), list) else []):
                 if isinstance(entry, str) and item is not None and entry not in declared:
                     self.error("ref_unknown", f"{rel}/checks/{index}", f"unknown item check {entry}")
+
+    def check_edge(self, field: _edges.LinkField, edge: _edges.Edge) -> None:
+        """Resolve one table link: its kind must be allowed by the field and a local target must exist."""
+        if edge.kind == "parent":
+            return  # a missing or self parent is reported as unit_parent
+        try:
+            parsed = parse_ref(edge.target)
+        except ValueError:
+            return  # a malformed ref is a schema error already
+        if field.targets is not None and parsed.kind not in field.targets:
+            self.error("ref_kind", edge.where, f"{edge.target} is a {parsed.kind}, expected {' or '.join(field.targets)}")
+        elif parsed.plan is None and _edges.locate(self.p, edge.target) is None:
+            what = f"unit {edge.target.split('/')[1]} in {edge.target.split('/')[0]}" if parsed.kind == "unit" \
+                else f"reference {edge.target}"
+            self.error("ref_unknown", edge.where, f"unknown {what}")
+
+    def check_read_ref(self, where: str, read: Any) -> None:
+        """``reads[].ref`` names data of this plan and carries its section in the ref or in ``section``, not both."""
+        if not (isinstance(read, dict) and isinstance(read.get("ref"), str)):
+            return
+        try:
+            parsed = parse_ref(read["ref"])
+        except ValueError:
+            return
+        if parsed.plan is not None:
+            self.error("reads_ref", f"{where}/ref", f"read ref {read['ref']} must name data of this plan")
+        if parsed.section and read.get("section"):
+            self.error("reads_ref", f"{where}/section", "a read ref with #section takes no section key")
+
+    def backlinks(self) -> None:
+        """A stored back-pointer must be matched by the forward field of the document it names, and vice versa."""
+        docs = list(_edges.documents(self.p))
+        for (kind, field), (_fwd_kind, fwd_field) in _edges.BACKLINKS.items():
+            by_key = {key: doc for k, key, _name, doc in docs if k == kind and isinstance(doc, dict)}
+            for key, doc in by_key.items():
+                rel = self.file_of(kind, key)
+                back = doc.get(field)
+                if isinstance(back, str):
+                    other = by_key.get(back)
+                    if other is None:
+                        self.error("ref_unknown", f"{rel}/{field}", f"unknown reference {back}")
+                    elif key not in _strings(other.get(fwd_field)):
+                        self.error("backlink_mismatch", f"{rel}/{field}",
+                                   f"{key} names {back} in {field}, but {back} does not list {key} in {fwd_field}")
+                for index, ref in enumerate(_strings(doc.get(fwd_field))):
+                    other = by_key.get(ref)
+                    if other is not None and other.get(field) != key:
+                        self.error("backlink_mismatch", f"{rel}/{fwd_field}/{index}",
+                                   f"{key} lists {ref} in {fwd_field}, but {ref} does not name {key} in {field}")
+
+    def artifacts(self) -> None:
+        """An output declares an artifact id once per plan; an input that cites it names the same path."""
+        outputs: dict[str, tuple[str, dict]] = {}
+        for ident, item_id, entry in _edges.declared_artifacts(self.p):
+            if entry.get("role") != "output":
+                continue
+            if ident in outputs:
+                self.error("artifact_duplicate", self.artifact_where(item_id, entry),
+                           f"artifact id {ident} is already declared as an output of {outputs[ident][0]}")
+            else:
+                outputs[ident] = (item_id, entry)
+        for ident, item_id, entry in _edges.declared_artifacts(self.p):
+            declared = outputs.get(ident)
+            if entry.get("role") == "input" and declared and entry.get("path") != declared[1].get("path"):
+                self.error("artifact_path", self.artifact_where(item_id, entry),
+                           f"input artifact {ident} names {entry.get('path')!r}, its output names {declared[1].get('path')!r}")
+
+    def artifact_where(self, item_id: str, entry: dict) -> str:
+        entries = self.p.items[item_id].get("artifacts")
+        index = next(i for i, e in enumerate(entries) if e is entry)
+        return f"{self.file_of('item', item_id)}/artifacts/{index}/id"
 
     def cycles(self) -> None:
         p = self.p
@@ -515,6 +553,10 @@ def globs_overlap(a: str, b: str) -> bool:
         if not (left == right or fnmatchcase(left, right) or fnmatchcase(right, left)):
             return False
     return True
+
+
+def _strings(value: Any) -> list[str]:
+    return [x for x in value if isinstance(x, str)] if isinstance(value, list) else []
 
 
 def _path_fields(kind: str, doc: dict) -> Iterator[tuple[str, str]]:

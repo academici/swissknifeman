@@ -177,6 +177,82 @@ class ReferenceTests(CheckCase):
         self.assertFound("ref_unknown", "U1.json/depends_on/0")
         self.assertFound("ref_unknown", "U1.json/checks/1", count=1)
 
+    def test_new_ref_kinds_must_resolve(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            related=[{"ref": "knowledge/none", "relation": "informs"}, {"ref": "knowledge/none#s", "relation": "informs"},
+                     {"ref": "artifact/none", "relation": "informs"}, {"ref": "P1.1/U9", "relation": "informs"}]))
+        self.assertFound("ref_unknown", "P1.2.json/related/0/ref")
+        self.assertFound("ref_unknown", "P1.2.json/related/1/ref")
+        self.assertFound("ref_unknown", "P1.2.json/related/2/ref")
+        self.assertFound("ref_unknown", "P1.2.json/related/3/ref")
+
+    def test_ref_to_an_existing_knowledge_section_unit_and_artifact_is_fine(self):
+        self.list_units("U1")
+        self.add_unit("U1")
+        demo.write_doc(self.root / "knowledge" / "design.json",
+                       {"$schema": "urn:swissknifeman:task:plan:document:v1", "id": "design", "title": "D",
+                        "sections": [{"id": "validation", "title": "V", "text": "t"}]}, "document")
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            related=[{"ref": "knowledge/design#validation", "relation": "informs"},
+                     {"ref": "P1.1/U1", "relation": "informs"}, {"ref": "artifact/catalog", "relation": "consumes"}]))
+        self.edit(P1 + "P1.1.json", lambda d: d.update(artifacts=[{"id": "catalog", "path": "a.json", "role": "output"}]))
+        self.assertEqual(self.found("ref_unknown"), [])
+        self.assertEqual(self.found("ref_kind"), [])
+
+    def test_a_field_takes_only_its_ref_kinds(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(decisions=["P1.1"]))
+        self.edit("decisions/D1.json", lambda d: d.update(applies_to=["D2"]))
+        self.edit(P1 + "P1.1.json", lambda d: d["result"].update(decision="P1.2"))
+        for where in ("P1.2.json/decisions/0", "D1.json/applies_to/0", "P1.1.json/result/decision"):
+            self.assertFound("ref_kind", where, count=1)
+
+    def test_qualified_refs_of_the_wrong_kind_are_still_refused(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(decisions=["PLAN3.P2.1"]))
+        self.assertFound("ref_kind", "P1.2.json/decisions/0")
+
+    def test_supersede_pointers_must_match_both_ways(self):
+        self.edit("decisions/D1.json", lambda d: d.update(superseded_by="D2"))  # D2 does not list D1
+        self.assertFound("backlink_mismatch", "D1.json/superseded_by", count=1)
+        self.edit("decisions/D1.json", lambda d: d.update(superseded_by=None))
+        self.edit("decisions/D2.json", lambda d: d.update(supersedes=["D1"]))  # D1 does not name D2
+        self.assertFound("backlink_mismatch", "D2.json/supersedes/0", count=1)
+        self.edit("decisions/D1.json", lambda d: d.update(superseded_by="D2"))
+        self.assertEqual(self.found("backlink_mismatch"), [])
+
+    def test_unit_parent_is_reported_once_as_unit_parent(self):
+        self.list_units("U1")
+        self.add_unit("U1", parent="U7")
+        self.assertFound("unit_parent", count=1)
+        self.assertEqual(self.found("ref_unknown", where="U1.json/parent"), [])
+
+    def test_artifact_ids_are_declared_once_and_inputs_name_the_declared_path(self):
+        out = {"id": "catalog", "path": "a.json", "role": "output"}
+        self.edit(P1 + "P1.1.json", lambda d: d.update(artifacts=[out]))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(artifacts=[{**out, "path": "b.json"}]))
+        self.assertFound("artifact_duplicate", "P1.2.json/artifacts/0/id", count=1)
+        self.edit(P1 + "P1.2.json", lambda d: d.update(artifacts=[{**out, "path": "b.json", "role": "input"}]))
+        self.assertEqual(self.found("artifact_duplicate"), [])
+        self.assertFound("artifact_path", "P1.2.json/artifacts/0/id", count=1)
+        self.edit(P1 + "P1.2.json", lambda d: d.update(artifacts=[{**out, "role": "input"}]))
+        self.assertEqual(self.found("artifact_path") + self.found("ref_unknown"), [])
+
+    def test_an_input_artifact_without_an_output_is_unknown(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(artifacts=[{"id": "ghost", "path": "a.json", "role": "input"}]))
+        self.assertFound("ref_unknown", "P1.2.json/artifacts/0/id", count=1)
+
+    def test_read_refs_resolve_and_stay_local_with_one_section(self):
+        reads = [{"ref": "knowledge/none", "why": "w", "required": False},
+                 {"ref": "PLAN3.D1", "why": "w", "required": False}]
+        self.edit(P1 + "P1.2.json", lambda d: d.update(reads=reads))
+        self.assertFound("ref_unknown", "P1.2.json/reads/0/ref", count=1)
+        self.assertFound("reads_ref", "P1.2.json/reads/1/ref", count=1)
+        demo.write_doc(self.root / "knowledge" / "design.json",
+                       {"$schema": "urn:swissknifeman:task:plan:document:v1", "id": "design", "title": "D",
+                        "sections": [{"id": "validation", "title": "V", "text": "t"}]}, "document")
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            reads=[{"ref": "knowledge/design#validation", "section": "validation", "why": "w", "required": True}]))
+        self.assertFound("reads_ref", "P1.2.json/reads/0/section", count=1)
+
     def test_log_events_must_point_at_existing_items_and_phases(self):
         with open(self.root / "log.jsonl", "a", encoding="utf-8") as handle:
             handle.write('{"v":1,"ts":"2026-10-05T10:00:00Z","type":"note","item":"P1.7","phase":"P5","actor":{"provider":"p","model":"m"},"summary":"s"}\n')

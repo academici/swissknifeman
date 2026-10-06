@@ -79,6 +79,32 @@ class ValidatorTests(unittest.TestCase):
         self.assertEqual([(i.path, i.code) for i in issues], [("/reads/1/path", "pattern")])
         self.assertTrue(issues[0].message.startswith("/reads/1/path: "))
 
+    def test_a_read_names_exactly_one_of_path_or_ref(self):
+        self.item["reads"] = [{"ref": "knowledge/design#validation", "why": "w", "required": True},
+                              {"ref": "artifact/catalog", "section": "s", "why": "w", "required": False}]
+        self.assertEqual(schema.validate(self.item, "item"), [])
+        both = {"ref": "D1", "path": "lib/x.py", "why": "w", "required": True}
+        neither = {"why": "w", "required": True}
+        for read in (both, neither):
+            self.item["reads"] = [read]
+            self.assertEqual([(i.path, i.code) for i in schema.validate(self.item, "item")], [("/reads/0", "one_of")], read)
+
+    def test_ref_fields_take_the_whole_grammar_and_nothing_else(self):
+        good = ["P1", "P1.2", "D3", "P1.2/U4", "knowledge/design", "knowledge/design#validation", "artifact/catalog",
+                "PLAN2.P6.1/U1", "repo:PLAN2.knowledge/x#y"]
+        for ref in good:
+            self.item["related"] = [{"ref": ref, "relation": "informs"}]
+            self.assertEqual(schema.validate(self.item, "item"), [], ref)
+        for ref in ("knowledge/", "artifact/", "P1/U1", "U1", "x", "knowledge/a#"):
+            self.item["related"] = [{"ref": ref, "relation": "informs"}]
+            self.assertEqual([i.code for i in schema.validate(self.item, "item")], ["pattern"], ref)
+
+    def test_artifact_ids_are_optional_and_pattern_checked(self):
+        self.item["artifacts"] = [{"id": "catalog", "path": "x.json", "role": "output"}, {"path": "y.json", "role": "input"}]
+        self.assertEqual(schema.validate(self.item, "item"), [])
+        self.item["artifacts"][0]["id"] = "bad id"
+        self.assertEqual([(i.path, i.code) for i in schema.validate(self.item, "item")], [("/artifacts/0/id", "pattern")])
+
     def test_pointer_escapes_special_characters(self):
         self.item["a/b~c"] = 1
         issues = schema.validate(self.item, "item")

@@ -69,6 +69,8 @@ def resolve(plan: store.Plan, ref: str, *, repos: Mapping[str, str] | None = Non
         return _fail(ref, "REF_INVALID", str(exc))
     if parsed.plan is None:  # local reference: not ours to resolve
         return {"ref": ref, "loaded": False}
+    if parsed.kind not in _KEYS:  # only phases, items and decisions of other plans are resolved
+        return _fail(ref, "REF_UNSUPPORTED", f"a {parsed.kind} of another plan cannot be resolved")
     try:
         plans_root, same_repo = _plans_root(plan, parsed.repo, repos)
         plan_dir = _find_plan_dir(plans_root, parsed.plan)

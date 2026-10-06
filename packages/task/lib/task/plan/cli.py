@@ -6,7 +6,7 @@ or check errors (stderr ``CODE: message``), 2 usage.
 from __future__ import annotations
 
 import argparse
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 from pathlib import Path
@@ -14,11 +14,12 @@ import re
 import sys
 
 
-from . import brief, check, context, lifecycle, ops, schema, snapshot, stats, store, units, views
+from . import brief, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
 _UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
+_READ_VERBS = ("get", "list", "events", "artifact")
 
 
 class UsageError(Exception):
@@ -76,6 +77,13 @@ def _session(value: str | None) -> str | None:
         return session_context.resolve().session_id
     except (ValueError, ImportError, OSError):
         return None
+
+
+def _csv(text: str) -> list[str]:
+    parts = [part.strip() for part in text.split(",")]
+    if not all(parts):
+        raise argparse.ArgumentTypeError("expected a non-empty comma-separated list")
+    return parts
 
 
 def _json_value(inline: str | None, file: Path | None, *, required: bool = True):
@@ -150,12 +158,41 @@ def cmd_show(args) -> int:
         print("  decisions: " + (", ".join(f"{d['id']} {d['status']}" for d in summary["decisions"]) or "none"))
         print(f"  next: {summary['next']}")
         return 0
-    if args.ref in ("plan", "brief"):
-        kind, doc = args.ref, getattr(plan, args.ref)
+    # Keep the legacy document-only output, including knowledge/<id>.json.
+    ref = args.ref.removesuffix(".json") if args.ref.startswith("knowledge/") else args.ref
+    data = query.get(plan, ref)
+    store.check_doc(data, "read-get", "show result")
+    if data["kind"] == "artifact":
+        _print_json(data["doc"])
     else:
-        kind, _key, doc = ops.resolve_target(plan, args.ref)
-    print(store.canonical_dump(doc, kind), end="")
+        print(store.canonical_dump(data["doc"], data["kind"]), end="")
     return 0
+
+
+def _read_result(data, kind: str) -> int:
+    store.check_doc(data, kind, f"{kind} result")
+    _print_json(data)
+    return 0
+
+
+def cmd_get(args) -> int:
+    return _read_result(query.get(store.load_plan(_plan_dir(args)), args.ref, section=args.section,
+                                  fields=args.fields, repos=_repos(args)), "read-get")
+
+
+def cmd_list(args) -> int:
+    return _read_result(query.list_rows(store.load_plan(_plan_dir(args)), args.kind, status=args.status,
+                                       phase=args.phase, applies_to=args.applies_to), "read-list")
+
+
+def cmd_events(args) -> int:
+    return _read_result(query.events(store.load_plan(_plan_dir(args)), item=args.item, types=args.type,
+                                    since=args.since, limit=args.limit), "read-events")
+
+
+def cmd_artifact(args) -> int:
+    return _read_result(query.artifact(store.load_plan(_plan_dir(args)), args.ref, inline=args.inline,
+                                      repos=_repos(args)), "read-artifact")
 
 
 def cmd_set(args) -> int:
@@ -453,6 +490,29 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("ref", nargs="?", help="plan, brief, Pn, Pn.m, D#, Pn.m/U#")
     p.add_argument("--json", action="store_true", help="machine-readable overview")
 
+    p = verb("get", cmd_get, "read one document by reference (JSON envelope)")
+    p.add_argument("ref")
+    p.add_argument("--section", help="knowledge section id")
+    p.add_argument("--fields", type=_csv, help="comma-separated top-level fields")
+    p.add_argument("--repo", action="append", type=_repo_mapping, default=[], metavar="NAME=PATH")
+
+    p = verb("list", cmd_list, "list document rows with filters (JSON envelope)")
+    p.add_argument("kind", help="item, phase, decision, document or unit (plural names also accepted)")
+    p.add_argument("--status")
+    p.add_argument("--phase")
+    p.add_argument("--applies-to")
+
+    p = verb("events", cmd_events, "read journal events with filters (JSON envelope)")
+    p.add_argument("--item")
+    p.add_argument("--type", type=_csv, help="comma-separated event types")
+    p.add_argument("--since", help="inclusive ISO timestamp with timezone")
+    p.add_argument("--limit", type=int, help="latest N matching events, in journal order")
+
+    p = verb("artifact", cmd_artifact, "read artifact metadata and optional content (JSON envelope)")
+    p.add_argument("ref")
+    p.add_argument("--inline", action="store_true")
+    p.add_argument("--repo", action="append", type=_repo_mapping, default=[], metavar="NAME=PATH")
+
     p = verb("set", cmd_set, "merge-patch plan, brief, a phase, item, decision or unit")
     p.add_argument("ref", help="plan | brief | Pn | Pn.m | D# | Pn.m/U#")
     value_args(p, True)
@@ -623,12 +683,28 @@ def _failure(code: str, message: str, issues=()) -> dict:
 
 
 def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
+    # Know the output contract even if parsing fails (missing args, bad CSV, etc.).
+    tail = argv
+    output = "text"
+    if tail[:1] == ["--output"] and len(tail) >= 2:
+        output, tail = tail[1], tail[2:]
+    elif tail and tail[0].startswith("--output="):
+        output, tail = tail[0].split("=", 1)[1], tail[1:]
+    parse_as_json = output == "json" or bool(tail and tail[0] in _READ_VERBS)
+    errors = io.StringIO()
     try:
-        args = parser.parse_args(argv)
+        if parse_as_json:
+            with redirect_stderr(errors):
+                args = parser.parse_args(argv)
+        else:
+            args = parser.parse_args(argv)
     except SystemExit as exc:  # argparse: 0 for --help, 2 for usage
+        if exc.code and parse_as_json:
+            _emit(_failure("USAGE", errors.getvalue().strip()))
         return int(exc.code or 0)
-    as_json = args.output == "json"
+    as_json = args.output == "json" or args.command in _READ_VERBS
     try:
         if as_json:
             output = io.StringIO()

@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
@@ -61,6 +62,10 @@ class VerbCoverageTests(EnvelopeCase):
         batches.write_text(json.dumps([{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "recommended"}]))
         return [  # (verb, argv, expected exit code); order matters: later verbs see earlier writes
             ("show", ["show", plan], 0),
+            ("get", ["get", plan, "P1.1"], 0),
+            ("list", ["list", plan, "items"], 0),
+            ("events", ["events", plan], 0),
+            ("artifact", ["artifact", plan, "artifact/absent"], 1),
             ("check", ["check", plan], 0),
             ("next", ["next", plan], 0),
             ("stats", ["stats", plan], 0),
@@ -110,6 +115,17 @@ class VerbCoverageTests(EnvelopeCase):
 
 
 class ErrorEnvelopeTests(EnvelopeCase):
+    def test_read_verbs_validate_data_before_printing(self):
+        from task.plan import query
+        for name, call, invalid in (("get", ["get", self.root, "P1.1"], {"doc": {}}),
+                                    ("list_rows", ["list", self.root, "items"], [{"ref": 3}]),
+                                    ("events", ["events", self.root], [{"type": "note"}]),
+                                    ("artifact", ["artifact", self.root, "artifact/a"], {"exists": True})):
+            with self.subTest(name=name), mock.patch.object(query, name, return_value=invalid):
+                doc = self.envelope(*call, code=1)
+                self.assertEqual(doc["error"]["code"], "SCHEMA_INVALID")
+                self.assertTrue(doc["error"]["issues"])
+
     def test_refusals_keep_their_code_and_issues(self):
         unknown = self.envelope("show", self.root, "P9.9", code=1)
         self.assertEqual(unknown["error"]["code"], "REF_UNKNOWN")

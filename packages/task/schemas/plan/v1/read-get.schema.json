@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-get:v1",
+  "title": "Read Get",
+  "type": "object",
+  "description": "One document read by reference, optionally projected by section and fields.",
+  "properties": {
+    "ref": {
+      "description": "Requested document reference, or the root plan/brief document.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "plan",
+            "brief"
+          ]
+        },
+        {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
+        }
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "description": "Source document kind.",
+      "enum": [
+        "plan",
+        "brief",
+        "phase",
+        "item",
+        "unit",
+        "decision",
+        "document",
+        "artifact"
+      ]
+    },
+    "doc": {
+      "type": "object",
+      "description": "Complete source document, or the explicitly requested projection; fields depend on kind."
+    }
+  },
+  "required": [
+    "ref",
+    "kind",
+    "doc"
+  ],
+  "additionalProperties": false
+}

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.2",
   "title": "Глаголы чтения get, list, events, artifact + схемы data",
-  "status": "todo",
+  "status": "done",
   "summary": "Read-only глаголы `get <ref> [--section] [--fields]`, `list <kind> [--status --phase --applies-to]`, `events [--item --type --since --limit]`, `artifact <ref> [--inline]`; `show <ref>` делегирует `get`; схемы data read-*.",
   "why": "D11, R2: агент запрашивает данные конкретного пункта и журнал через API, не открывая файлы.",
   "scope": {
@@ -154,6 +154,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:11:51Z"
+  "result": {
+    "started_at": "2026-10-06T08:54:33Z",
+    "finished_at": "2026-10-06T09:02:47Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1106b-188a-7371-8f82-c784741e2bc2"
+    },
+    "notes": "Добавлены read-only query.get/list_rows/events/artifact, CLI get/list/events/artifact, четыре схемы read-* и валидация data до печати. show использует get и сохраняет прежний canonical document-only вывод. get поддерживает секции knowledge, верхнеуровневые fields и qualified refs; list фильтры и numeric order; events фильтры, inclusive since и latest limit; artifact SHA-256, полный JSON/UTF-8, отказы PATH_INVALID/HUMAN_VIEW/CONTENT_INVALID. V1=0 (16 тестов), V2=0 (12), V3=0 (28), дополнительно test_cli.py=0 (23), всего 79 тестов. Логи и validation.json: @plan/artifacts/P6.2/. Подтверждены отсутствие записи/PlanLock и совместимость show. Документация, CHANGELOG, версии и широкий validate закреплены за P6.6. Ревью не запускалось по указанию владельца.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T09:02:47Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T09:02:47Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T09:02:47Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T09:02:47Z"
 }

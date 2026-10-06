@@ -175,6 +175,29 @@ class ValidatorTests(unittest.TestCase):
         self.assertIs(schema.load_registry(), schema.load_registry(SCHEMA_DIR))
 
 
+class ReadDataTests(unittest.TestCase):
+    def test_read_data_schemas_accept_results_and_reject_broken_contracts(self):
+        event = load(FIXTURES / "valid" / "log-event-e5-difficulty.json")
+        good = {
+            "read-get": {"ref": "knowledge/notes#a", "kind": "document", "doc": {"sections": []}},
+            "read-list": [{"ref": "P1.1", "title": "First", "status": "todo"}],
+            "read-events": [event],
+            "read-artifact": {"ref": "artifact/data", "path": "@plan/artifacts/data.json", "role": "output",
+                              "exists": False, "sha256": None},
+        }
+        for kind, value in good.items():
+            with self.subTest(kind=kind):
+                self.assertEqual(schema.validate(value, kind), [])
+                broken = copy.deepcopy(value)
+                record = broken[0] if isinstance(broken, list) else broken
+                record["unexpected"] = True
+                self.assertIn("additional", codes(schema.validate(broken, kind)))
+        for ref in ("views/plan.md", "knowledge/../notes", "P1.1\n"):
+            self.assertTrue(schema.validate({"ref": ref, "kind": "item", "doc": {}}, "read-get"))
+        self.assertTrue(schema.validate({**good["read-artifact"], "sha256": "wrong"}, "read-artifact"))
+        self.assertTrue(schema.validate([{**event, "type": "unknown"}], "read-events"))
+
+
 class ProfileTests(unittest.TestCase):
     """The schema files themselves stay inside the closed profile and carry the documented contract."""
 
@@ -184,7 +207,7 @@ class ProfileTests(unittest.TestCase):
     def test_schema_files_exist_and_parse(self):
         names = [p.name for p in self.schema_files()]
         self.assertEqual(names, sorted(f"{k}.schema.json" for k in
-                                       ("defs", "plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot", "envelope")))
+                                       ("defs", *schema.KINDS)))
         for path in self.schema_files():
             self.assertIsInstance(load(path), dict)
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "check_id": "V1",
+  "candidate": {
+    "head": "abc1234"
+  },
+  "started_at": "2026-10-07T00:00:00Z",
+  "finished_at": "2026-10-07T00:00:05Z",
+  "evidence_id": "evidence-fixture:procedure-pass",
+  "subject": "PLAN1.P1.1",
+  "procedure": {
+    "procedure": "Open the generated report and compare its totals with the source."
+  },
+  "producer": {
+    "kind": "human"
+  },
+  "verdict": "pass",
+  "observation": "Totals match the source."
+}

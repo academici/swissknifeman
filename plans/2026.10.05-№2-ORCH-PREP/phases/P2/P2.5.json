@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.5",
   "title": "Evidence для finish и unit accept (T6) + settings.evidence",
-  "status": "todo",
+  "status": "done",
   "summary": "`finish --evidence V#=PATH` и `unit accept --evidence` принимают check-evidence exec/v1 (структурная stdlib-проверка), записывают exit/verdict как результат проверки и путь как evidence; `plan.settings.evidence: required` запрещает закрытие без evidence.",
   "why": "I4: `--check V1=0` без запуска ничего не доказывает. Plan 1 даёт механизм и opt-in обязательность без breaking (D9); сверка кандидата с деревом — Plan 2. Hard risk: data integrity (INV-4, INV-5).",
   "scope": {
@@ -136,6 +136,38 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:23Z"
+  "result": {
+    "started_at": "2026-10-06T06:07:55Z",
+    "finished_at": "2026-10-06T06:20:37Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "360156d8-a081-4eb8-be5a-6cc834c1a4ab"
+    },
+    "notes": "lifecycle._load_evidence (stdlib-проверка ключевых полей check-evidence exec/v1, путь через context._resolve) и load_evidence; finish --evidence V#=PATH: exit из evidence → check-результат, checks[].evidence, result.evidence без дублей, EVIDENCE_CONFLICT с --check, EVIDENCE_REQUIRED при settings.evidence=required, идемпотентность attempt сравнивает и evidence; unit accept --evidence → outcome.evidence (CHECKS_RED на провальном evidence); CLI --evidence для finish и unit accept. test_evidence.py (30 тестов) + 5 fixtures evidence; orch конформанс TaskEvidenceConformance. Расширено: engine 494 OK, Task package 579 OK, orch tests OK, plan check 0 ошибок. Синхронизация plan-protocol/docs/CHANGELOG — P2.6.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T06:20:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T06:20:37Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T06:20:37Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T06:20:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T06:20:37Z"
 }

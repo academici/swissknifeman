@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Iterable, Mapping
 
 from . import check as _check, lifecycle, store, views
-from .model import ITEM_ID, PlanError
+from .model import ITEM_ID, PlanError, id_sort_key
 
 UNIT_STATUSES = ("todo", "dispatched", "returned", "accepted", "reworked", "rejected")
 OPEN = ("dispatched", "returned")
@@ -251,35 +251,53 @@ def _attempt_seen(p: store.Plan, item_id: str, unit_id: str, attempt_id: str) ->
     return seen
 
 
-def _outcome_differs(outcome: Mapping, status: str, attempt_id: str, notes: str, changed: Iterable[str]) -> bool:
-    """Whether a repeat of the latest transition reports other notes or paths than the recorded outcome."""
+def _outcome_differs(outcome: Mapping, status: str, attempt_id: str, notes: str, changed: Iterable[str],
+                     evidence: Iterable[str] = ()) -> bool:
+    """Whether a repeat of the latest transition reports other notes, paths or evidence than the outcome."""
     if outcome.get("attempt_id") != attempt_id:
         return False  # later transitions replaced the outcome; the logged status is all that is left to compare
-    changed = list(changed)
+    changed, evidence = list(changed), list(evidence)
+    if outcome.get("evidence", []) != evidence:  # evidence belongs to this transition only, so absence must match
+        return True
     if status == "returned":  # a return replaces both fields, so absence must match too
         return outcome.get("notes", "") != (notes or "") or outcome.get("changed", []) != changed
     return bool(notes and outcome.get("notes") != notes or changed and outcome.get("changed") != changed)
 
 
+def _unit_check_ids(p: store.Plan, item_id: str, unit: Mapping) -> set[str]:
+    """Check ids a unit may prove: the item's validation and the unit's own checks."""
+    known = {c["id"] for c in p.items[item_id].get("validation", []) if isinstance(c, dict) and "id" in c}
+    known |= {c if isinstance(c, str) else c.get("id") for c in unit.get("checks", [])
+              if isinstance(c, str) or isinstance(c, dict)}
+    return known
+
+
 def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[str, ...], *, notes: str = "",
                 changed: Iterable[str] = (), minutes: int | None = None, need_notes: bool = False,
                 actor: Mapping | None = None, back_to: str | None = None, executed_by: Mapping | None = None,
-                attempt_id: str | None = None) -> bool:
+                attempt_id: str | None = None, evidence: Mapping[str, str] | None = None) -> bool:
     """Move a unit to ``status`` (stored as ``back_to`` when set: a rework goes straight back to ``dispatched``).
 
     True when ``attempt_id`` already registered this transition and nothing was written. The attempt is looked
     up in the log, so a repeat stays a no-op after later transitions; while it is still the latest transition its
-    notes and changed paths must match too, else ``ATTEMPT_CONFLICT``.
+    notes, changed paths and evidence must match too, else ``ATTEMPT_CONFLICT``.
+
+    ``evidence`` (``V#`` -> check-evidence file of ``<item>/<U#>``) lands in ``outcome.evidence``; a failing one is
+    ``CHECKS_RED``. Unit checks are never recorded as exits.
     """
+    evidence = dict(evidence or {})
     registrar = lifecycle._given_actor(actor)
     executed_by = lifecycle._given_actor(executed_by)
     attempt_id = lifecycle.need_attempt(attempt_id)
     with lifecycle._mutation(plan) as (p, lock):
         unit = copy.deepcopy(_need_unit(p, item_id, unit_id))
+        proven = lifecycle.load_evidence(p, f"{item_id}/{unit_id}", evidence, _unit_check_ids(p, item_id, unit))
+        paths = list(dict.fromkeys(evidence[i] for i in sorted(evidence, key=id_sort_key)))
         if attempt_id is not None:
             seen = _attempt_seen(p, item_id, unit_id, attempt_id)
             if seen is not None:
-                if seen != status or _outcome_differs(unit.get("outcome") or {}, status, attempt_id, notes, changed):
+                if seen != status or _outcome_differs(unit.get("outcome") or {}, status, attempt_id, notes, changed,
+                                                      paths):
                     raise PlanError("ATTEMPT_CONFLICT", f"attempt {attempt_id} already registered "
                                                         f"{item_id}/{unit_id} {seen} with other outcome")
                 return True
@@ -290,6 +308,9 @@ def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[st
             raise PlanError("NOTES_REQUIRED", f"{status} needs --notes")
         if minutes is not None and (isinstance(minutes, bool) or not isinstance(minutes, int) or minutes < 0):
             raise PlanError("MINUTES_INVALID", "--minutes is a non-negative integer")
+        red = [f"{i}={code}" for i, code in sorted(proven.items(), key=lambda kv: id_sort_key(kv[0])) if code != 0]
+        if red:
+            raise PlanError("CHECKS_RED", f"{item_id}/{unit_id} evidence shows failed check(s): {', '.join(red)}")
         executor = lifecycle._actor_doc(p, actor, item_id)
         outcome = dict(unit.get("outcome") or {})
         outcome.setdefault("agent", executor)
@@ -308,6 +329,8 @@ def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[st
             outcome["changed"] = list(changed)
         if minutes is not None:
             outcome["minutes"] = minutes
+        if paths:
+            outcome["evidence"] = paths
         round_no = None
         if status == "reworked":
             round_no = 1 + sum(1 for _, e, _ in store.log_lines(p.root)
@@ -341,10 +364,14 @@ def return_unit(plan, item_id: str, unit_id: str, *, notes: str = "", changed: I
 
 
 def accept(plan, item_id: str, unit_id: str, *, notes: str = "", minutes: int | None = None,
-           actor: Mapping | None = None, attempt_id: str | None = None) -> bool:
-    """The executor reviewed and tested the piece: ``returned -> accepted``; True when already registered."""
+           actor: Mapping | None = None, attempt_id: str | None = None,
+           evidence: Mapping[str, str] | None = None) -> bool:
+    """The executor reviewed and tested the piece: ``returned -> accepted``; True when already registered.
+
+    ``evidence`` maps ``V#`` to check-evidence files of the unit; their paths land in ``outcome.evidence``.
+    """
     return _transition(plan, item_id, unit_id, "accepted", ("returned",), notes=notes, minutes=minutes, actor=actor,
-                       attempt_id=attempt_id)
+                       attempt_id=attempt_id, evidence=evidence)
 
 
 def rework(plan, item_id: str, unit_id: str, *, notes: str, actor: Mapping | None = None) -> None:

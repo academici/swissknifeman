@@ -11,6 +11,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 import copy
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import re
 import shutil
@@ -28,6 +29,12 @@ FINISH_STATUSES = ("done", "done_with_deviations", "blocked", "skipped")
 _OPTION_ID = re.compile(r"^[A-Z]$")
 _GATE = re.compile(r"^[A-Z0-9-]+$")
 ATTEMPT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$", re.ASCII)  # schemas/plan/v1 defs.attemptId
+EVIDENCE_SCHEMA = "urn:swissknifeman:orch:exec:check-evidence:v1"
+EVIDENCE_CONTRACT = "exec/v1"
+_CHECK_ID = re.compile(r"^V[0-9]+$")
+_GIT_SHA = re.compile(r"^[0-9a-f]{7,40}$")
+_EVIDENCE_KEYS = ("evidence_id", "started_at", "finished_at")
+_PRODUCER_KINDS = ("engine", "executor", "human")
 
 
 # ---------------------------------------------------------------- reading a plan
@@ -334,6 +341,80 @@ def need_attempt(attempt_id: str | None) -> str | None:
     return attempt_id
 
 
+def _text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _load_evidence(p: store.Plan, item_ref: str, check_id: str, path: str) -> int:
+    """Exit of check ``check_id`` proven by the check-evidence file at ``path`` (repo-relative or ``@plan/``).
+
+    A structural stdlib check of the exec/v1 key fields (D9; orch is never imported): a command carries its
+    observed ``exit``; a manual procedure carries a ``verdict``, mapped to 0 (``pass``) or 1 (``fail``) — no shell
+    exit is invented for it. ``item_ref`` is ``P1.2`` or ``P1.2/U1``; the evidence must name it and the check.
+    """
+    from . import context  # context imports this module for scheduling
+
+    def invalid(field: str, why: str) -> PlanError:
+        return PlanError("EVIDENCE_INVALID", f"{check_id} evidence {path}: {field} {why}")
+
+    target = context._resolve(p, path) if isinstance(path, str) and path else None
+    if target is None or not target.is_file():
+        raise invalid("file", "must exist inside the repository or the plan directory")
+    try:
+        doc = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise invalid("file", f"is not readable JSON ({error})") from None
+    if not isinstance(doc, dict):
+        raise invalid("document", "must be a JSON object")
+    if doc.get("$schema") != EVIDENCE_SCHEMA:
+        raise invalid("$schema", f"must be {EVIDENCE_SCHEMA}")
+    if doc.get("contract_version") != EVIDENCE_CONTRACT:
+        raise invalid("contract_version", f"must be {EVIDENCE_CONTRACT}")
+    for field in _EVIDENCE_KEYS:
+        if not _text(doc.get(field)):
+            raise invalid(field, "is required")
+    producer = doc.get("producer")
+    if not isinstance(producer, dict) or producer.get("kind") not in _PRODUCER_KINDS:
+        raise invalid("producer.kind", f"must be one of {', '.join(_PRODUCER_KINDS)}")
+    if not isinstance(doc.get("check_id"), str) or not _CHECK_ID.fullmatch(doc["check_id"]):
+        raise invalid("check_id", "must match V<n>")
+    subject = f"{p.plan.get('short_id') or p.plan['id']}.{item_ref}"
+    if doc["check_id"] != check_id or doc.get("subject") != subject:
+        raise PlanError("EVIDENCE_SUBJECT", f"{path} proves {doc.get('subject')!r} {doc['check_id']}, "
+                                            f"not {subject!r} {check_id}")
+    candidate = doc.get("candidate")
+    if not isinstance(candidate, dict) or not isinstance(candidate.get("head"), str) \
+            or not _GIT_SHA.fullmatch(candidate["head"]):
+        raise invalid("candidate.head", "must be a 7-40 character lowercase hex Git revision")
+    procedure = doc.get("procedure")
+    if not isinstance(procedure, dict):
+        raise invalid("procedure", "must be an object")
+    command, manual = _text(procedure.get("cmd")), _text(procedure.get("procedure"))
+    if command == manual or ("cmd" in procedure and "procedure" in procedure):
+        raise invalid("procedure", "needs exactly one non-empty cmd or procedure")
+    if command:
+        if "verdict" in doc:
+            raise invalid("verdict", "belongs to a manual procedure, not a command")
+        if isinstance(doc.get("exit"), bool) or not isinstance(doc.get("exit"), int):
+            raise invalid("exit", "must be the integer exit of the command")
+        return doc["exit"]
+    if "exit" in doc:
+        raise invalid("exit", "is never recorded for a manual procedure; use verdict")
+    if doc.get("verdict") not in ("pass", "fail"):
+        raise invalid("verdict", "must be pass or fail")
+    if not _text(doc.get("observation")):
+        raise invalid("observation", "is required for a manual procedure")
+    return 0 if doc["verdict"] == "pass" else 1
+
+
+def load_evidence(p: store.Plan, item_ref: str, evidence: Mapping[str, str], known: Iterable[str]) -> dict[str, int]:
+    """``{V#: exit}`` of every evidence file; ``CHECK_UNKNOWN`` for a check outside ``known``."""
+    unknown = sorted(set(evidence) - set(known))
+    if unknown:
+        raise PlanError("CHECK_UNKNOWN", f"{item_ref} declares no check {', '.join(unknown)}")
+    return {check_id: _load_evidence(p, item_ref, check_id, path) for check_id, path in evidence.items()}
+
+
 def _need_phase(p: store.Plan, phase_id: str) -> dict:
     if phase_id not in p.phases:
         raise PlanError("REF_UNKNOWN", f"unknown phase {phase_id!r}")
@@ -539,6 +620,11 @@ def _recorded_checks(doc: dict) -> dict[str, int]:
     return {c["id"]: c["exit"] for c in result.get("checks", []) if isinstance(c, dict) and "id" in c and "exit" in c}
 
 
+def _check_evidence(doc: dict) -> dict[str, str]:
+    result = doc.get("result") if isinstance(doc.get("result"), dict) else {}
+    return {c["id"]: c["evidence"] for c in result.get("checks", []) if isinstance(c, dict) and "id" in c and "evidence" in c}
+
+
 def _closure_summary(statuses: list[str]) -> str:
     counts = [(s.value, statuses.count(s.value)) for s in ItemStatus if statuses.count(s.value)]
     return f"{len(statuses)} item(s): " + ", ".join(f"{n} {name}" for name, n in counts)
@@ -547,23 +633,40 @@ def _closure_summary(statuses: list[str]) -> str:
 def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[str, int] | None = None,
            deviations: Iterable[str] = (), pending: Iterable[str] = (), escalation: str | None = None,
            commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None,
-           executed_by: Mapping | None = None, attempt_id: str | None = None) -> FinishResult:
+           executed_by: Mapping | None = None, attempt_id: str | None = None,
+           evidence: Mapping[str, str] | None = None) -> FinishResult:
     """Record the outcome of ``item_id``; closes the phase, and the plan, when it was the last open piece.
 
     ``actor`` is the registrar; ``executed_by`` (route-checked) replaces ``result.executor``. A repeat of the
     recorded ``attempt_id`` with the same status and checks writes nothing (``already_registered``); any other
     repeat of it is ``ATTEMPT_CONFLICT``.
+
+    ``evidence`` maps ``V#`` to a check-evidence file: its exit is the recorded check result and its path the
+    check's ``evidence``; a ``checks`` exit that disagrees is ``EVIDENCE_CONFLICT``. With
+    ``plan.settings.evidence == "required"`` a done item needs evidence for every acceptance check.
     """
     checks, deviations, pending, commits = dict(checks or {}), list(deviations), list(pending), list(commits)
+    evidence = dict(evidence or {})
     registrar, executed_by, attempt_id = _given_actor(actor), _given_actor(executed_by), need_attempt(attempt_id)
     with _mutation(plan) as (p, lock):
         item = copy.deepcopy(_need_item(p, item_id))
         if status not in FINISH_STATUSES:
             raise PlanError("STATUS_INVALID", f"status must be one of {', '.join(FINISH_STATUSES)}")
+        phase_id = _item_phase(item_id)
+        known = {c["id"] for c in item.get("validation", []) if isinstance(c, dict)}
+        known |= {c["id"] for c in p.phases[phase_id].get("validation", []) if isinstance(c, dict)}
+        proven = load_evidence(p, item_id, evidence, known)
+        conflict = sorted((i for i in proven if i in checks and checks[i] != proven[i]), key=id_sort_key)
+        if conflict:
+            raise PlanError("EVIDENCE_CONFLICT", "; ".join(f"--check {i}={checks[i]} but {evidence[i]} proves exit "
+                                                           f"{proven[i]}" for i in conflict))
+        checks.update(proven)
         prior = item.get("result") if isinstance(item.get("result"), dict) else {}
         if attempt_id is not None and prior.get("attempt_id") == attempt_id:
             recorded = _recorded_checks(item)
-            if item.get("status") != status or any(recorded.get(i) != code for i, code in checks.items()):
+            proofs = _check_evidence(item)
+            if item.get("status") != status or any(recorded.get(i) != code for i, code in checks.items()) \
+                    or any(proofs.get(i) != path for i, path in evidence.items()):
                 raise PlanError("ATTEMPT_CONFLICT", f"attempt {attempt_id} already registered {item_id} as "
                                                     f"{item.get('status')} with other outcome")
             return FinishResult(item_id, item["status"], None, p.plan.get("status") == "done", next(p),
@@ -572,15 +675,12 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
         if current != "in_progress" and not (status == "skipped" and current == "todo"):
             raise PlanError("NOT_STARTED", f"{item_id} is {current}; start it first"
                                            + (" (use reopen to redo a finished item)" if current in TERMINAL else ""))
-        phase_id = _item_phase(item_id)
         if status in ("done", "done_with_deviations"):
             open_units = sorted(key.split("/")[1] for key, unit in p.units.items()
                                 if key.startswith(f"{item_id}/") and unit.get("status") not in ("accepted", "rejected"))
             if open_units:
                 raise PlanError("UNITS_OPEN", f"{item_id} has units still out: {', '.join(open_units)} "
                                               "(plan.py unit … accept|reject|rework)")
-        known = {c["id"] for c in item.get("validation", []) if isinstance(c, dict)}
-        known |= {c["id"] for c in p.phases[phase_id].get("validation", []) if isinstance(c, dict)}
         unknown = sorted(set(checks) - known)
         if unknown:
             raise PlanError("CHECK_UNKNOWN", f"{item_id} declares no check {', '.join(unknown)}")
@@ -614,6 +714,15 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             if ref.plan is None and p.decisions.get(ref.target, {}).get("status") != "accepted":
                 raise PlanError("DECISION_REQUIRED", f"decision {decision} is not an accepted decision of this plan")
 
+        # A check re-recorded without evidence loses the evidence of its earlier result.
+        proofs = {i: path for i, path in _check_evidence(item).items() if i not in checks}
+        proofs.update(evidence)
+        if status in ("done", "done_with_deviations") and (p.plan.get("settings") or {}).get("evidence") == "required":
+            unproven = [i for i in acceptance if i not in proofs]
+            if unproven:
+                raise PlanError("EVIDENCE_REQUIRED", f"plan settings.evidence is required; acceptance check(s) without "
+                                                     f"evidence: {', '.join(unproven)} (--evidence V1=PATH)")
+
         if executed_by is not None:
             _route_verdict(p, [item_id], executed_by)
             validate_route(item.get("route") or {}, executed_by, item_id)
@@ -641,7 +750,11 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
         stamped = {c["id"]: c["at"] for c in prior.get("checks", []) if isinstance(c, dict) and "id" in c}
         stamped.update({i: now for i in checks})
         if recorded:
-            result["checks"] = [{"id": i, "exit": recorded[i], "at": stamped.get(i, now)} for i in ordered]
+            result["checks"] = [{"id": i, "exit": recorded[i], "at": stamped.get(i, now),
+                                 **({"evidence": proofs[i]} if i in proofs else {})} for i in ordered]
+        paths = list(dict.fromkeys(proofs[i] for i in ordered if i in proofs))
+        if paths:
+            result["evidence"] = paths
         item["status"], item["result"] = status, result
         actor_doc = _actor_doc(p, registrar or executed_by, item_id)
         changes: list[tuple[str, str | None, dict]] = [("item", item_id, item)]

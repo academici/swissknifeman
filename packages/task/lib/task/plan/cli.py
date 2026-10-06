@@ -44,6 +44,22 @@ def _check_result(text: str) -> tuple[str, int]:
     return match[1], int(match[2])
 
 
+def _evidence(text: str) -> tuple[str, str]:
+    match = re.fullmatch(r"(V[0-9]+)=(\S+)", text)
+    if match is None:
+        raise argparse.ArgumentTypeError("expected V<n>=<evidence path>, for example V1=@plan/artifacts/P1.2/V1.json")
+    return match[1], match[2]
+
+
+def _evidence_map(pairs: list[tuple[str, str]]) -> dict[str, str]:
+    seen: dict[str, str] = {}
+    for check_id, path in pairs:
+        if check_id in seen:
+            raise UsageError(f"--evidence {check_id} is given twice")
+        seen[check_id] = path
+    return seen
+
+
 def _repo_mapping(text: str) -> tuple[str, str]:
     name, sep, path = text.partition("=")
     if not sep or not re.fullmatch(r"[a-z0-9-]+", name) or not path:
@@ -266,7 +282,8 @@ def cmd_finish(args) -> int:
     result = lifecycle.finish(
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
         deviations=args.deviation, pending=args.pending, escalation=args.escalation, commits=args.commit,
-        decision=args.decision, actor=args.actor, executed_by=args.executed_by, attempt_id=args.attempt_id)
+        decision=args.decision, actor=args.actor, executed_by=args.executed_by, attempt_id=args.attempt_id,
+        evidence=_evidence_map(args.evidence))
     if args.json:
         _print_json({"item": result.item, "status": result.status, "phase_closed": result.phase_closed,
                      "plan_done": result.plan_done, "next": result.next.as_dict(),
@@ -306,6 +323,8 @@ def cmd_unit(args) -> int:
         raise UsageError("--executed-by belongs to unit … return")
     if args.attempt_id and args.action not in ("return", "accept"):
         raise UsageError("--attempt-id belongs to unit … return|accept")
+    if args.evidence and args.action != "accept":
+        raise UsageError("--evidence belongs to unit … accept")
     notes = args.notes or ""
     already = False
     if args.action == "return":
@@ -314,7 +333,7 @@ def cmd_unit(args) -> int:
                                     attempt_id=args.attempt_id)
     elif args.action == "accept":
         already = units.accept(plan_dir, args.item, args.target, notes=notes, minutes=args.minutes, actor=args.actor,
-                               attempt_id=args.attempt_id)
+                               attempt_id=args.attempt_id, evidence=_evidence_map(args.evidence))
     elif args.action == "rework":
         units.rework(plan_dir, args.item, args.target, notes=notes, actor=args.actor)
     else:
@@ -523,6 +542,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--executed-by", type=_actor, metavar="PROVIDER/MODEL[/EFFORT]",
                    help="who executed the item; route-checked, replaces result.executor")
     p.add_argument("--attempt-id", metavar="ID", help="registration attempt; a repeat of it is a no-op")
+    p.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V1=PATH",
+                   help="check-evidence file (exec/v1) whose exit is the check result (repeatable)")
     p.add_argument("--json", action="store_true")
 
     p = verb("unit", cmd_unit, "split an item into units and move them: add | <U#> dispatch|return|accept|rework|reject")
@@ -538,6 +559,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--executed-by", type=_actor, metavar="PROVIDER/MODEL[/EFFORT]",
                    help="return: who did the work when not the dispatched worker; route-checked")
     p.add_argument("--attempt-id", metavar="ID", help="return|accept: registration attempt; a repeat is a no-op")
+    p.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V1=PATH",
+                   help="accept: check-evidence file (exec/v1) of the unit (repeatable)")
     actor_arg(p)
 
     p = verb("stats", cmd_stats, "scout, unit and friction numbers of a plan (read-only)")

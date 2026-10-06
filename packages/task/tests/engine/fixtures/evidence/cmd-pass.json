@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "check_id": "V1",
+  "candidate": {
+    "head": "abc1234"
+  },
+  "started_at": "2026-10-07T00:00:00Z",
+  "finished_at": "2026-10-07T00:00:05Z",
+  "evidence_id": "evidence-fixture:cmd-pass",
+  "subject": "PLAN1.P1.1",
+  "procedure": {
+    "cmd": "python3 -m unittest discover -s tests",
+    "cwd": "lib"
+  },
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "claude-code",
+      "model": "claude-opus-5-5",
+      "effort": "high"
+    }
+  },
+  "exit": 0
+}

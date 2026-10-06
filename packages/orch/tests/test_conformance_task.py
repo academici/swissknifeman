@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ from orch import contracts
 from .task_fixture import TASK, brief_of_demo_plan
 
 BRIEF_PY = TASK / "lib/task/plan/brief.py"
+EVIDENCE_FIXTURES = TASK / "tests/engine/fixtures/evidence"
 
 
 @unittest.skipUnless(TASK.is_dir() and BRIEF_PY.is_file(), "Task package is not next to orch")
@@ -38,6 +40,20 @@ class TaskBriefConformance(unittest.TestCase):
         found = [ast.literal_eval(n.value) for n in ast.walk(tree)
                  if isinstance(n, ast.Assign) and any(getattr(t, "id", None) == "LIFECYCLE_PHRASES" for t in n.targets)]
         self.assertEqual(found, [contracts.LIFECYCLE_PHRASES])
+
+
+@unittest.skipUnless(EVIDENCE_FIXTURES.is_dir(), "Task evidence fixtures are not next to orch")
+class TaskEvidenceConformance(unittest.TestCase):
+    """Every check-evidence file Task accepts in its tests (D9) is valid exec/v1 check-evidence."""
+
+    def test_task_evidence_fixtures_are_valid_check_evidence(self):
+        fixtures = sorted(EVIDENCE_FIXTURES.glob("*.json"))
+        self.assertTrue(fixtures)
+        for fixture in fixtures:
+            with self.subTest(fixture.name):
+                doc = json.loads(fixture.read_text(encoding="utf-8"))
+                errors = [i for i in contracts.validate(doc, "check-evidence") if i.level == "error"]
+                self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,86 @@
+{
+  "item": "PLAN2.P6.6",
+  "at": "2026-10-06T09:56:24Z",
+  "executor": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "session": "01a1109e-760d-7d33-9679-b5d86d6c0a47"
+  },
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "cwd": ".",
+      "exit": 0,
+      "log": "@plan/artifacts/P6.6/V1.log",
+      "sha256": "235574c81d584032dd3722c60589ce44d2f89df4bb21895481f77a103255e4e8",
+      "test_runs": [
+        {
+          "tests": 679,
+          "seconds": 51.955
+        },
+        {
+          "tests": 594,
+          "seconds": 50.835
+        }
+      ],
+      "note": "Engine suite overlaps the package suite; counts are not unique tests."
+    },
+    {
+      "id": "canon",
+      "cmd": "python3 -m unittest discover -s tests -p test_canon_literals.py",
+      "cwd": "packages/task",
+      "exit": 0,
+      "tests": 4,
+      "log": "@plan/artifacts/P6.6/canon.log",
+      "bytes": 21630,
+      "cap": 105795,
+      "note": "Run after the final Markdown table correction."
+    },
+    {
+      "id": "plan-check",
+      "cmd": "python3 packages/task/scripts/plan.py check '2026.10.05-№2-ORCH-PREP'",
+      "cwd": ".",
+      "exit": 0,
+      "log": "@plan/artifacts/P6.6/plan-check.log"
+    },
+    {
+      "id": "projections",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+      "exit": 0,
+      "note": "No generated delta; also green within V1."
+    },
+    {
+      "id": "publication-version",
+      "cmd": "python3 packages/task/scripts/check-publication-version.py .",
+      "exit": 0,
+      "note": "Task remains aligned with released umbrella 0.28.3; also green within V1."
+    },
+    {
+      "id": "whitespace",
+      "cmd": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "docs": {
+    "updated": [
+      "packages/task/skills/plan-protocol/SKILL.md",
+      "packages/task/skills/plan-protocol/references/api.md",
+      "packages/task/docs/json-plan-design.md",
+      "CHANGELOG.md"
+    ],
+    "reason": "Synchronize agent-facing read/write API documentation with P6 and record the additive API under Unreleased."
+  },
+  "release": {
+    "version": "0.28.3",
+    "owner": "umbrella",
+    "bump": "Deferred to skiller release; no per-item Task bump.",
+    "known_baseline": "version-guard status reports inherited NOT-BUMPED units (8, including task); this item does not release or update installed caches."
+  },
+  "review": {
+    "performed": false,
+    "owner_instruction": "работай без ревью в рамках своей задачи"
+  },
+  "scope": "Documentation and existing acceptance checks only; no new verbs, role edits or product code changes."
+}

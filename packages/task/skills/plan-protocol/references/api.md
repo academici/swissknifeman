@@ -56,6 +56,10 @@ filter, depth or limit narrows the requested result.
 Pass a plan id, `PLAN<N>` or plan directory as `PLAN`. Document references are `plan`, `brief`,
 `Pn`, `Pn.m`, `Pn.m/U#`, `D#`, `knowledge/<id>[#section]` and `artifact/<id>`.
 Qualified references use `PLAN<N>.<ref>` or `<repo>:PLAN<N>.<ref>`.
+The shared `defs.ref` grammar covers typed document references; `plan` and `brief` are query
+selectors, not stored typed links. Knowledge/artifact ids and section ids use ASCII letters,
+digits, dots, underscores and hyphens, with an alphanumeric first and last character.
+Paths and `.json` filenames are not substitutes for a typed reference.
 
 | Query | Result in `data` |
 | --- | --- |
@@ -88,3 +92,56 @@ These read queries take no plan lock and write no files. `show PLAN REF` remains
 compatibility view, while `show` without a reference remains the overview. Existing `context`
 continues to provide the full execution pack. State changes use authoring/lifecycle verbs;
 do not convert a query result into a direct plan-file edit.
+
+## Declare plan links and artifacts
+
+Use the following mutations to change links. They take a plan lock, validate the changed
+document and complete proposed graph before publication, and leave source documents and the
+event log unchanged on refusal. They do not change lifecycle fields (`status`, `result`).
+Use `--output json` before the verb for the success/error envelope.
+
+| Mutation | Arguments after `PLAN` |
+| --- | --- |
+| `link` | `SOURCE TARGET --kind KIND [--relation R] [--note TEXT]` |
+| `unlink` | `SOURCE TARGET --kind KIND [--relation R]` |
+| `add-artifact` | `ITEM --path PATH --role input\|output [--id ID]` |
+
+`link` and `unlink` accept only bare local references, including their source. Qualified
+references are refused with `REF_QUALIFIED`; use `set`/`apply` for schema-supported qualified
+links. The writable kinds map to these fields:
+
+| Kind | Source → target | Owning field |
+| --- | --- | --- |
+| `depends_on` | phase → phase, item → item | `depends_on[]` |
+| `related` | item → typed document reference | `related[]` (`ref`, `relation`, optional `note`) |
+| `decision` | item → decision | `decisions[]` |
+| `applies_to` | decision or knowledge document → phase or item | `applies_to[]` |
+| `unit_depends_on` | unit → unit in the same item | `depends_on[]`, stored as bare `U#` |
+
+`related` requires `--relation informs|consumes|conflicts|follows_up|supersedes`.
+`--relation` and `--note` belong only to related links. Repeating an existing link is a no-op;
+supplying a different nonempty note for the same related target/relation updates the note.
+`unlink` also needs the relation for related links; a missing link is a no-op. It can remove
+a dangling target without resolving that target, provided the remaining graph passes `check`.
+
+`add-artifact` declares metadata; it does not create the artifact file. `PATH` is repository-relative
+or starts with `@plan/`. An output's optional id is unique across the plan and can be queried as
+`artifact/ID`. An input with an id cites the matching output declaration and path. Omitting ids
+preserves existing path-based artifact declarations. Repeating the same `(path, role, id)` is a
+no-op; adding an id to a declaration without one is allowed, but changing an existing id is refused.
+The responses report `changed: false` for a no-op.
+
+Optional `reads[].ref` names local plan data, including `knowledge/<id>#section`; exactly one of
+`ref` or `path` is required, with the existing `why` and `required` fields. Repository code/docs
+remain path-based reads. `context` resolves plan reads into complete sections and `brief` projects
+them to the existing path-based `exec/v1` read contract. Required missing sections refuse
+`start`/`brief` with `READ_MISSING`; graph validation also checks section references.
+Use either the `#section` fragment or the separate `section` key, never both. Qualified read
+refs are refused by `check`; qualified queries remain available through `get`/`artifact`.
+
+`check` derives all links from one table (`edges.LINK_FIELDS`), checks target kinds and existence,
+dependencies, cycles, artifact declarations and decision supersession backlinks. Reverse edges
+are computed rather than persisted. The other graph kinds (`parent`, `consumes`, `produces`,
+`supersedes`) remain visible through `links`; their owning authoring/lifecycle verbs change them.
+Invalid source/target combinations return `LINK_INVALID`; schema and proposed-graph failures
+return `SCHEMA_INVALID` and `PLAN_INVALID`. See `schema --verbs` for the full error sets.

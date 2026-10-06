@@ -18,7 +18,7 @@ sha256: ""
 
 # Plan Protocol
 
-Canon version: `plan-protocol-v4`. Plans are JSON documents changed only through the `plan.py` API
+Canon version: `plan-protocol-v4`. Read and change plan data only through the `plan.py` API
 (`python3 <Task package root>/scripts/plan.py`). Python validates every change and regenerates the
 human Markdown views under `views/`. Never read these views, use them as inputs or index them.
 The installed marketplace plugin owns this skill and the API together. Activate only for an explicit `task:plan-design`, `task:plan-run`, `task:plan-close`
@@ -38,7 +38,8 @@ plans/<YYYY.MM.DD-№N-CODENAME>/
   context/<Pn.m>.json                                     # generated context packs (git-ignored)
 ```
 
-Generated files are never edited and are not read for work; get state with `plan.py next|show|context`.
+Never open or edit plan source files directly; generated human views are not read for work.
+Get state with `plan.py next|context --stdout` and the read queries below.
 Schemas: `<Task package root>/schemas/plan/v1/*.schema.json` (`urn:swissknifeman:task:plan:<kind>:v1`).
 `plan.py check` validates JSON. `plan.py render --check` checks human-view freshness separately.
 
@@ -47,6 +48,9 @@ Schemas: `<Task package root>/schemas/plan/v1/*.schema.json` (`urn:swissknifeman
 - Directory id `YYYY.MM.DD-№N-CODENAME`, title `Plan №N — …`, Short ID `PLAN<N>`: allocated by
   `plan.py new`, never guessed, never recycled; archived plans keep theirs.
 - Local ids: phase `P<n>`, item `P<n>.<m>`, decision `D<n>`, unit `P<n>.<m>/U<k>`.
+- Knowledge and artifact refs: `knowledge/<id>[#section]`, `artifact/<id>`; `plan` and `brief`
+  are whole-document query selectors. Prefer `reads[].ref` for local plan data; exactly one of `ref`
+  or `path` is required. Optional artifact ids name unique output declarations; inputs cite them.
 - Outside the plan directory qualify ids: `PLAN<N>.P2.3`, `PLAN<N>.D4`; across repositories
   `<repo>:PLAN<N>.D4`. Details: [references/work-references.md](references/work-references.md).
 - Paths in plan JSON are repository-relative or `@plan/…` (inside the plan directory).
@@ -74,11 +78,13 @@ requires compatible explicit selections. `plan-run` itself has no fixed model.
 
 ## 5. API verbs
 
-For read queries, schema discovery and the parser-derived catalog, see [references/api.md](references/api.md).
+For query shapes, typed links, write rules and parser-derived discovery, read [references/api.md](references/api.md).
 
 | Purpose | Verbs |
 |:--|:--|
 | author | `new`, `set`, `push`, `apply`, `add-phase`, `add-item`, `add-decision`, `add-document`, `batches`, `design-done` |
+| query | `get`, `list`, `events`, `artifact`, `links`, `neighborhood`, `schema [<kind> \| --verbs]` |
+| link | `link`, `unlink`, `add-artifact` (validated mutations; exact repeats are no-ops) |
 | inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `brief <item> [--unit U#] [--inline-reads] [--repo NAME=PATH] [--out FILE]`, `check [--json]`, `render [--check]` |
 | execute | `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
@@ -91,7 +97,8 @@ route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or
 `brief` returns the worker input (exec/v1 execution-input) without lifecycle instructions; `settings.evidence: required` makes `finish` demand check evidence; a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
 Friction (`log --type deviation|blocker|difficulty|assumption|note`) is written only when reality
 changes the plan, an assumption or a blocker; it feeds the next items' Lessons.
-Exit codes: 0 ok, 1 refusal or check errors (`CODE: message` on stderr), 2 usage.
+Queries and `schema` always return `{ok,data|error}`; other verbs use `--output json` for it.
+Exit codes: 0 ok, 1 refusal or check errors (text mode: `CODE: message` on stderr), 2 usage.
 
 ## 6. Design rules
 
@@ -138,7 +145,7 @@ instructions. `unit <plan> <item> next` reports ready nodes as JSON; `unit … <
 the full JSON worker input. Dispatch writes `<U#>/brief.json`. All declared units must be accepted
 or explicitly rejected before an item finishes. Children finish before their parent.
 
-`add-document --file document.json` adds knowledge; `show/set … knowledge/<id>` reads or edits it.
+`add-document --file document.json` adds knowledge; `get/set … knowledge/<id>` reads or edits it.
 `apply --file patches.json` validates coordinated `{ref, patch}` edits before writing.
 `export` returns the complete current-format graph and event log; `import <directory> --file
 snapshot.json` restores a validated graph, preserving historical state and supporting evidence.

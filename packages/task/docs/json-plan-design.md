@@ -1,8 +1,66 @@
 # JSON plan API and orchestration
 
-JSON owns the complete plan contract and its execution state. Agents use the Python API,
-`scripts/plan.py`, or JSON documents. Markdown is a template projection for people, lives
+JSON owns the complete plan contract and its execution state. Agents read and change plan data
+only through `scripts/plan.py`; they never open or edit plan source files directly.
+Markdown is a template projection for people, lives
 in `views/`, and never supplies execution state, agent instructions or indexed context.
+
+## Read API
+
+Use `python3 <Task package root>/scripts/plan.py`. Pass a plan directory id, Short ID (`PLAN<N>`)
+or path as `PLAN`. Repository code and documentation remain ordinary readable files.
+
+| Need | Command after `plan.py` |
+| --- | --- |
+| Complete document or selected knowledge section/fields | `get PLAN REF [--section ID] [--fields a,b]` |
+| Filtered document rows | `list PLAN item\|phase\|decision\|document\|unit [--status S] [--phase Pn] [--applies-to REF]` |
+| Incoming/outgoing typed graph | `links PLAN REF [--direction out\|in\|both] [--kind K,...] [--depth N]` |
+| Item, graph, decisions and knowledge together | `neighborhood PLAN ITEM` |
+| Journal events | `events PLAN [--item REF] [--type T,...] [--since TS] [--limit N]` |
+| Declared artifact metadata, digest and optional complete content | `artifact PLAN artifact/ID [--inline]` |
+| Live parser-derived verb catalog or complete schema | `schema --verbs` or `schema KIND` (no plan needed) |
+
+These queries return one validated envelope: `{"ok": true, "data": ...}` or
+`{"ok": false, "error": {"code": "REF_UNKNOWN", "message": "..."}}`.
+Exit codes are 0 for success, 1 for refusal and 2 for usage. They take no plan lock and write no
+files. Data is complete unless the caller explicitly selects fields, sections, filters, graph
+depth or event count. The catalog names arguments, modes, refusal codes and dedicated `read-*`
+data schemas; `schema KIND` retrieves the schema, including definitions.
+
+Typed references include `Pn`, `Pn.m`, `Pn.m/U#`, `D#`, `knowledge/<id>[#section]` and
+`artifact/<id>`. Qualify them as `PLAN<N>.<ref>` or `<repo>:PLAN<N>.<ref>`; `plan` and `brief`
+are whole-document query selectors. `get`/`artifact` can resolve another plan, with repeatable
+`--repo NAME=PATH` or `SKM_PLAN_REPOS` for another repository. Graph queries do not load foreign
+plans: those nodes keep their qualified ref and null metadata. Incoming edges retain their
+original `from`/`to`; default direction is `both`, default depth is 1, and cycles terminate.
+
+`show PLAN REF` preserves its document-only output; `show PLAN` preserves the overview.
+`context PLAN ITEM --stdout` keeps the full execution pack, while `brief PLAN ITEM` keeps the
+`exec/v1 execution-input` projection. Existing verbs support the same envelope with the global
+`--output json` option before the verb. No legacy output or command is removed.
+
+## Validated links and artifacts
+
+All typed links share the `defs.ref` grammar and one edge-field table. Optional `reads[].ref`
+names local plan data in place of `path`; exactly one is required. Select a knowledge section
+with either `#section` or the separate `section` key. Optional artifact ids identify
+unique output declarations, and input artifacts cite the matching output id/path. Existing
+path-based reads and artifacts stay valid without migration. `check` validates target kinds,
+local resolution (including knowledge sections), cycles and supersession backlinks; reverse
+edges are computed rather than stored.
+
+Use `link PLAN SOURCE TARGET --kind KIND` and `unlink PLAN SOURCE TARGET --kind KIND` for local
+`depends_on`, `related`, `decision`, `applies_to` or `unit_depends_on` links. Related links need
+`--relation informs|consumes|conflicts|follows_up|supersedes` and optionally accept `--note TEXT`.
+Qualified refs require the schema-supported `set`/`apply` authoring path. Declare artifact
+metadata with `add-artifact PLAN ITEM --path PATH --role input|output [--id ID]`; it does not
+create the file. Each mutation holds a lock and validates the document and proposed graph
+before publication. Refusals leave source documents and events unchanged; exact repeats are
+no-ops and report `changed: false`. Lifecycle state stays owned by lifecycle verbs.
+
+For complete result shapes, writable source/target pairs, id rules and errors, read
+`skills/plan-protocol/references/api.md` in the Task package. The live catalog and schemas
+are available without reading plan files.
 
 ## Implementation order
 

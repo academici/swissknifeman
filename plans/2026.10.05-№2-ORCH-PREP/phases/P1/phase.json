@@ -70,9 +70,5 @@
       "mode": "recommended"
     }
   ],
-  "closed": {
-    "at": "2026-10-06T04:40:29Z",
-    "result": "done",
-    "summary": "5 item(s): 5 done"
-  }
+  "closed": null
 }

@@ -18,6 +18,8 @@ Engine operations and run states are described in [engine-port.md](engine-port.m
   `check`, `support`, `binding`, `roleId`) live in [`defs.schema.json`](../schemas/exec/v1/defs.schema.json).
 
 Validate a document: `python3 packages/orch/scripts/orch.py validate <kind> <file.json>`.
+Diagnostics include `path`, `code`, `message` and `level`. Warning-only documents return exit 0;
+errors return exit 1. `--quiet` suppresses stdout while preserving diagnostics and the exit status.
 
 ## Documents
 
@@ -46,7 +48,8 @@ Validate a document: `python3 packages/orch/scripts/orch.py validate <kind> <fil
 | `why`, `guidance`, `sections`, `constraints`, `decisions`, `reads`, `context_refs`, `upstream`, `lessons`, `hints`, `escalation` | | full item context, never truncated |
 
 Semantic: digest and `input_id` suffix match; no lifecycle phrases (`LIFECYCLE_LEAK`) outside the
-generator name and plan-rule constraints (warning there).
+generator name and plan-rule constraints (warning there). `scope.read_only: true` requires
+`result_contract.write_authority: "none"`; contradictory authority is refused with `INPUT_AUTHORITY`.
 
 ### run-policy
 

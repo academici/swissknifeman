@@ -31,6 +31,6 @@ def main(argv: list[str] | None = None) -> int:
     for issue in issues:
         print(f"{issue.code}: {issue.message}", file=sys.stderr)
     if not args.quiet:
-        result = [{"path": i.path, "code": i.code, "message": i.message} for i in issues]
+        result = [issue._asdict() for issue in issues]
         print(json.dumps(result if issues else {"valid": True}, ensure_ascii=False))
-    return 1 if issues else 0
+    return 1 if any(issue.level == "error" for issue in issues) else 0

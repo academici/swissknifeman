@@ -127,30 +127,27 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-05T19:50:47Z",
-    "finished_at": "2026-10-05T19:57:08Z",
+    "started_at": "2026-10-06T04:46:39Z",
+    "finished_at": "2026-10-06T04:47:14Z",
     "executor": {
       "provider": "codex",
       "model": "gpt-6.1-sol",
       "effort": "high",
-      "session": "01a10d53-1cb4-7e83-b2f6-447b63114cff"
+      "session": "01a10f74-c78e-7661-9950-e4f194779886"
     },
-    "notes": "Добавлены 5 выходных схем exec/v1 и semantic checks ATTEMPT_RANGE, USAGE_UNKNOWN_NUMERIC, COMPLETED_PARSE_ERROR, COST_FORMAT, RECEIPT_RECONCILE, EVIDENCE_CARRIER. По решению владельца launch-plan.env открыт, его значения проверяются как строки (type), отсутствие секретов обеспечивает producer; knowledge/contracts и item.rules синхронизированы через plan.py. Созданы 21 fixture (9 valid, 12 invalid с ровно одной ожидаемой ошибкой) и 3 synthetic traces (10 валидных run-event строк: ok/quota/unknown). V1/V2 exit 0, V2 assertion подтверждает реальный CLI exit 1 и EVIDENCE_CARRIER. Всего 37 тестов GREEN. Evidence: @plan/artifacts/P1.3/. Ревью не запускалось; широкий validate не повторялся. Изменения только в scope P1.3 и согласованном JSON-контракте; документация полного пакета — в последующих items, root docs/CHANGELOG вне scope. Прежние изменения Task сохранены.",
-    "pending": [
-      "Унаследованное ограничение P1.2: CLI из P1.1 отклоняет warning-only issues. CLI вне scope P1.3 и не изменён; contracts API сохраняет level=warning."
-    ],
+    "notes": "Повторная проверка после устранения унаследованного F2 в P1.1: прежний warning-only CLI pending устранён; активных pending/deviations/escalation нет. Выходные схемы, traces и semantics сохранены. V1 25 tests exit 0; V2 assertion подтвердил CLI exit 1 и EVIDENCE_CARRIER. Широкий validate изменённого пакета: OK, 70 tests; core 317 tests exit 0. Исходное выполнение сохранено в @plan/artifacts/review-p1/round-1/item-results.json.",
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-05T19:57:08Z"
+        "at": "2026-10-06T04:47:14Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-05T19:57:08Z"
+        "at": "2026-10-06T04:47:14Z"
       }
     ]
   },
-  "updated_at": "2026-10-05T19:57:08Z"
+  "updated_at": "2026-10-06T04:47:14Z"
 }

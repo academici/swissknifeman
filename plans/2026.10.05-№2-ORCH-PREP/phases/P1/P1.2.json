@@ -132,35 +132,32 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-05T19:00:25Z",
-    "finished_at": "2026-10-05T19:10:00Z",
+    "started_at": "2026-10-06T04:45:24Z",
+    "finished_at": "2026-10-06T04:46:39Z",
     "executor": {
       "provider": "codex",
       "model": "gpt-6.1-sol",
       "effort": "high",
-      "session": "01a10d53-1cb4-7e83-b2f6-447b63114cff"
+      "session": "01a10f74-c78e-7661-9950-e4f194779886"
     },
-    "notes": "Созданы 4 входные схемы exec/v1, semantic checks и 21 fixture (9 valid, 12 invalid; каждый invalid даёт ровно один ожидаемый error). 12 новых и 13 затронутых тестов прошли. V1/V2/V3 exit 0; V3 assertion подтвердил реальный CLI exit 1 и POLICY_REQUIRED_REFUSE. Решение владельца устранило цикл digest/input_id: суффикс после последнего @ исключён, идентификатор задания хэшируется; JSON knowledge/contracts и knowledge/task-changes синхронизированы через plan.py. Доказательства: @plan/artifacts/P1.2/. Review не запускалось; широкий validate не повторялся. Документация контрактов зафиксирована в knowledge; остальные docs/CHANGELOG вне scope. Предсуществующие изменения Task сохранены.",
-    "pending": [
-      "CLI из P1.1 пока возвращает exit 1 при warning-only issues; contracts API правильно возвращает level=warning. CLI не изменён, поскольку вне scope P1.2; нужен отдельный scoped repair consumer CLI."
-    ],
+    "notes": "F1 устранён: semantic INPUT_AUTHORITY отклоняет scope.read_only=true с write_authority!=none. Добавлены отдельный invalid fixture с пересчитанным digest/input_id и тест матрицы true/false/отсутствующий read_only × none/code_scope; fixture даёт ровно один error. Knowledge/contracts и docs синхронизированы. V1 13 tests exit 0; V2 valid plan-bound CLI exit 0; V3 assertion подтвердил CLI exit 1 и POLICY_REQUIRED_REFUSE. F2 уже исправлен в P1.1; прежний pending устранён. Исходные результаты сохранены в @plan/artifacts/review-p1/round-1/item-results.json.",
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-05T19:10:00Z"
+        "at": "2026-10-06T04:46:39Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-05T19:10:00Z"
+        "at": "2026-10-06T04:46:39Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-05T19:10:00Z"
+        "at": "2026-10-06T04:46:39Z"
       }
     ]
   },
-  "updated_at": "2026-10-05T19:10:00Z"
+  "updated_at": "2026-10-06T04:46:39Z"
 }

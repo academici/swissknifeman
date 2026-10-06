@@ -89,6 +89,11 @@ def _execution_input(doc: object) -> list[Issue]:
         issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest does not match canonical JSON"))
     if isinstance(input_id, str) and isinstance(digest, str) and not input_id.endswith("@" + digest[:12]):
         issues.append(Issue("/input_id", "INPUT_ID", "input_id must end with @digest[:12]"))
+    scope, result_contract = doc.get("scope"), doc.get("result_contract")
+    if isinstance(scope, dict) and scope.get("read_only") is True \
+            and isinstance(result_contract, dict) and result_contract.get("write_authority") != "none":
+        issues.append(Issue("/result_contract/write_authority", "INPUT_AUTHORITY",
+                            "read-only input requires write_authority none"))
     for path, value in _walk(doc):
         if not isinstance(value, str) or not any(phrase in value for phrase in LIFECYCLE_PHRASES):
             continue

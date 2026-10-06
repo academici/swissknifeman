@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from orch import cli, contracts, schema
+from tests.test_contracts_input import fixture, signed
 
 LAUNCHER = Path(__file__).resolve().parents[1] / "scripts/orch.py"
 
@@ -41,6 +42,30 @@ class CliValidateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
         self.assertIn("CONTRACT_VERSION:", result.stderr)
+
+    def test_warning_only_input_succeeds_and_preserves_level(self):
+        doc = fixture("execution-input", "plan-bound")
+        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
+        for options in ((), ("--quiet",)):
+            with self.subTest(options=options):
+                result = self.run_cli("execution-input", signed(doc), *options)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("LIFECYCLE_LEAK:", result.stderr)
+                if options:
+                    self.assertEqual(result.stdout, "")
+                else:
+                    issues = json.loads(result.stdout)
+                    self.assertEqual([(i["code"], i["level"]) for i in issues],
+                                     [("LIFECYCLE_LEAK", "warning")])
+
+    def test_warning_does_not_mask_errors(self):
+        doc = fixture("execution-input", "plan-bound")
+        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
+        del doc["goal"]
+        result = self.run_cli("execution-input", signed(doc))
+        self.assertEqual(result.returncode, 1)
+        issues = {i["code"]: i["level"] for i in json.loads(result.stdout)}
+        self.assertEqual(issues, {"required": "error", "LIFECYCLE_LEAK": "warning"})
 
     def test_missing_schema_fails_closed(self):
         with self.assertRaises(schema.SchemaProfileError):

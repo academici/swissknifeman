@@ -15,6 +15,7 @@ EXPECTED = {
     "execution-input/lifecycle-leak.json": "LIFECYCLE_LEAK",
     "execution-input/bad-provenance.json": "one_of",
     "execution-input/digest-mismatch.json": "DIGEST_MISMATCH",
+    "execution-input/read-only-write-authority.json": "INPUT_AUTHORITY",
     "run-policy/required-skip.json": "POLICY_REQUIRED_REFUSE",
     "run-policy/review-rounds-3.json": "POLICY_REVIEW_LIMIT",
     "run-policy/two-primary.json": "POLICY_PRIMARY",
@@ -106,6 +107,21 @@ class InputContractTests(unittest.TestCase):
             doc = fixture("execution-input", "plan-bound")
             doc["acceptance"]["checks"] = [{"id": "V1", "expect": "pass", "kind": "acceptance", **carrier}]
             self.assert_code("execution-input", signed(doc), "CHECK_CARRIER")
+
+    def test_read_only_input_authority(self):
+        for read_only in (True, False, None):
+            for authority in ("none", "code_scope"):
+                with self.subTest(read_only=read_only, authority=authority):
+                    doc = fixture("execution-input", "review-only")
+                    if read_only is None:
+                        del doc["scope"]["read_only"]
+                    else:
+                        doc["scope"]["read_only"] = read_only
+                    doc["result_contract"]["write_authority"] = authority
+                    issues = contracts.validate(signed(doc), "execution-input")
+                    expected = [("/result_contract/write_authority", "INPUT_AUTHORITY", "error")] \
+                        if read_only is True and authority == "code_scope" else []
+                    self.assertEqual([(i.path, i.code, i.level) for i in issues], expected)
 
     def test_lifecycle_exceptions_levels_and_json_pointers(self):
         doc = fixture("execution-input", "plan-bound")

@@ -12,7 +12,7 @@ context pack alone, and `plan.py check` passes.
 
 **Steps**
 1. New plan: `plan.py new --codename <NAME> --title "<title>" --actor <provider>/<model>/<effort>
-   --message-file <owner-message.md>` — the identity (`№N`, `PLAN<N>`) comes from the command, never guessed.
+   --message-file <owner-message.md>` — the identity (`№N`, `PLAN<N>`) comes from the command, never guessed. `--actor` is the observed session route, never inferred; ask the owner when it cannot be observed.
    Existing plan: `plan.py show <plan>` and `plan.py show <plan> <Pn>`.
 2. Plan fields: `plan.py set <plan> plan --json '{"goal": …, "context": …, "rules": […]}'`;
    owner requirements: `plan.py set <plan> brief --json …`.

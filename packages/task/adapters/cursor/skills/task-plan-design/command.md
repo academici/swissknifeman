@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:c53117ccaf803fcedce4ec3574d9bee3c06b0ec3b00671470d132fece49b5aec
+Canonical SHA-256: sha256:11e9825cdb4907976759722d8e2b090876be4f9d004328593f7fef724376c9d9
 Adapter: task.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -31,7 +31,7 @@ context pack alone, and `plan.py check` passes.
 
 **Steps**
 1. New plan: `plan.py new --codename <NAME> --title "<title>" --actor <provider>/<model>/<effort>
-   --message-file <owner-message.md>` — the identity (`№N`, `PLAN<N>`) comes from the command, never guessed.
+   --message-file <owner-message.md>` — the identity (`№N`, `PLAN<N>`) comes from the command, never guessed. `--actor` is the observed session route, never inferred; ask the owner when it cannot be observed.
    Existing plan: `plan.py show <plan>` and `plan.py show <plan> <Pn>`.
 2. Plan fields: `plan.py set <plan> plan --json '{"goal": …, "context": …, "rules": […]}'`;
    owner requirements: `plan.py set <plan> brief --json …`.

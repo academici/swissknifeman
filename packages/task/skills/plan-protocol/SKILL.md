@@ -66,7 +66,8 @@ them with `FIELD_OWNED`.
 An item's `route` (`class`: `economy|implementation|frontier`, `effort`: `low|medium|high|xhigh|max|ultra`) is the
 minimum. The executor runs under its own session route and declares it with `start --actor
 <provider>/<model>/<effort>`; a weaker route is refused (`ROUTE_UNDERSHOOT`), a stronger one is
-allowed. Optional `provider`, `model` and native JSON `settings` select the execution route for
+allowed. The declaration must be the observed session model and effort (runtime settings or environment),
+never inferred from prompt text or defaults; when a value cannot be observed, ask the owner. Optional `provider`, `model` and native JSON `settings` select the execution route for
 an item or unit; dispatch refuses a different explicit provider/model. Provider model pools
 live in `configs/command-routing.json`. A batch runs at the maximum route of its members and
 requires compatible explicit selections. `plan-run` itself has no fixed model.

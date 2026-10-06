@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:4f73d389d7c501e92498422fbbc53968cabace25b8fc944c5a1ec24464666001
+Canonical SHA-256: sha256:86de7bbaeb7f0b86a7613e031a8ce4064b413554234ab449354859deff9bf184
 Adapter: task.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -56,6 +56,7 @@ one commit per item, inside the item's scope.
 
 **Rules**
 - Run under the session route; never switch the model. The item route is the minimum.
+- Declare `--actor` from the runtime's observed session model and effort (its settings or environment); never infer them from prompt text or defaults, and ask the owner when one cannot be observed.
 - Change plan state only through `plan.py`; JSON is the source of truth.
 - Owner gates: `plan.py grant` only with the owner's explicit message quoted in `--note`.
 - Hard risk (security, schema/public API, data, concurrency, publishing) widens checks and is named in the

@@ -37,6 +37,7 @@ one commit per item, inside the item's scope.
 
 **Rules**
 - Run under the session route; never switch the model. The item route is the minimum.
+- Declare `--actor` from the runtime's observed session model and effort (its settings or environment); never infer them from prompt text or defaults, and ask the owner when one cannot be observed.
 - Change plan state only through `plan.py`; JSON is the source of truth.
 - Owner gates: `plan.py grant` only with the owner's explicit message quoted in `--note`.
 - Hard risk (security, schema/public API, data, concurrency, publishing) widens checks and is named in the

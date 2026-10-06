@@ -21,6 +21,9 @@ TOOL = "task/plan.py brief"
 REPORT = ["summary", "changed_paths", "checks_run", "evidence", "open_issues"]
 ESCALATION = ["A required read is missing or contradicts the goal",
               "An acceptance check cannot pass without leaving scope"]
+LIFECYCLE_PHRASES = (
+    "report_api", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
+)
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
 _LESSON_KEYS = ("type", "summary", "ts", "item", "impact", "next")
@@ -119,6 +122,69 @@ def _upstream(pack: dict) -> list[dict]:
     return result
 
 
+def _strings(value, path=""):
+    if isinstance(value, str):
+        yield path, value
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            yield from _strings(child, f"{path}/{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from _strings(child, f"{path}/{index}")
+
+
+def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = None) -> list[str]:
+    """Omissions of ``doc`` against its sources (knowledge/task-changes, T2): ``"<field>: <what is missing>"`` lines."""
+    item = plan.items[item_id]
+    unit = plan.units[f"{item_id}/{unit_id}"] if unit_id else None
+    phase = plan.phases.get(item_phase(item_id), {})
+    missing = []
+    checks = doc.get("acceptance", {}).get("checks", [])
+    expected = _checks(item, unit)
+    if not expected:
+        missing.append("acceptance.checks: no acceptance check")
+    for check in expected:
+        if check not in checks:
+            missing.append(f"acceptance.checks: missing {check.get('id', check) if isinstance(check, dict) else check}")
+    constraints = doc.get("constraints", [])
+    for source, texts in (("plan.rules", plan.plan.get("rules")), ("phase.pitfalls", phase.get("pitfalls")),
+                          ("item.rules", item.get("rules"))):
+        for index, text in enumerate(texts or []):
+            if {"text": text, "source": f"{source}[{index}]"} not in constraints:
+                missing.append(f"constraints: missing {source}[{index}]")
+    if unit and unit.get("instructions") and {"text": unit["instructions"], "source": "unit.instructions"} not in constraints:
+        missing.append("constraints: missing unit.instructions")
+    reads = {(r.get("path"), r.get("section")) for r in doc.get("reads", [])}
+    for read in (item.get("reads") or []) + ((unit or {}).get("reads") or []):
+        if read.get("required") and (read["path"], read.get("section")) not in reads:
+            missing.append(f"reads: missing {read['path']}" + (f"#{read['section']}" if read.get("section") else ""))
+    refs = {d.get("ref") for d in doc.get("decisions", [])}
+    for ref in item.get("decisions", []):
+        parsed = context.parse_ref(ref)
+        if (parsed.target if parsed.plan is None and parsed.target in plan.decisions else ref) not in refs:
+            missing.append(f"decisions: missing {ref}")
+    scope, source_scope = doc.get("scope", {}), item["scope"]
+    if scope.get("include") != source_scope["include"]:
+        missing.append("scope.include: differs from the item")
+    if scope.get("exclude") != source_scope.get("exclude", []):
+        missing.append("scope.exclude: differs from the item")
+    if not str(doc.get("goal") or "").strip():
+        missing.append("goal: empty")
+    if not (doc.get("route") or {}).get("minimum"):
+        missing.append("route.minimum: missing")
+    if doc.get("acceptance", {}).get("deliverables", []) != item.get("deliverables", []):
+        missing.append("deliverables: differ from the item")
+    plan_rules = {f"/constraints/{i}/text" for i, c in enumerate(constraints)
+                  if isinstance(c, dict) and str(c.get("source", "")).startswith("plan.rules")}
+    for path, text in _strings(doc):
+        if path.startswith("/provenance") or path in plan_rules:
+            continue
+        phrase = next((p for p in LIFECYCLE_PHRASES if p in text), None)
+        if phrase:
+            missing.append(f"{path}: lifecycle phrase {phrase!r}")
+    return missing
+
+
 def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_reads: bool = False,
           repos=None) -> dict:
     """Execution-input of ``item_id`` (or of its unit ``unit_id``). ``repos`` is reserved for the resolver of P2.3."""
@@ -177,6 +243,9 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "hints": [{"text": text, "source": "scout"} for text in pack.get("scout", {}).get("entries", [])],
     }
     doc.update({key: value for key, value in optional.items() if value})
+    missing = verify(plan, item_id, doc, unit_id=unit_id)
+    if missing:
+        raise PlanError("BRIEF_INCOMPLETE", "; ".join(missing))
     doc["digest"] = canonical_digest(doc)
     doc["input_id"] += f"@{doc['digest'][:12]}"
     return doc

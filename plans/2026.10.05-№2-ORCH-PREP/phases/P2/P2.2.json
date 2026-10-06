@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.2",
   "title": "Полнота brief (T2) и конформанс exec/v1 в orch",
-  "status": "todo",
+  "status": "done",
   "summary": "`brief.verify` проверяет присутствие всех acceptance-checks, правил, required reads, decisions и отсутствие lifecycle-фраз; нарушение — отказ BRIEF_INCOMPLETE. Тест orch прогоняет `plan.py brief` на fixture-плане и валидирует результат схемой execution-input.",
   "why": "I1, I3, R1: дешёвый пересказ не может быть единственным носителем требований; полнота проверяется детерминированно. D10: конформанс на стороне контракта.",
   "scope": {
@@ -116,6 +116,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:03:08Z"
+  "result": {
+    "started_at": "2026-10-06T05:13:16Z",
+    "finished_at": "2026-10-06T05:18:32Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f7e90ec1-1abf-4884-911c-7e59a6b64b77"
+    },
+    "notes": "brief.verify (rules 1-7) + LIFECYCLE_PHRASES; build raises BRIEF_INCOMPLETE; 9 completeness tests; orch conformance (schema, digest, lifecycle phrases via AST) on demo plan. Full suites: task engine 408 OK, orch 74 OK.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T05:18:32Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T05:18:32Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T05:18:32Z"
 }

@@ -199,6 +199,67 @@ class DigestTests(BriefCase):
             self.assertNotIn(key, doc)
 
 
+class CompletenessTests(BriefCase):
+    def verify(self, doc, item="P1.1", **kwargs):
+        return brief.verify(self.load(), item, doc, **kwargs)
+
+    def test_complete_document_has_no_omissions(self):
+        self.assertEqual(self.verify(self.brief()), [])
+
+    def test_removed_check_is_reported_once(self):
+        doc = self.brief()
+        removed = doc["acceptance"]["checks"].pop()
+        self.assertEqual(self.verify(doc), [f"acceptance.checks: missing {removed['id']}"])
+
+    def test_removed_rule_is_reported_once(self):
+        doc = self.brief()
+        doc["constraints"] = [c for c in doc["constraints"] if c["source"] != "item.rules[0]"]
+        self.assertEqual(self.verify(doc), ["constraints: missing item.rules[0]"])
+
+    def test_removed_required_read_is_reported_once(self):
+        doc = self.brief()
+        doc["reads"] = [r for r in doc["reads"] if r["path"] != "lib/x.py"]
+        self.assertEqual(self.verify(doc), ["reads: missing lib/x.py"])
+
+    def test_removed_decision_is_reported_once(self):
+        ops.add_decision(self.root, "Format", data={"options": [{"id": "A", "text": "English"}]})
+        lifecycle.decide(self.root, "D1", "A", "simple", by="owner", actor=test_lifecycle.OPUS)
+        ops.patch(self.root, "P1.1", {"decisions": ["D1"]})
+        doc = self.brief()
+        doc["decisions"] = [d for d in doc["decisions"] if d["ref"] != "D1"]
+        self.assertEqual(self.verify(doc), ["decisions: missing D1"])
+
+    def test_scope_goal_route_and_deliverables_must_match(self):
+        doc = self.brief()
+        doc["scope"]["include"] = ["other"]
+        doc["goal"] = " "
+        doc["route"] = {}
+        doc["acceptance"]["deliverables"] = []
+        self.assertEqual(self.verify(doc), [
+            "scope.include: differs from the item", "goal: empty", "route.minimum: missing",
+            "deliverables: differ from the item"])
+
+    def test_lifecycle_phrase_in_guidance_is_refused(self):
+        ops.patch(self.root, "P1.1", {"guidance": "then run plan.py finish P1.1"})
+        with self.assertRaises(Exception) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "BRIEF_INCOMPLETE")
+        self.assertIn("/guidance: lifecycle phrase 'plan.py finish'", str(ctx.exception))
+
+    def test_lifecycle_phrase_in_plan_rules_is_data(self):
+        ops.set_plan(self.root, {"rules": ["never call plan.py finish by hand"]})
+        self.assertEqual(self.verify(self.brief()), [])
+
+    def test_large_item_is_not_truncated(self):
+        reads = [{"path": f"absent/{i}.py", "why": "optional", "required": False} for i in range(200)]
+        ops.patch(self.root, "P1.1", {"reads": reads + [{"path": "lib/x.py", "why": "source", "required": True}],
+                                      "rules": [f"rule {i}" for i in range(50)]})
+        doc = self.brief()
+        self.assertEqual(self.verify(doc), [])
+        self.assertEqual(len(doc["constraints"]), 50 + 1 + 1)  # item rules + plan rule + phase pitfall
+        self.assertEqual(len(doc["reads"]), 201)
+
+
 class RefusalTests(BriefCase):
     def test_unknown_item_and_unit(self):
         with self.assertRaises(Exception) as ctx:

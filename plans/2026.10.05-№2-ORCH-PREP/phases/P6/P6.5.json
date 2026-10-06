@@ -125,35 +125,35 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-06T08:40:03Z",
-    "finished_at": "2026-10-06T08:47:43Z",
+    "started_at": "2026-10-06T09:17:26Z",
+    "finished_at": "2026-10-06T10:06:42Z",
     "executor": {
       "provider": "claude",
       "model": "claude-sonnet-5-5",
       "effort": "high",
-      "session": "6aab5bce-ab73-496c-9472-8e6c14c68273"
+      "session": "52f03bba-d715-4905-a712-04ff8f7468d6"
     },
-    "notes": "link/unlink/add-artifact одной транзакцией с check proposed graph; повтор — no-op; отказ ничего не пишет. V1 17 тестов, V2 12, V3 13, полный tests/engine 594 OK. Hard risk: публичный API и схема — рекомендуется task:review.",
+    "notes": "Reopen по review-p6 F1; validate.sh OK",
     "deviations": [
-      "Вне перечня файлов: LINK_INVALID добавлен в закрытый enum schemas/plan/v1/read-catalog.schema.json (аддитивно) и в реестр catalog.ERROR_CODES; из ops.apply вынесен _check_proposed"
+      "review-p6 F1: set/push/set_brief refuse new dangling links (PLAN_INVALID); test_context fixtures use force_patch"
     ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-06T08:47:43Z"
+        "at": "2026-10-06T10:06:42Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-06T08:47:43Z"
+        "at": "2026-10-06T10:06:42Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-06T08:47:43Z"
+        "at": "2026-10-06T10:06:42Z"
       }
     ]
   },
-  "updated_at": "2026-10-06T08:47:43Z"
+  "updated_at": "2026-10-06T10:06:42Z"
 }

@@ -108,7 +108,8 @@ Use `--output json` before the verb for the success/error envelope.
 
 `link` and `unlink` accept only bare local references, including their source. Qualified
 references are refused with `REF_QUALIFIED`; use `set`/`apply` for schema-supported qualified
-links. The writable kinds map to these fields:
+links. `set`, `push` and `apply` refuse (`PLAN_INVALID`) an edit that introduces a new unresolved link
+in any link field; errors the plan already had do not block an unrelated edit. The writable kinds map to these fields:
 
 | Kind | Source → target | Owning field |
 | --- | --- | --- |

@@ -265,7 +265,9 @@ def patch(plan, ref: str, merge_patch_doc: dict) -> None:
     with _mutation(plan) as p:
         kind, key, doc = resolve_target(p, ref)
         _guard_owned(kind, merge_patch_doc)
-        _commit(p, [(kind, key, merge_patch(doc, merge_patch_doc))])
+        changed = merge_patch(doc, merge_patch_doc)
+        _refuse_new_errors(p, kind, key, changed)
+        _commit(p, [(kind, key, changed)])
 
 
 def push(plan, ref: str, field: str, value: Any) -> None:
@@ -284,6 +286,7 @@ def push(plan, ref: str, field: str, value: Any) -> None:
         if not isinstance(current, list):
             raise PlanError("FIELD_NOT_ARRAY", f"{field!r} of {ref} is not an array")
         current.append(copy.deepcopy(value))
+        _refuse_new_errors(p, kind, key, doc)
         _commit(p, [(kind, key, doc)])
 
 
@@ -312,7 +315,9 @@ def set_brief(plan, merge_patch_doc: dict) -> None:
         raise PlanError("PATCH_INVALID", "a merge patch must be a JSON object")
     with _mutation(plan) as p:
         _guard_owned("brief", merge_patch_doc)
-        _commit(p, [("brief", None, merge_patch(p.brief, merge_patch_doc))])
+        changed = merge_patch(p.brief, merge_patch_doc)
+        _refuse_new_errors(p, "brief", None, changed)
+        _commit(p, [("brief", None, changed)])
 
 
 def add_document(plan, data: dict) -> str:
@@ -349,6 +354,25 @@ def apply(plan, patches: list[dict]) -> None:
             changed[(kind, key)] = doc
         _check_proposed(proposed)
         _commit(p, [(kind, key, doc) for (kind, key), doc in changed.items()])
+
+
+def _refuse_new_errors(p: store.Plan, kind: str, key: str | None, doc: dict) -> None:
+    """Refuse a single-document edit that makes ``check`` report a new error on a link field (D11: no dangling
+    link through set/push); pre-existing errors and non-link errors never block an unrelated edit."""
+    from . import check, edges
+    store.check_doc(doc, kind, f"{kind} {key or ''}".strip())  # a schema violation keeps its own refusal
+    proposed = copy.deepcopy(p)
+    if kind in ("plan", "brief"):
+        setattr(proposed, kind, doc)
+    else:
+        {"phase": proposed.phases, "item": proposed.items, "unit": proposed.units,
+         "decision": proposed.decisions, "document": proposed.documents}[kind][key] = doc
+    known = {(i.where, i.message) for i in check.check(p) if i.level == "error"}
+    link_places = {edge.where for edge in edges.edges(proposed)}
+    new = [i for i in check.check(proposed) if i.level == "error" and (i.where, i.message) not in known
+           and any(i.where == place or i.where.startswith(place + "/") for place in link_places)]
+    if new:
+        raise PlanError("PLAN_INVALID", "; ".join(f"{i.where}: {i.message}" for i in new), new)
 
 
 def _check_proposed(proposed: store.Plan) -> None:

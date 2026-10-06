@@ -74,6 +74,13 @@ class SectionTests(unittest.TestCase):
         self.assertEqual(context.extract_section(DOC, "Tail"), "tail text")
 
 
+def force_patch(root, ref, patch):
+    """Plant data that ``ops.patch`` would refuse (dangling links): these tests probe how readers treat it."""
+    with ops._mutation(root) as p:
+        kind, key, doc = ops.resolve_target(p, ref)
+        ops._commit(p, [(kind, key, ops.merge_patch(doc, patch))])
+
+
 class JsonContextTests(test_lifecycle.LifeCase):
     def test_complete_context_is_json_and_deterministic(self):
         text = context.render(self.load(), "P1.1")
@@ -94,13 +101,13 @@ class JsonContextTests(test_lifecycle.LifeCase):
     def test_long_supporting_sections_are_not_truncated(self):
         text = "\n".join(f"line {n}" for n in range(501))
         (self.root.parent.parent / "runbook.md").write_text("## Runbook\n" + text)
-        ops.patch(self.root, "P1.1", {"reads": [{"path": "runbook.md", "section": "Runbook", "why": "steps", "required": True}]})
+        force_patch(self.root, "P1.1", {"reads": [{"path": "runbook.md", "section": "Runbook", "why": "steps", "required": True}]})
         self.assertEqual(context.collect(self.load(), "P1.1")["reads"][0]["content"], text)
 
     def test_knowledge_sections_and_provenance_are_preserved(self):
         ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
             "sections": [{"id": "steps", "title": "Steps", "text": "do everything\n" * 400}]})
-        ops.patch(self.root, "P1.1", {"reads": [{"path": "@plan/knowledge/design.json", "section": "steps", "why": "steps", "required": True}]})
+        force_patch(self.root, "P1.1", {"reads": [{"path": "@plan/knowledge/design.json", "section": "steps", "why": "steps", "required": True}]})
         value = context.collect(self.load(), "P1.1")
         self.assertEqual(value["reads"][0]["content"]["sections"], value["documents"][0]["sections"])
         self.assertEqual(context.collect(self.load(), "P1.2")["documents"], [])
@@ -112,7 +119,7 @@ class JsonContextTests(test_lifecycle.LifeCase):
 
     def test_a_read_by_ref_is_inlined_like_the_read_by_path(self):
         self.add_design()
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design#steps", "why": "steps", "required": True},
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design#steps", "why": "steps", "required": True},
                                                  {"path": "@plan/knowledge/design.json", "section": "steps", "why": "same", "required": True}]})
         by_ref, by_path = context.collect(self.load(), "P1.1")["reads"]
         self.assertEqual(by_ref["ref"], "knowledge/design#steps")
@@ -122,13 +129,13 @@ class JsonContextTests(test_lifecycle.LifeCase):
 
     def test_the_section_key_selects_when_the_ref_names_a_whole_document(self):
         self.add_design()
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design", "section": "other", "why": "w", "required": True}]})
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design", "section": "other", "why": "w", "required": True}]})
         entry, = context.collect(self.load(), "P1.1")["reads"]
         self.assertEqual([s["id"] for s in entry["content"]["sections"]], ["other"])
 
     def test_plan_documents_of_every_local_kind_are_readable_by_ref(self):
         decision = ops.add_decision(self.root, "Question")
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": ref, "why": "w", "required": True}
+        force_patch(self.root, "P1.1", {"reads": [{"ref": ref, "why": "w", "required": True}
                                                  for ref in ("P1", "P1.2", decision)]})
         entries = context.collect(self.load(), "P1.1")["reads"]
         self.assertEqual([e["content"]["id"] for e in entries], ["P1", "P1.2", decision])
@@ -136,33 +143,33 @@ class JsonContextTests(test_lifecycle.LifeCase):
     def test_an_artifact_ref_reads_the_path_of_its_output(self):
         (self.root / "artifacts").mkdir()
         (self.root / "artifacts" / "catalog.json").write_text(json.dumps({"errors": 3}))
-        ops.patch(self.root, "P1.2", {"artifacts": [{"id": "catalog", "path": "@plan/artifacts/catalog.json", "role": "output"}]})
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "artifact/catalog", "why": "w", "required": True}]})
+        force_patch(self.root, "P1.2", {"artifacts": [{"id": "catalog", "path": "@plan/artifacts/catalog.json", "role": "output"}]})
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "artifact/catalog", "why": "w", "required": True}]})
         entry, = context.collect(self.load(), "P1.1")["reads"]
         self.assertEqual((entry["path"], entry["exists"], entry["content"]), ("@plan/artifacts/catalog.json", True, {"errors": 3}))
 
     def test_a_required_ref_that_names_nothing_is_missing(self):
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/gone", "why": "w", "required": True},
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/gone", "why": "w", "required": True},
                                                  {"ref": "artifact/gone", "why": "w", "required": True},
                                                  {"ref": "knowledge/gone", "why": "w", "required": False}]})
         self.assertEqual(context.missing_reads(self.load(), "P1.1"), ["@plan/knowledge/gone.json", "artifact/gone"])
         self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
 
     def test_a_ref_to_another_plan_is_not_readable(self):
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "PLAN3.D1", "why": "w", "required": False}]})
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "PLAN3.D1", "why": "w", "required": False}]})
         entry, = context.collect(self.load(), "P1.1")["reads"]
         self.assertEqual((entry["ref"], entry["exists"], "path" in entry), ("PLAN3.D1", False, False))
 
     def test_an_unreadable_section_of_a_ref_reports_the_same_error_as_a_path_read(self):
         self.add_design()
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design#nope", "why": "w", "required": False}]})
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design#nope", "why": "w", "required": False}]})
         entry, = context.collect(self.load(), "P1.1")["reads"]
         self.assertEqual(entry["error"], "section not found")
 
     def test_the_brief_keeps_exec_reads_path_based(self):
         from task.plan import brief
         self.add_design()
-        ops.patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design#steps", "why": "steps", "required": True}]})
+        force_patch(self.root, "P1.1", {"reads": [{"ref": "knowledge/design#steps", "why": "steps", "required": True}]})
         read, = brief.build(self.load(), "P1.1")["reads"]
         self.assertNotIn("ref", read)
         self.assertEqual((read["path"], read["section"]), ("@plan/knowledge/design.json", "steps"))
@@ -174,7 +181,7 @@ class JsonContextTests(test_lifecycle.LifeCase):
                       {"ref": "knowledge/design", "section": "missing"},
                       {"ref": "knowledge/design#Steps"}):  # fragments name ids, not titles
             with self.subTest(extra=extra):
-                ops.patch(self.root, "P1.1", {"reads": [{**extra, "why": "needed", "required": True}]})
+                force_patch(self.root, "P1.1", {"reads": [{**extra, "why": "needed", "required": True}]})
                 self.assertTrue(context.missing_reads(self.load(), "P1.1"))
                 self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
                 self.refused("READ_MISSING", lambda root: brief.build(self.load(), "P1.1"))
@@ -182,40 +189,40 @@ class JsonContextTests(test_lifecycle.LifeCase):
     def test_required_ref_section_titles_remain_readable_via_section_key(self):
         from task.plan import brief
         self.add_design()
-        ops.patch(self.root, "P1.1", {"reads": [
+        force_patch(self.root, "P1.1", {"reads": [
             {"ref": "knowledge/design", "section": "Steps", "why": "needed", "required": True}]})
         self.assertEqual(context.missing_reads(self.load(), "P1.1"), [])
         self.assertEqual(brief.build(self.load(), "P1.1")["reads"][0]["content"]["sections"][0]["id"], "steps")
 
     def test_unresolved_optional_ref_refuses_brief_but_declared_missing_file_is_allowed(self):
         from task.plan import brief
-        ops.patch(self.root, "P1.1", {"reads": [
+        force_patch(self.root, "P1.1", {"reads": [
             {"ref": "artifact/catalog", "why": "optional", "required": False}]})
         self.refused("REF_UNRESOLVED", lambda root: brief.build(self.load(), "P1.1"))
-        ops.patch(self.root, "P1.2", {"artifacts": [
+        force_patch(self.root, "P1.2", {"artifacts": [
             {"id": "catalog", "path": "catalog.json", "role": "output"}]})
         read, = brief.build(self.load(), "P1.1")["reads"]
         self.assertEqual((read["path"], read["exists"]), ("catalog.json", False))
         self.assertNotIn("ref", read)
 
     def test_views_never_supply_agent_input(self):
-        ops.patch(self.root, "P1.1", {"reads": [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad", "required": False}]})
+        force_patch(self.root, "P1.1", {"reads": [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad", "required": False}]})
         self.refused("HUMAN_VIEW", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
         self.assertEqual(self.load().items["P1.1"]["status"], "todo")
 
     def test_missing_required_input_is_refused_without_mutation(self):
-        ops.patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "needed", "required": True}]})
+        force_patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "needed", "required": True}]})
         self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
 
     def test_authored_plan_markdown_is_not_an_execution_source(self):
         (self.root / "notes.md").write_text("Private old plan notes")
-        ops.patch(self.root, "P1.1", {"reads": [{"path": "@plan/notes.md", "why": "bad", "required": True}]})
+        force_patch(self.root, "P1.1", {"reads": [{"path": "@plan/notes.md", "why": "bad", "required": True}]})
         self.refused("HUMAN_VIEW", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
 
     def test_upstream_results_and_foreign_decisions_remain_structured(self):
         self.start("P1.1")
         self.finish("P1.1", "done_with_deviations", notes="result", deviations=["slow"], pending=["docs"])
-        ops.patch(self.root, "P1.2", {"decisions": ["PLAN3.D4"]})
+        force_patch(self.root, "P1.2", {"decisions": ["PLAN3.D4"]})
         value = context.collect(self.load(), "P1.2")
         self.assertEqual(value["upstream"][0]["result"]["deviations"], ["slow"])
         entry, = value["decisions"]  # superset of the former {"ref", "loaded": False}; the resolver adds a reason

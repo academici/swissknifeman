@@ -83,6 +83,20 @@ class LinkTests(LinkCase):
             for field in ("status", "result"):
                 self.assertEqual(after[key].get(field), doc.get(field), f"{key}.{field}")
 
+    def test_set_and_push_refuse_a_dangling_link_and_write_nothing(self):
+        before = check.check(ops.store.load_plan(self.root))
+        for call in (lambda: ops.patch(self.root, "P1.1", {"depends_on": ["P9.9"]}),
+                     lambda: ops.push(self.root, "P1.1", "depends_on", "P9.9"),
+                     lambda: ops.push(self.root, "P1.1", "related", {"ref": "D404", "relation": "informs"}),
+                     lambda: ops.patch(self.root, "D1", {"applies_to": ["P9"]})):
+            with self.assertRaises(PlanError) as caught:
+                call()
+            self.assertEqual(caught.exception.code, "PLAN_INVALID")
+        after = ops.store.load_plan(self.root)
+        self.assertEqual(after.items["P1.1"].get("depends_on", []), [])
+        self.assertEqual(check.check(after), before)
+        ops.push(self.root, "P1.1", "related", {"ref": "D1", "relation": "informs"})  # a resolvable link is fine
+
     def test_refusals_write_nothing(self):
         self.units()
         cases = [

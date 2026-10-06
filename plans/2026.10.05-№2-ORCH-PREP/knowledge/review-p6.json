@@ -17,6 +17,11 @@
       "id": "recommendations",
       "title": "Рекомендации",
       "text": "1. Reopen P6.5 по F1 (владелец): валидировать поля-связи в set/apply/push через общий _check_proposed + тест «набор записывающих глаголов (set, push, apply) не допускает висячую ссылку».\n2. F2: единообразный REPO_UNKNOWN для неизвестного repo в links/neighborhood при ссылке на чужой план (P6.3, по решению владельца).\n3. Q1/Q2: зафиксировать ответ в knowledge/read-api либо api.md.\n4. Рекомендуется task:review: hard risk — публичный API и схемы."
+    },
+    {
+      "id": "resolution",
+      "title": "Исправления после review",
+      "text": "F1 исправлен в P6.5 (по просьбе владельца): ops._refuse_new_errors — set/push/set_brief отказывают PLAN_INVALID на новых ошибках полей-связей, существующие ошибки не блокируют; catalog и api.md обновлены; тест test_set_and_push_refuse_a_dangling_link_and_write_nothing; fixtures test_context через force_patch. F2 отклонён как дизайн (корень links на чужой ref нужен для входящих рёбер, закреплено test_links), запись deviation в P6.3. Q1/Q2 остаются вопросами владельцу. validate.sh OK (680+595 tests)."
     }
   ],
   "applies_to": [

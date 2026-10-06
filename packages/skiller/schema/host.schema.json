@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:skiller:host:v1",
+  "title": "skiller host configuration (configs/skiller-host.json)",
+  "description": "Optional config owned by the host repository that contains a Skiller install. Skiller looks for it at <repo root>/configs/skiller-host.json (or $SKILLER_HOST_CONFIG) relative to its own install, never the target project; without it every host function is off (standalone). Paths are POSIX and relative to the host repo root: no absolute paths, no `..`. Runtime validation is closed and stdlib-only (lib/skiller/host.py); this schema documents the same rules for editor DX.",
+  "type": "object",
+  "required": ["schema_version"],
+  "additionalProperties": false,
+  "definitions": {
+    "relpath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*\\\\)(?!(.*/)?\\.\\.(/|$))(?!.*//)(?!.*/$).+$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "description": "Format version of this config; only 1 is accepted."
+    },
+    "plugin_dirs": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/relpath" },
+      "description": "Glob patterns of sibling plugin directories (a directory holding .claude-plugin/plugin.json, except Skiller itself) aggregated into the marketplace. Empty or absent: no siblings."
+    },
+    "default_command_plugins": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/name" },
+      "description": "Plugins enabled by default next to the core plugin on connect/vendor and counted by budget; also the known plugin names. Empty or absent: none."
+    },
+    "version_files": {
+      "type": "array",
+      "description": "JSON files whose key is set to the release version (without `v`) by `skiller release`, when the file exists.",
+      "items": {
+        "type": "object",
+        "required": ["path", "key"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "$ref": "#/definitions/relpath", "description": "JSON file to update." },
+          "key": { "type": "string", "minLength": 1, "description": "Top-level key that receives the version." }
+        }
+      }
+    },
+    "machine_plugins": {
+      "type": "object",
+      "description": "Per machine-level CLI (for example grok): plugins installed from a local directory by install.sh and delivery, then their holds.",
+      "propertyNames": { "$ref": "#/definitions/name" },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name", "path"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "$ref": "#/definitions/name", "description": "Plugin name as the CLI knows it." },
+            "path": { "$ref": "#/definitions/relpath", "description": "Plugin directory to install from." },
+            "holds": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/relpath" },
+              "description": "Directories installed after the plugin (for example a prefix hold)."
+            }
+          }
+        }
+      }
+    },
+    "runtime_projection_plugins": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/name" },
+      "description": "Release units whose codex marketplace runtime readback uses the claude-code projection instead of the runtime projection."
+    },
+    "codex_link_roots": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/relpath" },
+      "description": "Extra roots that legacy codex skill links may point into when `skiller update` prunes them."
+    },
+    "legacy_runtime_links": {
+      "type": "array",
+      "description": "Historical plugin links in consumer projects that `skiller update` removes when they are symlinks to a known source.",
+      "items": {
+        "type": "object",
+        "required": ["link", "plugin", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "link": { "$ref": "#/definitions/relpath", "description": "Link path inside the consumer project." },
+          "plugin": { "$ref": "#/definitions/name", "description": "Plugin name in the provider plugin caches." },
+          "source": { "$ref": "#/definitions/relpath", "description": "Historical link target inside the host repository." }
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "External CLIs Skiller delegates to, by role (permissions, settings_doctor, environment_doctor, trace_doctor, ...). A missing command or binary is a graceful skip.",
+      "propertyNames": { "$ref": "#/definitions/name" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["argv"],
+        "additionalProperties": false,
+        "properties": {
+          "argv": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 },
+            "description": "Command line; argv[0] is a host-relative path when it contains `/`, otherwise a name looked up on PATH."
+          },
+          "env_override": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "Environment variable whose value replaces argv[0]."
+          },
+          "install_hint": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Hint shown in the warning when the binary is missing."
+          }
+        }
+      }
+    },
+    "mcp_servers": {
+      "type": "object",
+      "description": "Budget data for MCP servers shipped by the host repository.",
+      "propertyNames": { "$ref": "#/definitions/name" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tools": { "$ref": "#/definitions/count", "description": "Number of tools the server exposes." },
+          "instructions_tokens": { "$ref": "#/definitions/count", "description": "Resident server instruction tokens; absent means the budget fallback." }
+        }
+      }
+    },
+    "bootstrap": {
+      "$ref": "#/definitions/relpath",
+      "description": "Repository bootstrap skills config; absent disables root bootstrap rendering."
+    }
+  }
+}

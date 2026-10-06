@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "plugin_dirs": ["packages/*"],
+  "default_command_plugins": ["task"],
+  "version_files": [{"path": "packages/task/configs/command-routing.json", "key": "plugin_version"}],
+  "machine_plugins": {
+    "grok": [{"name": "task", "path": "packages/task", "holds": ["packages/task/adapters/grok/prefix-hold"]}]
+  },
+  "runtime_projection_plugins": ["task"],
+  "codex_link_roots": ["packages/task/adapters/codex/skills"],
+  "legacy_runtime_links": [{"link": "packages/task", "plugin": "task", "source": "packages/task"}],
+  "commands": {
+    "permissions": {"argv": ["packages/harness/bin/harness", "permissions"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
+    "settings_doctor": {"argv": ["packages/harness/bin/harness", "doctor", "--settings"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
+    "environment_doctor": {"argv": ["packages/harness/bin/harness", "--version"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
+    "trace_doctor": {"argv": ["packages/analyst/bin/analyst", "doctor"], "install_hint": "packages/analyst/install.sh"}
+  },
+  "mcp_servers": {"maind": {"tools": 11, "instructions_tokens": 0}},
+  "bootstrap": "configs/repository-bootstrap-skills.json"
+}

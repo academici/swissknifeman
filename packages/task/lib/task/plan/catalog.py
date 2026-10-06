@@ -13,7 +13,7 @@ VERB_DATA = {
     "new": None, "show": None, "get": "read-get", "list": "read-list", "events": "read-events",
     "artifact": "read-artifact", "links": "read-links", "neighborhood": "read-neighborhood",
     "schema": "read-catalog", "set": None, "apply": None, "export": "snapshot", "import": None,
-    "add-document": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
+    "add-document": None, "link": None, "unlink": None, "add-artifact": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "brief": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "archive": None,
@@ -24,7 +24,7 @@ VERB_MODES = {
     "new": "write", "show": "read", "get": "read", "list": "read", "events": "read",
     "artifact": "read", "links": "read", "neighborhood": "read", "schema": "read",
     "set": "write", "apply": "write", "export": "read", "import": "write", "add-document": "write",
-    "push": "write", "add-phase": "write", "add-item": "write", "add-decision": "write", "batches": "write",
+    "link": "write", "unlink": "write", "add-artifact": "write", "push": "write", "add-phase": "write", "add-item": "write", "add-decision": "write", "batches": "write",
     "check": "read", "render": "write", "next": "read", "start": "write", "context": "write",
     "brief": "read", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
@@ -40,7 +40,7 @@ DEPENDENCY_NOT_READY DEPTH_INVALID DESIGN_INCOMPLETE DEVIATION_REQUIRED DIRECTIO
 ESCALATION_REQUIRED EVIDENCE_CONFLICT EVIDENCE_INVALID EVIDENCE_REQUIRED EVIDENCE_SUBJECT EXTERNAL_GATE
 FIELD_NOT_ARRAY FIELD_OWNED FIELD_UNKNOWN GATE_INVALID GATE_NOT_GRANTED GATE_UNKNOWN HUMAN_VIEW
 ID_DUPLICATE ITEMS_DUPLICATE ITEMS_REQUIRED ITEMS_SPAN_PHASES ITEM_NOT_IN_PROGRESS ITEM_NOT_STARTABLE
-KIND_UNKNOWN LIMIT_INVALID LOG_INVALID LOG_TYPE_INVALID MESSAGE_REQUIRED MINUTES_INVALID NOTES_REQUIRED
+KIND_UNKNOWN LIMIT_INVALID LINK_INVALID LOG_INVALID LOG_TYPE_INVALID MESSAGE_REQUIRED MINUTES_INVALID NOTES_REQUIRED
 NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN OUT_INVALID PARALLEL_LIMIT PATCH_INVALID
 PATH_INVALID PHASE_NOT_DETAILED PLAN_AMBIGUOUS PLAN_CODENAME_INVALID PLAN_DATE_INVALID PLAN_EXISTS
 PLAN_INVALID PLAN_LOCKED PLAN_NOT_DONE PLAN_NOT_FOUND RATIONALE_REQUIRED READ_MISSING REASON_REQUIRED
@@ -55,6 +55,7 @@ _WRITE = {"PLAN_LOCKED", "SCHEMA_INVALID"}
 _ROUTE = {"ROUTE_MISMATCH", "ROUTE_UNDERSHOOT", "ROUTING_UNAVAILABLE"}
 _EVIDENCE = {"ATTEMPT_ID_INVALID", "ATTEMPT_CONFLICT", "CHECK_UNKNOWN", "EVIDENCE_INVALID", "EVIDENCE_SUBJECT",
              "EVIDENCE_REQUIRED", "EVIDENCE_CONFLICT"}
+_LINK = {"LINK_INVALID", "KIND_UNKNOWN", "FIELD_NOT_ARRAY"}
 _QUERY = _TARGET | {"SECTION_UNKNOWN", "REPO_UNKNOWN"}
 
 # Conservative per-verb refusal sets; IO_ERROR and USAGE are shared CLI errors.
@@ -73,6 +74,9 @@ VERB_ERRORS = {
     "export": _PLAN | {"LOG_INVALID"},
     "import": _PLAN | _WRITE | {"ID_DUPLICATE", "PLAN_INVALID", "PLAN_EXISTS", "LOG_INVALID"},
     "add-document": _PLAN | _WRITE | {"FIELD_OWNED", "PATCH_INVALID", "ID_DUPLICATE"},
+    "link": _PLAN | _TARGET | _WRITE | _LINK | {"PLAN_INVALID"},
+    "unlink": _PLAN | _TARGET | _WRITE | _LINK | {"PLAN_INVALID"},
+    "add-artifact": _PLAN | _TARGET | _WRITE | {"LINK_INVALID", "FIELD_NOT_ARRAY", "PLAN_INVALID"},
     "push": _PLAN | _TARGET | _WRITE | {"FIELD_OWNED", "FIELD_NOT_ARRAY"},
     "add-phase": _PLAN | _WRITE | {"FIELD_OWNED"},
     "add-item": _PLAN | _WRITE | {"REF_UNKNOWN", "FIELD_OWNED"},

@@ -158,6 +158,7 @@
                 "ITEM_NOT_STARTABLE",
                 "KIND_UNKNOWN",
                 "LIMIT_INVALID",
+                "LINK_INVALID",
                 "LOG_INVALID",
                 "LOG_TYPE_INVALID",
                 "MESSAGE_REQUIRED",

@@ -329,7 +329,6 @@ def add_document(plan, data: dict) -> str:
 
 def apply(plan, patches: list[dict]) -> None:
     """Validate a group of merge patches as one proposed graph, then commit all changed documents."""
-    from . import check
     if not isinstance(patches, list) or not patches:
         raise PlanError("PATCH_INVALID", "apply needs a non-empty array of {ref, patch} objects")
     with _mutation(plan) as p:
@@ -348,7 +347,144 @@ def apply(plan, patches: list[dict]) -> None:
                          "decision": proposed.decisions, "document": proposed.documents}[kind]
                 table[key] = doc
             changed[(kind, key)] = doc
-        errors = [i for i in check.check(proposed) if i.level == "error"]
-        if errors:
-            raise PlanError("PLAN_INVALID", "; ".join(f"{i.where}: {i.message}" for i in errors), errors)
+        _check_proposed(proposed)
         _commit(p, [(kind, key, doc) for (kind, key), doc in changed.items()])
+
+
+def _check_proposed(proposed: store.Plan) -> None:
+    """Refuse a proposed graph that ``check`` reports errors for; nothing has been written yet."""
+    from . import check
+    errors = [i for i in check.check(proposed) if i.level == "error"]
+    if errors:
+        raise PlanError("PLAN_INVALID", "; ".join(f"{i.where}: {i.message}" for i in errors), errors)
+
+
+# ---------------------------------------------------------------- links and artifacts (D11)
+
+LINK_KINDS = ("depends_on", "related", "decision", "applies_to", "unit_depends_on")
+
+
+def _local_ref(ref: str, what: str):
+    try:
+        parsed = parse_ref(ref)
+    except ValueError:
+        raise PlanError("REF_INVALID", f"invalid {what} reference {ref!r}") from None
+    if parsed.plan is not None:
+        raise PlanError("REF_QUALIFIED", f"{what} {ref!r} points to another plan; links stay inside one plan")
+    return parsed
+
+
+def _link_slot(p: store.Plan, kind: str, source: str, target: str, relation: str | None, note: str | None):
+    """Where the link ``source -> target`` of ``kind`` lives: ``(doc kind, key, doc, field, entry, same)``.
+
+    ``entry`` is the stored form of the link and ``same(candidate)`` tells whether a stored element is this edge.
+    The table of fields is ``edges.LINK_FIELDS``; this maps the closed write kinds onto it.
+    """
+    if kind not in LINK_KINDS:
+        raise PlanError("KIND_UNKNOWN", f"link kind {kind!r} is not one of {', '.join(LINK_KINDS)}")
+    if kind != "related" and (relation is not None or note is not None):
+        raise PlanError("LINK_INVALID", f"--relation and --note belong to related links, not {kind}")
+    if kind == "related" and not relation:
+        raise PlanError("LINK_INVALID", "a related link needs --relation")
+    doc_kind, key, doc = resolve_target(p, source)
+    dest = _local_ref(target, "link target")
+    starts = {"depends_on": ("phase", "item"), "related": ("item",), "decision": ("item",),
+              "applies_to": ("decision", "document"), "unit_depends_on": ("unit",)}[kind]
+    ends = {"depends_on": doc_kind, "decision": "decision", "unit_depends_on": "unit"}.get(kind)
+    if doc_kind not in starts:
+        raise PlanError("LINK_INVALID", f"{kind} starts from {' or '.join(starts)}, not from {source!r} ({doc_kind})")
+    if ends and dest.kind != ends:
+        raise PlanError("LINK_INVALID", f"{kind} from {source} must end at a {ends}, {target!r} is a {dest.kind}")
+    if kind == "related":
+        entry = {"ref": target, "relation": relation, **({"note": note} if note else {})}
+        return doc_kind, key, doc, "related", entry, \
+            lambda held: isinstance(held, dict) and held.get("ref") == target and held.get("relation") == relation
+    if kind == "unit_depends_on":
+        if dest.target.split("/")[0] != key.split("/")[0]:
+            raise PlanError("LINK_INVALID", f"unit dependencies stay inside one item: {source} -> {target}")
+        target = dest.target.split("/")[1]  # stored as the bare unit id of the same item
+    field = {"depends_on": "depends_on", "unit_depends_on": "depends_on", "decision": "decisions",
+             "applies_to": "applies_to"}[kind]
+    return doc_kind, key, doc, field, target, target.__eq__
+
+
+def _write_proposed(p: store.Plan, doc_kind: str, key, doc: dict, ref: str) -> None:
+    """Schema-check ``doc``, graph-check the plan with it in place, then commit it alone."""
+    store.check_doc(doc, doc_kind, ref)
+    proposed = copy.deepcopy(p)
+    if doc_kind in ("plan", "brief"):
+        setattr(proposed, doc_kind, doc)
+    else:
+        {"phase": proposed.phases, "item": proposed.items, "unit": proposed.units,
+         "decision": proposed.decisions, "document": proposed.documents}[doc_kind][key] = doc
+    _check_proposed(proposed)
+    _commit(p, [(doc_kind, key, doc)])
+
+
+def link(plan, source: str, target: str, *, kind: str, relation: str | None = None, note: str | None = None) -> bool:
+    """Add the typed link ``source -> target`` as one checked mutation; True when it was written.
+
+    A repeat of an existing edge is a no-op (a related link refreshes its note). The status and result of an item
+    are never touched. A proposed graph with any ``check`` error is refused and nothing is written.
+    """
+    with _mutation(plan) as p:
+        doc_kind, key, doc, field, entry, same = _link_slot(p, kind, source, target, relation, note)
+        doc = copy.deepcopy(doc)
+        stored = doc.get(field)
+        if stored is not None and not isinstance(stored, list):
+            raise PlanError("FIELD_NOT_ARRAY", f"{field!r} of {source} is not an array")
+        stored = doc.setdefault(field, [])
+        index = next((i for i, existing in enumerate(stored) if same(existing)), None)
+        if index is None:
+            stored.append(entry)
+        elif kind == "related" and note and stored[index].get("note") != note:
+            stored[index] = entry
+        else:
+            return False
+        _write_proposed(p, doc_kind, key, doc, source)
+    return True
+
+
+def unlink(plan, source: str, target: str, *, kind: str, relation: str | None = None) -> bool:
+    """Remove the typed link ``source -> target``; True when it was there. A missing edge is a no-op.
+
+    The target is not resolved, so a dangling link can be removed; the proposed graph is still checked.
+    """
+    with _mutation(plan) as p:
+        doc_kind, key, doc, field, _entry, same = _link_slot(p, kind, source, target, relation, None)
+        stored = doc.get(field)
+        if not isinstance(stored, list) or not any(same(existing) for existing in stored):
+            return False
+        doc = copy.deepcopy(doc)
+        doc[field] = [existing for existing in doc[field] if not same(existing)]
+        _write_proposed(p, doc_kind, key, doc, source)
+    return True
+
+
+def add_artifact(plan, item: str, path: str, role: str, *, artifact_id: str | None = None) -> bool:
+    """Declare an input or output artifact of ``item``; True when it was written.
+
+    An artifact is the pair ``(path, role)``: a repeat is a no-op, a repeat that names another id is refused.
+    Id uniqueness, the input -> output path match and the id's resolution are the ``check`` rules.
+    """
+    with _mutation(plan) as p:
+        doc_kind, key, doc = resolve_target(p, item)
+        if doc_kind != "item":
+            raise PlanError("LINK_INVALID", f"artifacts belong to an item, {item!r} is a {doc_kind}")
+        doc = copy.deepcopy(doc)
+        entries = doc.get("artifacts")
+        if entries is not None and not isinstance(entries, list):
+            raise PlanError("FIELD_NOT_ARRAY", f"artifacts of {item} is not an array")
+        entries = doc.setdefault("artifacts", [])
+        current = next((e for e in entries if isinstance(e, dict) and e.get("path") == path and e.get("role") == role),
+                       None)
+        if current is not None:
+            if artifact_id is not None and current.get("id") not in (None, artifact_id):
+                raise PlanError("LINK_INVALID", f"{role} artifact {path!r} of {item} already has id {current['id']!r}")
+            if artifact_id is None or current.get("id") == artifact_id:
+                return False
+            current["id"] = artifact_id
+        else:
+            entries.append({"path": path, "role": role, **({"id": artifact_id} if artifact_id else {})})
+        _write_proposed(p, doc_kind, key, doc, item)
+    return True

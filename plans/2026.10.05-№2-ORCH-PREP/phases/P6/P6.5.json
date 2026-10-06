@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.5",
   "title": "Запись связей и артефактов: link, unlink, add-artifact",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Глаголы `link <from> <to> --kind K [--relation --note]`, `unlink`, `add-artifact <item> --path --role [--id]`: связь меняется одной транзакцией ops с проверкой ссылок, дублей, циклов и существования.",
   "why": "D11, R3: связи и артефакты не правятся JSON-патчем вслепую; API проверяет вход и держит граф согласованным.",
   "scope": {
@@ -124,6 +124,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:12:12Z"
+  "result": {
+    "started_at": "2026-10-06T08:40:03Z",
+    "finished_at": "2026-10-06T08:47:43Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "6aab5bce-ab73-496c-9472-8e6c14c68273"
+    },
+    "notes": "link/unlink/add-artifact одной транзакцией с check proposed graph; повтор — no-op; отказ ничего не пишет. V1 17 тестов, V2 12, V3 13, полный tests/engine 594 OK. Hard risk: публичный API и схема — рекомендуется task:review.",
+    "deviations": [
+      "Вне перечня файлов: LINK_INVALID добавлен в закрытый enum schemas/plan/v1/read-catalog.schema.json (аддитивно) и в реестр catalog.ERROR_CODES; из ops.apply вынесен _check_proposed"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T08:47:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T08:47:43Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T08:47:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T08:47:43Z"
 }

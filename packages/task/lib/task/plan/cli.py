@@ -470,6 +470,24 @@ def cmd_apply(args) -> int:
     return 0
 
 
+def cmd_link(args) -> int:
+    changed = ops.link(_plan_dir(args), args.source, args.target, kind=args.kind, relation=args.relation, note=args.note)
+    _print_json({"linked": True, "changed": changed, "from": args.source, "to": args.target, "kind": args.kind})
+    return 0
+
+
+def cmd_unlink(args) -> int:
+    changed = ops.unlink(_plan_dir(args), args.source, args.target, kind=args.kind, relation=args.relation)
+    _print_json({"unlinked": True, "changed": changed, "from": args.source, "to": args.target, "kind": args.kind})
+    return 0
+
+
+def cmd_add_artifact(args) -> int:
+    changed = ops.add_artifact(_plan_dir(args), args.item, args.path, args.role, artifact_id=args.id)
+    _print_json({"added": True, "changed": changed, "item": args.item, "path": args.path, "role": args.role})
+    return 0
+
+
 def cmd_add_document(args) -> int:
     _print_json({"id": ops.add_document(_plan_dir(args), _json_value(args.json, args.file))})
     return 0
@@ -560,6 +578,25 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--replace", action="store_true", help="restore an existing JSON plan")
     p = verb("add-document", cmd_add_document, "add a schema-backed knowledge document")
     value_args(p, True)
+
+    p = verb("link", cmd_link, "add a typed link between two documents of the plan; a repeat is a no-op")
+    p.add_argument("source", metavar="from", help="owning document: Pn, Pn.m, D#, Pn.m/U# or knowledge/<id>")
+    p.add_argument("target", metavar="to", help="linked document in the same plan")
+    p.add_argument("--kind", required=True, choices=ops.LINK_KINDS)
+    p.add_argument("--relation", help="related only: informs|consumes|conflicts|follows_up|supersedes")
+    p.add_argument("--note", help="related only: why linked")
+
+    p = verb("unlink", cmd_unlink, "remove a typed link between two documents of the plan; a missing link is a no-op")
+    p.add_argument("source", metavar="from")
+    p.add_argument("target", metavar="to")
+    p.add_argument("--kind", required=True, choices=ops.LINK_KINDS)
+    p.add_argument("--relation", help="related only: the relation of the link to remove")
+
+    p = verb("add-artifact", cmd_add_artifact, "declare an input or output artifact of an item; a repeat is a no-op")
+    p.add_argument("item", metavar="item")
+    p.add_argument("--path", required=True, help="repository path or @plan/ path")
+    p.add_argument("--role", required=True, choices=("input", "output"))
+    p.add_argument("--id", help="artifact id, addressed as artifact/<id> (an output declares it, an input cites it)")
 
     p = verb("push", cmd_push, "append a value to an array field (dotted paths allowed)")
     p.add_argument("ref")

@@ -19,6 +19,13 @@
     "P5.4",
     "P5.1"
   ],
+  "related": [
+    {
+      "ref": "P6.6",
+      "relation": "informs",
+      "note": "документация P6 входит в итоговый validate"
+    }
+  ],
   "decisions": [],
   "reads": [
     {
@@ -157,5 +164,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:02:48Z"
+  "updated_at": "2026-10-06T05:12:12Z"
 }

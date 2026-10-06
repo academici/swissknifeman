@@ -1,0 +1,145 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.3",
+  "title": "Связи: links и neighborhood",
+  "status": "todo",
+  "summary": "`links <ref> [--direction out|in|both] [--kind] [--depth]` отдаёт типизированные рёбра, включая обратные, из таблицы edges; `neighborhood <item>` — item, его рёбра глубины 1, действующие decisions и knowledge.",
+  "why": "D11, R2: «связанные пункты» запрашиваются API, а не разбором JSON; обратные рёбра (кто зависит от X) в файлах не хранятся.",
+  "scope": {
+    "include": [
+      "query.links и query.neighborhood поверх edges.py",
+      "CLI-глаголы links и neighborhood",
+      "схемы read-links и read-neighborhood",
+      "tests/engine/test_links.py: эквивалентность независимому обходу полей и fixture на каждый тип ребра"
+    ],
+    "exclude": [
+      "изменение context.collect",
+      "запись связей (P6.5)",
+      "межпланные рёбра (только ref с префиксом, без загрузки чужого плана)"
+    ]
+  },
+  "depends_on": [
+    "P6.1",
+    "P6.2"
+  ],
+  "decisions": [
+    "D11"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "principle",
+      "why": "принцип, грамматика, глаголы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "current-surface",
+      "why": "аудит и пробелы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "read-verbs",
+      "why": "глаголы и форма data",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "checks",
+      "why": "проверки",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/edges.py",
+      "why": "таблица рёбер (P6.1)",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/query.py",
+      "why": "get/list (P6.2)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/query.py",
+      "change": "any",
+      "note": "created by P6.2"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-links.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-neighborhood.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_links.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_envelope.py",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обратные рёбра вычисляются, не хранятся",
+    "Порядок рёбер детерминирован (kind, from, to)",
+    "depth ограничен целым ≥1; циклы не зацикливают обход"
+  ],
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: публичный API и схемы.\n\n`data = {ref, edges:[{from,to,kind,relation?,note?}], nodes:[{ref,title,status}]}`. Тест эквивалентности строит ожидаемые рёбра обходом полей независимо от `LINK_FIELDS` на плане с каждым типом связи.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_links.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_envelope.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_query.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "links",
+    "neighborhood",
+    "test_links.py"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T05:12:12Z"
+}

@@ -35,8 +35,8 @@
     },
     {
       "id": "proposed-items",
-      "title": "Предлагаемая разбивка на items",
-      "text": "1. Грамматика ref + таблица рёбер `edges.py` + `check` резолвит все ссылки; миграция `@plan/` → `reads[].ref` (schema/public API → hard risk).\n2. `get`, `list`, `events`, `artifact` + схемы data.\n3. `links`, `neighborhood` + тесты эквивалентности.\n4. `schema` (каталог глаголов и схем) + описание в plan-protocol.\n5. Запись связей: `link`/`unlink`/`artifact add`.\nМесто: новая фаза после P2 либо items P2.8+ (решение владельца). P2.2 (verify brief) не зависит от этого."
+      "title": "Разбивка и место в roadmap (решено владельцем: новая фаза P6)",
+      "text": "Решение D11. Фаза P6 стоит в порядке плана после P2 и перед P3 (P3 зависит от P6 по умолчанию).\n\nПочему здесь: (1) тексты ролей P3 и manifests P4 называют глаголы чтения вместо чтения файлов плана; (2) `schema --verbs` нужен P4.4; (3) грамматика ref опирается на refs.py из P2.3; (4) P2.2 и P2.3 от P6 не зависят.\n\n- P6.1 грамматика ref + таблица рёбер `edges.py` + check резолвит все ссылки (schema: hard risk).\n- P6.2 `get`, `list`, `events`, `artifact` + схемы data.\n- P6.3 `links`, `neighborhood` + тесты эквивалентности.\n- P6.4 `schema` (каталог глаголов и схем) + references/api.md.\n- P6.5 запись связей: `link`/`unlink`/`add-artifact`.\n- P6.6 документация, CHANGELOG, широкий validate.\n- P6.7 Review P6."
     }
   ],
   "applies_to": [

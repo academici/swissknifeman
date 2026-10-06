@@ -1,0 +1,105 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.6",
+  "title": "Документация, CHANGELOG и широкий validate Task (Read API)",
+  "status": "todo",
+  "summary": "Синхронизировать plan-protocol, Task docs и CHANGELOG с P6; роли и команды называют глаголы чтения; широкий validate Task и канон-бюджет.",
+  "why": "D11: описание API и поведение совпадают; фаза закрывается широкой проверкой, которую не повторяют items.",
+  "scope": {
+    "include": [
+      "skills/plan-protocol (SKILL.md кратко, references/api.md)",
+      "Task docs (docs/json-plan-design.md), корневой CHANGELOG.md, версия манифестов по правилам пакета",
+      "широкий validate.sh Task"
+    ],
+    "exclude": [
+      "тексты ролей orch (P3)",
+      "новые глаголы"
+    ]
+  },
+  "depends_on": [
+    "P6.2",
+    "P6.3",
+    "P6.4",
+    "P6.5"
+  ],
+  "decisions": [
+    "D11"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "principle",
+      "why": "принцип, грамматика, глаголы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "current-surface",
+      "why": "аудит и пробелы",
+      "required": true
+    },
+    {
+      "path": "packages/task/CLAUDE.md",
+      "why": "правила пакета",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "why": "канон",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/api.md",
+      "change": "any",
+      "note": "created by P6.4"
+    },
+    {
+      "path": "packages/task/docs/json-plan-design.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Бюджет plan-*.md + SKILL.md ≤ 105795 байт",
+    "Версию поднимать только по правилам релиза пакета"
+  ],
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: публичный API и схемы.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "docs",
+    "CHANGELOG",
+    "validate.sh OK"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T05:12:12Z"
+}

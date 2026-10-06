@@ -1,0 +1,166 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.1",
+  "title": "Грамматика ref и таблица рёбер: edges.py, resolve в check",
+  "status": "todo",
+  "summary": "Единая грамматика ссылок (phase, item, unit, decision, knowledge/<id>[#section], artifact/<id>) и таблица рёбер `edges.py`; `check` разрешает каждую ссылку и сверяет обратные рёбра; optional `reads[].ref` и `artifacts[].id`.",
+  "why": "D11, R1: связи должны быть жёсткими и одинаково читаться любым глаголом; сейчас defs.ref покрывает phase/item/decision, а ссылки на unit, knowledge, artifact — свободные строки.",
+  "scope": {
+    "include": [
+      "model.parse_ref и defs.ref: unit, knowledge, artifact (расширение паттерна)",
+      "lib/task/plan/edges.py: EDGE_KINDS (замкнутый enum) и edges(plan) из одной таблицы полей-связей",
+      "check.py: каждая ссылка разрешается; superseded_by↔supersedes и parent↔children согласованы",
+      "schemas: optional reads[].ref (взаимоисключающе с path) и artifacts[].id; context.read_entry разрешает reads[].ref",
+      "tests/engine/test_edges.py, дополнения test_schema/test_check/test_context"
+    ],
+    "exclude": [
+      "миграция существующих планов (@plan/ пути остаются валидными)",
+      "глаголы чтения (P6.2)",
+      "внешние планы (refs.py из P2.3 используется как есть)"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D11"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "principle",
+      "why": "принцип, грамматика, глаголы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "current-surface",
+      "why": "аудит и пробелы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "ref-grammar",
+      "why": "грамматика и таблица рёбер",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/model.py",
+      "why": "parse_ref, REF, ITEM_ID",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/check.py",
+      "why": "references(), known(), cycles()",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/context.py",
+      "why": "read_entry, _resolve",
+      "required": true
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/defs.schema.json",
+      "why": "ref",
+      "required": true
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/item.schema.json",
+      "why": "reads, artifacts, related",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/edges.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/model.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/check.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/context.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/defs.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/item.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_edges.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_check.py",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Только optional поля: фикстуры существующих планов проходят без изменений",
+    "Таблица рёбер — единственное место, знающее, какие поля плана являются связями",
+    "Сообщения check — английские, с `where` и кодом"
+  ],
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: публичный API и схемы.\n\nТаблица `LINK_FIELDS`: (kind документа, путь поля, тип ребра, цель). Типы рёбер: depends_on, related (relation из enum item.related), decision, applies_to, unit_depends_on, parent, consumes, produces, supersedes. `edges(plan)` возвращает список `Edge(from, to, kind, relation, note)` в детерминированном порядке; обратные рёбра считает query (P6.2), не edges.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_edges.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_schema.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_check.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_context.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "edges.py",
+    "расширенная грамматика ref",
+    "check разрешает все ссылки"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T05:11:51Z"
+}

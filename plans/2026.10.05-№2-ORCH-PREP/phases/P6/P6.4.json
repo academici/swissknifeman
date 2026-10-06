@@ -1,0 +1,137 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.4",
+  "title": "Каталог API: глагол schema",
+  "status": "todo",
+  "summary": "`schema [<kind>] | --verbs` печатает схему документа или машиночитаемый каталог глаголов (аргументы, коды отказов, kind схемы data), собранный из parser; описание API для агента — в references/.",
+  "why": "D11, R2: «схемы API, как им пользоваться» — агент узнаёт API у самого API, а не из prose.",
+  "scope": {
+    "include": [
+      "lib/task/plan/catalog.py: verbs(parser) и VERB_DATA (глагол → kind data)",
+      "CLI-глагол schema",
+      "схема read-catalog",
+      "tests/engine/test_catalog.py: каталог совпадает с parser, у каждого глагола с data есть схема",
+      "skills/plan-protocol/references/api.md"
+    ],
+    "exclude": [
+      "генерация документации Markdown из каталога",
+      "изменение SKILL.md сверх ссылки (бюджет)"
+    ]
+  },
+  "depends_on": [
+    "P6.2",
+    "P6.3"
+  ],
+  "decisions": [
+    "D11"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "principle",
+      "why": "принцип, грамматика, глаголы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "current-surface",
+      "why": "аудит и пробелы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "read-verbs",
+      "why": "schema и проверки",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "why": "build_parser, _emit",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "why": "§5 API verbs",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-catalog.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_catalog.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/api.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Каталог строится из parser: новый глагол без записи VERB_DATA/описания роняет тест",
+    "Описание на английском; ссылка из SKILL.md одной строкой (бюджет канона)"
+  ],
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: публичный API и схемы.\n\n`schema --verbs` → `{verbs:[{name,summary,mode:read|write,args:[{name,required,choices?,help}],data_kind?,errors:[CODE]}]}`. Коды отказов — из реестра в catalog.py, тест сверяет с `PlanError(\"CODE\"` литералами в lib/task/plan.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_catalog.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_envelope.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_canon_literals.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "catalog.py",
+    "schema verb",
+    "references/api.md"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T05:11:52Z"
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.7",
+  "title": "Review P6: независимая проверка Read API",
+  "status": "todo",
+  "summary": "Read-only review диффа фазы P6 против knowledge/read-api и D11: схемы data, грамматика ref, эквивалентность рёбер, отказ записи вне API; вердикт GREEN/ATTENTION/RED в knowledge `review-p6` и note-событие.",
+  "why": "Публичный API и схемы (hard risk) фиксируются для всех агентов; независимая проверка по образцу P1.5/P2.7.",
+  "scope": {
+    "include": [
+      "сверка каждого глагола parser с каталогом и схемой data",
+      "проверка грамматики ref и таблицы рёбер на всех полях-связях схем",
+      "вердикт: add-document id review-p6 (verdict/findings/recommendations, applies_to [\"P6\"]) и log note"
+    ],
+    "exclude": [
+      "исправления кода (owning item через reopen владельцем)",
+      "второй раунд без новой гипотезы"
+    ]
+  },
+  "depends_on": [
+    "P6.6"
+  ],
+  "decisions": [
+    "D11"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "read-verbs",
+      "why": "эталон",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/read-api.json",
+      "section": "checks",
+      "why": "проверки",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "why": "форма вердикта",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/skills/quality/artifact-review/SKILL.md",
+      "why": "метод ревью",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/knowledge/review-p6.json",
+      "change": "create",
+      "note": "только через plan.py add-document"
+    }
+  ],
+  "rules": [
+    "Read-only по продукту",
+    "Finding: severity, path:line, сценарий отказа, owning item (P6.1–P6.6)"
+  ],
+  "guidance": "Порядок: дифф фазы; `bash packages/task/scripts/validate.sh` (один раз); сверка схем read-* с ответами глаголов. Uncertainty — вопрос, не дефект.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 packages/task/scripts/plan.py show PLAN2 knowledge/review-p6 > /dev/null",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "knowledge/review-p6 (вердикт)",
+    "note-событие в log"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-06T05:11:53Z"
+}

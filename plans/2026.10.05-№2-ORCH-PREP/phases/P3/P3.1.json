@@ -18,6 +18,13 @@
     ]
   },
   "depends_on": [],
+  "related": [
+    {
+      "ref": "P6.4",
+      "relation": "consumes",
+      "note": "роли называют глаголы чтения (get/links/schema), а не чтение файлов плана"
+    }
+  ],
   "decisions": [
     "D3",
     "D5"
@@ -139,5 +146,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-05T17:00:23Z"
+  "updated_at": "2026-10-06T05:12:12Z"
 }

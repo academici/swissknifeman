@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.5",
   "title": "Делегирование harness/analyst через commands, MCP-данные maind в хосте, межпакетный гейт agent-packs → корень",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "common.apply_permissions, doctor (--settings facade, проверка окружения, trace-quality), integrate используют `host_command`; budget берёт данные maind из `host.mcp_servers`; гейт свежести agent-packs (validate.sh 1370–1460) переезжает в корневой `scripts/agent-framework-freshness.py` + hygiene CI.",
   "why": "Skiller не должен знать harness/analyst/maind (D16), но `skiller connect`/`doctor --settings` обязаны работать как раньше (R21). Hard risk: budget first-turn — числа участвуют в гейте контекста (CLAUDE.md root.claude-code.context-budget); они не должны измениться.",
   "scope": {
@@ -207,6 +207,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T16:12:21Z"
+  "result": {
+    "started_at": "2026-10-06T17:29:38Z",
+    "finished_at": "2026-10-06T18:01:43Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "76f68350-4400-45b9-8e5c-2c0749b438ae"
+    },
+    "notes": "common.apply_permissions/doctor facade/env check/integrate/_available_mcp run host commands via host_command (no harness_bin, find_monorepo_root, sibling_bin); trace-quality uses host trace_doctor text, no analyst import; budget reads host mcp_servers (KNOWN_MCP_TOOLS external only), numbers identical; agent-packs freshness gate moved verbatim to scripts/agent-framework-freshness.py + test + hygiene CI, removed from Skiller validate.sh. All P8.5 allowlist entries removed. Suite 798 OK; validate.sh green; root tests green.",
+    "deviations": [
+      "Host instance environment_doctor uses --help and gains an 'environment' command; allowlist cleanup beyond task_files (config/status/eval comments, 3 extra tests, doctor fixture)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T18:01:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T18:01:43Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T18:01:43Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T18:01:43Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T18:01:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T18:01:43Z"
 }

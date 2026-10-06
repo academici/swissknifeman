@@ -64,7 +64,7 @@ class TestComposeLock(unittest.TestCase):
 
     def test_local_skill_not_attributed_to_boost(self):
         # Skill installed, not in the registry, Boost CONNECTED, but the skill is not in
-        # boost.json::skills (e.g. ecosystem-mcp from the hub maind) → local, not boost.
+        # boost.json::skills (e.g. ecosystem-mcp from the hub's memory tool) → local, not boost.
         with tempfile.TemporaryDirectory() as tmp:
             env, target = _setup(tmp)
             (target / ".claude/skills/ecosystem-mcp").mkdir(parents=True)

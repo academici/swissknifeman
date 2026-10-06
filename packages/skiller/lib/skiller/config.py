@@ -20,7 +20,7 @@ from .host import load_host
 # EVERY project by default (see deep_analysis §5–§6). Channels of different granularities:
 #   connect (marketplace) — bucket-granular → CORE_BUCKETS;
 # vendor (physical. copy)    — skill-granular → CORE_SKILLS + DEFAULT_EXCLUDE.
-# DEFAULT_EXCLUDE removes skills that duplicate the hub from auto-distribution maind
+# DEFAULT_EXCLUDE removes skills that duplicate the hub's own memory tooling from auto-distribution
 # (shared-memory ← agent-memory MCP) and hand tools (cross-project-coordinator).
 # Disabled by flag --no-core y connect/vendor.
 # CORE stores only the general execution discipline. Onboarding, search, GitHub review
@@ -92,7 +92,7 @@ DEFAULT_EXCLUDE = list(_CORE_POLICY["default_exclude"])
 # `--profile standalone` («put everything») remains available; auto-fallback puts only the core.
 # == CORE_BUCKETS (channel-independent consistency): used to include a bucket `system`
 # entirely, but he carries system/shared-memory and system/cross-project-coordinator — exactly those
-# hub duplicates maind, what CORE-politics drives through DEFAULT_EXCLUDE. Fallback should not retract
+# hub duplicates, what CORE-politics drives through DEFAULT_EXCLUDE. Fallback should not retract
 # them back, so it matches CORE_BUCKETS.
 MINIMAL_BUCKETS = list(CORE_BUCKETS)
 
@@ -128,7 +128,7 @@ class ProjectConfig(Mapping):
     (`skiller doctor` and `tests/test_schema.py`) read derivative `CONFIG_KEYS`
     and are not corrected.
 
-    **Why NOT subclass `dict`** (unlike `maind.config.Config`, config wrappers
+    **Why NOT subclass `dict`** (unlike dict-based config wrappers elsewhere, config wrappers
     NODE): subclass leaves mutation open (`cfg["agent"] = …`) and depreciates
     typing - the attribute and the key would separate silently. Here `frozen=True` plus
     read-only Mapping-projection onto `raw`: old access (`cfg.get("agent")`,

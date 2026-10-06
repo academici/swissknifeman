@@ -18,6 +18,12 @@
   `package_units` и `legacy_policy` из `configs/release-units.json`. Команды `codex`/`grok`
   и снимки attestation в монорепозитории прежние. `$id` JSON-схем Skiller теперь
   `urn:skiller:<name>:v1`; `$schema`-ссылки потребителей на прежние URL продолжают работать.
+- **Skiller делегирует окружение через host commands:** permissions, `doctor --settings`,
+  проверка окружения, integrate-блоки и trace-quality вызывают команды из
+  `configs/skiller-host.json` (`permissions`, `settings_doctor`, `environment`,
+  `environment_doctor`, `trace_doctor`) без импорта соседних пакетов; данные MCP-сервера
+  хаба для `budget --first-turn` берутся из `mcp_servers` (числа бюджета прежние). Гейт
+  свежести agent-packs переехал в корневой `scripts/agent-framework-freshness.py` (hygiene CI).
 
 - **Task Read API и типизированные связи:** `plan.py get`, `list`, `events`,
   `artifact`, `links`, `neighborhood` и `schema` возвращают валидированный JSON-конверт;

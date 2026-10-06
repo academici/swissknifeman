@@ -24,7 +24,7 @@ from tests.fixtures import make_laravel_project, make_registry, write_skill
 
 
 def _write_core_skills(root):
-    """Put CORE_SKILLS + maind-duplicates to the synthetic registry and
+    """Put CORE_SKILLS + hub-duplicates to the synthetic registry and
     add their buckets to buckets.json (1:1 requirement with catalogs)."""
     skills = root / "skills"
     for name in ("context-economy", "anti-drift", "compact-responses",

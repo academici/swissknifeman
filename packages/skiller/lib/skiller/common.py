@@ -1,8 +1,8 @@
 """General utilities: environment, output, parsing flag'ov and frontmatter.
 
-Verbatim common with maind/brain code (die/warn/now_iso/confirm/sanitize + core Env)
-moved to general core; here - only specifics swissknifeman (path-property,
-parse_flags, frontmatter, delegation of the environment to harness, registry constants)."""
+Verbatim common code (die/warn/now_iso/confirm/sanitize + core Env) moved to the
+general core; here - only specifics swissknifeman (path-property, parse_flags,
+frontmatter, delegation of the environment to host commands, registry constants)."""
 import hashlib
 import shutil
 import subprocess
@@ -14,11 +14,13 @@ from pathlib import Path
 # package modules, which historically take these names from .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
-    find_monorepo_root, is_within, is_within_lexical, now_iso, parse_flags,
-    parse_inline_list, run_cmd, safe_load_json, sanitize, sibling_bin,
+    is_within, is_within_lexical, now_iso, parse_flags,
+    parse_inline_list, run_cmd, safe_load_json, sanitize,
     state_dir, warn,
 )
 from core import parse_frontmatter as _core_parse_frontmatter
+
+from .host import host_command, load_host
 
 STATE_DIR = state_dir(HOME)
 DB_FILE = STATE_DIR / "projects.json"
@@ -179,26 +181,31 @@ class Env(BaseEnv):
         return self.state_dir / "topology.json"
 
 
-def harness_bin(env):
-    """Path to package launcher `harness` (environment settings moved there).
-    Resolve - general `core.sibling_bin`: env-override `SKM_HARNESS_BIN` → PATH →
-    `<monorepo>/packages/harness/bin/harness`. None, if not found (standalone /
-    harness not installed)."""
-    return sibling_bin("harness", env_var="SKM_HARNESS_BIN", use_path=False,
-                       monorepo_root=find_monorepo_root(env.root))
+def host_command_text(env, name, *args):
+    """Display text of host command `name` (configured argv, unresolved) plus `args`,
+    or None without a host command — for `next_command` hints, never executed."""
+    command = load_host(env.root).commands.get(name)
+    return " ".join((*command.argv, *args)) if command else None
+
+
+def host_install_suffix(env, name):
+    """` (install: <hint>)` from host command `name`, or "" without a hint."""
+    command = load_host(env.root).commands.get(name)
+    hint = command.install_hint if command else None
+    return f" (install: {hint})" if hint else ""
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):
-    """Pour in permissions-presets in .claude targets - delegated to package `harness`.
-    Environment Claude Code (permissions/MCP/hooks) moved to a separate package; skiller
-    calling `harness permissions` via subprocess. presets="" → stack autodetect.
-    Returns True, if harness started; False (with warn) — if harness is not installed."""
-    binp = harness_bin(env)
-    if binp is None:
-        warn("harness not installed - skip permissions "
-             "(set: packages/harness/install.sh)")
+    """Pour in permissions-presets in .claude targets - delegated to the host's
+    `permissions` command (subprocess; environment settings live outside skiller).
+    presets="" → stack autodetect. Returns True, if the command started; False (with
+    warn) — if it is not configured or not installed (empty host = not installed)."""
+    argv = host_command(env, "permissions")
+    if argv is None:
+        warn("permissions command not configured or not installed - skip permissions"
+             + host_install_suffix(env, "permissions"))
         return False
-    cmd = [str(binp), "permissions", "--target", str(target)]
+    cmd = [*argv, "--target", str(target)]
     if presets:
         cmd += ["--preset", presets]
     if settings_file:
@@ -206,20 +213,20 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     if dry_run:
         cmd.append("--dry-run")
     sys.stdout.flush()
-    # timeout: stuck harness (NFS/network) should not freeze `skiller sync` silently.
-    # stderr catch in warn; stdout we leave alive (harness prints progress itself).
+    # timeout: a stuck command (NFS/network) should not freeze `skiller sync` silently.
+    # stderr catch in warn; stdout we leave alive (the command prints progress itself).
     try:
         result = subprocess.run(cmd, check=False, timeout=30,
                                 stderr=subprocess.PIPE, text=True)
     except subprocess.TimeoutExpired:
-        warn("harness: timeout exceeded 30s — permissions might not apply")
+        warn("permissions command: timeout exceeded 30s — permissions might not apply")
         return True
     if result.returncode != 0:
         # Previously warn was only when non-empty stderr → silent non-null rc hid that
         # permissions-presets (deny garbage/allow stack) DID NOT lie down. We always inform you.
         detail = result.stderr.strip() if result.stderr else f"exit {result.returncode}"
-        warn(f"harness permissions did not apply ({detail}) — presets deny/allow might not have gone to bed; "
-             f"restart: harness permissions --target {target}")
+        warn(f"permissions command did not apply ({detail}) — presets deny/allow might not "
+             f"have gone to bed; restart: {' '.join(argv)} --target {target}")
     return True
 
 
@@ -227,7 +234,7 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
 
 
 # --- frontmatter --------------------------------------------------------------
-# Analysis moved to general core.text (single source for skiller/harness/maind).
+# Analysis moved to general core.text (single source for every package).
 # Here all that remains is to read the file: utf-8-sig cuts BOM, if available (otherwise
 # `﻿---` != `---` and all frontmatter would be silently ignored).
 def parse_frontmatter(path):

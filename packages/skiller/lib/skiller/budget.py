@@ -32,6 +32,7 @@ from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
                      known_command_plugins,
                      find_project_root, load_config, resolve_selection,
                      validate_config)
+from .host import load_host
 from .plugins import plugins_summary
 from .native_codex import native_inventory
 from .vendor import build_requires_index, collect_skills, resolve_requires
@@ -76,7 +77,7 @@ def _split_frontmatter(text):
     but solves ANOTHER problem - so you need a disassembled YAML-dictionary (without body), this
     function needs EXACTLY the body (frontmatter_text is not parsed here as YAML, only
     is cut off). Merge would mean changing the signature core.parse_frontmatter (common for
-    skiller/harness/maind — risk is wider than one package) for 8-line border finder
+    every package — risk is wider than one package) for 8-line border finder
     `---`...`---`. Left separately deliberately, not out of oversight."""
     lines = text.replace("\r\n", "\n").split("\n")
     if not lines or lines[0].strip() != "---":
@@ -213,13 +214,14 @@ FIRST_TURN_TARGET_MAX = 16_000
 FIRST_TURN_WARN = 23_000
 HOOK_TIMEOUT = 10
 
-# Known MCP-servers → number tool-schemes resident in system prompt (rude;
-# maind exact - packages/maind/lib/maind/mcp.py::TOOLS). Unknown server from
+# Known external MCP-servers → number tool-schemes resident in system prompt (rude).
+# Servers of the host repository come first from host `mcp_servers` (exact data owned
+# by the host). Unknown server from
 # .mcp.json — FALLBACK_MCP_TOOLS (flat-rating, not 0 and not overstated). `boost` —
 # alias `laravel-boost`, spotted at vintera/cms (one distribution, two server names
 # in the fleet - P2.3 Scope Included).
 KNOWN_MCP_TOOLS = {
-    "maind": 11, "perplexity-web": 4, "context7": 2, "sequential-thinking": 1,
+    "perplexity-web": 4, "context7": 2, "sequential-thinking": 1,
     "fetch": 1, "memory": 9, "filesystem": 11, "github": 20, "playwright": 21,
     "serena": 20, "laravel-boost": 15, "boost": 15,
 }
@@ -256,18 +258,27 @@ TOKENS_PER_MCP_TOOL_NAME = 24
 FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS = 40
 
 
-def _maind_server_instructions_tokens():
-    """`maind` — is the only known server whose source is in this
-    monorepo (`packages/maind/lib/maind/mcp.py`): response `initialize` does not carry
-    fields `instructions` (`mcp.py` — `_result(req_id, {"protocolVersion": …,
-    "capabilities": …, "serverInfo": …})`) — resident instruction text
-    is 0 ACTUALLY, this is not a fallback."""
-    return 0
+def _host_mcp_servers():
+    """Host `mcp_servers` (tools / instructions_tokens) of this Skiller install."""
+    return load_host(Path(__file__).resolve().parents[2]).mcp_servers
 
 
-# Servers whose instruction text has been checked against the local source (Implementation
-# Rules P2.3 §4) — key missing ⇒ fallback FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS.
-_LOCAL_MCP_SERVER_INSTRUCTIONS = {"maind": _maind_server_instructions_tokens}
+def _mcp_tool_count(name, host_servers):
+    """Tool count: host data, then KNOWN_MCP_TOOLS, then FALLBACK_MCP_TOOLS."""
+    server = host_servers.get(name)
+    if server is not None and server.tools is not None:
+        return server.tools
+    return KNOWN_MCP_TOOLS.get(name, FALLBACK_MCP_TOOLS)
+
+
+def _mcp_instruction_tokens(name, host_servers):
+    """Server instruction tokens: host data checked against the server's own source
+    (e.g. an `initialize` without `instructions` is 0, not a fallback), otherwise
+    FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS."""
+    server = host_servers.get(name)
+    if server is not None and server.instructions_tokens is not None:
+        return server.instructions_tokens
+    return FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS
 
 
 def _tool_search_mode(target):
@@ -935,7 +946,7 @@ def _measure_mcp(target):
     """Mode-dependent resident price estimation MCP-project servers (.mcp.json,
     P2.3/D19/D22): `mode`/`mode_source` — NEW keys (additivity D16), not
     change `tokens`/`detail` in form. Three branches:
-      off      — old age model (KNOWN_MCP_TOOLS × TOKENS_PER_MCP_TOOL),
+      off      — old age model (tool count × TOKENS_PER_MCP_TOOL),
                  is honest only when ENABLE_TOOL_SEARCH=false;
       auto     — assumption «within 10% context window» NOT verified
                  alive /context (not available to agent) → take the same ager-
@@ -962,24 +973,21 @@ def _measure_mcp(target):
     if not servers:
         return {"tokens": 0, "detail": "no servers", "mode": mode,
                 "mode_source": source, "estimate_class": None}
+    host_servers = _host_mcp_servers()
     if mode == MCP_MODE_OFF:
-        total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+        total = sum(_mcp_tool_count(n, host_servers) * TOKENS_PER_MCP_TOOL
                    for n in servers)
         est_class = "accurate model of complete circuits (ENABLE_TOOL_SEARCH=false)"
     elif mode == MCP_MODE_AUTO:
-        total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+        total = sum(_mcp_tool_count(n, host_servers) * TOKENS_PER_MCP_TOOL
                    for n in servers)
         est_class = ("upper limit (auto: assumption «within 10% windows» "
                      "not verified live /context)")
     else:
         total = 0
         for n in servers:
-            n_tools = KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS)
-            total += n_tools * TOKENS_PER_MCP_TOOL_NAME
-            if n in _LOCAL_MCP_SERVER_INSTRUCTIONS:
-                total += _LOCAL_MCP_SERVER_INSTRUCTIONS[n]()
-            else:
-                total += FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS
+            total += _mcp_tool_count(n, host_servers) * TOKENS_PER_MCP_TOOL_NAME
+            total += _mcp_instruction_tokens(n, host_servers)
         est_class = "lower bound (deferred: tool names + server instructions)"
     return {"tokens": total, "detail": f"{len(servers)} server(ov): " + ", ".join(servers),
            "mode": mode, "mode_source": source, "estimate_class": est_class}

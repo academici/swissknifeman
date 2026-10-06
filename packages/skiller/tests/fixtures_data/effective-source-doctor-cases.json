@@ -29,7 +29,7 @@
           "status": "ok",
           "evidence": {"registrations": {".codex/hooks.json": {"managed": true, "commands": []}}, "unmanaged": []},
           "quality": {"completeness": 1.0, "note": "handler content outside the repo is never scanned"},
-          "next_command": "harness doctor"
+          "next_command": "env-tool doctor"
         }
       ]
     },
@@ -60,18 +60,18 @@
             "unmanaged": [".claude/settings.json"]
           },
           "quality": {"completeness": 1.0, "note": "handler content outside the repo is never scanned"},
-          "next_command": "harness doctor"
+          "next_command": "env-tool doctor"
         },
         {
           "id": "trace-quality",
           "owner": "unified agent trace",
-          "source": "analyst.trace/analyst.metrics",
+          "source": "host trace doctor",
           "status": "unknown",
           "evidence": {
-            "gap": "no per-project trace store reader exists; measure with the analyst doctor"
+            "gap": "no per-project trace store reader exists; measure with the host trace doctor"
           },
           "quality": {"completeness": 0.0, "note": "instrument present, no stored measurement to read"},
-          "next_command": "PYTHONPATH=packages/analyst/lib python3 -m analyst doctor"
+          "next_command": "trace-tool doctor"
         }
       ]
     }

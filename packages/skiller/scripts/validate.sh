@@ -1296,8 +1296,6 @@ for sh in "$REPO_ROOT/bin/skiller" "$REPO_ROOT/install.sh" \
           "$REPO_ROOT/sync.sh" "$REPO_ROOT"/scripts/*.sh; do
   bash -n "$sh" || { echo "ERROR: bash -n failed: $sh" >&2; exit 1; }
 done
-# Presets/hooks Claude Code included in the package harness (see packages/harness);
-# them bash-check - in packages/harness/scripts/validate.sh.
 echo "CLI + shell scripts: syntax OK"
 
 # --- 12. lib/skiller package + unit/integration tests --------------------------
@@ -1363,100 +1361,9 @@ bash "$REPO_ROOT/bin/skiller" budget --check-core --strict || {
   echo "ERROR: CORE resident budget exceeded - shorten descriptions/core skills (skiller budget)" >&2
   exit 1; }
 
-# --- 16. framework canon: table «pack → version» vs pack.json (freshness gate) ------
-# `docs/agent-framework/framework-overview.md` is declared as the INPUT of the next run
-# framework-audit — and was already 36 days behind the tree once: the auditor received seven
-# «🔜 in progress» with the finished implementation and in good faith offered to build an already standing
-# (docs/audits/2026-07-29-harness-agnostic — meta find). Manual reminder «update
-# review» this class of failure was not caught, so the freshness of the input is kept by the machine.
-# Checking the same class as drift-registry gate (§12b): neither network nor git-history, nor
-# calendar thresholds - reconciliation of ANNOUNCED versions with `pack.json` of each pack.
-# B standalone-layout (packet without neighbor `harness`) gate degrades into an explicit pass.
-_AGENT_PACKS_DIR="$(cd "$REPO_ROOT/../harness/configs/claude-code/agent-packs" 2>/dev/null && pwd || true)"
-python3 - "$REPO_ROOT" "${_AGENT_PACKS_DIR:-}" <<'PY'
-import json, re, sys, pathlib
-
-root = pathlib.Path(sys.argv[1])
-packs_dir = sys.argv[2]
-overview = root / "docs" / "agent-framework" / "framework-overview.md"
-
-if not packs_dir:
-    print("framework canon: packages/harness/configs/claude-code/agent-packs not found "
-          "(standalone-layout) — freshness gate missed")
-    sys.exit(0)
-if not overview.is_file():
-    print("framework canon: docs/agent-framework/framework-overview.md no - "
-          "freshness gate missed")
-    sys.exit(0)
-
-# Anchor format closed: header «| Pack | Version |», delimiter, lines
-# «| <pack> | <x.y.z> |». There are no heuristics - what doesn’t fit into the form, then ERROR with fix.
-HEADER = re.compile(r"^\|\s*Pack\s*\|\s*Version\s*\|\s*$")
-SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
-ROW = re.compile(r"^\|\s*([A-Za-z0-9_][A-Za-z0-9_.-]*)\s*\|\s*(\d+\.\d+\.\d+)\s*\|\s*$")
-
-errors = []
-declared = {}
-in_table = False
-for ln, line in enumerate(overview.read_text(encoding="utf-8").splitlines(), 1):
-    if HEADER.match(line):
-        in_table = True
-        continue
-    if not in_table:
-        continue
-    if SEP.match(line):
-        continue
-    if not line.startswith("|"):
-        in_table = False
-        continue
-    m = ROW.match(line)
-    if not m:
-        errors.append(f"docs/agent-framework/framework-overview.md:{ln}: table row "
-                      f"«pack → version» not in format `| <pack> | <x.y.z> |`: {line.strip()}")
-        continue
-    declared[m.group(1)] = m.group(2)
-
-if not declared and not errors:
-    errors.append("docs/agent-framework/framework-overview.md: no table «pack → version» "
-                  "(header `| Pack | Version |`) — she is the machine anchor of the freshness gate")
-
-actual = {}
-for pj in sorted(pathlib.Path(packs_dir).glob("*/pack.json")):
-    name = pj.parent.name
-    try:
-        data = json.loads(pj.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        errors.append(f"agent-packs/{name}/pack.json: invalid JSON: {e}")
-        continue
-    version = data.get("version")
-    if not isinstance(version, str):
-        errors.append(f"agent-packs/{name}/pack.json: no string field version")
-        continue
-    actual[name] = version
-
-for name in sorted(actual):
-    if name not in declared:
-        errors.append(f"pack `{name}` is not declared in canon - update the table in "
-                      f"`framework-overview.md`: `{name}` `{actual[name]}`")
-    elif declared[name] != actual[name]:
-        errors.append(f"pack `{name}`: canon announces `{declared[name]}`, pack.json carries "
-                      f"`{actual[name]}` — update the table in `framework-overview.md`: "
-                      f"`{name}` `{actual[name]}`")
-for name in sorted(declared):
-    if name not in actual:
-        errors.append(f"string `{name}` is superfluous in canon (pack is not in "
-                      f"packages/harness/configs/claude-code/agent-packs) — remove line from "
-                      f"tables in `framework-overview.md`")
-
-if errors:
-    print(f"ERROR: frame canon has fallen behind the tree ({len(errors)}) — "
-          f"`framework-overview.md` is declared as the input of the following audit:", file=sys.stderr)
-    for e in errors:
-        print("  " + e, file=sys.stderr)
-    sys.exit(1)
-
-print(f"framework canon: table «pack → version» matches pack.json ({len(actual)} packs)")
-PY
+# --- 16. framework canon freshness (Skiller docs ⇄ host agent-pack versions) ------
+# Cross-package gate: lives in the host repository (scripts/agent-framework-freshness.py,
+# hygiene CI), not in this package.
 
 # --- 17. WARN: listing of profile detection against fallback budget Codex ---
 # Gate WARN, not ERROR: structural brute force is a known distribution composition problem,

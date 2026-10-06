@@ -1,7 +1,7 @@
-"""Facade `skiller doctor --settings` (P1.4): delegation to `harness doctor
---settings` via subprocess, returning the return code, graceful skip when
-missing harness. Check logic in skiller NO (D10) — testing only
-facade behavior, not taxonomy (her tests live in harness).
+"""Facade `skiller doctor --settings` (P1.4): delegation to the host `settings_doctor`
+command via subprocess, returning the return code, graceful skip when the command is
+not configured or not installed. Check logic in skiller NO (D10) — testing only
+facade behavior, not taxonomy (its tests live with the host tool).
 
 Plus P4.2 `skiller doctor --effective-source`: composed read-only doctor —
 here (Files item'and names exactly this test file), testing the facade as well
@@ -15,7 +15,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from unittest import mock
+
 from skiller.common import Env
+from skiller.host import clear_host_cache
 from skiller.doctor import (
     EffectiveSourceDoctorError,
     build_effective_source_report,
@@ -43,36 +46,57 @@ class DoctorSettingsFacadeCase(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.home = self.tmp / "home"
         self.home.mkdir()
-        # root — tmpdir without monorepo tokens: harness_bin will not find the launcher in
-        # package layout, all that remains is env-override SKM_HARNESS_BIN.
+        # root — tmpdir outside any host: the command comes only from the synthetic
+        # host config below, its binary only from the env override.
         self.env = Env(self.tmp / "registry", home=self.home)
         (self.tmp / "registry").mkdir()
-        self._saved_bin = os.environ.pop("SKM_HARNESS_BIN", None)
+        self.host = self.tmp / "host.json"
+        self.write_host({"commands": {"settings_doctor": {
+            "argv": ["bin/env-tool", "doctor", "--settings"], "env_override": "SKM_ENV_TOOL_BIN",
+            "install_hint": "env-tool/install.sh"}}})
+        clear_host_cache()
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(self.host)})
+        patcher.start()
+        os.environ.pop("SKM_ENV_TOOL_BIN", None)
+        self.addCleanup(patcher.stop)
+        self.addCleanup(clear_host_cache)
 
     def tearDown(self):
-        if self._saved_bin is not None:
-            os.environ["SKM_HARNESS_BIN"] = self._saved_bin
-        else:
-            os.environ.pop("SKM_HARNESS_BIN", None)
         self._tmp.cleanup()
 
-    # harness not installed → warn and graceful skip (rc 0, without crashing)
-    def test_missing_harness_warns_and_skips(self):
+    def write_host(self, config):
+        self.host.write_text(json.dumps({"schema_version": 1, **config}), encoding="utf-8")
+        clear_host_cache()
+
+    # command not installed → warn with the host install hint and graceful skip (rc 0)
+    def test_missing_command_warns_and_skips(self):
         exc, out = _run(cmd_doctor, self.env, ["--settings", "--target", str(self.tmp)])
         self.assertIsNone(exc)  # not sys.exit — facade missed softly
-        self.assertIn("harness not installed", out)
+        self.assertIn("settings doctor command not configured or not installed", out)
+        self.assertIn("(install: env-tool/install.sh)", out)
 
-    # harness present → return code is thrown (2 → sys.exit(2)).
+    def test_empty_host_skips_without_hint(self):
+        self.write_host({})
+        exc, out = _run(cmd_doctor, self.env, ["--settings", "--target", str(self.tmp)])
+        self.assertIsNone(exc)
+        self.assertIn("settings-doctor not available", out)
+        self.assertNotIn("install:", out)
+
+    # command present → return code is thrown (2 → sys.exit(2)), argv from the host.
     # The stub does not write to stdout: subprocess inherits real fd (redirect_stdout
     # only catches python-level sys.stdout) — checking the return code contract.
-    def test_proxies_harness_exit_code(self):
-        stub = self.tmp / "harness-stub"
-        stub.write_text("#!/usr/bin/env bash\nexit 2\n", encoding="utf-8")
+    def test_proxies_command_exit_code_and_argv(self):
+        log = self.tmp / "argv.log"
+        stub = self.tmp / "env-tool-stub"
+        stub.write_text(f"#!/usr/bin/env bash\nprintf '%s\\n' \"$*\" > {log}\nexit 2\n",
+                        encoding="utf-8")
         stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-        os.environ["SKM_HARNESS_BIN"] = str(stub)
+        os.environ["SKM_ENV_TOOL_BIN"] = str(stub)
         exc, _out = _run(cmd_doctor, self.env, ["--settings", "--target", str(self.tmp)])
         self.assertIsInstance(exc, SystemExit)
         self.assertEqual(exc.code, 2)
+        self.assertEqual(log.read_text(encoding="utf-8").strip(),
+                         f"doctor --settings --target {self.tmp}")
 
 
 class EffectiveSourceDoctorFixtureCase(unittest.TestCase):

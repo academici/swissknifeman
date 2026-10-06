@@ -6,6 +6,7 @@ fail-soft on broken hook (n/a, is no exception) and CLI (--json/--strict)."""
 import contextlib
 import io
 import json
+import os
 import stat
 import sys
 import tempfile
@@ -16,6 +17,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.budget import cmd_budget, first_turn_report
+from skiller.host import clear_host_cache
 from skiller.doctor import cmd_doctor
 import tests.fixtures as fx
 
@@ -26,10 +28,23 @@ def _write_hook(path, body):
     path.chmod(path.stat().st_mode | stat.S_IEXEC)
 
 
+# Synthetic host MCP server: exact tool count and instruction tokens owned by the host.
+HOST_SERVER = "hub-memory"
+HOST_TOOLS = 11
+
+
 class FirstTurnReportCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
+        host = self.tmp / "host.json"
+        host.write_text(json.dumps({"schema_version": 1, "mcp_servers": {
+            HOST_SERVER: {"tools": HOST_TOOLS, "instructions_tokens": 0}}}), encoding="utf-8")
+        clear_host_cache()
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(host)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(clear_host_cache)
         self.registry_root, self.env = fx.make_registry(self.tmp)
         self.proj = self.tmp / "myproj"
         self.proj.mkdir()
@@ -87,34 +102,32 @@ class FirstTurnReportCase(unittest.TestCase):
 
     def test_known_and_unknown_mcp_servers(self):
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
-            "maind": {"command": "maind"},
+            HOST_SERVER: {"command": "hub-memory"},
             "totally-unknown-server": {"command": "x"}}}), encoding="utf-8")
         report = first_turn_report(self.env, self.proj)
         mcp = report["sources"]["mcp"]
-        # deferred (default) — maind (11 names, instructions measured = 0) +
+        # deferred (default) — host server (11 names, instructions measured = 0) +
         # unknown (fallback tools + fallback instructions) — both taken into account, > 0
         self.assertGreater(mcp["tokens"], 0)
-        self.assertIn("maind", mcp["detail"])
+        self.assertIn(HOST_SERVER, mcp["detail"])
         self.assertIn("totally-unknown-server", mcp["detail"])
 
     def test_mcp_default_mode_is_deferred_lower_bound(self):
-        from skiller.budget import KNOWN_MCP_TOOLS, TOKENS_PER_MCP_TOOL_NAME
+        from skiller.budget import TOKENS_PER_MCP_TOOL_NAME
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
-            "maind": {"command": "maind"}}}), encoding="utf-8")
+            HOST_SERVER: {"command": "hub-memory"}}}), encoding="utf-8")
         report = first_turn_report(self.env, self.proj)
         mcp = report["sources"]["mcp"]
         self.assertEqual(mcp["mode"], "deferred")
         self.assertEqual(mcp["mode_source"], "default")
         self.assertIn("lower bound", mcp["estimate_class"])
-        # maind — the only server with locally verified instruction text
-        # (=0, `_maind_server_instructions_tokens`) → names only
-        self.assertEqual(mcp["tokens"], KNOWN_MCP_TOOLS["maind"] * TOKENS_PER_MCP_TOOL_NAME)
+        # host server — instruction text verified by the host (=0) → names only
+        self.assertEqual(mcp["tokens"], HOST_TOOLS * TOKENS_PER_MCP_TOOL_NAME)
 
     def test_mcp_tool_search_off_uses_eager_schema_model(self):
-        from skiller.budget import (FALLBACK_MCP_TOOLS, KNOWN_MCP_TOOLS,
-                                    TOKENS_PER_MCP_TOOL)
+        from skiller.budget import FALLBACK_MCP_TOOLS, TOKENS_PER_MCP_TOOL
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
-            "maind": {"command": "maind"},
+            HOST_SERVER: {"command": "hub-memory"},
             "totally-unknown-server": {"command": "x"}}}), encoding="utf-8")
         (self.proj / ".claude" / "settings.json").write_text(json.dumps({
             "env": {"ENABLE_TOOL_SEARCH": "false"}}), encoding="utf-8")
@@ -123,12 +136,12 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertEqual(mcp["mode"], "off")
         self.assertEqual(mcp["mode_source"], "settings.json")
         self.assertIn("accurate model of complete circuits", mcp["estimate_class"])
-        expected = (KNOWN_MCP_TOOLS["maind"] + FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+        expected = (HOST_TOOLS + FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
         self.assertEqual(mcp["tokens"], expected)
 
     def test_mcp_tool_search_auto_mode_from_settings_local(self):
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
-            "maind": {"command": "maind"}}}), encoding="utf-8")
+            HOST_SERVER: {"command": "hub-memory"}}}), encoding="utf-8")
         (self.proj / ".claude" / "settings.local.json").write_text(json.dumps({
             "env": {"ENABLE_TOOL_SEARCH": "auto"}}), encoding="utf-8")
         report = first_turn_report(self.env, self.proj)
@@ -141,7 +154,7 @@ class FirstTurnReportCase(unittest.TestCase):
         # process environment INTERRUPTS settings.local.json (order Implementation
         # Rules P2.3 §2): local carries auto, but alive env says false.
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
-            "maind": {"command": "maind"}}}), encoding="utf-8")
+            HOST_SERVER: {"command": "hub-memory"}}}), encoding="utf-8")
         (self.proj / ".claude" / "settings.local.json").write_text(json.dumps({
             "env": {"ENABLE_TOOL_SEARCH": "auto"}}), encoding="utf-8")
         with mock.patch.dict("os.environ", {"ENABLE_TOOL_SEARCH": "false"}):
@@ -242,7 +255,7 @@ class FirstTurnReportCase(unittest.TestCase):
     def test_verdict_ladder_matches_declared_thresholds(self):
         # the staircase is pinned NAMELY at its boundaries: threshold re-edition
         # (P1.3 Implementation Rules §6) should drop this case and not quietly
-        # change the meaning of the verdict for the fleet and `maind doctor --context`.
+        # change the meaning of the verdict for the fleet and the hub's context doctor.
         from skiller.budget import (FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN,
                                     _first_turn_verdict)
         self.assertEqual((FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN), (16_000, 23_000))
@@ -446,9 +459,9 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertEqual(after["raw_tokens"], base["raw_tokens"])
         self.assertEqual(after["excluded"], 0)
 
-    def test_json_top_level_keys_unchanged_for_maind_doctor(self):
+    def test_json_top_level_keys_unchanged_for_fleet_doctor(self):
         # fleet-consumer reads d["total"]/d["verdict"] and falls into n/a on any
-        # KeyError (`packages/maind/lib/maind/doctor.py:128–158`, D16) — new
+        # KeyError (the hub's fleet doctor, D16) — new
         # information comes ONLY additively, inside sources.skills.
         self._write_skill_fm("silent-entry", "disable-model-invocation: true\n")
         buf = io.StringIO()

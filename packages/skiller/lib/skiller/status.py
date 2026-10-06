@@ -14,7 +14,7 @@ from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
 
-# maind sync writes these at fixed paths; they share registry names with
+# The hub's memory-tool sync writes these at fixed paths; they share registry names with
 # repository-bootstrap but are NOT skiller-vendored copies (see skilldoc.py).
 MAIND_MANAGED_SKILL_NAMES = frozenset({"ecosystem-mcp", "ecosystem-setup"})
 
@@ -103,8 +103,8 @@ def name_duplicates(local_entries, registry_names):
     duplicate NAME (not a catalog: for some skills the catalog was renamed when saved
     `name`, see `findings/P3-listing-hygiene-and-vendoring-facts.md` §6).
 
-    maind-managed ecosystem skills share registry names but are updated by
-    ``maind sync``, not ``skiller update`` — exclude them from duplicate warnings."""
+    Hub-managed ecosystem skills share registry names but are updated by
+    the hub's memory-tool sync, not ``skiller update`` — exclude them from duplicate warnings."""
     return sorted(
         (e["dir"], e["name"], tuple(registry_names[e["name"]]))
         for e in local_entries
@@ -154,7 +154,7 @@ def prune_orphan_managed_lock(target, *, dry_run=False):
     """Remove managed-records skills-lock, whose installed_path no longer exist.
 
     Typical trace ``connect --cleanup-vendored``: physical. copies have been made lock stayed and
-    is misleading ``maind projects status`` / derive-graph."""
+    is misleading the hub's project status / derive-graph."""
     lock_path = target / "skills-lock.json"
     if not lock_path.is_file():
         return 0

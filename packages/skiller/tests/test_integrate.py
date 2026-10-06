@@ -1,24 +1,30 @@
-"""Wizard tests integrate (after moving the environment into the package harness).
+"""Wizard tests integrate (after moving the environment into the host environment tool).
 
 Here we are left with ORCHESTRATION and selection policy: dry-run does not write anything,
 minimal-bundle connects skills, `_gather`/`_default_mcp` resolve set MCP.
-The environment EXECUTION itself (permissions/MCP/auto-approve/memory) is delegated
-package harness via subprocess — its blocks are covered with tests in packages/harness/tests.
-In the fixture harness not installed → env-blocks are skipped softly (graceful skip).
+The environment EXECUTION itself (permissions/MCP/auto-approve/memory) is delegated to
+host commands via subprocess — the tool's own blocks are tested with that tool.
+In the fixture no host command is installed → env-blocks are skipped softly (graceful skip);
+HostDelegationCase pins the argv handed to a synthetic host tool.
 
 Racing against a synthetic registry (tests/fixtures) in temporary directories;
 env.home points to tmp — real ~/.swissknifeman and ~/.claude are not touched."""
 import contextlib
 import io
 import json
+import os
+import stat
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.integrate import cmd_integrate, _default_mcp, _gather
+from skiller.common import apply_permissions
+from skiller.host import clear_host_cache
+from skiller.integrate import cmd_integrate, _available_mcp, _default_mcp, _gather, _run_environment
 from skiller.registry import build_registry
 import tests.fixtures as fx
 
@@ -111,7 +117,7 @@ class IntegrateCase(unittest.TestCase):
             run(cmd_integrate, self.env,
                 ["--target", str(self.proj), "--skills-channel", "bogus", "--yes"])
 
-    # --- MCP choice policy (remains in the wizard; execution - in harness) ------
+    # --- MCP choice policy (remains in the wizard; execution - in the host tool) ------
     def test_default_mcp_dev_vs_vault(self):
         self.assertEqual(_default_mcp(self.proj), ["context7"])   # laravel = dev
         vault = self.tmp / "vault"; (vault / ".obsidian").mkdir(parents=True)
@@ -194,6 +200,63 @@ class IntegrateCase(unittest.TestCase):
     def test_help(self):
         out = run(cmd_integrate, self.env, ["--help"])
         self.assertIn("integrate", out)
+
+
+
+class HostDelegationCase(unittest.TestCase):
+    """Environment blocks run the host's `environment`/`permissions` argv, nothing else."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.tmp = Path(temporary.name)
+        self.env = fx.make_registry(self.tmp)[1]
+        self.log = self.tmp / "argv.log"
+        # Host paths resolve against the host root: the registry root outside any Git repo.
+        tool = self.env.root / "bin" / "env-tool"
+        tool.parent.mkdir()
+        tool.write_text(f"#!/usr/bin/env bash\nprintf '%s\\n' \"$*\" >> {self.log}\n"
+                        "[[ \"$1\" == mcp ]] && printf 'context7\\ngithub\\n'\nexit 0\n",
+                        encoding="utf-8")
+        tool.chmod(tool.stat().st_mode | stat.S_IEXEC)
+        self.host = self.tmp / "host.json"
+        self.write_host({"commands": {
+            "environment": {"argv": ["bin/env-tool"], "install_hint": "env-tool/install.sh"},
+            "permissions": {"argv": ["bin/env-tool", "permissions"]}}})
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(self.host)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(clear_host_cache)
+
+    def write_host(self, config):
+        self.host.write_text(json.dumps({"schema_version": 1, **config}), encoding="utf-8")
+        clear_host_cache()
+
+    def lines(self):
+        return self.log.read_text(encoding="utf-8").splitlines()
+
+    def test_environment_blocks_and_permissions_use_host_argv(self):
+        target = self.tmp / "project"
+        self.assertTrue(_run_environment(self.env, ["hooks", "--global"]))
+        self.assertEqual(_available_mcp(self.env), ["context7", "github"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(apply_permissions(self.env, target, "php", dry_run=True))
+        self.assertEqual(self.lines(), ["hooks --global", "mcp --list",
+                                        f"permissions --target {target} --preset php --dry-run"])
+
+    def test_missing_commands_skip_with_install_hint(self):
+        self.write_host({"commands": {"environment": {
+            "argv": ["bin/absent"], "install_hint": "env-tool/install.sh"}}})
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertFalse(_run_environment(self.env, ["hooks", "--global"]))
+            self.assertFalse(apply_permissions(self.env, self.tmp))
+        self.assertIn("environment command not configured or not installed - skip "
+                      "(install: env-tool/install.sh)", err.getvalue())
+        self.assertIn("permissions command not configured or not installed - skip permissions\n",
+                      err.getvalue())
+        self.assertEqual(_available_mcp(self.env), [])
+        self.assertFalse(self.log.exists())
 
 
 if __name__ == "__main__":

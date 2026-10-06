@@ -12,7 +12,8 @@
   "commands": {
     "permissions": {"argv": ["packages/harness/bin/harness", "permissions"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
     "settings_doctor": {"argv": ["packages/harness/bin/harness", "doctor", "--settings"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
-    "environment_doctor": {"argv": ["packages/harness/bin/harness", "--version"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
+    "environment": {"argv": ["packages/harness/bin/harness"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
+    "environment_doctor": {"argv": ["packages/harness/bin/harness", "--help"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
     "trace_doctor": {"argv": ["packages/analyst/bin/analyst", "doctor"], "install_hint": "packages/analyst/install.sh"}
   },
   "mcp_servers": {"maind": {"tools": 11, "instructions_tokens": 0}},

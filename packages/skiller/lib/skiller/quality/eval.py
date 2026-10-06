@@ -472,7 +472,7 @@ def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
 # ALGORITHM itself is exactly what this item ports into skiller, so the eval
 # seam survives the plan's own archival (`plans/<ID>/` is not a durable
 # dependency surface for a package). Reimplemented here, not imported — cited
-# in this module's own docstring convention (`analyst.metrics`: "each contract
+# in the trace-metrics contract's own docstring convention ("each contract
 # owns its own closed enum rather than sharing a runtime module across an
 # unrelated boundary"). No LLM judge anywhere in this path.
 SYSTEM_OPERATORS = {"event_present", "event_absent", "event_order", "event_count_max",
@@ -773,7 +773,7 @@ def pair_system_metric(baseline, candidate):
     an optional live candidate. `candidate=None` → `status: 'deferred'` (never
     a silent zero). A baseline whose proof class is not `recomputed`/`cross-
     checked` can never ground a comparison — mirrors
-    `analyst.metrics.pair_metric`'s discipline, cited rather than imported
+    the trace-metrics `pair_metric` discipline, cited rather than imported
     (cross-package rationale in that module's own docstring)."""
     comparable = {"recomputed", "cross-checked"}
     if candidate is None:
@@ -1012,7 +1012,7 @@ def _offline_report(skill_dir):
 
 
 def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
-    """CLI-harness `skiller eval`. `clock_ns`/`now_iso` — injection point
+    """CLI entry point `skiller eval`. `clock_ns`/`now_iso` — injection point
     injected clock for deterministic tests (byte reproducibility
     benchmark.json); default `None` → real time, `provenance.clock: "wall"`.
     Behavior CLI without flags does not change (backwards compatible)."""
@@ -1062,7 +1062,7 @@ def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
             return
         # Online-candidate generation thread/judge moved out of the gate CI; implementation
         # pulls `claude -p`. Here is the framework: scoring/selection below are clean and
-        # are covered with tests, online-the harness is connected in the environment with the model.
+        # are covered with tests, the online runner is connected in the environment with the model.
         warn("Online-description optimization (--triggers) runs in an environment with "
              "model; scoring/selection available as API (score_description / "
              "select_best_description). See The docs/guide/evals.md.")

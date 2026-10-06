@@ -12,14 +12,14 @@ calls; native `skills:`-preload subagent and auto-trigger plugin by description
 like Skill-call NOT visible → «DEAD» heuristic (is marked in the output).
 
 Division of labor with neighboring layers (do not duplicate, but supplement):
-- hook `run-report` (packages/harness/configs/claude-code/hooks/run-report/) —
+- hook `run-report` (run-report hook of the host environment) —
   always-on collector: writes the structured outcome of EACH run silently, without
   human participation;
 - `skiller analyze-run` (this module) — manual deep-dive ONE pass through
   requirement: tokens/timings/skill-usage on the living JSONL-transcripts;
-- `maind analyze` — verdict GREEN/ATTENTION/RED by run (run-report + git +
+- the hub's run analysis — verdict GREEN/ATTENTION/RED by run (run-report + git +
   health), synthesis on top, not parsing transcripts;
-- `analyst` — trend/lessons ON THE HORIZON of runs (digest/review/promote), and not
+- the trace analysis tool — trend/lessons ON THE HORIZON of runs (digest/review/promote), and not
   analysis of one run.
 Summation usage (tokens/tool_errors/wall-clock) — from `core.usage` (single
 source, see the caveat about self-sufficiency in his docstring); here -
@@ -407,7 +407,7 @@ def cmd_analyze_run(env, argv):
         fp.write_text(json.dumps(report, ensure_ascii=False, indent=2),
                       encoding="utf-8")
         if not opts.get("json"):
-            print(f"Saved by: {fp}  (hit the cross-session trend / maind)")
+            print(f"Saved by: {fp}  (hit the cross-session trend)")
 
     if opts.get("json"):
         print(json.dumps(report, ensure_ascii=False, indent=2))

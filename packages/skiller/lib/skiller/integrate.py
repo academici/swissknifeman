@@ -3,17 +3,20 @@
 Checklist going through «choose what you want from the maximum functionality» and applies
 selected, reusing existing commands: do_connect/do_vendor (skills),
 generate_hub (hub). Environment Claude Code (permissions/MCP/auto-approve/memory)
-moved to a separate package `harness` — the corresponding blocks are delegated to it via
-subprocess (like maind delegates skiller). Safe: --dry-run, merge-only, confirm.
+belongs to the host's environment tool (host commands `environment`, `permissions`) —
+the corresponding blocks are delegated to it via subprocess. Safe: --dry-run,
+merge-only, confirm.
 
 Blocks: prerequisites → skills → permissions → MCP → auto-approve → memory → output-style →
 plans-dir → hub → brain. Skill blocks (skills/hub) — here; environment (permissions/MCP/
-auto-approve/memory/output-style/plans-dir) — in harness.
+auto-approve/memory/output-style/plans-dir) — in the host environment tool.
 """
 import subprocess
 import sys
 
-from .common import apply_permissions, die, harness_bin, parse_flags, warn
+from .common import (apply_permissions, die, host_command_text, host_install_suffix,
+                     parse_flags, warn)
+from .host import host_command
 from .config import (autodetect, load_config, load_profile, resolve_profile_name,
                      resolve_target)
 from .brain_sync import BrainSync
@@ -23,7 +26,7 @@ from .skillset import do_sync
 from .hub import generate_hub
 from .topology import cmd_topology
 
-# Channels for publishing skills in the project (skills only; memory/graph maind — separately).
+# Channels for publishing skills in the project (skills only; memory/graph — separately).
 SKILLS_CHANNELS = ("connect", "vendor", "skip")
 
 # Bundle = pre-answers to the checklist. custom → ask interactively.
@@ -41,7 +44,7 @@ BUNDLES = {
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
-# MCP-servers distributed to development environments by default (presets - in the package harness).
+# MCP-servers distributed to development environments by default (presets - in the environment tool).
 DEV_MCP = ("context7",)
 
 
@@ -81,26 +84,27 @@ def _ask_text(prompt, default, interactive):
     return input(f"{prompt} [{default}]: ").strip() or default
 
 
-# --- harness delegation (environment Claude Code included in the package harness) -------
-def _run_harness(env, args):
-    """Execute package command harness (environment settings). False — if harness
+# --- environment delegation (host command `environment`) -------------------------
+def _run_environment(env, args):
+    """Execute a host environment-tool command. False — if it is not configured or
     not installed (then the block is skipped softly, as before in the absence of a script)."""
-    binp = harness_bin(env)
-    if binp is None:
-        warn("  harness not installed - skip (packages/harness/install.sh)")
+    argv = host_command(env, "environment")
+    if argv is None:
+        warn("  environment command not configured or not installed - skip"
+             + host_install_suffix(env, "environment"))
         return False
     sys.stdout.flush()
     try:
-        r = subprocess.run([str(binp)] + args, check=False, timeout=30,
+        r = subprocess.run([*argv, *args], check=False, timeout=30,
                            stderr=subprocess.PIPE, text=True)
     except subprocess.TimeoutExpired:
-        warn(f"  harness: timeout exceeded 30s — block may not have been applied "
+        warn(f"  environment command: timeout exceeded 30s — block may not have been applied "
              f"({args[0] if args else ''})")
         return True
     if r.returncode != 0:
         # graceful: we don’t disable the wizard, but we DO NOT remain silent - otherwise «ready» when not applicable. block
         detail = f": {r.stderr.strip()}" if r.stderr else ""
-        warn(f"  harness returned the code {r.returncode} — block may not have been applied "
+        warn(f"  environment command returned the code {r.returncode} — block may not have been applied "
              f"({args[0] if args else ''}){detail}")
     return True
 
@@ -112,12 +116,12 @@ def _default_mcp(target):
 
 
 def _available_mcp(env):
-    """Names of available MCP-presets - via `harness mcp --list` (empty if harness no)."""
-    binp = harness_bin(env)
-    if binp is None:
+    """Names of available MCP-presets - via `<environment> mcp --list` (empty without it)."""
+    argv = host_command(env, "environment")
+    if argv is None:
         return []
     try:
-        out = subprocess.run([str(binp), "mcp", "--list"],
+        out = subprocess.run([*argv, "mcp", "--list"],
                              capture_output=True, text=True, check=False).stdout
     except OSError:
         return []
@@ -154,10 +158,12 @@ def _block_prereqs(env, dry, interactive):
     if have:
         print("  ✓ hook files installed (~/.claude/hooks/)")
     else:
-        print("  ✗ hook files are not installed - you need: harness hooks --global")
+        hint = host_command_text(env, "environment", "hooks", "--global")
+        print("  ✗ hook files are not installed"
+              + (f" - you need: {hint}" if hint else " - no environment command configured"))
         if not dry and interactive and \
                 _yn("  Install hook files globally now?", False):
-            _run_harness(env, ["hooks", "--global"])
+            _run_environment(env, ["hooks", "--global"])
 
 
 def _resolve_channel(opts, default, interactive):
@@ -208,7 +214,7 @@ def _block_perms(env, target, choices, dry):
 
 
 def _block_mcp(env, target, choices, dry):
-    """Delegate installation MCP-servers to the package harness (merge-only in .mcp.json)."""
+    """Delegate installation MCP-servers to the environment tool (merge-only in .mcp.json)."""
     servers = choices.get("mcp") or []
     print(f"\n[3] MCP-servers: {', '.join(servers) if servers else 'pass'}")
     if not servers:
@@ -216,7 +222,7 @@ def _block_mcp(env, target, choices, dry):
     args = ["mcp", "--target", str(target), "--mcp", ",".join(servers)]
     if dry:
         args.append("--dry-run")
-    _run_harness(env, args)
+    _run_environment(env, args)
 
 
 def _block_autoapprove(env, target, choices, dry):
@@ -228,7 +234,7 @@ def _block_autoapprove(env, target, choices, dry):
             "--file", choices["settings_file"]]
     if dry:
         args.append("--dry-run")
-    _run_harness(env, args)
+    _run_environment(env, args)
 
 
 def _block_memory(env, target, choices, dry):
@@ -240,11 +246,11 @@ def _block_memory(env, target, choices, dry):
     args = ["hooks", "--target", str(target), "--memory", f"{brain}:{brain_mode}"]
     if dry:
         args.append("--dry-run")
-    _run_harness(env, args)
+    _run_environment(env, args)
 
 
 def _block_output_style(env, target, choices, dry):
-    """Terse agent's voice (harness output-style lean) — token-save output. off/None → pass."""
+    """Terse agent's voice (environment output-style lean) — token-save output. off/None → pass."""
     style = choices.get("output_style")
     print(f"\n[6] output-style: {style or 'pass'}")
     if not style:
@@ -252,13 +258,13 @@ def _block_output_style(env, target, choices, dry):
     args = ["hooks", "--target", str(target), "--output-style", style]
     if dry:
         args.append("--dry-run")
-    _run_harness(env, args)
+    _run_environment(env, args)
 
 
 def _block_plans_dir(env, target, choices, dry):
-    """Per-project plans/ (harness hooks --plans-dir plans) — plansDirectory in
+    """Per-project plans/ (environment hooks --plans-dir plans) — plansDirectory in
     .claude/settings.json (shared, committed), default «yes»: new onboardings are received
-    plans/ immediately. Answer «no» = don't call harnes at all - DO NOT call with off (y harness off
+    plans/ immediately. Answer «no» = don't call the tool at all - DO NOT call with off (its off
     removes only YOUR default plans, is a different semantics, not «do not install»)."""
     want = choices.get("plans_dir")
     print(f"\n[7] plans-dir: {'plans' if want else 'pass'}")
@@ -267,7 +273,7 @@ def _block_plans_dir(env, target, choices, dry):
     args = ["hooks", "--target", str(target), "--plans-dir", "plans"]
     if dry:
         args.append("--dry-run")
-    _run_harness(env, args)
+    _run_environment(env, args)
 
 
 def _block_hub(env, target, choices, dry):
@@ -358,7 +364,7 @@ def _gather(env, target, opts, bundle, interactive):
     prof_name, profile = _profile_dict(env, target, opts)
     base["profile"] = prof_name
     if bundle != "custom":
-        # auto-presets permissions (autodetect inside harness when empty)
+        # auto-presets permissions (autodetect inside the permissions command when empty)
         base["perms_presets"] = ""
         # Skills publication channel: --skills-channel > question (TTY) > bundle default.
         base["skills"] = _resolve_channel(opts, base["skills"], interactive)

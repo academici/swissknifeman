@@ -10,26 +10,27 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .common import DB_VERSION, atomic_write_json, harness_bin, is_within, parse_flags, warn
+from .common import (DB_VERSION, atomic_write_json, host_command_text, host_install_suffix,
+                     is_within, parse_flags, warn)
+from .host import host_command
 from .state import registry_git_state
 
 
 def _delegate_settings_doctor(env, opts):
-    """Facade `skiller doctor --settings` → `harness doctor --settings` (subprocess).
-    NO check logic here (D10, single source of truth in harness): only
-    throw stdout (inherited) and return code. harness not found → warn and
-    graceful skip (rc 0, like apply_permissions). No output parsing harness."""
-    binp = harness_bin(env)
-    if binp is None:
-        warn("harness not installed - settings-doctor not available "
-             "(set: packages/harness/install.sh)")
+    """Facade `skiller doctor --settings` → the host `settings_doctor` command (subprocess).
+    NO check logic here (D10, single source of truth in the host tool): only
+    throw stdout (inherited) and return code. Command not found → warn and
+    graceful skip (rc 0, like apply_permissions). No output parsing."""
+    argv = host_command(env, "settings_doctor")
+    if argv is None:
+        warn("settings doctor command not configured or not installed - settings-doctor "
+             "not available" + host_install_suffix(env, "settings_doctor"))
         return
-    cmd = [str(binp), "doctor", "--settings",
-           "--target", opts.get("target") or os.getcwd()]
+    cmd = [*argv, "--target", opts.get("target") or os.getcwd()]
     try:
         result = subprocess.run(cmd, check=False, timeout=30)
     except (subprocess.SubprocessError, OSError) as e:
-        warn(f"harness doctor --settings did not start: {e}")
+        warn(f"settings doctor command did not start: {e}")
         return
     if result.returncode:
         sys.exit(result.returncode)
@@ -452,7 +453,7 @@ def _command_locality(command, *, repo_root):
     return "unknown"
 
 
-def _hook_ownership_diagnostic(repo_root):
+def _hook_ownership_diagnostic(env, repo_root):
     """Registration source (repo file) × managed owner (`.swissknifeman/provider-
     artifacts.lock.json`) × handler locality — the three answers semantic-identity-
     ownership-v1.md § Hook identities names for a hook identity, computed from
@@ -467,7 +468,7 @@ def _hook_ownership_diagnostic(repo_root):
             "source": str(lock_path), "status": "unknown",
             "evidence": {"gap": f"lock file not found at {lock_path}"},
             "quality": {"completeness": 0.0, "note": "no managed-owner map to cite"},
-            "next_command": "harness doctor",
+            "next_command": host_command_text(env, "environment", "doctor"),
         }
     managed_targets = {r.get("target_path") for r in lock.get("records", ())}
     registrations = {}
@@ -490,7 +491,9 @@ def _hook_ownership_diagnostic(repo_root):
         "evidence": {"registrations": registrations, "unmanaged": unmanaged},
         "quality": {"completeness": 1.0,
                     "note": "handler content outside the repo is never scanned (D44-style)"},
-        "next_command": "harness doctor  # hook lifecycle ownership is P0.4/harness, read-only here",
+        "next_command": _with_note(host_command_text(env, "environment", "doctor"),
+                                   "hook lifecycle ownership is P0.4/host environment, "
+                                   "read-only here"),
     }
 
 
@@ -508,37 +511,29 @@ def _capability_gap_diagnostic(repo_root):
     }
 
 
-def _analyst_trace_modules_available():
-    """One-way, optional import (mirrors `analyst.doctor`'s own optional `task.plan`
-    check): absence of `analyst` degrades this diagnostic, it never raises a trace."""
-    try:
-        import analyst.metrics as _metrics
-        import analyst.trace as _trace
-    except Exception:
-        return None, None
-    return _trace.SCHEMA_VERSION, _metrics.SCHEMA_VERSION
+def _with_note(command, note):
+    """`command  # note` for a runnable hint, None when there is no command."""
+    return f"{command}  # {note}" if command else None
 
 
-def _trace_quality_diagnostic(repo_root):
+def _trace_quality_diagnostic(env):
     """Trace quality has no generic per-project trace store to query yet, so it is reported
-    as a named `unknown` (never rounded to `ok`); the analyst instrument is the live reader."""
-    trace_schema, metrics_schema = _analyst_trace_modules_available()
-    if not (trace_schema and metrics_schema):
+    as a named `unknown` (never rounded to `ok`); the host trace doctor is the live reader.
+    The command is only suggested, never run here."""
+    if host_command(env, "trace_doctor") is None:
         return {
             "id": "trace-quality", "owner": "unified agent trace",
-            "source": "analyst.trace / analyst.metrics (optional, one-way import)",
-            "status": "unknown",
-            "evidence": {"gap": "analyst package not importable from current PYTHONPATH "
-                                "— optional dependency, degrades rather than errors"},
-            "quality": {"completeness": 0.0, "note": "instrument not on path"},
-            "next_command": "PYTHONPATH=packages/analyst/lib python3 -m analyst doctor",
+            "source": "host trace doctor (not configured)", "status": "unknown",
+            "evidence": {"gap": "no trace doctor configured"},
+            "quality": {"completeness": 0.0, "note": "instrument not configured"},
+            "next_command": None,
         }
     return {
         "id": "trace-quality", "owner": "unified agent trace",
-        "source": f"{trace_schema}/{metrics_schema}", "status": "unknown",
-        "evidence": {"gap": "no per-project trace store reader exists; measure with the analyst doctor"},
+        "source": "host trace doctor", "status": "unknown",
+        "evidence": {"gap": "no per-project trace store reader exists; measure with the host trace doctor"},
         "quality": {"completeness": 0.0, "note": "instrument present, no stored measurement to read"},
-        "next_command": "PYTHONPATH=packages/analyst/lib python3 -m analyst doctor",
+        "next_command": host_command_text(env, "trace_doctor"),
     }
 
 
@@ -549,8 +544,8 @@ def gather_effective_source_diagnostics(env, *, repo_root):
         _identity_ownership_diagnostic(env),
         _cache_diagnostic(),
         _capability_gap_diagnostic(repo_root),
-        _hook_ownership_diagnostic(repo_root),
-        _trace_quality_diagnostic(repo_root),
+        _hook_ownership_diagnostic(env, repo_root),
+        _trace_quality_diagnostic(env),
     ]
 
 
@@ -871,8 +866,8 @@ def cmd_doctor(env, argv):
               "  --effective-source [--json]: read-only composed effective-source doctor "
               "(active semantic owner/provenance/collisions, cache, capability/reference "
               "coverage, hook ownership, trace-quality — versioned JSON with --json).\n"
-              "  --settings:     settings audit Claude Code (facade → harness "
-              "doctor --settings).")
+              "  --settings:     settings audit Claude Code (facade → host settings "
+              "doctor).")
         return
     if opts.get("settings"):
         _delegate_settings_doctor(env, opts)
@@ -1012,27 +1007,28 @@ def cmd_doctor(env, argv):
     check(profiles and not bad, f"profiles are loading ({len(profiles)})",
           f"broken: {', '.join(bad)}")
 
-    # harness (environment Claude Code — permissions/MCP/hooks) — OPTIONAL
-    # dependency: apply_permissions/_run_harness graceful-skip'if it's not there
-    # (standalone-layout / not installed). Previously doctor didn't look at all
-    # harness — «not installed» and «installed but broken» (broken binary/venv/etc.)
-    # were indistinguishable: connect/integrate quietly lost permissions-presets, and doctor
-    # reported «All checks passed» (audit Doc-1). Absence - NOT FAIL (this
-    # optional package); broken if present - FAIL.
-    hbin = harness_bin(env)
-    if hbin is None:
-        print("  [ok ] harness not installed - optional (permissions/MCP/hooks "
-              "do not apply; installation: packages/harness/install.sh)")
+    # Host environment command (environment Claude Code — permissions/MCP/hooks) —
+    # OPTIONAL dependency: apply_permissions/_run_environment graceful-skip if it's not
+    # there (standalone-layout / not installed). Previously doctor didn't look at the
+    # environment tool at all — «not installed» and «installed but broken» (broken
+    # binary/venv/etc.) were indistinguishable: connect/integrate quietly lost
+    # permissions-presets, and doctor reported «All checks passed» (audit Doc-1).
+    # Absence - NOT FAIL (optional); broken if present - FAIL.
+    probe = host_command(env, "environment_doctor")
+    if probe is None:
+        print("  [ok ] environment command not configured - optional (permissions/MCP/hooks "
+              "do not apply)" + host_install_suffix(env, "environment_doctor"))
     else:
+        label = f"environment command is being executed ({probe[0]})"
         try:
-            r = subprocess.run([str(hbin), "--help"], capture_output=True,
+            r = subprocess.run(probe, capture_output=True,
                                text=True, timeout=10, check=False)
-            check(r.returncode == 0, f"harness is being executed ({hbin})",
+            check(r.returncode == 0, label,
                   f"exit {r.returncode}: {(r.stderr or r.stdout).strip()[:200]}")
         except subprocess.TimeoutExpired:
-            check(False, f"harness is being executed ({hbin})", "timeout exceeded 10s")
+            check(False, label, "timeout exceeded 10s")
         except OSError as e:
-            check(False, f"harness is being executed ({hbin})", str(e))
+            check(False, label, str(e))
 
     # JSON-config schemes (schema/*.json) — DX-artifact (IntelliSense). Runtime-
     # manual validation (CONFIG_KEYS/SKILLSET_KEYS); scheme should not diverge from

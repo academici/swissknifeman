@@ -19,6 +19,7 @@ from skiller.common import MARKETPLACE
 from skiller.registry import build_registry, write_plugin_manifests
 from skiller.state import (db_records, load_db, save_db, upsert_project)
 from skiller.doctor import cmd_doctor
+from skiller.host import clear_host_cache
 from skiller.status import cmd_status
 from skiller.connect import do_connect
 import tests.fixtures as fx
@@ -295,25 +296,33 @@ class DoctorCase(unittest.TestCase):
         self.assertIn("skiller doctor", out)
         self.assertIn("python3", out)
         self.assertIn("profiles are loading", out)
-        # Doc-1: harness not found in synthetic tmp-registry (no monorepo around)
-        # — is an optional dependency and should NOT be considered FAIL.
-        self.assertIn("harness not installed", out)
-        self.assertNotIn("FAIL] harness", out)
+        # Doc-1: the environment command is not installed in the synthetic tmp-registry
+        # (empty host) — an optional dependency and should NOT be considered FAIL.
+        self.assertIn("environment command not configured - optional", out)
+        self.assertNotIn("FAIL] environment", out)
 
     def test_doctor_help(self):
         _, out = capture(cmd_doctor, self.env, ["--help"])
         self.assertIn("skiller doctor", out)
 
-    def test_doctor_flags_broken_harness_not_missing(self):
-        """Doc-1: harness INSTALLED (SKM_HARNESS_BIN points to an executable file),
-        but BROKEN (non-zero exit) — doctor should distinguish this from «not installed»
-        and report FAIL, and not silent 'ok'. The only file test, really
-        calling subprocess (the essence of the check cannot be verified otherwise)."""
-        broken = self.tmp / "broken-harness.sh"
+    def test_doctor_flags_broken_environment_command_not_missing(self):
+        """Doc-1: environment command INSTALLED (host `environment_doctor`, env override
+        points to an executable file), but BROKEN (non-zero exit) — doctor should
+        distinguish this from «not installed» and report FAIL, and not silent 'ok'. The
+        only file test, really calling subprocess (the essence of the check cannot be
+        verified otherwise)."""
+        broken = self.tmp / "broken-env-tool.sh"
         broken.write_text("#!/bin/sh\nexit 3\n", encoding="utf-8")
         broken.chmod(0o755)
-        old = os.environ.get("SKM_HARNESS_BIN")
-        os.environ["SKM_HARNESS_BIN"] = str(broken)
+        host = self.tmp / "host.json"
+        host.write_text(json.dumps({"schema_version": 1, "commands": {"environment_doctor": {
+            "argv": ["env-tool", "--help"], "env_override": "SKM_ENV_TOOL_BIN"}}}),
+            encoding="utf-8")
+        clear_host_cache()
+        self.addCleanup(clear_host_cache)
+        saved = {k: os.environ.get(k) for k in ("SKM_ENV_TOOL_BIN", "SKILLER_HOST_CONFIG")}
+        os.environ["SKM_ENV_TOOL_BIN"] = str(broken)
+        os.environ["SKILLER_HOST_CONFIG"] = str(host)
         try:
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
@@ -321,12 +330,13 @@ class DoctorCase(unittest.TestCase):
                     cmd_doctor(self.env, [])
             out = buf.getvalue()
         finally:
-            if old is None:
-                os.environ.pop("SKM_HARNESS_BIN", None)
-            else:
-                os.environ["SKM_HARNESS_BIN"] = old
-        self.assertIn("FAIL] harness is being executed", out)
-        self.assertNotIn("not installed", out)
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+        self.assertIn("FAIL] environment command is being executed", out)
+        self.assertNotIn("not configured", out)
 
     def test_doctor_flags_schema_type_mismatch_not_just_key_names(self):
         """Doc-2: before doctor checked ONLY the schema key names (⇄ keys) — when

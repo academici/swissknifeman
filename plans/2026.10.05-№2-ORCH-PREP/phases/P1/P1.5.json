@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.5",
   "title": "Review P1: независимая проверка контрактов",
-  "status": "todo",
+  "status": "done",
   "summary": "Read-only review диффа фазы P1 против knowledge/contracts и knowledge/engine-port; вердикт GREEN/ATTENTION/RED в knowledge `review-p1` и note-событие.",
   "why": "Публичные контракты фиксируются для всех движков; независимый провайдер (codex) ловит пропуски Claude-авторов (запрошено владельцем, PLAN1-PROMPT §5). Лимит I10: 2 раунда, 1 исправление владельцем-item.",
   "scope": {
@@ -125,6 +125,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T04:44:35Z"
+  "result": {
+    "started_at": "2026-10-06T04:48:39Z",
+    "finished_at": "2026-10-06T04:51:04Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "session": "01a10f80-27b2-7952-afa0-627be0e92d79"
+    },
+    "notes": "GREEN: исходный независимый полный обзор P1 и запрошенный локальный round 2 после одной correction закрыли все находки F1/F2. Native reviewer codex/gpt-6.1-sol/medium, session 01a10f80-27b2-7952-afa0-627be0e92d79, actual turn_context подтверждён в round-2/native-route.json. Кандидат 2feece57. V1 show knowledge/review-p1 exit 0 выполнен; V2 переиспользует test.sh exit 0 из нового validate: OK (70 tests), core 317 tests. Ревьюер независимо выполнил 4 адресных теста, проверил signed invalid fixture/6 authority combinations/8 CLI scenarios и отсутствие активных pending/deviations/escalation в P1.1-P1.3. Канонический GREEN @plan/knowledge/review-p1.json, raw @plan/artifacts/review-p1/verdict.json; note P1 записан. Предыдущие результаты и ATTENTION сохранены в round-1; открытых находок нет.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T04:51:04Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T04:51:04Z"
+      }
+    ],
+    "commits": [
+      "2feece57"
+    ]
+  },
+  "updated_at": "2026-10-06T04:51:04Z"
 }

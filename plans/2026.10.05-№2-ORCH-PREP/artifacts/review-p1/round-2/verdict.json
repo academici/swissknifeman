@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "review-p1",
+  "title": "Review P1 — GREEN",
+  "applies_to": ["P1"],
+  "sections": [
+    {
+      "id": "verdict",
+      "title": "Вердикт и покрытие",
+      "text": "GREEN. Исторические F1/F2 устранены; оставшихся находок в проверенном изменённом контуре их закрытия нет.\n\nВыполнен запрошенный локальный re-review, раунд 2 после одного owning correction. Кандидат: 2feece57b4cda3709398094d2bb711419b95491d; delta c3b32061..2feece57. Проверены только исправления F1/F2, связанный fixture, тесты, README/docs/CHANGELOG, adopted requirement и закрытие зависимых результатов P1.1–P1.3. Второго полного аудита P1 не было.\n\nСохраняется покрытие исходного независимого обзора: двусторонняя сверка полей девяти схем и defs, включая required/nested поля; closed-profile validator, semantic checks, fixtures/traces, RunState, EnginePort, binding matrix, stdlib/dependency boundary и CI. Исходный ATTENTION-документ сохранён в artifacts/review-p1/round-1/verdict.json. Исторические исправления P1.4 — изоляция usage и AFTER_TERMINAL для позднего started — остаются подтверждёнными первым проходом; повторно не проверялись.\n\nСамостоятельно выполнены 4 адресных unittest: test_read_only_input_authority, test_warning_only_input_succeeds_and_preserves_level, test_warning_does_not_mask_errors, test_quiet_keeps_error_and_status — exit 0. Дополнительно проверены подпись и единственная ошибка нового fixture, шесть комбинаций authority/read_only, восемь реальных CLI-сценариев через stdin: clean, warning-only, warning+error, authority-error, каждый с обычным выводом и --quiet. Все проверки прошли.\n\nПереиспользовано предоставленное evidence: validate.sh — validate: OK, 70 tests; core — 317 tests, exit 0; P1.1 V1 — 15 tests, V2 — validate с 69 tests до semantic-изменения, V3 — CI registrations; P1.2 V1 — 13 tests, V2 — valid CLI exit 0, V3 — отрицательный POLICY_REQUIRED_REFUSE; P1.3 V1 — 25 tests, V2 — отрицательный EVIDENCE_CARRIER. Широкие проверки не повторялись.\n\nNative session: 01a10f80-27b2-7952-afa0-627be0e92d79. Route codex/gpt-6.1-sol/medium подтверждён назначением владельца и активной записью P1.5; независимая runtime-телеметрия model/effort не предоставлена. Режим: -a never -s danger-full-access. HEAD совпал до и после проверок. Субагентов, реализации кандидатов, записи repository-файлов, lifecycle-мутаций, commit/push не было."
+    },
+    {
+      "id": "findings",
+      "title": "Находки",
+      "text": "Текущих находок нет.\n\nИсторическая F1 — Major, owning item P1.2 — устранена в packages/orch/lib/orch/contracts.py:92. При scope.read_only=true и write_authority≠none возвращается INPUT_AUTHORITY с level=error по /result_contract/write_authority. Новый signed invalid fixture read-only-write-authority.json даёт ровно одну INPUT_AUTHORITY ошибку; digest и суффикс input_id корректны. Из шести комбинаций true/false/отсутствующий read_only × none/code_scope пять допустимых принимаются, единственная противоречивая отклоняется API и CLI.\n\nИсторическая F2 — Minor, owning item P1.1 — устранена в packages/orch/lib/orch/cli.py:34 и :36. CLI сериализует path/code/message/level, возвращает exit 0 при warning-only и exit 1 при error, включая сочетание warning+error. --quiet подавляет stdout, сохраняя stderr и правильный статус. README, docs/contracts.md и CHANGELOG согласованы с этим поведением.\n\nP1.1/P1.2/P1.3 имеют status=done; в активных result отсутствуют поля pending/deviations/escalation. Исторические результаты этих трёх items в round-1/item-results.json побайтно по значениям JSON совпадают с result до correction. Зависимости P1.2→P1.1 и P1.3→P1.2 сохранены; P1.5 находится in_progress в ожидании регистрации данного вердикта."
+    },
+    {
+      "id": "recommendations",
+      "title": "Рекомендации и ограничения",
+      "text": "Дополнительных исправлений по F1/F2 не требуется. Координатор может обновить canonical review-p1 этим GREEN-вердиктом и завершить предусмотренную регистрацию P1.5/фазы. Ревьюер состояние плана не менял.\n\nGREEN относится к исходному полному покрытию P1 вместе с проверенным локальным закрытием F1/F2. Live capabilities провайдеров, будущие bindings/prepare, эффекты и conformance последующих фаз остаются вне этого обзора. Разница между файловым fixture coverage и unit coverage, отмеченная в первом отчёте, не была correctness-находкой и не расширяла scope второго раунда.\n\nИзменения metadata плана координатором допустимы: рабочее дерево содержит изменения log.jsonl и P1.5.json; продуктовый HEAD оставался 2feece57b4cda3709398094d2bb711419b95491d."
+    }
+  ]
+}

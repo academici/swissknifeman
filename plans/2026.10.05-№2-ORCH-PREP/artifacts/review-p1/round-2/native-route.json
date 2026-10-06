@@ -1,0 +1,11 @@
+{
+  "session": "01a10f80-27b2-7952-afa0-627be0e92d79",
+  "source": "rollout-2026-10-06T07-36-59-01a10f80-27b2-7952-afa0-627be0e92d79.jsonl",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "approval_policy": "never",
+  "sandbox_policy": {
+    "type": "danger-full-access"
+  },
+  "cwd": "/home/vostrikov/projects/packages/swissknifeman"
+}

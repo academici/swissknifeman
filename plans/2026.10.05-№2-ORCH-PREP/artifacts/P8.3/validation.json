@@ -1,0 +1,40 @@
+{
+  "item": "P8.3",
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_host_publication tests.test_codex_publication tests.test_publication -v",
+      "cwd": "packages/skiller",
+      "exit_code": 0,
+      "evidence": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.3/V1.log"
+    },
+    {
+      "id": "V2",
+      "cmd": "packages/skiller/bin/skiller registry --check",
+      "cwd": ".",
+      "exit_code": 0,
+      "evidence": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.3/V2.log"
+    },
+    {
+      "id": "V3",
+      "cmd": "packages/skiller/bin/skiller registry >/dev/null && test -z \"$(git status --porcelain -- .claude-plugin .agents packages/skiller/skills.json packages/skiller/skills packages/skiller/generate-skill packages/skiller/adapters packages/skiller/tests/fixtures_data .claude/skills)\"",
+      "cwd": ".",
+      "exit_code": 0,
+      "evidence": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.3/V3.log"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v",
+      "cwd": "packages/skiller",
+      "exit_code": 0,
+      "evidence": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.3/V4.log"
+    },
+    {
+      "id": "V5",
+      "cmd": "bash packages/skiller/scripts/test.sh",
+      "cwd": ".",
+      "exit_code": 0,
+      "evidence": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.3/V5.log"
+    }
+  ]
+}

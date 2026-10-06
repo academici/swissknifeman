@@ -6,12 +6,13 @@ import unittest
 from pathlib import Path
 
 from skiller.common import Env
+from skiller.host import load_host
 from skiller.publication import (_codex_skill_runtime_files,
                                  assert_root_bootstrap_set_completeness,
                                  load_repository_bootstrap_config,
                                  render_repository_bootstrap_projections)
 from skiller.registry import (build_codex_publication, build_registry,
-                              build_repository_bootstrap_publication)
+                              build_repository_bootstrap_publication, _sibling_plugins)
 
 
 class TestCodexPublication(unittest.TestCase):
@@ -56,10 +57,11 @@ class TestCodexPublication(unittest.TestCase):
         names = [plugin["name"] for plugin in marketplace["plugins"]]
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(names), len(set(names)))
-        self.assertIn("task", names)
-        task = next(plugin for plugin in marketplace["plugins"]
-                    if plugin["name"] == "task")
-        self.assertEqual(task["source"], "./packages/task")
+        for sibling in _sibling_plugins(self.repo_root, self.package_root,
+                                         load_host(self.package_root)):
+            if sibling.codex_supported:
+                plugin = next(p for p in marketplace["plugins"] if p["name"] == sibling.name)
+                self.assertEqual(plugin["source"], f"./{sibling.source_path}")
         for plugin in marketplace["plugins"]:
             self.assertTrue(set(self.golden["required_marketplace_fields"]).issubset(plugin))
             self.assertTrue(plugin["source"].startswith("./"))

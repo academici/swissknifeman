@@ -41,7 +41,9 @@ import os
 import sys
 from pathlib import Path
 
-from .common import HUB_MARKER, MANIFEST, find_monorepo_root, run_cmd
+from core import find_repo_root
+
+from .common import HUB_MARKER, MANIFEST, run_cmd
 
 HUB_START = HUB_MARKER
 HUB_END = "<!-- swissknifeman:hub:end -->"
@@ -201,16 +203,11 @@ def collect_agents(target, registry_names):
 def _marketplace_plugin_skills(env, registry):
     """Skills that are NATIVELY listed by the client for each marketplace plugin.
 
-    Source - generated `.claude-plugin/marketplace.json` umbrellas, that is
-    is exactly what the client reads, NOT the display «bucket → registry», by which
-    block index is being built (otherwise the reconciliation would check itself). Curated plugin
-    lists skills explicitly (`skills: [...]`), bucket gives the entire directory
-    (`source: ./packages/skiller/skills/<bucket>`), batch (`./packages/task`)
-    doesn't work offline - his skills simply aren't confirmed.
+    Source: generated marketplace entries. Curated plugins explicitly list skills;
+    bucket plugins expose their canonical skill directories. Sibling plugin entries
+    declared by the host config need native confirmation before their skills count.
     → {plugin: set(names)}; empty dict, if the manifest is not available."""
-    monorepo = find_monorepo_root(env.root)
-    if monorepo is None:
-        return {}
+    monorepo = find_repo_root(env.root) or env.root
     data = _load_json(Path(monorepo) / ".claude-plugin" / "marketplace.json")
     if not isinstance(data, dict):
         return {}

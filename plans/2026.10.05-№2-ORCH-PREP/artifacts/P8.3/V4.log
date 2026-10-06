@@ -1,0 +1,17 @@
+test_all_code_zones (tests.test_boundary.BoundaryScannerTests.test_all_code_zones) ... ok
+test_allowlist_skips_whole_file_and_retains_other_failures (tests.test_boundary.BoundaryScannerTests.test_allowlist_skips_whole_file_and_retains_other_failures) ... ok
+test_bootstrap_is_one_structural_entry_even_when_empty (tests.test_boundary.BoundaryScannerTests.test_bootstrap_is_one_structural_entry_even_when_empty) ... ok
+test_code_tokens_and_line_diagnostics (tests.test_boundary.BoundaryScannerTests.test_code_tokens_and_line_diagnostics) ... ok
+test_content_tool_names_allowed_but_repository_paths_rejected (tests.test_boundary.BoundaryScannerTests.test_content_tool_names_allowed_but_repository_paths_rejected) ... ok
+test_globs_and_nonrelative_or_noncanonical_paths_fail (tests.test_boundary.BoundaryScannerTests.test_globs_and_nonrelative_or_noncanonical_paths_fail) ... ok
+test_missing_allowlist_means_empty (tests.test_boundary.BoundaryScannerTests.test_missing_allowlist_means_empty) ... ok
+test_owner_reason_and_allowlist_shape (tests.test_boundary.BoundaryScannerTests.test_owner_reason_and_allowlist_shape) ... ok
+test_shared_core_and_unrelated_package_names_stay_allowed (tests.test_boundary.BoundaryScannerTests.test_shared_core_and_unrelated_package_names_stay_allowed) ... ok
+test_skipped_files_directories_and_binary (tests.test_boundary.BoundaryScannerTests.test_skipped_files_directories_and_binary) ... ok
+test_stale_missing_clean_and_excluded_entries_fail (tests.test_boundary.BoundaryScannerTests.test_stale_missing_clean_and_excluded_entries_fail) ... ok
+test_package_boundary_and_allowlist (tests.test_boundary.BoundaryTests.test_package_boundary_and_allowlist) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.738s
+
+OK

@@ -242,9 +242,8 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
             die(f"{dest}: invalid JSON: {e}")
 
     marketplaces = settings.setdefault("extraKnownMarketplaces", {})
-    # marketplace.json is in the ROOT of the monorepo (registry writes there, source-paths
-    # are relative to the root), and not in the package directory env.root — otherwise Claude Code looking for
-    # .claude-plugin/marketplace.json under packages/skiller and does not find plugins.
+    # Marketplace source paths are relative to the host root where registry writes
+    # its manifest, including sibling plugin entries declared by the host config.
     mp_root = find_repo_root(root) or root
     our_source = {"source": "directory", "path": str(mp_root)}
     if MARKETPLACE in marketplaces:

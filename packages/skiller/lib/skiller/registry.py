@@ -9,7 +9,8 @@ from core import atomic_write_text, find_repo_root, safe_load_json
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
 from .config import CORE_PLUGIN, CORE_SKILLS
-from .publication import (SiblingPlugin, assert_root_bootstrap_set_completeness,
+from .host import host_plugin_dirs, load_host
+from .publication import (SiblingPlugin, package_rel, assert_root_bootstrap_set_completeness,
                           build_publication_catalog, render_claude_publication,
                           render_codex_publication, render_repository_bootstrap_projections)
 
@@ -188,12 +189,12 @@ def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
     write_plugin_manifests and registry --check drift-gate). source-paths from the repo root."""
     root = env.root
     repo_root = _repo_root(root)
-    # Package prefix relative to repo root: "packages/skiller" or "" (standalone)
-    rel_pkg = root.relative_to(repo_root).as_posix() if root != repo_root else ""
+    # Package prefix relative to the host root, empty in standalone layouts.
+    rel_pkg = package_rel(repo_root, root)
     prefix = f"./{rel_pkg}" if rel_pkg else "."
 
     def src(sub):
-        """source-plugin path from repo root: ./packages/skiller/<sub> or ./<sub>."""
+        """Plugin source path relative to the host root."""
         return f"{prefix}/{sub}" if rel_pkg else f"./{sub}"
 
     manifests = []
@@ -314,28 +315,18 @@ def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
             "package": "skiller",
         })
 
-    # Neighboring monorepo packages (packages/<name>/.claude-plugin/plugin.json), except for the
-    # package skiller: maind, harness etc. The source of truth is their plugin.json
-    # (name/description/keywords). source is counted from the root of the repo: ./packages/<name>.
-    # Field `package` = package directory name (provenance: which package the plugin provided).
-    pkgs_dir = repo_root / "packages"
-    if rel_pkg and pkgs_dir.is_dir():
-        self_name = root.name  # directory skiller — its plugins are already added above
-        for pkg in sorted(pkgs_dir.iterdir()):
-            if not pkg.is_dir() or pkg.name == self_name:
-                continue
-            pj = pkg / ".claude-plugin" / "plugin.json"
-            if not pj.exists():
-                continue
-            data = json.loads(pj.read_text(encoding="utf-8"))
-            marketplace_plugins.append({
-                "name": data.get("name", pkg.name),
-                "source": f"./packages/{pkg.name}",
-                "description": data.get("description", ""),
-                "category": data.get("category", "ecosystem"),
-                "tags": data.get("keywords", []),
-                "package": pkg.name,
-            })
+    # Sibling plugin entries declared by the host config, with host-relative paths.
+    for pkg in host_plugin_dirs(repo_root, root, load_host(root)):
+        pj = pkg / ".claude-plugin" / "plugin.json"
+        data = json.loads(pj.read_text(encoding="utf-8"))
+        marketplace_plugins.append({
+            "name": data.get("name", pkg.name),
+            "source": f"./{pkg.relative_to(repo_root).as_posix()}",
+            "description": data.get("description", ""),
+            "category": data.get("category", "ecosystem"),
+            "tags": data.get("keywords", []),
+            "package": pkg.name,
+        })
 
     # marketplace.json — in the ROOT monorepo (one manifest for all plugins in the repo), and not in the package.
     write_json(repo_root / ".claude-plugin" / "marketplace.json", {
@@ -379,14 +370,11 @@ def _publication_versions(root):
     return units, default
 
 
-def _sibling_plugins(repo_root, package_root):
+def _sibling_plugins(repo_root, package_root, host):
     """Scan the bounded sibling-package manifest input before catalog construction."""
-    if package_root == repo_root or not (repo_root / "packages").is_dir():
-        return ()
     siblings = []
-    for package in sorted((repo_root / "packages").iterdir()):
-        if not package.is_dir() or package == package_root:
-            continue
+    candidates = host_plugin_dirs(repo_root, package_root, host)
+    for package in sorted(candidates, key=lambda path: path.relative_to(repo_root).as_posix()):
         manifest = package / ".claude-plugin" / "plugin.json"
         if not manifest.is_file():
             continue
@@ -397,7 +385,7 @@ def _sibling_plugins(repo_root, package_root):
             description=data.get("description", ""),
             category=data.get("category", "ecosystem"),
             tags=tuple(data.get("keywords", [])),
-            source_path=f"packages/{package.name}",
+            source_path=package.relative_to(repo_root).as_posix(),
             content_hash=hashlib.sha256(manifest.read_bytes()).hexdigest(),
             codex_supported=codex_manifest.is_file(),
         ))
@@ -417,7 +405,7 @@ def build_catalog(env, bucket_meta, bucket_dirs, registry=None):
     return build_publication_catalog(
         registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
         core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
-        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
+        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root, load_host(root)),
         generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
         skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
         unit_versions=unit_versions, default_unit_version=default_unit_version,

@@ -25,11 +25,12 @@ def _skill_md(name, description):
 
 
 def make_monorepo(tmp):
-    """Mini monorepo: <mono>/core, <mono>/packages/skiller (roster of 3 skills),
+    """Mini monorepo: <mono>/core, <mono>/vendor/skiller (roster of 3 skills),
     <mono>/.claude-plugin/marketplace.json with curated and bucket plugin."""
     mono = Path(tmp) / "mono"
     (mono / "core").mkdir(parents=True)
-    root = mono / "packages" / "skiller"
+    (mono / ".git").mkdir()
+    root = mono / "vendor" / "skiller"
     skills = root / "skills"
     entries = [("php", "code-style", "PHP code style"),
                ("php", "laravel-conventions", "Laravel conventions"),
@@ -48,10 +49,10 @@ def make_monorepo(tmp):
     (mono / ".claude-plugin").mkdir()
     (mono / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
         "name": "swissknifeman", "plugins": [
-            {"name": "php", "source": "./packages/skiller/skills/php"},
-            {"name": "quality", "source": "./packages/skiller/skills/quality"},
+            {"name": "php", "source": "./vendor/skiller/skills/php"},
+            {"name": "quality", "source": "./vendor/skiller/skills/quality"},
             {"name": "curated", "source": "./",
-             "skills": ["./packages/skiller/skills/php/code-style"]},
+             "skills": ["./vendor/skiller/skills/php/code-style"]},
         ]}), encoding="utf-8")
     home = mono / "home"
     home.mkdir()

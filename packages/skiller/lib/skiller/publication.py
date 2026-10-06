@@ -26,6 +26,17 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
 from core.provider.lock import LOCK_RELATIVE_PATH
 
 
+def package_rel(repo_root: Path, package_root: Path) -> str:
+    """Package prefix relative to its host root, empty for standalone layouts."""
+    relative = package_root.relative_to(repo_root).as_posix()
+    return "" if relative == "." else relative
+
+
+def _generator(package_prefix: str) -> str:
+    prefix = f"{package_prefix}/" if package_prefix else ""
+    return f"generator: {prefix}lib/skiller/registry.py→{prefix}lib/skiller/publication.py"
+
+
 _CLAUDE_ADAPTER = ArtifactAdapterIdentity(
     "skiller.claude-publication", "1.0.0", ProviderId.CLAUDE_CODE, "1.0.0",
     (CapabilityRequirement(CapabilityId("skills.repository"),
@@ -249,7 +260,7 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
         raise TypeError("catalog must be PublicationCatalog")
     repo_root = repo_root.resolve()
     package_root = package_root.resolve()
-    rel_package = package_root.relative_to(repo_root).as_posix() if package_root != repo_root else ""
+    rel_package = package_rel(repo_root, package_root)
 
     def source_path(relative: str) -> str:
         return f"./{rel_package}/{relative}" if rel_package else f"./{relative}"
@@ -272,7 +283,7 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
             artifacts.append(_render_artifact(
                 package_root / "skills" / unit.plugin_id / ".claude-plugin" / "plugin.json",
                 unit, plugin_data, tuple(by_id[item] for item in unit.member_ids), repo_root,
-                catalog.package_version))
+                catalog.package_version, package_root=package_root))
             marketplace_plugins.append({
                 "name": unit.plugin_id,
                 "source": source_path(f"skills/{unit.plugin_id}"),
@@ -314,7 +325,7 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
                            "skills": "./"}
             artifacts.append(_render_artifact(
                 package_root / "generate-skill" / ".claude-plugin" / "plugin.json", unit,
-                plugin_data, (), repo_root, catalog.package_version))
+                plugin_data, (), repo_root, catalog.package_version, package_root=package_root))
             marketplace_plugins.append({
                 "name": "generate-skill", "source": source_path("generate-skill"),
                 "description": catalog.generate_skill_description, "category": "meta",
@@ -343,7 +354,7 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
     artifacts.append(_render_artifact(repo_root / ".claude-plugin" / "marketplace.json",
                                       PublicationUnit("claude-marketplace", "claude-marketplace",
                                                       "marketplace", ()), marketplace_data,
-                                      all_sources, repo_root, catalog.package_version))
+                                      all_sources, repo_root, catalog.package_version, package_root=package_root))
     return tuple(artifacts)
 
 
@@ -377,7 +388,8 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
             artifacts.append(_render_codex_artifact(
                 root / ".codex-plugin" / "plugin.json", unit, data,
                 tuple(by_id[item] for item in unit.member_ids), repo_root,
-                catalog.package_version, content_version=unit.content_version))
+                catalog.package_version, content_version=unit.content_version,
+                package_root=package_root))
             plugins.append(_codex_marketplace_entry(unit.plugin_id, source_path(root),
                                                     meta["description"], meta))
         elif unit.kind == "meta":
@@ -387,7 +399,8 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                                           ["./generate-skill"])
             artifacts.append(_render_codex_artifact(
                 root / ".codex-plugin" / "plugin.json", unit, data, (), repo_root,
-                catalog.package_version, content_version=unit.content_version))
+                catalog.package_version, content_version=unit.content_version,
+                package_root=package_root))
             plugins.append(_codex_marketplace_entry("generate-skill", source_path(root),
                                                     catalog.generate_skill_description,
                                                     {"category": "meta", "tags": ["meta", "authoring"]}))
@@ -401,7 +414,7 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                                                     {"category": "meta", "tags": ["core", "token-economy"]}))
         elif unit.kind == "management":
             root = package_root / "adapters" / "codex" / "skm"
-            artifacts.extend(_render_codex_skm_bundle(root, unit, catalog, repo_root))
+            artifacts.extend(_render_codex_skm_bundle(root, unit, catalog, repo_root, package_root=package_root))
             plugins.append(_codex_marketplace_entry("skm", source_path(root),
                                                     "skiller management skill adapter",
                                                     {"category": "meta", "tags": ["cli", "skills", "management"]}))
@@ -421,7 +434,7 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
         repo_root / ".agents" / "plugins" / "marketplace.json",
         PublicationUnit("codex-marketplace", "codex-marketplace", "marketplace", ()),
         marketplace, tuple(catalog.skills) + codex_siblings,
-        repo_root, catalog.package_version))
+        repo_root, catalog.package_version, package_root=package_root))
     return tuple(artifacts)
 
 
@@ -469,7 +482,8 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
     artifacts = [_render_codex_artifact(
         root / ".codex-plugin" / "plugin.json", unit,
         _codex_plugin_manifest(unit.plugin_id, unit.content_version, description, [skill_root]),
-        members, repo_root, catalog.package_version, content_version=unit.content_version)]
+        members, repo_root, catalog.package_version, content_version=unit.content_version,
+                package_root=package_root)]
     for member in members:
         canonical_root = package_root / Path(member.source_path).parent
         for source in _codex_skill_runtime_files(
@@ -477,50 +491,58 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
             target = root / "skills" / member.semantic_id / source.relative_to(canonical_root)
             artifacts.append(_render_codex_artifact(
                 target, unit, source.read_bytes(), (member,), repo_root,
-                catalog.package_version, content_version=unit.content_version))
-    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
+                catalog.package_version, content_version=unit.content_version,
+                package_root=package_root))
+    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts),
+                                        repo_root, package_root=package_root))
     return tuple(artifacts)
 
 
 def _render_codex_skm_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
-                             repo_root: Path) -> tuple[CodexPublicationArtifact, ...]:
+                             repo_root: Path, package_root: Path) -> tuple[CodexPublicationArtifact, ...]:
     skill = ("---\nname: skm\ndescription: skiller CLI management adapter.\n---\n\n"
              "Use the repository-local skiller CLI for status, doctor, skills, and integration.\n")
     artifacts = [
         _render_codex_artifact(root / ".codex-plugin" / "plugin.json", unit,
                                _codex_plugin_manifest("skm", unit.content_version,
                                                       "skiller management skill adapter", ["./skills"]),
-                               (), repo_root, catalog.package_version, content_version=unit.content_version),
+                               (), repo_root, catalog.package_version, content_version=unit.content_version,
+                package_root=package_root),
         _render_codex_artifact(root / "skills" / "skm" / "SKILL.md", unit,
                                skill.encode("utf-8"), (), repo_root, catalog.package_version,
-                               content_version=unit.content_version),
+                               content_version=unit.content_version, package_root=package_root),
     ]
-    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
+    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts),
+                                        repo_root, package_root=package_root))
     return tuple(artifacts)
 
 
 def _codex_bundle_lock(root: Path, unit: PublicationUnit, package_version: str,
                        artifacts: tuple[CodexPublicationArtifact, ...],
-                       repo_root: Path) -> CodexPublicationArtifact:
+                       repo_root: Path, package_root: Path) -> CodexPublicationArtifact:
     records = [{"path": artifact.target.relative_to(root).as_posix(),
                 "source_hash": artifact.source_hash, "rendered_hash": artifact.rendered_hash}
                for artifact in artifacts]
     return _render_codex_artifact(root / "publication-lock.json", unit,
                                   {"contract_version": "1.0.0", "publication_unit": unit.unit_id,
                                    "version": unit.content_version, "artifacts": records}, (),
-                                  repo_root, package_version, content_version=unit.content_version)
+                                  repo_root, package_version, content_version=unit.content_version,
+                                  package_root=package_root)
 
 
 def _render_codex_artifact(target: Path, unit: PublicationUnit, data: Mapping[str, object] | bytes,
                            sources: Sequence[SemanticSkill], repo_root: Path,
-                           package_version: str, *, content_version: str | None = None) -> CodexPublicationArtifact:
+                           package_version: str, *, package_root: Path,
+                           content_version: str | None = None) -> CodexPublicationArtifact:
     source_records = tuple(ArtifactSource(
         f"skiller.publication.source{index}", source.source_path,
         source.content_hash if source.content_hash.startswith("sha256:") else f"sha256:{source.content_hash}")
         for index, source in enumerate(sources))
     if not source_records:
-        source_records = (ArtifactSource("skiller.publication.meta", "packages/skiller/package.json",
-                                         "sha256:" + "0" * 64),)
+        source_records = (ArtifactSource(
+            "skiller.publication.meta",
+            (Path(package_rel(repo_root, package_root)) / "package.json").as_posix(),
+            "sha256:" + "0" * 64),)
     rendered = data if isinstance(data, bytes) else _manifest_text(data)
     plugin_version = content_version if content_version is not None else package_version
     result = plan_artifact_render(ArtifactRenderRequest(
@@ -536,15 +558,17 @@ def _render_codex_artifact(target: Path, unit: PublicationUnit, data: Mapping[st
 
 def _render_artifact(target: Path, unit: PublicationUnit, data: Mapping[str, object],
                      sources: Sequence[SemanticSkill | SiblingPlugin],
-                     repo_root: Path, package_version: str) -> ClaudePublicationArtifact:
+                     repo_root: Path, package_version: str, *, package_root: Path) -> ClaudePublicationArtifact:
     relative_target = target.relative_to(repo_root).as_posix()
     source_records = tuple(ArtifactSource(
         f"skiller.publication.source{index}", source.source_path,
         source.content_hash if source.content_hash.startswith("sha256:") else f"sha256:{source.content_hash}")
         for index, source in enumerate(sources))
     if not source_records:
-        source_records = (ArtifactSource("skiller.publication.meta", "packages/skiller/package.json",
-                                         "sha256:" + "0" * 64),)
+        source_records = (ArtifactSource(
+            "skiller.publication.meta",
+            (Path(package_rel(repo_root, package_root)) / "package.json").as_posix(),
+            "sha256:" + "0" * 64),)
     result = plan_artifact_render(ArtifactRenderRequest(
         f"skiller.claude.{unit.plugin_id}", source_records,
         ArtifactTarget(relative_target, ("whole-file", ())), _CLAUDE_ADAPTER, (),
@@ -1040,7 +1064,7 @@ class RootBootstrapArtifact:
 
 
 def _root_bootstrap_body(identity: str, description: str, canonical_path: str,
-                         canonical_sha256: str, unit_version: str) -> bytes:
+                         canonical_sha256: str, unit_version: str, package_prefix: str) -> bytes:
     """Thin provider projection body: trigger metadata + a read-canonical instruction only."""
     title = " ".join(word.capitalize() for word in identity.split("-"))
     quoted = description.replace("\\", "\\\\").replace('"', '\\"')
@@ -1052,7 +1076,7 @@ def _root_bootstrap_body(identity: str, description: str, canonical_path: str,
         f"version: {unit_version}",
         f"canonical: {canonical_path}",
         f"canonical_sha256: {canonical_sha256}",
-        "generator: packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
+        _generator(package_prefix),
         "---",
         "",
         f"# {title}",
@@ -1139,7 +1163,7 @@ def _class_b_donor_bucket(canonical: str) -> str:
 
 def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path: str,
                                  canonical_sha256: str, unit_version: str,
-                                 asymmetry_reason: str) -> bytes:
+                                 asymmetry_reason: str, package_prefix: str) -> bytes:
     """Thin class-B projection body: same no-copied-body contract as class-A, plus
     the declared provider-asymmetry note — never emitted for a provider outside `providers`."""
     title = " ".join(word.capitalize() for word in identity.split("-"))
@@ -1153,7 +1177,7 @@ def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path
         f"version: {unit_version}",
         f"canonical: {canonical_path}",
         f"canonical_sha256: {canonical_sha256}",
-        "generator: packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
+        _generator(package_prefix),
         "---",
         "",
         f"# {title}",
@@ -1237,7 +1261,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
         canonical_rel = en_path.relative_to(repo_root).as_posix()
         source = ArtifactSource("skiller.repository-bootstrap.canonical", canonical_rel,
                                 "sha256:" + en_hash)
-        body = _root_bootstrap_body(identity, description, canonical_rel, en_hash, class_a_version)
+        body = _root_bootstrap_body(identity, description, canonical_rel, en_hash, class_a_version, package_prefix=package_rel(repo_root, package_root))
         for provider, projections_root, adapter in (
                 ("claude", repo_root / ".claude" / "skills", _CLAUDE_ADAPTER),
                 ("codex", repo_root / ".agents" / "skills", _CODEX_ADAPTER)):
@@ -1286,7 +1310,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
         source = ArtifactSource("skiller.repository-bootstrap.class-b.canonical", canonical_rel,
                                 "sha256:" + canonical_hash)
         body = _root_bootstrap_class_b_body(identity, description, canonical_rel, canonical_hash,
-                                            unit_version, record["asymmetry_reason"])
+                                            unit_version, record["asymmetry_reason"], package_prefix=package_rel(repo_root, package_root))
         provider_roots = {"claude": (repo_root / ".claude" / "skills", _CLAUDE_ADAPTER),
                           "codex": (repo_root / ".agents" / "skills", _CODEX_ADAPTER)}
         for provider in record["providers"]:

@@ -586,7 +586,7 @@ def _fixture_catalog(catalog, *, exclude_bucket_ids=_DONOR_BUCKETS):
     return dataclasses.replace(catalog, units=kept_units, skills=kept_skills)
 
 
-def declared_fixture_unit_set(catalog, *, repo_root):
+def declared_fixture_unit_set(catalog, *, repo_root, package_root=None):
     """D51 declared literal (`artifacts/P1.4/fixture-unit-set.json`, schema v1): the
     positive fixture's exact input, one record per provider. Both providers share one
     provider-neutral catalog, so `units` is identical by construction — the schema still
@@ -595,7 +595,9 @@ def declared_fixture_unit_set(catalog, *, repo_root):
     fixture = _fixture_catalog(catalog)
     units = sorted({unit.plugin_id for unit in fixture.units} |
                    {sibling.name for sibling in catalog.sibling_plugins})
-    identity_source = "packages/skiller/lib/skiller/registry.py::build_catalog"
+    from .publication import package_rel
+    prefix = package_rel(repo_root, package_root or Path(__file__).resolve().parents[2])
+    identity_source = f"{prefix + '/' if prefix else ''}lib/skiller/registry.py::build_catalog"
     per_provider = {
         "codex": {"marketplace": ".agents/plugins/marketplace.json"},
         "claude-code": {"marketplace": ".claude-plugin/marketplace.json"},
@@ -795,7 +797,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
     registry, bucket_meta, bucket_dirs = build_registry(env)
     catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
 
-    fixture_unit_set = declared_fixture_unit_set(catalog, repo_root=repo_root)
+    fixture_unit_set = declared_fixture_unit_set(catalog, repo_root=repo_root, package_root=root)
 
     positive_maps = {}
     collisions_by_provider = {}

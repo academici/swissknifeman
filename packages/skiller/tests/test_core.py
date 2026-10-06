@@ -173,7 +173,7 @@ class CoreCase(unittest.TestCase):
             "plugins": [
                 {"name": "core", "source": "./",
                  "skills": ["./skills/general/context-economy"]},
-                {"name": "task", "source": "./packages/task"},
+                {"name": "task", "source": "./vendor/plugin-a"},
             ],
         }) + "\n")
         proj = fx.make_laravel_project(self.tmp)

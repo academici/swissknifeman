@@ -1,7 +1,7 @@
 {
   "schema_version": "reliability-bank/v1",
   "grader_version": "test-1.0.0",
-  "note": "Small synthetic grader set for skiller's own system-bank adapter tests (packages/skiller/lib/skiller/quality/eval.py). Distinct from, and never a copy of, the frozen P0.3 bank at plans/2026.07.24-DEMO-PLAN/artifacts/reliability-bank-v1/graders.json.",
+  "note": "Small synthetic grader set for skiller's own system-bank adapter tests (lib/skiller/quality/eval.py). Distinct from, and never a copy of, the frozen P0.3 bank at plans/2026.07.24-DEMO-PLAN/artifacts/reliability-bank-v1/graders.json.",
   "policy": {
     "llm_judge_allowed": false,
     "judge_override_of_deterministic": "forbidden"

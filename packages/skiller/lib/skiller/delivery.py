@@ -8,10 +8,11 @@ import shutil
 import subprocess
 import uuid
 
-from core import atomic_write_json, find_monorepo_root
+from core import atomic_write_json, find_repo_root
 from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock, replace_owner_records, serialize_lock, _writer_guard, _contained_target
 from core import atomic_write_text
 from .common import die, parse_flags
+from .host import load_host
 from .release_attestation import build, check, digest
 from .state import load_db
 from .update import update_one
@@ -373,7 +374,8 @@ def _run(command, *, cwd=None):
 
 
 def deliver(env, release, *, all_projects=False, target=None, dry_run=False, native=True):
-    root = find_monorepo_root(env.root) or env.root
+    root = find_repo_root(env.root) or env.root
+    host = load_host(env.root)
     path = root / "releases" / (release + ".json")
     value = json.loads(path.read_text())
     errors = check(root, value)
@@ -469,7 +471,7 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             for runtime_root in roots:
                 for unit in value["units"]:
                     projection = unit["providers"].get("runtime")
-                    if unit["id"] == "task":
+                    if unit["id"] in host.runtime_projection_plugins:
                         projection = unit["providers"].get("claude-code")
                     if projection:
                         row["readback"].extend(unit["id"] + "/" + p for p in verify_surface(runtime_root / projection["source"], projection))
@@ -503,19 +505,23 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
                         row["status"] = "updated"
                     save()
-        # Grok's Task commands are a machine-level plugin, not files in each
-        # project's `.grok/` directory.  Update only the existing channel and
-        # prove its installed cache against the attested Grok projection.
-        if shutil.which("grok") and "task" in units and "grok" in units["task"]["providers"]:
-            row = {"surface": "grok-cache/task", "status": "blocked"}
+        # Grok command plugins are machine-level plugins, not files in each
+        # project's `.grok/` directory.  Update only the host's existing channels
+        # and prove each installed cache against the attested Grok projection.
+        for plugin in host.machine_plugins.get("grok", ()) if shutil.which("grok") else ():
+            name = plugin.name
+            if name not in units or "grok" not in units[name]["providers"]:
+                continue
+            row = {"surface": "grok-cache/" + name, "status": "blocked"}
             receipt["targets"].append(row)
             save()
             # SKM owns this plugin completely.  Grok's `update` follows the
-            # old local source and can therefore leave a released Task stale;
+            # old local source and can therefore leave a released plugin stale;
             # replace that installation from this attested checkout instead.
-            removed, remove_detail = _run(["grok", "plugin", "uninstall", "task"])
+            # Holds are machine setup (install.sh), not release bytes.
+            removed, remove_detail = _run(["grok", "plugin", "uninstall", name])
             installed_ok, install_detail = _run(
-                ["grok", "plugin", "install", str(root / "packages/task"), "--trust"])
+                ["grok", "plugin", "install", str(root / plugin.path), "--trust"])
             ok = removed and installed_ok
             row["reason"] = "uninstall: " + remove_detail + "; install: " + install_detail
             try:
@@ -524,16 +530,16 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                 entries = json.loads(listed.stdout) if listed.returncode == 0 else []
             except (OSError, json.JSONDecodeError):
                 entries = []
-            installed = next((entry for entry in entries if entry.get("name") == "task"
+            installed = next((entry for entry in entries if entry.get("name") == name
                               and entry.get("status") == "installed"), None)
             if not installed or not installed.get("path"):
-                row["readback"] = ["GROK_TASK_NOT_INSTALLED"]
+                row["readback"] = ["GROK_PLUGIN_NOT_INSTALLED"]
             else:
                 row["readback"] = verify_surface(Path(installed["path"]),
-                                                  units["task"]["providers"]["grok"])
+                                                  units[name]["providers"]["grok"])
             if ok and not row["readback"]:
                 row["status"] = "updated"
-                row["digest"] = units["task"]["providers"]["grok"]["tree_digest"]
+                row["digest"] = units[name]["providers"]["grok"]["tree_digest"]
             save()
     # A release policy is also a delivery contract.  Never silently omit a
     # provider merely because its native binary/channel was absent: every

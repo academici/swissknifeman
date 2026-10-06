@@ -11,6 +11,7 @@ from core.provider.lock import _contained_target, _writer_guard
 from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, warn
 from .config import ProjectConfig, load_config, resolve_target
 from .connect import do_connect
+from .host import load_host
 from .hub import hub_artifacts_exist
 from .registry import alias_migration_hints, load_bucket_aliases
 from .skillset import do_sync, load_skillset_config
@@ -97,36 +98,40 @@ def adopt_codex_provider_config(target, dry_run=False, plugins=None):
     return True
 
 
-def prune_legacy_task_runtime_link(env, target, dry_run=False):
-    """Remove only the former per-project task runtime link.
+def prune_legacy_runtime_links(env, target, dry_run=False):
+    """Remove only the former per-project plugin runtime links named by the host.
 
-    ``task`` is a plugin runtime.  Older bootstrap attempts created
-    ``packages/task`` links in consumer repositories; that bypasses both provider
+    Older bootstrap attempts created links to a plugin runtime inside consumer
+    repositories (host `legacy_runtime_links`); that bypasses both provider
     adapters and makes a project accidentally depend on the hub checkout/cache.
     Recognise only the three historical SKM destinations, never a project-owned
     link with the same path.
     """
-    legacy = Path(target) / "packages" / "task"
-    if not legacy.is_symlink():
-        return False
-    try:
-        destination = legacy.resolve(strict=True)
-    except OSError:
-        return False
-    managed_roots = (
-        env.root / "packages" / "task",
-        env.home / ".claude" / "plugins" / "cache" / MARKETPLACE / "task",
-        env.home / ".codex" / "plugins" / "cache" / MARKETPLACE / "task",
-    )
-    if not any(destination == root or root in destination.parents
-               for root in managed_roots):
-        return False
-    if dry_run:
-        print(f"[dry-run] remove legacy task runtime link {legacy}")
-    else:
-        legacy.unlink()
-        print(f"remove legacy task runtime link {legacy}")
-    return True
+    host = load_host(env.root)
+    pruned = False
+    for entry in host.legacy_runtime_links:
+        legacy = Path(target) / entry.link
+        if not legacy.is_symlink():
+            continue
+        try:
+            destination = legacy.resolve(strict=True)
+        except OSError:
+            continue
+        managed_roots = (
+            host.root / entry.source,
+            env.home / ".claude" / "plugins" / "cache" / MARKETPLACE / entry.plugin,
+            env.home / ".codex" / "plugins" / "cache" / MARKETPLACE / entry.plugin,
+        )
+        if not any(destination == root or root in destination.parents
+                   for root in managed_roots):
+            continue
+        if dry_run:
+            print(f"[dry-run] remove legacy {entry.plugin} runtime link {legacy}")
+        else:
+            legacy.unlink()
+            print(f"remove legacy {entry.plugin} runtime link {legacy}")
+        pruned = True
+    return pruned
 
 
 def retire_orphaned_codex_vendor_manifest(target, *, dry_run=False):
@@ -263,7 +268,7 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
     links and files fail before mutation; unique local capabilities remain.
     """
     from .native_codex import native_inventory
-    from .common import find_monorepo_root, parse_frontmatter
+    from .common import parse_frontmatter
     from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
     target = Path(target)
     marker = target / ".agents/.swissknifeman-codex-links.json"
@@ -290,10 +295,9 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
             disabled = {path for path, enabled in effective.items() if enabled is False}
         lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
         owned = parse_lock(lock_path.read_bytes()).records if lock_path.is_file() else ()
-        repo = find_monorepo_root(env.root)
+        host = load_host(env.root)
         allowed = [env.root / "skills", env.root / "adapters/codex"]
-        if repo is not None:
-            allowed.append(Path(repo) / "packages/task/adapters/codex/skills")
+        allowed.extend(host.root / relative for relative in host.codex_link_roots)
         pending = []
         for name, destination in links.items():
             if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name) or not isinstance(destination, str):
@@ -476,7 +480,7 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
     # Migration only after a genuine SKM marker proved ownership of the project.
     # Do not use a consumer-local task copy as a compatibility fallback: both
     # Claude and Codex resolve this runtime from their installed plugin.
-    prune_legacy_task_runtime_link(env, target, dry_run=dry_run)
+    prune_legacy_runtime_links(env, target, dry_run=dry_run)
 
     ok = True
     if mk_file or codex_marketplace or codex_links:

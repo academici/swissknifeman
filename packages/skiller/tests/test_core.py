@@ -3,10 +3,11 @@
 The default fixture registry does NOT contain general/oss-dev/system (for accurate
 the assertions of other tests held, and CORE was there no-op). Here we add to the registry
 with these buckets and check the injection CORE (vendor=skills, connect=buckets),
-default-exclude duplicates maind/manual skills and disabling via --no-core."""
+default-exclude duplicates hub/manual skills and disabling via --no-core."""
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -17,6 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from skiller.connect import do_connect
 from skiller.vendor import do_vendor
 from skiller.config import core_skill_tuples
+from skiller.host import clear_host_cache
+from unittest import mock
 import tests.fixtures as fx
 
 
@@ -164,7 +167,7 @@ class CoreCase(unittest.TestCase):
         self.assertIn("core", buf.getvalue())
 
     def test_connect_adds_default_command_plugins(self):
-        # C-3: DEFAULT_COMMAND_PLUGINS (e.g. `task`) — marketplace-guarded, like core,
+        # C-3: host default command plugins (here `plugin-a`) — marketplace-guarded, like core,
         # but NOT CORE-skill: --no-core doesn't touch them (checked below). Previously this thread
         # (connect.py cmd_added) was not covered by the test - command distribution regression
         # wouldn't have been caught.
@@ -173,9 +176,16 @@ class CoreCase(unittest.TestCase):
             "plugins": [
                 {"name": "core", "source": "./",
                  "skills": ["./skills/general/context-economy"]},
-                {"name": "task", "source": "./vendor/plugin-a"},
+                {"name": "plugin-a", "source": "./vendor/plugin-a"},
             ],
         }) + "\n")
+        host = self.tmp / "host.json"
+        host.write_text(json.dumps({"schema_version": 1, "default_command_plugins": ["plugin-a"]}))
+        clear_host_cache()
+        self.addCleanup(clear_host_cache)
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(host)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {"no_core": True})
         settings = json.loads(
@@ -183,7 +193,7 @@ class CoreCase(unittest.TestCase):
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
         # --no-core disables CORE-skills, but NOT command plugins (not CORE)
         self.assertNotIn("core", enabled)
-        self.assertIn("task", enabled)
+        self.assertIn("plugin-a", enabled)
 
 
 if __name__ == "__main__":

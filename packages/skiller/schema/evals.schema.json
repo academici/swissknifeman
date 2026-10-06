@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/evals.schema.json",
+  "$id": "urn:skiller:evals:v1",
   "title": "skiller skill evals (evals.json / pressure.json / triggers.json)",
   "description": "Registry skill behavioral tests (eval-first). Lie in skills/<bucket>/<name>/evals/. Runner/grader — lib/skiller/eval.py (skiller eval). Manual runtime validation (validate.sh + eval.validate_*); scheme - for DX. evals/ is NOT a vendor or part of content-hash.",
   "oneOf": [

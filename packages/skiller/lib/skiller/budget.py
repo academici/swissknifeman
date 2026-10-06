@@ -27,8 +27,9 @@ from pathlib import Path
 from core import atomic_write_text
 
 from .common import die, parse_flags, parse_frontmatter
-from .config import (CORE_SKILLS, DEFAULT_COMMAND_PLUGINS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
-                     ProjectConfig, all_buckets, core_skill_tuples,
+from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
+                     ProjectConfig, all_buckets, core_skill_tuples, default_command_plugins,
+                     known_command_plugins,
                      find_project_root, load_config, resolve_selection,
                      validate_config)
 from .plugins import plugins_summary
@@ -137,7 +138,7 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
         resolve_selection(env, target, config, profile, flag_buckets)
     known = all_buckets(env)
     for b in buckets:
-        if b not in known and b not in {"core", "task"}:
+        if b not in known and b not in known_command_plugins():
             die(f"unknown bucket: {b}")
     buckets = [b for b in buckets if b in known]
     exclude = set(flag_exclude) | set(config.exclude)
@@ -770,7 +771,7 @@ def _measure_skills(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
         for name, paths in sorted(observed["paths"].items()) if len(paths) > 1
     ]
     total = None if missing else sum(entry["tokens"] for entry in entries)
-    desired = set(managed.get("desired_plugins", [])) - set(DEFAULT_COMMAND_PLUGINS)
+    desired = set(managed.get("desired_plugins", [])) - set(default_command_plugins())
     outside_policy = sorted(set(observed["enabled"]) - desired) if desired else []
     not_effective = sorted(desired - set(observed["enabled"]))
     return {

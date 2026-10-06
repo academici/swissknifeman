@@ -12,6 +12,12 @@
   `plugin_dirs`, а собственные пути публикации и provenance вычисляются относительно
   корня хоста. Произвольная раскладка поддерживается без изменения байтов
   генерируемых артефактов в текущем монорепозитории.
+- **Skiller release, delivery и install через host-конфиг:** command-плагины по умолчанию,
+  version files релиза, Grok machine plugins, runtime-проекции и legacy runtime links
+  берутся из `configs/skiller-host.json`; release attestation читает `path`, `grok_native`,
+  `package_units` и `legacy_policy` из `configs/release-units.json`. Команды `codex`/`grok`
+  и снимки attestation в монорепозитории прежние. `$id` JSON-схем Skiller теперь
+  `urn:skiller:<name>:v1`; `$schema`-ссылки потребителей на прежние URL продолжают работать.
 
 - **Task Read API и типизированные связи:** `plan.py get`, `list`, `events`,
   `artifact`, `links`, `neighborhood` и `schema` возвращают валидированный JSON-конверт;

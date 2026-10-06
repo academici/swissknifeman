@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknifeman-config.schema.json",
+  "$id": "urn:skiller:swissknifeman-config:v1",
   "title": "swissknifeman vendor-mode config (.swissknifeman/config.json)",
   "description": "Source of Truth vendor-mode. Rules (presets ∪ buckets ∪ include) − exclude unfold into a flat set; `skiller sync` copies skills from the library to skills_path and writes skills-lock.json (managed) + .swissknifeman-manifest.json. Keys are kept in sync with SKILLSET_KEYS (lib/skiller/skillset.py) — gate tests/test_schema.py and skiller doctor.",
   "type": "object",

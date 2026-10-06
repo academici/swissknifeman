@@ -37,7 +37,7 @@ FULL_CONFIG = {
     "_comment": "DX-key: not validated, but must survive loading",
     "project_type": "fixture",
     "buckets": ["general"],
-    "plugins": ["task"],
+    "plugins": ["plugin-a"],
     "exclude": ["system/shared-memory"],
     "presets": [],
     "skills_path": ".claude/skills",

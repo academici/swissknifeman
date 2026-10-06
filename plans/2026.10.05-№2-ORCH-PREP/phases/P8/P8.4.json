@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.4",
   "title": "Release, attestation, delivery, update, install.sh и имена плагинов через host-конфиг",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Удаляются литералы `task`/`packages/<x>` и `find_monorepo_root` из release.py, release_attestation.py, delivery.py, update.py, config.py, vendor.py, budget.py:140, install.sh; знание переходит в host-конфиг и корневой `configs/release-units.json` (`path`, `grok_native`, `legacy_policy`). Codex consumer acceptance читает ожидаемые плагины из хоста; test_task_plugin_cache_revision переезжает в корень.",
   "why": "Это функции выпуска и доставки: ошибка → неверная версия Task, неустановленный grok-плагин, удалённая чужая ссылка в consumer-проекте. Hard risk: data integrity release attestation (политика для исторических ref) и `prune_legacy_runtime_links` (удалять только три исторических адреса). Поведение в монорепо — побайтно прежние вызовы.",
   "scope": {
@@ -280,6 +280,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T16:12:19Z"
+  "result": {
+    "started_at": "2026-10-06T17:29:38Z",
+    "finished_at": "2026-10-06T17:50:19Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "76f68350-4400-45b9-8e5c-2c0749b438ae"
+    },
+    "notes": "Host-driven release/attestation/delivery/update/install: config.default_command_plugins() lazy (I4) + known_command_plugins(); release _sync_version_files(root, version, host); attestation reads path/grok_native/package_units/legacy_policy (layout fallback to worktree policy; historical builds byte-identical for 4 refs); delivery grok loop over host.machine_plugins.grok and runtime_projection_plugins; update prune_legacy_runtime_links + codex_link_roots; install.sh host grok/codex with SKILLER_MARKETPLACE_ROOT (argv before/after identical). Root tests scripts/test-task-plugin-cache-revision.py, scripts/test-root-install.py + hygiene CI. All P8.4 allowlist entries removed; schema $id -> urn:skiller:<name>:v1. Suite 794 OK; validate.sh green (codex live gate SKIP: no binary). I2 spot check: budget --first-turn (+--with-plugins), release --dry-run identical HEAD vs tree.",
+    "deviations": [
+      "Allowlist scope wider than task_files (bin, topology, schema $id, fixtures, 9 tests); runtime package_units added to release-units; legacy runtime link source now resolves against host root"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T17:50:19Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T17:50:19Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T17:50:19Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T17:50:19Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T17:50:19Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-06T17:50:19Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T17:50:19Z"
 }

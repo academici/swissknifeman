@@ -6,6 +6,7 @@ saved options. Network/composer are not needed - everything is in tmpdir against
 import io
 import contextlib
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -16,10 +17,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import MANIFEST, MARKETPLACE
 from skiller.connect import do_connect
+from skiller.host import clear_host_cache
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, skillset_config_path
 from skiller.vendor import do_vendor
-from skiller.update import (cmd_update, replay_opts, retire_equivalent_codex_skill_links,
+from skiller.update import (cmd_update, prune_legacy_runtime_links, replay_opts, retire_equivalent_codex_skill_links,
                             retire_legacy_codex_links, retire_legacy_codex_vendor,
                             retire_orphaned_codex_vendor_manifest, update_one)
 try:
@@ -200,19 +202,90 @@ class UpdateCase(unittest.TestCase):
         self.assertEqual(a, b)
         self.assertEqual(a, {f"php@{MARKETPLACE}", f"quality@{MARKETPLACE}"})
 
-    def test_update_prunes_only_recognised_legacy_task_runtime_link(self):
+    def _with_host(self, config):
+        path = self.tmp / "host.json"
+        path.write_text(json.dumps({"schema_version": 1, **config}), encoding="utf-8")
+        clear_host_cache()
+        self.addCleanup(clear_host_cache)
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(path)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_update_prunes_only_recognised_legacy_runtime_link(self):
+        self._with_host({"legacy_runtime_links": [
+            {"link": "vendor/plugin-a", "plugin": "plugin-a", "source": "vendor/plugin-a"}]})
         proj = fx.make_laravel_project(self.tmp)
         silently(do_connect, self.env, proj, {"profile": "laravel-project"})
-        task_source = self.root / "packages" / "task"
-        task_source.mkdir(parents=True)
-        legacy = proj / "packages" / "task"
+        plugin_source = self.root / "vendor" / "plugin-a"
+        plugin_source.mkdir(parents=True)
+        legacy = proj / "vendor" / "plugin-a"
         legacy.parent.mkdir(parents=True)
-        legacy.symlink_to(task_source)
+        legacy.symlink_to(plugin_source)
 
         silently(cmd_update, self.env, ["--target", str(proj)])
 
         self.assertFalse(legacy.exists())
         self.assertFalse(legacy.is_symlink())
+
+    def test_legacy_runtime_link_cleanup_keeps_project_owned_and_unlisted_links(self):
+        self._with_host({"legacy_runtime_links": [
+            {"link": "vendor/plugin-a", "plugin": "plugin-a", "source": "vendor/plugin-a"}]})
+        proj = self.tmp / "owned"
+        own = proj / "lib" / "plugin-a"
+        own.mkdir(parents=True)
+        legacy = proj / "vendor" / "plugin-a"
+        legacy.parent.mkdir(parents=True)
+        legacy.symlink_to(own)  # same path, project-owned destination
+        cached = self.env.home / ".codex/plugins/cache" / MARKETPLACE / "plugin-a" / "1.0.0"
+        cached.mkdir(parents=True)
+        unlisted = proj / "vendor" / "plugin-b"
+        unlisted.symlink_to(cached)  # historical destination, but not a host entry
+
+        self.assertFalse(silently(prune_legacy_runtime_links, self.env, proj))
+        self.assertTrue(legacy.is_symlink())
+        self.assertTrue(unlisted.is_symlink())
+        legacy.unlink()
+        legacy.symlink_to(cached)
+        self.assertTrue(silently(prune_legacy_runtime_links, self.env, proj, dry_run=True))
+        self.assertTrue(legacy.is_symlink())
+        self.assertTrue(silently(prune_legacy_runtime_links, self.env, proj))
+        self.assertFalse(legacy.is_symlink())
+
+    def test_empty_host_prunes_no_runtime_link(self):
+        self._with_host({})
+        proj = self.tmp / "standalone"
+        cached = self.env.home / ".claude/plugins/cache" / MARKETPLACE / "plugin-a"
+        cached.mkdir(parents=True)
+        legacy = proj / "vendor" / "plugin-a"
+        legacy.parent.mkdir(parents=True)
+        legacy.symlink_to(cached)
+        self.assertFalse(silently(prune_legacy_runtime_links, self.env, proj))
+        self.assertTrue(legacy.is_symlink())
+
+    def test_codex_link_roots_extend_owned_sources(self):
+        self._with_host({"codex_link_roots": ["vendor/plugin-a/adapters/codex/skills"]})
+        project = self.tmp / "host-linked"
+        directory = project / ".agents/skills"
+        directory.mkdir(parents=True)
+        source = self.root / "vendor/plugin-a/adapters/codex/skills/run"
+        source.mkdir(parents=True)
+        (source / "SKILL.md").write_text("---\nname: run\ndescription: skill\n---\n")
+        (directory / "run").symlink_to(source)
+        marker = project / ".agents/.swissknifeman-codex-links.json"
+        marker.write_text(json.dumps({"version": 1, "links": {"run": str(source)}}))
+        native = self.tmp / "plugins/cache/swissknifeman/plugin-a/1/run"
+        import shutil
+        shutil.copytree(source, native)
+        inventory = {"ok": True, "native_names": {"run"}, "paths": {"run": [str(native / "SKILL.md")]}}
+        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+            self.assertTrue(silently(retire_legacy_codex_links, self.env, project))
+        self.assertFalse((directory / "run").is_symlink())
+        self._with_host({})
+        (directory / "run").symlink_to(source)
+        marker.write_text(json.dumps({"version": 1, "links": {"run": str(source)}}))
+        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+            with self.assertRaisesRegex(ValueError, "source outside owned skill roots"):
+                retire_legacy_codex_links(self.env, project)
 
     def test_update_adopt_codex_persists_dual_contract_and_bundle(self):
         proj = fx.make_laravel_project(self.tmp)
@@ -220,9 +293,9 @@ class UpdateCase(unittest.TestCase):
         materialize.parent.mkdir(parents=True, exist_ok=True)
         materialize.write_text(json.dumps({"name": MARKETPLACE, "plugins": [
             {"name": name, "source": f"./skills/{name}"}
-            for name in ("core", "task", "php", "quality")
+            for name in ("core", "plugin-a", "php", "quality")
         ]}), encoding="utf-8")
-        for name in ("core", "task", "php", "quality"):
+        for name in ("core", "plugin-a", "php", "quality"):
             plugin = self.root / "skills" / name
             plugin.mkdir(parents=True, exist_ok=True)
             (plugin / ".codex-plugin").mkdir(exist_ok=True)

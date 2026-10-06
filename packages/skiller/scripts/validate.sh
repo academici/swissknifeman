@@ -1494,17 +1494,26 @@ PY
 # clean-consumer discovery in temp CODEX_HOME — what the static does NOT check
 # diagram (`test_codex_publication.py`). Azguard, 2026-07-21: batch GREEN was,
 # consumer path — no. Explicit discrimination skip/GREEN/RED in the output - "gate not
-# ran" and "gate passed" are not the same thing. The test itself assumes a monorepo layout (sibling packages/task) —
-# same portability limit as the rest of the package tests/ of this gate.
-if [ ! -d "$REPO_ROOT/../task" ]; then
-  echo "SKIP: Codex publication consumer-acceptance gate - no sibling packages/task (standalone-layout skiller outside monorepo)"
+# ran" and "gate passed" are not the same thing. The expected inventory comes from the
+# host config (default command plugins + sibling plugin dirs); without a host the
+# gate has nothing to compare and is skipped explicitly.
+_CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+[ -d "$_CORE_ROOT/core" ] || _CORE_ROOT=""
+_host_rc=0
+PYTHONPATH="$REPO_ROOT/lib${_CORE_ROOT:+:$_CORE_ROOT}" python3 -c \
+  'import sys; from pathlib import Path; from skiller.host import load_host; sys.exit(0 if load_host(Path(sys.argv[1])).default_command_plugins else 3)' \
+  "$REPO_ROOT" || _host_rc=$?
+if [ "$_host_rc" -ne 0 ] && [ "$_host_rc" -ne 3 ]; then
+  echo "ERROR: Codex publication consumer-acceptance gate - host config unreadable" >&2
+  exit 1
+elif [ "$_host_rc" -eq 3 ]; then
+  echo "SKIP: Codex publication consumer-acceptance gate - no host config (standalone)"
 elif ! command -v codex >/dev/null 2>&1; then
   echo "SKIP: Codex publication consumer-acceptance gate - binary 'codex' not found in PATH (gate was NOT driven, do not count as GREEN)"
 else
   codex_version="$(codex --version 2>/dev/null || echo unknown)"
-  _MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
   _codex_gate_log="$(mktemp)"
-  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${_MONOREPO_ROOT:+:$_MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${_CORE_ROOT:+:$_CORE_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
       python3 -m unittest tests.test_codex_consumer_acceptance -v) > "$_codex_gate_log" 2>&1; then
     echo "Codex publication consumer-acceptance: GREEN (codex ${codex_version})"
   else

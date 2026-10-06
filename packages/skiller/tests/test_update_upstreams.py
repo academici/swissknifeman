@@ -6,7 +6,7 @@ lib/skiller/), so the only fair way to test it is to actually
 run (as already doing test_registry_state.py::test_broken_upstream_json_dies_
 with_path for another script). REPO_ROOT script resolves from its own
 locations (dirname(BASH_SOURCE)/..), so we copy the script itself next to
-synthetic skills/ in tmp — real packages/skiller cannot be touched or read
+synthetic skills/ in tmp — the real package cannot be touched or read
 to write. No network needed: source="file" + url=Path.as_uri() (file://) — exactly for
 this in schema/upstream.schema.json "source" contains file ("local only
 fixtures/tests"), and urllib.request supports file:// out of the box."""

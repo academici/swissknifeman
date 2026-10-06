@@ -1,13 +1,20 @@
-"""Regression: task plugin cache keys must track attested publication bytes."""
-import json
+#!/usr/bin/env python3
+"""Regression: task plugin cache keys must track attested publication bytes.
+
+Root test: it pins this monorepo's Task layout (packages/task) against Skiller's
+release attestation, which itself knows no package names.
+"""
 import re
+import sys
 import unittest
 from pathlib import Path
 
-from skiller.release_attestation import Source, _release_unit_policy, _expected_plugin_version, check_transition, version_errors
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(REPO_ROOT / "packages/skiller/lib"), str(REPO_ROOT)]
 
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
+from skiller.release_attestation import (Source, _expected_plugin_version,  # noqa: E402
+                                         _release_unit_policy, check_transition,
+                                         version_errors)
 
 
 class TaskPluginCacheRevisionTests(unittest.TestCase):
@@ -33,6 +40,14 @@ class TaskPluginCacheRevisionTests(unittest.TestCase):
             source, _release_unit_policy(source), "task", umbrella)
         self.assertEqual(expected, umbrella)
         self.assertEqual(version_source, "umbrella")
+
+    def test_host_config_names_task_version_file_and_grok_native_surface(self):
+        policy = _release_unit_policy(Source(REPO_ROOT))
+        self.assertIs(policy["plugins"]["task"].get("grok_native"), True)
+        from skiller.host import load_host
+        host = load_host(REPO_ROOT / "packages/skiller")
+        self.assertIn(("packages/task/configs/command-routing.json", "plugin_version"),
+                      [(entry.path, entry.key) for entry in host.version_files])
 
     def test_post_release_byte_change_requires_version_bump(self):
         old = {"units": [{"id": "task", "version": "0.24.11", "tree_digest": "a",

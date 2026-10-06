@@ -11,10 +11,11 @@ from core.provider.runtime import codex_migrated_command_skill
 from skiller.common import MANIFEST, SKILL_MANAGED_MARKER
 from skiller.delivery import (deliver, project_readback, prune_provider_caches,
                               recover_lock, release_history, verify_surface)
+from skiller.host import parse_host
 from skiller.release_attestation import digest, tree_digest
 
 
-def surface(files, source="packages/task"):
+def surface(files, source="vendor/plugin-a"):
     hashed = {path: digest(data) for path, data in files.items()}
     return {"source": source, "files": hashed, "tree_digest": tree_digest(hashed)}
 
@@ -22,7 +23,7 @@ def surface(files, source="packages/task"):
 def attestation(files):
     return {"schema_version": "release-attestation/v1",
             "umbrella": {"version": "1.0.0", "tag": "v1.0.0", "date": "2026-09-13"},
-            "units": [{"id": "task", "version": "1.0.0",
+            "units": [{"id": "plugin-a", "version": "1.0.0",
                        "providers": {"codex": surface(files)}, "tree_digest": "unit"}]}
 
 
@@ -122,7 +123,7 @@ class DeliveryTests(unittest.TestCase):
         old["units"][0]["version"] = "1.0.0"
         old["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"old"})
         old["_tag_commit"] = "0123456789abcdef"
-        cache = env.home / ".claude/plugins/cache/swissknifeman/task"
+        cache = env.home / ".claude/plugins/cache/swissknifeman/plugin-a"
         self.write(env.home / ".claude/plugins/installed_plugins.json",
                    json.dumps({"plugins": {}}).encode())
         self.write(cache / "1.0.0/SKILL.md", b"old")
@@ -156,9 +157,9 @@ class DeliveryTests(unittest.TestCase):
         current["units"][0]["version"] = "2.0.0"
         old["units"][0]["version"] = "1.0.0"
         old["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"old"})
-        path = env.home / ".claude/plugins/cache/swissknifeman/task/1.0.0"
+        path = env.home / ".claude/plugins/cache/swissknifeman/plugin-a/1.0.0"
         self.write(path / "SKILL.md", b"old")
-        installed = {"plugins": {"task@swissknifeman": [{"installPath": str(path)}]}}
+        installed = {"plugins": {"plugin-a@swissknifeman": [{"installPath": str(path)}]}}
         self.write(env.home / ".claude/plugins/installed_plugins.json", json.dumps(installed).encode())
         with patch("skiller.delivery.shutil.which", return_value=None):
             rows = prune_provider_caches(env, current, [old])
@@ -171,7 +172,7 @@ class DeliveryTests(unittest.TestCase):
         current["units"][0]["version"] = "2.0.0"
         old["units"][0]["version"] = "1.0.0"
         old["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"expected"})
-        path = env.home / ".claude/plugins/cache/swissknifeman/task/1.0.0"
+        path = env.home / ".claude/plugins/cache/swissknifeman/plugin-a/1.0.0"
         self.write(path / "SKILL.md", b"modified")
         self.write(env.home / ".claude/plugins/installed_plugins.json",
                    json.dumps({"plugins": {}}).encode())
@@ -183,7 +184,7 @@ class DeliveryTests(unittest.TestCase):
 
     def test_recovery_refuses_symlink_even_when_known_bytes_match(self):
         target = self.root / "project"
-        path = target / ".agents/plugins/bundles/task/SKILL.md"
+        path = target / ".agents/plugins/bundles/plugin-a/SKILL.md"
         self.write(self.root / "external.md", b"known")
         path.parent.mkdir(parents=True)
         path.symlink_to(self.root / "external.md")
@@ -194,7 +195,7 @@ class DeliveryTests(unittest.TestCase):
 
     def test_recovery_cannot_write_lock_through_symlinked_state_directory(self):
         target = self.root / "project"
-        self.write(target / ".agents/plugins/bundles/task/SKILL.md", b"known")
+        self.write(target / ".agents/plugins/bundles/plugin-a/SKILL.md", b"known")
         external = self.root / "external-state"
         external.mkdir()
         (target / ".swissknifeman").symlink_to(external, target_is_directory=True)
@@ -208,7 +209,7 @@ class DeliveryTests(unittest.TestCase):
 
     def test_known_old_recovers_ownership_without_changing_files(self):
         target = self.root / "project"
-        path = target / ".agents/plugins/bundles/task/SKILL.md"
+        path = target / ".agents/plugins/bundles/plugin-a/SKILL.md"
         self.write(path, b"old")
         current = attestation({"SKILL.md": b"current"})
         previous = attestation({"SKILL.md": b"old"})
@@ -222,8 +223,8 @@ class DeliveryTests(unittest.TestCase):
 
     def test_modified_preimage_blocks_entire_recovery_and_dry_run_writes_no_lock(self):
         target = self.root / "project"
-        known = target / ".agents/plugins/bundles/task/known.txt"
-        modified = target / ".agents/plugins/bundles/task/SKILL.md"
+        known = target / ".agents/plugins/bundles/plugin-a/known.txt"
+        modified = target / ".agents/plugins/bundles/plugin-a/SKILL.md"
         self.write(known, b"known")
         self.write(modified, b"user edit")
         current = attestation({"known.txt": b"known", "SKILL.md": b"current"})
@@ -252,7 +253,7 @@ class DeliveryTests(unittest.TestCase):
             return True
 
         result = SimpleNamespace(stdout="abc\n", returncode=0)
-        with patch("skiller.delivery.find_monorepo_root", return_value=checkout), \
+        with patch("skiller.delivery.find_repo_root", return_value=checkout), \
                 patch("skiller.delivery.check", return_value=[]), \
                 patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
                 patch("skiller.delivery.subprocess.run", return_value=result), \
@@ -276,13 +277,99 @@ class DeliveryTests(unittest.TestCase):
         env = SimpleNamespace(root=checkout, home=self.root / "home")
         cache = self.root / "cache"
         installation = {"scope": "local", "projectPath": str(project), "installPath": str(cache)}
-        self.write(env.home / ".claude/plugins/installed_plugins.json", json.dumps({"plugins": {"task@swissknifeman": [installation]}}).encode())
-        with patch("skiller.delivery.find_monorepo_root", return_value=checkout), \
+        self.write(env.home / ".claude/plugins/installed_plugins.json", json.dumps({"plugins": {"plugin-a@swissknifeman": [installation]}}).encode())
+        with patch("skiller.delivery.find_repo_root", return_value=checkout), \
                 patch("skiller.delivery.check", return_value=[]), \
                 patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
                 patch("skiller.delivery.subprocess.run", return_value=SimpleNamespace(stdout="abc\n", returncode=0)), \
                 patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "claude" else None), \
                 patch("skiller.delivery._run", return_value=(True, "updated")) as runner:
             receipt = deliver(env, "v1.0.0")
-        runner.assert_any_call(["claude", "plugin", "update", "task@swissknifeman", "--scope", "local", "--yes"], cwd=str(project))
+        runner.assert_any_call(["claude", "plugin", "update", "plugin-a@swissknifeman", "--scope", "local", "--yes"], cwd=str(project))
         self.assertEqual(receipt["status"], "GREEN")
+
+    def _native_host(self, checkout, host):
+        """Run a native delivery against `host` with fake grok/codex CLIs; return (receipt, calls)."""
+        calls = []
+        value = attestation({"commands/run.md": b"run"})
+        value["units"][0]["providers"]["grok"] = surface({"commands/run.md": b"run"})
+        value["units"].append({"id": "plugin-c", "version": "1.0.0", "tree_digest": "unit",
+                               "providers": {"grok": surface({"commands/c.md": b"c"})}})
+        self.write(checkout / "releases/v1.0.0.json", json.dumps(value).encode())
+        cache = self.root / "grok-cache"
+        self.write(cache / "commands/run.md", b"run")
+        env = SimpleNamespace(root=checkout, home=self.root / "home")
+
+        def run(command, **_kwargs):
+            calls.append(command)
+            if command[:3] == ["grok", "plugin", "list"]:
+                return SimpleNamespace(stdout=json.dumps([{"name": "plugin-a", "status": "installed",
+                                                           "path": str(cache)}]), returncode=0)
+            return SimpleNamespace(stdout="abc\n", returncode=0)
+
+        def fake(command, **_kwargs):
+            calls.append(command)
+            return True, "ok"
+
+        with patch("skiller.delivery.find_repo_root", return_value=checkout), \
+                patch("skiller.delivery.load_host", return_value=host), \
+                patch("skiller.delivery.check", return_value=[]), \
+                patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
+                patch("skiller.delivery.subprocess.run", side_effect=run), \
+                patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "grok" else None), \
+                patch("skiller.delivery._run", side_effect=fake):
+            receipt = deliver(env, "v1.0.0")
+        return receipt, calls
+
+    def test_native_grok_reinstalls_only_host_machine_plugins_from_their_path(self):
+        checkout = self.root / "checkout"
+        host = parse_host({"schema_version": 1, "machine_plugins": {"grok": [
+            {"name": "plugin-a", "path": "vendor/plugin-a", "holds": ["vendor/plugin-a/hold"]},
+            {"name": "plugin-x", "path": "vendor/plugin-x"}]}}, checkout)
+        receipt, calls = self._native_host(checkout, host)
+        grok = [c for c in calls if c[0] == "grok"]
+        self.assertEqual(grok, [
+            ["grok", "plugin", "uninstall", "plugin-a"],
+            ["grok", "plugin", "install", str(checkout / "vendor/plugin-a"), "--trust"],
+            ["grok", "plugin", "list", "--json"]])
+        rows = {row["surface"]: row for row in receipt["targets"] if "surface" in row}
+        self.assertEqual(rows["grok-cache/plugin-a"]["status"], "updated")
+        self.assertNotIn("grok-cache/plugin-c", {r for r in rows if rows[r].get("status") == "updated"})
+
+    def test_native_grok_without_host_plugins_runs_no_grok_command(self):
+        checkout = self.root / "checkout"
+        _receipt, calls = self._native_host(checkout, parse_host({"schema_version": 1}, checkout))
+        self.assertFalse([c for c in calls if c[0] == "grok"])
+
+    def test_codex_marketplace_runtime_reads_claude_projection_for_host_plugins(self):
+        checkout = self.root / "checkout"
+        runtime = self.root / "runtime"
+        self.write(runtime / "vendor/plugin-a/commands/run.md", b"stale")
+        value = attestation({})
+        value["units"][0]["providers"]["claude-code"] = surface({"commands/run.md": b"run"})
+        self.write(checkout / "releases/v1.0.0.json", json.dumps(value).encode())
+        env = SimpleNamespace(root=checkout, home=self.root / "home")
+
+        def run(command, **_kwargs):
+            if command[:4] == ["codex", "plugin", "marketplace", "list"]:
+                return SimpleNamespace(stdout=json.dumps({"marketplaces": [
+                    {"name": "swissknifeman", "root": str(runtime)}]}), returncode=0)
+            if command[:3] == ["codex", "plugin", "list"]:
+                return SimpleNamespace(stdout=json.dumps({"installed": []}), returncode=0)
+            return SimpleNamespace(stdout="abc\n", returncode=0)
+
+        for plugins, expected in ((["plugin-a"], ("blocked", ["plugin-a/commands/run.md"])),
+                                  ([], ("current", []))):
+            with self.subTest(plugins=plugins), \
+                    patch("skiller.delivery.find_repo_root", return_value=checkout), \
+                    patch("skiller.delivery.load_host", return_value=parse_host(
+                        {"schema_version": 1, "runtime_projection_plugins": plugins}, checkout)), \
+                    patch("skiller.delivery.check", return_value=[]), \
+                    patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
+                    patch("skiller.delivery.subprocess.run", side_effect=run), \
+                    patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "codex" else None):
+                receipt = deliver(env, "v1.0.0")
+            row = next(r for r in receipt["targets"] if r.get("surface") == "codex-marketplace-runtime")
+            # Host plugins prove their claude-code projection; others have no runtime surface here.
+            self.assertEqual((row["status"], row["readback"]), expected)
+

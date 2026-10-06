@@ -123,7 +123,7 @@ class MeasureListingBudgetCase(unittest.TestCase):
 class ProfilesListingReportCase(unittest.TestCase):
     """--profiles: detection budget for EACH supplied profile versus BOTH
     providers, on a synthetic registry (fixtures) — does not depend on the current
-    live composition packages/skiller/profiles/*.json."""
+    live composition of this package's profiles/*.json."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

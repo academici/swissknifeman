@@ -1,7 +1,7 @@
 """P3.1: gate «description ≤450 char» on the REAL registry.
 
 Gate batch-shortening - not synthetic fixtures-registry (that does not reflect the fact
-alive SKILL.md), and direct scan packages/skiller/skills/**/SKILL.md. Threshold 450 —
+alive SKILL.md), and direct scan of this package's skills/**/SKILL.md. Threshold 450 —
 hard-target item'a (validate.sh already warn'it on it, error will become in P3.2); threshold 300
 is checked separately as non-regression for those explicitly corrected in P3.1 skills
 (not «all ≤300» — part of the trigger-dense descriptions legally remains in burn-down
@@ -11,7 +11,7 @@ from pathlib import Path
 
 from skiller.common import parse_frontmatter
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # packages/skiller
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # the Skiller package
 SKILLS_ROOT = PACKAGE_ROOT / "skills"
 DESC_HARD_MAX = 450
 

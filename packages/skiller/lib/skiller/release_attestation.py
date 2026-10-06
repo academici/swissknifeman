@@ -6,8 +6,14 @@ from pathlib import Path
 import re
 import subprocess
 
-from core import atomic_write_json, find_monorepo_root
+from core import atomic_write_json, find_repo_root
 from .common import SKILL_IGNORE, die, parse_flags
+
+POLICY_PATH = "configs/release-units.json"
+POLICY_SCHEMA = "release-unit-policy/v1"
+# Location of this Skiller package; its prefix in the host root names the
+# publication-version map and the skill sources released as their own units.
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 
 
 def digest(data):
@@ -89,29 +95,75 @@ def surface(source, root, roots, *, manifest=None):
     return {"source": root, "files": files, "tree_digest": tree_digest(files)}
 
 
+def _package_rel(root):
+    """This package's POSIX prefix inside the host root ("" when it is the root)."""
+    try:
+        relative = PACKAGE_ROOT.relative_to(Path(root).resolve()).as_posix()
+    except ValueError:
+        return ""
+    return "" if relative == "." else relative
+
+
+def _in_package(relative, root):
+    prefix = _package_rel(root)
+    return f"{prefix}/{relative}" if prefix else relative
+
+
+def _checked_policy(value):
+    if not isinstance(value, dict) or value.get("schema_version") != POLICY_SCHEMA:
+        raise ValueError("RELEASE_UNIT_POLICY_INVALID")
+    return value
+
+
+def _worktree_policy(root):
+    """The host's current policy file, the authority for layout a historical ref lacks."""
+    path = Path(root) / POLICY_PATH
+    if not path.is_file():
+        return None
+    return _checked_policy(json.loads(path.read_text(encoding="utf-8")))
+
+
 def _release_unit_policy(source):
     """Return the independent version owner for every release plugin unit.
 
-    Historical refs predate the explicit policy file.  The fallback is the same
-    stable ownership rule so old releases remain comparable without becoming an
-    authority for the current expected version.
+    Historical refs predate the explicit policy file.  They use the host's
+    `legacy_policy` from the current working tree: the same stable ownership rule,
+    so old releases remain comparable without becoming an authority for the
+    current expected version.
     """
-    path = "configs/release-units.json"
-    if source.exists(path):
-        value = source.json(path)
-        if value.get("schema_version") != "release-unit-policy/v1":
-            raise ValueError("RELEASE_UNIT_POLICY_INVALID")
-        return value
-    return {
-        "schema_version": "release-unit-policy/v1",
-        "plugins": {
-            "task": {"version_owner": "umbrella", "required_providers": ["claude-code", "codex", "grok"]},
-            "maind": {"version_owner": "package", "package": "maind", "required_providers": ["claude-code"]},
-            "analyst": {"version_owner": "package", "package": "analyst", "required_providers": ["claude-code"]},
-            "harness": {"version_owner": "package", "package": "harness", "required_providers": ["claude-code"]},
-        },
-        "default_plugin_version_owner": "skiller-publication-map",
-    }
+    if source.exists(POLICY_PATH):
+        return _checked_policy(source.json(POLICY_PATH))
+    current = _worktree_policy(source.root)
+    legacy = current.get("legacy_policy") if current else None
+    if legacy is None:
+        raise ValueError("RELEASE_UNIT_POLICY_MISSING")
+    return _checked_policy(legacy)
+
+
+def _layout(source, policy, name, key):
+    """Layout field `key` of plugin rule `name`: the ref's policy, else the host's
+    current policy (`plugins`, then `legacy_policy`).  Older policy files predate
+    layout fields; the current host is the same authority the code used to hardcode."""
+    rule = policy.get("plugins", {}).get(name, {})
+    if key in rule:
+        return rule[key]
+    current = _worktree_policy(source.root) or {}
+    for candidate in (current, current.get("legacy_policy") or {}):
+        rule = candidate.get("plugins", {}).get(name, {})
+        if key in rule:
+            return rule[key]
+    return None
+
+
+def _package_units(source, policy):
+    """Runtime package units {id: path}: the ref's policy, else the host's current one."""
+    units = policy.get("package_units")
+    if units is None:
+        units = (_worktree_policy(source.root) or {}).get("package_units", {})
+    if not isinstance(units, dict) or not all(
+            isinstance(path, str) and path for path in units.values()):
+        raise ValueError("RELEASE_UNIT_POLICY_INVALID: package_units")
+    return units
 
 
 def _expected_plugin_version(source, policy, name, umbrella_version):
@@ -120,16 +172,18 @@ def _expected_plugin_version(source, policy, name, umbrella_version):
     if owner == "umbrella":
         return umbrella_version, "umbrella"
     if owner == "package":
-        package = rule.get("package", name)
-        package_path = f"packages/{package}/package.json"
+        path = _layout(source, policy, name, "path")
+        if not isinstance(path, str) or not path:
+            raise ValueError(f"RELEASE_UNIT_POLICY_INVALID: {name}: path missing")
+        package_path = f"{path}/package.json"
         return source.json(package_path)["version"], package_path
     if owner == "explicit":
         expected = rule.get("expected_version")
         if not isinstance(expected, str) or not expected:
             raise ValueError(f"RELEASE_UNIT_POLICY_INVALID: {name}: explicit version missing")
-        return expected, "configs/release-units.json"
+        return expected, POLICY_PATH
     if owner == "skiller-publication-map":
-        path = "packages/skiller/configs/publication-versions.json"
+        path = _in_package("configs/publication-versions.json", source.root)
         versions = source.json(path)
         expected = versions.get("units", {}).get(name, versions["default_unit_version"])
         return expected, path
@@ -191,10 +245,10 @@ def build(root, tag=None, *, ref=None):
             providers["codex-native"] = surface(source, codex_root, ["."],
                                                   manifest=".codex-plugin/plugin.json")
             provider_versions["codex"] = manifest["version"]
-            # Grok installs the Task package itself and discovers its native
-            # slash commands from `commands/`.  It is a separate native
-            # delivery surface, even though it shares the Task package root.
-            if name == "task":
+            # A `grok_native` plugin is installed by Grok as the package itself,
+            # which discovers its native slash commands from `commands/`.  It is a
+            # separate native delivery surface sharing the plugin's package root.
+            if _layout(source, policy, name, "grok_native") is True:
                 providers["grok"] = surface(source, codex_root, ["commands"],
                                              manifest=".claude-plugin/plugin.json")
                 provider_versions["grok"] = manifest["version"]
@@ -209,7 +263,7 @@ def build(root, tag=None, *, ref=None):
                 declaration = source.json(claude_root + "/" + claude_manifest)
                 if declaration.get("version"):
                     provider_versions["claude-code"] = declaration["version"]
-                if claude_root.startswith("packages/skiller/skills/"):
+                if claude_root.startswith(_in_package("skills/", source.root)):
                     roots = ["."]
                 else:
                     roots = ["lib", "scripts", "references", "configs", "runtime"]
@@ -230,8 +284,7 @@ def build(root, tag=None, *, ref=None):
                           "required_providers", []),
                       "provider_versions": provider_versions, "providers": providers,
                       "tree_digest": tree_digest({p: s["tree_digest"] for p, s in providers.items()})})
-    for package in ("skiller", "harness", "maind", "analyst"):
-        package_root = "packages/" + package
+    for package, package_root in sorted(_package_units(source, policy).items()):
         metadata = source.json(package_root + "/package.json")
         runtime = surface(source, package_root, ["lib", "bin", "scripts", "configs", "install.sh", "package.json"])
         units.append({"id": "package." + package, "version": metadata["version"],
@@ -240,7 +293,7 @@ def build(root, tag=None, *, ref=None):
                       "required_providers": [], "provider_versions": {},
                       "providers": {"runtime": runtime}, "tree_digest": runtime["tree_digest"]})
     return {"schema_version": "release-attestation/v1",
-            "version_policy": {"source": "configs/release-units.json",
+            "version_policy": {"source": POLICY_PATH,
                                "digest": digest(json.dumps(policy, sort_keys=True,
                                                            separators=(",", ":")).encode())},
             "umbrella": {"version": version, "tag": "v" + version, "date": date},
@@ -286,7 +339,7 @@ def cmd_attest(env, argv):
     if opts["help"]:
         print("skiller attest [--release vX.Y.Z] [--previous vX.Y.Z] [--check]")
         return
-    root = find_monorepo_root(env.root) or env.root
+    root = find_repo_root(env.root) or env.root
     try:
         value = build(root, opts["release"])
         path = root / "releases" / (value["umbrella"]["tag"] + ".json")
@@ -305,7 +358,7 @@ def cmd_attest(env, argv):
 
 def cmd_version(env, argv):
     opts = parse_flags(argv, {"--json": "bool"})
-    root = find_monorepo_root(env.root) or env.root
+    root = find_repo_root(env.root) or env.root
     value = build(root)
     result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
     value["umbrella"]["commit"] = result.stdout.strip() or "unknown"

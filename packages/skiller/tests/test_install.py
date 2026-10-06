@@ -1,18 +1,61 @@
-"""Basic machine installation regressions Codex-plugins."""
+"""Basic machine installation regressions: Codex and Grok plugins come from the host config.
 
+The installer runs from a copy of this package nested in a synthetic host repository,
+so host discovery (Git root -> configs/skiller-host.json) is the real one. Fake `codex`
+and `grok` binaries first in PATH log their argv; the machine CLIs are never touched.
+"""
+
+import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
+import core
+
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-MONOREPO_ROOT = PACKAGE_ROOT.parents[1]
-INSTALLER = PACKAGE_ROOT / "install.sh"
+CORE_PARENT = Path(core.__file__).resolve().parents[1]
+HOST_CONFIG = {
+    "schema_version": 1,
+    "default_command_plugins": ["plugin-a"],
+    "machine_plugins": {"grok": [{"name": "plugin-a", "path": "vendor/plugin-a",
+                                  "holds": ["vendor/plugin-a/adapters/grok/hold"]}]},
+}
+
+
+def _write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(value if isinstance(value, str) else json.dumps(value), encoding="utf-8")
 
 
 class InstallScriptCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temp_class = tempfile.TemporaryDirectory()
+        cls.host = Path(cls.temp_class.name) / "host"
+        package = cls.host / "vendor" / "skiller"
+        ignore = shutil.ignore_patterns("__pycache__")
+        for folder in ("bin", "lib", "configs"):
+            shutil.copytree(PACKAGE_ROOT / folder, package / folder, ignore=ignore)
+        shutil.copy2(PACKAGE_ROOT / "install.sh", package / "install.sh")
+        cls.installer = package / "install.sh"
+        subprocess.run(["git", "init", "-q", str(cls.host)], check=True)
+        _write(cls.host / ".agents/plugins/marketplace.json", {"name": "swissknifeman", "plugins": []})
+        _write(cls.host / "vendor/plugin-a/.claude-plugin/plugin.json", {"name": "plugin-a"})
+        _write(cls.host / "vendor/plugin-a/adapters/grok/hold/.grok-plugin/plugin.json", {"name": "hold"})
+        cls.set_host(HOST_CONFIG)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temp_class.cleanup()
+
+    @classmethod
+    def set_host(cls, config):
+        _write(cls.host / "configs/skiller-host.json", config)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
@@ -23,6 +66,7 @@ class InstallScriptCase(unittest.TestCase):
         self.grok_log = self.root / "grok.log"
         self.home.mkdir()
         self.fake_bin.mkdir()
+        self.addCleanup(self.set_host, HOST_CONFIG)
 
         codex = self.fake_bin / "codex"
         codex.write_text(
@@ -42,7 +86,7 @@ class InstallScriptCase(unittest.TestCase):
             "  if [[ \"$*\" == plugin\\ marketplace\\ add* ]]; then\n"
             "    echo \"Error: Marketplace source already configured: dummy\" >&2\n"
             "  else\n"
-            "    echo \"Error: repo 'task-199de6ad' already installed\" >&2\n"
+            "    echo \"Error: repo 'plugin-a-199de6ad' already installed\" >&2\n"
             "  fi\n"
             "  exit 1\n"
             "fi\n",
@@ -53,70 +97,54 @@ class InstallScriptCase(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def run_installer(self, *args):
-        env = os.environ.copy()
+    def run_installer(self, *args, **extra_env):
+        env = {k: v for k, v in os.environ.items()
+               if k not in {"SKILLER_HOST_CONFIG", "SKILLER_MARKETPLACE_ROOT"}}
         env.update({
             "HOME": str(self.home),
             "PATH": f"{self.fake_bin}:{env['PATH']}",
+            "PYTHONPATH": str(CORE_PARENT),
             "CODEX_STUB_LOG": str(self.log),
             "GROK_STUB_LOG": str(self.grok_log),
+            **extra_env,
         })
         return subprocess.run(
-            ["bash", str(INSTALLER), "--bin-dir", str(self.install_bin), *args],
-            cwd=MONOREPO_ROOT,
+            ["bash", str(self.installer), "--bin-dir", str(self.install_bin), *args],
+            cwd=self.host,
             env=env,
             capture_output=True,
             text=True,
             check=False,
         )
 
-    def test_default_install_adds_core_and_task_codex_plugins(self):
+    def lines(self, path):
+        return path.read_text(encoding="utf-8").splitlines()
+
+    def test_default_install_adds_core_and_host_command_plugins(self):
         result = self.run_installer()
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(
-            self.log.read_text(encoding="utf-8").splitlines(),
-            [
-                f"plugin marketplace add {MONOREPO_ROOT}",
-                "plugin add core@swissknifeman",
-                "plugin add task@swissknifeman",
-            ],
-        )
-        self.assertIn("Codex plugins installed: core task", result.stdout)
-        self.assertEqual(
-            self.grok_log.read_text(encoding="utf-8").splitlines(),
-            [
-                f"plugin marketplace add {MONOREPO_ROOT}",
-                f"plugin install {MONOREPO_ROOT}/packages/task --trust",
-                f"plugin install {MONOREPO_ROOT}/packages/task/adapters/grok/prefix-hold --trust",
-            ],
-        )
-        self.assertIn("Grok plugins installed: task prefix-hold", result.stdout)
-        self.assertNotIn("plugin install " + str(MONOREPO_ROOT) + " --trust", result.stdout)
+        self.assertEqual(self.lines(self.log), [
+            f"plugin marketplace add {self.host}",
+            "plugin add core@swissknifeman",
+            "plugin add plugin-a@swissknifeman",
+        ])
+        self.assertIn("Codex plugins installed: core plugin-a", result.stdout)
+        self.assertEqual(self.lines(self.grok_log), [
+            f"plugin marketplace add {self.host}",
+            f"plugin install {self.host}/vendor/plugin-a --trust",
+            f"plugin install {self.host}/vendor/plugin-a/adapters/grok/hold --trust",
+        ])
+        self.assertIn("Grok plugins installed: plugin-a hold", result.stdout)
+        self.assertNotIn("plugin install " + str(self.host) + " --trust", result.stdout)
 
     def test_repeat_grok_install_treats_already_present_as_success(self):
         result = self.run_installer()
         self.assertEqual(result.returncode, 0, result.stderr)
-        env_fail = os.environ.copy()
-        env_fail.update({
-            "HOME": str(self.home),
-            "PATH": f"{self.fake_bin}:{env_fail['PATH']}",
-            "CODEX_STUB_LOG": str(self.log),
-            "GROK_STUB_LOG": str(self.grok_log),
-            "GROK_STUB_FAIL": "1",
-        })
         self.grok_log.write_text("", encoding="utf-8")
-        result = subprocess.run(
-            ["bash", str(INSTALLER), "--bin-dir", str(self.install_bin),
-             "--no-codex-plugins"],
-            cwd=MONOREPO_ROOT,
-            env=env_fail,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        result = self.run_installer("--no-codex-plugins", GROK_STUB_FAIL="1")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Grok plugins installed: task prefix-hold", result.stdout)
+        self.assertIn("Grok plugins installed: plugin-a hold", result.stdout)
         self.assertNotIn("ERROR: grok", result.stderr)
 
     def test_no_grok_plugins_is_an_explicit_opt_out(self):
@@ -125,7 +153,7 @@ class InstallScriptCase(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.grok_log.exists())
         self.assertIn("Grok plugins: pass (--no-grok-plugins)", result.stdout)
-        self.assertIn("Codex plugins installed: core task", result.stdout)
+        self.assertIn("Codex plugins installed: core plugin-a", result.stdout)
 
     def test_no_codex_plugins_is_an_explicit_opt_out(self):
         result = self.run_installer("--no-codex-plugins")
@@ -133,46 +161,52 @@ class InstallScriptCase(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.log.exists())
         self.assertIn("Codex plugins: pass (--no-codex-plugins)", result.stdout)
-        self.assertIn("Grok plugins installed: task prefix-hold", result.stdout)
+        self.assertIn("Grok plugins installed: plugin-a hold", result.stdout)
 
     def test_explicit_codex_plugin_survives_default_opt_out(self):
         result = self.run_installer(
             "--no-codex-plugins", "--codex-plugin", "ai")
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(
-            self.log.read_text(encoding="utf-8").splitlines(),
-            [
-                f"plugin marketplace add {MONOREPO_ROOT}",
-                "plugin add ai@swissknifeman",
-            ],
-        )
+        self.assertEqual(self.lines(self.log), [
+            f"plugin marketplace add {self.host}",
+            "plugin add ai@swissknifeman",
+        ])
         self.assertIn("Codex plugins installed: ai", result.stdout)
 
-    def test_umbrella_installer_forwards_plugin_opt_outs_only_to_skiller(self):
-        env = os.environ.copy()
-        env.update({
-            "HOME": str(self.home),
-            "PATH": f"{self.fake_bin}:{env['PATH']}",
-            "CODEX_STUB_LOG": str(self.log),
-            "GROK_STUB_LOG": str(self.grok_log),
-        })
-        result = subprocess.run(
-            ["bash", str(MONOREPO_ROOT / "install.sh"),
-             "--bin-dir", str(self.install_bin),
-             "--no-codex-plugins", "--no-grok-plugins"],
-            cwd=MONOREPO_ROOT,
-            env=env,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+    def test_marketplace_root_override_serves_codex_and_grok(self):
+        market = self.root / "market"
+        _write(market / ".agents/plugins/marketplace.json", {"plugins": []})
+        result = self.run_installer(SKILLER_MARKETPLACE_ROOT=str(market))
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse(self.log.exists())
+        self.assertEqual(self.lines(self.log)[0], f"plugin marketplace add {market}")
+        self.assertEqual(self.lines(self.grok_log)[0], f"plugin marketplace add {market}")
+        # Plugin paths stay relative to the host root.
+        self.assertEqual(self.lines(self.grok_log)[1],
+                         f"plugin install {self.host}/vendor/plugin-a --trust")
+
+    def test_empty_host_installs_core_only_and_no_grok_plugin(self):
+        self.set_host({"schema_version": 1})
+        result = self.run_installer()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.lines(self.log), [
+            f"plugin marketplace add {self.host}",
+            "plugin add core@swissknifeman",
+        ])
         self.assertFalse(self.grok_log.exists())
-        self.assertIn("Codex plugins: pass (--no-codex-plugins)", result.stdout)
-        self.assertIn("Grok plugins: pass (--no-grok-plugins)", result.stdout)
+        self.assertIn("INFO: no host grok plugins", result.stdout)
+
+    def test_missing_grok_plugin_fails_before_any_grok_call(self):
+        self.set_host({"schema_version": 1, "machine_plugins": {"grok": [
+            {"name": "plugin-z", "path": "vendor/plugin-z"}]}})
+        result = self.run_installer("--no-codex-plugins")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(f"ERROR: Grok plugin plugin-z not found: {self.host}/vendor/plugin-z",
+                      result.stderr)
+        self.assertFalse(self.grok_log.exists())
 
 
 if __name__ == "__main__":

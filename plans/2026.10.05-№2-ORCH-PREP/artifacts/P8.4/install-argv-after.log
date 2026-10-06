@@ -1,0 +1,69 @@
+## default rc=0
+argv: codex plugin marketplace add <ROOT>
+argv: codex plugin add core@swissknifeman
+argv: codex plugin add task@swissknifeman
+argv: grok plugin marketplace add <ROOT>
+argv: grok plugin install <ROOT>/packages/task --trust
+argv: grok plugin install <ROOT>/packages/task/adapters/grok/prefix-hold --trust
+stdout: Installed: <TMP>/bin/skiller -> <ROOT>/packages/skiller/bin/skiller
+stdout: WARN: <TMP>/bin not in PATH. Add:
+stdout:   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+stdout: Check: skiller doctor
+stdout: Codex plugins installed: core task
+stdout: Grok plugins installed: task prefix-hold
+## no-codex rc=0
+argv: grok plugin marketplace add <ROOT>
+argv: grok plugin install <ROOT>/packages/task --trust
+argv: grok plugin install <ROOT>/packages/task/adapters/grok/prefix-hold --trust
+stdout: Installed: <TMP>/bin/skiller -> <ROOT>/packages/skiller/bin/skiller
+stdout: WARN: <TMP>/bin not in PATH. Add:
+stdout:   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+stdout: Check: skiller doctor
+stdout: Codex plugins: pass (--no-codex-plugins)
+stdout: Grok plugins installed: task prefix-hold
+## no-grok rc=0
+argv: codex plugin marketplace add <ROOT>
+argv: codex plugin add core@swissknifeman
+argv: codex plugin add task@swissknifeman
+stdout: Installed: <TMP>/bin/skiller -> <ROOT>/packages/skiller/bin/skiller
+stdout: WARN: <TMP>/bin not in PATH. Add:
+stdout:   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+stdout: Check: skiller doctor
+stdout: Codex plugins installed: core task
+stdout: Grok plugins: pass (--no-grok-plugins)
+## explicit-ai rc=0
+argv: codex plugin marketplace add <ROOT>
+argv: codex plugin add ai@swissknifeman
+argv: grok plugin marketplace add <ROOT>
+argv: grok plugin install <ROOT>/packages/task --trust
+argv: grok plugin install <ROOT>/packages/task/adapters/grok/prefix-hold --trust
+stdout: Installed: <TMP>/bin/skiller -> <ROOT>/packages/skiller/bin/skiller
+stdout: WARN: <TMP>/bin not in PATH. Add:
+stdout:   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+stdout: Check: skiller doctor
+stdout: Codex plugins installed: ai
+stdout: Grok plugins installed: task prefix-hold
+## extra-ai rc=0
+argv: codex plugin marketplace add <ROOT>
+argv: codex plugin add core@swissknifeman
+argv: codex plugin add task@swissknifeman
+argv: codex plugin add ai@swissknifeman
+argv: grok plugin marketplace add <ROOT>
+argv: grok plugin install <ROOT>/packages/task --trust
+argv: grok plugin install <ROOT>/packages/task/adapters/grok/prefix-hold --trust
+stdout: Installed: <TMP>/bin/skiller -> <ROOT>/packages/skiller/bin/skiller
+stdout: WARN: <TMP>/bin not in PATH. Add:
+stdout:   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+stdout: Check: skiller doctor
+stdout: Codex plugins installed: core task ai
+stdout: Grok plugins installed: task prefix-hold
+## grok-already rc=0
+argv: grok plugin marketplace add <ROOT>
+argv: grok plugin install <ROOT>/packages/task --trust
+argv: grok plugin install <ROOT>/packages/task/adapters/grok/prefix-hold --trust
+stdout: Installed: <TMP>/bin/skiller -> <ROOT>/packages/skiller/bin/skiller
+stdout: WARN: <TMP>/bin not in PATH. Add:
+stdout:   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+stdout: Check: skiller doctor
+stdout: Codex plugins: pass (--no-codex-plugins)
+stdout: Grok plugins installed: task prefix-hold

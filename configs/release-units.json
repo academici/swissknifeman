@@ -1,26 +1,56 @@
 {
   "schema_version": "release-unit-policy/v1",
-  "_doc": "Independent version ownership for release attestation. Snapshot bytes never define the expected version.",
+  "_doc": "Independent version ownership for release attestation. Snapshot bytes never define the expected version. Optional keys within release-unit-policy/v1: plugins.<name>.path (package root of a version_owner=package plugin), plugins.<name>.grok_native (Grok installs the plugin package and serves its commands/), package_units (runtime package units id -> path), legacy_policy (the policy for historical refs without this file).",
   "plugins": {
     "task": {
       "version_owner": "umbrella",
-      "required_providers": ["claude-code", "codex", "grok"]
+      "grok_native": true,
+      "required_providers": [
+        "claude-code",
+        "codex",
+        "grok"
+      ]
     },
     "maind": {
       "version_owner": "package",
       "package": "maind",
-      "required_providers": ["claude-code"]
+      "path": "packages/maind",
+      "required_providers": [
+        "claude-code"
+      ]
     },
     "analyst": {
       "version_owner": "package",
       "package": "analyst",
-      "required_providers": ["claude-code"]
+      "path": "packages/analyst",
+      "required_providers": [
+        "claude-code"
+      ]
     },
     "harness": {
       "version_owner": "package",
       "package": "harness",
-      "required_providers": ["claude-code"]
+      "path": "packages/harness",
+      "required_providers": [
+        "claude-code"
+      ]
     }
   },
-  "default_plugin_version_owner": "skiller-publication-map"
+  "default_plugin_version_owner": "skiller-publication-map",
+  "package_units": {
+    "skiller": "packages/skiller",
+    "harness": "packages/harness",
+    "maind": "packages/maind",
+    "analyst": "packages/analyst"
+  },
+  "legacy_policy": {
+    "schema_version": "release-unit-policy/v1",
+    "plugins": {
+      "task": {"version_owner": "umbrella", "grok_native": true, "required_providers": ["claude-code", "codex", "grok"]},
+      "maind": {"version_owner": "package", "package": "maind", "path": "packages/maind", "required_providers": ["claude-code"]},
+      "analyst": {"version_owner": "package", "package": "analyst", "path": "packages/analyst", "required_providers": ["claude-code"]},
+      "harness": {"version_owner": "package", "package": "harness", "path": "packages/harness", "required_providers": ["claude-code"]}
+    },
+    "default_plugin_version_owner": "skiller-publication-map"
+  }
 }

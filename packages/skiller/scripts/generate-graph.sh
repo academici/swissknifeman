@@ -5,7 +5,7 @@
 # python-functions to compare in-memory). Left in the tree (rm blocked
 # environment policy) — safe to remove: git rm scripts/generate-graph.sh.
 #
-# Generate packages/skiller/docs/guide/graph.md (Mermaid dependency graph) from
+# Generate <package>/docs/guide/graph.md (Mermaid dependency graph) from
 # skills.json. Reads requires/produces_for fields (registry v5+); run after
 # 'skiller registry' (the registry command calls this automatically).
 set -euo pipefail
@@ -20,7 +20,7 @@ root = Path(sys.argv[1])  # package root (skills.json here)
 registry = json.loads((root / "skills.json").read_text(encoding="utf-8"))
 skills = registry["skills"]
 
-# Docks skiller live in the package itself (packages/skiller/docs/guide) — looking up
+# Docks skiller live in the package itself (<package>/docs/guide) — looking up
 # closest directory with docs/guide (is the package itself; fallback — root).
 def _docs_root(p):
     for cand in (p, *p.parents):

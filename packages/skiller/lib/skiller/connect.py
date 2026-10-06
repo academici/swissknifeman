@@ -14,7 +14,7 @@ from core.provider.artifact import sha256_digest
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, is_within, parse_flags, warn)
 from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
-                     DEFAULT_COMMAND_PLUGINS, all_buckets,
+                     all_buckets, default_command_plugins,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
@@ -103,8 +103,9 @@ def prepare_connect_selection(env, target, opts, config):
         profile_source = "plugins"
 
     buckets = all_buckets(env)
+    command_plugins = default_command_plugins()
     known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
-                     | set(DEFAULT_COMMAND_PLUGINS))
+                     | set(command_plugins))
     core_added = []
     if not opts.get("no_core") and CORE_PLUGIN not in plugins:
         if _marketplace_declares(env, CORE_PLUGIN):
@@ -121,7 +122,7 @@ def prepare_connect_selection(env, target, opts, config):
              "for complete general use --no-core")
 
     cmd_added = []
-    for cp in DEFAULT_COMMAND_PLUGINS:
+    for cp in command_plugins:
         if cp not in plugins and _marketplace_declares(env, cp):
             cmd_added.append(cp)
     plugins = list(plugins) + cmd_added
@@ -222,7 +223,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
         print(f"CORE:     {CORE_PLUGIN} (lightweight token-saving core, {len(CORE_SKILLS)} skills "
               f"instead of buckets general+oss-dev; --no-core disables)")
     if cmd_added:
-        print(f"COMMANDS: {' '.join(cmd_added)} (intent commands /task:*, are distributed by default; "
+        print(f"COMMANDS: {' '.join(cmd_added)} (host command plugins, are distributed by default; "
               f"disable pointwise - enabledPlugins[...]=false)")
 
     list_only = opts.get("list", False)

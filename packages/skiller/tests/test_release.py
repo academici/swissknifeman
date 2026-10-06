@@ -4,19 +4,23 @@ Unit tests use synthetic data without Git. Integration tests run against a
 synthetic temporary Git repository and never modify the root CHANGELOG.md.
 """
 import json
+import os
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from skiller.common import Env
 from skiller.release import (bump_version, classify_bump, cmd_release,
                              read_unreleased_section, unreleased_is_empty)
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # packages/skiller
-MONOREPO_ROOT = PACKAGE_ROOT.parents[1]              # Swissknifeman repository root.
+from skiller.host import clear_host_cache
+
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # the Skiller package
+HOST_ROOT = PACKAGE_ROOT.parents[1]                 # host repository root, when nested
 SKILLER_BIN = PACKAGE_ROOT / "bin" / "skiller"
-SWISSKNIFEMAN_BIN = MONOREPO_ROOT / "bin" / "swissknifeman"
+SWISSKNIFEMAN_BIN = HOST_ROOT / "bin" / "swissknifeman"
 
 
 class ClassifyBumpCase(unittest.TestCase):
@@ -152,8 +156,8 @@ class CmdReleaseCase(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         _init_repo(self.root)
-        # Mirror `skiller <package-root> release`: find_monorepo_root climbs via
-        # `packages/` or `core/`; here root is the temporary monorepo root.
+        # Mirror `skiller <package-root> release`: the release root is the Git
+        # root above the package; here it is the temporary repository itself.
         self.env = Env(self.root, home=self.root / "home")
 
     def tearDown(self):
@@ -212,14 +216,37 @@ class CmdReleaseCase(unittest.TestCase):
         section = text.split("## [Unreleased]", 1)[1].split("## [0.8.0]", 1)[0]
         self.assertNotIn("- stub", section)
 
-    def test_without_dry_run_updates_task_catalog_version_when_present(self):
-        routing = self.root / "packages/task/configs/command-routing.json"
+    def _with_host(self, config):
+        path = self.root / "host.json"
+        path.write_text(json.dumps(config), encoding="utf-8")
+        clear_host_cache()
+        self.addCleanup(clear_host_cache)
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(path)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_without_dry_run_updates_host_version_files_when_present(self):
+        self._with_host({"schema_version": 1, "version_files": [
+            {"path": "vendor/plugin-a/configs/routing.json", "key": "plugin_version"},
+            {"path": "vendor/plugin-b/missing.json", "key": "version"}]})
+        routing = self.root / "vendor/plugin-a/configs/routing.json"
         routing.parent.mkdir(parents=True)
-        routing.write_text('{\n  "plugin_version": "0.7.1"\n}\n', encoding="utf-8")
-        _commit(self.root, "fix: task release")
+        routing.write_text('{\n  "plugin_version": "0.7.1",\n  "other": 1\n}\n', encoding="utf-8")
+        _commit(self.root, "fix: plugin release")
         exc, _out = _run_cli(cmd_release, self.env, [])
         self.assertIsNone(exc)
-        self.assertEqual("0.7.2", json.loads(routing.read_text())["plugin_version"])
+        self.assertEqual({"plugin_version": "0.7.2", "other": 1}, json.loads(routing.read_text()))
+        self.assertFalse((self.root / "vendor/plugin-b/missing.json").exists())
+
+    def test_without_host_no_version_file_is_written(self):
+        self._with_host({"schema_version": 1})
+        routing = self.root / "vendor/plugin-a/configs/routing.json"
+        routing.parent.mkdir(parents=True)
+        routing.write_text('{"plugin_version": "0.7.1"}', encoding="utf-8")
+        _commit(self.root, "fix: plugin release")
+        exc, _out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        self.assertEqual('{"plugin_version": "0.7.1"}', routing.read_text())
 
     def test_git_tag_command_is_only_printed_never_executed(self):
         _commit(self.root, "feat: new feature")
@@ -231,6 +258,7 @@ class CmdReleaseCase(unittest.TestCase):
         self.assertNotIn("v0.8.0", tags)  # Tags are never created automatically.
 
 
+@unittest.skipUnless(SWISSKNIFEMAN_BIN.is_file(), "no host router (standalone)")
 class SwissknifemanReleaseFacadeCase(unittest.TestCase):
     """Root `bin/swissknifeman release` facade delegates to skiller read-only."""
 

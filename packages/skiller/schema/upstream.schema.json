@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/upstream.schema.json",
+  "$id": "urn:skiller:upstream:v1",
   "title": "skiller upstream provenance (upstream.json)",
   "description": "External provenance/derived skill next to SKILL.md. Runtime validation - scripts/validate.sh (scheme - for DX). strategy=merge describes a skill assembled from ≥2 sources (origins[]: base + supplement); his sync is MANUAL under the control of an agent.",
   "type": "object",

@@ -13,8 +13,8 @@
 #   --bin-dir DIR   link destination (default: ~/.local/bin)
 #   --force         replace a foreign file or link without prompting
 #   --codex-plugin  install additional Codex plugin NAME (repeatable)
-#   --no-codex-plugins  skip the base core and task Codex plugins
-#   --no-grok-plugins   skip the Grok task plugin
+#   --no-codex-plugins  skip the base core and host command Codex plugins
+#   --no-grok-plugins   skip the host Grok plugins
 #
 # Next - from any consuming project:
 #   skiller connect    # Claude Code (plugin marketplace)
@@ -109,9 +109,22 @@ esac
 
 echo "Check: skiller doctor"
 
-# Basic `core` + `task` — machine bootstrap Codex: after installing the umbrella
-# TASK-commands should work in any project without manual link/plugin add.
-# We take the list from the declarative CORE-policy, do not duplicate it in shell.
+# Host repository (configs/skiller-host.json): the Git root above this package; its
+# marketplace serves Codex and Grok. SKILLER_MARKETPLACE_ROOT overrides the marketplace.
+HOST_ROOT="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
+[[ -n "$HOST_ROOT" ]] || HOST_ROOT="$REPO_ROOT"
+MARKETPLACE_ROOT="${SKILLER_MARKETPLACE_ROOT:-$HOST_ROOT}"
+# The shared `core` foundation sits two levels above the package (see bin/skiller).
+CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+[[ -d "$CORE_ROOT/core" ]] || CORE_ROOT=""
+
+host_python() {  # stdin: python reading the host through skiller modules
+  PYTHONPATH="$REPO_ROOT/lib${CORE_ROOT:+:$CORE_ROOT}${PYTHONPATH:+:$PYTHONPATH}" python3 - "$REPO_ROOT"
+}
+
+# Basic `core` + host command plugins — machine bootstrap Codex: after installing the
+# umbrella, command plugins should work in any project without manual link/plugin add.
+# We take the list from the CORE-policy and the host config, do not duplicate it in shell.
 # Profile plugins remain explicit: installing them globally here would bloat
 # all Codex-sessions regardless of the project.
 if [[ "$CODEX_PLUGINS_ENABLED" == false && "$CODEX_PLUGIN_EXPLICIT" == false ]]; then
@@ -123,20 +136,17 @@ elif ! command -v codex >/dev/null 2>&1; then
   fi
   echo "INFO: codex CLI not found - basic Codex-plugins not installed"
 else
-  MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
-  [[ -f "$MONOREPO_ROOT/.agents/plugins/marketplace.json" ]] || {
-    echo "ERROR: Codex marketplace not generated: $MONOREPO_ROOT/.agents/plugins/marketplace.json" >&2
+  [[ -f "$MARKETPLACE_ROOT/.agents/plugins/marketplace.json" ]] || {
+    echo "ERROR: Codex marketplace not generated: $MARKETPLACE_ROOT/.agents/plugins/marketplace.json" >&2
     exit 1
   }
 
   policy_plugins=""
   if [[ "$CODEX_PLUGINS_ENABLED" == true ]]; then
-    policy_plugins="$(
-      PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT${PYTHONPATH:+:$PYTHONPATH}" \
-        python3 - <<'PY'
-from skiller.config import CORE_PLUGIN, DEFAULT_COMMAND_PLUGINS
+    policy_plugins="$(host_python <<'PY'
+from skiller.config import CORE_PLUGIN, default_command_plugins
 
-for plugin in (CORE_PLUGIN, *DEFAULT_COMMAND_PLUGINS):
+for plugin in (CORE_PLUGIN, *default_command_plugins()):
     print(plugin)
 PY
     )" || {
@@ -158,29 +168,61 @@ PY
     seen_codex_plugins["$plugin"]=1
   done
 
-  codex plugin marketplace add "$MONOREPO_ROOT"
+  codex plugin marketplace add "$MARKETPLACE_ROOT"
   for plugin in "${CODEX_PLUGINS[@]}"; do
     codex plugin add "$plugin@$MARKETPLACE"
   done
   echo "Codex plugins installed: ${CODEX_PLUGINS[*]}"
 fi
 
-# Grok loads Task slash commands from the installed plugin's commands/ directory.
-# Install that plugin by path. Do not install marketplace `core`: its source is
-# the monorepo root, and `grok plugin install` copies the whole directory.
-# Profile plugins stay explicit so they do not bloat every Grok session.
-# A second run exits 1 with "already configured" / "already installed"; that is success.
+# Grok loads plugin slash commands from the installed plugin's commands/ directory.
+# Install each host Grok plugin (machine_plugins.grok) by path, then its holds. Do not
+# install marketplace `core`: its source is the host root, and `grok plugin install`
+# copies the whole directory. Profile plugins stay explicit so they do not bloat every
+# Grok session. A second run exits 1 with "already configured" / "already installed";
+# that is success.
 if [[ "$GROK_PLUGINS_ENABLED" == false ]]; then
   echo "Grok plugins: pass (--no-grok-plugins)"
 elif ! command -v grok >/dev/null 2>&1; then
-  echo "INFO: grok CLI not found - task plugin not installed"
+  echo "INFO: grok CLI not found - host grok plugins not installed"
 else
-  MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
-  TASK_PLUGIN="$MONOREPO_ROOT/packages/task"
-  [[ -f "$TASK_PLUGIN/.claude-plugin/plugin.json" ]] || {
-    echo "ERROR: Grok task plugin not found: $TASK_PLUGIN" >&2
+  grok_rows="$(host_python <<'PY'
+import sys
+from pathlib import Path
+from skiller.host import load_host
+
+for plugin in load_host(Path(sys.argv[1])).machine_plugins.get("grok", ()):
+    print(f"plugin\t{plugin.name}\t{plugin.path}")
+    for hold in plugin.holds:
+        print(f"hold\t{plugin.name}\t{hold}")
+PY
+  )" || {
+    echo "ERROR: could not read host grok plugins from skiller.host" >&2
     exit 1
   }
+
+  GROK_KINDS=()
+  GROK_PATHS=()
+  GROK_LABELS=()
+  while IFS=$'\t' read -r kind name relative; do
+    [[ -n "$kind" ]] || continue
+    path="$HOST_ROOT/$relative"
+    if [[ "$kind" == plugin ]]; then
+      [[ -f "$path/.claude-plugin/plugin.json" ]] || {
+        echo "ERROR: Grok plugin $name not found: $path" >&2
+        exit 1
+      }
+      GROK_LABELS+=("$name")
+    else
+      [[ -f "$path/.grok-plugin/plugin.json" ]] || {
+        echo "ERROR: Grok plugin $name hold not found: $path" >&2
+        exit 1
+      }
+      GROK_LABELS+=("$(basename "$path")")
+    fi
+    GROK_KINDS+=("$kind")
+    GROK_PATHS+=("$path")
+  done <<< "$grok_rows"
 
   grok_tolerate() {
     local label="$1"
@@ -203,17 +245,20 @@ else
     exit 1
   }
 
-  HOLD_PLUGIN="$MONOREPO_ROOT/packages/task/adapters/grok/prefix-hold"
-  [[ -f "$HOLD_PLUGIN/.grok-plugin/plugin.json" ]] || {
-    echo "ERROR: Grok task prefix hold not found: $HOLD_PLUGIN" >&2
-    exit 1
-  }
-
-  grok_tolerate "marketplace add" grok plugin marketplace add "$MONOREPO_ROOT"
-  grok_tolerate "plugin install" grok plugin install "$TASK_PLUGIN" --trust
-  # Grok qualifies a plugin command as /task:<name> only when that bare name
-  # also exists elsewhere. prefix-hold reserves those names. design/review
-  # already collide with bundled skills; the hold covers every Task command.
-  grok_tolerate "prefix-hold install" grok plugin install "$HOLD_PLUGIN" --trust
-  echo "Grok plugins installed: task prefix-hold"
+  if [[ ${#GROK_PATHS[@]} -eq 0 ]]; then
+    echo "INFO: no host grok plugins"
+  else
+    grok_tolerate "marketplace add" grok plugin marketplace add "$MARKETPLACE_ROOT"
+    # Grok qualifies a plugin command as /<plugin>:<name> only when that bare
+    # name also exists elsewhere. A hold plugin reserves those names, so it is
+    # installed right after the plugin it covers.
+    for i in "${!GROK_PATHS[@]}"; do
+      if [[ "${GROK_KINDS[$i]}" == plugin ]]; then
+        grok_tolerate "plugin install" grok plugin install "${GROK_PATHS[$i]}" --trust
+      else
+        grok_tolerate "hold install" grok plugin install "${GROK_PATHS[$i]}" --trust
+      fi
+    done
+    echo "Grok plugins installed: ${GROK_LABELS[*]}"
+  fi
 fi

@@ -33,7 +33,7 @@
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
-# PACKAGE Root (packages/skiller): here skills/, lib/, scripts/, buckets.json.
+# PACKAGE Root (the Skiller package): here skills/, lib/, scripts/, buckets.json.
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
@@ -62,7 +62,7 @@ esac
 
 # Root monorepo (two levels above the package) gives the package `core` (general foundation).
 # Fallback on standalone-layout: if directory core is not nearby - the path is not added.
-# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
+# (fixed here as ../.. rather than a Python repo-root search, because core
 #  not yet PYTHONPATH — conscious take bash-sides.)
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""

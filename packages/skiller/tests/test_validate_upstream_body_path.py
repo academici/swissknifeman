@@ -1,5 +1,5 @@
 """P7.3 (thin-navigator): scripts/validate.sh body_path-gates - isolated, without
-touching the present packages/skiller.
+touching the present Skiller package.
 
 scripts/validate.sh — bash-wrap around python-heredoc'a (same reason as
 test_update_upstreams.py: not lib/skiller-module, honestly tested only by real
@@ -8,8 +8,8 @@ validate.sh next to MINIMUM synthetic skills/. Such a root is intentionally NOT
 contains buckets.json/skills.json/marketplace.json etc. - sections validate.sh,
 who need them, in their absence they gently hoard ERROR (do not fall exception), a
 python-heredoc does almost immediately sys.exit(1) due to non-empty errors[] — bash-sections
-11+ (registry --check, full test.sh, budget --check-core) to real
-packages/skiller are NOT received at all (and therefore cannot recursively restart
+11+ (registry --check, full test.sh, budget --check-core) to the real
+package are NOT received at all (and therefore cannot recursively restart
 the same test suite). Checking for non-general exit-code (it is expectedly non-zero due to
 missing registry environment), and SPECIFIC lines about body_path in stdout."""
 import hashlib

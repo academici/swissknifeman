@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknife.schema.json",
+  "$id": "urn:skiller:swissknife:v1",
   "title": "swissknifeman project config (.swissknife.json)",
   "description": "Easy project config: selecting buckets/exceptions/profile for channels connect (bucket-granular) and legacy vendor. Vendor-mode `skiller sync` uses a separate, extended .swissknifeman/config.json (see swissknifeman-config.schema.json). Keys are kept in sync with CONFIG_KEYS (lib/skiller/common.py) — gate tests/test_schema.py and skiller doctor.",
   "type": "object",
@@ -105,7 +105,7 @@
     },
     "policy_profile": {
       "type": "string",
-      "description": "Expected policy-settings profile Claude Code: harness doctor --settings checks the effective configuration of layers against the profile configs/claude-code/policy/<name>.json (e.g. max-permissive, base). Drift = find. The home of the declaration is here, not in.claude/settings.json."
+      "description": "Expected policy-settings profile Claude Code: the host settings doctor (`skiller doctor --settings`) checks the effective configuration of layers against the profile configs/claude-code/policy/<name>.json (e.g. max-permissive, base). Drift = find. The home of the declaration is here, not in.claude/settings.json."
     }
   }
 }

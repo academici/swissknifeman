@@ -5,7 +5,7 @@ codex 1.0.6
 Component inventory
   Skills (11)  adversarial-review, cancel, codex-cli-runtime, codex-result-handling, gpt-5-4-prompting, rescue, result, review, setup, status, transfer
   Agents (1)  codex-rescue
-  Hooks (3)  SessionStart, SessionEnd, Stop  (harness-only — no model context cost)
+  Hooks (3)  SessionStart, SessionEnd, Stop  (runtime-only — no model context cost)
   MCP servers (0)
   LSP servers (0)
 

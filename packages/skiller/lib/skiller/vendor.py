@@ -9,7 +9,7 @@ from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions, die,
                      is_within, is_within_lexical, parse_flags,
                      parse_frontmatter_fields, resolve_requires_bfs,
                      safe_copy_skill, sanitize, warn, write_skill_manifest)
-from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
+from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples, known_command_plugins,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
@@ -124,7 +124,7 @@ def do_vendor(env, target, opts, register=True):
 
     known = all_buckets(env)
     for b in buckets:
-        if b not in known and b not in {"core", "task"}:
+        if b not in known and b not in known_command_plugins():
             die(f"unknown bucket: {b}")
     buckets = [b for b in buckets if b in known]
 

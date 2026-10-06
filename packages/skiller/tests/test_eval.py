@@ -17,9 +17,6 @@ from skiller.quality import eval as ev
 import tests.fixtures as fx
 
 FIXTURES_DATA = Path(__file__).resolve().parent / "fixtures_data"
-_TASK_LIB = Path(__file__).resolve().parents[2] / "task" / "lib"
-if _TASK_LIB.is_dir():
-    sys.path.insert(0, str(_TASK_LIB))
 
 
 class GradeAssertionCase(unittest.TestCase):

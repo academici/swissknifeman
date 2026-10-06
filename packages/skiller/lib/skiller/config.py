@@ -14,6 +14,7 @@ from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
 
 from .common import (AGENT_DEFAULTS, confirm, die,
                      parse_frontmatter_fields, warn)
+from .host import load_host
 
 # CORE-distribution policy: token-saving skills that swissknifeman puts in
 # EVERY project by default (see deep_analysis §5–§6). Channels of different granularities:
@@ -34,7 +35,6 @@ def _load_core_policy():
         "resident_budget_target": 750,
         "core_plugin": "core",
         "core_buckets": ["general", "oss-dev"],
-        "default_command_plugins": ["task"],
         "default_exclude": ["system/shared-memory", "system/cross-project-coordinator"],
     }
     try:
@@ -70,13 +70,22 @@ RESIDENT_BUDGET_TARGET = _CORE_POLICY["resident_budget_target"]
 # prompts to remove (otherwise dual boot). Vendor-channel is still taking CORE_SKILLS file by file.
 CORE_BUCKETS = list(_CORE_POLICY["core_buckets"])
 # Command plugins (NOT skill buckets), which connect is included in EVERY project by default.
-# `task` — intent commands /task:design|dev|review|research|fix (package task, commands-only): distributed
-# everywhere, because. intent-router policy offers exactly them - without the plugin the offer will not resolve.
+# The host repository names them (host config `default_command_plugins`); an empty host has none.
 # Like CORE_PLUGIN: are declared in marketplace and are silently skipped on the old marketplace / in the test registry
 # (there marketplace.json = {}). Codex publishes commands as skills, so their descriptions
 # are included in it listing budget. Disable point by point - enabledPlugins[...]=false
 # (connect respects explicit false, as for buckets).
-DEFAULT_COMMAND_PLUGINS = list(_CORE_POLICY["default_command_plugins"])
+# Lazy, not import-time: a broken host config must not break `skiller --help`/`version`.
+def default_command_plugins():
+    """Command plugins from the host of this Skiller install (empty host -> [])."""
+    return list(load_host(Path(__file__).resolve().parents[2]).default_command_plugins)
+
+
+def known_command_plugins():
+    """Plugin names accepted beside skill buckets: CORE_PLUGIN and the host command plugins."""
+    return {CORE_PLUGIN, *default_command_plugins()}
+
+
 DEFAULT_EXCLUDE = list(_CORE_POLICY["default_exclude"])
 # Minimum safe set for UNRECOGNIZED project type (autodetect → standalone).
 # DO NOT expand `["*"]` (= all buckets) default is «soulless dump of everything». Explicit

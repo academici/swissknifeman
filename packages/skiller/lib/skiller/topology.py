@@ -14,7 +14,9 @@ import os
 import shutil
 import sys
 
-from .common import (atomic_write_json, die, find_monorepo_root, now_iso,
+from core import find_repo_root
+
+from .common import (atomic_write_json, die, now_iso,
                      parse_flags, warn)
 from .state import load_db
 
@@ -121,7 +123,7 @@ def _cmd_init(env, opts):
 
     brain = default_for("brain", "brain", detect_brain(env))
     skman = default_for("swissknifeman", "swissknifeman",
-                        str(find_monorepo_root(env.root) or env.root))
+                        str(find_repo_root(env.root) or env.root))
     base = default_for("projects_base", "projects_base", detect_projects_base(env))
 
     interactive = sys.stdin.isatty() and not opts.get("yes")

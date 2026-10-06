@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.7",
   "title": "Review P6: независимая проверка Read API",
-  "status": "todo",
+  "status": "done",
   "summary": "Read-only review диффа фазы P6 против knowledge/read-api и D11: схемы data, грамматика ref, эквивалентность рёбер, отказ записи вне API; вердикт GREEN/ATTENTION/RED в knowledge `review-p6` и note-событие.",
   "why": "Публичный API и схемы (hard risk) фиксируются для всех агентов; независимая проверка по образцу P1.5/P2.7.",
   "scope": {
@@ -90,6 +90,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:11:53Z"
+  "result": {
+    "started_at": "2026-10-06T09:01:59Z",
+    "finished_at": "2026-10-06T09:13:01Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "52f03bba-d715-4905-a712-04ff8f7468d6"
+    },
+    "notes": "Review P6 ATTENTION: 1 Major (P6.5), 1 Minor (P6.3), 2 вопроса; V2 validate OK; product not changed",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T09:13:01Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T09:13:01Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T09:13:01Z"
 }

@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "review-p6",
+  "title": "Review P6 — ATTENTION",
+  "sections": [
+    {
+      "id": "verdict",
+      "title": "Вердикт и покрытие",
+      "text": "ATTENTION. Одна подтверждённая находка (Major, owning P6.5) и два вопроса/Minor. RED-дефектов нет; исправлений и второго раунда не было.\n\nОбласть: дифф фазы 7f0d3caa..71bee0fe (edges.py, refs.py, query.py, catalog.py, cli.py, ops.py, read-*.schema.json, api.md, tests). Эталон — knowledge/read-api (read-verbs, checks) и D11. Состояние плана читалось только через plan.py; продукт и план не менялись, рабочая копия для проб — scratchpad.\n\nПодтверждено: V2 `bash packages/task/scripts/validate.sh` exit 0 (один запуск). Сверка verbs: catalog.verbs() требует точного совпадения VERB_DATA/VERB_MODES/VERB_ERRORS с набором parser-а, каждый data_kind проверяется по реестру схем; все глаголы чтения get/list/events/artifact/links/neighborhood/schema имеют read-* схему и mode=read. Независимый обход схем plan/v1 (каждое поле с $ref на defs/ref: brief owners, decision/document applies_to, item related/decisions/reads/result.decision) полностью покрыт строками LINK_FIELDS; id-поля без $ref (depends_on фаз/items, supersedes, unit depends_on/parent, artifacts) тоже в таблице. Пробы links на живом плане: P6.7, D11, knowledge/read-api[#checks], PLAN2.-/repo-квалифицированные self-ref, plan, brief, несуществующие и malformed ref — отказы REF_UNKNOWN/REF_INVALID, без исключений."
+    },
+    {
+      "id": "findings",
+      "title": "Находки",
+      "text": "F1 — Major, confidence high. Owning item P6.5. packages/task/lib/task/plan/ops.py (generic set/push; apply уже вызывает _check_proposed и отказывает PLAN_INVALID) против D11 «запись — глаголами с валидацией входа». Глаголы set и push принимают поля-связи без проверки: в копии плана `set P6.7 --json '{\"depends_on\":[\"P99.9\"]}'` → `updated P6.7`; `push P6.7 depends_on \"P98.1\"` → pushed; `push P6.7 related {\"ref\":\"D404\",\"relation\":\"informs\"}` → pushed; `set D11 {\"superseded_by\":\"D77\"}` → updated. Висячие ссылки обнаруживает только последующий `check` (ref_unknown: …/depends_on/0), а до него они попадают в план и в `links`/`next`. Единственный путь с валидацией (link/unlink, LINK_INVALID) обходится. Сценарий отказа: агент пишет depends_on через set, получает успех, plan.py next/start работают с несуществующей зависимостью. Рекомендуется: _check_proposed (уже выделен в P6.5) применять в set и push для полей из edges.LINK_FIELDS либо объявить их FIELD_OWNED с отсылкой к link.\n\nF2 — Minor, confidence medium. Owning P6.3. query.py `_graph_ref`/`links`: корнем может быть ссылка на чужой план с неизвестным repo (`other:PLAN9.D1` → ok, 0 рёбер, 1 узел), тогда как `get` на ту же ссылку даёт REPO_UNKNOWN. Это следует документированному «чужие узлы — только ссылки», но молчаливый успех для опечатки в repo скрывает ошибку.\n\nВопрос Q1 (не дефект). edges.py эмитит источник `brief/<Bn>` (applies_to по requirements[].owners), но `brief/B1` не валидный корень ни для links, ни для get (REF_INVALID по грамматике ref): такие узлы достижимы только как конец ребра. На живом плане owners пусты, поэтому путь не наблюдался вне fixtures. Намеренно ли?\n\nВопрос Q2 (не дефект). Структурные связи phase.items, item.units, unit.item, phase.batches не входят в LINK_FIELDS (api.md: селекторы, не типизированные связи), поэтому neighborhood item не показывает его units, а links на Pn возвращает 0 рёбер. Достаточно ли `get`/`list --phase` для агента?"
+    },
+    {
+      "id": "recommendations",
+      "title": "Рекомендации",
+      "text": "1. Reopen P6.5 по F1 (владелец): валидировать поля-связи в set/apply/push через общий _check_proposed + тест «набор записывающих глаголов (set, push, apply) не допускает висячую ссылку».\n2. F2: единообразный REPO_UNKNOWN для неизвестного repo в links/neighborhood при ссылке на чужой план (P6.3, по решению владельца).\n3. Q1/Q2: зафиксировать ответ в knowledge/read-api либо api.md.\n4. Рекомендуется task:review: hard risk — публичный API и схемы."
+    }
+  ],
+  "applies_to": [
+    "P6"
+  ]
+}

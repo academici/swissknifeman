@@ -14,7 +14,7 @@ import re
 import sys
 
 
-from . import brief, catalog, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
+from . import brief, bridges, catalog, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -214,6 +214,20 @@ def cmd_schema(args) -> int:
         document, _base = registry.for_kind(args.kind)
     _print_json(document)  # The registry has already checked the schema's closed profile.
     return 0
+
+
+def cmd_bridge(args) -> int:
+    if args.name == "list":
+        if args.verb is not None or args.args:
+            raise UsageError("bridge list takes no arguments")
+        data = bridges.listing()
+        if args.output == "json":
+            _print_json(data)
+        else:
+            for row in data["bridges"]:
+                print(" ".join((row["name"], row["partner"], row["direction"], *row["verbs"])))
+        return 0
+    return bridges.run(args.name, args.verb, args.args)
 
 
 def cmd_set(args) -> int:
@@ -566,6 +580,11 @@ def build_parser() -> argparse.ArgumentParser:
     selection.add_argument("kind", nargs="?", choices=(*schema.KINDS, "defs"), help="plan/v1 schema kind")
     selection.add_argument("--verbs", action="store_true", help="describe all verbs (default when no kind is given)")
 
+    p = verb("bridge", cmd_bridge, "list named bridges or run a bridge verb with its own arguments", plan=False)
+    p.add_argument("name", help="bridge name, or list")
+    p.add_argument("verb", nargs="?", help="bridge verb from its entrypoints")
+    p.add_argument("args", nargs=argparse.REMAINDER, help="arguments passed to the bridge verb unchanged")
+
     p = verb("set", cmd_set, "merge-patch plan, brief, a phase, item, decision or unit")
     p.add_argument("ref", help="plan | brief | Pn | Pn.m | D# | Pn.m/U#")
     value_args(p, True)
@@ -777,8 +796,10 @@ def main(argv=None) -> int:
             _emit(_failure("USAGE", errors.getvalue().strip()))
         return int(exc.code or 0)
     as_json = args.output == "json" or args.command in _READ_VERBS
+    # A bridge verb owns its output and exit code; only dispatcher refusals use the envelope.
+    passthrough = args.command == "bridge" and args.name != "list"
     try:
-        if as_json:
+        if as_json and not passthrough:
             output = io.StringIO()
             with redirect_stdout(output):
                 code = args.handler(args)

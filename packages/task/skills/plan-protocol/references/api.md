@@ -35,6 +35,16 @@ The catalog is built from the live argument parser. Each entry contains `name`, 
 - `errors` lists conservative stable refusal codes registered for that verb, including shared
   CLI errors. It is not a list of errors produced on every invocation.
 
+## Named bridges
+
+Links to other tools live only in named bridges under `<Task package root>/bridges/<name>/`; the
+core never names a partner. `plan.py bridge list` validates every `bridge.json` (kind `bridge`,
+`schema bridge`) and prints one row per bridge (`--output json`: `{"bridges": [...]}`).
+`plan.py bridge <name> <verb> [args…]` runs the verb's entrypoint with the remaining arguments
+unchanged; the bridge owns its output and exit code, and the dispatcher sets `TASK_ROOT`,
+`TASK_PLAN_PY` and `PYTHONPATH`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
+`BRIDGE_UNKNOWN`, `BRIDGE_VERB_UNKNOWN`.
+
 ## Responses
 
 The read verbs below and `schema` always return one validated JSON envelope:

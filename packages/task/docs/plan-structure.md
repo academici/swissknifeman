@@ -72,6 +72,15 @@ snapshot, stages the destination with supporting files, then publishes it with r
 publication failure. Existing JSON requires `--replace`. Historical dates, states and evidence
 survive import exactly. Import is a data API; source-format conversion is never runtime behavior.
 
+## Named bridges
+
+The Task core knows no partner tool by name: every link to one lives in `bridges/<name>/` with a
+`bridge.json` manifest (`plan.py schema bridge`). `plan.py bridge list` shows the bridges found by
+scanning `bridges/`; `plan.py bridge <name> <verb> [args…]` runs a declared entrypoint and passes its
+output and exit code through. A bridge may import Task modules but reaches its partner only through
+the partner's public CLI or files. `tests/test_boundary.py` keeps the core clean; its temporary
+`tests/boundary_allowlist.json` may only shrink. `validate.sh` also runs `bridges/*/tests`.
+
 ## Execution input (brief)
 
 `plan.py brief <plan> <item> [--unit U#] [--inline-reads] [--repo NAME=PATH]` returns the worker's `exec/v1` execution-input as JSON.

@@ -15,18 +15,18 @@ VERB_DATA = {
     "schema": "read-catalog", "set": None, "apply": None, "export": "snapshot", "import": None,
     "add-document": None, "link": None, "unlink": None, "add-artifact": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
-    "brief": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
+    "brief": None, "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "archive": None,
 }
 
-# Mode describes the default invocation's writes; mixed verbs are conservative (unit is write).
+# Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
 VERB_MODES = {
     "new": "write", "show": "read", "get": "read", "list": "read", "events": "read",
     "artifact": "read", "links": "read", "neighborhood": "read", "schema": "read",
     "set": "write", "apply": "write", "export": "read", "import": "write", "add-document": "write",
     "link": "write", "unlink": "write", "add-artifact": "write", "push": "write", "add-phase": "write", "add-item": "write", "add-decision": "write", "batches": "write",
     "check": "read", "render": "write", "next": "read", "start": "write", "context": "write",
-    "brief": "read", "finish": "write", "unit": "write", "stats": "read", "log": "write",
+    "brief": "read", "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "archive": "write",
 }
@@ -34,7 +34,7 @@ VERB_MODES = {
 # Maintained refusal registry. Tests compare it with PlanError literals across lib/task/plan.
 ERROR_CODES = frozenset("""
 ACCEPT_REQUIRED ACTOR_REQUIRED AGENT_REQUIRED ALREADY_ARCHIVED ARCHIVE_EXISTS ATTEMPT_CONFLICT
-ATTEMPT_ID_INVALID BRIEF_INCOMPLETE BY_INVALID CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONTENT_INVALID
+ATTEMPT_ID_INVALID BRIDGE_INVALID BRIDGE_UNKNOWN BRIDGE_VERB_UNKNOWN BRIEF_INCOMPLETE BY_INVALID CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONTENT_INVALID
 DECISION_NOT_ACCEPTED DECISION_NOT_OPEN DECISION_REQUIRED DECISION_SELF_SUPERSEDE DECISION_SUPERSEDED
 DEPENDENCY_NOT_READY DEPTH_INVALID DESIGN_INCOMPLETE DEVIATION_REQUIRED DIRECTION_INVALID
 ESCALATION_REQUIRED EVIDENCE_CONFLICT EVIDENCE_INVALID EVIDENCE_REQUIRED EVIDENCE_SUBJECT EXTERNAL_GATE
@@ -91,6 +91,7 @@ VERB_ERRORS = {
     "context": _PLAN | _TARGET | {"LOG_INVALID", "HUMAN_VIEW"},
     "brief": _PLAN | _TARGET | {"PHASE_NOT_DETAILED", "READ_MISSING", "HUMAN_VIEW", "REF_UNRESOLVED",
         "BRIEF_INCOMPLETE", "OUT_INVALID", "LOG_INVALID"},
+    "bridge": {"BRIDGE_INVALID", "BRIDGE_UNKNOWN", "BRIDGE_VERB_UNKNOWN"},
     "finish": _PLAN | _WRITE | _ROUTE | _EVIDENCE | {"REF_UNKNOWN", "STATUS_INVALID", "NOT_STARTED",
         "CHECKS_MISSING", "CHECKS_RED", "DEVIATION_REQUIRED", "ESCALATION_REQUIRED", "DECISION_REQUIRED", "UNITS_OPEN"},
     "unit": _PLAN | _WRITE | _ROUTE | _EVIDENCE | {"REF_UNKNOWN", "FIELD_OWNED", "UNIT_INVALID", "AGENT_REQUIRED",

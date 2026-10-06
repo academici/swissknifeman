@@ -89,6 +89,13 @@ fi
 PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s tests/engine -p "test_*.py" || err "engine unittest"
 
+# Named bridges carry their own tests; an empty or missing bridges/ directory is skipped.
+for bridge_tests in bridges/*/tests; do
+  [[ -d "$bridge_tests" ]] || continue
+  PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
+    python3 -m unittest discover -s "$bridge_tests" -t "$bridge_tests" -p "test_*.py" || err "bridge unittest $bridge_tests"
+done
+
 # A target is a plan directory (holds plan.json) or a plans/ root of such directories.
 plan_dirs=()
 for plan_target in ${plan_targets[@]+"${plan_targets[@]}"}; do

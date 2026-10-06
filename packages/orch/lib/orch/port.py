@@ -96,6 +96,11 @@ class RunState:
     def _next_stage(self, event: dict) -> dict:
         stage_id, kind, attempt = event["stage_id"], event["kind"], event["attempt"]
         current = self._stages.get(stage_id)
+        # An earlier attempt is terminal by construction: a retry starts only after it ended.
+        # Check all event kinds, including a delayed started event, before retry handling.
+        if current is not None and (attempt < current["attempt"] or
+                                    (attempt == current["attempt"] and current["status"] != "running")):
+            raise PortError("AFTER_TERMINAL", f"stage {stage_id!r} attempt {attempt} already ended")
         if kind == "started":
             if current is None:
                 if attempt != 1:
@@ -116,9 +121,6 @@ class RunState:
                 raise PortError("INPUT_INVALID", f"stage {stage_id!r} received {kind!r} before started")
             if attempt > current["attempt"]:
                 raise PortError("INPUT_INVALID", f"stage {stage_id!r} attempt {attempt} has not started")
-            # An earlier attempt is terminal by construction: a retry starts only after it ended.
-            if attempt < current["attempt"] or current["status"] != "running":
-                raise PortError("AFTER_TERMINAL", f"stage {stage_id!r} attempt {attempt} already ended")
             stage = dict(current, errors=list(current["errors"]))
             if kind in ERROR_CLASS:
                 error = {"class": ERROR_CLASS[kind], "message": event.get("summary", kind.replace("_", " "))}
@@ -130,7 +132,7 @@ class RunState:
                 stage["finished_at"] = event["ts"]
                 if kind == "completed":
                     usage = event.get("data", {}).get("usage")
-                    stage["usage"] = usage if isinstance(usage, dict) else None
+                    stage["usage"] = copy.deepcopy(usage) if isinstance(usage, dict) else None
         if "route_observed" in event:
             stage["route_observed"] = dict(event["route_observed"])
         stage["last_seq"] = event["seq"]

@@ -52,6 +52,7 @@ silently.
 
 `RunState(run_id)` folds run-events without I/O or the system clock; every value comes from events.
 An event is fully checked before any change, so a rejected event leaves the state untouched.
+Retained event data is copied: modifying an event after `apply()` cannot change the reduced result.
 
 - `apply(event)` validates the event against `run-event` (`INPUT_INVALID`), its `run_id`
   (`RUN_UNKNOWN`) and its `seq`. The key is `(run_id, seq)`: an identical replay is ignored, other
@@ -74,8 +75,9 @@ An event is fully checked before any change, so a rejected event leaves the stat
 | `completed` | terminal `completed`; usage from its `data.usage` |
 
 A stage accepts only `started` before its first attempt; an event for a later attempt that has not
-started is `INPUT_INVALID`. `route_observed` from any event becomes `route.observed` with
-`source: "event"`. Usage is `{"status": "reported"}` with integer `input_tokens`/`output_tokens` taken
+started is `INPUT_INVALID`. Any new event for an ended attempt, including a delayed `started`, is
+`AFTER_TERMINAL`; an identical replay is still ignored. `route_observed` from any event becomes
+`route.observed` with `source: "event"`. Usage is `{"status": "reported"}` with integer `input_tokens`/`output_tokens` taken
 from the last `completed.data.usage`, otherwise `{"status": "unknown"}` without numbers.
 
 ## Binding matrix

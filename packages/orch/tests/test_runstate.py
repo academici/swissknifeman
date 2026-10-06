@@ -103,6 +103,18 @@ class RunStateTests(unittest.TestCase):
         state = fold([event(0, "started"), event(1, "failed"), event(2, "started", attempt=2)])
         self.assert_port_error("AFTER_TERMINAL", state, event(3, "output", attempt=1))
 
+    def test_late_started_of_terminal_attempt_is_after_terminal(self):
+        for kind in ("failed", "timeout", "quota_block", "auth_block", "unknown_outcome",
+                     "completed", "cancelled"):
+            with self.subTest(kind=kind):
+                state = fold([event(0, "started"), event(1, kind)])
+                self.assert_port_error("AFTER_TERMINAL", state, event(2, "started"))
+                if kind not in ("completed", "cancelled"):
+                    state.apply(event(2, "started", attempt=2))
+                    self.assert_port_error("AFTER_TERMINAL", state, event(3, "started", attempt=1))
+                    state.apply(event(3, "failed", attempt=2))
+                    self.assert_port_error("AFTER_TERMINAL", state, event(4, "started", attempt=1))
+
     def test_grok_unknown_trace_closes_as_unknown_outcome(self):
         state = fold(trace("native-grok-unknown"))
         self.assertEqual(state.stages()["primary"]["status"], "running")
@@ -181,6 +193,17 @@ class RunStateTests(unittest.TestCase):
         state = fold([event(0, "started"), event(1, "failed", data=usage), event(2, "started", attempt=2),
                       event(3, "completed", attempt=2, data={"usage": {"input_tokens": 9}})])
         self.assertEqual(result(state)["usage"], {"status": "reported", "input_tokens": 9})
+
+    def test_usage_is_detached_from_applied_event(self):
+        completed = event(1, "completed", data={"usage": {"input_tokens": 7, "output_tokens": 3}})
+        state = fold([event(0, "started"), completed])
+        expected = result(state)
+        completed["data"]["usage"]["input_tokens"] = 999
+        del completed["data"]["usage"]["output_tokens"]
+        self.assertEqual(result(state), expected)
+        state.apply(event(1, "completed", data={"usage": {"input_tokens": 7, "output_tokens": 3}}))
+        self.assertEqual(result(state), expected)
+        self.assert_port_error("SEQ_ORDER", state, completed)
 
     def test_stages_are_independent(self):
         state = fold([event(0, "started", stage="scout"), event(1, "completed", stage="scout"),

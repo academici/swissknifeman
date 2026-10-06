@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:bridge:v1",
+  "name": "orch",
+  "partner": "orch",
+  "direction": "both",
+  "contract": "exec/v1",
+  "summary": "Projects a plan item or unit into an orch execution-input (exec/v1).",
+  "entrypoints": {
+    "brief": "brief.py"
+  },
+  "requires": {
+    "cli": "scripts/orch.py",
+    "env": "SKM_ORCH_ROOT"
+  }
+}

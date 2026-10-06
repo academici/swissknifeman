@@ -12,8 +12,9 @@
   `link`, `unlink` и `add-artifact` проверяют документ и весь предложенный граф под lock;
   точный повтор — no-op, отказ не меняет источники и журнал. Входящие рёбра вычисляются,
   данные читаются через API без усечения; прежние `show` и `context` сохраняют свой вывод.
-- **Task execution-input:** `plan.py brief` выдаёт `exec/v1 execution-input`
-  с проверкой полноты и разрешением ссылок на другие планы.
+- **Task execution-input:** мост `plan.py bridge orch brief` выдаёт `exec/v1 execution-input`
+  с проверкой полноты и разрешением ссылок на другие планы; ядро Task не знает `exec/v1`
+  (глагол `plan.py brief` до выпуска перенесён в `packages/task/bridges/orch`).
 - **Task actor, попытки и evidence:** добавлены `--executed-by`, `--registrar`,
   `--attempt-id` и check evidence (`--evidence`, `settings.evidence`): раздельные
   исполнитель и регистратор, идемпотентная регистрация и опциональная обязательность

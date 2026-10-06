@@ -26,11 +26,9 @@ The catalog is built from the live argument parser. Each entry contains `name`, 
   even when each individual argument has `required: false`.
 - `mode` describes the default invocation. `context` writes a generated pack unless `--stdout`
   is supplied; `render` writes views unless `--check` is supplied. `unit` combines queries and
-  mutations, so its mode is `write`. `brief` defaults to read-only stdout; `--out` writes a file
-  outside the plan. Mode is discovery metadata, not an authorization grant.
+  mutations, so its mode is `write`. Mode is discovery metadata, not an authorization grant.
 - `data_kind` names a dedicated `plan/v1` data schema. Retrieve it with `schema <data_kind>`.
-  Existing polymorphic payloads omit this field. `brief` uses the external `exec/v1 execution-input`
-  contract. For `schema`, `read-catalog` describes the default/`--verbs` result; `<kind>` returns
+  Existing polymorphic payloads omit this field. For `schema`, `read-catalog` describes the default/`--verbs` result; `<kind>` returns
   the schema document itself.
 - `errors` lists conservative stable refusal codes registered for that verb, including shared
   CLI errors. It is not a list of errors produced on every invocation.
@@ -44,6 +42,7 @@ core never names a partner. `plan.py bridge list` validates every `bridge.json` 
 unchanged; the bridge owns its output and exit code, and the dispatcher sets `TASK_ROOT`,
 `TASK_PLAN_PY` and `PYTHONPATH`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
 `BRIDGE_UNKNOWN`, `BRIDGE_VERB_UNKNOWN`.
+Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
 
 ## Responses
 
@@ -144,9 +143,8 @@ The responses report `changed: false` for a no-op.
 
 Optional `reads[].ref` names local plan data, including `knowledge/<id>#section`; exactly one of
 `ref` or `path` is required, with the existing `why` and `required` fields. Repository code/docs
-remain path-based reads. `context` resolves plan reads into complete sections and `brief` projects
-them to the existing path-based `exec/v1` read contract. Required missing sections refuse
-`start`/`brief` with `READ_MISSING`; graph validation also checks section references.
+remain path-based reads. `context` resolves plan reads into complete sections. Required missing
+sections refuse `start` with `READ_MISSING`; graph validation also checks section references.
 Use either the `#section` fragment or the separate `section` key, never both. Qualified read
 refs are refused by `check`; qualified queries remain available through `get`/`artifact`.
 

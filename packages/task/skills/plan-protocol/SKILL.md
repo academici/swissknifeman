@@ -85,8 +85,9 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 | author | `new`, `set`, `push`, `apply`, `add-phase`, `add-item`, `add-decision`, `add-document`, `batches`, `design-done` |
 | query | `get`, `list`, `events`, `artifact`, `links`, `neighborhood`, `schema [<kind> \| --verbs]` |
 | link | `link`, `unlink`, `add-artifact` (validated mutations; exact repeats are no-ops) |
-| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `brief <item> [--unit U#] [--inline-reads] [--repo NAME=PATH] [--out FILE]`, `check [--json]`, `render [--check]` |
+| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `check [--json]`, `render [--check]` |
 | execute | `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
+| bridge | `bridge list`, `bridge <name> <verb> [args…]` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
 | transfer | `export`, `import --file <current-format-snapshot.json> [--replace]` |
 
@@ -94,7 +95,7 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
 `start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.
 `finish --status done` needs every acceptance check recorded with exit 0.
-`brief` returns the worker input (exec/v1 execution-input) without lifecycle instructions; `settings.evidence: required` makes `finish` demand check evidence; a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
+`settings.evidence: required` makes `finish` demand check evidence; a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
 Friction (`log --type deviation|blocker|difficulty|assumption|note`) is written only when reality
 changes the plan, an assumption or a blocker; it feeds the next items' Lessons.
 Queries and `schema` always return `{ok,data|error}`; other verbs use `--output json` for it.
@@ -150,9 +151,7 @@ or explicitly rejected before an item finishes. Children finish before their par
 `export` returns the complete current-format graph and event log; `import <directory> --file
 snapshot.json` restores a validated graph, preserving historical state and supporting evidence.
 `--replace` is required to restore an existing JSON plan. Import never interprets Markdown.
-`brief <item>` is the read-only worker input (`exec/v1` execution-input): the item's task, scope, checks,
-reads with `sha256`, decisions and upstream results, without lifecycle instructions; the full pack stays
-reachable through its `context_refs`. `--out FILE` must name a file outside the plan directory (`OUT_INVALID`).
+Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
 
 `plan.py --output json <verb>` prints exactly one envelope for every verb, validated against
 `schemas/plan/v1/envelope.schema.json` (kind `envelope`) before it is printed:

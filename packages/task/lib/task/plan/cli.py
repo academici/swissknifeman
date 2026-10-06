@@ -14,7 +14,7 @@ import re
 import sys
 
 
-from . import brief, bridges, catalog, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
+from . import bridges, catalog, check, context, lifecycle, ops, query, schema, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -339,17 +339,6 @@ def cmd_context(args) -> int:
     return 0
 
 
-def cmd_brief(args) -> int:
-    plan = store.load_plan(_plan_dir(args))
-    if args.out is None:
-        print(brief.render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads,
-                           repos=_repos(args)), end="")
-    else:
-        print(brief.write(plan, args.item, args.out, unit_id=args.unit, inline_reads=args.inline_reads,
-                          repos=_repos(args)))
-    return 0
-
-
 def cmd_finish(args) -> int:
     result = lifecycle.finish(
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
@@ -667,14 +656,6 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("context", cmd_context, "return complete JSON context (context/<item>.json)")
     p.add_argument("item")
     p.add_argument("--stdout", action="store_true", help="print the pack instead of writing it")
-    p.add_argument("--repo", action="append", default=[], type=_repo_mapping, metavar="NAME=PATH",
-                   help="repository root of references to another repository (repeatable)")
-
-    p = verb("brief", cmd_brief, "execution-input (exec/v1) of an item or unit, read-only")
-    p.add_argument("item")
-    p.add_argument("--unit", metavar="U#", help="brief one unit of the item")
-    p.add_argument("--inline-reads", action="store_true", help="embed the full text of existing text reads")
-    p.add_argument("--out", type=Path, help="write the document to FILE instead of stdout")
     p.add_argument("--repo", action="append", default=[], type=_repo_mapping, metavar="NAME=PATH",
                    help="repository root of references to another repository (repeatable)")
 

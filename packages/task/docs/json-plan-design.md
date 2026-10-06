@@ -35,9 +35,9 @@ plans: those nodes keep their qualified ref and null metadata. Incoming edges re
 original `from`/`to`; default direction is `both`, default depth is 1, and cycles terminate.
 
 `show PLAN REF` preserves its document-only output; `show PLAN` preserves the overview.
-`context PLAN ITEM --stdout` keeps the full execution pack, while `brief PLAN ITEM` keeps the
-`exec/v1 execution-input` projection. Existing verbs support the same envelope with the global
-`--output json` option before the verb. No legacy output or command is removed.
+`context PLAN ITEM --stdout` keeps the full execution pack. Existing verbs support the same envelope with the global
+`--output json` option before the verb.
+Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
 
 ## Validated links and artifacts
 

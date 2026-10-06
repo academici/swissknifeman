@@ -1,4 +1,4 @@
-"""`--output json` is one API: every verb answers with the envelope schema, refusals carry a code, `--out` is checked."""
+"""`--output json` is one API: every verb answers with the envelope schema and refusals carry a code."""
 import io
 import json
 import sys
@@ -12,8 +12,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task.plan import brief, cli, schema, store  # noqa: E402
-from task.plan.model import PlanError  # noqa: E402
+from task.plan import cli, schema  # noqa: E402
 
 try:
     from . import test_lifecycle
@@ -76,7 +75,6 @@ class VerbCoverageTests(EnvelopeCase):
             ("render", ["render", plan], 0),
             ("export", ["export", plan], 0),
             ("context", ["context", plan, "P1.1", "--stdout"], 0),
-            ("brief", ["brief", plan, "P1.1"], 0),
             ("set", ["set", plan, "P1.1", "--json", '{"summary": "again"}'], 0),
             ("apply", ["apply", plan, "--file", str(patch)], 0),
             ("push", ["push", plan, "P1.1", "scope.include", "--json", '"extra"'], 0),
@@ -165,36 +163,6 @@ class ErrorEnvelopeTests(EnvelopeCase):
     def test_an_envelope_outside_the_schema_is_a_bug_not_output(self):
         with self.assertRaises(RuntimeError):
             cli._emit({"ok": True})
-
-
-class BriefOutTests(EnvelopeCase):
-    def test_out_must_be_a_file_outside_the_plan(self):
-        plan = store.load_plan(self.root)
-        for bad in ("", str(self.root / "brief-copy.json"), str(self.root / "phases" / "P1" / "P1.1.json"),
-                    str(self.root), str(self.plans)):
-            with self.subTest(out=bad):
-                with self.assertRaises(PlanError) as ctx:
-                    brief.write(plan, "P1.1", bad)
-                self.assertEqual(ctx.exception.code, "OUT_INVALID")
-        self.assertFalse((self.root / "brief-copy.json").exists())
-
-    def test_a_refused_out_leaves_the_plan_untouched_and_enveloped(self):
-        before = (self.root / "phases" / "P1" / "P1.1.json").read_bytes()
-        document = self.envelope("brief", self.root, "P1.1", "--out", self.root / "phases" / "P1" / "P1.1.json", code=1)
-        self.assertEqual(document["error"]["code"], "OUT_INVALID")
-        self.assertEqual((self.root / "phases" / "P1" / "P1.1.json").read_bytes(), before)
-
-    def test_malformed_ids_are_refused_by_the_api_not_the_parser(self):
-        for argv, code in ((("P1.1", "--unit", "x"), "REF_INVALID"), (("P1", ), "REF_INVALID"),
-                           (("P1.1", "--unit", "U9"), "REF_UNKNOWN")):
-            with self.subTest(argv=argv):
-                self.assertEqual(self.envelope("brief", self.root, *argv, code=1)["error"]["code"], code)
-
-    def test_out_writes_a_new_file_and_reports_its_path(self):
-        target = self.plans.parent / "briefs" / "p1.json"
-        document = self.envelope("brief", self.root, "P1.1", "--out", target, code=0)
-        self.assertEqual(document["data"], {"message": str(target.resolve())})
-        self.assertEqual(json.loads(target.read_text())["input_id"].split("@")[0], "PLAN1.P1.1")
 
 
 if __name__ == "__main__":

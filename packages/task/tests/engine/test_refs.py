@@ -1,4 +1,4 @@
-"""refs.resolve (T4): other plans of the same repository (live, archived), foreign repositories, failures, context/brief."""
+"""refs.resolve (T4): other plans of the same repository (live, archived), foreign repositories, failures, context."""
 import hashlib
 import json
 import os
@@ -14,8 +14,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task.plan import brief, context, lifecycle, ops, refs, store  # noqa: E402
-from task.plan.model import PlanError  # noqa: E402
+from task.plan import context, lifecycle, ops, refs, store  # noqa: E402
 
 try:
     from . import test_lifecycle
@@ -221,62 +220,6 @@ class ContextTests(RefsCase):
         run = subprocess.run([sys.executable, str(SCRIPT), "context", str(self.root), "P1.2", "--repo", "oops"],
                              capture_output=True, text=True, timeout=30)
         self.assertEqual(run.returncode, 2, run.stderr)
-
-
-class BriefTests(RefsCase):
-    def setUp(self):
-        super().setUp()
-        (self.plans.parent / "lib").mkdir()
-        (self.plans.parent / "lib" / "x.py").write_text("x\n", encoding="utf-8")
-
-    def brief(self, **kwargs):
-        return brief.build(self.load(), "P1.1", **kwargs)
-
-    def test_resolved_decision_is_in_the_brief_within_the_closed_schema(self):
-        ops.patch(self.root, "P1.1", {"decisions": ["PLAN2.D1"]})
-        entry = self.brief()["decisions"][0]
-        self.assertEqual(set(entry), {"ref", "loaded", "title", "status", "decision", "rationale", "source"})
-        self.assertEqual(entry["source"]["sha256"],
-                         hashlib.sha256((self.other / "decisions" / "D1.json").read_bytes()).hexdigest())
-
-    def test_unresolved_required_decision_refuses(self):
-        ops.patch(self.root, "P1.1", {"decisions": ["PLAN2.D1", "PLAN8.D3"]})
-        with self.assertRaises(PlanError) as ctx:
-            self.brief()
-        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
-        self.assertIn("PLAN8.D3", ctx.exception.message)
-        self.assertNotIn("PLAN2.D1", ctx.exception.message)
-
-    def test_not_accepted_required_decision_refuses(self):
-        key = ops.add_decision(self.other, "Open question", data={"options": [{"id": "A", "text": "x"}]})
-        ops.patch(self.root, "P1.1", {"decisions": [f"PLAN2.{key}"]})
-        with self.assertRaises(PlanError) as ctx:
-            self.brief()
-        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
-
-    def test_foreign_repository_via_repos(self):
-        repo, _ = self.foreign_repo()
-        ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
-        with self.assertRaises(PlanError) as ctx:
-            self.brief()
-        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
-        self.assertTrue(self.brief(repos={"ext": str(repo)})["decisions"][0]["loaded"])
-
-    def test_cli_brief_refuses_and_accepts_repo(self):
-        repo, _ = self.foreign_repo()
-        ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
-        base = [sys.executable, str(SCRIPT), "brief", str(self.root), "P1.1"]
-        refused = subprocess.run(base, capture_output=True, text=True, timeout=30)
-        self.assertEqual(refused.returncode, 1)
-        self.assertTrue(refused.stderr.startswith("REF_UNRESOLVED: "), refused.stderr)
-        ok = subprocess.run([*base, "--repo", f"ext={repo}"], capture_output=True, text=True, timeout=30)
-        self.assertEqual(ok.returncode, 0, ok.stderr)
-        self.assertTrue(json.loads(ok.stdout)["decisions"][0]["loaded"])
-
-    def test_local_decisions_are_untouched(self):
-        key = accepted(self.root, "Local")
-        ops.patch(self.root, "P1.1", {"decisions": [key]})
-        self.assertTrue(self.brief()["decisions"][0]["loaded"])
 
 
 if __name__ == "__main__":

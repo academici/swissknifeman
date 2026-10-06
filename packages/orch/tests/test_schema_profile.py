@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -9,8 +8,6 @@ import unittest
 from unittest.mock import patch
 
 from orch import contracts, schema
-
-TASK_SCHEMA = Path(__file__).resolve().parents[2] / "task/lib/task/plan/schema.py"
 
 
 class SchemaProfileTests(unittest.TestCase):
@@ -21,22 +18,6 @@ class SchemaProfileTests(unittest.TestCase):
             }))
             with self.assertRaisesRegex(schema.SchemaProfileError, "unsupported keyword 'minimum'"):
                 schema.load_registry(Path(directory), urn_prefix="urn:test:", kinds=("bad",))
-
-    @unittest.skipUnless(TASK_SCHEMA.is_file(), "Task source not present in standalone checkout")
-    def test_task_profile_parity_without_importing_task(self):
-        tree = ast.parse(TASK_SCHEMA.read_text(encoding="utf-8"))
-        values = {}
-        for node in tree.body:
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id in ("SUPPORTED_KEYWORDS", "ERROR_CODES"):
-                        value = node.value
-                        if isinstance(value, ast.Call):
-                            value = value.args[0]
-                        values[target.id] = ast.literal_eval(value)
-        self.assertEqual(set(values), {"SUPPORTED_KEYWORDS", "ERROR_CODES"})
-        for name, expected in values.items():
-            self.assertTrue(set(getattr(schema, name)).issuperset(expected), name)
 
     def test_digest_canonical_bytes_and_no_mutation(self):
         original = {"digest": "old", "z": "привет", "a": {"digest": "nested", "n": 1}}

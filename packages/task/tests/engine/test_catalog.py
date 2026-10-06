@@ -96,7 +96,7 @@ class ParserCatalogTests(unittest.TestCase):
 
     def test_mode_honestly_marks_default_writes_and_read_queries(self):
         rows = {v["name"]: v for v in catalog.verbs(cli.build_parser())["verbs"]}
-        for name in ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "brief", "export"):
+        for name in ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "export"):
             self.assertEqual(rows[name]["mode"], "read")
         for name in ("context", "render", "unit", "start", "finish", "set", "import"):
             self.assertEqual(rows[name]["mode"], "write")

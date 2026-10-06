@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.2",
   "title": "Мост task/bridges/orch: перенос brief (exec/v1) из ядра и тестов конформанса",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Создан мост `packages/task/bridges/orch/` (bridge.json, README, partner.py, brief.py); exec/v1-проекция `brief` переехала из ядра Task в мост (`plan.py bridge orch brief …`, вывод байт-в-байт прежний), глагол `plan.py brief` удалён из ядра; conformance- и schema-profile-тесты orch, читавшие Task, переехали в тесты моста и проверяют через `orch.py validate`.",
   "why": "D15: ядро Task не знает exec/v1; оркестратор заменяем новым мостом без правки ядра. `plan.py brief` не выпущен (CHANGELOG [Unreleased]) — удаление без deprecation. Hard risk: публичный контракт CLI (удаление глагола) и потеря проверок конформанса при переносе тестов.",
   "scope": {
@@ -254,6 +254,53 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T11:23:48Z"
+  "result": {
+    "started_at": "2026-10-06T12:20:39Z",
+    "finished_at": "2026-10-06T12:43:44Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "9c5ff053-4b14-4f6c-8468-1e2af987afe2"
+    },
+    "notes": "bridges/orch (bridge.json, README, partner.py, brief.py with main); brief verb removed from core cli/catalog/read-catalog; output identical to old plan.py brief on demo plan except tool and derived digest; orch conformance + schema-profile parity moved to bridge tests via orch.py validate / AST; allowlist 38→30 (P7.2 entries gone, cli.py reason → P7.3); docs neutral + one Bridges line. Bridge tests 58 OK none skipped; engine 559 OK; orch test+validate OK; Task validate.sh OK.",
+    "deviations": [
+      "Core tests outside task_files (test_envelope, test_context, test_refs) carried brief cases; moved into bridges/orch/tests/test_brief.py, core keeps start/context halves; bridge CLI refusals are stderr text (dispatcher passthrough, no envelope)",
+      "REF_UNRESOLVED and OUT_INVALID removed from core ERROR_CODES/read-catalog enum with BRIEF_INCOMPLETE (only brief raised them)",
+      "Evidence conformance kept in bridge test_conformance.py (orch.py validate check-evidence) so no orch check is lost before P7.3; root CHANGELOG [Unreleased] entry reworded"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T12:43:44Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T12:43:44Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T12:43:44Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T12:43:44Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T12:43:44Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-06T12:43:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T12:43:44Z"
 }

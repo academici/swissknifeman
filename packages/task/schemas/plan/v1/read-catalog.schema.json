@@ -103,7 +103,7 @@
           },
           "data_kind": {
             "type": "string",
-            "description": "Dedicated plan/v1 data schema, when available. schema uses read-catalog for --verbs/default; <kind> returns the schema itself. Legacy polymorphic outputs and external exec/v1 brief have no plan/v1 data kind.",
+            "description": "Dedicated plan/v1 data schema, when available. schema uses read-catalog for --verbs/default; <kind> returns the schema itself. Legacy polymorphic outputs have no plan/v1 data kind.",
             "pattern": "^[a-z][a-z0-9-]*$"
           },
           "errors": {
@@ -123,7 +123,6 @@
                 "BRIDGE_INVALID",
                 "BRIDGE_UNKNOWN",
                 "BRIDGE_VERB_UNKNOWN",
-                "BRIEF_INCOMPLETE",
                 "BY_INVALID",
                 "CHECKS_MISSING",
                 "CHECKS_RED",
@@ -171,7 +170,6 @@
                 "NOT_STARTED",
                 "NOT_TERMINAL",
                 "OPTION_UNKNOWN",
-                "OUT_INVALID",
                 "PARALLEL_LIMIT",
                 "PATCH_INVALID",
                 "PATH_INVALID",
@@ -190,7 +188,6 @@
                 "REF_INVALID",
                 "REF_QUALIFIED",
                 "REF_UNKNOWN",
-                "REF_UNRESOLVED",
                 "REPO_UNKNOWN",
                 "ROUTE_MISMATCH",
                 "ROUTE_UNDERSHOOT",

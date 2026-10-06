@@ -8,14 +8,13 @@ from . import schema
 
 # None means the legacy data payload is polymorphic or has no dedicated plan/v1 schema.
 # schema's read-catalog applies to --verbs/default; <kind> returns the schema document itself.
-# brief's execution-input belongs to exec/v1, not to this package's schema registry.
 VERB_DATA = {
     "new": None, "show": None, "get": "read-get", "list": "read-list", "events": "read-events",
     "artifact": "read-artifact", "links": "read-links", "neighborhood": "read-neighborhood",
     "schema": "read-catalog", "set": None, "apply": None, "export": "snapshot", "import": None,
     "add-document": None, "link": None, "unlink": None, "add-artifact": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
-    "brief": None, "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
+    "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "archive": None,
 }
 
@@ -26,7 +25,7 @@ VERB_MODES = {
     "set": "write", "apply": "write", "export": "read", "import": "write", "add-document": "write",
     "link": "write", "unlink": "write", "add-artifact": "write", "push": "write", "add-phase": "write", "add-item": "write", "add-decision": "write", "batches": "write",
     "check": "read", "render": "write", "next": "read", "start": "write", "context": "write",
-    "brief": "read", "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
+    "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "archive": "write",
 }
@@ -34,17 +33,17 @@ VERB_MODES = {
 # Maintained refusal registry. Tests compare it with PlanError literals across lib/task/plan.
 ERROR_CODES = frozenset("""
 ACCEPT_REQUIRED ACTOR_REQUIRED AGENT_REQUIRED ALREADY_ARCHIVED ARCHIVE_EXISTS ATTEMPT_CONFLICT
-ATTEMPT_ID_INVALID BRIDGE_INVALID BRIDGE_UNKNOWN BRIDGE_VERB_UNKNOWN BRIEF_INCOMPLETE BY_INVALID CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONTENT_INVALID
+ATTEMPT_ID_INVALID BRIDGE_INVALID BRIDGE_UNKNOWN BRIDGE_VERB_UNKNOWN BY_INVALID CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONTENT_INVALID
 DECISION_NOT_ACCEPTED DECISION_NOT_OPEN DECISION_REQUIRED DECISION_SELF_SUPERSEDE DECISION_SUPERSEDED
 DEPENDENCY_NOT_READY DEPTH_INVALID DESIGN_INCOMPLETE DEVIATION_REQUIRED DIRECTION_INVALID
 ESCALATION_REQUIRED EVIDENCE_CONFLICT EVIDENCE_INVALID EVIDENCE_REQUIRED EVIDENCE_SUBJECT EXTERNAL_GATE
 FIELD_NOT_ARRAY FIELD_OWNED FIELD_UNKNOWN GATE_INVALID GATE_NOT_GRANTED GATE_UNKNOWN HUMAN_VIEW
 ID_DUPLICATE ITEMS_DUPLICATE ITEMS_REQUIRED ITEMS_SPAN_PHASES ITEM_NOT_IN_PROGRESS ITEM_NOT_STARTABLE
 KIND_UNKNOWN LIMIT_INVALID LINK_INVALID LOG_INVALID LOG_TYPE_INVALID MESSAGE_REQUIRED MINUTES_INVALID NOTES_REQUIRED
-NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN OUT_INVALID PARALLEL_LIMIT PATCH_INVALID
+NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN PARALLEL_LIMIT PATCH_INVALID
 PATH_INVALID PHASE_NOT_DETAILED PLAN_AMBIGUOUS PLAN_CODENAME_INVALID PLAN_DATE_INVALID PLAN_EXISTS
 PLAN_INVALID PLAN_LOCKED PLAN_NOT_DONE PLAN_NOT_FOUND RATIONALE_REQUIRED READ_MISSING REASON_REQUIRED
-REF_INVALID REF_QUALIFIED REF_UNKNOWN REF_UNRESOLVED REPO_UNKNOWN ROUTE_MISMATCH ROUTE_UNDERSHOOT
+REF_INVALID REF_QUALIFIED REF_UNKNOWN REPO_UNKNOWN ROUTE_MISMATCH ROUTE_UNDERSHOOT
 ROUTING_UNAVAILABLE SCHEMA_INVALID SECTION_UNKNOWN SINCE_INVALID STATUS_INVALID UNITS_OPEN
 UNIT_DEPENDENCY UNIT_INVALID UNIT_SELF UNIT_STATE IO_ERROR USAGE VERB_FAILED
 """.split())
@@ -89,8 +88,6 @@ VERB_ERRORS = {
         "ITEMS_SPAN_PHASES", "ITEM_NOT_STARTABLE", "PHASE_NOT_DETAILED", "DEPENDENCY_NOT_READY", "READ_MISSING",
         "HUMAN_VIEW", "EXTERNAL_GATE", "GATE_UNKNOWN", "GATE_NOT_GRANTED", "GATE_INVALID", "NOTE_REQUIRED"},
     "context": _PLAN | _TARGET | {"LOG_INVALID", "HUMAN_VIEW"},
-    "brief": _PLAN | _TARGET | {"PHASE_NOT_DETAILED", "READ_MISSING", "HUMAN_VIEW", "REF_UNRESOLVED",
-        "BRIEF_INCOMPLETE", "OUT_INVALID", "LOG_INVALID"},
     "bridge": {"BRIDGE_INVALID", "BRIDGE_UNKNOWN", "BRIDGE_VERB_UNKNOWN"},
     "finish": _PLAN | _WRITE | _ROUTE | _EVIDENCE | {"REF_UNKNOWN", "STATUS_INVALID", "NOT_STARTED",
         "CHECKS_MISSING", "CHECKS_RED", "DEVIATION_REQUIRED", "ESCALATION_REQUIRED", "DECISION_REQUIRED", "UNITS_OPEN"},

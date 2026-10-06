@@ -3,21 +3,30 @@
 ``build`` maps ``context.collect`` into the ``execution-input`` document by the ``brief-mapping`` table of
 ``knowledge/task-changes``. It is read-only: no ``PlanLock``, no plan or log writes, no ``context/`` pack. Lifecycle
 instructions and the report API never enter the document; the full pack stays reachable through ``context_refs``.
+
+Run as ``plan.py bridge orch brief <plan> <item> [--unit U#] [--inline-reads] [--out FILE] [--repo NAME=PATH]``.
 """
 from __future__ import annotations
 
+import argparse
 import copy
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import re
+import sys
 
-from . import context, store
-from .model import ITEM_ID, PlanError, item_phase
+_LIB = Path(__file__).resolve().parents[2] / "lib"
+if str(_LIB) not in sys.path:  # direct runs; the dispatcher already sets PYTHONPATH
+    sys.path.insert(0, str(_LIB))
+
+from task.plan import context, store  # noqa: E402
+from task.plan.model import ITEM_ID, PlanError, item_phase  # noqa: E402
 
 SCHEMA = "urn:swissknifeman:orch:exec:execution-input:v1"
 CONTRACT_VERSION = "exec/v1"
-TOOL = "task/plan.py brief"
+TOOL = "task/bridges/orch brief"
 REPORT = ["summary", "changed_paths", "checks_run", "evidence", "open_issues"]
 ESCALATION = ["A required read is missing or contradicts the goal",
               "An acceptance check cannot pass without leaving scope"]
@@ -41,7 +50,8 @@ def canonical_digest(doc: dict) -> str:
 
 def _task_version() -> str:
     try:
-        manifest = Path(__file__).resolve().parents[3] / ".claude-plugin" / "plugin.json"
+        root = Path(os.environ.get("TASK_ROOT") or Path(__file__).resolve().parents[2])
+        manifest = root / ".claude-plugin" / "plugin.json"
         return str(json.loads(manifest.read_text(encoding="utf-8"))["version"])
     except (OSError, ValueError, KeyError):
         return "unknown"
@@ -294,3 +304,43 @@ def write(plan: store.Plan, item_id: str, out: str | Path, *, unit_id: str | Non
     target = check_out(plan, out)
     store.atomic_write(target, render(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos))
     return target
+
+
+def _repo_mapping(text: str) -> tuple[str, str]:
+    name, sep, path = text.partition("=")
+    if not sep or not re.fullmatch(r"[a-z0-9-]+", name) or not path:
+        raise argparse.ArgumentTypeError("expected NAME=PATH, for example swissknifeman=/work/swissknifeman")
+    return name, path
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(prog="plan.py bridge orch brief",
+                                     description="execution-input (exec/v1) of an item or unit, read-only")
+    parser.add_argument("plan", help="plan id, PLAN<N> or path")
+    parser.add_argument("item")
+    parser.add_argument("--unit", metavar="U#", help="brief one unit of the item")
+    parser.add_argument("--inline-reads", action="store_true", help="embed the full text of existing text reads")
+    parser.add_argument("--out", type=Path, help="write the document to FILE instead of stdout")
+    parser.add_argument("--repo", action="append", default=[], type=_repo_mapping, metavar="NAME=PATH",
+                        help="repository root of references to another repository (repeatable)")
+    parser.add_argument("--plans-root", type=Path, default=None, help="plans/ directory (default: nearest up from cwd)")
+    args = parser.parse_args(argv)
+    try:
+        plan = store.load_plan(store.resolve_plan_dir(args.plan, args.plans_root))
+        if args.out is None:
+            print(render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads, repos=dict(args.repo)),
+                  end="")
+        else:
+            print(write(plan, args.item, args.out, unit_id=args.unit, inline_reads=args.inline_reads,
+                        repos=dict(args.repo)))
+    except PlanError as exc:
+        print(f"{exc.code}: {exc.message}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"IO_ERROR: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

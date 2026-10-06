@@ -1,4 +1,5 @@
-"""plan.py brief (exec/v1 execution-input): field mapping, units, inline reads, refusals, determinism, read-only."""
+"""plan.py bridge orch brief (exec/v1 execution-input): field mapping, units, inline reads, refusals, determinism,
+read-only, ``--out``, and the core no longer knowing the verb."""
 import hashlib
 import json
 import subprocess
@@ -6,18 +7,21 @@ import sys
 import unittest
 from pathlib import Path
 
-_LIB = Path(__file__).resolve().parents[2] / "lib"
-if str(_LIB) not in sys.path:
-    sys.path.insert(0, str(_LIB))
+_BRIDGE = Path(__file__).resolve().parents[1]
+_TASK = Path(__file__).resolve().parents[3]
+for _path in (_TASK / "lib", _TASK / "tests" / "engine", _BRIDGE):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
-from task.plan import brief, lifecycle, ops, units  # noqa: E402
+import brief  # noqa: E402
+from task.plan import context, lifecycle, ops, store, units  # noqa: E402
+from task.plan.model import PlanError  # noqa: E402
+import test_context  # noqa: E402
+import test_lifecycle  # noqa: E402
+import test_refs  # noqa: E402
 
-try:
-    from . import test_lifecycle
-except ImportError:  # run as `discover -s tests/engine` (no parent package)
-    import test_lifecycle
-
-SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "plan.py"
+SCRIPT = _TASK / "scripts" / "plan.py"
+BRIDGE = ("bridge", "orch", "brief")
 
 
 def tree_hashes(root: Path) -> dict:
@@ -108,10 +112,9 @@ class MappingTests(BriefCase):
         self.assertEqual((prov["kind"], prov["plan"], prov["item"]), ("plan", "PLAN1", "P1.1"))
         self.assertEqual(prov["plan_dir"], f"plans/{self.root.name}")
         self.assertNotIn("unit", prov)
-        self.assertEqual(prov["generated_by"]["tool"], "task/plan.py brief")
+        self.assertEqual(prov["generated_by"]["tool"], "task/bridges/orch brief")
         self.assertEqual(prov["source_digest"],
-                         hashlib.sha256(__import__("task.plan.context", fromlist=["x"]).render(
-                             self.load(), "P1.1", with_scout=False).encode()).hexdigest())
+                         hashlib.sha256(context.render(self.load(), "P1.1", with_scout=False).encode()).hexdigest())
         pack, document = doc["context_refs"]
         self.assertEqual(pack["kind"], "pack")
         self.assertEqual(pack["path"], f"plans/{self.root.name}/context/P1.1.json")
@@ -298,7 +301,7 @@ class ReadOnlyTests(BriefCase):
     def test_build_and_cli_leave_every_plan_file_untouched(self):
         before = tree_hashes(self.root)
         self.brief()
-        subprocess.run([sys.executable, str(SCRIPT), "brief", str(self.root), "P1.1"],
+        subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, str(self.root), "P1.1"],
                        capture_output=True, text=True, timeout=30, check=True)
         self.assertEqual(tree_hashes(self.root), before)
         self.assertFalse((self.root / "context").exists())
@@ -307,7 +310,7 @@ class ReadOnlyTests(BriefCase):
 class CliTests(BriefCase):
     def run_cli(self, *args, output=None):
         head = ["--output", output] if output else []
-        return subprocess.run([sys.executable, str(SCRIPT), *head, "brief", str(self.root), *args],
+        return subprocess.run([sys.executable, str(SCRIPT), *head, *BRIDGE, str(self.root), *args],
                               capture_output=True, text=True, timeout=30)
 
     def test_stdout_is_the_document(self):
@@ -331,21 +334,186 @@ class CliTests(BriefCase):
         self.assertEqual(doc["provenance"]["unit"], unit_id)
         self.assertEqual(doc["reads"][0]["content"], "print('x')\n")
 
-    def test_json_envelope_and_refusal_codes(self):
-        ok = json.loads(self.run_cli("P1.1", output="json").stdout)
-        self.assertTrue(ok["ok"])
-        self.assertEqual(ok["data"]["contract_version"], "exec/v1")
-        bad = self.run_cli("P2.1", output="json")
-        self.assertEqual(bad.returncode, 1)
-        self.assertEqual(json.loads(bad.stdout)["error"]["code"], "PHASE_NOT_DETAILED")
-        text = self.run_cli("P2.1")
-        self.assertEqual(text.returncode, 1)
-        self.assertTrue(text.stderr.startswith("PHASE_NOT_DETAILED:"))
+    def test_bridge_owns_its_output_and_refusal_codes(self):
+        ok = self.run_cli("P1.1", output="json")  # the dispatcher passes bridge output through, no envelope
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertEqual(json.loads(ok.stdout)["contract_version"], "exec/v1")
+        for output in (None, "json"):
+            bad = self.run_cli("P2.1", output=output)
+            self.assertEqual(bad.returncode, 1)
+            self.assertTrue(bad.stderr.startswith("PHASE_NOT_DETAILED:"), bad.stderr)
+
+    def test_main_takes_the_plan_reference_and_plans_root(self):
+        result = subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, self.root.name, "P1.1", "--plans-root",
+                                 str(self.plans)], capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), self.brief())
+        missing = subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, "absent", "P1.1", "--plans-root",
+                                  str(self.plans)], capture_output=True, text=True, timeout=30)
+        self.assertEqual(missing.returncode, 1)
+        self.assertTrue(missing.stderr.startswith("PLAN_NOT_FOUND:"), missing.stderr)
+
+    def test_usage_errors_exit_2(self):
+        self.assertEqual(self.run_cli().returncode, 2)
+        self.assertEqual(self.run_cli("P1.1", "--repo", "bad").returncode, 2)
 
     def test_malformed_unit_id_is_refused_by_the_api(self):
         result = self.run_cli("P1.1", "--unit", "x")
         self.assertEqual(result.returncode, 1)
         self.assertTrue(result.stderr.startswith("REF_INVALID:"))
+
+
+class OutTests(BriefCase):
+    """``--out`` (formerly in the core envelope tests)."""
+
+    def run_cli(self, *args):
+        return subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, str(self.root), *args],
+                              capture_output=True, text=True, timeout=30)
+
+    def test_out_must_be_a_file_outside_the_plan(self):
+        plan = store.load_plan(self.root)
+        for bad in ("", str(self.root / "brief-copy.json"), str(self.root / "phases" / "P1" / "P1.1.json"),
+                    str(self.root), str(self.plans)):
+            with self.subTest(out=bad):
+                with self.assertRaises(PlanError) as ctx:
+                    brief.write(plan, "P1.1", bad)
+                self.assertEqual(ctx.exception.code, "OUT_INVALID")
+        self.assertFalse((self.root / "brief-copy.json").exists())
+
+    def test_a_refused_out_leaves_the_plan_untouched(self):
+        before = (self.root / "phases" / "P1" / "P1.1.json").read_bytes()
+        result = self.run_cli("P1.1", "--out", str(self.root / "phases" / "P1" / "P1.1.json"))
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(result.stderr.startswith("OUT_INVALID:"), result.stderr)
+        self.assertEqual((self.root / "phases" / "P1" / "P1.1.json").read_bytes(), before)
+
+    def test_malformed_ids_are_refused_by_the_api_not_the_parser(self):
+        for argv, code in ((("P1.1", "--unit", "x"), "REF_INVALID"), (("P1", ), "REF_INVALID"),
+                           (("P1.1", "--unit", "U9"), "REF_UNKNOWN")):
+            with self.subTest(argv=argv):
+                result = self.run_cli(*argv)
+                self.assertEqual(result.returncode, 1)
+                self.assertTrue(result.stderr.startswith(f"{code}:"), result.stderr)
+
+    def test_out_writes_a_new_file_and_reports_its_path(self):
+        target = self.plans.parent / "briefs" / "p1.json"
+        result = self.run_cli("P1.1", "--out", str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, f"{target.resolve()}\n")
+        self.assertEqual(json.loads(target.read_text())["input_id"].split("@")[0], "PLAN1.P1.1")
+
+
+class RefReadTests(test_lifecycle.LifeCase):
+    """Reads by reference (formerly in the core context tests): exec/v1 reads stay path-based."""
+
+    add_design = test_context.JsonContextTests.add_design
+
+    def test_the_brief_keeps_exec_reads_path_based(self):
+        self.add_design()
+        test_context.force_patch(self.root, "P1.1", {"reads": [
+            {"ref": "knowledge/design#steps", "why": "steps", "required": True}]})
+        read, = brief.build(self.load(), "P1.1")["reads"]
+        self.assertNotIn("ref", read)
+        self.assertEqual((read["path"], read["section"]), ("@plan/knowledge/design.json", "steps"))
+
+    def test_required_ref_sections_refuse_the_brief_without_mutation(self):
+        self.add_design()
+        for extra in ({"ref": "knowledge/design#missing"},
+                      {"ref": "knowledge/design", "section": "missing"},
+                      {"ref": "knowledge/design#Steps"}):  # fragments name ids, not titles
+            with self.subTest(extra=extra):
+                test_context.force_patch(self.root, "P1.1", {"reads": [{**extra, "why": "needed", "required": True}]})
+                self.refused("READ_MISSING", lambda root: brief.build(self.load(), "P1.1"))
+
+    def test_required_ref_section_titles_remain_readable_via_section_key(self):
+        self.add_design()
+        test_context.force_patch(self.root, "P1.1", {"reads": [
+            {"ref": "knowledge/design", "section": "Steps", "why": "needed", "required": True}]})
+        self.assertEqual(brief.build(self.load(), "P1.1")["reads"][0]["content"]["sections"][0]["id"], "steps")
+
+    def test_unresolved_optional_ref_refuses_brief_but_declared_missing_file_is_allowed(self):
+        test_context.force_patch(self.root, "P1.1", {"reads": [
+            {"ref": "artifact/catalog", "why": "optional", "required": False}]})
+        self.refused("REF_UNRESOLVED", lambda root: brief.build(self.load(), "P1.1"))
+        test_context.force_patch(self.root, "P1.2", {"artifacts": [
+            {"id": "catalog", "path": "catalog.json", "role": "output"}]})
+        read, = brief.build(self.load(), "P1.1")["reads"]
+        self.assertEqual((read["path"], read["exists"]), ("catalog.json", False))
+        self.assertNotIn("ref", read)
+
+
+class CrossPlanTests(test_refs.RefsCase):
+    """Decisions of other plans (formerly in the core refs tests): resolved, refused, foreign repositories."""
+
+    def setUp(self):
+        super().setUp()
+        (self.plans.parent / "lib").mkdir()
+        (self.plans.parent / "lib" / "x.py").write_text("x\n", encoding="utf-8")
+
+    def brief(self, **kwargs):
+        return brief.build(self.load(), "P1.1", **kwargs)
+
+    def test_resolved_decision_is_in_the_brief_within_the_closed_schema(self):
+        ops.patch(self.root, "P1.1", {"decisions": ["PLAN2.D1"]})
+        entry = self.brief()["decisions"][0]
+        self.assertEqual(set(entry), {"ref", "loaded", "title", "status", "decision", "rationale", "source"})
+        self.assertEqual(entry["source"]["sha256"],
+                         hashlib.sha256((self.other / "decisions" / "D1.json").read_bytes()).hexdigest())
+
+    def test_unresolved_required_decision_refuses(self):
+        ops.patch(self.root, "P1.1", {"decisions": ["PLAN2.D1", "PLAN8.D3"]})
+        with self.assertRaises(PlanError) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
+        self.assertIn("PLAN8.D3", ctx.exception.message)
+        self.assertNotIn("PLAN2.D1", ctx.exception.message)
+
+    def test_not_accepted_required_decision_refuses(self):
+        key = ops.add_decision(self.other, "Open question", data={"options": [{"id": "A", "text": "x"}]})
+        ops.patch(self.root, "P1.1", {"decisions": [f"PLAN2.{key}"]})
+        with self.assertRaises(PlanError) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
+
+    def test_foreign_repository_via_repos(self):
+        repo, _ = self.foreign_repo()
+        ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
+        with self.assertRaises(PlanError) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
+        self.assertTrue(self.brief(repos={"ext": str(repo)})["decisions"][0]["loaded"])
+
+    def test_cli_brief_refuses_and_accepts_repo(self):
+        repo, _ = self.foreign_repo()
+        ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
+        base = [sys.executable, str(SCRIPT), *BRIDGE, str(self.root), "P1.1"]
+        refused = subprocess.run(base, capture_output=True, text=True, timeout=30)
+        self.assertEqual(refused.returncode, 1)
+        self.assertTrue(refused.stderr.startswith("REF_UNRESOLVED: "), refused.stderr)
+        ok = subprocess.run([*base, "--repo", f"ext={repo}"], capture_output=True, text=True, timeout=30)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertTrue(json.loads(ok.stdout)["decisions"][0]["loaded"])
+
+    def test_local_decisions_are_untouched(self):
+        key = test_refs.accepted(self.root, "Local")
+        ops.patch(self.root, "P1.1", {"decisions": [key]})
+        self.assertTrue(self.brief()["decisions"][0]["loaded"])
+
+
+class CoreVerbTests(unittest.TestCase):
+    def test_brief_is_no_longer_a_core_verb(self):
+        result = subprocess.run([sys.executable, str(SCRIPT), "brief", "PLAN1", "P1.1"],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("invalid choice: 'brief'", result.stderr)
+
+    def test_bridge_list_names_the_brief_verb(self):
+        result = subprocess.run([sys.executable, str(SCRIPT), "--output", "json", "bridge", "list"],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        row, = [r for r in json.loads(result.stdout)["data"]["bridges"] if r["name"] == "orch"]
+        self.assertIn("brief", row["verbs"])
+        self.assertEqual(row["contract"], "exec/v1")
 
 
 if __name__ == "__main__":

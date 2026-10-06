@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:86de7bbaeb7f0b86a7613e031a8ce4064b413554234ab449354859deff9bf184
+Canonical SHA-256: sha256:95ea8d0683bd59985720b78123709c54a1a03a769f4cd0de4e94743ed05a2c32
 Adapter: task.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -57,8 +57,9 @@ one commit per item, inside the item's scope.
 
 **Units (optional)**
 - Represent preparation, implementation, review and checks as units with dependencies and optional parents; `plan.py unit <plan> <item> add --title … --json …`.
-- Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give its
-  `phases/<Pn>/<Pn.m>/<U#>/brief.json` to a native subagent of your own provider; use `unit … next` for ready work and JSON context for dependencies.
+- Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give a native subagent of
+  your own provider its `phases/<Pn>/<Pn.m>/<U#>/brief.json` and the executor handoff in the Task package's
+  `references/executor-handoff.md`; record its report yourself with `unit … return`. Use `unit … next` for ready work.
 - You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`.
 - `finish` is refused until every unit is `accepted` or explicitly `rejected`. Python starts no agent; `plan.py stats` shows the numbers.
 

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/dev.md
-Canonical SHA-256: sha256:a16e7b3ae196a389c9430e088ef3d4ac36f5621cd78b19eee7189c9782046429
+Canonical SHA-256: sha256:8066b413f50f115911fcb03760484b7aa7a735e0b4829b77585af87c80fe74bd
 Adapter: task.cursor-command/1.0.18
 -->
 ---
@@ -49,6 +49,6 @@ recommended Next does not override Scope or Acceptance. External writes, changed
 dependencies require the corresponding authority or readiness. Repeated failure without new evidence requires
 a different approach.
 
-Use `general/verify-claims` for changing external premises. Preserve other people's changes. One scoped commit
+Use a claim-verification skill, when installed, for changing external premises. Preserve other people's changes. One scoped commit
 containing the product and required generated carriers is the normal completion. Report changes, actual checks,
 and limitations. Push or open a PR only on request.

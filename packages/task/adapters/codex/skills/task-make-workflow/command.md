@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/make-workflow.md
-Canonical SHA-256: sha256:566cad8e9413a4c8c4f011b8e3f4839016a12857554241071a19d3b217a9a41d
+Canonical SHA-256: sha256:6035337862f99e0d1c1af7403fa24936dcec4a3e94d37dd27d4bd575599d26b2
 Adapter: task.codex-command/1.0.18
 -->
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
@@ -19,7 +19,7 @@ Copy and fill a canonical template; do not write orchestration from scratch.
 
 ## 1. Load the authoring contract
 
-Use `general/workflow-craft` as the source of truth for template matching, the design/dev stage matrix,
+Use a workflow-craft skill, when installed, as the source of truth for template matching, the design/dev stage matrix,
 and slot rules. Do not duplicate its rules in the generated workflow.
 
 ## 2. Select a template
@@ -36,7 +36,7 @@ nor a pipeline fits, return to the main loop; do not fork template logic for the
 
 ## 3. Resolve slots
 
-Fill facts available from the request and repository. Use `general/spec-interview` only for a missing
+Fill facts available from the request and repository. Use a spec-interview skill, when installed, only for a missing
 product decision or authority boundary:
 
 - Ask one question at a time and branch on the answer.

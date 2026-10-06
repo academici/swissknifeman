@@ -21,7 +21,7 @@ Copy and fill a canonical template; do not write orchestration from scratch.
 
 ## 1. Load the authoring contract
 
-Use `general/workflow-craft` as the source of truth for template matching, the design/dev stage matrix,
+Use a workflow-craft skill, when installed, as the source of truth for template matching, the design/dev stage matrix,
 and slot rules. Do not duplicate its rules in the generated workflow.
 
 ## 2. Select a template
@@ -38,7 +38,7 @@ nor a pipeline fits, return to the main loop; do not fork template logic for the
 
 ## 3. Resolve slots
 
-Fill facts available from the request and repository. Use `general/spec-interview` only for a missing
+Fill facts available from the request and repository. Use a spec-interview skill, when installed, only for a missing
 product decision or authority boundary:
 
 - Ask one question at a time and branch on the answer.

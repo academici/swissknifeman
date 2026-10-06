@@ -7,7 +7,7 @@ export default withMermaid(defineConfig({
   description: 'Task commands and executable plan protocol',
   base: '/task/',
   lastUpdated: true,
-  ignoreDeadLinks: [/^\/harness\//, /^\/develop/],
+  ignoreDeadLinks: [/^\/develop/],
   themeConfig: {
     nav: [{ text: 'Overview', link: '/' }, { text: 'Methodology', link: '/methodology' }],
     sidebar: {

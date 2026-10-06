@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.4",
   "title": "Чистое ядро Task: dedupe reviewer, executor handoff, нейтрализация, без allowlist",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Ядро Task чистое: абзац --reviewer заменён ссылкой на reviewer-selection.md (F5/F20), Task-собственный `references/executor-handoff.md` и новая строка Units в plan-run.md (F10), unit brief без `report_api`, упоминания других пакетов и Skiller-skills нейтрализованы, шаг 7 (корневой скрипт) убран из validate.sh, проекции перегенерированы; `tests/boundary_allowlist.json` удалён, boundary-тест Task зелёный без исключений.",
   "why": "Заменяет пропущенные P3.3/P3.4 (D12, D13): I9 — одна копия текста; R1 — subagent не получает lifecycle (report_api); D12 — Task самодостаточен без Skiller; ядро не зовёт корневые скрипты.",
   "scope": {
@@ -256,6 +256,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T11:21:59Z"
+  "result": {
+    "started_at": "2026-10-06T15:47:28Z",
+    "finished_at": "2026-10-06T16:06:54Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a111e4-f14d-71a3-bef8-7e3ae523d7ad"
+    },
+    "notes": "Dedupe F5/F20, Task-owned executor handoff + Units docs aligned; report_api removed from unit brief; partner/skill names neutralized and projections regenerated; managed gate removed from Task validation; allowlist deleted. Task validate green (650/560/87); delta checks 14, final renderer no-op. Docs updated. Combined native grok-4.7/high review GREEN, artifacts/P7.5/review-final.json; checks/artifacts in artifacts/P7.4.",
+    "deviations": [
+      "Narrow .claude/runs runtime exclusion; root CHANGELOG outside task_files; reviewer correction extends workflows Units docs beyond literal substitution table; broad validation deferred to combined final candidate per owner."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T16:06:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T16:06:54Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T16:06:54Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T16:06:54Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-06T16:06:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T16:06:54Z"
 }

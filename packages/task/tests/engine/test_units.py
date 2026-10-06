@@ -131,7 +131,7 @@ class DispatchTests(UnitCase):
         value = json.loads(units.dispatch(self.root, "P1.1", "U1", HAIKU).read_text())
         self.assertEqual(value["unit"]["goal"], "Error types")
         self.assertEqual(value["context"]["item"]["rules"], ["Keep it small"])
-        self.assertEqual(value["report_api"]["verb"], "unit return")
+        self.assertNotIn("report_api", value)
 
     def test_refusals(self):
         self.add("Errors", U1)

@@ -113,8 +113,7 @@ def brief(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False)
             "context": context.collect(plan, item_id),
             "reads": [context.read_entry(plan, r) for r in unit.get("reads", [])],
             "checks": [copy.deepcopy(by_id[c] if isinstance(c, str) else c) for c in unit.get("checks", [])],
-            "rework": (unit.get("outcome") or {}).get("notes", "") if rework else "",
-            "report_api": {"verb": "unit return", "item": item_id, "unit": unit_id}}
+            "rework": (unit.get("outcome") or {}).get("notes", "") if rework else ""}
 
 
 def brief_text(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False) -> str:

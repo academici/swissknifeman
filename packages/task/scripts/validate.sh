@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# validate.sh — package structural checks task (CI + locally), according to the example
-# packages/maind/scripts/validate.sh. Checks: compilation Python (lib/tests/scripts),
+# validate.sh — package structural checks task (CI + locally). Checks: compilation Python (lib/tests/scripts),
 # syntax bash (scripts/*.sh), required files, frontmatter slash-commands
 # (description/model/effort — task kicks the model/effort each command), unittest
 # (including the plan engine tests/engine), and - for selected plans or the fleet -
@@ -23,21 +22,21 @@ cd "$REPO_ROOT"
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
-echo "[1/7] python compile"
+echo "[1/6] python compile"
 python3 -m compileall -q lib tests scripts || err "py_compile"
 
-echo "[2/7] bash syntax"
+echo "[2/6] bash syntax"
 for f in scripts/*.sh; do
   bash -n "$f" || err "bash -n $f"
 done
 
-echo "[3/7] required files"
+echo "[3/6] required files"
 for f in .claude-plugin/plugin.json lib/task/__init__.py lib/task/plan/__init__.py \
          scripts/plan.py schemas/plan/v1/item.schema.json commands/design.md; do
   [[ -e "$f" ]] || err "no file: $f"
 done
 
-echo "[4/7] slash-commands (frontmatter: description/model/effort)"
+echo "[4/6] slash-commands (frontmatter: description/model/effort)"
 python3 - <<'PY' || err "broken frontmatter in commands/*.md"
 import glob, sys
 
@@ -75,7 +74,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[5/7] tests (incl. plan engine) + plan.py check on selected plans"
+echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
 # lib/ — package task; MONOREPO_ROOT (two levels above the package) — to optional
 # was imported core (command_render / session_context use it with a fallback).
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
@@ -119,13 +118,13 @@ fi
 # P0.7 — parity of provider projections of teams was maintained only by unit-tests; gate
 # of the generator also covers claude-golden and publication-lock.
 
-echo "[5b/7] publication version ↔ umbrella ↔ manifests"
+echo "[5b/6] publication version ↔ umbrella ↔ manifests"
 if [[ -n "$MONOREPO_ROOT" ]]; then
   python3 "$REPO_ROOT/scripts/check-publication-version.py" "$MONOREPO_ROOT" \
     || err "publication version drift — bump plugin_version + render-provider-commands"
 fi
 
-echo "[6/7] provider command projections (render-provider-commands --check)"
+echo "[6/6] provider command projections (render-provider-commands --check)"
 if [[ -n "$MONOREPO_ROOT" ]]; then
   python3 scripts/render-provider-commands.py --check --root "$MONOREPO_ROOT" \
     || err "team projections diverged from canon - python3 packages/task/scripts/render-provider-commands.py --write --root ."
@@ -133,13 +132,6 @@ else
   echo "  command projections: monorepo root not found (standalone-layout) — gate skipped"
 fi
 
-echo "[7/7] managed blocks (sync-managed-blocks --check)"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  python3 "$MONOREPO_ROOT/scripts/sync-managed-blocks.py" --check --root "$MONOREPO_ROOT" \
-    || err "managed blocks drifted - python3 scripts/sync-managed-blocks.py --write --root ."
-else
-  echo "  managed blocks: monorepo root not found (standalone-layout) — gate skipped"
-fi
 
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: FAILURE" >&2; exit 1; fi

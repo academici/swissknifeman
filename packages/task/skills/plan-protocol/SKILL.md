@@ -127,12 +127,7 @@ runs only on explicit owner invocation and writes a verdict file plus a `note` e
   [references/review-mode.md](references/review-mode.md) — per-command notes.
 - [references/work-references.md](references/work-references.md) — Short IDs and qualified references.
 
-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
-exact native route; without an explicit review request no review runs. `plan-run` accepts
-`--review-effort`; review/audit accept `--effort`. See the Task package's
-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
+Reviewer selection: see the Task package's references/reviewer-selection.md.
 
 ## JSON orchestration and snapshots
 

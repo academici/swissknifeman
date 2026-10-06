@@ -14,9 +14,4 @@ Applies to `task:plan-audit` and to a review item added by `--review`.
 6. Fixes are execution work of the owning item (`plan.py reopen` by the owner when it is closed);
    the reviewer does not fix and does not start a second pass without a new question.
 
-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
-exact native route; without an explicit review request no review runs. `plan-run` accepts
-`--review-effort`; review/audit accept `--effort`. See the Task package's
-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
+Reviewer selection: see the Task package's references/reviewer-selection.md.

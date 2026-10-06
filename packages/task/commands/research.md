@@ -18,7 +18,7 @@ Profile `research`:
 2. Use breadth-first fan-out only for large independent facets. Separate discovery from synthesis and cite
    sources explicitly. Delegate the smallest useful number of searches; do locally what needs only a few tool
    calls. Do not ask a subagent to recheck the same work. Adversarial verification of another worker's findings
-   is independent verification. Before multi-agent JavaScript orchestration, use `general/workflow-craft` and
+   is independent verification. Before multi-agent JavaScript orchestration, use a workflow-craft skill, when installed, and
    the canonical templates in `packages/task/workflows/README.md`.
 3. Verify changing external claims before recording them through `verify-claims`; do not rely on memory.
 4. Record material sources in provenance (`docs/reference.md` when present).

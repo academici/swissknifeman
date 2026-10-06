@@ -43,7 +43,7 @@
     "consumed": [
       {
         "name": "routing",
-        "donor": "harness",
+        "donor": "donor-package",
         "pinned": "v2",
         "reaction": "re-check"
       }

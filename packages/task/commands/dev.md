@@ -44,6 +44,6 @@ recommended Next does not override Scope or Acceptance. External writes, changed
 dependencies require the corresponding authority or readiness. Repeated failure without new evidence requires
 a different approach.
 
-Use `general/verify-claims` for changing external premises. Preserve other people's changes. One scoped commit
+Use a claim-verification skill, when installed, for changing external premises. Preserve other people's changes. One scoped commit
 containing the product and required generated carriers is the normal completion. Report changes, actual checks,
 and limitations. Push or open a PR only on request.

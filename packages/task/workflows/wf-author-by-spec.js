@@ -38,7 +38,7 @@ const FILES = [
 ]
 
 // SLOT: pipeline commands - mandatory runs after editing (empty if not present).
-// Example swissknifeman: check-translations.sh --stamp → skiller registry → validate.sh.
+// Example swissknifeman: check-translations.sh --stamp → registry regeneration → validate.sh.
 // guarded-optional-args: empty array - obvious default «no pipeline» (see `CONVEYOR.length ?
 // … : null` below), not skipping a check - a pattern from `wf-agentools-drive` (cross-ref, do not vendor).
 const CONVEYOR = []

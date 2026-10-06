@@ -33,7 +33,9 @@ def core_files() -> list[str]:
     for path in sorted(ROOT.rglob("*")):
         relative = path.relative_to(ROOT).as_posix()
         if (not path.is_file() or relative in SKIPPED_FILES or relative.startswith(SKIPPED_DIRS)
-                or SKIPPED_PARTS & set(path.relative_to(ROOT).parts)):
+                or SKIPPED_PARTS & set(path.relative_to(ROOT).parts)
+                or any(parts == (".claude", "runs") for parts in
+                       zip(path.relative_to(ROOT).parts, path.relative_to(ROOT).parts[1:]))):
             continue
         files.append(relative)
     return files

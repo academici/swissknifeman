@@ -63,30 +63,27 @@ agents build, and stays the integrator: it reviews and tests every returned piec
 - Split only into independent pieces: each unit owns its `files` (disjoint from every unit it has no `depends_on`
   path to; `plan.py check` and `unit … add` enforce it) and has its own checks and minimum route.
 - Verbs: `plan.py unit <plan> <item> add --title T --json '{"files": […], "mode": "delegate"}'`, then
-  `unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, `return --notes … --changed …` (the worker),
+  `unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, `return --notes … --changed …` (the integrator records the worker report),
   `accept|rework|reject --notes …` (the executor). `rework` sends the piece back to `dispatched` and rewrites its brief;
   every transition logs a `delegate` event. `mode: self` units are never dispatched (`UNIT_SELF`).
 - `dispatch` writes `phases/<Pn>/<Pn.m>/<U#>/brief.json`: goal, owned files, reads, item rules and decisions, checks,
-  where to report. Python starts no agent: hand the brief to a native subagent of your provider (Claude Code Task
-  tool, Codex, Cursor or Grok subagents) and run parallel-safe units together (the pack's Units section lists them).
+  and rework notes. Python starts no agent: give the brief and the Task package's `references/executor-handoff.md`
+  to a native subagent of your provider (Claude Code Task tool, Codex, Cursor or Grok subagents). The worker returns
+  its report to the integrator, who records `unit … return`; the worker does not run `plan.py`. Run parallel-safe
+  units together (the pack's Units section lists them).
 - `finish --status done|done_with_deviations` is refused with `UNITS_OPEN` while a unit is `dispatched` or `returned`.
 - `plan.py stats <plan> [--json]` reads `log.jsonl` only: friction by type and item, scout outcomes and mean seconds,
   unit outcomes (accepted, reworked, rejected) and median minutes per class and model. No thresholds: turning scout or
   delegation on by default is a later owner decision based on these numbers.
 - Roadmap trigger (not implemented): if units are used in at least N plans and `stats` shows an accepted share of at
-  least X, consider `packages/artifex` as a deterministic dispatcher that takes `units[]` as its slice source.
+  least X, consider a deterministic dispatcher that takes `units[]` as its slice source.
 
 ## Bundles
 
 - Review profiles for `wf-audit-adversarial.js` (constitution + measurements by type
-  artifact) - skill `quality/artifact-review`; conformance-finder's by stack skills -
+  artifact) - an artifact-review skill, when installed; conformance-finder's by stack skills -
   command `/task:review`.
 - Full cycle in which workflow templates occupy the research/exec/review stages -
   [Methodology](./methodology).
 
-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
-exact native route; without an explicit review request no review runs. `plan-run` accepts
-`--review-effort`; review/audit accept `--effort`. See the Task package's
-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
+Reviewer selection: see the Task package's references/reviewer-selection.md.

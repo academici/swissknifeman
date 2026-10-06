@@ -1,4 +1,4 @@
-"""Task owns a portable, on-demand plan canon without a separate Skiller plugin."""
+"""Task owns a portable, on-demand plan canon without a separate plugin."""
 import json
 from pathlib import Path
 import re
@@ -12,12 +12,12 @@ RUNTIME = ROOT / "packages/task/skills/plan-protocol"
 
 
 class PlanProtocolRuntimeTests(unittest.TestCase):
-    def test_relocated_runtime_resolves_references_without_skiller(self):
+    def test_relocated_runtime_resolves_references_in_task_only_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
             checkout = Path(directory)
             runtime = checkout / "packages/task/skills/plan-protocol"
             shutil.copytree(RUNTIME, runtime)
-            self.assertFalse((checkout / "packages/skiller").exists())
+            self.assertEqual({path.name for path in (checkout / "packages").iterdir()}, {"task"})
             body = (runtime / "SKILL.md").read_text()
             references = re.findall(r"\]\(([^)]+)\)", body)
             self.assertIn("references/work-references.md", references)
@@ -32,5 +32,4 @@ class PlanProtocolRuntimeTests(unittest.TestCase):
         self.assertTrue(RUNTIME.is_relative_to(ROOT / "packages/task/skills"))
         claude = json.loads((ROOT / "packages/task/.claude-plugin/plugin.json").read_text())
         self.assertEqual(claude["skills"], ["./skills"])
-        self.assertFalse((ROOT / "packages/skiller/skills/general/plan-protocol").exists())
         self.assertFalse((RUNTIME / "provenance.json").exists())

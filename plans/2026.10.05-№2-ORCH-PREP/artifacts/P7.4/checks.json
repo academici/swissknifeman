@@ -1,0 +1,40 @@
+{
+  "item": "P7.4",
+  "checks": {
+    "V1": {
+      "cmd": "! grep -rn 'exact native route; without an explicit review request no review runs' packages/task/skills packages/task/docs packages/task/commands",
+      "exit": 0,
+      "evidence": "V1.log: declared command executed, exit 0"
+    },
+    "V2": {
+      "cmd": "test ! -e packages/task/tests/boundary_allowlist.json && cd packages/task && PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "exit": 0,
+      "evidence": "validate.log: tests.test_boundary plus allowlist-absent.log"
+    },
+    "V3": {
+      "cmd": "grep -n 'references/executor-handoff.md' packages/task/commands/plan-run.md",
+      "exit": 0,
+      "evidence": "V3.log: declared command executed, exit 0"
+    },
+    "V4": {
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+      "exit": 0,
+      "evidence": "validate.log: renderer check OK"
+    },
+    "V5": {
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "exit": 0,
+      "evidence": "validate.log: 650 package tests, 560 engine tests, 87 bridge tests; validate OK"
+    }
+  },
+  "notes": "Overlapping checks reuse the suite which executes the declared command. Task validator itself reruns engine tests; it was invoked only once.",
+  "correction_checks": {
+    "evidence": "correction-checks.log",
+    "exit": 0,
+    "tests": 14
+  },
+  "final_renderer_check": {
+    "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+    "exit": 0
+  }
+}

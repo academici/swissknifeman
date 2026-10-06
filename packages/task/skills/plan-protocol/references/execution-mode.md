@@ -15,9 +15,4 @@ The requested items (or the ready batch from `plan.py next`) are one ordered wor
 6. Broad suites run once in the last item of a phase; earlier items run their affected checks.
 7. The final report gives the outcome per item and the exact `plan.py next <plan>` line.
 
-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
-exact native route; without an explicit review request no review runs. `plan-run` accepts
-`--review-effort`; review/audit accept `--effort`. See the Task package's
-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
+Reviewer selection: see the Task package's references/reviewer-selection.md.

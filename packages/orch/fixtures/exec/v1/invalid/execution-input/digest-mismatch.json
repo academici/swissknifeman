@@ -10,7 +10,7 @@
     "item": "P1.2",
     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
     "generated_by": {
-      "tool": "task/plan.py brief",
+      "tool": "plan-bridge brief",
       "task_version": "0.28.3"
     }
   },

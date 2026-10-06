@@ -31,7 +31,7 @@ REPORT = ["summary", "changed_paths", "checks_run", "evidence", "open_issues"]
 ESCALATION = ["A required read is missing or contradicts the goal",
               "An acceptance check cannot pass without leaving scope"]
 LIFECYCLE_PHRASES = (
-    "report_api", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
+    "report_api", "report API", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
 )
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")

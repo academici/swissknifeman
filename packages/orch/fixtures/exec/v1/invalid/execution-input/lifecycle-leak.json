@@ -1,8 +1,8 @@
 {
   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
   "contract_version": "exec/v1",
-  "input_id": "PLAN9.P1.2@4851e1b6c6c7",
-  "digest": "4851e1b6c6c7dc252e420605f38a9c125069db2afb4f63ae23cb7a5d72dbe44e",
+  "input_id": "PLAN9.P1.2@9384a1b74d13",
+  "digest": "9384a1b74d13b2424fc0920a6d7efcec0ffe395ae731771604835efcf23c28cf",
   "provenance": {
     "kind": "plan",
     "plan": "PLAN9",
@@ -10,7 +10,7 @@
     "item": "P1.2",
     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
     "generated_by": {
-      "tool": "task/plan.py brief",
+      "tool": "plan-bridge brief",
       "task_version": "0.28.3"
     }
   },
@@ -30,7 +30,7 @@
     ],
     "read_only": false
   },
-  "guidance": "Run task:plan-run after changing the code.",
+  "guidance": "Run report_api after changing the code.",
   "constraints": [
     {
       "text": "stdlib only",

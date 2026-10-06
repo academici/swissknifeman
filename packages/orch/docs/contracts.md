@@ -1,12 +1,12 @@
 # exec/v1 contracts
 
-Engine-neutral documents exchanged between Task, roles and engine bindings. The schemas in
+Engine-neutral documents exchanged between plan bridges, roles and engine bindings. The schemas in
 [`schemas/exec/v1/`](../schemas/exec/v1/) are the source of truth; this page is a short map.
 Engine operations and run states are described in [engine-port.md](engine-port.md).
 
 ## Conventions
 
-- JSON Schema draft 2020-12 in the closed keyword profile shared with Task (`orch.schema`).
+- JSON Schema draft 2020-12 in the closed keyword profile shared with the plan store (`orch.schema`).
   Numeric bounds and cross-field rules are semantic checks in `orch.contracts.semantic_checks`.
 - Every document carries `$schema` (`urn:swissknifeman:orch:exec:<kind>:v1`) and
   `contract_version: "exec/v1"`. An unknown version is refused with `CONTRACT_VERSION`.
@@ -25,15 +25,15 @@ errors return exit 1. `--quiet` suppresses stdout while preserving diagnostics a
 
 | Kind | Written by | Read by | Purpose |
 | --- | --- | --- | --- |
-| [`execution-input`](../schemas/exec/v1/execution-input.schema.json) | Task `plan.py brief`, ad-hoc/review input | engine, prompt render, role | What to do: goal, scope, acceptance, minimum route, result contract |
+| [`execution-input`](../schemas/exec/v1/execution-input.schema.json) | plan bridge `brief`, ad-hoc/review input | engine, prompt render, role | What to do: goal, scope, acceptance, minimum route, result contract |
 | [`run-policy`](../schemas/exec/v1/run-policy.schema.json) | owner/config, outside plan JSON | engine | Stage pipeline, review limits, retries, git and finalize actions |
-| [`role-manifest`](../schemas/exec/v1/role-manifest.schema.json) | orch `roles/` | binding, `skiller resolve --role` | Instruction references, skills, tool permissions, write authority |
+| [`role-manifest`](../schemas/exec/v1/role-manifest.schema.json) | orch `roles/` | binding, skill resolver | Instruction references, skills, tool permissions, write authority |
 | [`capability-record`](../schemas/exec/v1/capability-record.schema.json) | binding seeds, probes | `prepare` | What one binding × provider × CLI version supports |
 | [`launch-plan`](../schemas/exec/v1/launch-plan.schema.json) | `EnginePort.prepare` | `run`, reviewer | Resolved stages with argv/profile/prompt and refusals |
 | [`run-event`](../schemas/exec/v1/run-event.schema.json) | binding `watch` | `RunState` | Normalized event of a running stage |
 | [`stage-result`](../schemas/exec/v1/stage-result.schema.json) | `RunState.stage_result`, binding | coordinator, registrar | Outcome of one stage attempt |
 | [`effect-receipt`](../schemas/exec/v1/effect-receipt.schema.json) | engine | engine, reconcile | Idempotent record of an external effect |
-| [`check-evidence`](../schemas/exec/v1/check-evidence.schema.json) | engine, executor, human | Task `finish`, reviewer | Proof that an acceptance check ran on a candidate tree |
+| [`check-evidence`](../schemas/exec/v1/check-evidence.schema.json) | engine, executor, human | plan store `finish`, reviewer | Proof that an acceptance check ran on a candidate tree |
 
 ### execution-input
 
@@ -72,7 +72,7 @@ Semantic: exactly one `primary`; required stages refuse when unavailable; acycli
 | `instructions` | * | repository paths of canonical texts (no copied bodies) |
 | `tools` | * | `filesystem`, `shell`, `network`, `plan_api` permissions |
 | `write_authority`, `result_shape`, `model_class_min`, `forbidden_inputs` | * | authority and output shape |
-| `skills`, `agent_pack_roles` | | required/optional skills; link to harness agent-pack roles |
+| `skills`, `agent_pack_roles` | | required/optional skills; link to agent-pack roles |
 
 Semantic: `plan` authority ⇔ `plan_api: write`; `none` authority forbids filesystem writes.
 

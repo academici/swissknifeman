@@ -15,9 +15,8 @@ KINDS = (
     "execution-input", "run-policy", "role-manifest", "capability-record", "run-event",
     "stage-result", "effect-receipt", "check-evidence", "launch-plan",
 )
-LIFECYCLE_PHRASES = (
-    "report_api", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
-)
+# Plan bridges add their own stricter phrases.
+LIFECYCLE_PHRASES = ("report_api", "report API")
 
 
 class Issue(NamedTuple):

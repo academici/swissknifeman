@@ -112,4 +112,4 @@ Plan 2 probe.
 3. Add capability seeds `bindings/capabilities/<name>--<provider>.json` (`declared`, with evidence).
 4. Add a column to `bindings/matrix.json` and to the table above; the matrix test requires every cell.
 5. Add the binding to `BINDINGS`; the conformance test is parameterized by it.
-6. Do not change Task, Skiller or the input, policy and role schemas: needing that is a contract defect.
+6. Do not change the plan store, the skill catalog or the input, policy and role schemas: needing that is a contract defect.

@@ -1,0 +1,35 @@
+{
+  "item": "P7.5",
+  "checks": {
+    "V1": {
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "exit": 0,
+      "evidence": "validate.log: scripts/test.sh (78 tests), plus boundary-final.log (3 tests) after exact event exception"
+    },
+    "V2": {
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "exit": 0,
+      "evidence": "validate.log: validate OK (fixtures, schemas, tests)"
+    },
+    "V3": {
+      "cmd": "! grep -rnE 'plan\\.py|\\btask:[a-z]|\\bquality:|packages/(task|skiller|harness)' packages/orch --include=*.py --include=*.md --include=*.json --include=*.jsonl --exclude-dir=__pycache__",
+      "exit": 0,
+      "evidence": "V3.log: declared command executed, exit 0"
+    },
+    "V4": {
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py'",
+      "exit": 0,
+      "evidence": "../P7.4/validate.log: 87 bridge tests on combined candidate"
+    }
+  },
+  "notes": "Overlapping checks reuse the suite which executes the declared command. Task validator itself reruns engine tests; it was invoked only once.",
+  "correction_checks": {
+    "evidence": "correction-checks.log",
+    "exit": 0,
+    "tests": 16
+  },
+  "final_renderer_check": {
+    "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+    "exit": 0
+  }
+}

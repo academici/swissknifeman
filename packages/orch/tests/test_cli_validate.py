@@ -45,7 +45,7 @@ class CliValidateTests(unittest.TestCase):
 
     def test_warning_only_input_succeeds_and_preserves_level(self):
         doc = fixture("execution-input", "plan-bound")
-        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
+        doc["constraints"] = [{"text": "Use report_api", "source": "plan.rules[2]"}]
         for options in ((), ("--quiet",)):
             with self.subTest(options=options):
                 result = self.run_cli("execution-input", signed(doc), *options)
@@ -60,7 +60,7 @@ class CliValidateTests(unittest.TestCase):
 
     def test_warning_does_not_mask_errors(self):
         doc = fixture("execution-input", "plan-bound")
-        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
+        doc["constraints"] = [{"text": "Use report_api", "source": "plan.rules[2]"}]
         del doc["goal"]
         result = self.run_cli("execution-input", signed(doc))
         self.assertEqual(result.returncode, 1)

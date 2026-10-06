@@ -118,7 +118,7 @@
             "read",
             "write"
           ],
-          "description": "Task plan API permission."
+          "description": "Plan store API permission."
         }
       },
       "required": [

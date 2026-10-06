@@ -1,0 +1,1006 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c0bf1c09..55333865 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -58,6 +58,15 @@
+ 
+ ### Changed
+ 
++- **Чистое ядро Task:** межпакетные упоминания заменены нейтральными инструкциями,
++  временный boundary allowlist удалён; unit brief больше не передаёт `report_api`.
++  `plan-run` передаёт исполнителю собственный executor handoff, а повторяющийся текст
++  выбора ревьюера заменён ссылкой на canonical `references/reviewer-selection.md`.
++  Проверка managed-блоков остаётся в корневом CI; validate Task проверяет только свой пакет.
++- **Нейтральное ядро orch:** роли, документация и fixture provenance обращаются к plan store,
++  plan bridge и skill resolver; проверки lifecycle сохраняют нейтральные фразы,
++  а мост — более строгие ограничения. Boundary-тест проверяет весь текст ядра.
++
+ - **Синхронизация JSON v3 с main:** сохранены история релизов 0.28.0–0.28.3 и версии
+   опубликованных пакетов; JSON-фича остаётся в `[Unreleased]`. Опциональный `--reviewer`
+   выбирает отдельную нативную read-only сессию без обязательного ревью по риску; роли
+diff --git a/packages/orch/README.md b/packages/orch/README.md
+index 5d866d1a..c6619ebf 100644
+--- a/packages/orch/README.md
++++ b/packages/orch/README.md
+@@ -2,7 +2,7 @@
+ 
+ Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
+ Status: **internal, not published (PLAN2.D2)**. Runtime code uses only the Python
+-standard library and `orch`; it is independent of Task, Skiller, Harness and core.
++standard library and `orch`; it is independent of other packages of this repository.
+ 
+ The package supplies a closed-profile JSON Schema validator, shared `exec/v1`
+ definitions, all nine document schemas and their fixtures, canonical document
+@@ -25,5 +25,5 @@ warning-only documents), `1` invalid input or refusal, `2` usage error.
+ `--quiet` suppresses stdout and preserves diagnostics and the exit status.
+ 
+ The registry rejects schema keywords outside its closed profile. Its validator
+-is an adapted copy of `task/plan/schema.py` (PLAN2.D4); tests compare the supported
+-keywords and error codes by reading Task's source, without importing Task.
++is an adapted copy of the plan store's closed-profile validator (PLAN2.D4);
++the plan bridge tests keyword parity.
+diff --git a/packages/orch/docs/contracts.md b/packages/orch/docs/contracts.md
+index 639eeeb0..5d81ed46 100644
+--- a/packages/orch/docs/contracts.md
++++ b/packages/orch/docs/contracts.md
+@@ -1,12 +1,12 @@
+ # exec/v1 contracts
+ 
+-Engine-neutral documents exchanged between Task, roles and engine bindings. The schemas in
++Engine-neutral documents exchanged between plan bridges, roles and engine bindings. The schemas in
+ [`schemas/exec/v1/`](../schemas/exec/v1/) are the source of truth; this page is a short map.
+ Engine operations and run states are described in [engine-port.md](engine-port.md).
+ 
+ ## Conventions
+ 
+-- JSON Schema draft 2020-12 in the closed keyword profile shared with Task (`orch.schema`).
++- JSON Schema draft 2020-12 in the closed keyword profile shared with the plan store (`orch.schema`).
+   Numeric bounds and cross-field rules are semantic checks in `orch.contracts.semantic_checks`.
+ - Every document carries `$schema` (`urn:swissknifeman:orch:exec:<kind>:v1`) and
+   `contract_version: "exec/v1"`. An unknown version is refused with `CONTRACT_VERSION`.
+@@ -25,15 +25,15 @@ errors return exit 1. `--quiet` suppresses stdout while preserving diagnostics a
+ 
+ | Kind | Written by | Read by | Purpose |
+ | --- | --- | --- | --- |
+-| [`execution-input`](../schemas/exec/v1/execution-input.schema.json) | Task `plan.py brief`, ad-hoc/review input | engine, prompt render, role | What to do: goal, scope, acceptance, minimum route, result contract |
++| [`execution-input`](../schemas/exec/v1/execution-input.schema.json) | plan bridge `brief`, ad-hoc/review input | engine, prompt render, role | What to do: goal, scope, acceptance, minimum route, result contract |
+ | [`run-policy`](../schemas/exec/v1/run-policy.schema.json) | owner/config, outside plan JSON | engine | Stage pipeline, review limits, retries, git and finalize actions |
+-| [`role-manifest`](../schemas/exec/v1/role-manifest.schema.json) | orch `roles/` | binding, `skiller resolve --role` | Instruction references, skills, tool permissions, write authority |
++| [`role-manifest`](../schemas/exec/v1/role-manifest.schema.json) | orch `roles/` | binding, skill resolver | Instruction references, skills, tool permissions, write authority |
+ | [`capability-record`](../schemas/exec/v1/capability-record.schema.json) | binding seeds, probes | `prepare` | What one binding × provider × CLI version supports |
+ | [`launch-plan`](../schemas/exec/v1/launch-plan.schema.json) | `EnginePort.prepare` | `run`, reviewer | Resolved stages with argv/profile/prompt and refusals |
+ | [`run-event`](../schemas/exec/v1/run-event.schema.json) | binding `watch` | `RunState` | Normalized event of a running stage |
+ | [`stage-result`](../schemas/exec/v1/stage-result.schema.json) | `RunState.stage_result`, binding | coordinator, registrar | Outcome of one stage attempt |
+ | [`effect-receipt`](../schemas/exec/v1/effect-receipt.schema.json) | engine | engine, reconcile | Idempotent record of an external effect |
+-| [`check-evidence`](../schemas/exec/v1/check-evidence.schema.json) | engine, executor, human | Task `finish`, reviewer | Proof that an acceptance check ran on a candidate tree |
++| [`check-evidence`](../schemas/exec/v1/check-evidence.schema.json) | engine, executor, human | plan store `finish`, reviewer | Proof that an acceptance check ran on a candidate tree |
+ 
+ ### execution-input
+ 
+@@ -72,7 +72,7 @@ Semantic: exactly one `primary`; required stages refuse when unavailable; acycli
+ | `instructions` | * | repository paths of canonical texts (no copied bodies) |
+ | `tools` | * | `filesystem`, `shell`, `network`, `plan_api` permissions |
+ | `write_authority`, `result_shape`, `model_class_min`, `forbidden_inputs` | * | authority and output shape |
+-| `skills`, `agent_pack_roles` | | required/optional skills; link to harness agent-pack roles |
++| `skills`, `agent_pack_roles` | | required/optional skills; link to agent-pack roles |
+ 
+ Semantic: `plan` authority ⇔ `plan_api: write`; `none` authority forbids filesystem writes.
+ 
+diff --git a/packages/orch/docs/engine-port.md b/packages/orch/docs/engine-port.md
+index f09d3d72..18730464 100644
+--- a/packages/orch/docs/engine-port.md
++++ b/packages/orch/docs/engine-port.md
+@@ -112,4 +112,4 @@ Plan 2 probe.
+ 3. Add capability seeds `bindings/capabilities/<name>--<provider>.json` (`declared`, with evidence).
+ 4. Add a column to `bindings/matrix.json` and to the table above; the matrix test requires every cell.
+ 5. Add the binding to `BINDINGS`; the conformance test is parameterized by it.
+-6. Do not change Task, Skiller or the input, policy and role schemas: needing that is a contract defect.
++6. Do not change the plan store, the skill catalog or the input, policy and role schemas: needing that is a contract defect.
+diff --git a/packages/orch/fixtures/exec/v1/invalid/execution-input/bad-provenance.json b/packages/orch/fixtures/exec/v1/invalid/execution-input/bad-provenance.json
+index c4ab0098..d80c5460 100644
+--- a/packages/orch/fixtures/exec/v1/invalid/execution-input/bad-provenance.json
++++ b/packages/orch/fixtures/exec/v1/invalid/execution-input/bad-provenance.json
+@@ -1,8 +1,8 @@
+ {
+   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+   "contract_version": "exec/v1",
+-  "input_id": "PLAN9.P1.2@48a3ed6dda8f",
+-  "digest": "48a3ed6dda8f1530758066001bed3031a24dad4d65d697f2c2a28f8ded0638d3",
++  "input_id": "PLAN9.P1.2@d72d3dafaf47",
++  "digest": "d72d3dafaf47be2f73a7d7dc0c8ea01cf47d813feafdf46d92937630be3494ad",
+   "provenance": {
+     "kind": "unknown",
+     "plan": "PLAN9",
+@@ -10,7 +10,7 @@
+     "item": "P1.2",
+     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "generated_by": {
+-      "tool": "task/plan.py brief",
++      "tool": "plan-bridge brief",
+       "task_version": "0.28.3"
+     }
+   },
+diff --git a/packages/orch/fixtures/exec/v1/invalid/execution-input/digest-mismatch.json b/packages/orch/fixtures/exec/v1/invalid/execution-input/digest-mismatch.json
+index 2f62710d..68240747 100644
+--- a/packages/orch/fixtures/exec/v1/invalid/execution-input/digest-mismatch.json
++++ b/packages/orch/fixtures/exec/v1/invalid/execution-input/digest-mismatch.json
+@@ -10,7 +10,7 @@
+     "item": "P1.2",
+     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "generated_by": {
+-      "tool": "task/plan.py brief",
++      "tool": "plan-bridge brief",
+       "task_version": "0.28.3"
+     }
+   },
+diff --git a/packages/orch/fixtures/exec/v1/invalid/execution-input/extra-field.json b/packages/orch/fixtures/exec/v1/invalid/execution-input/extra-field.json
+index 761b9cc2..cbb7096b 100644
+--- a/packages/orch/fixtures/exec/v1/invalid/execution-input/extra-field.json
++++ b/packages/orch/fixtures/exec/v1/invalid/execution-input/extra-field.json
+@@ -1,8 +1,8 @@
+ {
+   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+   "contract_version": "exec/v1",
+-  "input_id": "PLAN9.P1.2@d7ffb1fe91b4",
+-  "digest": "d7ffb1fe91b47fef2ed5abe832dce81b49b532737272147feab44894315f2fd0",
++  "input_id": "PLAN9.P1.2@65e9227a62c1",
++  "digest": "65e9227a62c19e950c0e9a64e5349ca0df4b0dfa3f08cdcb7dfaba80b27de142",
+   "provenance": {
+     "kind": "plan",
+     "plan": "PLAN9",
+@@ -10,7 +10,7 @@
+     "item": "P1.2",
+     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "generated_by": {
+-      "tool": "task/plan.py brief",
++      "tool": "plan-bridge brief",
+       "task_version": "0.28.3"
+     }
+   },
+diff --git a/packages/orch/fixtures/exec/v1/invalid/execution-input/lifecycle-leak.json b/packages/orch/fixtures/exec/v1/invalid/execution-input/lifecycle-leak.json
+index b68c3ecb..e8d65baa 100644
+--- a/packages/orch/fixtures/exec/v1/invalid/execution-input/lifecycle-leak.json
++++ b/packages/orch/fixtures/exec/v1/invalid/execution-input/lifecycle-leak.json
+@@ -1,8 +1,8 @@
+ {
+   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+   "contract_version": "exec/v1",
+-  "input_id": "PLAN9.P1.2@4851e1b6c6c7",
+-  "digest": "4851e1b6c6c7dc252e420605f38a9c125069db2afb4f63ae23cb7a5d72dbe44e",
++  "input_id": "PLAN9.P1.2@9384a1b74d13",
++  "digest": "9384a1b74d13b2424fc0920a6d7efcec0ffe395ae731771604835efcf23c28cf",
+   "provenance": {
+     "kind": "plan",
+     "plan": "PLAN9",
+@@ -10,7 +10,7 @@
+     "item": "P1.2",
+     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "generated_by": {
+-      "tool": "task/plan.py brief",
++      "tool": "plan-bridge brief",
+       "task_version": "0.28.3"
+     }
+   },
+@@ -30,7 +30,7 @@
+     ],
+     "read_only": false
+   },
+-  "guidance": "Run task:plan-run after changing the code.",
++  "guidance": "Run report_api after changing the code.",
+   "constraints": [
+     {
+       "text": "stdlib only",
+diff --git a/packages/orch/fixtures/exec/v1/invalid/execution-input/missing-goal.json b/packages/orch/fixtures/exec/v1/invalid/execution-input/missing-goal.json
+index 7da89053..6fb2a21f 100644
+--- a/packages/orch/fixtures/exec/v1/invalid/execution-input/missing-goal.json
++++ b/packages/orch/fixtures/exec/v1/invalid/execution-input/missing-goal.json
+@@ -1,8 +1,8 @@
+ {
+   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+   "contract_version": "exec/v1",
+-  "input_id": "PLAN9.P1.2@0a87546a725f",
+-  "digest": "0a87546a725f99c9b9e52fdfdc7c129b2460b356d235adb0b5752d707793b310",
++  "input_id": "PLAN9.P1.2@4ebd76a0d826",
++  "digest": "4ebd76a0d8264a17a18968cd4afc36404707c83c31c6ceeab5826b7602a095f1",
+   "provenance": {
+     "kind": "plan",
+     "plan": "PLAN9",
+@@ -10,7 +10,7 @@
+     "item": "P1.2",
+     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "generated_by": {
+-      "tool": "task/plan.py brief",
++      "tool": "plan-bridge brief",
+       "task_version": "0.28.3"
+     }
+   },
+diff --git a/packages/orch/fixtures/exec/v1/valid/execution-input/plan-bound.json b/packages/orch/fixtures/exec/v1/valid/execution-input/plan-bound.json
+index 907adefb..62654685 100644
+--- a/packages/orch/fixtures/exec/v1/valid/execution-input/plan-bound.json
++++ b/packages/orch/fixtures/exec/v1/valid/execution-input/plan-bound.json
+@@ -1,8 +1,8 @@
+ {
+   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+   "contract_version": "exec/v1",
+-  "input_id": "PLAN9.P1.2@77492587d30e",
+-  "digest": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
++  "input_id": "PLAN9.P1.2@550ced0c6037",
++  "digest": "550ced0c6037dd512d197bd0696945c0a18ced394d75cb3bc959f69a8bafa656",
+   "provenance": {
+     "kind": "plan",
+     "plan": "PLAN9",
+@@ -10,7 +10,7 @@
+     "item": "P1.2",
+     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "generated_by": {
+-      "tool": "task/plan.py brief",
++      "tool": "plan-bridge brief",
+       "task_version": "0.28.3"
+     }
+   },
+diff --git a/packages/orch/lib/orch/contracts.py b/packages/orch/lib/orch/contracts.py
+index d31f928e..2d2431c0 100644
+--- a/packages/orch/lib/orch/contracts.py
++++ b/packages/orch/lib/orch/contracts.py
+@@ -15,9 +15,8 @@ KINDS = (
+     "execution-input", "run-policy", "role-manifest", "capability-record", "run-event",
+     "stage-result", "effect-receipt", "check-evidence", "launch-plan",
+ )
+-LIFECYCLE_PHRASES = (
+-    "report_api", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
+-)
++# Plan bridges add their own stricter phrases.
++LIFECYCLE_PHRASES = ("report_api", "report API")
+ 
+ 
+ class Issue(NamedTuple):
+diff --git a/packages/orch/lib/orch/schema.py b/packages/orch/lib/orch/schema.py
+index 4619a164..a9912752 100644
+--- a/packages/orch/lib/orch/schema.py
++++ b/packages/orch/lib/orch/schema.py
+@@ -1,6 +1,7 @@
+ """Closed-profile JSON Schema validator (stdlib only).
+ 
+-Adapted copy of task/plan/schema.py (PLAN2.D4).
++Adapted copy of the plan store's closed-profile validator (PLAN2.D4);
++the plan bridge tests keyword parity.
+ 
+ Supports exactly the keywords in ``SUPPORTED_KEYWORDS``; any other keyword in a schema file fails
+ closed with ``SchemaProfileError`` at load time. Validation collects every issue instead of stopping at the
+diff --git a/packages/orch/roles/reviewer.md b/packages/orch/roles/reviewer.md
+index 5d64fd41..12cd739a 100644
+--- a/packages/orch/roles/reviewer.md
++++ b/packages/orch/roles/reviewer.md
+@@ -11,9 +11,9 @@ Review one candidate change once and return findings. You judge; you do not repa
+ 
+ ## You do
+ 
+-- Apply the review method of skill `quality:code-review` to code changes and of skill
+-  `quality:artifact-review` to plans, specifications and documentation. Load the skill; this text
+-  does not restate its method.
++- Apply the review method of the skills listed in your role manifest (`skills`): the code-review
++  skill for code changes, the artifact-review skill for plans, specifications and documentation.
++  Load them; this text does not repeat them.
+ - Judge the candidate against its contract: scope, acceptance checks, deliverables, decisions and
+   constraints in the input.
+ - Make one pass over the whole candidate and stop.
+diff --git a/packages/orch/schemas/exec/v1/execution-input.schema.json b/packages/orch/schemas/exec/v1/execution-input.schema.json
+index b6946994..a320a5a5 100644
+--- a/packages/orch/schemas/exec/v1/execution-input.schema.json
++++ b/packages/orch/schemas/exec/v1/execution-input.schema.json
+@@ -62,7 +62,7 @@
+                 },
+                 "task_version": {
+                   "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+-                  "description": "Task package version."
++                  "description": "Plan store version."
+                 }
+               },
+               "required": [
+diff --git a/packages/orch/schemas/exec/v1/role-manifest.schema.json b/packages/orch/schemas/exec/v1/role-manifest.schema.json
+index cfbe5501..ac74f91f 100644
+--- a/packages/orch/schemas/exec/v1/role-manifest.schema.json
++++ b/packages/orch/schemas/exec/v1/role-manifest.schema.json
+@@ -118,7 +118,7 @@
+             "read",
+             "write"
+           ],
+-          "description": "Task plan API permission."
++          "description": "Plan store API permission."
+         }
+       },
+       "required": [
+diff --git a/packages/orch/tests/test_boundaries.py b/packages/orch/tests/test_boundaries.py
+index 450ee0dc..d41fde4e 100644
+--- a/packages/orch/tests/test_boundaries.py
++++ b/packages/orch/tests/test_boundaries.py
+@@ -3,12 +3,61 @@ from __future__ import annotations
+ import ast
+ from pathlib import Path
+ import pkgutil
++import re
+ import sys
+ import sysconfig
+ import unittest
+ 
+ 
++ROOT = Path(__file__).resolve().parents[1]
++SELF = Path(__file__).resolve().relative_to(ROOT).as_posix()
++_NAMES = "task|skiller|harness|maind|analyst|artifex"
++FORBIDDEN = (
++    re.compile(rf"packages/({_NAMES})\b"),
++    re.compile(rf"^\s*(from|import)\s+({_NAMES})\b"),
++    re.compile(r"\b(skiller|harness|maind|analyst|artifex)\b"),
++    re.compile(r"plan\.py"),
++    re.compile(r"\btask:[a-z][a-z-]*"),
++    re.compile(r"task/(lib|plan|scripts|commands|skills)\b"),
++    # The native provider event is not a skill identity.
++    re.compile(r"\b(?!system/init(?![a-z0-9-]))(general|quality|system|devops|oss-dev|repository-bootstrap)[/:][a-z][a-z0-9-]+"),
++)
++SKIPPED_DIRS = ("bridges/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
++SKIPPED_PARTS = {"__pycache__", "node_modules"}
++
++
+ class BoundaryTests(unittest.TestCase):
++    def test_core_names_no_other_package(self):
++        found = []
++        for path in sorted(ROOT.rglob("*")):
++            relative = path.relative_to(ROOT).as_posix()
++            parts = path.relative_to(ROOT).parts
++            if (not path.is_file() or relative in {"CHANGELOG.md", SELF}
++                    or relative.startswith(SKIPPED_DIRS) or SKIPPED_PARTS & set(parts)
++                    or any(pair == (".claude", "runs") for pair in zip(parts, parts[1:]))):
++                continue
++            try:
++                text = path.read_text(encoding="utf-8")
++            except UnicodeDecodeError:
++                continue
++            for number, line in enumerate(text.splitlines(), 1):
++                for pattern in FORBIDDEN:
++                    match = pattern.search(line)
++                    if match:
++                        found.append(f"{relative}:{number}: {match.group(0).strip()}")
++                        break
++        self.assertEqual(found, [], "core references another package:\n" + "\n".join(found))
++
++    def test_boundary_tokens_and_provider_event(self):
++        for line in ("packages/" + "task", "from task.plan import store", "skiller resolve",
++                     "plan" + ".py finish", "task:" + "plan-run", "task/commands/dev.md",
++                     "quality/code-review", "system/agent-packs", "system/initial", "system/init-extra", "general/verify-claims"):
++            with self.subTest(line=line):
++                self.assertTrue(any(pattern.search(line) for pattern in FORBIDDEN))
++        for line in ("task failures", "plan store", "system/init", "orchestration", "harnessing"):
++            with self.subTest(line=line):
++                self.assertFalse(any(pattern.search(line) for pattern in FORBIDDEN))
++
+     def test_runtime_imports_are_stdlib_or_orch(self):
+         allowed = getattr(sys, "stdlib_module_names", None)
+         if allowed is None:  # Python 3.9 CI; stdlib_module_names was added in 3.10.
+diff --git a/packages/orch/tests/test_cli_validate.py b/packages/orch/tests/test_cli_validate.py
+index b3d1ec14..a2f8f9c5 100644
+--- a/packages/orch/tests/test_cli_validate.py
++++ b/packages/orch/tests/test_cli_validate.py
+@@ -45,7 +45,7 @@ class CliValidateTests(unittest.TestCase):
+ 
+     def test_warning_only_input_succeeds_and_preserves_level(self):
+         doc = fixture("execution-input", "plan-bound")
+-        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
++        doc["constraints"] = [{"text": "Use report_api", "source": "plan.rules[2]"}]
+         for options in ((), ("--quiet",)):
+             with self.subTest(options=options):
+                 result = self.run_cli("execution-input", signed(doc), *options)
+@@ -60,7 +60,7 @@ class CliValidateTests(unittest.TestCase):
+ 
+     def test_warning_does_not_mask_errors(self):
+         doc = fixture("execution-input", "plan-bound")
+-        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
++        doc["constraints"] = [{"text": "Use report_api", "source": "plan.rules[2]"}]
+         del doc["goal"]
+         result = self.run_cli("execution-input", signed(doc))
+         self.assertEqual(result.returncode, 1)
+diff --git a/packages/orch/tests/test_contracts_input.py b/packages/orch/tests/test_contracts_input.py
+index c07d6255..8a4e8be6 100644
+--- a/packages/orch/tests/test_contracts_input.py
++++ b/packages/orch/tests/test_contracts_input.py
+@@ -125,8 +125,8 @@ class InputContractTests(unittest.TestCase):
+ 
+     def test_lifecycle_exceptions_levels_and_json_pointers(self):
+         doc = fixture("execution-input", "plan-bound")
+-        doc["provenance"]["generated_by"]["tool"] = "plan.py finish"
+-        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
++        doc["provenance"]["generated_by"]["tool"] = "plan-bridge register"
++        doc["constraints"] = [{"text": "Use report_api", "source": "plan.rules[2]"}]
+         issues = contracts.validate(signed(doc), "execution-input")
+         self.assertEqual([(i.path, i.code, i.level) for i in issues],
+                          [("/constraints/0/text", "LIFECYCLE_LEAK", "warning")])
+@@ -136,7 +136,7 @@ class InputContractTests(unittest.TestCase):
+         doc["provenance"]["request"] = "Call report_api"
+         self.assert_code("execution-input", signed(doc), "LIFECYCLE_LEAK")
+         doc = fixture("execution-input", "plan-bound")
+-        doc["reads"][0]["content"] = {"~/key": ["unit return"]}
++        doc["reads"][0]["content"] = {"~/key": ["report API"]}
+         issues = contracts.validate(signed(doc), "execution-input")
+         self.assertEqual(issues[0].path, "/reads/0/content/~0~1key/0")
+ 
+diff --git a/packages/orch/tests/test_roles_text.py b/packages/orch/tests/test_roles_text.py
+index c06359cb..3fb40f08 100644
+--- a/packages/orch/tests/test_roles_text.py
++++ b/packages/orch/tests/test_roles_text.py
+@@ -49,7 +49,7 @@ class RolesTextTests(unittest.TestCase):
+     def test_worker_roles_carry_no_lifecycle_instruction(self):
+         for role in WORKER_ROLES:
+             text = _text(role)
+-            for phrase in (*LIFECYCLE_PHRASES, "plan.py"):
++            for phrase in LIFECYCLE_PHRASES:
+                 with self.subTest(role=role, phrase=phrase):
+                     self.assertNotIn(phrase, text)
+ 
+@@ -61,7 +61,7 @@ class RolesTextTests(unittest.TestCase):
+     def test_executor_exports_a_clean_handoff(self):
+         handoff = _exports(_text("executor")).get("handoff")
+         self.assertTrue(handoff and handoff.strip())
+-        for phrase in (*LIFECYCLE_PHRASES, "plan.py"):
++        for phrase in LIFECYCLE_PHRASES:
+             with self.subTest(phrase=phrase):
+                 self.assertNotIn(phrase, handoff)
+         for field in ("summary", "changed_paths", "checks_run", "evidence", "open_issues"):
+@@ -70,12 +70,12 @@ class RolesTextTests(unittest.TestCase):
+ 
+     def test_reviewer_references_the_review_skills(self):
+         text = _text("reviewer")
+-        self.assertIn("quality:code-review", text)
+-        self.assertIn("quality:artifact-review", text)
++        self.assertNotIn("quality" + ":", text)
++        self.assertNotIn("general/", text)
++        self.assertIn("role manifest", text)
+ 
+     def test_registrar_hands_the_report_to_the_plan_bridge(self):
+         text = _text("registrar")
+-        self.assertNotIn("plan.py", text)
+         self.assertIn("Never manufacture evidence", text)
+         for phrase in ("`register`", "`register-review`", "registration-receipt"):
+             with self.subTest(phrase=phrase):
+diff --git a/packages/task/bridges/orch/brief.py b/packages/task/bridges/orch/brief.py
+index 288615fa..f810a390 100644
+--- a/packages/task/bridges/orch/brief.py
++++ b/packages/task/bridges/orch/brief.py
+@@ -31,7 +31,7 @@ REPORT = ["summary", "changed_paths", "checks_run", "evidence", "open_issues"]
+ ESCALATION = ["A required read is missing or contradicts the goal",
+               "An acceptance check cannot pass without leaving scope"]
+ LIFECYCLE_PHRASES = (
+-    "report_api", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
++    "report_api", "report API", "plan.py start", "plan.py finish", "unit return", "task:plan-run",
+ )
+ _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
+ _DECISION_KEYS = ("title", "status", "decision", "rationale")
+diff --git a/packages/task/commands/dev.md b/packages/task/commands/dev.md
+index 9d0d8cdf..e2d0808f 100644
+--- a/packages/task/commands/dev.md
++++ b/packages/task/commands/dev.md
+@@ -44,6 +44,6 @@ recommended Next does not override Scope or Acceptance. External writes, changed
+ dependencies require the corresponding authority or readiness. Repeated failure without new evidence requires
+ a different approach.
+ 
+-Use `general/verify-claims` for changing external premises. Preserve other people's changes. One scoped commit
++Use a claim-verification skill, when installed for changing external premises. Preserve other people's changes. One scoped commit
+ containing the product and required generated carriers is the normal completion. Report changes, actual checks,
+ and limitations. Push or open a PR only on request.
+diff --git a/packages/task/commands/make-workflow.md b/packages/task/commands/make-workflow.md
+index 16aa4ecf..f9e7eb84 100644
+--- a/packages/task/commands/make-workflow.md
++++ b/packages/task/commands/make-workflow.md
+@@ -21,7 +21,7 @@ Copy and fill a canonical template; do not write orchestration from scratch.
+ 
+ ## 1. Load the authoring contract
+ 
+-Use `general/workflow-craft` as the source of truth for template matching, the design/dev stage matrix,
++Use a workflow-craft skill, when installed, as the source of truth for template matching, the design/dev stage matrix,
+ and slot rules. Do not duplicate its rules in the generated workflow.
+ 
+ ## 2. Select a template
+@@ -38,7 +38,7 @@ nor a pipeline fits, return to the main loop; do not fork template logic for the
+ 
+ ## 3. Resolve slots
+ 
+-Fill facts available from the request and repository. Use `general/spec-interview` only for a missing
++Fill facts available from the request and repository. Use a spec-interview skill, when installed, only for a missing
+ product decision or authority boundary:
+ 
+ - Ask one question at a time and branch on the answer.
+diff --git a/packages/task/commands/plan-run.md b/packages/task/commands/plan-run.md
+index fbbf0531..9fde0f4a 100644
+--- a/packages/task/commands/plan-run.md
++++ b/packages/task/commands/plan-run.md
+@@ -30,8 +30,9 @@ one commit per item, inside the item's scope.
+ 
+ **Units (optional)**
+ - Represent preparation, implementation, review and checks as units with dependencies and optional parents; `plan.py unit <plan> <item> add --title … --json …`.
+-- Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give its
+-  `phases/<Pn>/<Pn.m>/<U#>/brief.json` to a native subagent of your own provider; use `unit … next` for ready work and JSON context for dependencies.
++- Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give a native subagent of
++  your own provider its `phases/<Pn>/<Pn.m>/<U#>/brief.json` and the executor handoff in the Task package's
++  `references/executor-handoff.md`; record its report yourself with `unit … return`. Use `unit … next` for ready work.
+ - You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`.
+ - `finish` is refused until every unit is `accepted` or explicitly `rejected`. Python starts no agent; `plan.py stats` shows the numbers.
+ 
+diff --git a/packages/task/commands/research.md b/packages/task/commands/research.md
+index 26a4f730..3ee705f0 100644
+--- a/packages/task/commands/research.md
++++ b/packages/task/commands/research.md
+@@ -18,7 +18,7 @@ Profile `research`:
+ 2. Use breadth-first fan-out only for large independent facets. Separate discovery from synthesis and cite
+    sources explicitly. Delegate the smallest useful number of searches; do locally what needs only a few tool
+    calls. Do not ask a subagent to recheck the same work. Adversarial verification of another worker's findings
+-   is independent verification. Before multi-agent JavaScript orchestration, use `general/workflow-craft` and
++   is independent verification. Before multi-agent JavaScript orchestration, use a workflow-craft skill, when installed, and
+    the canonical templates in `packages/task/workflows/README.md`.
+ 3. Verify changing external claims before recording them through `verify-claims`; do not rely on memory.
+ 4. Record material sources in provenance (`docs/reference.md` when present).
+diff --git a/packages/task/docs/.vitepress/config.mts b/packages/task/docs/.vitepress/config.mts
+index 5a2af4d6..b7cb2bef 100644
+--- a/packages/task/docs/.vitepress/config.mts
++++ b/packages/task/docs/.vitepress/config.mts
+@@ -7,7 +7,7 @@ export default withMermaid(defineConfig({
+   description: 'Task commands and executable plan protocol',
+   base: '/task/',
+   lastUpdated: true,
+-  ignoreDeadLinks: [/^\/harness\//, /^\/develop/],
++  ignoreDeadLinks: [/^\/develop/],
+   themeConfig: {
+     nav: [{ text: 'Overview', link: '/' }, { text: 'Methodology', link: '/methodology' }],
+     sidebar: {
+diff --git a/packages/task/docs/index.md b/packages/task/docs/index.md
+index 0901a681..9182e409 100644
+--- a/packages/task/docs/index.md
++++ b/packages/task/docs/index.md
+@@ -3,7 +3,7 @@
+ **What is it.** Optional helpers for Claude Code (`/task:*`), Codex (`$ task:*`), Cursor (`task:*`) and
+ Grok (`/task:*`) for explicit job selection. Workflows are enabled only by explicitly calling the
+ command/skill: Codex gets `allow_implicit_invocation: false`, Claude - `disable-model-invocation: true`;
+-harness does not select commands by keywords. Each command except `plan-run` **pins the model +
++the environment does not select commands by keywords. Each command except `plan-run` **pins the model +
+ reasoning effort + workflow profile**, overriding the session settings, to avoid switching them manually.
+ Default-on in each onboarded project (connect channel); no resident tax - command descriptions are not
+ injected into every request.
+@@ -16,7 +16,7 @@ projections. After the update, open a new session: the files on disk change, but
+ is not reinitialized.
+ 
+ **When NOT to touch.** This is not an engine for general work - it only routes to the model/effort/profile.
+-Subagent workflows and agent packs live in `harness`; the executable plan is a JSON directory driven by
++Subagent workflows and agent packs live outside Task; the executable plan is a JSON directory driven by
+ `scripts/plan.py` (see [Plan structure](./plan-structure)).
+ 
+ ## Commands
+diff --git a/packages/task/docs/methodology.md b/packages/task/docs/methodology.md
+index 709fb98b..dbd0c682 100644
+--- a/packages/task/docs/methodology.md
++++ b/packages/task/docs/methodology.md
+@@ -76,9 +76,4 @@ Do not invent bookkeeping: JSON plus the API already keep state consistent. A to
+ local defect is repaired in the same attempt and logged only if it changed the plan; repeated re-audits
+ without a material scope/risk change are not run.
+ 
+-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+-exact native route; without an explicit review request no review runs. `plan-run` accepts
+-`--review-effort`; review/audit accept `--effort`. See the Task package's
+-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
++Reviewer selection: see the Task package's references/reviewer-selection.md.
+diff --git a/packages/task/docs/workflows.md b/packages/task/docs/workflows.md
+index 34d591f6..a24fde23 100644
+--- a/packages/task/docs/workflows.md
++++ b/packages/task/docs/workflows.md
+@@ -74,19 +74,14 @@ agents build, and stays the integrator: it reviews and tests every returned piec
+   unit outcomes (accepted, reworked, rejected) and median minutes per class and model. No thresholds: turning scout or
+   delegation on by default is a later owner decision based on these numbers.
+ - Roadmap trigger (not implemented): if units are used in at least N plans and `stats` shows an accepted share of at
+-  least X, consider `packages/artifex` as a deterministic dispatcher that takes `units[]` as its slice source.
++  least X, consider a deterministic dispatcher as a deterministic dispatcher that takes `units[]` as its slice source.
+ 
+ ## Bundles
+ 
+ - Review profiles for `wf-audit-adversarial.js` (constitution + measurements by type
+-  artifact) - skill `quality/artifact-review`; conformance-finder's by stack skills -
++  artifact) - skill an artifact-review skill, when installed; conformance-finder's by stack skills -
+   command `/task:review`.
+ - Full cycle in which workflow templates occupy the research/exec/review stages -
+   [Methodology](./methodology).
+ 
+-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+-exact native route; without an explicit review request no review runs. `plan-run` accepts
+-`--review-effort`; review/audit accept `--effort`. See the Task package's
+-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
++Reviewer selection: see the Task package's references/reviewer-selection.md.
+diff --git a/packages/task/lib/task/command_render.py b/packages/task/lib/task/command_render.py
+index c7544dbd..89617e56 100644
+--- a/packages/task/lib/task/command_render.py
++++ b/packages/task/lib/task/command_render.py
+@@ -1250,12 +1250,11 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
+         "",
+         "1. Open the intended repository root as the workspace.",
+         "2. Set Run Mode to **Run Everything** (Settings → Run Mode).",
+-        "3. Confirm `.cursor/mcp.json` contains hub servers (`maind health --cwd`).",
++        "3. Confirm `.cursor/mcp.json` contains hub servers.",
+         "4. Pin the routed model; do not substitute `auto` for fixed frontier/implementation pins.",
+         "5. For CLI launches, pass the full flag set above; partial flags are not a trusted launch.",
+         "",
+-        "Full install and profile shapes: [Cursor adapter](/skiller/adapters/cursor) and "
+-        "[Harness setup: Cursor](/harness/setup/cursor).",
++        "Full install and profile shapes: see your environment's Cursor adapter setup.",
+         "",
+         "## Grok launch contract (trusted self-host)",
+         "",
+@@ -1282,7 +1281,7 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
+         "```",
+         "",
+         "1. Open the intended repository root (`--cwd`).",
+-        "2. Confirm `.grok/config.toml` and hub MCP (`maind health --cwd`).",
++        "2. Confirm `.grok/config.toml` and hub MCP.",
+         "3. Pin the routed model; do not substitute Cursor-inventory grok-4.x ids for provider grok.",
+         "4. Pass `--always-approve` only on a trusted self-host; the deny floor remains.",
+         "",
+diff --git a/packages/task/lib/task/plan/units.py b/packages/task/lib/task/plan/units.py
+index 75d8083c..879b6ef6 100644
+--- a/packages/task/lib/task/plan/units.py
++++ b/packages/task/lib/task/plan/units.py
+@@ -113,8 +113,7 @@ def brief(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False)
+             "context": context.collect(plan, item_id),
+             "reads": [context.read_entry(plan, r) for r in unit.get("reads", [])],
+             "checks": [copy.deepcopy(by_id[c] if isinstance(c, str) else c) for c in unit.get("checks", [])],
+-            "rework": (unit.get("outcome") or {}).get("notes", "") if rework else "",
+-            "report_api": {"verb": "unit return", "item": item_id, "unit": unit_id}}
++            "rework": (unit.get("outcome") or {}).get("notes", "") if rework else ""}
+ 
+ 
+ def brief_text(plan: store.Plan, item_id: str, unit_id: str, *, rework: bool = False) -> str:
+diff --git a/packages/task/scripts/validate.sh b/packages/task/scripts/validate.sh
+index 47f262c9..9b9ea1a7 100755
+--- a/packages/task/scripts/validate.sh
++++ b/packages/task/scripts/validate.sh
+@@ -1,6 +1,5 @@
+ #!/usr/bin/env bash
+-# validate.sh — package structural checks task (CI + locally), according to the example
+-# packages/maind/scripts/validate.sh. Checks: compilation Python (lib/tests/scripts),
++# validate.sh — package structural checks task (CI + locally). Checks: compilation Python (lib/tests/scripts),
+ # syntax bash (scripts/*.sh), required files, frontmatter slash-commands
+ # (description/model/effort — task kicks the model/effort each command), unittest
+ # (including the plan engine tests/engine), and - for selected plans or the fleet -
+@@ -23,21 +22,21 @@ cd "$REPO_ROOT"
+ fail=0
+ err() { echo "  FAIL: $*" >&2; fail=1; }
+ 
+-echo "[1/7] python compile"
++echo "[1/6] python compile"
+ python3 -m compileall -q lib tests scripts || err "py_compile"
+ 
+-echo "[2/7] bash syntax"
++echo "[2/6] bash syntax"
+ for f in scripts/*.sh; do
+   bash -n "$f" || err "bash -n $f"
+ done
+ 
+-echo "[3/7] required files"
++echo "[3/6] required files"
+ for f in .claude-plugin/plugin.json lib/task/__init__.py lib/task/plan/__init__.py \
+          scripts/plan.py schemas/plan/v1/item.schema.json commands/design.md; do
+   [[ -e "$f" ]] || err "no file: $f"
+ done
+ 
+-echo "[4/7] slash-commands (frontmatter: description/model/effort)"
++echo "[4/6] slash-commands (frontmatter: description/model/effort)"
+ python3 - <<'PY' || err "broken frontmatter in commands/*.md"
+ import glob, sys
+ 
+@@ -75,7 +74,7 @@ for b in bad:
+ sys.exit(1 if bad else 0)
+ PY
+ 
+-echo "[5/7] tests (incl. plan engine) + plan.py check on selected plans"
++echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
+ # lib/ — package task; MONOREPO_ROOT (two levels above the package) — to optional
+ # was imported core (command_render / session_context use it with a fallback).
+ MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+@@ -119,13 +118,13 @@ fi
+ # P0.7 — parity of provider projections of teams was maintained only by unit-tests; gate
+ # of the generator also covers claude-golden and publication-lock.
+ 
+-echo "[5b/7] publication version ↔ umbrella ↔ manifests"
++echo "[5b/6] publication version ↔ umbrella ↔ manifests"
+ if [[ -n "$MONOREPO_ROOT" ]]; then
+   python3 "$REPO_ROOT/scripts/check-publication-version.py" "$MONOREPO_ROOT" \
+     || err "publication version drift — bump plugin_version + render-provider-commands"
+ fi
+ 
+-echo "[6/7] provider command projections (render-provider-commands --check)"
++echo "[6/6] provider command projections (render-provider-commands --check)"
+ if [[ -n "$MONOREPO_ROOT" ]]; then
+   python3 scripts/render-provider-commands.py --check --root "$MONOREPO_ROOT" \
+     || err "team projections diverged from canon - python3 packages/task/scripts/render-provider-commands.py --write --root ."
+@@ -133,13 +132,6 @@ else
+   echo "  command projections: monorepo root not found (standalone-layout) — gate skipped"
+ fi
+ 
+-echo "[7/7] managed blocks (sync-managed-blocks --check)"
+-if [[ -n "$MONOREPO_ROOT" ]]; then
+-  python3 "$MONOREPO_ROOT/scripts/sync-managed-blocks.py" --check --root "$MONOREPO_ROOT" \
+-    || err "managed blocks drifted - python3 scripts/sync-managed-blocks.py --write --root ."
+-else
+-  echo "  managed blocks: monorepo root not found (standalone-layout) — gate skipped"
+-fi
+ 
+ echo ""
+ if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: FAILURE" >&2; exit 1; fi
+diff --git a/packages/task/skills/plan-protocol/SKILL.md b/packages/task/skills/plan-protocol/SKILL.md
+index 86c3781f..e4e3738f 100644
+--- a/packages/task/skills/plan-protocol/SKILL.md
++++ b/packages/task/skills/plan-protocol/SKILL.md
+@@ -127,12 +127,7 @@ runs only on explicit owner invocation and writes a verdict file plus a `note` e
+   [references/review-mode.md](references/review-mode.md) — per-command notes.
+ - [references/work-references.md](references/work-references.md) — Short IDs and qualified references.
+ 
+-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+-exact native route; without an explicit review request no review runs. `plan-run` accepts
+-`--review-effort`; review/audit accept `--effort`. See the Task package's
+-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
++Reviewer selection: see the Task package's references/reviewer-selection.md.
+ 
+ ## JSON orchestration and snapshots
+ 
+diff --git a/packages/task/skills/plan-protocol/references/execution-mode.md b/packages/task/skills/plan-protocol/references/execution-mode.md
+index 903e6b9f..2367c4ab 100644
+--- a/packages/task/skills/plan-protocol/references/execution-mode.md
++++ b/packages/task/skills/plan-protocol/references/execution-mode.md
+@@ -15,9 +15,4 @@ The requested items (or the ready batch from `plan.py next`) are one ordered wor
+ 6. Broad suites run once in the last item of a phase; earlier items run their affected checks.
+ 7. The final report gives the outcome per item and the exact `plan.py next <plan>` line.
+ 
+-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+-exact native route; without an explicit review request no review runs. `plan-run` accepts
+-`--review-effort`; review/audit accept `--effort`. See the Task package's
+-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
++Reviewer selection: see the Task package's references/reviewer-selection.md.
+diff --git a/packages/task/skills/plan-protocol/references/review-mode.md b/packages/task/skills/plan-protocol/references/review-mode.md
+index 5ac9ae84..7ba2aa3b 100644
+--- a/packages/task/skills/plan-protocol/references/review-mode.md
++++ b/packages/task/skills/plan-protocol/references/review-mode.md
+@@ -14,9 +14,4 @@ Applies to `task:plan-audit` and to a review item added by `--review`.
+ 6. Fixes are execution work of the owning item (`plan.py reopen` by the owner when it is closed);
+    the reviewer does not fix and does not start a second pass without a new question.
+ 
+-Optional `--reviewer provider/model[/context][/effort]` requests a fresh read-only reviewer on that
+-exact native route; without an explicit review request no review runs. `plan-run` accepts
+-`--review-effort`; review/audit accept `--effort`. See the Task package's
+-`references/reviewer-selection.md` for route parsing, native session independence and the bounded
+-two-completed-round/one-owning-correction policy. JSON and `plan.py` remain the state API;
+-reviewer flags do not restore `plan-work`, launch agents from Python or execute check commands.
++Reviewer selection: see the Task package's references/reviewer-selection.md.
+diff --git a/packages/task/tests/boundary_allowlist.json b/packages/task/tests/boundary_allowlist.json
+deleted file mode 100644
+index 68ca5cff..00000000
+--- a/packages/task/tests/boundary_allowlist.json
++++ /dev/null
+@@ -1,24 +0,0 @@
+-{
+-  "adapters/codex/skills/task-dev/command.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "adapters/codex/skills/task-make-workflow/command.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "adapters/codex/skills/task-research/command.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "adapters/cursor/skills/task-dev/command.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "adapters/cursor/skills/task-make-workflow/command.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "adapters/cursor/skills/task-research/command.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "commands/dev.md": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "commands/make-workflow.md": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "commands/research.md": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "docs/.vitepress/config.mts": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "docs/index.md": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "docs/reference/provider-model-roles.md": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "docs/workflows.md": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "lib/task/command_render.py": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "scripts/validate.sh": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "tests/engine/fixtures/valid/plan-full.json": "P7.4: donor value names a repository package; use a neutral value",
+-  "tests/fixtures.py": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "tests/fixtures_data/claude-command-golden/commands/dev.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "tests/fixtures_data/claude-command-golden/commands/make-workflow.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "tests/fixtures_data/claude-command-golden/commands/research.md": "P7.4: generated projection of a command text that P7.4 neutralizes",
+-  "tests/test_plan_protocol_runtime.py": "P7.4: Task-internal neutralization of partner names and skill ids",
+-  "workflows/wf-author-by-spec.js": "P7.4: Task-internal neutralization of partner names and skill ids"
+-}
+diff --git a/packages/task/tests/engine/fixtures/valid/plan-full.json b/packages/task/tests/engine/fixtures/valid/plan-full.json
+index d9116233..52a28091 100644
+--- a/packages/task/tests/engine/fixtures/valid/plan-full.json
++++ b/packages/task/tests/engine/fixtures/valid/plan-full.json
+@@ -43,7 +43,7 @@
+     "consumed": [
+       {
+         "name": "routing",
+-        "donor": "harness",
++        "donor": "donor-package",
+         "pinned": "v2",
+         "reaction": "re-check"
+       }
+diff --git a/packages/task/tests/engine/test_units.py b/packages/task/tests/engine/test_units.py
+index 4d9729b9..b425529c 100644
+--- a/packages/task/tests/engine/test_units.py
++++ b/packages/task/tests/engine/test_units.py
+@@ -131,7 +131,7 @@ class DispatchTests(UnitCase):
+         value = json.loads(units.dispatch(self.root, "P1.1", "U1", HAIKU).read_text())
+         self.assertEqual(value["unit"]["goal"], "Error types")
+         self.assertEqual(value["context"]["item"]["rules"], ["Keep it small"])
+-        self.assertEqual(value["report_api"]["verb"], "unit return")
++        self.assertNotIn("report_api", value)
+ 
+     def test_refusals(self):
+         self.add("Errors", U1)
+diff --git a/packages/task/tests/fixtures.py b/packages/task/tests/fixtures.py
+index 7ec745ab..d6c84b4b 100644
+--- a/packages/task/tests/fixtures.py
++++ b/packages/task/tests/fixtures.py
+@@ -3,7 +3,7 @@ import sys
+ from pathlib import Path
+ 
+ # In case of direct launch (`cd packages/task && python3 -m unittest discover -s tests`,
+-# without prior PYTHONPATH) — guarantee lib/ in the path, as in maind/tests/fixtures.py.
++# without prior PYTHONPATH) — guarantee lib/ in the path
+ _LIB = Path(__file__).resolve().parents[1] / "lib"
+ if str(_LIB) not in sys.path:
+     sys.path.insert(0, str(_LIB))
+diff --git a/packages/task/tests/test_boundary.py b/packages/task/tests/test_boundary.py
+index 95de1740..a5ded881 100644
+--- a/packages/task/tests/test_boundary.py
++++ b/packages/task/tests/test_boundary.py
+@@ -33,7 +33,9 @@ def core_files() -> list[str]:
+     for path in sorted(ROOT.rglob("*")):
+         relative = path.relative_to(ROOT).as_posix()
+         if (not path.is_file() or relative in SKIPPED_FILES or relative.startswith(SKIPPED_DIRS)
+-                or SKIPPED_PARTS & set(path.relative_to(ROOT).parts)):
++                or SKIPPED_PARTS & set(path.relative_to(ROOT).parts)
++                or any(parts == (".claude", "runs") for parts in
++                       zip(path.relative_to(ROOT).parts, path.relative_to(ROOT).parts[1:]))):
+             continue
+         files.append(relative)
+     return files
+diff --git a/packages/task/tests/test_plan_protocol_runtime.py b/packages/task/tests/test_plan_protocol_runtime.py
+index eba115bf..4b6d8d72 100644
+--- a/packages/task/tests/test_plan_protocol_runtime.py
++++ b/packages/task/tests/test_plan_protocol_runtime.py
+@@ -1,4 +1,4 @@
+-"""Task owns a portable, on-demand plan canon without a separate Skiller plugin."""
++"""Task owns a portable, on-demand plan canon without a separate plugin."""
+ import json
+ from pathlib import Path
+ import re
+@@ -12,12 +12,12 @@ RUNTIME = ROOT / "packages/task/skills/plan-protocol"
+ 
+ 
+ class PlanProtocolRuntimeTests(unittest.TestCase):
+-    def test_relocated_runtime_resolves_references_without_skiller(self):
++    def test_relocated_runtime_resolves_references_in_task_only_checkout(self):
+         with tempfile.TemporaryDirectory() as directory:
+             checkout = Path(directory)
+             runtime = checkout / "packages/task/skills/plan-protocol"
+             shutil.copytree(RUNTIME, runtime)
+-            self.assertFalse((checkout / "packages/skiller").exists())
++            self.assertEqual({path.name for path in (checkout / "packages").iterdir()}, {"task"})
+             body = (runtime / "SKILL.md").read_text()
+             references = re.findall(r"\]\(([^)]+)\)", body)
+             self.assertIn("references/work-references.md", references)
+@@ -32,5 +32,4 @@ class PlanProtocolRuntimeTests(unittest.TestCase):
+         self.assertTrue(RUNTIME.is_relative_to(ROOT / "packages/task/skills"))
+         claude = json.loads((ROOT / "packages/task/.claude-plugin/plugin.json").read_text())
+         self.assertEqual(claude["skills"], ["./skills"])
+-        self.assertFalse((ROOT / "packages/skiller/skills/general/plan-protocol").exists())
+         self.assertFalse((RUNTIME / "provenance.json").exists())
+diff --git a/packages/task/workflows/wf-author-by-spec.js b/packages/task/workflows/wf-author-by-spec.js
+index 6be14161..57aa55b7 100644
+--- a/packages/task/workflows/wf-author-by-spec.js
++++ b/packages/task/workflows/wf-author-by-spec.js
+@@ -38,7 +38,7 @@ const FILES = [
+ ]
+ 
+ // SLOT: pipeline commands - mandatory runs after editing (empty if not present).
+-// Example swissknifeman: check-translations.sh --stamp → skiller registry → validate.sh.
++// Example swissknifeman: check-translations.sh --stamp → registry regeneration → validate.sh.
+ // guarded-optional-args: empty array - obvious default «no pipeline» (see `CONVEYOR.length ?
+ // … : null` below), not skipping a check - a pattern from `wf-agentools-drive` (cross-ref, do not vendor).
+ const CONVEYOR = []
+diff --git "a/plans/2026.10.05-\342\204\2262-ORCH-PREP/log.jsonl" "b/plans/2026.10.05-\342\204\2262-ORCH-PREP/log.jsonl"
+index 1bccd865..2de2880d 100644
+--- "a/plans/2026.10.05-\342\204\2262-ORCH-PREP/log.jsonl"
++++ "b/plans/2026.10.05-\342\204\2262-ORCH-PREP/log.jsonl"
+@@ -145,3 +145,12 @@
+ {"v":1,"ts":"2026-10-06T13:02:20Z","type":"assumption","item":"P7.3","phase":"P7","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"high"},"summary":"Unit registration: pending issues become note events prefixed 'pending: ' (unit return has no --pending); escalation refused with REGISTER_STATUS_MISMATCH (belongs to the item's blocked finish); checks/evidence named in return notes, recorded at accept"}
+ {"v":1,"ts":"2026-10-06T13:02:20Z","type":"note","item":"P7.3","phase":"P7","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"high"},"summary":"register refuses unknown stage-report fields (closed report) so no field can be dropped silently; report evidence paths without a --evidence V#= argument are named in finish notes"}
+ {"v":1,"ts":"2026-10-06T13:10:41Z","type":"finish","item":"P7.3","phase":"P7","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"high"},"summary":"P7.3 done_with_deviations","data":{"status":"done_with_deviations","checks":{"V1":0,"V2":0,"V3":0,"V4":0,"V5":0}},"executed_by":{"provider":"anthropic","model":"claude-opus-5-5","effort":"high","session":"97be2aee-af3b-4e59-a73e-dd33b1dcebf2"}}
++{"v":1,"ts":"2026-10-06T15:47:28Z","type":"start","item":"P7.4","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"start P7.4 (batch B4)","data":{"requested":["P7.4","P7.5"],"route":"ok"}}
++{"v":1,"ts":"2026-10-06T15:47:28Z","type":"start","item":"P7.5","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"start P7.5 (batch B4)","data":{"requested":["P7.4","P7.5"],"route":"ok"}}
++{"v":1,"ts":"2026-10-06T15:48:06Z","type":"note","item":"P7.4","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"Owner override: «Ревью выполняй в самом конце по всему проделанному объему. grok используй без параметра контекта при ревью». One native read-only grok/grok-4.7/high review over P7.4–P7.5 after green affected checks, before finish; reuse overlapping suite evidence, only Task/orch packages."}
++{"v":1,"ts":"2026-10-06T15:48:59Z","type":"deviation","item":"P7.4","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"Boundary scan also found ignored provider run reports under .claude/runs/ (including lib/.claude/runs/). Exclude only that runtime directory pair; keep all authored .claude content and generated projections scanned. No owner runtime files changed."}
++{"v":1,"ts":"2026-10-06T15:48:59Z","type":"deviation","item":"P7.5","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"Skill-id boundary regex also matches the native Claude event system/init in the existing binding matrix/docs. Exempt this exact provider event (no skill identity) while retaining all other system/* skill bans. Reuse orch test.sh from validate V2 as V1 and bridge V4 from final Task validation to avoid duplicate runs."}
++{"v":1,"ts":"2026-10-06T15:49:52Z","type":"deviation","item":"P7.5","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"Bridge lifecycle-phrase superset check requires adding neutral report API to task/bridges/orch/brief.py (outside P7.5 task_files). Preserve every stricter existing bridge phrase; orch keeps only neutral phrases. Provider-run runtime exclusions mirror Task boundary repair."}
++{"v":1,"ts":"2026-10-06T15:49:53Z","type":"note","item":"P7.4","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"Broad Task validation deferred to final P7.5 after both product changes so core, engine, bridge suites run once on combined candidate. P7.4 V2/V4 will reuse embedded boundary/render checks from that validation. No unrelated package validation/registry/release."}
++{"v":1,"ts":"2026-10-06T15:50:15Z","type":"deviation","item":"P7.4","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"Root CHANGELOG [Unreleased] updated outside task_files for substantive Task/orch cleanup. Docs assessment: updated existing Task/orch package docs and generated provider reference; umbrella docs are generated from package sources."}
++{"v":1,"ts":"2026-10-06T15:51:06Z","type":"deviation","item":"P7.5","phase":"P7","actor":{"provider":"codex","model":"gpt-6.1-sol","effort":"high","session":"01a111e4-f14d-71a3-bef8-7e3ae523d7ad"},"summary":"First orch validation exposed an additional lifecycle pointer test using unit return (line 139). Replace with neutral report API to preserve nested JSON pointer coverage after neutralizing orch phrases; rerun affected orch validation only."}
+diff --git "a/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.4.json" "b/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.4.json"
+index 57c6ad74..f80712a7 100644
+--- "a/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.4.json"
++++ "b/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.4.json"
+@@ -2,7 +2,7 @@
+   "$schema": "urn:swissknifeman:task:plan:item:v1",
+   "id": "P7.4",
+   "title": "Чистое ядро Task: dedupe reviewer, executor handoff, нейтрализация, без allowlist",
+-  "status": "todo",
++  "status": "in_progress",
+   "summary": "Ядро Task чистое: абзац --reviewer заменён ссылкой на reviewer-selection.md (F5/F20), Task-собственный `references/executor-handoff.md` и новая строка Units в plan-run.md (F10), unit brief без `report_api`, упоминания других пакетов и Skiller-skills нейтрализованы, шаг 7 (корневой скрипт) убран из validate.sh, проекции перегенерированы; `tests/boundary_allowlist.json` удалён, boundary-тест Task зелёный без исключений.",
+   "why": "Заменяет пропущенные P3.3/P3.4 (D12, D13): I9 — одна копия текста; R1 — subagent не получает lifecycle (report_api); D12 — Task самодостаточен без Skiller; ядро не зовёт корневые скрипты.",
+   "scope": {
+@@ -256,6 +256,14 @@
+     "need": "none",
+     "status": "not_needed"
+   },
+-  "result": null,
+-  "updated_at": "2026-10-06T11:21:59Z"
++  "result": {
++    "started_at": "2026-10-06T15:47:28Z",
++    "executor": {
++      "provider": "codex",
++      "model": "gpt-6.1-sol",
++      "effort": "high",
++      "session": "01a111e4-f14d-71a3-bef8-7e3ae523d7ad"
++    }
++  },
++  "updated_at": "2026-10-06T15:47:28Z"
+ }
+diff --git "a/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.5.json" "b/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.5.json"
+index 950c37d1..3034056f 100644
+--- "a/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.5.json"
++++ "b/plans/2026.10.05-\342\204\2262-ORCH-PREP/phases/P7/P7.5.json"
+@@ -2,7 +2,7 @@
+   "$schema": "urn:swissknifeman:task:plan:item:v1",
+   "id": "P7.5",
+   "title": "Чистое ядро orch: фразы lifecycle, reviewer без skills, boundary-тест orch",
+-  "status": "todo",
++  "status": "in_progress",
+   "summary": "Ядро orch не знает Task и Skiller: LIFECYCLE_PHRASES без команд Task, reviewer.md без имён skills (через role manifest), docs/README/schema descriptions говорят «plan store / plan bridge», тесты и fixture lifecycle-leak нейтральны; test_boundaries.py получает текстовый boundary-обход ядра orch без allowlist.",
+   "why": "D13: пакеты чистые, orch заменяем и выносим. После P7.2–P7.3 тесты, читавшие Task, уже в мосту; остаётся текст ядра orch. Мост Task держит более строгий список фраз (P7.2 проверяет bridge ⊇ orch).",
+   "scope": {
+@@ -184,6 +184,14 @@
+     "need": "none",
+     "status": "not_needed"
+   },
+-  "result": null,
+-  "updated_at": "2026-10-06T11:22:32Z"
++  "result": {
++    "started_at": "2026-10-06T15:47:28Z",
++    "executor": {
++      "provider": "codex",
++      "model": "gpt-6.1-sol",
++      "effort": "high",
++      "session": "01a111e4-f14d-71a3-bef8-7e3ae523d7ad"
++    }
++  },
++  "updated_at": "2026-10-06T15:47:28Z"
+ }
+--- /dev/null
++++ packages/task/references/executor-handoff.md
+@@ -0,0 +1,16 @@
++# Executor handoff
++
++You implement one unit or item for the integrator who dispatched you. Your input is the JSON brief the
++integrator gives you. Implement only its scope and edit only its files; follow its rules, decisions and
++guidance. Do not read or edit plan files, do not run `plan.py`, do not commit: the integrator records
++and commits. Run each check exactly as written and keep long output in a file. Stop on a needed
++decision, a path outside your files, or an owner action, and say so.
++
++Return to the integrator:
++- `summary`: what changed and why, in a few lines.
++- `changed_paths`: every path you created, modified or deleted.
++- `checks_run`: each check that actually ran with its exact command and exit (or verdict for a manual
++  procedure). A check that did not run is not listed; name it in `open_issues`.
++- `evidence`: paths of output files you produced.
++- `open_issues`: every plan-relevant surprise: deviation, blocker, difficulty, assumption, skipped work,
++  residual risk.

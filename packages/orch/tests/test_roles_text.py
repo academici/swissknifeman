@@ -49,7 +49,7 @@ class RolesTextTests(unittest.TestCase):
     def test_worker_roles_carry_no_lifecycle_instruction(self):
         for role in WORKER_ROLES:
             text = _text(role)
-            for phrase in (*LIFECYCLE_PHRASES, "plan.py"):
+            for phrase in LIFECYCLE_PHRASES:
                 with self.subTest(role=role, phrase=phrase):
                     self.assertNotIn(phrase, text)
 
@@ -61,7 +61,7 @@ class RolesTextTests(unittest.TestCase):
     def test_executor_exports_a_clean_handoff(self):
         handoff = _exports(_text("executor")).get("handoff")
         self.assertTrue(handoff and handoff.strip())
-        for phrase in (*LIFECYCLE_PHRASES, "plan.py"):
+        for phrase in LIFECYCLE_PHRASES:
             with self.subTest(phrase=phrase):
                 self.assertNotIn(phrase, handoff)
         for field in ("summary", "changed_paths", "checks_run", "evidence", "open_issues"):
@@ -70,12 +70,12 @@ class RolesTextTests(unittest.TestCase):
 
     def test_reviewer_references_the_review_skills(self):
         text = _text("reviewer")
-        self.assertIn("quality:code-review", text)
-        self.assertIn("quality:artifact-review", text)
+        self.assertNotIn("quality" + ":", text)
+        self.assertNotIn("general/", text)
+        self.assertIn("role manifest", text)
 
     def test_registrar_hands_the_report_to_the_plan_bridge(self):
         text = _text("registrar")
-        self.assertNotIn("plan.py", text)
         self.assertIn("Never manufacture evidence", text)
         for phrase in ("`register`", "`register-review`", "registration-receipt"):
             with self.subTest(phrase=phrase):

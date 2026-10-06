@@ -1,8 +1,8 @@
 {
   "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
   "contract_version": "exec/v1",
-  "input_id": "PLAN9.P1.2@0a87546a725f",
-  "digest": "0a87546a725f99c9b9e52fdfdc7c129b2460b356d235adb0b5752d707793b310",
+  "input_id": "PLAN9.P1.2@4ebd76a0d826",
+  "digest": "4ebd76a0d8264a17a18968cd4afc36404707c83c31c6ceeab5826b7602a095f1",
   "provenance": {
     "kind": "plan",
     "plan": "PLAN9",
@@ -10,7 +10,7 @@
     "item": "P1.2",
     "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
     "generated_by": {
-      "tool": "task/plan.py brief",
+      "tool": "plan-bridge brief",
       "task_version": "0.28.3"
     }
   },

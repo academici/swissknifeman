@@ -1,6 +1,7 @@
 """Closed-profile JSON Schema validator (stdlib only).
 
-Adapted copy of task/plan/schema.py (PLAN2.D4).
+Adapted copy of the plan store's closed-profile validator (PLAN2.D4);
+the plan bridge tests keyword parity.
 
 Supports exactly the keywords in ``SUPPORTED_KEYWORDS``; any other keyword in a schema file fails
 closed with ``SchemaProfileError`` at load time. Validation collects every issue instead of stopping at the

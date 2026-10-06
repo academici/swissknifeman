@@ -125,8 +125,8 @@ class InputContractTests(unittest.TestCase):
 
     def test_lifecycle_exceptions_levels_and_json_pointers(self):
         doc = fixture("execution-input", "plan-bound")
-        doc["provenance"]["generated_by"]["tool"] = "plan.py finish"
-        doc["constraints"] = [{"text": "Avoid task:plan-run", "source": "plan.rules[2]"}]
+        doc["provenance"]["generated_by"]["tool"] = "plan-bridge register report_api"
+        doc["constraints"] = [{"text": "Use report_api", "source": "plan.rules[2]"}]
         issues = contracts.validate(signed(doc), "execution-input")
         self.assertEqual([(i.path, i.code, i.level) for i in issues],
                          [("/constraints/0/text", "LIFECYCLE_LEAK", "warning")])
@@ -136,7 +136,7 @@ class InputContractTests(unittest.TestCase):
         doc["provenance"]["request"] = "Call report_api"
         self.assert_code("execution-input", signed(doc), "LIFECYCLE_LEAK")
         doc = fixture("execution-input", "plan-bound")
-        doc["reads"][0]["content"] = {"~/key": ["unit return"]}
+        doc["reads"][0]["content"] = {"~/key": ["report API"]}
         issues = contracts.validate(signed(doc), "execution-input")
         self.assertEqual(issues[0].path, "/reads/0/content/~0~1key/0")
 

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.5",
   "title": "Чистое ядро orch: фразы lifecycle, reviewer без skills, boundary-тест orch",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Ядро orch не знает Task и Skiller: LIFECYCLE_PHRASES без команд Task, reviewer.md без имён skills (через role manifest), docs/README/schema descriptions говорят «plan store / plan bridge», тесты и fixture lifecycle-leak нейтральны; test_boundaries.py получает текстовый boundary-обход ядра orch без allowlist.",
   "why": "D13: пакеты чистые, orch заменяем и выносим. После P7.2–P7.3 тесты, читавшие Task, уже в мосту; остаётся текст ядра orch. Мост Task держит более строгий список фраз (P7.2 проверяет bridge ⊇ orch).",
   "scope": {
@@ -184,6 +184,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T11:22:32Z"
+  "result": {
+    "started_at": "2026-10-06T15:47:28Z",
+    "finished_at": "2026-10-06T16:07:25Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a111e4-f14d-71a3-bef8-7e3ae523d7ad"
+    },
+    "notes": "Neutral orch lifecycle phrases, role text, docs and schema descriptions; entire core boundary scan green without allowlist; fixture generators neutralized and canonical digest/input_id recomputed except intentional digest-mismatch. Registrar remains neutral. Orch validate green (78); final boundary 3, correction input/boundary 16; Task bridge 87 reused from combined validation. Docs/CHANGELOG updated. Combined grok-4.7/high review GREEN after one correction, artifacts/P7.5/review-final.json; actual session dff2bcb0-111f-4abb-9c75-c2a63e3d7ff3.",
+    "deviations": [
+      "Exact native system/init event and local .claude/runs runtime excluded from text scan; bridge report API superset requires one additive phrase outside task_files; lifecycle pointer test uses neutral phrase and generator exemption test restored; overlapping tests reused per owner; root CHANGELOG outside task_files."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T16:07:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T16:07:25Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T16:07:25Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T16:07:25Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T16:07:25Z"
 }

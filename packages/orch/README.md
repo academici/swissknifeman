@@ -2,7 +2,7 @@
 
 Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
 Status: **internal, not published (PLAN2.D2)**. Runtime code uses only the Python
-standard library and `orch`; it is independent of Task, Skiller, Harness and core.
+standard library and `orch`; it is independent of other packages of this repository.
 
 The package supplies a closed-profile JSON Schema validator, shared `exec/v1`
 definitions, all nine document schemas and their fixtures, canonical document
@@ -25,5 +25,5 @@ warning-only documents), `1` invalid input or refusal, `2` usage error.
 `--quiet` suppresses stdout and preserves diagnostics and the exit status.
 
 The registry rejects schema keywords outside its closed profile. Its validator
-is an adapted copy of `task/plan/schema.py` (PLAN2.D4); tests compare the supported
-keywords and error codes by reading Task's source, without importing Task.
+is an adapted copy of the plan store's closed-profile validator (PLAN2.D4);
+the plan bridge tests keyword parity.

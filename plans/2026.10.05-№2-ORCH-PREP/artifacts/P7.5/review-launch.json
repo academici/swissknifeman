@@ -1,0 +1,12 @@
+{
+  "provider": "grok",
+  "model": "grok-4.7",
+  "effort": "high",
+  "session": "dff2bcb0-111f-4abb-9c75-c2a63e3d7ff3",
+  "base": "fbf0747ba93d592d8833654d77ad2b0395d39617",
+  "scope": [
+    "P7.4",
+    "P7.5"
+  ],
+  "context_parameter": null
+}

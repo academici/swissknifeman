@@ -227,6 +227,14 @@ class StartTests(LifeCase):
         self.start("P1.1", grants=[label])
         self.assertIn(label, lifecycle.granted_gates(self.load()))
 
+    def test_external_gate_waits_and_cannot_be_started_or_owner_granted(self):
+        label = "DEPENDENCY-RECEIPT"
+        ops.patch(self.root, "P1.1", {"authority": {"kind": "external_gate", "gate": label,
+                                                        "scope": "Wait for the owning repository receipt."}})
+        self.assertEqual(lifecycle.next(self.load()).exact, f"waiting: external gate {label}")
+        self.refused("EXTERNAL_GATE", lambda root, *a: lifecycle.start(root, ["P1.1"], OPUS))
+        self.refused("GATE_UNKNOWN", lambda root, *a: lifecycle.grant(root, label, "Owner says go."))
+
 
 class FinishTests(LifeCase):
     def test_done_needs_every_acceptance_check_with_exit_zero(self):

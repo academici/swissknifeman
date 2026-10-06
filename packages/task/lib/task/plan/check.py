@@ -12,11 +12,11 @@ from typing import Any, Iterator, NamedTuple
 
 from . import schema as _schema
 from . import store
-from .model import ITEM_ID, parse_ref
+from .model import ITEM_ID, TERMINAL, parse_ref
 
 _UNIT_ID = re.compile(r"^U[0-9]+$")
 _DRIVE = re.compile(r"^[A-Za-z]:[\\/]")
-_GLOB = re.compile(r"[*?\[]")
+_GLOB = re.compile(r"[*?\[{]")
 _TARGETED_EVENTS = frozenset({"start", "finish", "design_done", "phase_closed", "deviation", "blocker",
                               "difficulty", "assumption"})
 
@@ -272,7 +272,7 @@ class _Context:
                 if not item:
                     continue
 
-                def missing(field: str, why: str) -> None:
+                def missing(field: str, why: str, *, rel=rel, item_id=item_id) -> None:
                     self.error("incomplete", f"{rel}/{field}", f"detailed item {item_id} needs {why}")
 
                 for field in ("summary", "why"):
@@ -291,7 +291,7 @@ class _Context:
                     missing("reads", "reads, task_files, guidance or self-contained sections")
 
     def validation_shapes(self) -> None:
-        for kind, key, rel, doc in self.docs():
+        for kind, _key, rel, doc in self.docs():
             checks = doc.get("validation") if kind in ("item", "phase") else None
             for index, entry in enumerate(checks if isinstance(checks, list) else []):
                 if not isinstance(entry, dict):
@@ -309,15 +309,16 @@ class _Context:
     def authority(self) -> None:
         for key, item in self.p.items.items():
             authority = item.get("authority")
-            if not isinstance(authority, dict) or authority.get("kind") != "owner_gate":
+            if not isinstance(authority, dict) or authority.get("kind") not in {"owner_gate", "external_gate"}:
                 continue
+            kind = authority["kind"]
             identities = [name for name in ("gate", "label") if authority.get(name)]
             if len(identities) != 1:
                 self.error("authority_identity", f"{self.file_of('item', key)}/authority",
-                           "owner_gate needs exactly one of gate or label")
+                           f"{kind} needs exactly one of gate or label")
             if not authority.get("scope"):
                 self.error("authority_scope", f"{self.file_of('item', key)}/authority/scope",
-                           "owner_gate needs its source scope")
+                           f"{kind} needs its source scope")
 
     def decisions(self) -> None:
         for key, doc in self.p.decisions.items():
@@ -330,7 +331,7 @@ class _Context:
 
     def paths(self) -> None:
         from . import context
-        for kind, key, rel, doc in self.docs():
+        for kind, _key, rel, doc in self.docs():
             for pointer, value in _path_fields(kind, doc):
                 parts = re.split(r"[\\/]", value)
                 if ".." in parts:
@@ -406,7 +407,7 @@ class _Context:
 
     def orchestration(self) -> None:
         from . import units
-        for kind, key, rel, doc in self.docs():
+        for _kind, _key, rel, doc in self.docs():
             setting = doc.get("orchestration")
             if isinstance(setting, dict) and "max_parallel" in setting:
                 value = setting["max_parallel"]
@@ -455,10 +456,18 @@ class _Context:
         for key, item in p.items.items():
             rel = self.file_of("item", key)
             produced = self.produced_paths(key)
+            externally_gated = (item.get("authority") or {}).get("kind") == "external_gate"
+            dependencies_ready = all(
+                dep not in p.items or p.items[dep].get("status") in TERMINAL
+                for dep in item.get("depends_on", [])
+            ) if isinstance(item.get("depends_on"), list) else True
+            produced_here = lambda path, produced=produced: path in produced or any(
+                output.endswith("/") and path.startswith(output) for output in produced)
             for index, read in enumerate(item.get("reads", []) if isinstance(item.get("reads"), list) else []):
                 if (isinstance(read, dict) and read.get("required") is True and isinstance(read.get("path"), str)
                         and not _GLOB.search(read["path"]) and not self.exists(read["path"])
-                        and read["path"] not in produced):
+                        and item.get("status") not in TERMINAL and not externally_gated and dependencies_ready
+                        and not produced_here(read["path"])):
                     self.warn("read_missing", f"{rel}/reads/{index}/path",
                               f"required read {read['path']} does not exist and no dependency produces it")
             for index, hint in enumerate(item.get("task_files", []) if isinstance(item.get("task_files"), list) else []):
@@ -485,6 +494,9 @@ class _Context:
             for artifact in doc.get("artifacts", []) if isinstance(doc.get("artifacts"), list) else []:
                 if isinstance(artifact, dict) and artifact.get("role") == "output" and isinstance(artifact.get("path"), str):
                     produced.add(artifact["path"])
+            for hint in doc.get("task_files", []) if isinstance(doc.get("task_files"), list) else []:
+                if isinstance(hint, dict) and isinstance(hint.get("path"), str):
+                    produced.add(hint["path"])
             if isinstance(doc.get("depends_on"), list):
                 stack.extend(doc["depends_on"])
         return produced

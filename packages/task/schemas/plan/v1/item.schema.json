@@ -115,6 +115,16 @@
         "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
       }
     },
+    "skills": {
+      "type": "array",
+      "description": "Named skills or capabilities the executor must load.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[a-z][a-z0-9-]*(?:(?::|/)[a-z][a-z0-9-]*)?$"
+      },
+      "uniqueItems": true
+    },
     "reads": {
       "type": "array",
       "description": "Files to read, in reading order.",
@@ -325,15 +335,16 @@
     },
     "authority": {
       "type": "object",
-      "description": "Authority needed; owner_gate requires gate and scope.",
+      "description": "Authority needed; owner_gate and external_gate require an identity and scope.",
       "properties": {
         "kind": {
           "type": "string",
-          "description": "routine or owner_gate.",
+          "description": "Routine execution, an owner grant, or evidence controlled outside this plan.",
           "minLength": 1,
           "enum": [
             "routine",
-            "owner_gate"
+            "owner_gate",
+            "external_gate"
           ]
         },
         "gate": {
@@ -344,11 +355,11 @@
         },
         "label": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
-          "description": "Exact source label for an owner gate that never had a machine gate id."
+          "description": "Exact source label when a gate never had a machine gate id."
         },
         "scope": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
-          "description": "What the gate authorizes."
+          "description": "What the owner grant or external evidence authorizes."
         }
       },
       "required": [

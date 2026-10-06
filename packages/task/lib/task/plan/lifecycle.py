@@ -115,6 +115,8 @@ def _gate_wait(plan: store.Plan, item_id: str, granted: set[str]) -> str | None:
     identity = authority.get("gate") or authority.get("label")
     if authority.get("kind") == "owner_gate" and identity not in granted:
         return f"gate {identity}"
+    if authority.get("kind") == "external_gate":
+        return f"external gate {identity}"
     return None
 
 
@@ -426,6 +428,8 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         for item_id in requested:
             wait = _gate_wait(p, item_id, granted)
             if wait:
+                if (p.items[item_id].get("authority") or {}).get("kind") == "external_gate":
+                    raise PlanError("EXTERNAL_GATE", f"{item_id} needs {wait}; reconcile the external evidence first")
                 raise PlanError("GATE_NOT_GRANTED", f"{item_id} needs {wait} (plan.py grant, or start --grant)")
         verdict = _route_verdict(p, requested, actor)
         for item_id in requested:
@@ -677,7 +681,8 @@ def grant(plan, gate: str, note: str, actor: Mapping | None = None) -> Next:
             raise PlanError("GATE_INVALID", f"gate must match [A-Z0-9-]+, received {gate!r}")
         if not note or not note.strip():
             raise PlanError("NOTE_REQUIRED", "--note must quote the owner's message that grants the gate")
-        if not any(((d.get("authority") or {}).get("gate") or (d.get("authority") or {}).get("label")) == gate
+        if not any((d.get("authority") or {}).get("kind") == "owner_gate"
+                   and ((d.get("authority") or {}).get("gate") or (d.get("authority") or {}).get("label")) == gate
                    for d in p.items.values()):
             raise PlanError("GATE_UNKNOWN", f"no item declares owner gate {gate!r}")
         if gate not in granted_gates(p):

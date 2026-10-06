@@ -39,6 +39,10 @@ A section is `{id, title, text}` and retains its complete body, including code/e
 A knowledge read can select its section id or exact title. A document without `applies_to`
 is global context; otherwise it applies to the named phases/items.
 
+An item's optional `skills` is a unique list of skill or capability names, such as
+`skill-creator` or `blender:mcp-blender`. These names declare what the executor must load;
+the plan API does not install or launch them.
+
 ## API
 
 ```bash
@@ -75,6 +79,11 @@ Batches cover every phase item exactly once and preserve execution order. Recomm
 can be split; required batches are atomic. Explicit phase dependencies express parallel branches.
 `next --json` reports one semantic action and its required route. Owner gates are declared in
 `authority`, granted through `grant --note` with authentic owner permission.
+
+An `external_gate` declares an identity (`gate` or `label`) and a source `scope` controlled
+outside the plan. `next` waits for it, `start` refuses with `EXTERNAL_GATE`, and owner
+`grant` cannot satisfy it. Reconcile the external evidence before changing its authority
+through the authoring API.
 
 Routes specify minimum `class: economy|implementation|frontier` and effort
 `low|medium|high|xhigh|max|ultra`. Optional `provider` and `model` select an exact executor;
@@ -113,6 +122,11 @@ human Markdown and does not depend on view freshness. `render --check` separatel
 human views. Templates produce overview, roadmap, status, handoff, questions and complete
 brief/phase/item/unit/decision/knowledge views. No plan-local `AGENTS.md` or `CLAUDE.md` is created.
 
+Missing required reads warn once the item's dependencies are terminal. Terminal items and
+externally gated items do not warn about retired or externally controlled inputs. Dependency
+`task_files`, output artifacts and output directories count as planned producers; wildcard
+and brace-pattern reads are excluded from this advisory existence check.
+
 Search/index ignores exclude plan Markdown, `views/` and generated `context/`; Serena provisioning applies
 these exclusions even when gitignored files are indexed. Harness guards protect generated
 views, JSON packs and worker briefs from hand edits. References from reads/examples into
@@ -121,5 +135,5 @@ historical Markdown receipts may remain immutable evidence for people.
 
 The Task marketplace plugin delivers `skills/plan-protocol` with the engine, schemas, templates
 and provider commands. The protocol is explicitly invoked and shares the same installed package
-as its API. Temporary migrations live under the package's `docs/migration/` and are removed when
-the active-plan inventory is exhausted; archived plans are untouched.
+as its API. Temporary migration tooling has been removed from the active package tree;
+source-format conversion is not a runtime compatibility layer.

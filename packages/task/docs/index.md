@@ -53,8 +53,8 @@ carriers. The marketplace plugin includes `skills/plan-protocol` alongside the e
 Plans can describe preparation, implementation, review and verification as dependent or nested
 units with explicit model settings. `unit … next` reports ready work; the API launches no process.
 `export/import` round-trip complete snapshots, and `apply` validates coordinated edits together.
-There are no read-count or context-size gates. Temporary active-plan conversions live under this
-package's `docs/migration/`; the runtime contains no Markdown compatibility layer.
+There are no read-count or context-size gates. Temporary migration tooling has been removed
+from the active package tree; the runtime contains no Markdown compatibility layer.
 
 ## Pages
 

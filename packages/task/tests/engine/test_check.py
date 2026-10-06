@@ -195,6 +195,17 @@ class CycleTests(CheckCase):
         self.edit(P1 + "P1.2.json", lambda d: d.update(depends_on=["P1.2"]))
         self.assertFound("cycle")
 
+    def test_multi_item_import_cycle_is_reported_once(self):
+        third = copy.deepcopy(demo.fixture("item-e3"))
+        third.update(id="P1.3", title="Third", status="todo", depends_on=["P1.1"], result=None)
+        demo.write_doc(self.root / P1 / "P1.3.json", third, "item")
+        self.edit(P1 + "phase.json", lambda d: (d["items"].append("P1.3"), d["batches"].append(
+            {"id": "B3", "items": ["P1.3"], "mode": "recommended"})))
+        self.edit(P1 + "P1.1.json", lambda d: d.update(depends_on=["P1.2"]))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(depends_on=["P1.3"]))
+        hit = self.assertFound("cycle", count=1)[0]
+        self.assertIn("P1.1 -> P1.2 -> P1.3 -> P1.1", hit.message)
+
     def test_phase_cycle_through_the_default_previous_phase_edge(self):
         demo.write_doc(self.root / "phases" / "P2" / "phase.json", {**demo.fixture("phase-e2"), "id": "P2", "items": [], "batches": []}, "phase")
         self.edit("plan.json", lambda d: d.update(phases=["P1", "P2"]))
@@ -268,6 +279,16 @@ class AuthorityTests(CheckCase):
         self.assertEqual(self.found("authority_identity"), [])
         self.assertEqual(self.found("authority_scope"), [])
         self.edit(P1 + "P1.2.json", lambda d: d.update(authority={"kind": "owner_gate"}))
+        self.assertFound("authority_identity", "P1.2.json/authority", count=1)
+        self.assertFound("authority_scope", "P1.2.json/authority/scope", count=1)
+
+    def test_external_gate_needs_a_traceable_identity_and_scope(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            authority={"kind": "external_gate", "label": "owning package receipt",
+                       "scope": "The owning repository must publish the immutable receipt."}))
+        self.assertEqual(self.found("authority_identity"), [])
+        self.assertEqual(self.found("authority_scope"), [])
+        self.edit(P1 + "P1.2.json", lambda d: d.update(authority={"kind": "external_gate"}))
         self.assertFound("authority_identity", "P1.2.json/authority", count=1)
         self.assertFound("authority_scope", "P1.2.json/authority/scope", count=1)
 
@@ -420,7 +441,7 @@ class AdvisoryTests(CheckCase):
 
     def test_required_read_missing_warns_until_it_exists_or_a_dependency_produces_it(self):
         warn = lambda: [h.where for h in self.found("read_missing", level="warning") if "P1.2" in h.where]  # noqa: E731
-        self.assertEqual(len(warn()), 2)  # lib/pkg/config.py and @plan/knowledge/design.json
+        self.assertEqual(len(warn()), 1)  # config.py is a dependency task_file; knowledge is not produced yet
         (self.root.parents[1] / "lib" / "pkg").mkdir(parents=True)
         (self.root.parents[1] / "lib" / "pkg" / "config.py").write_text("x = 1\n", encoding="utf-8")
         self.assertEqual(len(warn()), 1)
@@ -430,6 +451,42 @@ class AdvisoryTests(CheckCase):
         (self.root / "research").mkdir()
         (self.root / "research" / "00-design.md").write_text("# d\n", encoding="utf-8")
         self.assertEqual(warn(), [])
+
+    def test_dependency_task_files_and_output_directories_satisfy_future_reads(self):
+        self.edit(P1 + "P1.1.json", lambda d: d.update(task_files=[
+            {"path": "@plan/artifacts/future/", "change": "create"}]))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[
+            {"path": "@plan/artifacts/future/manifest.json", "why": "producer output", "required": True}]))
+        self.assertEqual([h for h in self.found("read_missing", level="warning") if "P1.2" in h.where], [])
+
+    def test_missing_required_read_waits_until_item_dependencies_are_terminal(self):
+        self.edit(P1 + "P1.1.json", lambda d: d.update(status="todo", result=None))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[
+            {"path": "future/input.json", "why": "needed after the producer is complete", "required": True}]))
+        self.assertEqual([h for h in self.found("read_missing", level="warning") if "P1.2" in h.where], [])
+        self.edit(P1 + "P1.1.json", lambda d: d.update(
+            status="done", result={"started_at": "2026-10-05T10:00:00Z",
+                                   "finished_at": "2026-10-05T10:01:00Z",
+                                   "executor": {"provider": "p", "model": "m"},
+                                   "notes": "done", "checks": [], "deviations": [], "pending": []}))
+        self.assertEqual(len([h for h in self.found("read_missing", level="warning") if "P1.2" in h.where]), 1)
+
+    def test_brace_expansion_read_is_treated_as_a_pattern(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[
+            {"path": "app/{main,config}.py", "why": "two source inputs", "required": True}]))
+        self.assertEqual([h for h in self.found("read_missing", level="warning") if "P1.2" in h.where], [])
+
+    def test_terminal_item_does_not_warn_about_a_retired_historical_read(self):
+        self.edit(P1 + "P1.1.json", lambda d: d.update(reads=[
+            {"path": "retired/source.py", "why": "historical execution input", "required": True}]))
+        self.assertEqual([h for h in self.found("read_missing", level="warning") if "P1.1" in h.where], [])
+
+    def test_external_gate_does_not_warn_about_reads_owned_outside_the_plan(self):
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            authority={"kind": "external_gate", "label": "owning repository receipt",
+                       "scope": "The owning repository controls these inputs."},
+            reads=[{"path": "other-project/receipt.json", "why": "external evidence", "required": True}]))
+        self.assertEqual([h for h in self.found("read_missing", level="warning") if "P1.2" in h.where], [])
 
     def test_optional_reads_and_globs_do_not_warn(self):
         self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[

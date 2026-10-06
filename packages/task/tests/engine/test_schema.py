@@ -118,6 +118,7 @@ class ValidatorTests(unittest.TestCase):
         self.item["route"] = None
         self.item["validation"][0]["procedure"] = "Owner compares the signed acceptance packet."
         self.item["validation"][0].pop("cmd")
+        self.item["skills"] = ["blender:mcp-blender", "skill-creator"]
         self.assertEqual(schema.validate(self.item, "item"), [])
 
     def test_object_data_payload_is_free_form(self):

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.1",
   "title": "plan.py brief: проекция execution-input (T1, T3)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Новый read-only глагол `plan.py brief <plan> <item> [--unit U#] [--inline-reads] [--out FILE]` выдаёт exec/v1 execution-input из полного context pack по таблице полей; без report_api и lifecycle-инструкций.",
   "why": "R1, R3, I1, I3: worker должен получать задание, а не плановый процесс; полный pack остаётся рядом и доступен по ссылке. D10: форма brief = exec/v1.",
   "scope": {
@@ -142,6 +142,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:25Z"
+  "result": {
+    "started_at": "2026-10-06T04:53:10Z",
+    "finished_at": "2026-10-06T04:56:11Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "d04ee04c-fe18-4361-a6ae-aef30f6f3032"
+    },
+    "notes": "brief.py (build/render/canonical_digest), CLI verb brief with --unit/--inline-reads/--out, 25 mapping tests; read-only, no PlanLock.",
+    "deviations": [
+      "--output json envelope keeps the shared plan.py shape {ok,data}; brief-verb text said {ok,result}. --repo not added (P2.3)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T04:56:11Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T04:56:11Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-06T04:56:11Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-06T04:56:11Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T04:56:11Z"
 }

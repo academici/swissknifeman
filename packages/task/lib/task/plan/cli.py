@@ -14,7 +14,7 @@ import re
 import sys
 
 
-from . import check, context, lifecycle, ops, snapshot, stats, store, units, views
+from . import brief, check, context, lifecycle, ops, snapshot, stats, store, units, views
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -237,6 +237,19 @@ def cmd_context(args) -> int:
         print(context.render(plan, args.item), end="")
     else:
         print(lifecycle.shown_path(context.build(plan, args.item)))
+    return 0
+
+
+def cmd_brief(args) -> int:
+    plan = store.load_plan(_plan_dir(args))
+    if args.unit is not None and not re.fullmatch(r"U[0-9]+", args.unit):
+        raise UsageError(f"invalid unit id {args.unit!r}")
+    text = brief.render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads)
+    if args.out is not None:
+        store.atomic_write(args.out, text)
+        print(args.out)
+    else:
+        print(text, end="")
     return 0
 
 
@@ -465,6 +478,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("context", cmd_context, "return complete JSON context (context/<item>.json)")
     p.add_argument("item")
     p.add_argument("--stdout", action="store_true", help="print the pack instead of writing it")
+
+    p = verb("brief", cmd_brief, "execution-input (exec/v1) of an item or unit, read-only")
+    p.add_argument("item")
+    p.add_argument("--unit", metavar="U#", help="brief one unit of the item")
+    p.add_argument("--inline-reads", action="store_true", help="embed the full text of existing text reads")
+    p.add_argument("--out", type=Path, help="write the document to FILE instead of stdout")
 
     p = verb("finish", cmd_finish, "record the outcome of an item; closes the phase and the plan when complete")
     p.add_argument("item")

@@ -1,0 +1,9 @@
+# orch
+
+Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
+Status: **internal, not published**. The package uses only the Python standard library.
+
+- [exec/v1 contracts](contracts.md) — nine document kinds, conventions, contract changelog.
+- [Engine Port](engine-port.md) — operations, run states, binding capability matrix.
+- [Architecture](architecture.md) — package boundaries, dependency rule, layout.
+- [Adding an engine](adding-an-engine.md) — steps to add a binding.

@@ -49,3 +49,4 @@ sync_pkg harness
 sync_pkg maind   # internal links maind-docks relative → work and standalone, and in the unit
 sync_pkg analyst # continuous learning; internal links are relative (standalone + unit)
 sync_pkg task
+sync_pkg orch

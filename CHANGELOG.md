@@ -4,6 +4,11 @@
 
 ### Added
 
+- **skiller:** `resolve --role`.
+- **task:** launch catalog `orchestration.launch`.
+- **scripts:** `sync-managed-blocks`.
+- **harness:** `run` discovers Task via `SKM_TASK_ROOT`.
+
 - **Task область видимости context pack:** `global` у document/decision, `settings.context_pack`
   (`legacy|scoped`; `plan.py new` пишет `scoped`, существующие планы остаются `legacy`) и
   `settings.context_budget_kb`; scoped отбрасывает непривязанное, помечает reads, уже лежащие в pack
@@ -131,6 +136,7 @@
 
 ### Changed
 
+- **task:** review method is generated from `quality:code-review` / `quality:artifact-review`.
 - **core:** `shared_config_path` returns the owner path from one name → path table, without
   fallback; signature unchanged. `profile-catalog` now resolves to the harness canon.
 - **Task:** test that `capability_bindings` in `command-routing.json` agree with levels in

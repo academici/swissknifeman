@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.5",
   "title": "Документация, CHANGELOG и широкий validate всех пакетов",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "packages/orch/docs (index, architecture, adding-an-engine) и README; страница в root docs по docs-maintenance; CHANGELOG [Unreleased]; широкие validate/test Task, Skiller, Harness, orch; managed-blocks и проекции без расхождений.",
   "why": "R12, R16: устройство и способ добавить движок записаны; R21: финальная проверка совместимости всех пакетов один раз.",
   "scope": {
@@ -163,6 +163,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:12:12Z"
+  "result": {
+    "started_at": "2026-10-07T14:56:46Z",
+    "finished_at": "2026-10-07T15:18:44Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "68013e95-6527-479e-927a-8145c2324ec2"
+    },
+    "notes": "orch docs, umbrella docs wiring, CHANGELOG; wide validates green",
+    "deviations": [
+      "architecture.md package-neutral: orch boundary test forbids partner package names"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-07T15:18:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T15:18:44Z"
 }

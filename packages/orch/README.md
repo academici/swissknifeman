@@ -32,3 +32,11 @@ warning-only documents), `1` invalid input or refusal, `2` usage error.
 The registry rejects schema keywords outside its closed profile. Its validator
 is an adapted copy of the plan store's closed-profile validator (PLAN2.D4);
 the plan bridge tests keyword parity.
+
+## Docs
+
+- [index](docs/index.md)
+- [contracts](docs/contracts.md)
+- [engine-port](docs/engine-port.md)
+- [architecture](docs/architecture.md)
+- [adding-an-engine](docs/adding-an-engine.md)

@@ -26,6 +26,7 @@ export default withMermaid(defineConfig({
       { text: 'References', link: '/reference', activeMatch: '/reference' },
       { text: 'core', link: '/core/', activeMatch: '/core/' },
       { text: 'task', link: '/task/', activeMatch: '/task/' },
+      { text: 'orch', link: '/orch/', activeMatch: '/orch/' },
     ],
 
     sidebar: {
@@ -209,6 +210,19 @@ export default withMermaid(defineConfig({
         {
           text: 'Roadmap',
           items: [{ text: 'Deferred (P5)', link: '/analyst/roadmap' }],
+        },
+      ],
+
+      '/orch/': [
+        {
+          text: 'Orchestration contracts (orch)',
+          items: [
+            { text: 'Overview', link: '/orch/' },
+            { text: 'Architecture', link: '/orch/architecture' },
+            { text: 'Contracts exec/v1', link: '/orch/contracts' },
+            { text: 'Engine Port', link: '/orch/engine-port' },
+            { text: 'Adding an engine', link: '/orch/adding-an-engine' },
+          ],
         },
       ],
 

@@ -75,6 +75,7 @@ docs/skiller/
 docs/harness/
 docs/maind/
 docs/analyst/
+docs/orch/
 
 # Domestic research-docks (audits/trackers) — locally, do not publish
 # (anchor to root: DO NOT touch the bucket skills/research registry)

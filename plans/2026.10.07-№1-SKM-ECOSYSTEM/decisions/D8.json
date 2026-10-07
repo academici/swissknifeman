@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D8",
+  "title": "Skills: в skiller только общие, модульные — в своём модуле",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Где живут skills?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Правило M2/M3 без отдельного согласования: system/* → harness, brain, maind, analyst по таблице knowledge/architecture §8; general/* проверяется на привязку к модулю при детализации P8"
+    }
+  ],
+  "decision": "A — Правило M2/M3 без отдельного согласования: system/* → harness, brain, maind, analyst по таблице knowledge/architecture §8; general/* проверяется на привязку к модулю при детализации P8",
+  "rationale": "M3: «я и так сказал… утверждать не нужно».",
+  "applies_to": [
+    "P7",
+    "P8",
+    "P11"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

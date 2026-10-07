@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P8",
+  "title": "skiller: только общие skills",
+  "design": "skeleton",
+  "goal": "В skiller остаются общие skills, skm, профили/пресеты, шаблон skill и синхронизация с upstream; system/* разъезжаются по модулям; код — тонкий CLI над aicore; служебные файлы skiller — в новых местах; skiller автономен (зависит только от aicore).",
+  "context": "D2, D5, D8; knowledge/architecture §7 skiller, §8. Детализируется после P5 и P7.",
+  "scope": {
+    "include": [
+      "перенос skills по модулям",
+      "перевод кода на aicore",
+      "служебные файлы skiller"
+    ],
+    "exclude": [
+      "содержимое общих skills"
+    ]
+  },
+  "depends_on": [
+    "P5",
+    "P7"
+  ],
+  "deliverables": [
+    "skiller → aicore",
+    "skills по модулям"
+  ],
+  "items": [],
+  "batches": []
+}

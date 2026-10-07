@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P11",
+  "title": "Модули хаба: maind, analyst, harness; удаление core и artifex",
+  "design": "skeleton",
+  "goal": "maind, analyst, harness работают на aicore и новых местах конфига/состояния (*.env.ini, .maind*.json, ~/.maind, *.bak уходят); рендереры провайдеров перенесены по правилу «рендер — aicore, каталоги — harness»; core/ и artifex удалены; проверка границ --strict зелёная.",
+  "context": "D2, D5, D8; knowledge/architecture §5.3, §7. Детализируется после P8 и P10.",
+  "scope": {
+    "include": [
+      "перевод модулей хаба",
+      "удаление core и artifex",
+      "strict-проверка границ"
+    ],
+    "exclude": [
+      "umbrella CLI (P12)"
+    ]
+  },
+  "depends_on": [
+    "P8",
+    "P10"
+  ],
+  "deliverables": [
+    "модули хаба на aicore",
+    "core и artifex удалены"
+  ],
+  "items": [],
+  "batches": []
+}

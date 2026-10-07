@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D13",
+  "title": "Guard dev-клона: маркер + реальный HOME в точках входа",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Чем технически не дать клону тронуть живое состояние?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Неотслеживаемый маркер .swissknifeman-dev в корне клона; встроенная проверка в bin-обёртках модулей, install.sh и scripts/bootstrap-machine.sh: если найден маркер и HOME равен домашнему каталогу пользователя из passwd и не задан SKM_DEV_ALLOW_LIVE=1 — exit 3 с SKM_DEV_GUARD; тесты с tmp HOME не затрагиваются; в main маркера нет — поведение не меняется",
+      "pros": "Ловит и ручной запуск, и агентов; дёшево; удаляется в P12"
+    },
+    {
+      "id": "B",
+      "text": "PreToolUse-хук Claude Code в клоне",
+      "cons": "Не защищает от ручного запуска"
+    }
+  ],
+  "decision": "A — Неотслеживаемый маркер .swissknifeman-dev в корне клона; встроенная проверка в bin-обёртках модулей, install.sh и scripts/bootstrap-machine.sh: если найден маркер и HOME равен домашнему каталогу пользователя из passwd и не задан SKM_DEV_ALLOW_LIVE=1 — exit 3 с SKM_DEV_GUARD; тесты с tmp HOME не затрагиваются; в main маркера нет — поведение не меняется",
+  "rationale": "Факты 2026-10-07: CLI в PATH, маркетплейс и проекты указывают на live-папку; тесты в основном используют tmp HOME (scripts/test-root-install.py).",
+  "applies_to": [
+    "P1"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

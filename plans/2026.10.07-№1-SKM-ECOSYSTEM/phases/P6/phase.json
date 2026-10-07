@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P6",
+  "title": "aicore: расширения — события, подписки, оверлеи, внешние плагины",
+  "design": "skeleton",
+  "goal": "aicore.ext: конверт событий, журнал проекта, best-effort доставка подписчикам из конфига и unit.json, оверлеи инструкций по слотам, внешние плагины-команды (JSON stdin/stdout); контракт и тесты; CLI для эмуляции событий.",
+  "context": "D6; knowledge/architecture §6. Детализируется после P4.",
+  "scope": {
+    "include": [
+      "события",
+      "подписки",
+      "оверлеи",
+      "внешние плагины-команды"
+    ],
+    "exclude": [
+      "события конкретных модулей (P7, P9, P10)"
+    ]
+  },
+  "depends_on": [
+    "P4"
+  ],
+  "deliverables": [
+    "aicore.ext",
+    "контракт событий"
+  ],
+  "items": [],
+  "batches": []
+}

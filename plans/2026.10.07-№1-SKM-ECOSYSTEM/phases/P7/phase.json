@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P7",
+  "title": "brain: основа модуля",
+  "design": "skeleton",
+  "goal": "packages/brain по контракту модуля: поиск хранилища из конфига, синхронизация документов (из skiller/brain_sync), skill brain-locator, brain-части maind, подписчик planner.plan.closed → заметка (проверено в песочнице на копии хранилища).",
+  "context": "D7; knowledge/architecture §7 brain. Детализируется после P6.",
+  "scope": {
+    "include": [
+      "каркас brain",
+      "перенос brain_sync, brain-locator, brain-частей maind",
+      "первый подписчик"
+    ],
+    "exclude": [
+      "код из ~/Vaults/Brain/brain"
+    ]
+  },
+  "depends_on": [
+    "P6"
+  ],
+  "deliverables": [
+    "packages/brain",
+    "первый подписчик"
+  ],
+  "items": [],
+  "batches": []
+}

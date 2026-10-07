@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.1",
   "title": "Discovery Task без monorepo-хардкода (harness/run и orch)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "orch.discovery и новый harness/run/task_paths.py находят Task в порядке D7 (SKM_TASK_ROOT → пакет-сосед установки → прежний find_monorepo_root → TASK_UNAVAILABLE); plan_reader, worker и gate используют его; поведение в монорепо прежнее.",
   "why": "I13, R19: Task должен подключаться к стороннему harness/engine без `packages/task/...` в целевом проекте; harness/run остаётся legacy (I15) — меняется только поиск путей.",
   "scope": {
@@ -51,7 +51,19 @@
   ],
   "task_files": [
     {
-      "path": "packages/orch/lib/orch/discovery.py",
+      "path": "packages/orch/bridges/task/bridge.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/bridges/task/discovery.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/bridges/task/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/bridges/task/tests/test_discovery.py",
       "change": "create"
     },
     {
@@ -69,10 +81,6 @@
     {
       "path": "packages/harness/lib/harness/run/gate.py",
       "change": "modify"
-    },
-    {
-      "path": "packages/orch/tests/test_discovery.py",
-      "change": "create"
     },
     {
       "path": "packages/harness/tests/test_run_task_paths.py",
@@ -94,7 +102,7 @@
   "validation": [
     {
       "id": "V1",
-      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_discovery -v",
+      "cmd": "python3 -m unittest discover -s bridges/task/tests -t bridges/task/tests -p \"test_*.py\" && bash scripts/test.sh && bash scripts/validate.sh",
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "packages/orch"
@@ -107,7 +115,7 @@
     },
     {
       "id": "V3",
-      "cmd": "! grep -nE 'packages.{0,8}task' packages/harness/lib/harness/run/plan_reader.py packages/harness/lib/harness/run/worker.py packages/harness/lib/harness/run/gate.py",
+      "cmd": "! grep -nE \"packages.{0,8}task\" packages/harness/lib/harness/run/plan_reader.py packages/harness/lib/harness/run/worker.py packages/harness/lib/harness/run/gate.py",
       "expect": "exit 0 (no matches)",
       "kind": "acceptance"
     }
@@ -131,6 +139,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:02:49Z"
+  "result": {
+    "started_at": "2026-10-07T13:51:21Z",
+    "finished_at": "2026-10-07T14:04:13Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "ac066913-cb4a-4137-ada8-3ecc0958eafd"
+    },
+    "notes": "task_paths (harness) + bridges/task/discovery (orch), D7 order; plan_reader/worker/gate/journal use task_paths; explicit monorepo_root stays highest priority; harness full test+validate and orch test+validate green",
+    "deviations": [
+      "Orch side placed in bridge packages/orch/bridges/task (D13 boundary) instead of lib/orch/discovery.py; V1 runs bridge test + orch test/validate; journal.py added to scope; task_files and V1 updated in the item"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T14:04:13Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T14:04:13Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T14:04:13Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T14:04:13Z"
 }

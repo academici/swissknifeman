@@ -4,9 +4,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from core import find_monorepo_root
-
-from . import plan_reader
+from . import plan_reader, task_paths
 
 GREEN = "GREEN"
 ATTENTION = "ATTENTION"
@@ -82,9 +80,9 @@ def _read_closure(before, *, timeout=30):
     }
 
 
-def _read_check_signals(plan_dir, monorepo_root, *, timeout=60):
+def _read_check_signals(plan_dir, task, *, timeout=60):
     """`plan.py check`: errors are RED, warnings are ATTENTION, silence is clean."""
-    payload, reason = plan_reader.call_plan(monorepo_root, "check", plan_dir, timeout=timeout)
+    payload, reason = plan_reader.call_plan(task, "check", plan_dir, timeout=timeout)
     if payload is None or reason:
         return {"degraded": True, "clean": False, "errors": True, "warnings": False,
                 "lint_class": "degraded", "reason": reason}
@@ -95,9 +93,9 @@ def _read_check_signals(plan_dir, monorepo_root, *, timeout=60):
             "reason": None}
 
 
-def _read_item_after(plan_dir, item_id, monorepo_root, *, timeout=60):
+def _read_item_after(plan_dir, item_id, task, *, timeout=60):
     """Item JSON after the run: status, pending work, deviations, escalation."""
-    item, reason = plan_reader.call_plan(monorepo_root, "show", plan_dir, item_id, timeout=timeout)
+    item, reason = plan_reader.call_plan(task, "show", plan_dir, item_id, timeout=timeout)
     if item is None or reason:
         return {"available": False, "reason": reason or f"item {item_id} not readable"}
     result = item.get("result") or {}
@@ -157,15 +155,14 @@ def verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, *, monorepo_r
             timeout=60):
     """Verdict of one run from its outcome, git closure, plan check and item JSON."""
     plan_dir = Path(plan_dir)
-    if monorepo_root is None:
-        monorepo_root = find_monorepo_root(plan_dir.resolve())
-        if monorepo_root is None:
-            raise GateUnavailable(
-                f"monorepo root not found from {plan_dir} — package `task` not available")
+    try:
+        task = task_paths.task_root(plan_dir.resolve(), monorepo_root=monorepo_root)
+    except task_paths.TaskUnavailable as exc:
+        raise GateUnavailable(str(exc)) from exc
 
-    check = _read_check_signals(plan_dir, monorepo_root, timeout=timeout)
+    check = _read_check_signals(plan_dir, task, timeout=timeout)
     closure = _read_closure(before, timeout=timeout)
-    item_after = _read_item_after(plan_dir, item_id, monorepo_root, timeout=timeout)
+    item_after = _read_item_after(plan_dir, item_id, task, timeout=timeout)
 
     signals = {
         "outcome_class": outcome.get("outcome"),

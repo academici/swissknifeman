@@ -7,7 +7,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from core import find_monorepo_root
+from . import task_paths
 
 
 OUTCOME_OK = "ok"
@@ -52,8 +52,8 @@ def resolve_claude_bin():
     return shutil.which("claude")
 
 
-def _load_routing_config(monorepo_root):
-    path = Path(monorepo_root) / "packages" / "task" / "configs" / "command-routing.json"
+def _load_routing_config(task):
+    path = task_paths.routing_in(task)
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -68,9 +68,13 @@ def _first(selectors):
     return selectors[0] if isinstance(selectors, list) and selectors else None
 
 
-def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root, claude_bin):
+def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin):
     """Internal documentation."""
-    routing, reason = _load_routing_config(monorepo_root)
+    try:
+        task = task_paths.task_root(monorepo_root=monorepo_root)
+    except task_paths.TaskUnavailable as exc:
+        raise WorkerUnavailable(f"routing media not available: {exc}") from exc
+    routing, reason = _load_routing_config(task)
     if routing is None:
         raise WorkerUnavailable(f"routing media not available: {reason}")
 
@@ -164,13 +168,10 @@ def _classify_envelope(proc, argv, client_version):
 def run(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin=None,
         timeout=DEFAULT_TIMEOUT):
     """Internal documentation."""
-    if monorepo_root is None:
-        monorepo_root = find_monorepo_root(Path.cwd())
-        if monorepo_root is None:
-            raise WorkerUnavailable(
-                "monorepo root not found - media command-routing.json not available "
-                "(standalone-layout without package `task`)")
-    monorepo_root = Path(monorepo_root)
+    try:
+        task_paths.task_root(monorepo_root=monorepo_root)
+    except task_paths.TaskUnavailable as exc:
+        raise WorkerUnavailable(f"{exc} (command-routing.json not available)") from exc
 
     resolved_bin = claude_bin or resolve_claude_bin()
     if resolved_bin is None:

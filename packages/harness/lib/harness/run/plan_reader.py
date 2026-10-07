@@ -5,7 +5,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from core import find_monorepo_root
+from . import task_paths
 
 
 ROUTING_UNRESOLVED = "ROUTING-UNRESOLVED"
@@ -20,13 +20,16 @@ TERMINAL_STATUSES = ("done", "done_with_deviations", "skipped")
 EXEC_RUN = "run"
 
 
-def plan_script(monorepo_root):
-    return Path(monorepo_root) / "packages" / "task" / "scripts" / "plan.py"
+def plan_script(task):
+    return task_paths.script_in(task)
 
 
-def call_plan(monorepo_root, verb, plan_dir, *args, timeout=60):
-    """Run `plan.py <verb> <plan_dir> [args] --json`; return `(payload, None)` or `(None, reason)`."""
-    argv = ["python3", str(plan_script(monorepo_root)), verb, str(plan_dir), *args, "--json"]
+def call_plan(task, verb, plan_dir, *args, timeout=60):
+    """Run `plan.py <verb> <plan_dir> [args] --json`; return `(payload, None)` or `(None, reason)`.
+
+    `task` is the Task package root (see `task_paths.task_root`).
+    """
+    argv = ["python3", str(plan_script(task)), verb, str(plan_dir), *args, "--json"]
     try:
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -72,18 +75,16 @@ def _classify(status, phase_detailed, route, route_error):
 def queue(plan_dir, phase_id, *, monorepo_root=None):
     """Queue of the phase items: drivable ones, refusals by name, terminal items dequeued."""
     plan_dir = Path(plan_dir)
-    if monorepo_root is None:
-        monorepo_root = find_monorepo_root(plan_dir.resolve())
-        if monorepo_root is None:
-            return _degraded(plan_dir, phase_id, (
-                f"monorepo root not found from {plan_dir} — package `task` not available "
-                "(standalone-layout): driver refuses to drive, not silent"))
-    monorepo_root = Path(monorepo_root)
+    try:
+        task = task_paths.task_root(plan_dir.resolve(), monorepo_root=monorepo_root)
+    except task_paths.TaskUnavailable as exc:
+        return _degraded(plan_dir, phase_id, (
+            f"{exc} (standalone-layout): driver refuses to drive, not silent"))
 
-    phase, reason = call_plan(monorepo_root, "show", plan_dir, phase_id)
+    phase, reason = call_plan(task, "show", plan_dir, phase_id)
     if phase is None or reason:
         return _degraded(plan_dir, phase_id, reason or f"phase «{phase_id}» not readable")
-    nxt, reason = call_plan(monorepo_root, "next", plan_dir)
+    nxt, reason = call_plan(task, "next", plan_dir)
     if nxt is None or reason:
         return _degraded(plan_dir, phase_id, reason or "next step not readable")
 
@@ -93,7 +94,7 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
     result_items = []
     excluded_terminal = []
     for item_id in phase.get("items") or []:
-        item, reason = call_plan(monorepo_root, "show", plan_dir, item_id)
+        item, reason = call_plan(task, "show", plan_dir, item_id)
         if item is None or reason:
             return _degraded(plan_dir, phase_id, reason or f"item «{item_id}» not readable")
         status = item.get("status") or ""

@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:orch:bridge:v1",
+  "name": "task",
+  "partner": "task",
+  "direction": "out",
+  "contract": "task.package-layout/v1",
+  "summary": "Finds the Task package (plan CLI and command-routing config) for orch tooling without a monorepo path: SKM_TASK_ROOT, then the package next to the installation, then the monorepo ancestor.",
+  "entrypoints": {},
+  "requires": {
+    "env": "SKM_TASK_ROOT"
+  }
+}

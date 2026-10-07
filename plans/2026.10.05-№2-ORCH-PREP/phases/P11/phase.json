@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P11",
   "title": "Рефакторинг конфигов: инвентаризация, владельцы, удаление лишнего",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Каждый конфиг имеет владельца и потребителя; неиспользуемые и дублирующиеся удалены; конфиги оркестрации и мостов на своих местах (D17 п.4, B50).",
-  "context": "knowledge/bridges §p11. Корневые configs/: gitignore-policy, managed-blocks, profile-catalog, provider-capabilities, provider-distribution, provider-projection, release-units; пакетные: task/command-routing.json, skiller/{core-policy,publication-versions,repository-bootstrap-skills}.json, harness/configs/{claude-code,codex,common,cursor,grok}.",
+  "context": "Досье — knowledge/configs-p11 (§inventory, §findings F1–F8, решение D26 = A); внешние опоры — @plan/research/Q18.md. Подход — knowledge/bridges §p11. Неиспользуемых конфигов нет; удаляется только отставший дубль configs/profile-catalog.json; правило «владелец + потребитель» удерживается configs/config-inventory.json и scripts/test-config-inventory.py.",
   "scope": {
     "include": [
       "Инвентаризация (кто читает, кто пишет, дубли)",
@@ -26,6 +26,34 @@
     "удалены лишние",
     "конфиги по владельцам"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P11.1",
+    "P11.2",
+    "P11.3",
+    "P11.4"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P11.1",
+        "P11.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P11.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P11.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

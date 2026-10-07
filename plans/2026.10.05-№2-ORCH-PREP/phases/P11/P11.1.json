@@ -1,0 +1,178 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.1",
+  "title": "Резолвер конфигов без fallback и удаление дубля configs/profile-catalog.json",
+  "status": "done_with_deviations",
+  "summary": "core/config_paths.py: одна таблица name → repo-relative путь единственной копии у владельца (без fallback); удалить отставший дубль configs/profile-catalog.json; тесты резолвера.",
+  "why": "F1: корневая копия profile-catalog отстала от канона harness (нет lifecycle.tool-telemetry), а резолвер предпочитает её — maind/provider_deploy читает устаревшие данные. F2: корневой путь command-routing фантомный, fallback-механика мёртвая. Риск — сменить поведение maind: перед удалением сверить, что единственное различие копий — запись tool-telemetry (канон — надмножество).",
+  "scope": {
+    "include": [
+      "core/config_paths.py по §resolver",
+      "core/tests/test_config_paths.py",
+      "удаление configs/profile-catalog.json"
+    ],
+    "exclude": [
+      "прямые читатели command-routing/harness-конфигов в harness, artifex, maind, scripts (F2, F6)",
+      "docs и CHANGELOG (P11.4)",
+      "configs/config-inventory.json (P11.3)"
+    ]
+  },
+  "decisions": [
+    "D26"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "findings",
+      "why": "F1, F2 — что и почему",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "resolver",
+      "why": "целевой код и тесты",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "compat",
+      "why": "что не менять (API core)",
+      "required": true
+    },
+    {
+      "path": "core/config_paths.py",
+      "why": "текущий резолвер",
+      "required": true
+    },
+    {
+      "path": "core/tests/test_config_paths.py",
+      "why": "тесты к переименованию",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/provider_deploy.py",
+      "section": "425-445",
+      "why": "единственный вызов shared_config_path('profile-catalog')",
+      "required": true
+    },
+    {
+      "path": "core/__init__.py",
+      "section": "30-110",
+      "why": "экспорт shared_config_path сохраняется",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "core/config_paths.py",
+      "change": "modify"
+    },
+    {
+      "path": "core/tests/test_config_paths.py",
+      "change": "modify"
+    },
+    {
+      "path": "configs/profile-catalog.json",
+      "change": "delete"
+    }
+  ],
+  "rules": [
+    "Сигнатура и имена shared_config_path не меняются; KeyError для неизвестного имени и FileNotFoundError без корня — как раньше",
+    "Сначала diff двух копий (команда в §resolver); различие кроме блока lifecycle.tool-telemetry → plan.py log --type blocker, файл не удалять",
+    "Не трогать harness/maind/artifex/scripts — их чтения уже указывают на канон или вне scope (F2, F6)",
+    "Удаление — git rm в том же scoped-коммите item"
+  ],
+  "guidance": "Исполнитель: implementation/medium (Sonnet; Sol допустим). Код резолвера дан целиком в §resolver — перенести дословно, docstring модуля обновить. maind-тесты provider_deploy прогнать: они строят tmp-деревья с harness/configs, новый путь обязан находиться и там.",
+  "examples": [
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "resolver"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=. python3 -m unittest discover -s core/tests -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test ! -e configs/profile-catalog.json && python3 -c \"from core.config_paths import shared_config_path as p; assert str(p('profile-catalog')).endswith('packages/harness/configs/common/profile-catalog.json'); assert str(p('command-routing')).endswith('packages/task/configs/command-routing.json')\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/maind/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/harness/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "резолвер без fallback, одна копия на конфиг",
+    "configs/profile-catalog.json удалён",
+    "тесты резолвера"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T10:47:57Z",
+    "finished_at": "2026-10-07T10:53:43Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "5823ff57-9374-4473-aff8-6fb8917b2369"
+    },
+    "notes": "resolver single-table, profile-catalog dup removed (diff: only lifecycle.tool-telemetry missing in root)",
+    "deviations": [
+      "V3 fails on baseline too (missing maind-overview SKILL.md path); not caused by resolver change"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T10:53:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T10:53:43Z"
+      },
+      {
+        "id": "V3",
+        "exit": 1,
+        "at": "2026-10-07T10:53:43Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T10:53:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T10:53:43Z"
+}

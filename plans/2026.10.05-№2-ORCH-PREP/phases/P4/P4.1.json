@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.1",
   "title": "Launch catalog роль × provider; scout читает catalog",
-  "status": "todo",
+  "status": "blocked",
   "summary": "command-routing.json получает `orchestration.launch.<role>.<provider>` (5 ролей × claude-code/codex/grok) с model_class вместо модели; валидатор command_catalog проверяет форму, плейсхолдеры, запрет `--bare`; scout берёт запись из `launch.scout` (модель через class_selectors), legacy `orchestration.scout` — fallback; argv scout побайтно прежний.",
   "why": "R4, R3, I8, I12: один источник запуска для scout и будущего engine (D6); модели только из mappings.",
   "scope": {
@@ -128,6 +128,17 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:26Z"
+  "result": {
+    "started_at": "2026-10-07T10:03:49Z",
+    "finished_at": "2026-10-07T10:04:38Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "7fc85a26-ccc9-4d41-b3d3-9b83ffe2a039"
+    },
+    "notes": "No product changes. P4.1 scope/task_files/validation target the superseded D6 layout.",
+    "escalation": "Owner: approve redesign of P4.1 per D17 p.3 / bridges item-mapping — (a) where launch catalog + argv builders live in orch (path, e.g. packages/orch/configs/launch-catalog.json) and (b) how Task scout gets argv: via task/bridges/orch, or keep legacy orchestration.scout and drop launch from Task. Then rewrite P4.1 scope, task_files and V1–V4, or run 'task:plan-revise'."
+  },
+  "updated_at": "2026-10-07T10:04:38Z"
 }

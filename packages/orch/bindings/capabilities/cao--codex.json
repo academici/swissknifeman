@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:capability-record:v1",
+  "contract_version": "exec/v1",
+  "binding": "cao",
+  "provider": "codex",
+  "cli": {
+    "name": "cao"
+  },
+  "status": "declared",
+  "recorded_at": "2026-10-07T10:20:25Z",
+  "transport": "tui",
+  "auth_route": "subscription_oauth",
+  "model": {
+    "set": "supported",
+    "observe": "adapted"
+  },
+  "effort": {
+    "set": "adapted",
+    "observe": "unknown"
+  },
+  "stream": "adapted",
+  "attach": "supported",
+  "cancel": "adapted",
+  "resume": "adapted",
+  "usage": "unknown",
+  "restrictions": {
+    "tools_native": "adapted",
+    "sandbox_os": "adapted",
+    "prompt_only": false
+  },
+  "skill_delivery": {
+    "mode": "profile_skills",
+    "per_run_isolation": "adapted"
+  },
+  "plan_write_prevention": "adapted",
+  "terminal_signal": "CAO status COMPLETED parsed from the TUI screen (premature COMPLETED is a known issue)",
+  "evidence": [
+    {
+      "kind": "doc",
+      "ref": "https://github.com/awslabs/cli-agent-orchestrator/blob/main/docs/agent-profile.md"
+    },
+    {
+      "kind": "perplexity",
+      "ref": "orch/research/perplexity/Q11.md"
+    },
+    {
+      "kind": "perplexity",
+      "ref": "orch/research/perplexity/Q14.md"
+    }
+  ],
+  "extensions": {
+    "cao_provider": "codex"
+  }
+}

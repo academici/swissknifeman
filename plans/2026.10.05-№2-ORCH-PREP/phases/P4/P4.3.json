@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.3",
   "title": "Capability seeds для native / CAO / Claude-only",
-  "status": "todo",
+  "status": "done",
   "summary": "Семь capability-record (status declared) по готовой таблице; тест сверяет их со схемой и с bindings/matrix.json (model_set, effort_set, cancel, resume, usage) по provider.",
   "why": "R16, I7, I14: prepare отказывает явно по capability, а не угадывает; значения Grok — unknown до probe Plan 2.",
   "scope": {
@@ -87,6 +87,23 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:31Z"
+  "result": {
+    "started_at": "2026-10-07T10:19:17Z",
+    "finished_at": "2026-10-07T10:21:01Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "7c5f51dc-6c5f-4831-b25e-b2e714aee8a0"
+    },
+    "notes": "7 capability seeds + test_capability_seeds; values match matrix.json by provider",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T10:21:01Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T10:21:01Z"
 }

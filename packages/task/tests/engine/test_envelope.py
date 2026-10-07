@@ -137,6 +137,18 @@ class ErrorEnvelopeTests(EnvelopeCase):
                 self.assertEqual(doc["error"]["code"], "SCHEMA_INVALID")
                 self.assertTrue(doc["error"]["issues"])
 
+    def test_next_parallel_validates_data_before_printing(self):
+        from task.plan import parallel
+        broken = parallel.ReadySet("p", 1, lanes=[{"lane": "bad"}])
+        with mock.patch.object(parallel, "ready_set", return_value=broken):
+            doc = self.envelope("next", self.root, "--parallel", "1", code=1)
+        self.assertEqual(doc["error"]["code"], "SCHEMA_INVALID")
+        self.assertTrue(doc["error"]["issues"])
+
+    def test_next_parallel_limit_refusal_is_enveloped(self):
+        doc = self.envelope("next", self.root, "--parallel", "0", code=1)
+        self.assertEqual(doc["error"]["code"], "LIMIT_INVALID")
+
     def test_refusals_keep_their_code_and_issues(self):
         unknown = self.envelope("show", self.root, "P9.9", code=1)
         self.assertEqual(unknown["error"]["code"], "REF_UNKNOWN")

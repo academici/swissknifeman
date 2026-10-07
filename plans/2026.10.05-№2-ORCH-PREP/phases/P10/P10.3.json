@@ -1,0 +1,258 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.3",
+  "title": "Task: ready set по всему плану — plan.py next --parallel N + схема read-ready",
+  "status": "done_with_deviations",
+  "summary": "Чистая функция `parallel.ready_set(plan, limit)` и флаг `plan.py next <plan> --parallel N [--json]`: полосы run-items/design-phase по всем фазам с учётом зависимостей, гейтов, batches, strategy и конфликтов task_files; running, conflicts, waiting, deferred; схема данных read-ready.",
+  "why": "B51/D17 п.5: сейчас `next` называет одну операцию первой незакрытой фазы, хотя готовы работы в нескольких фазах (например P4 и design P12); движку и людям нужен детерминированный набор безопасно параллельных полос. Hard risk: вывод `next` без флага читает мост orch (register.py) — он не должен измениться ни на байт.",
+  "scope": {
+    "include": [
+      "parallel.py: ReadySet, ready_set",
+      "cli.py: next --parallel N (текст и --json)",
+      "schemas/plan/v1/read-ready.schema.json + регистрация KINDS",
+      "catalog.py: ошибки next (LIMIT_INVALID)",
+      "tests/engine/test_parallel.py: сценарии ready set"
+    ],
+    "exclude": [
+      "изменение lifecycle.next и вывода next без флага",
+      "start/claim, worktree, reconcile (P10.4)",
+      "мост orch"
+    ]
+  },
+  "depends_on": [
+    "P10.2"
+  ],
+  "decisions": [
+    "D17"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "алгоритм, форма вывода, пример",
+      "required": true,
+      "section": "ready-set"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "предикат конфликта",
+      "required": true,
+      "section": "conflicts"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "read-only инвариант P7",
+      "required": true,
+      "section": "invariants"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "сценарии",
+      "required": true,
+      "section": "validation"
+    },
+    {
+      "path": "packages/task/lib/task/plan/parallel.py",
+      "why": "footprint/conflict из P10.2",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "why": "next, ready_members, _unmet_dependency, _gate_wait, route_of, Next.launch",
+      "required": true,
+      "section": "86-215"
+    },
+    {
+      "path": "packages/task/lib/task/plan/units.py",
+      "why": "policy(): слияние orchestration plan/phase/item",
+      "required": true,
+      "section": "62-72"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "why": "cmd_next и регистрация verb next",
+      "required": true,
+      "section": "300-320"
+    },
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "why": "VERB_ERRORS next, ERROR_CODES",
+      "required": true
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-commits.schema.json",
+      "why": "образец read-схемы (закрытый профиль)",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "why": "KINDS: регистрация read-ready",
+      "required": true,
+      "section": "1-60"
+    },
+    {
+      "path": "packages/task/tests/engine/test_envelope.py",
+      "why": "проверка data по read-схеме",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/parallel.py",
+      "change": "modify",
+      "note": "создаётся в P10.2 (depends_on)"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/schemas/plan/v1/read-ready.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_parallel.py",
+      "change": "modify",
+      "note": "создаётся в P10.2 (depends_on)"
+    },
+    {
+      "path": "packages/task/tests/engine/test_envelope.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_catalog.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_cli.py",
+      "change": "modify",
+      "note": "только если там golden help/verbs"
+    }
+  ],
+  "rules": [
+    "next без --parallel — байт-в-байт прежний вывод (текст и --json); lifecycle.next не менять",
+    "ready_set — read-only: ни событий, ни записи файлов, ни plan lock",
+    "Использовать функции lifecycle (_phase_deps, _unmet_dependency, _gate_wait, ready_members, route_of), не копировать их логику",
+    "Если `--json` оборачивается envelope — data валидна по read-ready; VERB_DATA next остаётся None (полиморфный)"
+  ],
+  "guidance": "Исполнитель: implementation/high (Sonnet, не экономить). Порядок шагов алгоритма §ready-set соблюдать буквально, особенно учёт running в слотах и в taken. В тестах сравнивать вывод `next` без флага с `lifecycle.next(plan).exact` на нескольких состояниях.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_parallel.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_envelope.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_schema.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_catalog.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_cli.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_lifecycle.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 packages/task/scripts/plan.py next 2026.10.05-№2-ORCH-PREP --parallel 4 --json | python3 -c \"import json,sys; d=json.load(sys.stdin); d=d.get('data', d); assert isinstance(d['lanes'], list) and isinstance(d['conflicts'], list) and 'next' in d; print('ok')\"",
+      "expect": "exit 0; `ok`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/plan.py next 2026.10.05-№2-ORCH-PREP --parallel 0 2>&1 | grep -q LIMIT_INVALID",
+      "expect": "exit 0 (отказ найден)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V6",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "plan.py next --parallel N",
+    "read-ready.schema.json",
+    "parallel.ready_set"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T08:20:00Z",
+    "finished_at": "2026-10-07T08:27:57Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "d5aa2e18-5564-4ca9-9b4f-c47ef9f449db"
+    },
+    "notes": "parallel.ready_set/ReadySet + next --parallel N (текст, --json), read-ready.schema.json, LIMIT_INVALID в каталоге next; next без флага не менялся (тест сравнивает с lifecycle.next и прежним выводом), read-only проверен байт-в-байт.",
+    "deviations": [
+      "sequential-фаза: не более одной полосы run-items на фазу (спецификация описывала только случай с running)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T08:27:57Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T08:27:57Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T08:27:57Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T08:27:57Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T08:27:57Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T08:27:57Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T08:27:57Z"
+}

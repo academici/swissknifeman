@@ -101,6 +101,14 @@ class ParserCatalogTests(unittest.TestCase):
         for name in ("context", "render", "unit", "start", "finish", "set", "import", "commit"):
             self.assertEqual(rows[name]["mode"], "write")
 
+    def test_next_stays_polymorphic_read_and_announces_the_limit_refusal(self):
+        rows = {v["name"]: v for v in catalog.verbs(cli.build_parser())["verbs"]}
+        self.assertNotIn("data_kind", rows["next"])
+        self.assertEqual(rows["next"]["mode"], "read")
+        self.assertIn("LIMIT_INVALID", rows["next"]["errors"])
+        self.assertIn("--parallel", [a["name"] for a in rows["next"]["args"]])
+        schema.load_registry().for_kind("read-ready")
+
     def test_catalog_has_no_shared_mutable_parser_metadata(self):
         parser = cli.build_parser()
         before = catalog.verbs(parser)

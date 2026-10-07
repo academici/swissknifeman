@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-ready:v1",
+  "title": "Read Ready",
+  "type": "object",
+  "description": "Lanes that can run in parallel across the whole plan, with running work, file conflicts, waits and deferrals.",
+  "properties": {
+    "plan": {
+      "type": "string",
+      "description": "Plan id.",
+      "minLength": 1
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Effective lane limit: the request capped by orchestration.max_parallel."
+    },
+    "lanes": {
+      "type": "array",
+      "description": "Selected lanes in plan order.",
+      "items": {
+        "description": "One lane.",
+        "$ref": "urn:swissknifeman:task:plan:read-ready:v1#/$defs/lane"
+      }
+    },
+    "running": {
+      "type": "array",
+      "description": "In-progress items; they occupy slots and footprints.",
+      "items": {
+        "description": "One running item.",
+        "$ref": "urn:swissknifeman:task:plan:read-ready:v1#/$defs/running"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "Lanes skipped because task_files clash with a running or selected item.",
+      "items": {
+        "description": "One conflict.",
+        "$ref": "urn:swissknifeman:task:plan:read-ready:v1#/$defs/conflict"
+      }
+    },
+    "waiting": {
+      "type": "array",
+      "description": "Phases and items that cannot start yet, with the reason.",
+      "items": {
+        "description": "One wait.",
+        "$ref": "urn:swissknifeman:task:plan:read-ready:v1#/$defs/wait"
+      }
+    },
+    "deferred": {
+      "type": "array",
+      "description": "Ready item ids (design phase id for a design lane) that did not fit into the limit.",
+      "items": {
+        "type": "string",
+        "description": "Item or phase id.",
+        "minLength": 1
+      }
+    },
+    "next": {
+      "description": "The single semantic next step, as plan.py next --json prints it.",
+      "$ref": "urn:swissknifeman:task:plan:read-ready:v1#/$defs/next"
+    }
+  },
+  "required": [
+    "plan",
+    "limit",
+    "lanes",
+    "running",
+    "conflicts",
+    "waiting",
+    "deferred",
+    "next"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "lane": {
+      "type": "object",
+      "description": "One safely parallel lane.",
+      "properties": {
+        "lane": {
+          "type": "string",
+          "description": "Lane label L1, L2, ... in selection order.",
+          "pattern": "^L[0-9]+$"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Operation of the lane.",
+          "enum": [
+            "run-items",
+            "design-phase"
+          ]
+        },
+        "phase": {
+          "type": "string",
+          "description": "Phase id.",
+          "minLength": 1
+        },
+        "batch": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Batch id for run-items; null for a design lane."
+        },
+        "items": {
+          "type": "array",
+          "description": "Item ids to run; empty for a design lane.",
+          "items": {
+            "type": "string",
+            "description": "Item id.",
+            "minLength": 1
+          }
+        },
+        "route": {
+          "description": "Minimum route of the lane, or null when no item declares one.",
+          "oneOf": [
+            {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route"
+            },
+            {
+              "type": "null",
+              "description": "No route declared."
+            }
+          ]
+        },
+        "command": {
+          "type": "string",
+          "description": "Command that starts the lane.",
+          "minLength": 1
+        },
+        "launch": {
+          "description": "Launch line per provider.",
+          "type": "object",
+          "properties": {
+            "claude": {
+              "type": "string",
+              "description": "Claude Code slash command."
+            },
+            "codex": {
+              "type": "string",
+              "description": "Codex invocation."
+            }
+          },
+          "required": [
+            "claude",
+            "codex"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "lane",
+        "kind",
+        "phase",
+        "batch",
+        "items",
+        "route",
+        "command",
+        "launch"
+      ],
+      "additionalProperties": false
+    },
+    "running": {
+      "type": "object",
+      "description": "Running item.",
+      "properties": {
+        "item": {
+          "type": "string",
+          "description": "Item id.",
+          "minLength": 1
+        },
+        "phase": {
+          "type": "string",
+          "description": "Phase id.",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "item",
+        "phase"
+      ],
+      "additionalProperties": false
+    },
+    "conflict": {
+      "type": "object",
+      "description": "Skipped lane item and the item it clashes with.",
+      "properties": {
+        "item": {
+          "type": "string",
+          "description": "Skipped item id.",
+          "minLength": 1
+        },
+        "with": {
+          "type": "string",
+          "description": "Running or selected item id.",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the pair cannot run together.",
+          "enum": [
+            "task_files_overlap",
+            "footprint_unknown"
+          ]
+        },
+        "paths": {
+          "type": "array",
+          "description": "Overlapping path pairs; empty for footprint_unknown.",
+          "items": {
+            "type": "array",
+            "description": "Path of the skipped item, then path of the other item.",
+            "minItems": 2,
+            "items": {
+              "type": "string",
+              "description": "task_files path."
+            }
+          }
+        }
+      },
+      "required": [
+        "item",
+        "with",
+        "reason",
+        "paths"
+      ],
+      "additionalProperties": false
+    },
+    "wait": {
+      "type": "object",
+      "description": "Something that cannot start yet.",
+      "properties": {
+        "phase": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Phase id; null for a plan-level wait."
+        },
+        "item": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Item id; null for a phase- or plan-level wait."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why it waits.",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "phase",
+        "item",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "next": {
+      "type": "object",
+      "description": "Next step as lifecycle.Next.as_dict.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Next kind.",
+          "enum": [
+            "run-items",
+            "design-phase",
+            "waiting",
+            "archive",
+            "terminal"
+          ]
+        },
+        "exact": {
+          "type": "string",
+          "description": "Single-line text."
+        },
+        "phase": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Phase id or null."
+        },
+        "batch": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Batch id or null."
+        },
+        "items": {
+          "type": "array",
+          "description": "Item ids.",
+          "items": {
+            "type": "string",
+            "description": "Item id."
+          }
+        },
+        "route": {
+          "description": "Minimum route of the lane, or null when no item declares one.",
+          "oneOf": [
+            {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route"
+            },
+            {
+              "type": "null",
+              "description": "No route declared."
+            }
+          ]
+        },
+        "launch": {
+          "description": "Launch line per provider, or null.",
+          "oneOf": [
+            {
+              "type": "object",
+              "description": "Launch line per provider.",
+              "properties": {
+                "claude": {
+                  "type": "string",
+                  "description": "Claude Code slash command."
+                },
+                "codex": {
+                  "type": "string",
+                  "description": "Codex invocation."
+                }
+              },
+              "required": [
+                "claude",
+                "codex"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null",
+              "description": "No command."
+            }
+          ]
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Command or null."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Wait reason; empty when not waiting."
+        }
+      },
+      "required": [
+        "kind",
+        "exact",
+        "phase",
+        "batch",
+        "items",
+        "route",
+        "launch",
+        "command",
+        "reason"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

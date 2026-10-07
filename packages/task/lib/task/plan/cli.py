@@ -14,7 +14,8 @@ import re
 import sys
 
 
-from . import bridges, catalog, check, context, gitops, lifecycle, ops, query, schema, snapshot, stats, store, units, views
+from . import (bridges, catalog, check, context, gitops, lifecycle, ops, parallel, query, schema, snapshot, stats, store,
+               units, views)
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -305,6 +306,14 @@ def cmd_render(args) -> int:
 
 
 def cmd_next(args) -> int:
+    if args.parallel is not None:
+        ready = parallel.ready_set(store.load_plan(_plan_dir(args)), args.parallel)
+        store.check_doc(ready.as_dict(), "read-ready", "next --parallel result")
+        if args.json:
+            _print_json(ready.as_dict())
+        else:
+            print(ready.render())
+        return 0
     action = lifecycle.next(store.load_plan(_plan_dir(args)))
     if args.json:
         _print_json(action.as_dict())
@@ -657,6 +666,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("next", cmd_next, "semantic next step")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--parallel", type=int, metavar="N", help="list up to N lanes that can run side by side across the plan")
 
     def actor_arg(p, required=False, text="PROVIDER/MODEL[/EFFORT] (default: the item executor, else plan authoring)"):
         p.add_argument("--actor", type=_actor, required=required, help=text)

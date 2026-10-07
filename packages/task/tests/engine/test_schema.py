@@ -207,6 +207,36 @@ class ReadDataTests(unittest.TestCase):
         self.assertTrue(schema.validate([{**event, "type": "unknown"}], "read-events"))
 
 
+class ReadReadyTests(unittest.TestCase):
+    def document(self):
+        launch = {"claude": "/task:plan-run p P1.1", "codex": "$ task:plan-run p P1.1"}
+        return {
+            "plan": "p", "limit": 2,
+            "lanes": [{"lane": "L1", "kind": "run-items", "phase": "P1", "batch": "B1", "items": ["P1.1"],
+                       "route": {"class": "implementation", "effort": "high"}, "command": "task:plan-run p P1.1",
+                       "launch": launch},
+                      {"lane": "L2", "kind": "design-phase", "phase": "P2", "batch": None, "items": [], "route": None,
+                       "command": "task:plan-design p P2", "launch": launch}],
+            "running": [{"item": "P1.2", "phase": "P1"}],
+            "conflicts": [{"item": "P1.3", "with": "P1.2", "reason": "task_files_overlap", "paths": [["a/", "a/x.py"]]}],
+            "waiting": [{"phase": "P3", "item": None, "reason": "P1"}, {"phase": None, "item": None, "reason": "paused: x"}],
+            "deferred": ["P1.4"],
+            "next": {"kind": "waiting", "exact": "waiting: P1", "phase": "P3", "batch": None, "items": [], "route": None,
+                     "launch": None, "command": None, "reason": "P1"},
+        }
+
+    def test_accepts_a_full_result_and_rejects_broken_contracts(self):
+        good = self.document()
+        self.assertEqual(schema.validate(good, "read-ready"), [])
+        for mutate in (lambda d: d.update(extra=1), lambda d: d["lanes"][0].update(lane="first"),
+                       lambda d: d["lanes"][0].update(kind="other"), lambda d: d["conflicts"][0].update(reason="no"),
+                       lambda d: d["conflicts"][0]["paths"].append(["only-one"]), lambda d: d.pop("deferred"),
+                       lambda d: d["waiting"][0].pop("item"), lambda d: d["next"].update(kind="x")):
+            broken = copy.deepcopy(good)
+            mutate(broken)
+            self.assertTrue(schema.validate(broken, "read-ready"))
+
+
 class ProfileTests(unittest.TestCase):
     """The schema files themselves stay inside the closed profile and carry the documented contract."""
 

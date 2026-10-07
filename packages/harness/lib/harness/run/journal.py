@@ -4,9 +4,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from core import find_monorepo_root
-
-from harness.run import plan_reader, worker
+from harness.run import plan_reader, task_paths, worker
 
 
 DRIVER = "driver"
@@ -86,9 +84,9 @@ def classify(*, pre_launch, outcome=None, item_status=None):
 
 
 
-def _build_argv(*, plan_dir, item_id, run_id, event_type, note, monorepo_root,
+def _build_argv(*, plan_dir, item_id, run_id, event_type, note, task,
                 session_id=None, cost_usd=None, num_turns=None, duration_ms=None):
-    argv = ["python3", str(plan_reader.plan_script(monorepo_root)), "log",
+    argv = ["python3", str(plan_reader.plan_script(task)), "log",
             str(plan_dir), item_id, "--type", event_type, "--summary", note,
             "--actor", DRIVER_ACTOR, "--ref", f"run:{run_id}"]
     metrics = [f"{key}={value}" for key, value in (
@@ -99,15 +97,11 @@ def _build_argv(*, plan_dir, item_id, run_id, event_type, note, monorepo_root,
     return argv
 
 
-def _resolve_monorepo_root(monorepo_root, plan_dir):
-    if monorepo_root is not None:
-        return Path(monorepo_root)
-    root = find_monorepo_root(Path(plan_dir).resolve())
-    if root is None:
-        raise JournalUnavailable(
-            "monorepo root not found - process CLI log not available "
-            "(standalone-layout without owner package)")
-    return root
+def _resolve_task_root(monorepo_root, plan_dir):
+    try:
+        return task_paths.task_root(Path(plan_dir).resolve(), monorepo_root=monorepo_root)
+    except task_paths.TaskUnavailable as exc:
+        raise JournalUnavailable(f"{exc} (process CLI log not available)") from exc
 
 
 def _run_cli(argv, *, timeout):
@@ -142,10 +136,10 @@ def maybe_write(plan_dir, item_id, *, run_id, pre_launch=False,
 
     event_type = _EVENT_TYPE[category]
     note = _build_note(run_id, category, outcome=outcome, refusal_detail=refusal_detail)
-    root = _resolve_monorepo_root(monorepo_root, plan_dir)
+    task = _resolve_task_root(monorepo_root, plan_dir)
     argv = _build_argv(
         plan_dir=plan_dir, item_id=item_id, run_id=run_id, event_type=event_type, note=note,
-        monorepo_root=root,
+        task=task,
         session_id=(outcome or {}).get("session_id"),
         cost_usd=(outcome or {}).get("total_cost_usd"),
         num_turns=(outcome or {}).get("num_turns"),

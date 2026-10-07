@@ -48,6 +48,7 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.decisions()
     ctx.paths()
     ctx.results()
+    ctx.closures()
     ctx.units()
     ctx.orchestration()
     ctx.log()
@@ -405,6 +406,24 @@ class _Context:
                 self.error("result_status", f"{rel}/result", "status in_progress needs result.started_at")
             if status == "skipped" and not result.get("decision"):
                 self.error("result_status", f"{rel}/result", "status skipped needs result.decision")
+
+    def closures(self) -> None:
+        """Closure drift after parallel trees merged: terminal but unclosed, or closed with open items."""
+        p = self.p
+        for phase_id, phase in p.phases.items():
+            declared = phase.get("items") if isinstance(phase.get("items"), list) else []
+            members = [i for i in declared if isinstance(i, str) and i in p.items]
+            if not members:
+                continue
+            where = f"{self.file_of('phase', phase_id)}/closed"
+            open_items = [i for i in members if p.items[i].get("status", "todo") not in TERMINAL]
+            if not phase.get("closed") and not open_items:
+                self.warn("phase_unclosed", where, f"every item of {phase_id} is terminal but the phase is not closed; "
+                                                   f"run plan.py reconcile {p.plan.get('id', p.root.name)}")
+            elif phase.get("closed") and open_items:
+                self.warn("phase_closure_stale", where, f"{phase_id} is closed but {', '.join(open_items)} "
+                                                        f"{'is' if len(open_items) == 1 else 'are'} not terminal; "
+                                                        f"reopen or finish {open_items[0]}")
 
     def units(self) -> None:
         p = self.p

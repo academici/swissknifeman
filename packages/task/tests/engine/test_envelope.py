@@ -97,6 +97,7 @@ class VerbCoverageTests(EnvelopeCase):
             ("supersede", ["supersede", plan, "D1", "D1"], 1),
             ("grant", ["grant", plan, "NOPE", "--note", "n"], 1),
             ("reopen", ["reopen", plan, "P1.1", "--reason", "again"], 0),
+            ("reconcile", ["reconcile", plan, "--actor", ACTOR], 0),  # nothing to reconcile
             ("archive", ["archive", plan], 1),  # the plan is not done
             ("import", ["import", str(tmp / self.root.name), "--file", str(snapshot)], 0),
             ("new", ["new", "--plans-root", str(self.plans), "--codename", "ENVY", "--title", "T", "--actor", ACTOR,

@@ -204,6 +204,8 @@ def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa:
                 return Next("waiting", reason or f"batch {batch.get('id')}", phase=phase_id, batch=batch.get("id"))
             return Next("run-items", phase=phase_id, batch=batch.get("id"), items=tuple(ready),
                         route=route_of(plan, ready), command=f"task:plan-run {plan_id} {' '.join(ready)}")
+        if all(status_of(plan, i) in TERMINAL for i in phase_items(plan, phase_id)):  # finished in other trees
+            return Next("waiting", f"{phase_id} closure: plan.py reconcile {plan_id}", phase=phase_id)
         return Next("waiting", f"{phase_id} closure (finish the last item)", phase=phase_id)
     if blocked_phase is not None:
         blocked = first_blocked(plan, blocked_phase)
@@ -627,6 +629,33 @@ def _closure_summary(statuses: list[str]) -> str:
     return f"{len(statuses)} item(s): " + ", ".join(f"{n} {name}" for name, n in counts)
 
 
+def _plan_done(p: store.Plan, closing: Mapping[str, dict]) -> bool:
+    """Every phase is closed without ``blocked`` once the phase documents in ``closing`` are saved."""
+    results = [(closing.get(pid) or p.phases[pid]).get("closed") for pid in phase_order(p)]
+    return bool(results) and all(isinstance(c, dict) and c.get("result") != "blocked" for c in results)
+
+
+def _closure(p: store.Plan, phase_id: str, statuses: Iterable[str], actor_doc: dict, now: str,
+             via: str | None = None) -> tuple[list[tuple[str, str | None, dict]], list[dict], bool]:
+    """Closure of ``phase_id`` from its item ``statuses``: the phase change, its ``phase_closed`` event and
+    whether that closure ends the plan. Nothing while an item is still open. The caller writes the plan."""
+    statuses = list(statuses)
+    closure = phase_status(statuses)
+    if closure is None:
+        return [], [], False
+    phase_doc = copy.deepcopy(p.phases[phase_id])
+    phase_doc["closed"] = {"at": now, "result": closure, "summary": _closure_summary(statuses)}
+    event = store.new_event("phase_closed", f"{phase_id} closed: {closure}", actor_doc, phase=phase_id,
+                            data={"result": closure, **({"via": via} if via else {})})
+    return [("phase", phase_id, phase_doc)], [event], _plan_done(p, {phase_id: phase_doc})
+
+
+def _done_plan(p: store.Plan) -> tuple[str, None, dict]:
+    plan_doc = copy.deepcopy(p.plan)
+    plan_doc["status"] = "done"
+    return "plan", None, plan_doc
+
+
 def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[str, int] | None = None,
            deviations: Iterable[str] = (), pending: Iterable[str] = (), escalation: str | None = None,
            commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None,
@@ -760,22 +789,61 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
         events[0].update(attribution)
 
         after = {**{i: status_of(p, i) for i in phase_items(p, phase_id)}, item_id: status}
-        closure = phase_status(after.values())
-        plan_done = False
-        if closure is not None:
-            phase_doc = copy.deepcopy(p.phases[phase_id])
-            phase_doc["closed"] = {"at": now, "result": closure, "summary": _closure_summary(list(after.values()))}
-            changes.append(("phase", phase_id, phase_doc))
-            events.append(store.new_event("phase_closed", f"{phase_id} closed: {closure}", actor_doc, phase=phase_id,
-                                          data={"result": closure}))
-            results = {pid: (phase_doc if pid == phase_id else p.phases[pid]).get("closed") for pid in phase_order(p)}
-            if all(isinstance(c, dict) and c.get("result") != "blocked" for c in results.values()):
-                plan_doc = copy.deepcopy(p.plan)
-                plan_doc["status"] = "done"
-                changes.append(("plan", None, plan_doc))
-                plan_done = True
+        closing, closed_events, plan_done = _closure(p, phase_id, after.values(), actor_doc, now)
+        changes += closing
+        events += closed_events
+        if plan_done:
+            changes.append(_done_plan(p))
         _commit(p, changes, events, lock)
+        closure = closing[0][2]["closed"]["result"] if closing else None
         return FinishResult(item_id, status, closure, plan_done, next(p))
+
+
+# ---------------------------------------------------------------- reconcile
+
+@dataclass(frozen=True)
+class ReconcileResult:
+    closed: tuple[tuple[str, str], ...]  # (phase, closure result) in plan order
+    plan_done: bool
+    next: Next
+
+    def text(self) -> str:
+        lines = [f"phase {phase} closed: {result}" for phase, result in self.closed]
+        if self.plan_done:
+            lines.append("plan done")
+        lines.append(f"next: {self.next.exact}" if lines else f"nothing to reconcile\nnext: {self.next.exact}")
+        return "\n".join(lines)
+
+    def as_dict(self) -> dict:
+        return {"closed": [{"phase": phase, "result": result} for phase, result in self.closed],
+                "plan_done": self.plan_done, "next": self.next.as_dict()}
+
+
+def reconcile(plan, actor: Mapping | None = None) -> ReconcileResult:
+    """Integrator closure after parallel trees merged: close every open phase whose items are all terminal,
+    then the plan. Idempotent: with nothing to close it appends no event and writes no file."""
+    with _mutation(plan) as (p, lock):
+        actor_doc, now = _actor_doc(p, _given_actor(actor)), store.now()
+        changes: list[tuple[str, str | None, dict]] = []
+        events: list[dict] = []
+        closing: dict[str, dict] = {}
+        for phase_id in phase_order(p):
+            members = phase_items(p, phase_id)
+            if p.phases[phase_id].get("closed") or not members:
+                continue
+            phase_changes, phase_events, _ = _closure(p, phase_id, [status_of(p, i) for i in members], actor_doc, now,
+                                                      via="reconcile")
+            if phase_changes:
+                closing[phase_id] = phase_changes[0][2]
+                changes += phase_changes
+                events += phase_events
+        plan_done = p.plan.get("status") not in ("done", "archived") and _plan_done(p, closing)
+        if plan_done:
+            changes.append(_done_plan(p))
+        if changes:
+            _commit(p, changes, events, lock)
+        closed = tuple((phase_id, doc["closed"]["result"]) for phase_id, doc in closing.items())
+        return ReconcileResult(closed, plan_done, next(p))
 
 
 # ---------------------------------------------------------------- log, decisions, grants

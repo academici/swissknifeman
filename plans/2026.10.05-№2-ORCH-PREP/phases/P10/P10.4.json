@@ -1,0 +1,267 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.4",
+  "title": "Task: plan.py reconcile — закрытие фаз интегратором, общий хелпер закрытия, git-тест двух worktree",
+  "status": "done_with_deviations",
+  "summary": "Глагол `plan.py reconcile <plan>` закрывает фазы, все items которых terminal, и план (идемпотентно); закрытие из finish выносится в общий хелпер; `next` называет reconcile в причине ожидания; check предупреждает `phase_unclosed`/`phase_closure_stale`; интеграционный тест: claim → два worktree → finish+commit в каждом → последовательное слияние (merge и rebase) → reconcile.",
+  "why": "Инвариант P3 (knowledge/parallel-p10 §invariants): последние два item фазы, завершённые в разных деревьях, не закрывают фазу ни в одном из них — после интеграции план навсегда ждёт «closure». Hard risk: целостность lifecycle-полей phase.closed/plan.status и одновременная запись phase.json — закрытие должно выполнять только интегратор и только под plan lock, повтор — без записи.",
+  "scope": {
+    "include": [
+      "lifecycle.py: _closure хелпер, finish через него, reconcile, причина next",
+      "cli.py verb reconcile",
+      "catalog.py: reconcile (write, _PLAN|_WRITE)",
+      "check.py: phase_unclosed, phase_closure_stale (warn)",
+      "tests/engine/test_reconcile.py, test_parallel_integration.py (новые)"
+    ],
+    "exclude": [
+      "автоматизация worktree и слияний (Plan 2)",
+      "изменение событий finish",
+      "новые поля plan/v1"
+    ]
+  },
+  "depends_on": [
+    "P10.3"
+  ],
+  "decisions": [
+    "D17",
+    "D24"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "контракт глагола и текст next",
+      "required": true,
+      "section": "reconcile"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "порядок claim/изоляции/интеграции для теста",
+      "required": true,
+      "section": "integration"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "инварианты и interfering pairs",
+      "required": true,
+      "section": "invariants"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "сценарии тестов",
+      "required": true,
+      "section": "validation"
+    },
+    {
+      "path": "@plan/knowledge/git-p9.json",
+      "why": "union и ограничения",
+      "required": true,
+      "section": "log-union"
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "why": "finish: закрытие фазы и plan done",
+      "required": true,
+      "section": "700-780"
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "why": "next: ветка closure, _mutation, _commit",
+      "required": true,
+      "section": "175-310"
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "why": "design_done/reopen как образец простого write-глагола",
+      "required": true,
+      "section": "870-920"
+    },
+    {
+      "path": "packages/task/tests/engine/test_log_union.py",
+      "why": "tmp git repo, env, diverge — образец интеграционного теста",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/gitops.py",
+      "why": "commit verb API для коммитов в тесте",
+      "required": true,
+      "section": "1-60"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "why": "регистрация write-глаголов и --actor",
+      "required": true,
+      "section": "650-700"
+    },
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "why": "VERB_DATA/VERB_MODES/VERB_ERRORS",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/catalog.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/lib/task/plan/check.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_reconcile.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_parallel_integration.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_lifecycle.py",
+      "change": "modify",
+      "note": "только если старый текст причины closure зафиксирован в тесте"
+    },
+    {
+      "path": "packages/task/tests/engine/test_catalog.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_check.py",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "reconcile без изменений: ни события, ни записи, файлы байт-в-байт",
+    "finish после рефакторинга пишет те же документы и события, что и раньше (test_lifecycle зелёный без правки ожиданий finish)",
+    "Все проверки до записи, под plan lock на свежем снимке (_mutation)",
+    "Тест git изолирован: tmp HOME, GIT_CONFIG_GLOBAL=/dev/null, без сети; skipUnless git; worktree удаляются в cleanup"
+  ],
+  "guidance": "Исполнитель: frontier/high (Opus, не экономить: data integrity lifecycle). В интеграционном тесте использовать API (lifecycle.start/finish, gitops) напрямую, как test_log_union; второй вариант — rebase ветки B на main после слияния A и fast-forward.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_reconcile.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_parallel_integration.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_lifecycle.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_check.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_catalog.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_parallel.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_log_union.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/plan.py schema --verbs | grep -q '\"reconcile\"'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP",
+      "expect": "exit 0; 0 errors",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V7",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "plan.py reconcile",
+    "check phase_unclosed/phase_closure_stale",
+    "интеграционный тест параллельных worktree"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T08:40:09Z",
+    "finished_at": "2026-10-07T08:54:44Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "62e65416-6681-496c-abd4-916bc273d765"
+    },
+    "notes": "reconcile (write, _PLAN|_WRITE): закрывает terminal-фазы и план под plan lock, no-op байт-в-байт; finish через общий _closure (события без via, test_lifecycle без правок); next: '<Pn> closure: plan.py reconcile <plan>'; check: phase_unclosed/phase_closure_stale (warn); data.via — log-event data свободный, схема не менялась; git-тест двух worktree: merge --no-ff и rebase+ff → reconcile → коммит. Полный tests/engine: 661 OK после кейса envelope.",
+    "deviations": [
+      "test_envelope.py вне task_files: кейс reconcile для VerbCoverageTests"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-07T08:54:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T08:54:44Z"
+}

@@ -15,7 +15,7 @@ VERB_DATA = {
     "add-document": None, "link": None, "unlink": None, "add-artifact": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
-    "supersede": None, "grant": None, "design-done": None, "reopen": None, "archive": None, "commit": None, "commits": "read-commits",
+    "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits",
 }
 
 # Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
@@ -27,6 +27,7 @@ VERB_MODES = {
     "check": "read", "render": "write", "next": "read", "start": "write", "context": "write",
     "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
+    "reconcile": "write",
     "archive": "write", "commit": "write", "commits": "read",
 }
 
@@ -103,6 +104,7 @@ VERB_ERRORS = {
     "grant": _PLAN | _WRITE | {"GATE_INVALID", "GATE_UNKNOWN", "NOTE_REQUIRED"},
     "design-done": _PLAN | _WRITE | {"REF_UNKNOWN", "DESIGN_INCOMPLETE"},
     "reopen": _PLAN | _WRITE | {"REF_UNKNOWN", "NOT_TERMINAL", "REASON_REQUIRED"},
+    "reconcile": _PLAN | _WRITE,
     "archive": _PLAN | _WRITE | {"ALREADY_ARCHIVED", "ARCHIVE_EXISTS", "PLAN_NOT_DONE", "REASON_REQUIRED"},
     "commits": _PLAN | _TARGET | {"CONTENT_INVALID", "GIT_UNAVAILABLE", "GIT_FAILED", "SCHEMA_INVALID"},
     "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",

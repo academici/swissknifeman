@@ -464,6 +464,15 @@ def cmd_reopen(args) -> int:
     return 0
 
 
+def cmd_reconcile(args) -> int:
+    result = lifecycle.reconcile(_plan_dir(args), actor=args.actor)
+    if args.json:
+        _print_json(result.as_dict())
+    else:
+        print(result.text())
+    return 0
+
+
 def cmd_archive(args) -> int:
     print(f"archived to {lifecycle.archive(_plan_dir(args), force=args.force, reason=args.reason, actor=args.actor)}")
     return 0
@@ -776,6 +785,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("item")
     p.add_argument("--reason", required=True)
     actor_arg(p)
+
+    p = verb("reconcile", cmd_reconcile, "close phases whose items are all terminal, then the plan (integrator)")
+    actor_arg(p, text="PROVIDER/MODEL[/EFFORT] (default: plan authoring)")
+    p.add_argument("--json", action="store_true")
 
     p = verb("archive", cmd_archive, "move a done plan to plans/archive/")
     p.add_argument("--force", action="store_true", help="archive a plan that is not done (needs --reason)")

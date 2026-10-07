@@ -36,8 +36,23 @@ repository-relative or `@plan/…`; `..` is rejected. Stable identities may cont
 | snapshot | complete plan graph and events, used by export/import |
 
 A section is `{id, title, text}` and retains its complete body, including code/examples.
-A knowledge read can select its section id or exact title. A document without `applies_to`
-is global context; otherwise it applies to the named phases/items.
+A knowledge read can select its section id or exact title. Context scope: a document or accepted
+decision reaches an item's pack through `applies_to` (item or phase) or `global: true`
+(both together are a `scope_ambiguous` error). `settings.context_pack` is `legacy` (absent; a
+document without `applies_to` enters every pack) or `scoped` (written by `plan.py new`; unbound
+content is dropped, reads already present in the pack are marked `included`, upstream and
+phase dependencies are summaries). `settings.context_budget_kb` (default 256) is the warning
+threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
+An item read names exactly one of `path` or `ref`. Local refs include phases, items,
+units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
+The separate `section` key accepts a knowledge section id or exact title; it cannot
+accompany a ref fragment. `check` resolves both ref forms, and `start`
+refuses an unreadable required section in a ref read with `READ_MISSING` before
+writing any state.
+
+An item's optional `skills` is a unique list of skill or capability names, such as
+`skill-creator` or `blender:mcp-blender`. These names declare what the executor must load;
+the plan API does not install or launch them.
 
 ## API
 
@@ -62,16 +77,47 @@ snapshot, stages the destination with supporting files, then publishes it with r
 publication failure. Existing JSON requires `--replace`. Historical dates, states and evidence
 survive import exactly. Import is a data API; source-format conversion is never runtime behavior.
 
-## Scoped commits
+## Named bridges
 
-`plan.py commit PLAN1 P1.1 --role executor|reviewer|fix` makes one scoped Git commit with the item's
-declared `task_files` and operation-owned plan files; foreign dirty paths return `OUTSIDE_SCOPE`
-(`--leave-outside` keeps them, `--path` adds an explicit extra path, `--dry-run --json` previews).
-Messages carry `Plan`, `Plan-Ref` and `Plan-Role` trailers; `plan.py commits PLAN1 [P1.1]` reads the
-linked commits back, and `plan.py bridge orch commit …` returns a `stage-result.commits[]` fragment.
-Plans receive `.gitattributes` with `log.jsonl merge=union`; GitHub web-merge does not apply it, so
-parallel plan branches integrate locally (`git merge`/`git rebase`), then push. See
-`packages/task/docs/plan-structure.md` for the full contract.
+The Task core knows no partner tool by name: every link to one lives in `bridges/<name>/` with a
+`bridge.json` manifest (`plan.py schema bridge`). `plan.py bridge list` shows the bridges found by
+scanning `bridges/`; `plan.py bridge <name> <verb> [args…]` runs a declared entrypoint and passes its
+output and exit code through. A bridge may import Task modules but reaches its partner only through
+the partner's public CLI or files. `tests/test_boundary.py` keeps the core clean; its temporary
+`tests/boundary_allowlist.json` may only shrink. `validate.sh` also runs `bridges/*/tests`.
+Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
+
+## Attempts and evidence
+
+`plan.py commit PLAN1 P1.1 --role executor` makes one scoped Git commit containing the item's
+declared `task_files` and operation-owned plan files; a unit ref uses its `files` instead.
+Roles are `executor`, `reviewer` and `fix`; reviewers commit operation-owned plan files,
+knowledge reports and artifacts.
+Foreign dirty paths return `OUTSIDE_SCOPE`; `--leave-outside` preserves them, including staged
+content. Use repeated `--path` for explicit extra paths and record a deviation with `plan.py log`.
+`--dry-run --json` previews paths, message and `paths_digest` without writes.
+Plan and Git index locks protect the operation; a private index keeps failed staging/commit
+attempts from changing existing staged work. Git hooks remain enabled.
+
+Messages use `task-plan-commit/v1` with `Plan`, `Plan-Ref` and `Plan-Role` trailers.
+Optional `settings.commit` sets `scope` and attribution `trailers`; CLI overrides include
+`--type`, `--scope`, `--summary`, `--trailer` and `--actor`. The helper prints the resulting SHA
+without changing the journal afterward. Existing `finish --commit SHA` remains available for
+commits made before finish. Plans receive `.gitattributes` with `log.jsonl merge=union`;
+parallel journal changes integrate through local Git merge/rebase, with timestamps allowed
+to appear out of order. GitHub web-merge does not apply `merge=union`: integrate parallel plan
+branches locally, then push. `union` does not resolve conflicts in shared JSON (`plan.json`,
+`phase.json`).
+
+`plan.py commits PLAN1 [P1.1[/U1]] [--role executor|reviewer|fix]` reads the commits linked to a plan
+by `Plan` trailers (read-only JSON envelope, schema `plan.py schema read-commits`); an item ref
+includes its units. A named bridge may return the same commit in its partner's result format
+(see the bridge's README).
+
+`start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
+A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.
+`finish` / `unit accept --evidence V#=PATH` accept check evidence; `settings.evidence: required` makes finish require evidence for every acceptance check (default: optional).
+The check-evidence file follows Task's field contract (`plan.py schema check-evidence`): `$schema` is any non-empty marker, so files of an external executor pass without conversion; the key fields (`subject`, `check_id`, `candidate.head`, `procedure`, `exit` or `verdict`) are checked.
 
 ## Lifecycle and scheduling
 
@@ -95,6 +141,11 @@ idempotently and without a second writer. `check` warns with `phase_unclosed` an
 Lanes are integrated locally and one at a time (GitHub web-merge does not apply `merge=union`).
 `next --json` reports one semantic action and its required route. Owner gates are declared in
 `authority`, granted through `grant --note` with authentic owner permission.
+
+An `external_gate` declares an identity (`gate` or `label`) and a source `scope` controlled
+outside the plan. `next` waits for it, `start` refuses with `EXTERNAL_GATE`, and owner
+`grant` cannot satisfy it. Reconcile the external evidence before changing its authority
+through the authoring API.
 
 Routes specify minimum `class: economy|implementation|frontier` and effort
 `low|medium|high|xhigh|max|ultra`. Optional `provider` and `model` select an exact executor;
@@ -133,6 +184,11 @@ human Markdown and does not depend on view freshness. `render --check` separatel
 human views. Templates produce overview, roadmap, status, handoff, questions and complete
 brief/phase/item/unit/decision/knowledge views. No plan-local `AGENTS.md` or `CLAUDE.md` is created.
 
+Missing required reads warn once the item's dependencies are terminal. Terminal items and
+externally gated items do not warn about retired or externally controlled inputs. Dependency
+`task_files`, output artifacts and output directories count as planned producers; wildcard
+and brace-pattern reads are excluded from this advisory existence check.
+
 Search/index ignores exclude plan Markdown, `views/` and generated `context/`; Serena provisioning applies
 these exclusions even when gitignored files are indexed. Harness guards protect generated
 views, JSON packs and worker briefs from hand edits. References from reads/examples into
@@ -141,5 +197,5 @@ historical Markdown receipts may remain immutable evidence for people.
 
 The Task marketplace plugin delivers `skills/plan-protocol` with the engine, schemas, templates
 and provider commands. The protocol is explicitly invoked and shares the same installed package
-as its API. Temporary migrations live under the package's `docs/migration/` and are removed when
-the active-plan inventory is exhausted; archived plans are untouched.
+as its API. Temporary migration tooling has been removed from the active package tree;
+source-format conversion is not a runtime compatibility layer.

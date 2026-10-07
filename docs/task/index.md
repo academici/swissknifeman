@@ -3,7 +3,7 @@
 **What is it.** Optional helpers for Claude Code (`/task:*`), Codex (`$ task:*`), Cursor (`task:*`) and
 Grok (`/task:*`) for explicit job selection. Workflows are enabled only by explicitly calling the
 command/skill: Codex gets `allow_implicit_invocation: false`, Claude - `disable-model-invocation: true`;
-harness does not select commands by keywords. Each command except `plan-run` **pins the model +
+the environment does not select commands by keywords. Each command except `plan-run` **pins the model +
 reasoning effort + workflow profile**, overriding the session settings, to avoid switching them manually.
 Default-on in each onboarded project (connect channel); no resident tax - command descriptions are not
 injected into every request.
@@ -16,7 +16,7 @@ projections. After the update, open a new session: the files on disk change, but
 is not reinitialized.
 
 **When NOT to touch.** This is not an engine for general work - it only routes to the model/effort/profile.
-Subagent workflows and agent packs live in `harness`; the executable plan is a JSON directory driven by
+Subagent workflows and agent packs live outside Task; the executable plan is a JSON directory driven by
 `scripts/plan.py` (see [Plan structure](./plan-structure)).
 
 ## Commands
@@ -53,8 +53,8 @@ carriers. The marketplace plugin includes `skills/plan-protocol` alongside the e
 Plans can describe preparation, implementation, review and verification as dependent or nested
 units with explicit model settings. `unit … next` reports ready work; the API launches no process.
 `export/import` round-trip complete snapshots, and `apply` validates coordinated edits together.
-There are no read-count or context-size gates. Temporary active-plan conversions live under this
-package's `docs/migration/`; the runtime contains no Markdown compatibility layer.
+There are no read-count or context-size gates. Temporary migration tooling has been removed
+from the active package tree; the runtime contains no Markdown compatibility layer.
 
 ## Pages
 

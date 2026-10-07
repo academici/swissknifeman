@@ -111,11 +111,11 @@ IDE checklist before an autonomous session:
 
 1. Open the intended repository root as the workspace.
 2. Set Run Mode to **Run Everything** (Settings → Run Mode).
-3. Confirm `.cursor/mcp.json` contains hub servers (`maind health --cwd`).
+3. Confirm `.cursor/mcp.json` contains hub servers.
 4. Pin the routed model; do not substitute `auto` for fixed frontier/implementation pins.
 5. For CLI launches, pass the full flag set above; partial flags are not a trusted launch.
 
-Full install and profile shapes: [Cursor adapter](/skiller/adapters/cursor) and [Harness setup: Cursor](/harness/setup/cursor).
+Full install and profile shapes: see your environment's Cursor adapter setup.
 
 ## Grok launch contract (trusted self-host)
 
@@ -136,6 +136,6 @@ grok --cwd <repo-cwd> --model <model-selector> --always-approve '/task:<command>
 ```
 
 1. Open the intended repository root (`--cwd`).
-2. Confirm `.grok/config.toml` and hub MCP (`maind health --cwd`).
+2. Confirm `.grok/config.toml` and hub MCP.
 3. Pin the routed model; do not substitute Cursor-inventory grok-4.x ids for provider grok.
 4. Pass `--always-approve` only on a trusted self-host; the deny floor remains.

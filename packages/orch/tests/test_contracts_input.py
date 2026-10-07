@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 KINDS = ("execution-input", "run-policy", "role-manifest", "capability-record")
 EXPECTED = {
     "run-policy/commit-with-git-none.json": "COMMIT_POLICY_CONFLICT",
+    "run-policy/isolation-with-git-none.json": "ISOLATION_POLICY_CONFLICT",
+    "run-policy/isolation-bad-mode.json": "enum",
 
     "execution-input/missing-goal.json": "required",
     "execution-input/extra-field.json": "additional",
@@ -202,6 +204,29 @@ class InputContractTests(unittest.TestCase):
             doc = fixture("run-policy", "commit-policy")
             doc["commit"] = value
             self.assert_code("run-policy", doc, "type")
+
+    def test_isolation_policy_shape_and_semantics(self):
+        self.assertEqual(contracts.validate(fixture("run-policy", "isolation-worktree"), "run-policy"), [])
+        doc = fixture("run-policy", "isolation-worktree")
+        doc["isolation"]["mode"] = "shared"
+        doc["git_action"] = "none"
+        del doc["commit"]
+        self.assertEqual(contracts.validate(doc, "run-policy"), [])
+        for field in ("mode", "integration", "recheck"):
+            doc = fixture("run-policy", "isolation-worktree")
+            del doc["isolation"][field]
+            self.assert_code("run-policy", doc, "required")
+        for field, value in (("integration", "parallel"), ("recheck", "some")):
+            doc = fixture("run-policy", "isolation-worktree")
+            doc["isolation"][field] = value
+            self.assert_code("run-policy", doc, "enum")
+        for value in (None, [], "worktree"):
+            doc = fixture("run-policy", "isolation-worktree")
+            doc["isolation"] = value
+            self.assert_code("run-policy", doc, "type")
+        doc = fixture("run-policy", "solo")
+        self.assertNotIn("isolation", doc)
+        self.assertEqual(contracts.validate(doc, "run-policy"), [])
 
     def test_role_authority_both_directions_and_read_only(self):
         doc = fixture("role-manifest", "executor-minimal")

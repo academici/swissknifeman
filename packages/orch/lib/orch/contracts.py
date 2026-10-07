@@ -128,6 +128,10 @@ def _run_policy(doc: object) -> list[Issue]:
     if "commit" in doc and doc.get("git_action") == "none":
         issues.append(Issue("/commit", "COMMIT_POLICY_CONFLICT",
                             "commit policy requires git_action commit"))
+    isolation = doc.get("isolation")
+    if isinstance(isolation, dict) and isolation.get("mode") == "worktree" and doc.get("git_action") == "none":
+        issues.append(Issue("/isolation", "ISOLATION_POLICY_CONFLICT",
+                            "worktree isolation needs git_action commit to integrate"))
     stages = doc.get("stages")
     if not isinstance(stages, list):
         return issues

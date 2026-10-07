@@ -61,11 +61,18 @@ generator name and plan-rule constraints (warning there). `scope.read_only: true
 | `retries_budget`, `git_action`, `finalize` | * | retry total, `none`/`commit`, deterministic registration |
 | `applies_to` | | reference patterns |
 | `commit` | | `scope: item\|unit`, distinct non-empty `roles` (`executor`, `reviewer`, `fix`), `message_convention` identifier; all three fields required when present |
+| `isolation` | | `mode: worktree\|shared`, `integration: sequential`, `recheck: item\|all\|none`; all three fields required when present |
 
 Semantic: exactly one `primary`; required stages refuse when unavailable; acyclic known dependencies;
 `review.enabled` matches a review stage; integers are non-negative. A `commit` policy with
 `git_action: none` is refused with `COMMIT_POLICY_CONFLICT`; `git_action: commit` without the
 optional policy remains valid.
+
+`isolation.mode: worktree` means one branch and working tree per run; results are integrated one branch
+at a time (`integration: sequential`), and `recheck` sets the acceptance scope re-run after each
+integration. `shared` works in the common tree, and such runs must not execute in parallel. A
+`worktree` isolation with `git_action: none` is refused with `ISOLATION_POLICY_CONFLICT` because there is
+nothing to integrate; documents without `isolation` remain valid.
 
 ### role-manifest
 
@@ -156,6 +163,8 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 
 ## Changelog контрактов
 
+- exec/v1 — optional `run-policy.isolation` (`mode`, `integration`, `recheck`) and
+  `ISOLATION_POLICY_CONFLICT`; existing documents remain valid.
 - exec/v1 — optional `run-policy.commit` and `stage-result.commits`, shared `commitRole`,
   commit policy conflict and duplicate hash checks; existing documents remain valid.
 - exec/v1 — initial (PLAN2): nine document kinds, shared definitions, closed schema profile and

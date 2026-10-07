@@ -239,6 +239,42 @@
         "message_convention"
       ],
       "additionalProperties": false
+    },
+    "isolation": {
+      "type": "object",
+      "description": "Optional run isolation and integration policy.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "worktree",
+            "shared"
+          ],
+          "description": "Isolation mode: own branch and working tree per run, or shared working tree."
+        },
+        "integration": {
+          "type": "string",
+          "enum": [
+            "sequential"
+          ],
+          "description": "Integration order of isolated runs."
+        },
+        "recheck": {
+          "type": "string",
+          "enum": [
+            "item",
+            "all",
+            "none"
+          ],
+          "description": "Acceptance recheck scope after each integration."
+        }
+      },
+      "required": [
+        "mode",
+        "integration",
+        "recheck"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

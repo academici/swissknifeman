@@ -23,7 +23,10 @@ already approved by the owner; the agent owns the implementation end to end.
 
 - Make all architectural, design, fix and sequencing decisions yourself. Record them in the plan
   (`plan.py log`; an architectural choice becomes a plan decision) and keep going to the result.
-- Never ask for confirmation, "which option" or "should I continue". Continue to the next plan item.
+- Scope of the run is exactly the plan item(s) named in the invocation. "To the end" means that item
+  is fully done, verified and committed, not that the next items start. Never begin another item or
+  phase on your own; after finishing, report and stop.
+- Within the item, never ask for confirmation or "which option"; decide, log and finish it.
 - Fix every defect you hit right away and properly, even when it exceeds a soft threshold or is not
   strictly in scope; log the deviation. Do not leave known red checks or defer obvious fixes.
 - Quality over speed: root-cause fixes, verified by the item's checks and the affected suites.

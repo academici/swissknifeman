@@ -1,4 +1,4 @@
-"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input and render prompts."""
+"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run."""
 from __future__ import annotations
 
 import argparse
@@ -6,8 +6,10 @@ import json
 from pathlib import Path
 import sys
 
-from orch import adhoc, launch, render
+from orch import adhoc, catalog, launch, render
+from orch.bindings import BINDINGS
 from orch.contracts import validate
+from orch.port import PortError
 from orch.schema import SchemaProfileError
 
 
@@ -64,6 +66,37 @@ def _render_prompt(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise PortError("INPUT_INVALID", f"cannot read {path}: {error}") from error
+
+
+def _prepare(args: argparse.Namespace) -> int:
+    try:
+        if not args.dry_run:
+            raise PortError("NOT_IMPLEMENTED", "prepare only supports --dry-run in this version")
+        input_doc, policy = _load_json(args.input), _load_json(args.policy)
+        directory = Path(args.roles_dir) if args.roles_dir else render.ROLES_DIR
+        roles = {path.stem: _load_json(path) for path in sorted(directory.glob("*.json"))}
+        engine = BINDINGS[args.binding](args.out, catalog=catalog.Catalog.load(args.routing),
+                                        roles_dir=args.roles_dir)
+        plan = engine.prepare(input_doc, policy, roles, provider=args.provider, dry_run=True)
+    except PortError as error:
+        print(f"{error.code}: {error.message}", file=sys.stderr)
+        for issue in error.data.get("issues", []):
+            print(f"  {issue['code']}: {issue['path'] or '/'} {issue['message']}", file=sys.stderr)
+        if "launch_plan" in error.data:  # the refusal report
+            print(json.dumps(error.data["launch_plan"], ensure_ascii=False, indent=2))
+        return 1
+    except (catalog.CatalogError, launch.LaunchError) as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
+    print(json.dumps(plan, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="orch.py")
     verbs = parser.add_subparsers(dest="verb", required=True)
@@ -100,6 +133,15 @@ def main(argv: list[str] | None = None) -> int:
     command.add_argument("--input", type=Path, required=True)
     command.add_argument("--role", required=True)
     command.add_argument("--roles-dir", type=Path)
+    command = verbs.add_parser("prepare", help="launch-plan of a run; --dry-run writes projection files only")
+    command.add_argument("--binding", choices=sorted(BINDINGS), required=True)
+    command.add_argument("--provider")
+    command.add_argument("--input", type=Path, required=True)
+    command.add_argument("--policy", type=Path, required=True)
+    command.add_argument("--out", type=Path, required=True, help="directory for prompts and profiles")
+    command.add_argument("--dry-run", action="store_true")
+    command.add_argument("--routing", type=Path, help="routing config holding the model mappings")
+    command.add_argument("--roles-dir", type=Path)
     args = parser.parse_args(argv)
     if args.verb == "launch":
         return _launch(args)
@@ -107,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
         return _input_adhoc(args)
     if args.verb == "render-prompt":
         return _render_prompt(args)
+    if args.verb == "prepare":
+        return _prepare(args)
     try:
         doc = json.loads(args.file.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:

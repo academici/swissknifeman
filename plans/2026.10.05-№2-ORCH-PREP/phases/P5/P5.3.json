@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
   "title": "orch prepare --dry-run: native launch-plan, CAO profile, Claude-only prompt",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "catalog.py читает launch catalog и mappings через discovery; prepare_common реализует общий алгоритм отказов; bindings native/cao/claude-only строят свои проекции; `orch prepare --binding … --dry-run` печатает валидный launch-plan и пишет файлы проекций; без --dry-run — NOT_IMPLEMENTED.",
   "why": "R5, R16, I2, I7, I8, I14: подготовка запуска одинакова для всех движков, отказ явный, модели — из mappings; CAO доступен как второй adapter без зависимости.",
   "scope": {
@@ -47,7 +47,7 @@
       "required": true
     },
     {
-      "path": "packages/orch/lib/orch/discovery.py",
+      "path": "packages/orch/bridges/task/discovery.py",
       "why": "routing_path",
       "required": true
     },
@@ -133,6 +133,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:27Z"
+  "result": {
+    "started_at": "2026-10-07T14:40:56Z",
+    "finished_at": "2026-10-07T14:47:37Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "85e1a27a-7daa-4d9b-b6a9-690058fed58e"
+    },
+    "notes": "catalog.py, bindings native/cao/claude-only, prepare --dry-run verb, 34 tests; package validate OK",
+    "deviations": [
+      "Stale read path (discovery now in bridges/task); routing found via --routing/ORCH_ROUTING/bridge scan; Catalog class API; launch-plan argv items may be empty (schema, contracts changelog, README touched outside scope list)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T14:47:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T14:47:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T14:47:37Z"
 }

@@ -7,7 +7,10 @@ standard library and `orch`; it is independent of other packages of this reposit
 The package supplies a closed-profile JSON Schema validator, shared `exec/v1`
 definitions, all nine document schemas and their fixtures, canonical document
 digests and a `validate` CLI. It also defines the EnginePort protocol, RunState
-reducer and binding capability matrix; execution bindings are future work.
+reducer and binding capability matrix. `orch.py prepare --binding native|cao|claude-only --provider P --input I
+--policy POLICY --out DIR --dry-run` prints a launch-plan and writes its prompt or CAO profile files into `DIR`;
+models come from the `mappings` of a routing config (`--routing`, `ORCH_ROUTING` or a bridge's `routing_path()`).
+Starting runs is future work; `prepare` without `--dry-run` returns `NOT_IMPLEMENTED`.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
 Incompatible versions return `CONTRACT_VERSION` before schema validation.

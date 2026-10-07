@@ -163,6 +163,7 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 
 ## Changelog контрактов
 
+- exec/v1 — `launch-plan.stages[].argv` items may be empty strings (a launch catalog argument such as `--tools ""`); existing documents remain valid.
 - exec/v1 — optional `run-policy.isolation` (`mode`, `integration`, `recheck`) and
   `ISOLATION_POLICY_CONFLICT`; existing documents remain valid.
 - exec/v1 — optional `run-policy.commit` and `stage-result.commits`, shared `commitRole`,

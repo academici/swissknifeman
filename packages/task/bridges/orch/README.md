@@ -9,6 +9,7 @@ replacing the orchestrator means adding another bridge under `bridges/`, not edi
 | `register` | `register.py` | orch → Task: a worker's stage-report into `log` + `finish` or `unit … return` |
 | `register-review` | `register_review.py` | orch → Task: review-findings into `add-document` + a `note` event |
 | `commit` | `commit.py` | Task → orch: one scoped operation commit as a stage-result `commits[]` fragment |
+| `launch` | `launch.py` | orch → Task: a role's launch command line with the model resolved from Task's provider mapping |
 
 Run a verb through the Task dispatcher: `plan.py bridge orch <verb> [args…]`. `plan.py bridge list`
 validates `bridge.json` and lists the verbs.
@@ -157,3 +158,18 @@ PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orc
 `test_schema_profile.py` (orch's closed schema profile ⊇ Task's) skip when orch is not found.
 `test_record_parity.py` pins every recording obligation W1–W12 to its owner; rows owned by orch roles or by
 this repository's plan skip when those are absent. `validate.sh` of Task runs these tests.
+
+## launch
+
+```text
+plan.py bridge orch launch <role> <provider> [--effort E] [--cwd DIR] [--routing FILE]
+```
+
+Prints `{argv, transport, timeout_s, model, model_class}` and starts nothing. The entry comes from the partner's
+launch catalog (`orch.py launch show|argv`); the catalog holds a `model_class`, never a model. The bridge maps the
+class to a model through `mappings.<provider>.class_selectors` in `configs/command-routing.json` (`--routing`
+overrides the file) and the effort through `effort_selectors`. Providers whose CLI takes no model
+(`model_set: unknown`, grok) get no model argument. Refusals: `LAUNCH_UNKNOWN` (no entry),
+`LAUNCH_INVALID` (bad request or catalog), `LAUNCH_MODEL_UNRESOLVED` (mapping has no model for the class),
+`ROUTING_UNREADABLE`. The tests also compare the argv of `scout` with Task's own `orchestration.scout`, which
+`start --scout` keeps using unchanged.

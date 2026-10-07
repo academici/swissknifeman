@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D25",
+  "title": "P4.1: launch catalog в orch, scout Task на собственном конфиге",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "P4.1 после D17: где живут launch catalog и argv-билдеры и как Task scout получает argv?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Каталог и билдеры в orch (packages/orch/configs/launch-catalog.json, lib/orch/launch.py, orch.py launch); модели не в каталоге (только model_class), класс→модель резолвит мост task/bridges/orch по mappings Task (I8); scout Task остаётся на собственном orchestration.scout, паритет argv — тестом моста."
+    },
+    {
+      "id": "B",
+      "text": "Каталог в Task command-routing.json (как D6); orch читает через discovery",
+      "cons": "ядро Task знает роли orch; противоречит D13/D17"
+    },
+    {
+      "id": "C",
+      "text": "Каталог в orch и scout Task читает его через мост",
+      "cons": "start --scout получает зависимость от orch; ядро Task не может вызвать мост без имён партнёра; риск изменения argv scout"
+    }
+  ],
+  "context": "P4.1 заблокирован (blocker): текст пункта следует D6 (superseded D17). Владелец: «это технические вопросы, найди лучшее решение по каждому вопросу».",
+  "decision": "A — Каталог и билдеры в orch (packages/orch/configs/launch-catalog.json, lib/orch/launch.py, orch.py launch); модели не в каталоге (только model_class), класс→модель резолвит мост task/bridges/orch по mappings Task (I8); scout Task остаётся на собственном orchestration.scout, паритет argv — тестом моста.",
+  "rationale": "Владелец делегировал технический выбор. A: D17 п.3 и D13 (ядра Task и orch не знают друг друга; связь только в task/bridges/orch); модели только из mappings (I8) — каталог хранит model_class, класс→модель резолвит мост; scout Task не меняется (argv побайтно прежний, нулевой риск), дрейф ловит parity-тест в мосте; legacy orchestration.scout остаётся рабочим ключом Task, а не fallback.",
+  "applies_to": [
+    "P4"
+  ],
+  "actor": {
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

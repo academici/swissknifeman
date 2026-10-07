@@ -1,0 +1,17 @@
+{
+  "$comment": "Skills per role id; the role manifests in the neutral core do not name skills. Used by resolve_role.py when a manifest has no `skills`.",
+  "roles": {
+    "reviewer": [
+      {
+        "name": "quality:code-review",
+        "required": true,
+        "why": "review method for code diffs"
+      },
+      {
+        "name": "quality:artifact-review",
+        "required": false,
+        "why": "review method for plans and docs"
+      }
+    ]
+  }
+}

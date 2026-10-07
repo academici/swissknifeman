@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:orch:bridge:v1",
+  "name": "skiller",
+  "partner": "skiller",
+  "direction": "out",
+  "contract": "skiller.resolve/v1",
+  "summary": "Expands a role manifest's skills into their transitive closure through the partner's generic skill resolver and reports the skill delivery mode of the role's provider from the capability seed.",
+  "entrypoints": {
+    "resolve-role": "resolve_role.py"
+  },
+  "requires": {
+    "cli": "bin/skiller",
+    "env": "SKM_SKILLER_ROOT"
+  }
+}

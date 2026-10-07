@@ -37,6 +37,16 @@ A plan item may run a workflow template in its stage (research, authoring, audit
 itself is driven only by `scripts/plan.py` verbs (`next, start, log, finish, check, render`) - see
 [Methodology](./methodology) and [Plan structure](./plan-structure); templates never write plan JSON by hand.
 
+## Scoped commits per operation
+
+Every operation of an item ends with its own scoped commit: the executor after `finish`
+(`plan.py commit PLAN1 P1.1 --role executor`), the reviewer after its report
+(`--role reviewer`), a review correction after the affected checks rerun (`--role fix`).
+The commit holds the item's plan JSON and `task_files` only; foreign dirty paths return
+`OUTSIDE_SCOPE` and stay untouched with `--leave-outside`. Never `git add -A`, `--no-verify`,
+amend or push in plan-run. `plan.py commits PLAN1 [P1.1]` lists the commits linked to the plan or
+item by `Plan` trailers. Details: [Plan structure](./plan-structure).
+
 ## Scout
 
 An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic

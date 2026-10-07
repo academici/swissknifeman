@@ -100,7 +100,14 @@ Optional `settings.commit` sets `scope` and attribution `trailers`; CLI override
 without changing the journal afterward. Existing `finish --commit SHA` remains available for
 commits made before finish. Plans receive `.gitattributes` with `log.jsonl merge=union`;
 parallel journal changes integrate through local Git merge/rebase, with timestamps allowed
-to appear out of order.
+to appear out of order. GitHub web-merge does not apply `merge=union`: integrate parallel plan
+branches locally, then push. `union` does not resolve conflicts in shared JSON (`plan.json`,
+`phase.json`).
+
+`plan.py commits PLAN1 [P1.1[/U1]] [--role executor|reviewer|fix]` reads the commits linked to a plan
+by `Plan` trailers (read-only JSON envelope, schema `plan.py schema read-commits`); an item ref
+includes its units. A named bridge may return the same commit in its partner's result format
+(see the bridge's README).
 
 `start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
 A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.

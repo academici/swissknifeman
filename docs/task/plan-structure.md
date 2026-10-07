@@ -62,6 +62,17 @@ snapshot, stages the destination with supporting files, then publishes it with r
 publication failure. Existing JSON requires `--replace`. Historical dates, states and evidence
 survive import exactly. Import is a data API; source-format conversion is never runtime behavior.
 
+## Scoped commits
+
+`plan.py commit PLAN1 P1.1 --role executor|reviewer|fix` makes one scoped Git commit with the item's
+declared `task_files` and operation-owned plan files; foreign dirty paths return `OUTSIDE_SCOPE`
+(`--leave-outside` keeps them, `--path` adds an explicit extra path, `--dry-run --json` previews).
+Messages carry `Plan`, `Plan-Ref` and `Plan-Role` trailers; `plan.py commits PLAN1 [P1.1]` reads the
+linked commits back, and `plan.py bridge orch commit …` returns a `stage-result.commits[]` fragment.
+Plans receive `.gitattributes` with `log.jsonl merge=union`; GitHub web-merge does not apply it, so
+parallel plan branches integrate locally (`git merge`/`git rebase`), then push. See
+`packages/task/docs/plan-structure.md` for the full contract.
+
 ## Lifecycle and scheduling
 
 Items: `todo → in_progress → done | done_with_deviations | blocked | skipped`.

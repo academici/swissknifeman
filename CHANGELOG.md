@@ -9,6 +9,15 @@
   явные пути и настройки сообщения. Plan trailers связывают коммит с операцией;
   блокировки плана и Git-индекса защищают снимок, временный индекс сохраняет
   исходный staging при отказе Git или хука.
+- **Task чтение коммитов и мост:** `plan.py commits` читает коммиты плана по trailers
+  `Plan` (фильтры по item/unit и роли, JSON-конверт `read-commits`); мост
+  `plan.py bridge orch commit` возвращает коммит как фрагмент `stage-result.commits[]`.
+  Контракт `exec/v1` расширен аддитивно: `run-policy.commit` и `stage-result.commits[]`.
+  Новые планы и импорт получают `.gitattributes` с `log.jsonl merge=union`; GitHub
+  web-merge union не применяет, параллельные ветки плана интегрируются локально.
+- **Правила scoped-коммитов в командах:** `plan-run` и `plan-protocol` требуют один
+  `plan.py commit` на операцию (executor, reviewer, fix) без `git add -A`, `--no-verify`,
+  amend и push; проекции адаптеров и справочник provider-commands перегенерированы.
 - **Границы Skiller без allowlist:** документация и общие skills используют пути
   от корня пакета и имена внешних инструментов; migration allowlist удалён.
   Каталог `skills.json` проверяется как контент: пути монорепозитория запрещены,

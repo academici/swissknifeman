@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.7",
   "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P9",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Документация Task (plan-structure: .gitattributes и trailers; workflows: commit/commits; json-plan-design при необходимости) в packages/task/docs и docs/task, CHANGELOG [Unreleased] по фактическому diff P9, knowledge/architecture-bridges (строка о commit-мосте), широкий validate Task и orch.",
   "why": "Закрытие фазы: новые глаголы и правило коммитов видимы владельцу и провайдерам; широкий прогон ловит регрессии между пакетами.",
   "scope": {
@@ -160,6 +160,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T19:12:46Z"
+  "result": {
+    "started_at": "2026-10-07T07:00:57Z",
+    "finished_at": "2026-10-07T07:20:13Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "eb8dcb20-649b-4df3-bf35-c0dfba00b2d0"
+    },
+    "notes": "Docs (plan-structure, workflows; task + docs/task mirror), CHANGELOG [Unreleased] for P9, wide validate green. architecture-bridges: no change needed — commit bridge verb is covered by existing 'orch: brief, register, register-review' row only in P9 knowledge; left unchanged.",
+    "deviations": [
+      "Fixed flaky racy-index in gitops.commit (preserve index mtime), outside docs scope; required by red wide validate"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T07:20:13Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T07:20:13Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T07:20:13Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T07:20:13Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T07:20:13Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T07:20:13Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T07:20:13Z"
 }

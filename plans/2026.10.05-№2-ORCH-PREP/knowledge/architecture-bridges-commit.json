@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "architecture-bridges-commit",
+  "title": "Архитектура: мост commit (дополнение к architecture-bridges после P9)",
+  "sections": [
+    {
+      "id": "commit-bridge",
+      "title": "Строка о commit-мосте",
+      "text": "Дополняет architecture-bridges §dependency-rule (владение мостами, D14): мост `task/bridges/orch` теперь объявляет глаголы brief, register, register-review и commit. `commit` вызывает `plan.py commit … --json` через CLI Task и возвращает фрагмент `stage-result.commits[]` (sha, role, ref, paths_digest); ядро Task формат exec/v1 не знает, ядро orch Task не вызывает. Ядро читает коммиты плана глаголом `plan.py commits` по trailers `Plan`. Параллельные ветки плана интегрируются локально: `log.jsonl merge=union` (D24), GitHub web-merge union не применяет."
+    }
+  ],
+  "applies_to": [
+    "P9"
+  ]
+}

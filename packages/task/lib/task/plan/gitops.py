@@ -242,6 +242,10 @@ def commit(plan_dir: str | Path, ref: str, *, role: str, paths: list[str] = (), 
                 original_index = _read_optional(index)
                 if original_index is not None:
                     private.write_bytes(original_index)
+                    # Keep the original mtime: a fresh one defeats Git's racy-clean detection and a
+                    # same-size rewrite within one timestamp tick would be missed.
+                    st = index.stat()
+                    os.utime(private, ns=(st.st_atime_ns, st.st_mtime_ns))
                 env = {**os.environ, "GIT_INDEX_FILE": str(private)}
                 indexed = set(os.fsdecode(p) for p in _git(repo, "ls-files", "-z", env=env).split(b"\0") if p)
                 # Already staged deletions (including rename sources) are absent from the index.

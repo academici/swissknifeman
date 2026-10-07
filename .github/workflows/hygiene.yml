@@ -36,6 +36,9 @@ jobs:
           python3 scripts/test-sync-managed-blocks.py -v
           python3 scripts/sync-managed-blocks.py --check --root .
 
+      - name: config-inventory (owner + consumer per config)
+        run: python3 scripts/test-config-inventory.py -v
+
       - name: status-check (capability matrix)
         run: |
           python3 scripts/test-status-check.py -v

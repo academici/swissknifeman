@@ -1,0 +1,162 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.3",
+  "title": "Инвентарь конфигов configs/config-inventory.json и CI-guard владельца и потребителя",
+  "status": "done",
+  "summary": "configs/config-inventory.json (owner + consumers + released на каждый конфиг или семейство) по §inventory и scripts/test-config-inventory.py (покрытие scope, мёртвые записи, владельцы, потребители, регресс F1); шаг в .github/workflows/hygiene.yml.",
+  "why": "F8: правило «каждый конфиг имеет владельца и потребителя» (цель фазы) ничем не удерживается — новый конфиг-сирота или дубль появятся снова. Q18: JSON-манифест + unittest соразмерен репозиторию без build system. Риск — хрупкий glob-матчер: ** должен корректно матчить вложенные каталоги harness.",
+  "scope": {
+    "include": [
+      "configs/config-inventory.json",
+      "scripts/test-config-inventory.py",
+      "шаг CI в .github/workflows/hygiene.yml"
+    ],
+    "exclude": [
+      "перенос или удаление конфигов (P11.1)",
+      "docs и CHANGELOG (P11.4)",
+      "конфиги вне §scope (tests, fixtures, plans, releases, lock-файлы, snippets skills)"
+    ]
+  },
+  "depends_on": [
+    "P11.1"
+  ],
+  "decisions": [
+    "D26"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "scope",
+      "why": "что входит в инвентарь",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "inventory",
+      "why": "строки → записи entries (владелец, потребители, released)",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "inventory-guard",
+      "why": "формат файла и шесть тестов",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "findings",
+      "why": "F5–F7: почему записи остаются",
+      "required": false
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "section": "30-40",
+      "why": "место шага рядом с managed-blocks",
+      "required": true
+    },
+    {
+      "path": "scripts/test-sync-managed-blocks.py",
+      "section": "1-40",
+      "why": "стиль корневых unittest-скриптов",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "configs/config-inventory.json",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-config-inventory.py",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Glob-матчер — собственный regex (Python 3.12 локально, full_match недоступен): '**/' → '(?:.*/)?', '**' → '.*', '*' → '[^/]*', '?' → '[^/]', прочее re.escape, re.fullmatch",
+    "Множество файлов — только git ls-files по шаблонам scope; untracked и игнорируемое не проверяется",
+    "Потребители — реальные пути из §inventory, проверенные на существование; для образцов — 'user:<что делает пользователь>'; consumer-тесты допустимы только если иного потребителя нет",
+    "Файл не найден ни одной записью → добавить запись по факту (grep читателей) и отметить в --notes; читателя нет → plan.py log --type blocker (кандидат на удаление решает владелец), не удалять",
+    "Никаких изменений самих конфигов"
+  ],
+  "guidance": "Исполнитель: implementation/high (Sonnet; Sol допустим). Начать с python-скрипта, печатающего непокрытые файлы, затем дописать записи до зелёного test_scope_covered. Записи сортировать по path/glob. Образцы записей: {\"path\": \"packages/skiller/.swissknifeman.example/config.json\", \"owner\": \"skiller\", \"consumers\": [\"user:copies to .swissknifeman/config.json for vendor mode\"], \"released\": true} ; {\"glob\": \"packages/skiller/budget-configs/*.json\", \"owner\": \"skiller\", \"consumers\": [\"packages/skiller/lib/skiller/budget.py\"], \"released\": true, \"dynamic\": true, \"note\": \"skiller budget --compare <name>\"}",
+  "examples": [
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "inventory-guard"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-config-inventory.py -v",
+      "expect": "exit 0; 6 тестов OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c \"import json; d=json.load(open('configs/config-inventory.json')); assert d['schema_version']==1 and all(('path' in e) != ('glob' in e) and e['consumers'] for e in d['entries'])\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -q 'test-config-inventory.py' .github/workflows/hygiene.yml",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "инвентарь конфигов в репозитории",
+    "CI-guard владельца и потребителя"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T11:03:37Z",
+    "finished_at": "2026-10-07T11:06:16Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "353f85d0-a945-41b4-bf62-65f01a8131a5"
+    },
+    "notes": "config-inventory.json: 36 entries (path/glob), 6-test guard, hygiene.yml step; no configs changed; orch bridge manifests lack a code reader (see note)",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T11:06:16Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T11:06:16Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T11:06:16Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T11:06:16Z"
+}

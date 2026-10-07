@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "_doc": "Every config has one owner and at least one consumer. Checked by scripts/test-config-inventory.py (CI hygiene). Decisions: plan PLAN2 knowledge configs-p11.",
+  "scope": [
+    "configs/*.json",
+    "config.example.json",
+    ".codex/config.toml.example",
+    ".grok/config.toml.example",
+    "packages/*/configs/*.json",
+    "packages/*/bridges/*/*.json",
+    "packages/harness/configs/**/*.json",
+    "packages/skiller/budget-configs/*.json",
+    "packages/skiller/schema/*.json",
+    "packages/skiller/.swissknifeman.example/*.json"
+  ],
+  "entries": [
+    {
+      "path": ".codex/config.toml.example",
+      "owner": "root",
+      "consumers": [
+        "user:copies to .codex/config.toml",
+        "configs/gitignore-policy.json"
+      ],
+      "released": true,
+      "note": "sample"
+    },
+    {
+      "path": ".grok/config.toml.example",
+      "owner": "root",
+      "consumers": [
+        "user:copies to .grok/config.toml",
+        "configs/gitignore-policy.json"
+      ],
+      "released": true,
+      "note": "sample"
+    },
+    {
+      "path": "config.example.json",
+      "owner": "root",
+      "consumers": [
+        "packages/maind/install.sh",
+        "packages/maind/lib/maind/common.py",
+        "packages/maind/lib/maind/doctor.py",
+        "packages/maind/lib/maind/projects.py"
+      ],
+      "released": true,
+      "note": "template of the root config.json"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-config-inventory.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/gitignore-policy.json",
+      "owner": "core",
+      "consumers": [
+        "core/gitignore_policy.py",
+        "packages/maind/lib/maind/doctor.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/managed-blocks.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/sync-managed-blocks.py",
+        ".github/workflows/hygiene.yml"
+      ],
+      "released": false,
+      "note": "registry is empty; gate kept for P5.5"
+    },
+    {
+      "path": "configs/provider-capabilities.json",
+      "owner": "core",
+      "consumers": [
+        "core/provider/config.py",
+        "packages/harness/lib/harness/profiles.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/maind/lib/maind/config.py",
+        "packages/maind/lib/maind/provider_deploy.py",
+        "packages/task/lib/task/command_render.py"
+      ],
+      "released": false,
+      "note": "SSOT of support levels"
+    },
+    {
+      "path": "configs/provider-distribution.json",
+      "owner": "core",
+      "consumers": [
+        "core/provider/distribution.py",
+        "packages/skiller/lib/skiller/doctor.py",
+        "packages/skiller/lib/skiller/publication.py",
+        "scripts/release-fleet.sh",
+        "scripts/skiller-standalone-check.sh"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/provider-projection.json",
+      "owner": "core",
+      "consumers": [
+        "core/provider/projection.py",
+        "scripts/skiller-standalone-check.sh"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/release-units.json",
+      "owner": "root",
+      "consumers": [
+        "packages/skiller/lib/skiller/release_attestation.py",
+        "packages/task/scripts/check-publication-version.py",
+        "scripts/version-guard.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/repository-bootstrap-skills.json",
+      "owner": "root",
+      "consumers": [
+        "packages/skiller/lib/skiller/publication.py"
+      ],
+      "released": false,
+      "note": "reached through skiller-host.json bootstrap"
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "owner": "root",
+      "consumers": [
+        "packages/skiller/lib/skiller/host.py",
+        "packages/skiller/install.sh"
+      ],
+      "released": false
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/agent-packs/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/agentpacks.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/hooks/*/config.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/doctor.py",
+        "packages/harness/configs/claude-code/hooks/agent-router/_lib.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/mcp/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/mcp.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/policy/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/harness/lib/harness/permissions.py"
+      ],
+      "released": true
+    },
+    {
+      "path": "packages/harness/configs/claude-code/settings-keys.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/settings_audit.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/settings.*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/doctor.py",
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/harness/lib/harness/permissions.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "note": "presets discovered by glob"
+    },
+    {
+      "glob": "packages/harness/configs/codex/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/common/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/instructions.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/harness/lib/harness/execpolicy.py",
+        "packages/harness/lib/harness/reviewroles.py",
+        "packages/maind/lib/maind/provider_deploy.py",
+        "packages/maind/lib/maind/provision/deploy.py",
+        "scripts/provider-docs.py"
+      ],
+      "released": true,
+      "note": "direct maind reads are roadmap (harness <-> maind bridges)"
+    },
+    {
+      "path": "packages/harness/configs/common/profile-catalog.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/profiles.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/maind/lib/maind/provision/workspace.py",
+        "scripts/provider-docs.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true,
+      "note": "canonical profile catalog"
+    },
+    {
+      "glob": "packages/harness/configs/cursor/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/cursor_render.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/grok/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true
+    },
+    {
+      "path": "packages/orch/bridges/harness/bridge.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/bridges/harness/tests/test_agent_pack_roles.py"
+      ],
+      "released": false,
+      "note": "declarative, no entrypoints; bridges are discovered by scanning bridges/*/bridge.json",
+      "dynamic": true
+    },
+    {
+      "path": "packages/orch/bridges/skiller/bridge.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/bridges/skiller/resolve_role.py"
+      ],
+      "released": false,
+      "note": "declarative; names the resolve-role entrypoint"
+    },
+    {
+      "path": "packages/orch/bridges/skiller/role-skills.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/bridges/skiller/resolve_role.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/orch/configs/launch-catalog.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/launch.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/skiller/.swissknifeman.example/config.json",
+      "owner": "skiller",
+      "consumers": [
+        "user:copies to .swissknifeman/config.json for vendor mode"
+      ],
+      "released": true,
+      "note": "sample"
+    },
+    {
+      "glob": "packages/skiller/budget-configs/*.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/budget.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "note": "skiller budget --compare <name>"
+    },
+    {
+      "path": "packages/skiller/configs/core-policy.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/budget.py",
+        "packages/harness/lib/harness/instructions.py",
+        "packages/skiller/scripts/validate.sh"
+      ],
+      "released": true
+    },
+    {
+      "path": "packages/skiller/configs/publication-versions.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/publication.py",
+        "packages/skiller/lib/skiller/registry.py",
+        "packages/skiller/lib/skiller/release_attestation.py",
+        "scripts/version-guard.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/skiller/schema/*.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/doctor.py",
+        "packages/skiller/lib/skiller/host.py",
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/tests/test_schema.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "note": "editor/doc schemas, loaded by name"
+    },
+    {
+      "path": "packages/task/bridges/orch/bridge.json",
+      "owner": "task",
+      "consumers": [
+        "packages/task/lib/task/plan/bridges.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/task/configs/command-routing.json",
+      "owner": "task",
+      "consumers": [
+        "packages/task/lib/task/plan/lifecycle.py",
+        "packages/task/lib/task/command_render.py",
+        "packages/task/lib/task/command_catalog.py",
+        "packages/task/scripts/render-provider-commands.py",
+        "packages/task/scripts/check-publication-version.py",
+        "packages/task/bridges/orch/launch.py",
+        "packages/harness/lib/harness/cursor_render.py",
+        "packages/harness/lib/harness/run/worker.py",
+        "packages/artifex/lib/artifex/providers/codex.py",
+        "scripts/provider-docs.py",
+        "configs/skiller-host.json"
+      ],
+      "released": true
+    }
+  ]
+}

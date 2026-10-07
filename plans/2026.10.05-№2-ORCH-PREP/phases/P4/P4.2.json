@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
   "title": "Role manifests пяти ролей (exec/v1)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "packages/orch/roles/<role>.json для context-scout, executor, bounded-implementer, reviewer, registrar по готовой таблице; тест проверяет схему, существование и sha256 инструкций, связи с roles.json.",
   "why": "R6, R9, I3: роль — контракт (инструкции, skills, полномочия, форма результата) для любого движка; D5.",
   "scope": {
@@ -92,6 +92,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:31Z"
+  "result": {
+    "started_at": "2026-10-07T10:19:17Z",
+    "finished_at": "2026-10-07T10:20:55Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "7c5f51dc-6c5f-4831-b25e-b2e714aee8a0"
+    },
+    "notes": "5 role manifests + test_role_manifests; sha256 and agent_pack_roles verified",
+    "deviations": [
+      "harness roles.json path fixed to ORCH.parent/harness"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T10:20:55Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T10:20:55Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T10:20:55Z"
 }

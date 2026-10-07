@@ -2,16 +2,17 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.4",
   "title": "Тест переносимости: один execution-input на трёх bindings",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "test_portability.py: brief fixture-плана Task, ad-hoc и review-only входы проходят prepare на native/CAO/Claude-only с идентичным task-блоком; stage-result из synthetic trace валиден и привязан к digest; широкий validate orch.",
   "why": "R16, R14 — критерий готовности Plan 1 (DECISIONS §3): goal/checks не переписываются под движок.",
   "scope": {
     "include": [
       "tests/test_portability.py по knowledge/engine-port §conformance (параметризация по BINDINGS и provider)",
-      "использовать helper `tests/task_fixture.py` из P2.2 без изменения его сигнатуры"
+      "plan-bound вход — orch fixture fixtures/exec/v1/valid/execution-input/plan-bound.json (после P7.2 brief-fixture Task живёт в мосте; orch не зовёт plan.py, граница P7.5); helpers fixture/roles/ROUTING — по образцу tests/test_prepare.py"
     ],
     "exclude": [
-      "реальные запуски"
+      "реальные запуски",
+      "tests/task_fixture.py и вызовы plan.py (перенесены в мост P7.2)"
     ]
   },
   "depends_on": [
@@ -27,8 +28,13 @@
       "required": true
     },
     {
-      "path": "packages/orch/tests/test_conformance_task.py",
-      "why": "как получить brief fixture-плана",
+      "path": "packages/orch/tests/test_prepare.py",
+      "why": "fixture/roles/ROUTING и вызов prepare (замена устаревшего task_fixture)",
+      "required": true
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/valid/execution-input/plan-bound.json",
+      "why": "plan-bound вход",
       "required": true
     },
     {
@@ -39,11 +45,6 @@
     {
       "path": "packages/orch/lib/orch/port.py",
       "why": "RunState",
-      "required": true
-    },
-    {
-      "path": "packages/orch/tests/task_fixture.py",
-      "why": "helper brief fixture-плана",
       "required": true
     }
   ],
@@ -91,6 +92,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:03:09Z"
+  "result": {
+    "started_at": "2026-10-07T14:54:20Z",
+    "finished_at": "2026-10-07T14:55:44Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "a4c5c04c-9d84-4a61-b101-60e8073ca04f"
+    },
+    "notes": "test_portability.py: 3 inputs x native/cao/claude-only x providers; native x grok asserted CAPABILITY_UNSUPPORTED; task block byte-for-byte in each primary projection; no LIFECYCLE_PHRASES; stage-result bound to input digest. validate: OK",
+    "deviations": [
+      "plan-bound input taken from orch fixture plan-bound.json instead of task_fixture.py (moved to Task bridge by P7.2; owner decision); item reads/scope amended via plan.py set"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T14:55:44Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T14:55:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T14:55:44Z"
 }

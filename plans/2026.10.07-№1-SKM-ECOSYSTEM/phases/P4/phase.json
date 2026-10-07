@@ -4,13 +4,16 @@
   "title": "aicore: конфиг и состояние",
   "design": "skeleton",
   "goal": "aicore.config (слои defaults → машина → проект → env → флаги, схемы модулей, explain) и aicore.state (XDG-места, проектный .swissknifeman/{config.json,state,backups}, SKM_HOME, бэкапы с ротацией вместо *.bak) работают; swissknifeman config show/set/explain; первый модуль переведён, старые файлы читаются с предупреждением.",
-  "context": "D5; knowledge/architecture §5. Детализируется после P3.",
+  "context": "D5; knowledge/architecture §5. Детализируется после P3. Формат слоёв — TOML, состояние — JSON, config.example.toml из схемы (D14); конфиг planner — первый крупный потребитель (D15).",
   "scope": {
     "include": [
       "aicore.config",
       "aicore.state",
       "CLI config",
-      "чтение старых мест с предупреждением"
+      "чтение старых мест с предупреждением",
+      "config.example.toml из схемы + проверка расхождения в CI",
+      "swissknifeman config init",
+      "минимальный писатель TOML для config set"
     ],
     "exclude": [
       "массовая миграция модулей (P8–P11)",

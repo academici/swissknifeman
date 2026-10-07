@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.6",
   "title": "Итоговый вывод плана: сверка покрытия и записи",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Knowledge-документ `conclusion`: итоги фаз, сверка R1–R28/I1–I15 с доказательствами (файл/тест/команда), сверка обязанностей записи W1–W12 и записей самого плана, готовность контрактов для Plan 2, открытые вопросы и риски; note-событие.",
   "why": "R28 и R27 (M4): после завершения нужен вывод, а план должен быть самодостаточным по материалам; R25 — ничего не потеряно.",
   "scope": {
@@ -86,10 +86,10 @@
     },
     {
       "id": "V3",
-      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_record_parity -v",
+      "cmd": "PYTHONPATH=../../../lib python3 -m unittest test_record_parity -v",
       "expect": "exit 0",
       "kind": "acceptance",
-      "cwd": "packages/orch"
+      "cwd": "packages/task/bridges/orch/tests"
     }
   ],
   "deliverables": [
@@ -110,6 +110,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:24Z"
+  "result": {
+    "started_at": "2026-10-07T15:25:26Z",
+    "finished_at": "2026-10-07T15:35:10Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "94fa4774-ced1-47c5-8dd6-ea6737dca035"
+    },
+    "notes": "knowledge/conclusion: итоги 12 фаз, сверка R1–R28/I1–I15/B44–B52 с доказательствами (файл/тест/команда), запись W1–W12, готовность к Plan 2, open-questions, numbers. Свежие проверки на HEAD 6425acbe: orch 164 OK, мосты Task 97 OK, boundary Task 5 и Skiller 13 OK, record parity 6 OK, plan check 0/0. Findings: F-C1 Major (P12.1: brief scoped-плана с reads[].included не проходит exec/v1), F-C2 Major (review-p2 F1 route.settings всё ещё открыт, P2.1), F-C3 (HEAD ссылается на неотслеживаемые D26–D29, knowledge configs-p11/parallel-p10/architecture-bridges-parallel, research Q16–Q19 — коммит владельца). Продукт не менялся; note P5 записан. Рекомендация task:review для исправлений exec/v1.",
+    "deviations": [
+      "V3 переведён на packages/task/bridges/orch/tests/test_record_parity.py: P7.3 перенёс тест из packages/orch/tests"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T15:35:10Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T15:35:10Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T15:35:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T15:35:10Z"
 }

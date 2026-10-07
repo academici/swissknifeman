@@ -43,7 +43,8 @@
     "P5.3",
     "P5.4",
     "P5.5",
-    "P5.6"
+    "P5.6",
+    "P5.7"
   ],
   "batches": [
     {
@@ -85,6 +86,13 @@
       "id": "BP5-6",
       "items": [
         "P5.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP5-7",
+      "items": [
+        "P5.7"
       ],
       "mode": "recommended"
     }

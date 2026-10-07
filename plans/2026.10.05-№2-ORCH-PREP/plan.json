@@ -5,7 +5,7 @@
   "title": "Plan №2 — Подготовка к оркестрации: контракты, разделение пакетов, привязки к движкам",
   "status": "done",
   "created": "2026-10-05",
-  "updated_at": "2026-10-07T15:35:10Z",
+  "updated_at": "2026-10-07T15:44:32Z",
   "repository": "swissknifeman",
   "owner": "repository owner",
   "authoring": {
@@ -23,7 +23,7 @@
     "Урезание context pack или обязательное ревью каждого item"
   ],
   "rules": [
-    "Исполнители (R24; route — минимальный класс, provider/model не фиксируются; таблица — plan.sections `model-economy`): Opus, не экономить — P1.4, P2.4, P2.5, P3.1, P3.3, P5.6. Sonnet, лучше не экономить — P2.1, P2.2, P2.3, P4.1, P4.4, P5.1, P5.3. Sol допустим вместо Sonnet (effort high, без правки плана) — P1.1, P1.2, P1.3, P3.2, P5.2, P5.4; при красных тестах или blocker — перезапуск на Sonnet. Sol по плану — P1.5, P2.6, P2.7, P3.4, P4.2, P4.3, P5.5. Понижение frontier-item (Opus) только через смену route (`plan.py set`), иначе ROUTE_UNDERSHOOT. Первая строка guidance каждого item повторяет рекомендацию.",
+    "Исполнители (R24; route — минимальный класс, provider/model не фиксируются; таблица — plan.sections `model-economy`): Opus, не экономить — P1.4, P2.4, P2.5, P3.1, P3.3, P5.6. Sonnet, лучше не экономить — P2.1, P2.2, P2.3, P4.1, P4.4, P5.1, P5.3. Sol допустим вместо Sonnet (effort high, без правки плана) — P1.1, P1.2, P1.3, P3.2, P5.2, P5.4; при красных тестах или blocker — перезапуск на Sonnet. Sol по плану — P1.5, P2.6, P2.7, P3.4, P4.2, P4.3, P5.5; общий аудит P5.7 — Sol (gpt-6.1-sol, frontier/high) по указанию владельца 2026-10-07. Понижение frontier-item (Opus) только через смену route (`plan.py set`), иначе ROUTE_UNDERSHOOT. Первая строка guidance каждого item повторяет рекомендацию.",
     "Без breaking changes (R21): существующие команды Task, глаголы plan.py, plan/v1 (только optional поля), Skiller connect/vendor/sync, Harness installer и harness/run работают как раньше; перенос текста = новый canonical владелец + старое место ссылается или генерируется (knowledge/architecture §compat).",
     "Запись не меньше прежнего (R27): каждый item при finish пишет `--notes` с итогом, все реально выполненные checks, `--deviation`/`--pending`, friction через `plan.py log`; длинные результаты — в `@plan/artifacts/<item>/` или knowledge; ни одна обязанность записи W1–W12 (knowledge/instruction-split §recording-obligations) не снимается.",
     "Решения — из knowledge и decisions; если исполнителю нужен проектный выбор, которого нет в досье, — `plan.py log <plan> <item> --type blocker`, не импровизация (особенно Sol-items).",

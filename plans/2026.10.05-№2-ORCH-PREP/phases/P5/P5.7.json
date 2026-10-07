@@ -1,0 +1,173 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.7",
+  "title": "Общий аудит Plan №2: независимая сквозная проверка (Sol)",
+  "status": "todo",
+  "summary": "Независимый read-only аудит всего Plan №2 по методике knowledge/audit-method (блоки A–K): перепроверка вывода P5.6 по каждому R/I/B, сквозной живой контракт Task → exec/v1 → prepare, границы пакетов, широкие проверки, совместимость с v0.28.6, полнота записи и ссылок в git, решения, docs, гигиена. Вердикт в knowledge `audit-plan2-<дата>`, артефакты, note-события.",
+  "why": "Владелец (2026-10-07): последний пункт плана — общий аудит всего плана исполнителем gpt-6.1-sol. Вывод P5.6 написан исполнителем плана; R25/R27/R28 требуют независимой сверки, а conclusion уже показал три находки (F-C1–F-C3), которые P5.4/P5.5 не поймали.",
+  "scope": {
+    "include": [
+      "блоки A–K из `@plan/knowledge/audit-method.json` §blocks — все, по порядку; команды и exit в `@plan/artifacts/P5.7/`",
+      "перепроверка 52 строк conclusion §coverage (R1–R28, I1–I15, B44–B52) с итогом CONFIRMED/WRONG/STALE/UNVERIFIABLE",
+      "независимое воспроизведение F-C1, F-C2, F-C3 и проверка owning items",
+      "`plan.py add-document PLAN2 --file …` (id `audit-plan2-<YYYY-MM-DD>`, sections по §output) + `plan.py log PLAN2 P5 --type note` + note на owning item каждой находки"
+    ],
+    "exclude": [
+      "исправления продукта, плана, документации (только findings на owning items; reopen — владелец)",
+      "оспаривание принятых решений D1–D29 (только вопросы)",
+      "запуск моделей, CAO, tmux, сети; `orch prepare` без `--dry-run`",
+      "файлы владельца вне плана (`.sc1`, `.sc2`, `docs/task/*`) и неотслеживаемые файлы плана — не трогать и не коммитить",
+      "проектирование Plan 2"
+    ]
+  },
+  "depends_on": [
+    "P5.6"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/audit-method.json",
+      "section": "setup",
+      "why": "правила работы аудитора",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/audit-method.json",
+      "section": "blocks",
+      "why": "что и как проверять (A–K)",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/audit-method.json",
+      "section": "severity",
+      "why": "шкала и форма находки",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/audit-method.json",
+      "section": "output",
+      "why": "форма документа и порядок записи",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/conclusion.json",
+      "section": "coverage",
+      "why": "52 утверждения для перепроверки",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/conclusion.json",
+      "section": "recording",
+      "why": "F-C3 и прежняя сверка записи",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/conclusion.json",
+      "section": "open-questions",
+      "why": "F-C1, F-C2 и известные пробелы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/coverage.json",
+      "section": "requirements",
+      "why": "исходная матрица R1–R28",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/coverage.json",
+      "section": "invariants",
+      "why": "исходная матрица I1–I15",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/bridges.json",
+      "section": "principle",
+      "why": "правило мостов для блока E (B44–B47)",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "recording-obligations",
+      "why": "W1–W12 для блока H",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "why": "протокол read-only вердикта",
+      "required": true
+    },
+    {
+      "path": "packages/task/commands/plan-audit.md",
+      "why": "форма audit-документа",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/knowledge/audit-plan2-*.json",
+      "change": "create",
+      "note": "только через plan.py add-document"
+    },
+    {
+      "path": "@plan/artifacts/P5.7/",
+      "change": "create",
+      "note": "state.txt, commands.log, <block>-<n>.log, validation.json"
+    }
+  ],
+  "rules": [
+    "Read-only по продукту и плану; пробы с изменениями — только в копии `$S` (audit-method §setup п.3)",
+    "Каждое утверждение документа — с командой и её exit или `path:line`; непроверенное — в `not-checked`, не в findings",
+    "Finding: severity по audit-method §severity, confidence, `path:line`, точное воспроизведение, ожидание (R/I/B/D#/check), owning item, рекомендация в одно предложение",
+    "Один проход, без субагентов, без второго раунда; каждая широкая проверка — один запуск",
+    "Свои (Sol) items плана не подтверждать по их notes — только по командам этого аудита",
+    "Коммит — `plan.py commit PLAN2 P5.7 --role reviewer --leave-outside`; никаких `git add -A`, amend, push"
+  ],
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, frontier/high) — свежая сессия, не исполнявшая items плана; модель задана владельцем. Opus/Sonnet допустимы только по решению владельца.\n\nЗапуск: `task:plan-run 2026.10.05-№2-ORCH-PREP P5.7` с явным id — `plan.py next` покажет archive, потому что P5 была закрыта до добавления P5.7 (add-item не снимает закрытие фазы; `start P5.7` работает, `finish` закрывает фазу и план заново; предупреждение check phase_closure_stale до старта ожидаемо).\n\nПорядок: прочитай `plan.py context PLAN2 P5.7 --stdout` → audit-method §setup (подготовь `$S`, `state.txt`) → блоки A–K по порядку, сразу дописывая `commands.log` и `validation.json` → собери документ по §output во временный файл → V1–V4 → `add-document`, note-события → `finish` → `commit --role reviewer`.\n\nСамые дорогие блоки — F (широкие validate, суммарно ~5–10 минут) и D (brief на ~70 items): запускай их в фоне с выводом в лог и продолжай B/E/H. Если F показывает красное, сначала проверь, не связано ли оно с грязными файлами владельца (`git stash` запрещён — сравни с копией `git archive HEAD` в `$S/head`). Ожидаемые известные результаты: F-C1 и F-C2 воспроизводятся; F-C3 — 15 неотслеживаемых файлов плана (D26–D29, 3 knowledge, Q16–Q19 .json+.md); вывод отметил ROUTE_MODEL_UNKNOWN и красные записанные checks P2.4 V5 и P11.1 V3 — подтверди, не дублируй как новые.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 -c \"import json,glob,sys; f=glob.glob('plans/2026.10.05-№2-ORCH-PREP/knowledge/audit-plan2-*.json'); assert len(f)==1, f; d=json.load(open(f[0])); ids=[s['id'] for s in d['sections']]; assert ids==['verdict','method','findings','coverage-recheck','recording-recheck','compat','not-checked','recommendations'], ids; assert d['sections'][0]['text'].split()[0].strip('*.:') in ('GREEN','ATTENTION','RED'); assert d['applies_to']==['P5.7']; rows=[l for l in d['sections'][3]['text'].splitlines() if l.startswith('| ') and l.split('|')[1].strip()[:1] in 'RIB' and l.split('|')[1].strip()[1:2].isdigit()]; assert len(rows)>=52, len(rows)\"",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c \"import json,sys; p='plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/'; assert open(p+'commands.log').read().strip(); assert open(p+'state.txt').read().strip(); v=json.load(open(p+'validation.json')); b={r['block'] for r in v}; assert b>=set('ABCDEFGHIJK'), sorted(set('ABCDEFGHIJK')-b); assert all('cmd' in r and 'exit' in r for r in v)\"",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 -c \"import json,glob,sys; bad=[f for f in glob.glob('plans/2026.10.05-№2-ORCH-PREP/phases/*/P*.json') if (d:=json.load(open(f)))['status'] in ('done','done_with_deviations') and not ((d.get('result') or {}).get('notes') and {c['id'] for c in (d.get('result') or {}).get('checks',[])} >= {v['id'] for v in d.get('validation',[]) if v['kind']=='acceptance'})]; print(bad); sys.exit(1 if bad else 0)\"",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/plan.py check PLAN2",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "knowledge/audit-plan2-<дата>",
+    "@plan/artifacts/P5.7/",
+    "note-события P5 и owning items"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-07T15:44:34Z"
+}

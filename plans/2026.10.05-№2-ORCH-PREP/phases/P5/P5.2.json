@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
   "title": "orch render-prompt (Claude-only) и input adhoc",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "render.py строит детерминированный task-блок и prompt роли из execution-input + role-manifest; adhoc.py и `orch input adhoc` создают валидный execution-input без плана (adhoc/review); `orch render-prompt` печатает Markdown.",
   "why": "R13, R16: Claude-only harness и ad-hoc поручения используют тот же контракт без Task; task-блок — общий для всех bindings (конформанс P5.4).",
   "scope": {
@@ -130,6 +130,32 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-05T17:00:29Z"
+  "result": {
+    "started_at": "2026-10-07T14:27:50Z",
+    "finished_at": "2026-10-07T14:32:25Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "7b8e30b2-f049-4d60-a3ef-8b99415e2d0c"
+    },
+    "notes": "render.py (render_task_block, render_section, render_prompt, load_role, INSTRUCTIONS_DRIFT), adhoc.py (build_adhoc_input, USAGE exit 2), verbs 'input adhoc' and 'render-prompt', golden prompt-executor-plan-bound.md. V1 (24 tests) and V2 exit 0; full orch suite 126 OK; bridge review-prompt test OK. Review fallback procedure and roles-dir resolution by file name logged as assumptions.",
+    "deviations": [
+      "Task block adds Context/Upstream/Lessons/Hints sections between Reads and Acceptance (fields the executor role promises)",
+      "Skills of a role are listed via manifest.skills ('## Skills' before '---'); quality:code-review assertion lives in bridges/skiller/tests/test_review_prompt.py (extra file, D13 boundary keeps skill ids out of core)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T14:32:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T14:32:25Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T14:32:25Z"
 }

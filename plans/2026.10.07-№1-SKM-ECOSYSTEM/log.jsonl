@@ -13,3 +13,6 @@
 {"v":1,"ts":"2026-10-07T17:52:20Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D12 accepted","data":{"id":"D12","by":"owner","option":"A"}}
 {"v":1,"ts":"2026-10-07T17:52:20Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D13 accepted","data":{"id":"D13","by":"agent","option":"A"}}
 {"v":1,"ts":"2026-10-07T17:57:51Z","type":"design_done","phase":"P1","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"P1 design done"}
+{"v":1,"ts":"2026-10-07T18:12:50Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D14 accepted","data":{"id":"D14","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:12:50Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D15 accepted","data":{"id":"D15","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:12:51Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D16 accepted","data":{"id":"D16","by":"owner","option":"A"}}

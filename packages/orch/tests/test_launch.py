@@ -48,6 +48,19 @@ class LaunchCatalogTests(unittest.TestCase):
         self.assertEqual(argv[argv.index("--effort") + 1], "xhigh")
         self.assertEqual(launch.build_argv(self.catalog, "executor", "grok"), ["grok", "agent", "stdio"])
 
+    def test_grok_reviewer_runs_read_only_under_landlock(self):
+        argv = launch.build_argv(self.catalog, "reviewer", "grok", model="m-1", effort="xhigh", cwd="/w")
+        split = argv.index("--")
+        self.assertEqual(argv[:split], ["python3", str(launch.ORCH_ROOT / "scripts" / "ro-run.py"), "--rw", "/w/vendor"])
+        self.assertTrue((launch.ORCH_ROOT / "scripts" / "ro-run.py").is_file())
+        grok = argv[split + 1:]
+        self.assertEqual(grok[:3], ["grok", "--cwd", "/w"])
+        for flag, value in (("--prompt-file", "/dev/stdin"), ("--model", "m-1"), ("--effort", "xhigh"),
+                            ("--permission-mode", "bypassPermissions"), ("--disallowed-tools", "search_replace,write"),
+                            ("--output-format", "streaming-messages-json")):
+            self.assertEqual(grok[grok.index(flag) + 1], value)
+        self.assertEqual(launch.entry(self.catalog, "reviewer", "grok")["transport"], "jsonl")
+
     def test_bare_is_forbidden(self):
         self.assertIn("--bare", self.broken(lambda l: l["scout"]["codex"]["argv"].append("--bare")))
 

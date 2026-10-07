@@ -50,8 +50,22 @@ class LaunchBridge(unittest.TestCase):
         self.assertEqual(json.loads(launch("bounded-implementer", "codex").stdout)["model"], "gpt-5.6-luna")
 
     def test_unknown_model_set_takes_no_model_argument(self):
-        out = json.loads(launch("reviewer", "grok").stdout)
+        out = json.loads(launch("executor", "grok").stdout)
         self.assertEqual(out["argv"], ["grok", "agent", "stdio"])
+        refused = launch("executor", "grok", "--model", "grok-x")
+        self.assertEqual(refused.returncode, 1)
+        self.assertTrue(refused.stderr.startswith("LAUNCH_INVALID:"), refused.stderr)
+
+    def test_owner_selector_model_replaces_the_class_mapping(self):
+        done = launch("reviewer", "grok", "--model", "grok-4.7", "--effort", "high", "--cwd", "/work")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        out = json.loads(done.stdout)
+        argv = out["argv"]
+        self.assertEqual((out["model"], out["transport"]), ("grok-4.7", "jsonl"))
+        self.assertEqual(argv[argv.index("--model") + 1], "grok-4.7")
+        self.assertEqual(argv[argv.index("--effort") + 1], "high")
+        self.assertEqual(argv[argv.index("--") - 2:argv.index("--")], ["--rw", "/work/vendor"])
+        self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
 
     def test_refusals(self):
         done = launch("scout", "grok")

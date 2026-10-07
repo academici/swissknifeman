@@ -162,14 +162,21 @@ this repository's plan skip when those are absent. `validate.sh` of Task runs th
 ## launch
 
 ```text
-plan.py bridge orch launch <role> <provider> [--effort E] [--cwd DIR] [--routing FILE]
+plan.py bridge orch launch <role> <provider> [--model M] [--effort E] [--cwd DIR] [--routing FILE]
 ```
 
 Prints `{argv, transport, timeout_s, model, model_class}` and starts nothing. The entry comes from the partner's
 launch catalog (`orch.py launch show|argv`); the catalog holds a `model_class`, never a model. The bridge maps the
 class to a model through `mappings.<provider>.class_selectors` in `configs/command-routing.json` (`--routing`
-overrides the file) and the effort through `effort_selectors`. Providers whose CLI takes no model
-(`model_set: unknown`, grok) get no model argument. Refusals: `LAUNCH_UNKNOWN` (no entry),
+overrides the file) and the effort through `effort_selectors`. `--model` pins the exact model of an owner
+selector (`reviewer grok/grok-4.7`) instead of the class mapping. Providers whose CLI takes no model
+(`model_set: unknown`, grok `executor`) get no model argument; `--model` there is `LAUNCH_INVALID`. Refusals: `LAUNCH_UNKNOWN` (no entry),
 `LAUNCH_INVALID` (bad request or catalog), `LAUNCH_MODEL_UNRESOLVED` (mapping has no model for the class),
-`ROUTING_UNREADABLE`. The tests also compare the argv of `scout` with Task's own `orchestration.scout`, which
+`ROUTING_UNREADABLE`.
+
+A reviewer on another provider (`reviewer-selection`): `plan.py bridge orch launch reviewer grok --model grok-4.7
+--effort high --cwd <repository>`. The grok entry runs headless under orch `scripts/ro-run.py` (Linux Landlock, no
+root, no user namespaces): the filesystem stays readable, writes go only to temp directories, `~/.grok` and
+`<repository>/vendor` (test caches); the brief goes on stdin (`--prompt-file /dev/stdin`), the stream is
+`streaming-messages-json` under `bypassPermissions` with the edit tools disallowed. The tests also compare the argv of `scout` with Task's own `orchestration.scout`, which
 `start --scout` keeps using unchanged.

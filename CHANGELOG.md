@@ -4,6 +4,13 @@
 
 ### Added
 
+- **orch:** `scripts/ro-run.py` запускает команду под Landlock (Linux, без root и user namespaces):
+  файловая система читается целиком, запись — только во временные каталоги, `~/.grok` и `--rw`. Роль
+  `reviewer` на grok в каталоге запуска — headless `grok --prompt-file /dev/stdin` с `bypassPermissions` под
+  `ro-run.py` (раньше ACP `grok agent stdio` с `model_set: unknown`); плейсхолдер `{orch}` — корень пакета.
+- **task:** `reviewer-selection` — ревьюер другого провайдера по сообщению владельца, argv из
+  `plan.py bridge orch launch reviewer <provider> --model M` (новый `--model` — точная модель селектора вместо
+  маппинга класса), маршрут и контекст из сессии самого ревьюера, находки с воспроизведением.
 - **skiller:** `resolve --role`.
 - **task:** launch catalog `orchestration.launch`.
 - **scripts:** `sync-managed-blocks`.

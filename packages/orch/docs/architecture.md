@@ -30,7 +30,7 @@ engines use partner CLI/JSON APIs only
 
 ```text
 packages/orch/
-  README.md  docs/  scripts/{orch.py,validate.sh,test.sh}
+  README.md  docs/  scripts/{orch.py,ro-run.py,validate.sh,test.sh}
   schemas/exec/v1/            # defs + nine document schemas
   lib/orch/                   # schema, contracts, port, discovery, catalog, render, adhoc, bindings/, cli
   roles/<role>.md|json        # canonical role texts and role manifests
@@ -40,3 +40,14 @@ packages/orch/
   bridges/<partner>/          # the only place that names a partner
   fixtures/  tests/
 ```
+
+## Launch catalog
+
+`configs/launch-catalog.json` states how each role starts on each provider CLI by model class; `orch.py launch argv`
+fills `{model}`, `{effort}`, `{cwd}` and `{orch}` (this package root) and starts nothing. The grok `reviewer` is a
+headless read-only run: `scripts/ro-run.py` applies a Linux Landlock ruleset before `exec` (no root, no user
+namespaces, so it works where Ubuntu refuses unprivileged bubblewrap), the whole filesystem stays readable and
+writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; grok reads the brief from stdin
+(`--prompt-file /dev/stdin`), runs under `bypassPermissions` with its edit tools disallowed and streams
+`streaming-messages-json`. Every child inherits the ruleset, so tests and shell commands of the reviewer run but
+cannot change the repository.

@@ -5,7 +5,7 @@
   "title": "Plan №1 — Разделение экосистемы на модули: aicore, skiller, planner, orch, brain и хаб",
   "status": "active",
   "created": "2026-10-07",
-  "updated_at": "2026-10-07T17:57:36Z",
+  "updated_at": "2026-10-07T18:48:26Z",
   "repository": "swissknifeman-next",
   "owner": "repository owner",
   "authoring": {
@@ -29,7 +29,8 @@
     "Начало каждой фазы: влить origin/main в ветку; конец фазы: тесты и проверки автономности зелёные, push в origin ecosystem-split",
     "Верхний слой (knowledge/architecture) меняется только решением плана, не попутно внутри фазы",
     "Генерируемые файлы (корневые CLAUDE.md/AGENTS.md, проекции .agents/.codex/.grok/.cursor) меняются через их источник и генератор, не руками",
-    "Схема планов и URN urn:swissknifeman:task:plan:* не меняются"
+    "Схема планов и URN urn:swissknifeman:task:plan:* не меняются",
+    "Детализация и аудит фазы сверяются с реестром внешнего ревью (knowledge/review-e1-index и документы review-e1-*): каждый ПРИНЯТ/АДАПТИРОВАН-тезис фазы реализован либо перенесён решением"
   ],
   "phases": [
     "P1",

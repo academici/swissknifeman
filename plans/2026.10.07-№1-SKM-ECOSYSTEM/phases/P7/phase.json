@@ -4,7 +4,7 @@
   "title": "brain: основа модуля",
   "design": "skeleton",
   "goal": "packages/brain по контракту модуля: поиск хранилища из конфига, синхронизация документов (из skiller/brain_sync), skill brain-locator, brain-части maind, подписчик planner.plan.closed → заметка (проверено в песочнице на копии хранилища).",
-  "context": "D7; knowledge/architecture §7 brain. Детализируется после P6.",
+  "context": "D7; knowledge/architecture §7 brain. Детализируется после P6. Внешнее ревью E1: тезисы E22, E44 (идемпотентность подписчика по event_id) (knowledge/review-e1-*).",
   "scope": {
     "include": [
       "каркас brain",

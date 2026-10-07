@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D21",
+  "title": "Протокол исполнения: идентичность событий, fencing, идемпотентность, неизменяемый launch-plan, explain",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Что добавить в контракт исполнения orch до реализации движка (E04, E09, E11, E23–E26, E38, E54–E56)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Контракт (P10; реализация движка — Plan 2 оркестрации): run-event получает event_id (дедупликация), causation_id/correlation_id, owner_epoch; инварианты: монотонные attempt/seq/terminal, повторная доставка идемпотентна, событие старого epoch отклоняется, cancel — запрос, cancelled — только после подтверждённой остановки, unknown_outcome не превращается в failed. Fencing локального движка: lock с pid+epoch, resume повышает epoch, запись состояния проверяет epoch. Ключи идемпотентности: submission_id (повторный run возвращает существующий), launch-plan digest, attempt_id (уже есть в регистрации), effect_id в effect-receipt. prepare — чистый: неизменяемый launch-plan с digest-ами входа, политики, ролей, каталога и версий модулей, выбранной привязкой и решениями; без тихой пересборки; привязка не меняется посреди run; prepare --dry-run возвращает proof (digest-ы, снимок capabilities, решения, предупреждения, отказы); explain по launch-plan; отказ может объяснять цепочку причин. Большие данные — артефактами по digest, события несут ссылки. Один владелец исполнения на run и на попытку пункта плана (сессия или run orch) — норма экосистемы"
+    }
+  ],
+  "decision": "A — Контракт (P10; реализация движка — Plan 2 оркестрации): run-event получает event_id (дедупликация), causation_id/correlation_id, owner_epoch; инварианты: монотонные attempt/seq/terminal, повторная доставка идемпотентна, событие старого epoch отклоняется, cancel — запрос, cancelled — только после подтверждённой остановки, unknown_outcome не превращается в failed. Fencing локального движка: lock с pid+epoch, resume повышает epoch, запись состояния проверяет epoch. Ключи идемпотентности: submission_id (повторный run возвращает существующий), launch-plan digest, attempt_id (уже есть в регистрации), effect_id в effect-receipt. prepare — чистый: неизменяемый launch-plan с digest-ами входа, политики, ролей, каталога и версий модулей, выбранной привязкой и решениями; без тихой пересборки; привязка не меняется посреди run; prepare --dry-run возвращает proof (digest-ы, снимок capabilities, решения, предупреждения, отказы); explain по launch-plan; отказ может объяснять цепочку причин. Большие данные — артефактами по digest, события несут ссылки. Один владелец исполнения на run и на попытку пункта плана (сессия или run orch) — норма экосистемы",
+  "rationale": "E1; большая часть инвариантов уже в packages/orch/docs/engine-port.md (one workflow owner, AFTER_TERMINAL, unknown_outcome, end of stream ≠ success) — добавляются недостающие поля и правила.",
+  "applies_to": [
+    "P9",
+    "P10"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

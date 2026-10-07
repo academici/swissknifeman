@@ -4,7 +4,7 @@
   "title": "orch и мосты",
   "design": "skeleton",
   "goal": "bridges/planner-orch и bridges/orch-skiller в хабе с контрактными тестами; порт «источник работы» в orch; выбор движка в конфиге с отказом при нехватке возможностей; события orch.run.*; поиск соседей по путям удалён. Сценарии оркестрации — профили run-policy в конфиге orch (стадии, классы моделей, ревью, раунды, бюджеты стадий); бриф пункта строится кодом (обязательное дословно) + необязательная сжатая часть дешёвой моделью со ссылками на оригиналы, хранится артефактом пункта по digest; закрытие — по evidence (D16).",
-  "context": "D3, D6; knowledge/architecture §7 orch, §9. Детализируется после P9. D16, research/Q6.md; существующие exec/v1 execution-input, роли orch и профили run-policy PLAN2 — основа, движок вне плана.",
+  "context": "D3, D6; knowledge/architecture §7 orch, §9. Детализируется после P9. D16, research/Q6.md; существующие exec/v1 execution-input, роли orch и профили run-policy PLAN2 — основа, движок вне плана. Внешнее ревью E1: тезисы E04, E08–E11, E19, E21, E23–E26, E38, E54–E57, E59 (knowledge/review-e1-*).",
   "scope": {
     "include": [
       "перенос мостов",
@@ -13,7 +13,12 @@
       "события orch",
       "профили сценариев в конфиге orch",
       "бриф как артефакт пункта и стадия сжатия необязательного",
-      "evidence-gate закрытия в мосте register"
+      "evidence-gate закрытия в мосте register",
+      "поля run-event: event_id, causation, owner_epoch",
+      "ключи идемпотентности",
+      "launch-plan с digest-ами, proof и explain",
+      "capability-record: source, свежесть, remediation",
+      "профили run-policy как версионированные пакеты политик с тестами"
     ],
     "exclude": [
       "native-движок и CAO (вне плана)"

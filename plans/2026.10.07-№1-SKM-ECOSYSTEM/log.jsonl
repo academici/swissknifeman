@@ -16,3 +16,13 @@
 {"v":1,"ts":"2026-10-07T18:12:50Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D14 accepted","data":{"id":"D14","by":"agent","option":"A"}}
 {"v":1,"ts":"2026-10-07T18:12:50Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D15 accepted","data":{"id":"D15","by":"owner","option":"A"}}
 {"v":1,"ts":"2026-10-07T18:12:51Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D16 accepted","data":{"id":"D16","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:19Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D17 accepted","data":{"id":"D17","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:20Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D18 accepted","data":{"id":"D18","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:20Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D19 accepted","data":{"id":"D19","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:21Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D20 accepted","data":{"id":"D20","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:21Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D21 accepted","data":{"id":"D21","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:22Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D22 accepted","data":{"id":"D22","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:22Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D23 accepted","data":{"id":"D23","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:23Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D24 accepted","data":{"id":"D24","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:23Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D25 accepted","data":{"id":"D25","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-07T18:48:24Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D26 accepted","data":{"id":"D26","by":"agent","option":"A"}}

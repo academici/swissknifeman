@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D17",
+  "title": "Контракты экосистемы: language-neutral схемы в aicore",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Где живут общие контракты, чтобы модули не копировали их и не зависели от orch (тезисы E02, E03, E13, E14)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "JSON Schema (draft 2020-12, конкретный $schema и $id с версией) — источник истины, Python реализует. Общие контракты экосистемы — в packages/aicore/schemas/<contract>/v<N>/: манифест модуля (unit.json), конверт события, таксономия ошибок, уровни поддержки capability, канонический digest, политика эволюции схем. exec/v1 остаётся в orch (контракт оркестрации), но берёт общие определения из aicore. Инвентаризация контрактов с владельцем и пробелами — knowledge/review-e1-contracts. Отдельный модуль contracts — по триггеру: появился потребитель не на Python",
+      "pros": "Нет копий и зависимости модулей от orch; не добавляет release-единицу раньше времени"
+    },
+    {
+      "id": "B",
+      "text": "Отдельный модуль/репозиторий skm-contracts сейчас",
+      "cons": "Ещё одна единица выпуска без внешнего потребителя"
+    }
+  ],
+  "decision": "A — JSON Schema (draft 2020-12, конкретный $schema и $id с версией) — источник истины, Python реализует. Общие контракты экосистемы — в packages/aicore/schemas/<contract>/v<N>/: манифест модуля (unit.json), конверт события, таксономия ошибок, уровни поддержки capability, канонический digest, политика эволюции схем. exec/v1 остаётся в orch (контракт оркестрации), но берёт общие определения из aicore. Инвентаризация контрактов с владельцем и пробелами — knowledge/review-e1-contracts. Отдельный модуль contracts — по триггеру: появился потребитель не на Python",
+  "rationale": "E1 (research/E1-perplexity-review.md) рекомендует отдельный contract product; принят принцип, форма адаптирована к модели «всё зависит только от aicore» (D2).",
+  "applies_to": [
+    "P2",
+    "P3",
+    "P6",
+    "P10"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

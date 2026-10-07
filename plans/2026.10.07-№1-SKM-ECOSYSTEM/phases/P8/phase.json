@@ -4,12 +4,13 @@
   "title": "skiller: только общие skills",
   "design": "skeleton",
   "goal": "В skiller остаются общие skills, skm, профили/пресеты, шаблон skill и синхронизация с upstream; system/* разъезжаются по модулям; код — тонкий CLI над aicore; служебные файлы skiller — в новых местах; skiller автономен (зависит только от aicore).",
-  "context": "D2, D5, D8; knowledge/architecture §7 skiller, §8. Детализируется после P5 и P7.",
+  "context": "D2, D5, D8; knowledge/architecture §7 skiller, §8. Детализируется после P5 и P7. Внешнее ревью E1: тезисы E27 (knowledge/review-e1-*).",
   "scope": {
     "include": [
       "перенос skills по модулям",
       "перевод кода на aicore",
-      "служебные файлы skiller"
+      "служебные файлы skiller",
+      "метаданные skills: license, совместимость, инструменты, provenance"
     ],
     "exclude": [
       "содержимое общих skills"

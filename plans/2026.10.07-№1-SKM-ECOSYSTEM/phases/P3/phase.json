@@ -4,12 +4,13 @@
   "title": "aicore: основа — util, provider, artifacts, usage",
   "design": "skeleton",
   "goal": "packages/aicore — автономный модуль с util, provider (включая каталог моделей), artifacts, usage, перенесёнными из core с сохранением истории; core реэкспортирует aicore (shim), потребители не сломаны; bin-обёртки модулей находят aicore по правилу AICORE_ROOT → _vendor → соседняя папка.",
-  "context": "D2, D4; knowledge/architecture §3, §4. Детализируется после P2 по отчёту проверки границ.",
+  "context": "D2, D4; knowledge/architecture §3, §4. Детализируется после P2 по отчёту проверки границ. Внешнее ревью E1: тезисы E03, E13 (digest, ошибки, уровни capability), E21, E29 (knowledge/review-e1-*).",
   "scope": {
     "include": [
       "git mv core → packages/aicore",
       "shim в core",
-      "автономные тесты aicore"
+      "автономные тесты aicore",
+      "packages/aicore/schemas: digest, таксономия ошибок, уровни поддержки capability"
     ],
     "exclude": [
       "конфиг/состояние (P4)",

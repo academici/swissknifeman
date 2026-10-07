@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.3",
   "title": "Описание процесса ветки, CHANGELOG и push фазы",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Раздел «Ecosystem split branch (temporary)» в docs/develop.md, строки CHANGELOG; push фазы в origin ecosystem-split.",
   "why": "Владелец работает с веткой на двух компьютерах; процесс (клон, guard, песочница, стабильный plan.py, ритм фаз) должен быть записан, а результат фазы — виден в origin.",
   "scope": {
@@ -101,12 +101,34 @@
   },
   "result": {
     "started_at": "2026-10-07T19:51:56Z",
+    "finished_at": "2026-10-07T20:08:31Z",
     "executor": {
       "provider": "claude",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "d2379738-2720-41b2-b716-85ade2cfb146"
-    }
+    },
+    "notes": "Раздел «Ecosystem split branch (temporary)» (7 пунктов), 2 строки CHANGELOG [Unreleased]/Added, заметки в docs пакетов. Команды в разделе — ровно реализованные в P1.1/P1.2. V3: push 46336e0c..fa71a378 в origin/ecosystem-split, ahead 0 после fetch.",
+    "deviations": [
+      "Кроме docs/develop.md и CHANGELOG добавлены короткие заметки «Development clone guard» в packages/{analyst,harness,maind,skiller}/docs/index.md: гейт docs-impact требует правок документации пакета при изменении его bin/; escape-trailer Docs-Not-Needed отклонён, т.к. покрывает весь набор изменений ветки. Раздел develop.md без ID плана (plans/<PLAN-ID>) — иначе public-hygiene красный. Порядок: коммит и push выполнены до finish; финальный commit состояния плана запушен отдельно."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T20:08:31Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T20:08:31Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T20:08:31Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-07T19:51:56Z"
+  "updated_at": "2026-10-07T20:08:31Z"
 }

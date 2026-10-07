@@ -591,5 +591,80 @@ class AdvisoryTests(CheckCase):
         self.assertEqual([h.where.rsplit("/", 2)[-2] for h in hits], ["0"])
 
 
+class ContextScopeTests(CheckCase):
+    def add_doc(self, doc_id, **extra):
+        doc = {"$schema": "urn:swissknifeman:task:plan:document:v1", "id": doc_id, "title": doc_id, "sections": [{"id": "s", "title": "S", "text": "t"}], **extra}
+        demo.write_doc(self.root / "knowledge" / f"{doc_id}.json", doc, "document")
+
+    def set_scoped(self):
+        self.edit("plan.json", lambda d: d.setdefault("settings", {}).update(context_pack="scoped"))
+
+    def hits(self, code, where):
+        return self.found(code, "warning", where)
+
+    def test_global_with_applies_to_is_an_error_for_documents_and_decisions(self):
+        self.add_doc("both", **{"global": True, "applies_to": ["P1"]})
+        self.edit("decisions/D1.json", lambda d: d.update({"global": True}))
+        self.assertFound("scope_ambiguous", "knowledge/both.json/global", count=1)
+        self.assertFound("scope_ambiguous", "decisions/D1.json/global", count=1)
+
+    def test_legacy_flags_every_unbound_document_with_the_fix_command(self):
+        self.add_doc("loose")
+        self.add_doc("bound", applies_to=["P1"])
+        self.add_doc("world", **{"global": True})
+        hit, = self.hits("context_unbound", "knowledge/loose.json/applies_to")
+        self.assertIn("plan.py link <plan> knowledge/loose <Pn|Pn.m> --kind applies_to", hit.message)
+        self.assertIn("1 KB", hit.message)
+        self.assertEqual(len([i for i in self.found("context_unbound", "warning")]), 1)
+
+    def test_legacy_flags_an_unbound_accepted_decision_only(self):
+        self.edit("decisions/D1.json", lambda d: d.pop("applies_to"))
+        self.assertTrue(self.hits("context_unbound", "decisions/D1.json/applies_to"))
+        self.assertFalse(self.hits("context_unbound", "decisions/D2.json"))
+
+    def test_scoped_flags_only_content_that_no_item_reads(self):
+        self.set_scoped()
+        self.add_doc("orphan")
+        self.add_doc("read-by-ref")
+        self.add_doc("read-by-path")
+        self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[
+            {"ref": "knowledge/read-by-ref#s", "why": "w", "required": False},
+            {"path": "@plan/knowledge/read-by-path.json", "why": "w", "required": False}]))
+        warned = [i.where for i in self.found("context_unbound", "warning")]
+        self.assertEqual(warned, ["knowledge/orphan.json/applies_to"])
+        self.assertIn("reaches no context pack", self.hits("context_unbound", "orphan")[0].message)
+
+    def test_scoped_decision_named_by_an_item_is_reachable(self):
+        self.set_scoped()
+        self.edit("decisions/D1.json", lambda d: d.pop("applies_to"))
+        self.edit(P1 + "P1.1.json", lambda d: d.update(decisions=[]))
+        self.assertTrue(self.hits("context_unbound", "decisions/D1.json"))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(decisions=["D1"]))
+        self.assertFalse(self.hits("context_unbound", "decisions/D1.json"))
+
+    def test_brief_duplicate_between_section_and_message_and_between_messages(self):
+        def change(d):
+            d["messages"] = [{"id": "M1", "date": "2026-10-07", "text": "same"},
+                             {"id": "M2", "date": "2026-10-07", "text": "same"}]
+            d["sections"] = [{"id": "S1", "title": "T", "text": " same "}]
+        self.edit("brief.json", change)
+        self.assertEqual(sorted(i.where for i in self.found("brief_duplicate", "warning")),
+                         ["brief.json/messages/1", "brief.json/sections/0"])
+
+    def test_context_heavy_and_legacy_sections(self):
+        big = "x" * (check.HEAVY_TEXT_BYTES + 1)
+        self.edit("plan.json", lambda d: d.update(sections=[
+            {"id": "Legacy-status", "title": "Status", "text": big}, {"id": "ok", "title": "legacy-notes", "text": "t"}]))
+        self.edit("brief.json", lambda d: d.update(messages=[{"id": "M1", "date": "2026-10-07", "text": big}]))
+        self.assertEqual(sorted(i.where for i in self.found("context_heavy", "warning")),
+                         ["brief.json/messages/0", "plan.json/sections/0"])
+        self.assertEqual(sorted(i.where for i in self.found("context_legacy", "warning")),
+                         ["plan.json/sections/0", "plan.json/sections/1"])
+
+    def test_warnings_never_become_errors(self):
+        self.add_doc("loose")
+        self.assertEqual([i for i in self.run_check() if i.level == "error"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -7,9 +7,11 @@ few advisory findings are warnings. Human-view freshness is checked separately b
 from __future__ import annotations
 
 from fnmatch import fnmatchcase
+import json
 import re
 from typing import Any, Iterator, NamedTuple
 
+from . import context as _context
 from . import edges as _edges
 from . import schema as _schema
 from . import store
@@ -18,6 +20,8 @@ from .model import ITEM_ID, TERMINAL, parse_ref
 _UNIT_ID = re.compile(r"^U[0-9]+$")
 _DRIVE = re.compile(r"^[A-Za-z]:[\\/]")
 _GLOB = re.compile(r"[*?\[{]")
+HEAVY_TEXT_BYTES = 16 * 1024
+_READ_PATH = re.compile(r"^@plan/(knowledge|decisions)/([^/]+)\.json$")
 _TARGETED_EVENTS = frozenset({"start", "finish", "design_done", "phase_closed", "deviation", "blocker",
                               "difficulty", "assumption"})
 
@@ -53,6 +57,7 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.orchestration()
     ctx.log()
     ctx.advisories()
+    ctx.context_scope()
     return issues
 
 
@@ -547,6 +552,87 @@ class _Context:
                         and not _GLOB.search(hint["path"]) and not self.exists(hint["path"])):
                     self.warn("modify_missing", f"{rel}/task_files/{index}/path",
                               f"{hint['path']} is marked modify but does not exist")
+
+    def read_targets(self) -> tuple[set[str], set[str]]:
+        """Knowledge ids and decision ids that some item reads or (decisions) names, from plan data only."""
+        documents: set[str] = set()
+        decisions: set[str] = set()
+        for item in self.p.items.values():
+            if not isinstance(item, dict):
+                continue
+            for read in item.get("reads", []) if isinstance(item.get("reads"), list) else []:
+                if not isinstance(read, dict):
+                    continue
+                ref, path = read.get("ref"), read.get("path")
+                if isinstance(ref, str):
+                    base = ref.split("#", 1)[0]
+                    if base.startswith("knowledge/"):
+                        documents.add(base[len("knowledge/"):])
+                    elif re.fullmatch(r"D[0-9]+", base):
+                        decisions.add(base)
+                match = _READ_PATH.match(path) if isinstance(path, str) else None
+                if match:
+                    (documents if match[1] == "knowledge" else decisions).add(match[2])
+            for ref in item.get("decisions", []) if isinstance(item.get("decisions"), list) else []:
+                if isinstance(ref, str):
+                    decisions.add(ref)
+        return documents, decisions
+
+    def context_scope(self) -> None:
+        """Binding of knowledge and decisions to context packs, and brief/plan text that rides in every pack."""
+        p = self.p
+        mode = _context.pack_mode(p)
+        read_documents, read_decisions = self.read_targets()
+        fix = "plan.py link <plan> {ref} <Pn|Pn.m> --kind applies_to"
+        for kind, entries, reached in (("document", p.documents, read_documents), ("decision", p.decisions, read_decisions)):
+            for key, doc in entries.items():
+                if not isinstance(doc, dict):
+                    continue
+                where = self.file_of(kind, key)
+                applies = doc.get("applies_to")
+                if doc.get("global") is True and applies:
+                    self.error("scope_ambiguous", f"{where}/global", "global and applies_to together are ambiguous; keep one")
+                    continue
+                if applies or doc.get("global") is True or (kind == "decision" and doc.get("status") != "accepted"):
+                    continue
+                ref = f"knowledge/{key}" if kind == "document" else key
+                if mode == "legacy":
+                    size = max(1, len(json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8")) // 1024) if kind == "document" else None
+                    sized = f" ({size} KB)" if size else ""
+                    self.warn("context_unbound", f"{where}/applies_to",
+                              f"{ref}{sized} has no applies_to and enters every context pack; bind it "
+                              f"({fix.format(ref=ref)}) or set global: true")
+                elif key not in reached:
+                    self.warn("context_unbound", f"{where}/applies_to",
+                              f"{ref} reaches no context pack: bind it ({fix.format(ref=ref)}), set global: true, "
+                              "or read it from an item")
+        brief = p.brief if isinstance(p.brief, dict) else {}
+        texts: list[tuple[str, int, str]] = []
+        for field in ("messages", "sections"):
+            for index, entry in enumerate(brief.get(field, []) if isinstance(brief.get(field), list) else []):
+                if isinstance(entry, dict) and isinstance(entry.get("text"), str):
+                    texts.append((field, index, entry["text"]))
+        seen: dict[str, tuple[str, int]] = {}
+        for field, index, text in texts:
+            first = seen.setdefault(text.strip(), (field, index))
+            if first != (field, index) and (field == "sections" or first[0] == "messages"):
+                self.warn("brief_duplicate", f"brief.json/{field}/{index}",
+                          f"duplicates brief.json/{first[0]}/{first[1]}; every pack carries both")
+        sections = p.plan.get("sections") if isinstance(p.plan, dict) else None
+        plan_texts = [("plan.json", "sections", i, e) for i, e in enumerate(sections if isinstance(sections, list) else [])
+                      if isinstance(e, dict)]
+        for where, field, index, entry in [("brief.json", f, i, {"text": t}) for f, i, t in texts] + plan_texts:
+            text = entry.get("text")
+            size = len(text.encode("utf-8")) if isinstance(text, str) else 0
+            if size > HEAVY_TEXT_BYTES:
+                self.warn("context_heavy", f"{where}/{field}/{index}",
+                          f"{max(1, size // 1024)} KB enters every context pack; move phase-specific records to "
+                          "knowledge/<id>.json with applies_to")
+        for where, field, index, entry in plan_texts:
+            if any(isinstance(entry.get(k), str) and entry[k].lower().startswith("legacy-") for k in ("id", "title")):
+                self.warn("context_legacy", f"{where}/{field}/{index}",
+                          "legacy projection enters every context pack; move what is still current to knowledge, "
+                          "drop the rest")
 
     def exists(self, path: str) -> bool:
         base = self.p.root if path.startswith("@plan/") else self.p.repo_root

@@ -65,8 +65,8 @@
     }
   ],
   "closed": {
-    "at": "2026-10-07T13:32:05Z",
-    "result": "blocked",
-    "summary": "5 item(s): 2 done, 2 done_with_deviations, 1 blocked"
+    "at": "2026-10-07T13:50:56Z",
+    "result": "done_with_deviations",
+    "summary": "5 item(s): 3 done, 2 done_with_deviations"
   }
 }

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.4",
   "title": "Документация конфигов, CHANGELOG и широкий validate всех пакетов",
-  "status": "blocked",
+  "status": "done",
   "summary": "docs/reference/configs.md (правило владельца, где инвентарь, как добавить конфиг) + ссылка из docs/reference.md; правка SSOT-строк profile-catalog в docs/reference/provider-{distribution,projection}.md; CHANGELOG [Unreleased]; knowledge architecture-bridges; широкий validate всех пакетов.",
   "why": "Последний item фазы: фиксирует правило для людей и следующих планов и прогоняет широкие проверки всех пакетов (правило плана: широкий validate — только здесь; P11 затрагивает core, общий для всех).",
   "scope": {
@@ -21,7 +21,8 @@
   "depends_on": [
     "P11.1",
     "P11.2",
-    "P11.3"
+    "P11.3",
+    "P11.5"
   ],
   "decisions": [
     "D26"
@@ -198,63 +199,62 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-07T11:08:50Z",
-    "finished_at": "2026-10-07T11:32:23Z",
+    "started_at": "2026-10-07T13:32:14Z",
+    "finished_at": "2026-10-07T13:50:56Z",
     "executor": {
-      "provider": "anthropic",
+      "provider": "claude",
       "model": "claude-sonnet-5-5",
-      "effort": "medium",
-      "session": "0444a7ef-58f4-43b3-af73-fe0b5b32c103"
+      "effort": "high",
+      "session": "ac066913-cb4a-4137-ada8-3ecc0958eafd"
     },
-    "notes": "architecture-bridges knowledge not edited: no plan.py verb for document edit.",
-    "escalation": "Owner decision: fix V4 (statusline test flake, artifex instruction drift via harness instructions sync) and V5 (stale maind-overview path in maind test) in a separate item; P11.4 docs/CHANGELOG are done and V1-3,6-9 green.",
+    "notes": "Wide validate green after P11.5 (65c004a3). architecture-bridges knowledge not edited: no plan.py verb for document edit.",
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V4",
-        "exit": 1,
-        "at": "2026-10-07T11:32:23Z"
+        "exit": 0,
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V5",
-        "exit": 1,
-        "at": "2026-10-07T11:32:23Z"
+        "exit": 0,
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V6",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V7",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V8",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       },
       {
         "id": "V9",
         "exit": 0,
-        "at": "2026-10-07T11:32:23Z"
+        "at": "2026-10-07T13:50:56Z"
       }
     ]
   },
-  "updated_at": "2026-10-07T11:32:23Z"
+  "updated_at": "2026-10-07T13:50:56Z"
 }

@@ -1,0 +1,121 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.2",
+  "title": "Task: guard согласия уровней capability_bindings с provider-capabilities",
+  "status": "done",
+  "summary": "Task: unittest согласия уровней command-routing.mappings.<provider>.capability_bindings с support.<provider>.level в configs/provider-capabilities.json.",
+  "why": "F3: уровни в routing — мёртвые данные (command_render берёт уровни только из манифеста), но поле обязательно по контракту command-routing 1.0.0 и в выпущенном плагине Task. Без guard две копии молча расходятся и вводят в заблуждение читателей routing (harness/cursor_render, docs).",
+  "scope": {
+    "include": [
+      "packages/task/tests/test_command_routing_capabilities.py"
+    ],
+    "exclude": [
+      "изменение command-routing.json или provider-capabilities.json",
+      "изменение command_render.py / command_catalog.py",
+      "контракт command-routing"
+    ]
+  },
+  "decisions": [
+    "D26"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "findings",
+      "why": "F3",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "capability-guard",
+      "why": "алгоритм теста",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/command_render.py",
+      "section": "240-272",
+      "why": "уровни берутся из манифеста; путь к манифесту",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_plan_command_routing.py",
+      "section": "1-40",
+      "why": "как тесты Task находят routing и корень репозитория",
+      "required": true
+    },
+    {
+      "path": "packages/task/configs/command-routing.json",
+      "why": "mappings.*.capability_bindings",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/tests/test_command_routing_capabilities.py",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Только stdlib и json; совместимость с Python 3.9 (CI matrix Task 3.9/3.11/3.13): без match, без PurePath.full_match, без X | Y в рантайме",
+    "Данные не править: расхождение → plan.py log --type blocker с парой provider/capability",
+    "Тест читает манифест по пути от корня монорепо; если корня нет (standalone Task) — skipTest с причиной"
+  ],
+  "guidance": "Исполнитель: economy/medium (Sol). Короткий тест по готовому алгоритму §capability-guard.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 -m unittest discover -s tests -p 'test_command_routing_capabilities.py' -v",
+      "expect": "exit 0; тесты выполнены, не skipped",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib:../.. python3 -m unittest discover -s tests -p 'test_*routing*.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "guard согласия уровней capability"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T10:47:57Z",
+    "finished_at": "2026-10-07T10:53:48Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "5823ff57-9374-4473-aff8-6fb8917b2369"
+    },
+    "notes": "guard test for capability_bindings levels vs provider-capabilities",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T10:53:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T10:53:48Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T10:53:48Z"
+}

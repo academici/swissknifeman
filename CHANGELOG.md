@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Config inventory:** `configs/config-inventory.json` records one owner and at least one consumer
+  for every config in scope; `scripts/test-config-inventory.py` (CI hygiene) fails on an uncovered,
+  dead or consumer-less entry.
+
 - **Task параллельные полосы:** `plan.py next <plan> --parallel N [--json]` — read-only
   ready set по всему плану (зависимости, непересекающиеся `task_files`, `running`/`conflicts`/
   `waiting`/`deferred`; схема `read-ready`; обычный `next` без изменений). `plan.py reconcile`
@@ -120,6 +124,11 @@
 
 ### Changed
 
+- **core:** `shared_config_path` returns the owner path from one name → path table, without
+  fallback; signature unchanged. `profile-catalog` now resolves to the harness canon.
+- **Task:** test that `capability_bindings` in `command-routing.json` agree with levels in
+  `configs/provider-capabilities.json`.
+
 - **Чистое ядро Task:** межпакетные упоминания заменены нейтральными инструкциями,
   временный boundary allowlist удалён; unit brief больше не передаёт `report_api`.
   `plan-run` передаёт исполнителю собственный executor handoff, а повторяющийся текст
@@ -159,6 +168,11 @@
 - **Claude permissions:** пресет `base` больше не запрещает чтение `CHANGELOG.md`.
   Правило `Read(**/CHANGELOG.md)` убрано из `settings.base.json`, который
   `harness permissions` мержит в `.claude/settings.local.json`.
+
+### Removed
+
+- Duplicate `configs/profile-catalog.json` (never released); the canon is
+  `packages/harness/configs/common/profile-catalog.json`.
 
 ### Fixed
 

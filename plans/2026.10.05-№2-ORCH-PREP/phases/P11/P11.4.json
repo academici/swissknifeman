@@ -1,0 +1,260 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.4",
+  "title": "Документация конфигов, CHANGELOG и широкий validate всех пакетов",
+  "status": "blocked",
+  "summary": "docs/reference/configs.md (правило владельца, где инвентарь, как добавить конфиг) + ссылка из docs/reference.md; правка SSOT-строк profile-catalog в docs/reference/provider-{distribution,projection}.md; CHANGELOG [Unreleased]; knowledge architecture-bridges; широкий validate всех пакетов.",
+  "why": "Последний item фазы: фиксирует правило для людей и следующих планов и прогоняет широкие проверки всех пакетов (правило плана: широкий validate — только здесь; P11 затрагивает core, общий для всех).",
+  "scope": {
+    "include": [
+      "docs/reference/configs.md",
+      "docs/reference.md",
+      "docs/reference/provider-distribution.md",
+      "docs/reference/provider-projection.md",
+      "CHANGELOG.md",
+      "knowledge architecture-bridges (plan.py)"
+    ],
+    "exclude": [
+      "изменения кода и конфигов (красный прогон — repair в той же сессии, не редизайн)"
+    ]
+  },
+  "depends_on": [
+    "P11.1",
+    "P11.2",
+    "P11.3"
+  ],
+  "decisions": [
+    "D26"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "compat",
+      "why": "тексты CHANGELOG и docs",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "findings",
+      "why": "что сказать о дублях, оставленных под guard",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/configs-p11.json",
+      "section": "inventory-guard",
+      "why": "как добавить конфиг (для страницы)",
+      "required": true
+    },
+    {
+      "path": "docs/reference.md",
+      "why": "куда добавить ссылку",
+      "required": true
+    },
+    {
+      "path": "docs/reference/provider-distribution.md",
+      "section": "25-40",
+      "why": "строка 32 — SSOT profile-catalog",
+      "required": true
+    },
+    {
+      "path": "docs/reference/provider-projection.md",
+      "section": "44-56",
+      "why": "строка 50 — SSOT profile-catalog",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "section": "1-60",
+      "why": "формат [Unreleased]",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/architecture-bridges.json",
+      "why": "разделы, куда добавить P11",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/reference/configs.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/reference.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/provider-distribution.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/provider-projection.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/.vitepress/config.mts",
+      "change": "modify",
+      "note": "только если reference-страницы перечислены в sidebar явно"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/knowledge/architecture-bridges.json",
+      "change": "modify",
+      "note": "только через plan.py; если нет verb для правки документа — пропустить и записать в --notes"
+    }
+  ],
+  "rules": [
+    "Plan-файлы — только через plan.py",
+    "CHANGELOG — по фактическому diff (plan.py commits 2026.10.05-№2-ORCH-PREP и git log по PLAN2.P11): ### Removed — дубль configs/profile-catalog.json; ### Added — configs/config-inventory.json и CI-проверка; ### Changed — shared_config_path отдаёт путь владельца без fallback",
+    "Страница configs.md не копирует таблицу инвентаря — ссылка на configs/config-inventory.json",
+    "Docs по английски, как соседние reference-страницы"
+  ],
+  "guidance": "Исполнитель: economy/medium (Sol). Запустить python3 scripts/docs-impact.py --base HEAD~4 --head HEAD как диагностику (не acceptance).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=. python3 -m unittest discover -s core/tests",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/skiller/scripts/validate.sh && bash scripts/skiller-standalone-check.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/harness/scripts/test.sh && bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh && bash packages/analyst/scripts/validate.sh && bash packages/artifex/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "python3 scripts/test-config-inventory.py && python3 scripts/sync-managed-blocks.py --check --root . && python3 scripts/test-provider-docs.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V8",
+      "cmd": "grep -q 'config-inventory.json' docs/reference/configs.md && ! grep -q '`configs/profile-catalog.json`' docs/reference/provider-distribution.md docs/reference/provider-projection.md && grep -q 'profile-catalog' CHANGELOG.md",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP",
+      "expect": "exit 0; 0 errors",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "docs конфигов",
+    "CHANGELOG [Unreleased]",
+    "широкий validate всех пакетов зелёный"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T11:08:50Z",
+    "finished_at": "2026-10-07T11:32:23Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "0444a7ef-58f4-43b3-af73-fe0b5b32c103"
+    },
+    "notes": "architecture-bridges knowledge not edited: no plan.py verb for document edit.",
+    "escalation": "Owner decision: fix V4 (statusline test flake, artifex instruction drift via harness instructions sync) and V5 (stale maind-overview path in maind test) in a separate item; P11.4 docs/CHANGELOG are done and V1-3,6-9 green.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V4",
+        "exit": 1,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V5",
+        "exit": 1,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-07T11:32:23Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T11:32:23Z"
+}

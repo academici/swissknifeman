@@ -47,7 +47,7 @@ models and forbid slash syntax.
 | `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
 | `configs/provider-projection.json` | Instruction/command projection policies |
 | `packages/task/configs/command-routing.json` | Task command routing SSOT |
-| `configs/profile-catalog.json` | Harness profile catalog SSOT |
+| `packages/harness/configs/common/profile-catalog.json` | Harness profile catalog SSOT |
 
 Package-local trees under `packages/*/configs/` remain **provider render bindings**
 (harness MCP/hooks, task schemas). Shared contracts that multiple packages must agree

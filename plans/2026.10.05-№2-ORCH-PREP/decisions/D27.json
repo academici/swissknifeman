@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D27",
+  "title": "P12: семантика пустого applies_to и миграция существующих планов",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Что значит knowledge/decision без applies_to для context pack и как перейти на явную область без breaking change (R21)? (измерения — knowledge/context-scope-p12 §measurements)",
+  "options": [
+    {
+      "id": "A",
+      "text": "Явная глобальность `global: true` у document/decision; `settings.context_pack: legacy|scoped` (отсутствие = legacy, `plan.py new` пишет scoped); в scoped непривязанное не попадает в pack; check предупреждает `context_unbound`; global + applies_to — error `scope_ambiguous`",
+      "pros": "Существующие планы без изменений; новые строгие; переход по плану одной настройкой после устранения предупреждений; совпадает с Q19"
+    },
+    {
+      "id": "B",
+      "text": "Сразу трактовать пустой applies_to как «никуда»",
+      "cons": "Breaking change поведения context для всех существующих планов (R21)"
+    },
+    {
+      "id": "C",
+      "text": "Только предупреждение check, семантика прежняя",
+      "cons": "Новые планы продолжают раздувать pack; нет пути к строгому режиму"
+    }
+  ],
+  "context": "Пустой applies_to сейчас — молчаливое «во все pack» (context.collect, selected_decisions); в azguard PLAN2 это дало 575 KB из 1318 KB pack. Perplexity Q19 (@plan/research/Q19.md).",
+  "decision": "A — Явная глобальность `global: true` у document/decision; `settings.context_pack: legacy|scoped` (отсутствие = legacy, `plan.py new` пишет scoped); в scoped непривязанное не попадает в pack; check предупреждает `context_unbound`; global + applies_to — error `scope_ambiguous`",
+  "rationale": "Владелец делегировал оптимальный выбор (D17); A — единственный вариант без breaking change (R21), даёт строгий режим новым планам и явный путь перехода; Q19 рекомендует ровно эту схему (explicit global, per-plan setting, lint first).",
+  "applies_to": [
+    "P12"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

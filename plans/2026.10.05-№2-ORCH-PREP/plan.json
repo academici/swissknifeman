@@ -5,7 +5,7 @@
   "title": "Plan №2 — Подготовка к оркестрации: контракты, разделение пакетов, привязки к движкам",
   "status": "active",
   "created": "2026-10-05",
-  "updated_at": "2026-10-06T11:24:19Z",
+  "updated_at": "2026-10-07T06:21:36Z",
   "repository": "swissknifeman",
   "owner": "repository owner",
   "authoring": {
@@ -44,6 +44,7 @@
     "P10",
     "P4",
     "P11",
+    "P12",
     "P5"
   ],
   "settings": {

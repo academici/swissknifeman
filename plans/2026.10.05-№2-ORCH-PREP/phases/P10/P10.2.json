@@ -1,0 +1,199 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.2",
+  "title": "Task: модуль parallel.py — footprint, конфликт пары, граф ожидания; check dependency_deadlock",
+  "status": "done_with_deviations",
+  "summary": "Новый модуль `lib/task/plan/parallel.py`: `footprint`, `conflict`, `wait_graph`; в `check` — ошибка `dependency_deadlock` для циклов ожидания, проходящих через зависимость фазы (межфазные item-зависимости), с тестами.",
+  "why": "Цепочки зависимостей между пунктами разных фаз уже допустимы данными, но смешанный цикл item ↔ фаза сейчас не ловится и вешает план навсегда; footprint и конфликт — общая основа ready set (P10.3) и правила изоляции. Hard risk: ложное «нет конфликта» ведёт к параллельной записи одного файла — предикат обязан быть консервативным.",
+  "scope": {
+    "include": [
+      "lib/task/plan/parallel.py (новый)",
+      "check.py: метод deadlock рядом с cycles",
+      "tests/engine/test_parallel.py (новый): footprint, conflict, deadlock"
+    ],
+    "exclude": [
+      "ready set и CLI (P10.3)",
+      "reconcile (P10.4)",
+      "новые поля plan/v1"
+    ]
+  },
+  "decisions": [
+    "D17"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "что уже есть в Task",
+      "required": true,
+      "section": "existing"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "footprint, граф ожидания",
+      "required": true,
+      "section": "data-model"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "предикат конфликта",
+      "required": true,
+      "section": "conflicts"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "алгоритм и сообщения check",
+      "required": true,
+      "section": "deadlock"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "тестовые сценарии",
+      "required": true,
+      "section": "validation"
+    },
+    {
+      "path": "packages/task/lib/task/plan/check.py",
+      "why": "cycles/report_cycles, globs_overlap, _files, unit_overlap",
+      "required": true,
+      "section": "240-300"
+    },
+    {
+      "path": "packages/task/lib/task/plan/check.py",
+      "why": "globs_overlap",
+      "required": true,
+      "section": "550-565"
+    },
+    {
+      "path": "packages/task/lib/task/plan/lifecycle.py",
+      "why": "_phase_deps, phase_items, status_of",
+      "required": true,
+      "section": "38-130"
+    },
+    {
+      "path": "packages/task/lib/task/plan/units.py",
+      "why": "parallel_pairs как образец",
+      "required": true,
+      "section": "40-60"
+    },
+    {
+      "path": "packages/task/tests/engine/test_check.py",
+      "why": "как строятся планы-фикстуры и проверяются коды check",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/engine/demo.py",
+      "why": "make_demo_plan, rewrite",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/parallel.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/check.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_parallel.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/tests/engine/test_check.py",
+      "change": "modify",
+      "note": "только если нужна регрессия существующих кодов"
+    }
+  ],
+  "rules": [
+    "stdlib-only; parallel.py не импортирует cli; check импортирует parallel лениво внутри метода (как units), чтобы не было цикла импортов",
+    "Детерминизм: сортировка по model.id_sort_key, без зависимости от порядка dict",
+    "Чистые item-циклы не дублировать — их сообщает cycles",
+    "Пустой/отсутствующий task_files → footprint None (никогда не пустой список как «нет конфликтов»)"
+  ],
+  "guidance": "Исполнитель: implementation/high (Sonnet, не экономить). Предикат overlap — только `check.globs_overlap`, без нового. Сообщение deadlock: цепочка id с пометкой `(phase Pn)` у фазового ребра.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_parallel.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_check.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP",
+      "expect": "exit 0; 0 errors",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_boundary -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "lib/task/plan/parallel.py",
+    "check dependency_deadlock"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T08:08:31Z",
+    "finished_at": "2026-10-07T08:17:12Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "2b522bde-5004-4416-80c1-cf0cd1010a38"
+    },
+    "notes": "parallel.py: footprint/conflict/wait_graph(+wait_edges, deadlocks); check dependency_deadlock; 21 тест; engine suite 617 OK",
+    "deviations": [
+      "conflict() возвращает Conflict(reason, pairs); пути нормализуются (хвостовой '/', './') перед globs_overlap"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T08:17:12Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T08:17:12Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T08:17:12Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T08:17:12Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T08:17:12Z"
+}

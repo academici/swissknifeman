@@ -40,6 +40,7 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.membership()
     ctx.references()
     ctx.cycles()
+    ctx.deadlock()
     ctx.batches()
     ctx.completeness()
     ctx.validation_shapes()
@@ -258,6 +259,13 @@ class _Context:
             else:
                 phases[phase_id] = [order[index - 1]] if index else []  # default: the previous phase
         self.report_cycles("phase", phases, "depends_on")
+
+    def deadlock(self) -> None:
+        """Wait cycles through a phase dependency; pure item and pure phase cycles belong to ``cycles``."""
+        from . import parallel
+        for found in parallel.deadlocks(self.p):
+            self.error("dependency_deadlock", self.file_of("item", found.items[0]),
+                       f"{found.render()} never becomes ready")
 
     def report_cycles(self, label: str, graph: dict[str, list[str]], field: str, prefix: str = "") -> None:
         state: dict[str, int] = {}

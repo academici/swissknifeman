@@ -51,7 +51,7 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 | `gpt-5.6-terra` | implementation, review | — |
 | `gpt-5.6-sol` | frontier, implementation, review, design, audit | — |
 | `gpt-6-astra` | frontier, implementation, review, design, audit | patterns=`gpt-6(\.\d+)*-astra` |
-| `gpt-6-sol` | implementation, review | — |
+| `gpt-6-sol` | implementation, review | aliases=`gpt-6` |
 | `gpt-6.1-sol` | frontier, implementation, review, design, audit | patterns=`gpt-6\.[1-9]\d*-sol` |
 
 ### `cursor`

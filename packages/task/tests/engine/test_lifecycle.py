@@ -102,6 +102,7 @@ class RoutePoolTests(unittest.TestCase):
         self.assertEqual(lifecycle.admitted_class("claude-code", "claude-sonnet-5-5"), "implementation")
         self.assertEqual(lifecycle.admitted_class("claude-code", "claude-haiku-4-5-20251001"), "economy")
         self.assertEqual(lifecycle.admitted_class("codex", "gpt-6-sol"), "implementation")
+        self.assertEqual(lifecycle.admitted_class("codex", "gpt-6"), "implementation")
         self.assertEqual(lifecycle.admitted_class("codex", "gpt-6.2-sol"), "frontier")
 
     def test_unknown_model_or_provider_is_none(self):

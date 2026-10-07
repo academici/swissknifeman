@@ -424,6 +424,9 @@
             "roles": [
               "implementation",
               "review"
+            ],
+            "aliases": [
+              "gpt-6"
             ]
           },
           {
@@ -453,6 +456,12 @@
           "verified_at": "2026-10-05",
           "scope": "Opt-in Codex scout invocation",
           "claim": "exec runs non-interactively; omitted PROMPT or '-' reads stdin; --sandbox read-only; global -a never; --model, -c and --ephemeral are documented"
+        },
+        {
+          "source": "Owner confirmation in Chatom task:plan-run continuation",
+          "verified_at": "2026-10-07",
+          "scope": "Codex model selector admission",
+          "claim": "The active gpt-6 selector matches the existing gpt-6-sol implementation route"
         }
       ]
     },

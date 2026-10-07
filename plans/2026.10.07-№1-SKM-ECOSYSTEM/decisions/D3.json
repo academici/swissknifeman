@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D3",
+  "title": "Три вида связей; мосты-связки в bridges/ хаба; порт «источник работы» у orch",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Как связаны модули, в частности planner и orch?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Зависимость (aicore), мост (синхронный CLI+JSON контракт, bridges/planner-orch, bridges/orch-skiller), событие (асинхронно, источник не знает подписчиков). orch ведёт цикл через порт next → brief → run → register; поиск соседа по путям заменяется командой из конфига (knowledge/architecture §1, §7 orch, §9). Заменяет PLAN2 D14 начиная с P10"
+    }
+  ],
+  "decision": "A — Зависимость (aicore), мост (синхронный CLI+JSON контракт, bridges/planner-orch, bridges/orch-skiller), событие (асинхронно, источник не знает подписчиков). orch ведёт цикл через порт next → brief → run → register; поиск соседа по путям заменяется командой из конфига (knowledge/architecture §1, §7 orch, §9). Заменяет PLAN2 D14 начиная с P10",
+  "rationale": "M1 «через мосты»; research/Q4, Q5; M4.",
+  "applies_to": [
+    "P6",
+    "P10",
+    "P11"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

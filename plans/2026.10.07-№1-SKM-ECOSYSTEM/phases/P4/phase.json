@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P4",
+  "title": "aicore: конфиг и состояние",
+  "design": "skeleton",
+  "goal": "aicore.config (слои defaults → машина → проект → env → флаги, схемы модулей, explain) и aicore.state (XDG-места, проектный .swissknifeman/{config.json,state,backups}, SKM_HOME, бэкапы с ротацией вместо *.bak) работают; swissknifeman config show/set/explain; первый модуль переведён, старые файлы читаются с предупреждением.",
+  "context": "D5; knowledge/architecture §5. Детализируется после P3.",
+  "scope": {
+    "include": [
+      "aicore.config",
+      "aicore.state",
+      "CLI config",
+      "чтение старых мест с предупреждением"
+    ],
+    "exclude": [
+      "массовая миграция модулей (P8–P11)",
+      "команда upgrade (P13)"
+    ]
+  },
+  "depends_on": [
+    "P3"
+  ],
+  "deliverables": [
+    "слоёный конфиг",
+    "стандартные места состояния",
+    "SKM_HOME"
+  ],
+  "items": [],
+  "batches": []
+}

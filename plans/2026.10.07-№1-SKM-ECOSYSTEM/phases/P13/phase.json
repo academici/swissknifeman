@@ -1,0 +1,29 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P13",
+  "title": "Переход: swissknifeman upgrade, upgrade guide, репетиция, слияние",
+  "design": "skeleton",
+  "goal": "swissknifeman upgrade (--dry-run, apply, --rollback) переводит машину и проекты; docs/upgrade/<version>.md; репетиция на копиях и на втором компьютере; guard и маркер dev-клона удалены; слияние в main и major-тег; старый тег — точка отката.",
+  "context": "D9, D11; knowledge/architecture §11. Детализируется после P12.",
+  "scope": {
+    "include": [
+      "команда upgrade",
+      "upgrade guide",
+      "репетиция",
+      "слияние и тег"
+    ],
+    "exclude": [
+      "вынос модулей в отдельные репозитории"
+    ]
+  },
+  "depends_on": [
+    "P12"
+  ],
+  "deliverables": [
+    "команда upgrade",
+    "upgrade guide",
+    "major-выпуск"
+  ],
+  "items": [],
+  "batches": []
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P9",
+  "title": "planner: переименование, конфиг, оверлеи, события",
+  "design": "skeleton",
+  "goal": "packages/planner (бывший task) с алиасами /task:* и SKM_TASK_ROOT; конфиг, оверлеи слотов команд, события planner.*, внешние проверки плана; команды и skills через aicore.content; URN схем неизменны; старые планы читаются; planner автономен.",
+  "context": "D2, D6, D9; knowledge/architecture §7 planner. Детализируется после P5 и P6.",
+  "scope": {
+    "include": [
+      "переименование",
+      "точки расширения",
+      "события",
+      "перевод на aicore"
+    ],
+    "exclude": [
+      "мосты к orch (P10)"
+    ]
+  },
+  "depends_on": [
+    "P5",
+    "P6"
+  ],
+  "deliverables": [
+    "packages/planner",
+    "точки расширения planner"
+  ],
+  "items": [],
+  "batches": []
+}

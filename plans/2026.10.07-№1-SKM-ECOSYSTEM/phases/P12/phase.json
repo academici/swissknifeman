@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P12",
+  "title": "Хаб: umbrella CLI, маркетплейс, CI-матрица, документация",
+  "design": "skeleton",
+  "goal": "swissknifeman install/doctor/config/units; маркетплейс и плагин-набор генерируются aicore из unit.json; CI-матрица проверяет каждый модуль автономно и мосты; документация модулей и экосистемы актуальна.",
+  "context": "D1, D3; knowledge/architecture §7 корень хаба. Детализируется после P11.",
+  "scope": {
+    "include": [
+      "umbrella CLI",
+      "маркетплейс и bundle",
+      "CI-матрица",
+      "документация"
+    ],
+    "exclude": [
+      "команда upgrade (P13)"
+    ]
+  },
+  "depends_on": [
+    "P11"
+  ],
+  "deliverables": [
+    "umbrella CLI",
+    "CI-матрица"
+  ],
+  "items": [],
+  "batches": []
+}

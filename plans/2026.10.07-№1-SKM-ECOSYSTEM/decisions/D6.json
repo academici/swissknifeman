@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D6",
+  "title": "Расширяемость: события, подписки, оверлеи, внешние плагины-команды",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Как модули расширяются и настраиваются без форка?",
+  "options": [
+    {
+      "id": "A",
+      "text": "aicore.ext: события (конверт, журнал проекта, best-effort доставка), подписки в конфиге и unit.json, оверлеи инструкций по слотам команд, внешние плагины-команды по JSON stdin/stdout (knowledge/architecture §6). Хуки провайдеров остаются у harness"
+    }
+  ],
+  "decision": "A — aicore.ext: события (конверт, журнал проекта, best-effort доставка), подписки в конфиге и unit.json, оверлеи инструкций по слотам команд, внешние плагины-команды по JSON stdin/stdout (knowledge/architecture §6). Хуки провайдеров остаются у harness",
+  "rationale": "M3: хуки, плагины, свои инструкции, настройка под компьютер.",
+  "applies_to": [
+    "P6",
+    "P7",
+    "P9",
+    "P10"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

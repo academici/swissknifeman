@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "aicore: основа — util, provider, artifacts, usage",
+  "design": "skeleton",
+  "goal": "packages/aicore — автономный модуль с util, provider (включая каталог моделей), artifacts, usage, перенесёнными из core с сохранением истории; core реэкспортирует aicore (shim), потребители не сломаны; bin-обёртки модулей находят aicore по правилу AICORE_ROOT → _vendor → соседняя папка.",
+  "context": "D2, D4; knowledge/architecture §3, §4. Детализируется после P2 по отчёту проверки границ.",
+  "scope": {
+    "include": [
+      "git mv core → packages/aicore",
+      "shim в core",
+      "автономные тесты aicore"
+    ],
+    "exclude": [
+      "конфиг/состояние (P4)",
+      "контент (P5)",
+      "расширения (P6)"
+    ]
+  },
+  "depends_on": [
+    "P2"
+  ],
+  "deliverables": [
+    "packages/aicore",
+    "shim core",
+    "aicore без зависимостей"
+  ],
+  "items": [],
+  "batches": []
+}

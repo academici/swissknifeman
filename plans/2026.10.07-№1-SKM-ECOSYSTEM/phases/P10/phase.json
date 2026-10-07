@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P10",
+  "title": "orch и мосты",
+  "design": "skeleton",
+  "goal": "bridges/planner-orch и bridges/orch-skiller в хабе с контрактными тестами; порт «источник работы» в orch; выбор движка в конфиге с отказом при нехватке возможностей; события orch.run.*; поиск соседей по путям удалён.",
+  "context": "D3, D6; knowledge/architecture §7 orch, §9. Детализируется после P9.",
+  "scope": {
+    "include": [
+      "перенос мостов",
+      "порт источника работы",
+      "конфиг движка",
+      "события orch"
+    ],
+    "exclude": [
+      "native-движок и CAO (вне плана)"
+    ]
+  },
+  "depends_on": [
+    "P9"
+  ],
+  "deliverables": [
+    "мосты в хабе",
+    "конфиг движка"
+  ],
+  "items": [],
+  "batches": []
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D12",
+  "title": "Порядок фаз P0–P12",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "В каком порядке строим?",
+  "options": [
+    {
+      "id": "A",
+      "text": "P1 среда → P2 каркас модулей → P3–P6 aicore (основа, конфиг/состояние, контент/доставка, расширения) → P7 brain → P8 skiller → P9 planner → P10 orch и мосты → P11 модули хаба → P12 хаб → P13 переход (knowledge/architecture §12); каждая фаза детализируется перед выполнением"
+    }
+  ],
+  "decision": "A — P1 среда → P2 каркас модулей → P3–P6 aicore (основа, конфиг/состояние, контент/доставка, расширения) → P7 brain → P8 skiller → P9 planner → P10 orch и мосты → P11 модули хаба → P12 хаб → P13 переход (knowledge/architecture §12); каждая фаза детализируется перед выполнением",
+  "rationale": "M2: пошаговый план; M4.",
+  "global": true,
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

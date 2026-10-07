@@ -1,0 +1,104 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.3",
+  "title": "Описание процесса ветки, CHANGELOG и push фазы",
+  "status": "todo",
+  "summary": "Раздел «Ecosystem split branch (temporary)» в docs/develop.md, строки CHANGELOG; push фазы в origin ecosystem-split.",
+  "why": "Владелец работает с веткой на двух компьютерах; процесс (клон, guard, песочница, стабильный plan.py, ритм фаз) должен быть записан, а результат фазы — виден в origin.",
+  "scope": {
+    "include": [
+      "docs/develop.md по §docs",
+      "CHANGELOG.md [Unreleased] → Added",
+      "git push origin ecosystem-split"
+    ],
+    "exclude": [
+      "другие страницы docs",
+      "корневые CLAUDE.md/AGENTS.md (генерируются; P2)"
+    ]
+  },
+  "depends_on": [
+    "P1.2"
+  ],
+  "decisions": [
+    "D10"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/dev-env-p1.json",
+      "section": "docs",
+      "why": "структура раздела и строки CHANGELOG",
+      "required": true
+    },
+    {
+      "path": "docs/develop.md",
+      "section": "370-400",
+      "why": "конец страницы и стиль разделов",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "section": "1-20",
+      "why": "формат [Unreleased]",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/develop.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Push — только ветки ecosystem-split в origin, без force",
+    "Команды в разделе — ровно те, что реализованы в P1.1/P1.2"
+  ],
+  "guidance": "Исполнитель: economy/medium. После коммита item: git push origin ecosystem-split.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "grep -q 'Ecosystem split branch' docs/develop.md && grep -q 'dev-sandbox.sh' docs/develop.md && grep -q 'dev-clone.sh sync-main' docs/develop.md",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "sed -n '/## \\[Unreleased\\]/,/^## \\[/p' CHANGELOG.md | grep -q 'dev-sandbox.sh'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "git fetch -q origin && test \"$(git rev-list --count origin/ecosystem-split..HEAD)\" = 0",
+      "expect": "exit 0 (всё запушено)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "раздел процесса в docs/develop.md",
+    "строки CHANGELOG",
+    "фаза в origin"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-07T17:57:37Z"
+}

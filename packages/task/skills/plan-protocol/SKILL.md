@@ -85,13 +85,14 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 | author | `new`, `set`, `push`, `apply`, `add-phase`, `add-item`, `add-decision`, `add-document`, `batches`, `design-done` |
 | query | `get`, `list`, `events`, `artifact`, `links`, `neighborhood`, `schema [<kind> \| --verbs]` |
 | link | `link`, `unlink`, `add-artifact` (validated mutations; exact repeats are no-ops) |
-| inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `check [--json]`, `render [--check]` |
-| execute | `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
+| inspect | `show [<ref>] [--json]`, `next [--json]`, `next <plan> --parallel N [--json]`, `context <item> [--stdout]`, `check [--json]`, `render [--check]` |
+| execute | `reconcile` (integrator only), `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
 | git | `commit <Pn.m\|Pn.m/U#> --role executor\|reviewer\|fix [--path P] [--leave-outside] [--dry-run]`, `commits [<ref>]` |
 | bridge | `bridge list`, `bridge <name> <verb> [args…]` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
 | transfer | `export`, `import --file <current-format-snapshot.json> [--replace]` |
 
+Parallel work uses `plan.py next <plan> --parallel N`; lanes never share `task_files` or a dependency path; the integrator alone runs `plan.py reconcile <plan>`.
 `next` returns exactly one semantic step: `design-phase`, `run-items` (a ready batch with its
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
 `start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.

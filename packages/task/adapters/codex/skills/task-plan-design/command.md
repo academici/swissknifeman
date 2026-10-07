@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:11e9825cdb4907976759722d8e2b090876be4f9d004328593f7fef724376c9d9
+Canonical SHA-256: sha256:a9376cdd18fd7ec690fb37c8fb74e6e772378f9a542d1258728fc992e2737d73
 Adapter: task.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -64,6 +64,7 @@ context pack alone, and `plan.py check` passes.
 - For concurrency, transactions, auth or data integrity, put the shared invariant model in
   JSON `sections` or `knowledge/<id>.json` and reference it through item reads; name enforcement, bypass and
   interfering operation/lock pairs. Use existing rules and validation fields, not new mandatory gates.
+- For parallel phases keep `task_files` exact: `next --parallel` treats an item without `task_files` as conflicting with every lane.
 - Design does not execute items.
 
 **Done when** `plan.py check <plan>` reports 0 errors, the target phase is `detailed`, and the report

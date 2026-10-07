@@ -45,6 +45,13 @@ unchanged; the bridge owns its output and exit code, and the dispatcher sets `TA
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor and registers its
 reports back through `plan.py` only (see the bridge's README).
 
+## Parallel lanes
+
+| Verb | Mode | Data | Use |
+| --- | --- | --- | --- |
+| `next <plan> --parallel N [--json]` | read | `read-ready` | ready lanes across phases; no `task_files` = conflicts with all |
+| `reconcile <plan>` | write | — | integrator closes phases whose items are all terminal |
+
 ## Responses
 
 The read verbs below and `schema` always return one validated JSON envelope:

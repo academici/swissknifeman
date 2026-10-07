@@ -1,0 +1,197 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.5",
+  "title": "Правила параллельных полос в командах Task и plan-protocol + проекции адаптеров",
+  "status": "done",
+  "summary": "Короткие правила `next --parallel`, worktree на полосу после claim, последовательная интеграция и `reconcile` интегратором — в plan-run, plan-design, plan-protocol SKILL.md, execution-mode.md, api.md; проекции адаптеров генератором.",
+  "why": "Без правил в командах люди и агенты продолжат запускать параллельно в одном дереве или закрывать фазы вручную; правила — единственное принуждение до движка Plan 2.",
+  "scope": {
+    "include": [
+      "commands/plan-run.md, commands/plan-design.md",
+      "skills/plan-protocol/SKILL.md, references/execution-mode.md, references/api.md",
+      "adapters/** и golden — только генератором"
+    ],
+    "exclude": [
+      "docs/ и CHANGELOG (P10.6)",
+      "новый раздел-методичка"
+    ]
+  },
+  "depends_on": [
+    "P10.4"
+  ],
+  "decisions": [
+    "D17"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "точные формулировки",
+      "required": true,
+      "section": "rules-text"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "шаги для execution-mode",
+      "required": true,
+      "section": "integration"
+    },
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "why": "Rules и шаги",
+      "required": true
+    },
+    {
+      "path": "packages/task/commands/plan-design.md",
+      "why": "Rules",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "why": "раздел исполнения",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/execution-mode.md",
+      "why": "место для подраздела Parallel lanes",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/api.md",
+      "why": "таблица/список глаголов",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_canon_literals.py",
+      "why": "обязательные фразы",
+      "required": true
+    },
+    {
+      "path": "packages/task/scripts/render-provider-commands.py",
+      "why": "генерация проекций",
+      "required": true,
+      "section": "1-20"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/commands/plan-design.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/execution-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/api.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/adapters/**",
+      "change": "any",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/task/tests/fixtures_data/**",
+      "change": "any",
+      "note": "golden только генератором"
+    },
+    {
+      "path": "packages/task/tests/test_canon_literals.py",
+      "change": "modify",
+      "note": "только если добавляется обязательный литерал"
+    }
+  ],
+  "rules": [
+    "Тексты английские, 1–2 строки на место; подраздел execution-mode ≤ 12 строк",
+    "Сохранить существующие канонические литералы (test_canon_literals, test_record_parity моста)",
+    "Проекции — только `python3 packages/task/scripts/render-provider-commands.py --write --root .`"
+  ],
+  "guidance": "Исполнитель: implementation/medium (Sol допустим). Вставить §rules-text почти дословно.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "grep -q 'next <plan> --parallel N' packages/task/commands/plan-run.md && grep -q 'plan.py reconcile' packages/task/commands/plan-run.md && grep -q -- '--parallel' packages/task/skills/plan-protocol/SKILL.md && grep -q 'reconcile' packages/task/skills/plan-protocol/references/api.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_canon_literals.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_provider_command_parity.py' -v && PYTHONPATH=lib python3 -m unittest discover -s tests -p 'test_docs_sync.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_record_parity.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "правила параллельных полос в командах и plan-protocol"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T09:22:33Z",
+    "finished_at": "2026-10-07T09:23:43Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "2aa01954-91d5-4cb0-b220-337f2971944a"
+    },
+    "notes": "Parallel-lane rules added to plan-run, plan-design, plan-protocol SKILL/execution-mode/api; adapters regenerated.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T09:23:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T09:23:43Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T09:23:43Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T09:23:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T09:23:43Z"
+}

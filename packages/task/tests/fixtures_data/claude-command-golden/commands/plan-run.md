@@ -50,6 +50,7 @@ one commit per item, inside the item's scope.
   final report with a `task:review` recommendation; no review runs by default.
 - `--review`: after the last green item, one `task:review` pass over the scope diff; fix a confirmed
   finding in its open item, report findings of closed items as recommendations.
+- Parallel lanes: take them from `plan.py next <plan> --parallel N`; one worktree and branch per lane after a committed claim; integrate lanes one at a time, re-run the item's acceptance checks, then `plan.py reconcile <plan>`.
 - Stop only at an owner gate, a missing decision, an external wait or exhausted context; existing dirty
   changes belong to the owner.
 

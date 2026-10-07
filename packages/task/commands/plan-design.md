@@ -39,6 +39,7 @@ context pack alone, and `plan.py check` passes.
 - For concurrency, transactions, auth or data integrity, put the shared invariant model in
   JSON `sections` or `knowledge/<id>.json` and reference it through item reads; name enforcement, bypass and
   interfering operation/lock pairs. Use existing rules and validation fields, not new mandatory gates.
+- For parallel phases keep `task_files` exact: `next --parallel` treats an item without `task_files` as conflicting with every lane.
 - Design does not execute items.
 
 **Done when** `plan.py check <plan>` reports 0 errors, the target phase is `detailed`, and the report

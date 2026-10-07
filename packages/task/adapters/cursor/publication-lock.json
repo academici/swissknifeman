@@ -75,26 +75,26 @@
     {
       "artifact_id": "task.cursor.plan.design.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-design/SKILL.md",
-      "rendered_hash": "sha256:67f6783958ff8ec11471079a4e10cf8db4c9b6c2a5657c430beb8bf4824650c4",
-      "source_hash": "sha256:36d7c19c01e2e7aed1dd5b482171d422fd31b55b838e615518aa98e08951c0a5"
+      "rendered_hash": "sha256:4dd01e1076bcac645801aa43642e855e734bd728da8c06ecec3c64292e924da1",
+      "source_hash": "sha256:2af40218eda73d811c5002b1eba2fd1f3b9d7ef957deaf0d9a8955d2835b8f8a"
     },
     {
       "artifact_id": "task.cursor.plan.design.runtime",
       "path": "packages/task/adapters/cursor/skills/task-plan-design/command.md",
-      "rendered_hash": "sha256:f95a56959adf1e09a611fe02b89d9dee45e85891944f1d0666b9b4493b824347",
-      "source_hash": "sha256:4e65ff9b12f70636ab2e8e8269caf97d2e8442726b99a047619bdb7f9a0fba57"
+      "rendered_hash": "sha256:6a153990ab9a4212ebfdb29782309ebcc09b4ac4ec76d19e825339def933432f",
+      "source_hash": "sha256:59b202ebe5678fc57406d62ddc51dbeb06ad0013ac1aff93f4de00c994e8881a"
     },
     {
       "artifact_id": "task.cursor.plan.run.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-run/SKILL.md",
-      "rendered_hash": "sha256:9a4682cd79aa42dd6239f3c2caa8115232653b2af52f5f99e0cb078b930f4614",
-      "source_hash": "sha256:f9d744b8e95f9cfbe98ad30acb1b60e613643110f28ab3e981a5d87be01f25aa"
+      "rendered_hash": "sha256:07c7be3c78df688e194f56d74a0735770a2cada107e766d2caadff8e7b5ebeff",
+      "source_hash": "sha256:f6592a3c3a0666b9ab98356e645a0ea2bb09656a28893fdffc68d1f03f773529"
     },
     {
       "artifact_id": "task.cursor.plan.run.runtime",
       "path": "packages/task/adapters/cursor/skills/task-plan-run/command.md",
-      "rendered_hash": "sha256:7e21c99cae6bafb52034c958f715801f584d94dc86e909b6a08753077a59b457",
-      "source_hash": "sha256:55cd843064630c5fa5dd06acf2e07a475d369ffc741a5b5bb6a48ba47fd6e40d"
+      "rendered_hash": "sha256:34de6f35f736b9e70159bab6b9d8f97b3f56ced1cf7aa9c74d21c1f21d9df2bf",
+      "source_hash": "sha256:6fbf44ead1cc130d7c29ad0d2d7e132539207e2074972c640a5bbdb31d3a0207"
     },
     {
       "artifact_id": "task.cursor.research.skill",

@@ -87,6 +87,7 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 | link | `link`, `unlink`, `add-artifact` (validated mutations; exact repeats are no-ops) |
 | inspect | `show [<ref>] [--json]`, `next [--json]`, `context <item> [--stdout]`, `check [--json]`, `render [--check]` |
 | execute | `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
+| git | `commit <Pn.m\|Pn.m/U#> --role executor\|reviewer\|fix [--path P] [--leave-outside] [--dry-run]`, `commits [<ref>]` |
 | bridge | `bridge list`, `bridge <name> <verb> [args…]` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
 | transfer | `export`, `import --file <current-format-snapshot.json> [--replace]` |
@@ -95,6 +96,8 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
 `start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.
 `finish --status done` needs every acceptance check recorded with exit 0.
+Every operation ends with one scoped `plan.py commit … --role executor|reviewer|fix` (never `git add -A`,
+`--no-verify`, amend or push); trailers link commits to the plan and `plan.py commits` lists them.
 `settings.evidence: required` makes `finish` demand check evidence (field contract: `schema check-evidence`); a repeated `--attempt-id` with matching status/checks/evidence is a no-op.
 Friction (`log --type deviation|blocker|difficulty|assumption|note`) is written only when reality
 changes the plan, an assumption or a blocker; it feeds the next items' Lessons.

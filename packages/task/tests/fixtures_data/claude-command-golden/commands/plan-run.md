@@ -22,24 +22,29 @@ one commit per item, inside the item's scope.
    `plan.py log <plan> <item> --type deviation|blocker|difficulty|assumption|note --summary "…"`.
 6. Run each Validation check once per relevant change; keep long output in a file.
    With `--reviewer`, run the selected native read-only reviewer after GREEN checks; record its
-   verdict and actual session in an artifact and a `plan.py log --type note` event. A finding returns
-   one owning correction and affected checks, then at most one re-review; no recursive reviewer fixes.
+   verdict and actual session in an artifact and a `plan.py log --type note` event, then
+   `plan.py commit <plan> <item> --role reviewer`. A finding returns one owning correction and affected
+   checks, committed with `--role fix` after they rerun, then at most one re-review; no recursive reviewer fixes.
 7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…"`
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
-8. One scoped commit (plan JSON + product files), then the next item of the batch.
+8. One scoped commit: `plan.py commit <plan> <item> --role executor` (plan JSON + product files of the item;
+   `--path` for an extra file, logged as a deviation). Report the printed sha, then the next item of the batch.
 
 **Units (optional)**
 - Represent preparation, implementation, review and checks as units with dependencies and optional parents; `plan.py unit <plan> <item> add --title … --json …`.
 - Hand a piece out: `plan.py unit <plan> <item> <U#> dispatch --agent <provider>/<model>`, then give a native subagent of
   your own provider its `phases/<Pn>/<Pn.m>/<U#>/brief.json` and the executor handoff in the Task package's
   `references/executor-handoff.md`; record its report yourself with `unit … return`. Use `unit … next` for ready work.
-- You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`.
+- You stay the integrator: review every returned diff, rerun its checks, then `unit … <U#> accept|rework|reject --notes …`;
+  after `accept`, commit it with `plan.py commit <plan> <item>/<U#> --role executor`.
 - `finish` is refused until every unit is `accepted` or explicitly `rejected`. Python starts no agent; `plan.py stats` shows the numbers.
 
 **Rules**
 - Run under the session route; never switch the model. The item route is the minimum.
 - Declare `--actor` from the runtime's observed session model and effort (its settings or environment); never infer them from prompt text or defaults, and ask the owner when one cannot be observed.
 - Change plan state only through `plan.py`; JSON is the source of truth.
+- Never `git add -A`, `--no-verify`, amend or push in plan-run; a refusal `OUTSIDE_SCOPE` lists foreign dirty
+  paths — leave them (owner work) with `--leave-outside` or extend with `--path`.
 - Owner gates: `plan.py grant` only with the owner's explicit message quoted in `--note`.
 - Hard risk (security, schema/public API, data, concurrency, publishing) widens checks and is named in the
   final report with a `task:review` recommendation; no review runs by default.

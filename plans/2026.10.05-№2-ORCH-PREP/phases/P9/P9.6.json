@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.6",
   "title": "Правила коммитов в командах Task и plan-protocol + проекции адаптеров",
-  "status": "todo",
+  "status": "done",
   "summary": "plan-run.md, plan-protocol (SKILL.md, execution-mode, review-mode) и executor-handoff описывают завершение каждой операции через `plan.py commit --role executor|reviewer|fix` и запреты (add -A, no-verify, amend, push); проекции адаптеров перегенерированы.",
   "why": "B48: правило должно дойти до исполнителей всех провайдеров; тексты рендерятся в адаптеры, поэтому правка только через генератор.",
   "scope": {
@@ -170,6 +170,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T19:12:45Z"
+  "result": {
+    "started_at": "2026-10-07T03:10:53Z",
+    "finished_at": "2026-10-07T03:28:50Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "c34cb272-c38d-41a9-a668-567f6056c845"
+    },
+    "notes": "plan-run steps 6/8, Units and Rules now end each operation with plan.py commit --role executor|reviewer|fix and forbid git add -A, --no-verify, amend, push (OUTSIDE_SCOPE → --leave-outside/--path); plan-protocol SKILL.md (git verb row + contract line), execution-mode and review-mode got one line each. executor-handoff already says the worker does not commit — unchanged. Projections regenerated (codex/cursor plan-run, claude golden, provider-commands reference). V5 first run hit the out-of-scope test_commits_read flake (logged difficulty, P9.3 gitops racy index mtime); rerun GREEN.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T03:28:50Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T03:28:50Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T03:28:50Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T03:28:50Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T03:28:50Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T03:28:50Z"
 }

@@ -5,7 +5,9 @@ The requested items (or the ready batch from `plan.py next`) are one ordered wor
 1. `plan.py start` once for the workset; it checks phase design, dependencies, gates, open decisions
    and the minimum route, then writes the context packs.
 2. Per item: read its pack and listed reads, implement Scope include, run its acceptance checks,
-   `plan.py finish` with the recorded exits, then one scoped commit.
+   `plan.py finish` with the recorded exits, then one scoped commit with
+   `plan.py commit <plan> <item> --role executor` (`plan.py commits` lists them; never `git add -A`,
+   `--no-verify`, amend or push).
 3. Continue with the next ready item of the workset in the same session; an item's green result
    is not a stopping point.
 4. Log friction only when reality changes the plan, an assumption or a blocker

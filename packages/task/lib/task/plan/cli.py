@@ -14,8 +14,8 @@ import re
 import sys
 
 
-from . import (bridges, catalog, check, context, gitops, lifecycle, ops, parallel, query, schema, snapshot, stats, store,
-               units, views)
+from . import (bridges, budget, catalog, check, context, gitops, lifecycle, ops, parallel, query, schema, snapshot,
+               stats, store, units, views)
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -345,7 +345,15 @@ def _repos(args) -> dict[str, str]:
 
 def cmd_context(args) -> int:
     plan = store.load_plan(_plan_dir(args))
-    if args.stdout:
+    if args.budget:
+        if args.stdout:
+            raise UsageError("--budget reports sizes and writes no pack; drop --stdout")
+        report = budget.measure(plan, args.item, repos=_repos(args))
+        if args.json or args.output == "json":
+            _print_json(report)
+        else:
+            print(budget.text(report))
+    elif args.stdout:
         print(context.render(plan, args.item, repos=_repos(args)), end="")
     else:
         print(lifecycle.shown_path(context.build(plan, args.item, repos=_repos(args))))
@@ -707,6 +715,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("context", cmd_context, "return complete JSON context (context/<item>.json)")
     p.add_argument("item")
     p.add_argument("--stdout", action="store_true", help="print the pack instead of writing it")
+    p.add_argument("--budget", action="store_true", help="report the pack size by key and source; writes nothing")
+    p.add_argument("--json", action="store_true", help="with --budget: print the report as JSON")
     p.add_argument("--repo", action="append", default=[], type=_repo_mapping, metavar="NAME=PATH",
                    help="repository root of references to another repository (repeatable)")
 

@@ -1,0 +1,152 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.2",
+  "title": "Измерение pack: budget.py и plan.py context --budget",
+  "status": "done",
+  "summary": "Модуль `lib/task/plan/budget.py` (`measure`, `text`) и флаг `plan.py context <plan> <item> --budget [--json]`: размер pack по ключам и источникам, причина включения, непривязанное, дубли reads, превышение бюджета и scoped-preview для legacy-планов.",
+  "why": "Без измерения раздувание незаметно: 1 МБ pack обнаружился только вручную в azguard. Отчёт — диагностика для автора плана и основа блока design-done (P12.4). Риск: отчёт обязан ничего не писать и не расходиться с collect — причины и дубли берутся из функций context.py (P12.1), а не вычисляются заново.",
+  "scope": {
+    "include": [
+      "lib/task/plan/budget.py: measure(plan, item_id, *, repos=None) -> dict, text(report) -> str по §budget-report",
+      "lib/task/plan/cli.py cmd_context + парсер: флаг --budget и --json; --budget с --stdout → UsageError",
+      "tests/engine/test_budget.py"
+    ],
+    "exclude": [
+      "изменение состава pack (P12.1)",
+      "check-правила (P12.3) и design-done (P12.4)",
+      "обрезка, отказ или код выхода ≠ 0 при превышении бюджета"
+    ]
+  },
+  "depends_on": [
+    "P12.1"
+  ],
+  "decisions": [
+    "D29"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/context-scope-p12#budget-report",
+      "why": "схема measure, правила подсчёта, формат text, CLI",
+      "required": true
+    },
+    {
+      "ref": "knowledge/context-scope-p12#model",
+      "why": "scope_reason, pack_mode, budget_bytes",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/context.py",
+      "why": "collect, render, duplicate_target после P12.1",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "section": "346-352",
+      "why": "cmd_context; парсер verb context ~707",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/stats.py",
+      "why": "образец модуля collect/text для CLI",
+      "required": false
+    },
+    {
+      "path": "packages/task/tests/engine/test_stats.py",
+      "why": "образец теста модуля на LifeCase",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/budget.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_budget.py",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "stdlib-only, Python 3.9",
+    "measure ничего не пишет (тест: каталог context/ не появляется)",
+    "Детерминизм: sources по убыванию bytes, затем key, ref",
+    "scoped_preview_bytes только в legacy: deepcopy плана с settings.context_pack = scoped; исходный объект не мутируется",
+    "JSON печатается при --json или args.output == \"json\"; иначе text(report)",
+    "Не трогать catalog.py, если test_catalog проходит (флаги выводятся из парсера)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Тесты: legacy-план с непривязанным документом → unbound.documents == 1, reason unbound, scoped_preview_bytes < bytes; read привязанного документа → duplicates.reads == 1 и sources[*].duplicate_of == documents; scoped-план → нет scoped_preview_bytes, unbound.bytes == 0; settings.context_budget_kb = 1 → over_budget true; CLI `context --budget --json` через subprocess (как test_cli_stdout_is_json_and_does_not_write_a_pack в test_context.py) — валидный JSON и pack не записан; `--budget --stdout` → exit 2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_budget.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_c*.py'",
+      "expect": "exit 0 (test_cli, test_catalog, test_check, test_context, test_commit*)",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 packages/task/scripts/plan.py context 2026.10.05-№2-ORCH-PREP P5.2 --budget --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"mode\"] in (\"legacy\",\"scoped\") and d[\"bytes\"]>0 and d[\"by_key\"] and d[\"sources\"]'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "budget.py measure/text",
+    "plan.py context --budget [--json]",
+    "tests/engine/test_budget.py"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T12:14:53Z",
+    "finished_at": "2026-10-07T12:17:34Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "0bd84c25-0e11-4d17-84ea-4e64a9878479"
+    },
+    "notes": "budget.py measure/text, context --budget [--json], test_budget (8 tests)",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T12:17:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T12:17:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T12:17:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T12:17:34Z"
+}

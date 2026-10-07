@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.1",
   "title": "Guard dev-клона в точках входа и scripts/dev-clone.sh",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Вставить одинаковый guard-блок в 11 точек входа сразу после set -euo pipefail; добавить /.swissknifeman-dev в .gitignore; написать scripts/dev-clone.sh (init, status, sync-main) и scripts/test-dev-guard.py; шаг CI; выполнить dev-clone.sh init в клоне и доказать, что наборы тестов зелёные при наличии маркера.",
   "why": "Live-папка — источник CLI в PATH, маркетплейса и путей в проектах; случайный запуск установщика или CLI из клона с реальным HOME перепишет их на недоделанную версию. Guard срабатывает до любых действий и только в клоне (маркер не коммитится). Риск: guard не первым оператором → побочные эффекты до проверки; тест места блока это исключает, поэтому реальные установщики с реальным HOME тесты не запускают.",
   "scope": {
@@ -207,6 +207,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T17:57:37Z"
+  "result": {
+    "started_at": "2026-10-07T19:10:04Z",
+    "finished_at": "2026-10-07T19:35:25Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "d2379738-2720-41b2-b716-85ade2cfb146"
+    },
+    "notes": "Guard в 11 точках, .gitignore, dev-clone.sh, test-dev-guard.py (14 тестов), шаг hygiene.yml, маркер создан. Базовая линия до правок: skiller 31s, maind 39s, harness 161s, analyst <1s, root-install 1s, bootstrap 14s — все зелёные; после: те же наборы зелёные с маркером (skiller 803, maind 608, harness 734, analyst 264 тестов). Живое состояние машины не менялось (отпечаток до/после совпал). Прямой запуск unittest из клона с реальным HOME теперь отказывает с SKM_DEV_GUARD — это штатно; наборы запускать через scripts/test.sh.",
+    "deviations": [
+      "(1) Порог §baseline (>5 файлов) превышен: 9 файлов роняли guard; исправлено не правкой тестов, а изоляцией HOME в раннерах packages/{skiller,maind,harness}/scripts/test.sh и scripts/test-bootstrap-machine.sh (временный HOME на весь прогон) — файлы вне task_files, добавлены через --path. (2) V5: public-hygiene.py красный до изменений (66 одинаковых находок на чистом HEAD вне scope P1), test-public-hygiene.py и шаг CI зелёные."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T19:35:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T19:35:25Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T19:35:25Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T19:35:25Z"
+      },
+      {
+        "id": "V5",
+        "exit": 1,
+        "at": "2026-10-07T19:35:25Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T19:35:25Z"
 }

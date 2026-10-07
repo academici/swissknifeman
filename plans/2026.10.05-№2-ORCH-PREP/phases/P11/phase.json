@@ -30,7 +30,8 @@
     "P11.1",
     "P11.2",
     "P11.3",
-    "P11.4"
+    "P11.4",
+    "P11.5"
   ],
   "batches": [
     {
@@ -49,6 +50,13 @@
       "mode": "recommended"
     },
     {
+      "id": "B4",
+      "items": [
+        "P11.5"
+      ],
+      "mode": "recommended"
+    },
+    {
       "id": "B3",
       "items": [
         "P11.4"
@@ -57,8 +65,8 @@
     }
   ],
   "closed": {
-    "at": "2026-10-07T11:32:23Z",
+    "at": "2026-10-07T13:32:05Z",
     "result": "blocked",
-    "summary": "4 item(s): 2 done, 1 done_with_deviations, 1 blocked"
+    "summary": "5 item(s): 2 done, 2 done_with_deviations, 1 blocked"
   }
 }

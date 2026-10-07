@@ -8,6 +8,7 @@ replacing the orchestrator means adding another bridge under `bridges/`, not edi
 | `brief` | `brief.py` | Task → orch: plan item or unit as an `execution-input` |
 | `register` | `register.py` | orch → Task: a worker's stage-report into `log` + `finish` or `unit … return` |
 | `register-review` | `register_review.py` | orch → Task: review-findings into `add-document` + a `note` event |
+| `commit` | `commit.py` | Task → orch: one scoped operation commit as a stage-result `commits[]` fragment |
 
 Run a verb through the Task dispatcher: `plan.py bridge orch <verb> [args…]`. `plan.py bridge list`
 validates `bridge.json` and lists the verbs.
@@ -105,6 +106,22 @@ location, failure_scenario, basis}], date: YYYY-MM-DD}`. The bridge records
 
 A repeat is a no-op: an identical stored document and a note already in the journal are skipped.
 
+## commit
+
+`plan.py bridge orch commit <plan> <item>[/<U#>] --role executor|reviewer|fix [options of plan.py commit]`
+
+Runs `plan.py commit <plan> <ref> … --json` as a subprocess (the bridge calls Task through its CLI, as
+`register` does; nothing is imported) and prints the fragment for a stage-result:
+
+```json
+{"commits": [{"sha": "…", "role": "executor", "ref": "P1.1", "paths_digest": "<sha256>"}]}
+```
+
+`paths_digest` is the Task result's digest of the sorted repo-relative paths; orch computes the same value
+independently (`\n`-joined, no trailing newline). Every argument after `<plan> <ref>` is passed to `plan.py
+commit` unchanged. A refusal of Task (`OUTSIDE_SCOPE`, `NOTHING_TO_COMMIT`, …) is printed as `CODE: message`
+on stderr, exit 1. A `--dry-run` creates no commit, so the bridge refuses with `COMMIT_RESULT_INVALID`.
+
 ## Refusals of register and register-review
 
 Bridge codes (stderr `CODE: message`, exit 1, nothing written): `REGISTER_REPORT_INVALID`,
@@ -135,7 +152,7 @@ cd packages/task
 PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py'
 ```
 
-`test_brief.py` and `test_register.py` work without orch. `test_conformance.py` (documents valid for
+`test_brief.py`, `test_register.py` and `test_commit_bridge.py` (the stage-result check skips without orch) work without orch. `test_conformance.py` (documents valid for
 `orch.py validate`, lifecycle phrases of the bridge ⊇ orch's, orch check-evidence accepted by Task) and
 `test_schema_profile.py` (orch's closed schema profile ⊇ Task's) skip when orch is not found.
 `test_record_parity.py` pins every recording obligation W1–W12 to its owner; rows owned by orch roles or by

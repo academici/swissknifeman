@@ -4,11 +4,12 @@
   "partner": "orch",
   "direction": "both",
   "contract": "exec/v1",
-  "summary": "Projects a plan item or unit into an orch execution-input (exec/v1) and registers worker reports back into the plan.",
+  "summary": "Projects a plan item or unit into an orch execution-input (exec/v1) and registers worker reports back into the plan, and returns scoped-commit fragments for a stage-result.",
   "entrypoints": {
     "brief": "brief.py",
     "register": "register.py",
-    "register-review": "register_review.py"
+    "register-review": "register_review.py",
+    "commit": "commit.py"
   },
   "requires": {
     "cli": "scripts/orch.py",

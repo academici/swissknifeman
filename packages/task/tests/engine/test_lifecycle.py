@@ -454,6 +454,37 @@ class DesignDoneTests(LifeCase):
         self.refused("REF_UNKNOWN", lambda root, *a: lifecycle.design_done(root, "P9"))
 
 
+class DesignReportTests(LifeCase):
+    SECTIONS = [{"id": "s", "title": "S", "text": "x" * 2000}]
+
+    def test_legacy_unbound_document_is_reported_with_a_warning(self):
+        ops.set_plan(self.root, {"settings": {"context_pack": "legacy"}})
+        ops.add_document(self.root, {"id": "loose", "title": "Loose", "sections": self.SECTIONS})
+        report = lifecycle.design_done(self.root, "P2", actor=OPUS)
+        self.assertEqual((report["phase"], report["mode"]), ("P2", "legacy"))
+        self.assertGreater(report["items"][0]["unbound_bytes"], 0)
+        self.assertIn("context_unbound", [w["code"] for w in report["warnings"]])
+
+    def test_repeat_on_detailed_phase_builds_the_report_without_writing(self):
+        self.design_p2()
+        before = (self.tree(), len(self.events("design_done")))
+        report = lifecycle.design_done(self.root, "P2")
+        self.assertEqual([i["item"] for i in report["items"]], ["P2.1"])
+        self.assertEqual((self.tree(), len(self.events("design_done"))), before)
+
+    def test_phase_document_no_item_reads_is_listed_as_unread(self):
+        ops.add_document(self.root, {"id": "bound", "title": "B", "applies_to": ["P2"], "sections": self.SECTIONS})
+        ops.add_document(self.root, {"id": "read", "title": "R", "applies_to": ["P2"], "sections": self.SECTIONS})
+        ops.patch(self.root, "P2.1", {"reads": [{"ref": "knowledge/read#s", "why": "w", "required": True}]})
+        report = lifecycle.design_done(self.root, "P2", actor=OPUS)
+        self.assertEqual(report["phase_documents_unread"], ["knowledge/bound"])
+
+    def test_small_budget_marks_items_over(self):
+        ops.set_plan(self.root, {"settings": {"context_budget_kb": 1}})
+        report = lifecycle.design_done(self.root, "P2", actor=OPUS)
+        self.assertTrue(report["items"][0]["over_budget"])
+
+
 class ReopenTests(LifeCase):
     def test_reopen_clears_result_phase_closure_and_plan_done(self):
         self.run_phase_one()

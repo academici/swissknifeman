@@ -159,9 +159,19 @@ class LifecycleFlowTests(CliCase):
             self.assertIn(verb, out)
             self.assertEqual(self.run_plan(verb, "--help").returncode, 0)
 
+    def test_design_done_prints_the_report_as_text_and_json(self):
+        self.designed_plan()
+        out = self.verb("design-done", "PLAN1", "P1", "--json")
+        self.assertEqual(out.returncode, 0, out.stderr)
+        report = json.loads(out.stdout)
+        self.assertEqual(report["phase"], "P1")
+        self.assertEqual([i["item"] for i in report["items"]], ["P1.1"])
+        again = self.verb("design-done", "PLAN1", "P1")
+        self.assertRegex(again.stdout, r"^P1 detailed\n  P1\.1 \d+ KB")
+
     def test_full_flow_from_design_to_archive(self):
         self.designed_plan()
-        self.assertEqual(self.verb("design-done", "PLAN1", "P1").stdout.strip(), "P1 detailed")
+        self.assertEqual(self.verb("design-done", "PLAN1", "P1").stdout.splitlines()[0], "P1 detailed")
         plan_id = "2026.10.05-№1-DEMO"
         self.assertEqual(self.verb("next", "PLAN1").stdout.strip(), f"run-items: task:plan-run {plan_id} P1.1  (implementation/high)")
         started = self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--session", "auto")

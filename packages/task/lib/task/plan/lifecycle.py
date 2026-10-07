@@ -937,27 +937,60 @@ def grant(plan, gate: str, note: str, actor: Mapping | None = None) -> Next:
 
 # ---------------------------------------------------------------- design-done, reopen, archive
 
-def design_done(plan, phase_id: str, actor: Mapping | None = None) -> None:
-    """Mark ``phase_id`` detailed after ``check`` (as if detailed) found no error in it."""
+CONTEXT_WARNINGS = ("context_unbound", "brief_duplicate", "context_heavy", "context_legacy")
+
+
+def design_report(plan, phase_id: str) -> dict:
+    """Pack-size and knowledge-binding report of a detailed phase; read-only, a failure is reported, not raised."""
+    from . import budget, check  # budget imports context, check imports views; both import this module
+
+    try:
+        p = store.load_plan(store.resolve_plan_dir(plan))
+        items = phase_items(p, phase_id)
+        report = {"phase": phase_id, "detailed": p.phases[phase_id].get("design") == "detailed",
+                  "mode": None, "budget_bytes": None, "items": [], "warnings": [], "phase_documents_unread": []}
+        for item_id in items:
+            m = budget.measure(p, item_id)
+            report["mode"], report["budget_bytes"] = m["mode"], m["budget_bytes"]
+            report["items"].append({"item": item_id, "bytes": m["bytes"], "over_budget": m["over_budget"],
+                                    "top": m["sources"][:3], "unbound_bytes": m["unbound"]["bytes"],
+                                    "duplicate_bytes": m["duplicates"]["bytes"]})
+        report["warnings"] = [{"code": i.code, "where": i.where, "message": i.message}
+                              for i in check.check(p) if i.code in CONTEXT_WARNINGS]
+        read = {str(r.get("ref")).split("#", 1)[0] for item_id in items
+                for r in p.items[item_id].get("reads") or [] if isinstance(r, dict) and r.get("ref")}
+        scope = {phase_id, *items}
+        report["phase_documents_unread"] = sorted(
+            f"knowledge/{doc_id}" for doc_id, doc in p.documents.items()
+            if scope & set(doc.get("applies_to") or []) and f"knowledge/{doc_id}" not in read)
+        return report
+    except (PlanError, OSError) as exc:
+        return {"phase": phase_id, "detailed": True, "error": str(exc), "items": [], "warnings": [],
+                "phase_documents_unread": []}
+
+
+def design_done(plan, phase_id: str, actor: Mapping | None = None) -> dict:
+    """Mark ``phase_id`` detailed after ``check`` (as if detailed) found no error in it; returns ``design_report``."""
     from . import check  # check imports views, views imports this module
 
     with _mutation(plan) as (p, lock):
+        root = p.root
         phase = _need_phase(p, phase_id)
-        if phase.get("design") == "detailed":
-            return
-        probe = copy.deepcopy(p)
-        probe.phases[phase_id]["design"] = "detailed"
-        errors = [i for i in check.check(probe) if i.level == "error" and i.where.startswith(f"phases/{phase_id}/")]
-        if not phase_items(p, phase_id) and not errors:
-            raise PlanError("DESIGN_INCOMPLETE", f"{phase_id} has no items")
-        if errors:
-            shown = "; ".join(f"{i.where}: {i.message}" for i in errors[:3])
-            more = f" (+{len(errors) - 3} more)" if len(errors) > 3 else ""
-            raise PlanError("DESIGN_INCOMPLETE", f"{len(errors)} error(s) in {phase_id}: {shown}{more}")
-        doc = copy.deepcopy(phase)
-        doc["design"] = "detailed"
-        event = store.new_event("design_done", f"{phase_id} design done", _actor_doc(p, actor), phase=phase_id)
-        _commit(p, [("phase", phase_id, doc)], [event], lock)
+        if phase.get("design") != "detailed":
+            probe = copy.deepcopy(p)
+            probe.phases[phase_id]["design"] = "detailed"
+            errors = [i for i in check.check(probe) if i.level == "error" and i.where.startswith(f"phases/{phase_id}/")]
+            if not phase_items(p, phase_id) and not errors:
+                raise PlanError("DESIGN_INCOMPLETE", f"{phase_id} has no items")
+            if errors:
+                shown = "; ".join(f"{i.where}: {i.message}" for i in errors[:3])
+                more = f" (+{len(errors) - 3} more)" if len(errors) > 3 else ""
+                raise PlanError("DESIGN_INCOMPLETE", f"{len(errors)} error(s) in {phase_id}: {shown}{more}")
+            doc = copy.deepcopy(phase)
+            doc["design"] = "detailed"
+            event = store.new_event("design_done", f"{phase_id} design done", _actor_doc(p, actor), phase=phase_id)
+            _commit(p, [("phase", phase_id, doc)], [event], lock)
+    return design_report(root, phase_id)
 
 
 def reopen(plan, item_id: str, reason: str, actor: Mapping | None = None) -> None:

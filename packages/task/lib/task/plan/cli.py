@@ -461,8 +461,27 @@ def cmd_grant(args) -> int:
 def cmd_design_done(args) -> int:
     if not PHASE_ID.fullmatch(args.phase):
         raise UsageError(f"invalid phase id {args.phase!r}")
-    lifecycle.design_done(_plan_dir(args), args.phase, actor=args.actor)
+    report = lifecycle.design_done(_plan_dir(args), args.phase, actor=args.actor)
+    if args.json or args.output == "json":
+        _print_json(report)
+        return 0
     print(f"{args.phase} detailed")
+    if report.get("error"):
+        print(f"  report unavailable: {report['error']}")
+    kb = lambda size: size // 1024
+    for entry in report["items"]:
+        line = f"  {entry['item']} {kb(entry['bytes'])} KB"
+        if entry["over_budget"]:
+            line += f" OVER budget {kb(report['budget_bytes'])} KB"
+        if entry["unbound_bytes"]:
+            line += f" unbound {kb(entry['unbound_bytes'])} KB"
+        if entry["duplicate_bytes"]:
+            line += f" duplicates {kb(entry['duplicate_bytes'])} KB"
+        print(line)
+    for warning in report["warnings"]:
+        print(f"  warning {warning['code']} {warning['where']}")
+    if report["phase_documents_unread"]:
+        print("  unread phase knowledge: " + ", ".join(report["phase_documents_unread"]))
     return 0
 
 
@@ -787,8 +806,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--note", required=True)
     actor_arg(p)
 
-    p = verb("design-done", cmd_design_done, "mark a phase detailed after check")
+    p = verb("design-done", cmd_design_done, "mark a phase detailed after check; prints the context report")
     p.add_argument("phase")
+    p.add_argument("--json", action="store_true", help="print the report as JSON")
     actor_arg(p)
 
     p = verb("reopen", cmd_reopen, "reopen a finished item (owner amendment)")

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.4",
   "title": "skiller resolve --role: closure skills роли и способ доставки",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Новая команда `skiller resolve --role <id>|--manifest PATH --provider P [--json]`: читает role manifest (discovery orch), раскрывает транзитивные requires через resolve_requires_bfs, отдаёт skills с источниками и режим доставки из capability seed; офлайн-тест closure пяти ролей; широкий validate Skiller.",
   "why": "R9, R4, S1/S3 (DECISIONS §6): роль получает только свои skills; «установлен» ≠ «загружен» — режим доставки берётся из capability-record.",
   "scope": {
@@ -157,6 +157,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T05:12:12Z"
+  "result": {
+    "started_at": "2026-10-07T10:22:02Z",
+    "finished_at": "2026-10-07T10:29:41Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "ea13c0c0-06ed-449e-b13a-13f0ee675ebe"
+    },
+    "notes": "Bridge resolve_role.py: manifest/role-skills + generic skiller resolve via subprocess + delivery from capability seed; 10 offline tests; Skiller untouched.",
+    "deviations": [
+      "Owner-chosen redesign: orch/bridges/skiller instead of skiller resolve --role (D16); P4.2 boundary repair (reviewer skills to bridge, harness test to bridges/harness)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T10:29:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T10:29:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T10:29:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T10:29:41Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T10:29:41Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T10:29:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T10:29:41Z"
 }

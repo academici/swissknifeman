@@ -11,18 +11,6 @@
       "sha256": "a417914dd76efd1fdf6d0e630b753acb8487024bb0987a72ff7cfdbbdbda33f9"
     }
   ],
-  "skills": [
-    {
-      "name": "quality:code-review",
-      "required": true,
-      "why": "review method for code diffs"
-    },
-    {
-      "name": "quality:artifact-review",
-      "required": false,
-      "why": "review method for plans and docs"
-    }
-  ],
   "tools": {
     "filesystem": "read",
     "shell": "read_only",

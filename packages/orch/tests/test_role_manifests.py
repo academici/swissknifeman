@@ -10,9 +10,7 @@ from orch import contracts
 ORCH = Path(__file__).resolve().parents[1]
 REPO = ORCH.parents[1]
 ROLES = ORCH / "roles"
-ROLES_JSON = ORCH.parent / "harness/configs/common/agent-packs/roles.json"
 ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "registrar")
-PACK_ROLE = {"executor": "slice-builder", "bounded-implementer": "slice-builder", "reviewer": "reviewer"}
 
 
 def _manifest(role: str) -> dict:
@@ -44,16 +42,6 @@ class RoleManifestTests(unittest.TestCase):
                 lines = (ROLES / f"{role}.md").read_text(encoding="utf-8").splitlines()
                 first = next(line for line in lines[lines.index("## You do") + 1:] if line.strip())
                 self.assertEqual(_manifest(role)["description"], first.removeprefix("- "))
-
-    @unittest.skipUnless(ROLES_JSON.is_file(), "harness agent-packs roles.json not available")
-    def test_agent_pack_roles_match_harness_catalog(self):
-        entries = json.loads(ROLES_JSON.read_text(encoding="utf-8"))["roles"]
-        for role in ROLE_IDS:
-            with self.subTest(role=role):
-                expected = sorted((e["pack_id"], e["role_id"]) for e in entries
-                                  if e["role_id"] == PACK_ROLE.get(role))
-                actual = sorted((r["pack_id"], r["role_id"]) for r in _manifest(role).get("agent_pack_roles", []))
-                self.assertEqual(actual, expected)
 
 
 if __name__ == "__main__":

@@ -269,6 +269,20 @@
             "required"
           ],
           "default": "optional"
+        },
+        "context_pack": {
+          "type": "string",
+          "description": "Context pack scope: legacy sends unbound content everywhere, scoped sends only bound or global content; absent means legacy.",
+          "minLength": 1,
+          "enum": [
+            "legacy",
+            "scoped"
+          ],
+          "default": "legacy"
+        },
+        "context_budget_kb": {
+          "type": "integer",
+          "description": "Context pack size warning threshold in KB, at least 1; absent means 256."
         }
       },
       "required": [

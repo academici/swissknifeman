@@ -151,6 +151,7 @@ class ReadsTests(BriefCase):
         self.assertNotIn("content", by_path["data.bin"])
 
     def test_inline_reads_keep_section_content_of_json_sources(self):
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": "legacy"}})  # scoped drops reads held by documents
         ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
                                      "sections": [{"id": "a", "title": "A", "text": "t"}, {"id": "b", "title": "B", "text": "u"}]})
         ops.patch(self.root, "P1.1", {"reads": [
@@ -427,6 +428,7 @@ class RefReadTests(test_lifecycle.LifeCase):
 
     def test_required_ref_section_titles_remain_readable_via_section_key(self):
         self.add_design()
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": "legacy"}})  # scoped drops reads held by documents
         test_context.force_patch(self.root, "P1.1", {"reads": [
             {"ref": "knowledge/design", "section": "Steps", "why": "needed", "required": True}]})
         self.assertEqual(brief.build(self.load(), "P1.1")["reads"][0]["content"]["sections"][0]["id"], "steps")

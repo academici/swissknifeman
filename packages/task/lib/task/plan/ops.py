@@ -136,7 +136,7 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
         "$schema": _schema_const("plan"), "id": plan_id, "short_id": short_id, "title": title, "status": "active",
         "created": created, "updated_at": store.now(), "repository": repository, "owner": owner,
         "authoring": copy.deepcopy(authoring), "goal": title, "context": title, "phases": [],
-        "settings": {"design_audit": "none", "scout": "off"},
+        "settings": {"design_audit": "none", "scout": "off", "context_pack": "scoped"},
     }
     brief_message = {"id": "M1", "date": message_date or created, "text": message}
     if channel:

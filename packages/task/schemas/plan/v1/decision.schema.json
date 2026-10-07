@@ -98,6 +98,10 @@
         "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
       }
     },
+    "global": {
+      "type": "boolean",
+      "description": "True sends the decision to every context pack; exclusive with a non-empty applies_to."
+    },
     "supersedes": {
       "type": "array",
       "description": "Decisions superseded by this one.",

@@ -12,6 +12,39 @@ from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
 LESSON_TYPES = ("deviation", "blocker", "difficulty", "assumption")
+PACK_MODES = ("legacy", "scoped")
+DEFAULT_BUDGET_KB = 256
+UPSTREAM_KEYS = ("id", "title", "status", "summary", "deliverables", "artifacts")
+RESULT_KEYS = ("notes", "deviations", "pending", "escalation", "commits")
+PHASE_KEYS = ("id", "title", "goal", "deliverables", "contract", "closed")
+PROJECTION_NOTE = ("reads[].included names the pack key that already holds the source; "
+                   "upstream and phase_dependencies are summaries, read them by ref for the full record")
+
+
+def pack_mode(plan: store.Plan) -> str:
+    """``settings.context_pack``; a plan that does not set it keeps the legacy pack."""
+    mode = plan.plan.get("settings", {}).get("context_pack")
+    return mode if mode in PACK_MODES else "legacy"
+
+
+def budget_bytes(plan: store.Plan) -> int:
+    """The pack size warning threshold in bytes; it is a report limit, never a trim."""
+    kb = plan.plan.get("settings", {}).get("context_budget_kb")
+    return (kb if isinstance(kb, int) and not isinstance(kb, bool) and kb >= 1 else DEFAULT_BUDGET_KB) * 1024
+
+
+def scope_reason(doc: dict, item_id: str, phase_id: str, mode: str) -> str | None:
+    """Why a document or decision reaches the pack of ``item_id``: item, phase, global, unbound (legacy only) or None."""
+    applies = doc.get("applies_to") or []
+    if item_id in applies:
+        return "item"
+    if phase_id in applies:
+        return "phase"
+    if doc.get("global") is True:
+        return "global"
+    if not applies and mode == "legacy":
+        return "unbound"
+    return None
 
 
 def extract_section(text: str, section: str) -> str | None:
@@ -181,11 +214,67 @@ def selected_decisions(plan: store.Plan, item_id: str, *, repos=None) -> list[di
             selected.append(parsed.target)
         else:
             foreign.append(refs.resolve(plan, ref, repos=repos))
+    mode, phase_id = pack_mode(plan), item_phase(item_id)
     for key, doc in plan.decisions.items():
-        applies = doc.get("applies_to", [])
-        if doc.get("status") == "accepted" and (not applies or item_id in applies or item_phase(item_id) in applies):
+        if doc.get("status") == "accepted" and scope_reason(doc, item_id, phase_id, mode) is not None:
             selected.append(key)
     return [copy.deepcopy(plan.decisions[k]) for k in dict.fromkeys(selected)] + foreign
+
+
+def _summary(doc: dict, keys: tuple) -> dict:
+    return {k: copy.deepcopy(doc[k]) for k in keys if k in doc}
+
+
+def _project_upstream(doc: dict) -> dict:
+    """A finished dependency as the executor needs it: identity, summary, deliverables and the outcome."""
+    entry = _summary(doc, UPSTREAM_KEYS)
+    result = doc.get("result")
+    outcome = _summary(result, RESULT_KEYS) if isinstance(result, dict) else {}
+    if outcome:
+        entry["result"] = outcome
+    return entry
+
+
+def _project_phase(doc: dict) -> dict:
+    return _summary(doc, PHASE_KEYS)
+
+
+def _source_key(plan: store.Plan, item_id: str, pack: dict, path: str) -> str | None:
+    """The pack key that already holds the JSON source at ``path``, if any."""
+    held = {f"@plan/{plan.rel(plan.path('plan'))}": "plan", f"@plan/{plan.rel(plan.path('brief'))}": "brief",
+            f"@plan/{plan.rel(plan.path('phase', item_phase(item_id)))}": "phase",
+            f"@plan/{plan.rel(plan.path('item', item_id))}": "item"}
+    held.update({f"@plan/{plan.rel(plan.path('document', d['id']))}": "documents"
+                 for d in pack["documents"] if "id" in d})
+    held.update({f"@plan/{plan.rel(plan.path('decision', d['id']))}": "decisions"
+                 for d in pack["decisions"] if isinstance(d.get("id"), str) and d["id"] in plan.decisions})
+    return held.get(path)
+
+
+def duplicate_target(plan: store.Plan, item_id: str, pack: dict, index: int) -> str | None:
+    """Where ``pack["reads"][index]`` already lives in the pack: a pack key, ``reads/<j>`` (the first read of the same
+    path and section), or None. A read of a dependency file is an explicit request for the full record and stays."""
+    entry = pack["reads"][index]
+    path = entry.get("path")
+    if not isinstance(path, str):
+        return None
+    key = _source_key(plan, item_id, pack, path)
+    if key:
+        return key
+    for earlier in range(index):
+        other = pack["reads"][earlier]
+        if other.get("path") == path and other.get("section") == entry.get("section"):
+            return f"reads/{earlier}"
+    return None
+
+
+def _dedupe_reads(plan: store.Plan, item_id: str, pack: dict) -> None:
+    """Replace the content of a read that the pack already carries with the key that holds it."""
+    targets = [duplicate_target(plan, item_id, pack, i) for i in range(len(pack["reads"]))]
+    for entry, target in zip(pack["reads"], targets):
+        if target:
+            entry.pop("content", None)
+            entry["included"] = target
 
 
 def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=None) -> dict:
@@ -193,7 +282,7 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         raise PlanError("REF_UNKNOWN", f"unknown item {item_id!r}")
     from . import lifecycle, units
 
-    item, phase_id = plan.items[item_id], item_phase(item_id)
+    item, phase_id, mode = plan.items[item_id], item_phase(item_id), pack_mode(plan)
     related = [r["ref"] for r in item.get("related", [])]
     upstream = [copy.deepcopy(plan.items[d]) for d in dict.fromkeys([*item.get("depends_on", []), *related])
                 if d in plan.items]
@@ -212,10 +301,15 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
                                if d in plan.phases],
         "reads": [read_entry(plan, r) for r in _reads(item)], "lessons": lessons,
         "documents": [copy.deepcopy(d) for d in plan.documents.values()
-                      if not d.get("applies_to") or item_id in d["applies_to"] or phase_id in d["applies_to"]],
+                      if scope_reason(d, item_id, phase_id, mode) is not None],
         "units": [copy.deepcopy(plan.units[f"{item_id}/{u}"]) for u in units.unit_ids(plan, item_id)],
         "orchestration": units.policy(plan, item_id), "ready_units": units.ready(plan, item_id),
     }
+    if mode == "scoped":
+        result["projection"] = {"mode": mode, "note": PROJECTION_NOTE}
+        result["upstream"] = [_project_upstream(d) for d in result["upstream"]]
+        result["phase_dependencies"] = [_project_phase(d) for d in result["phase_dependencies"]]
+        _dedupe_reads(plan, item_id, result)
     scout = plan.root / PACK_DIR / f"{item_id}.scout.json"
     if with_scout and scout.is_file():
         result["scout"] = json.loads(scout.read_text(encoding="utf-8"))

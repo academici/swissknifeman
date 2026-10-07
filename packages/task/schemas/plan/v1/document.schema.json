@@ -33,6 +33,10 @@
       },
       "description": "Applies to."
     },
+    "global": {
+      "type": "boolean",
+      "description": "True sends the document to every context pack; exclusive with a non-empty applies_to."
+    },
     "provenance": {
       "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/provenance",
       "description": "Provenance."

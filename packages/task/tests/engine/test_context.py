@@ -82,6 +82,12 @@ def force_patch(root, ref, patch):
 
 
 class JsonContextTests(test_lifecycle.LifeCase):
+    """Legacy pack semantics: the plan from ``new_plan`` is scoped, so these tests pin ``context_pack: legacy``."""
+
+    def setUp(self):
+        super().setUp()
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": "legacy"}})
+
     def test_complete_context_is_json_and_deterministic(self):
         text = context.render(self.load(), "P1.1")
         value = json.loads(text)
@@ -220,6 +226,132 @@ class JsonContextTests(test_lifecycle.LifeCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["item"]["id"], "P1.1")
         self.assertFalse((self.root / "context").exists())
+
+
+DECISION = {"status": "accepted", "decision": "rule", "rationale": "why"}
+
+
+class ScopeTests(test_lifecycle.LifeCase):
+    """``settings.context_pack``: legacy sends unbound content everywhere, scoped only bound, global or explicit."""
+
+    def add_content(self):
+        ops.add_document(self.root, {"id": "loose", "title": "Loose", "sections": [{"id": "s", "title": "S", "text": "t"}]})
+        ops.add_document(self.root, {"id": "everywhere", "title": "All", "global": True,
+                                     "sections": [{"id": "s", "title": "S", "text": "t"}]})
+        ops.add_document(self.root, {"id": "bound", "title": "Bound", "applies_to": ["P1.1"],
+                                     "sections": [{"id": "s", "title": "S", "text": "t"}]})
+        self.loose = ops.add_decision(self.root, "Loose", data=DECISION)
+        self.pinned = ops.add_decision(self.root, "Pinned", data=DECISION)
+        self.phase = ops.add_decision(self.root, "Phase", data={**DECISION, "applies_to": ["P1"]})
+        self.world = ops.add_decision(self.root, "World", data={**DECISION, "global": True})
+        force_patch(self.root, "P1.1", {"decisions": [self.pinned]})
+
+    def set_mode(self, mode):
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": mode}})
+
+    def ids(self, value, key):
+        return [d["id"] for d in value[key]]
+
+    def test_new_plans_are_scoped_and_a_missing_setting_is_legacy(self):
+        self.assertEqual(context.pack_mode(self.load()), "scoped")
+        plan = self.load()
+        del plan.plan["settings"]["context_pack"]
+        self.assertEqual(context.pack_mode(plan), "legacy")
+        self.assertEqual(context.budget_bytes(plan), 256 * 1024)
+        plan.plan["settings"]["context_budget_kb"] = 8
+        self.assertEqual(context.budget_bytes(plan), 8 * 1024)
+        plan.plan["settings"]["context_budget_kb"] = 0
+        self.assertEqual(context.budget_bytes(plan), 256 * 1024)
+
+    def test_scope_reason_priority_and_modes(self):
+        reason = context.scope_reason
+        self.assertEqual(reason({"applies_to": ["P1.1"]}, "P1.1", "P1", "scoped"), "item")
+        self.assertEqual(reason({"applies_to": ["P1"], "global": True}, "P1.1", "P1", "scoped"), "phase")
+        self.assertEqual(reason({"global": True}, "P1.1", "P1", "scoped"), "global")
+        self.assertEqual(reason({}, "P1.1", "P1", "legacy"), "unbound")
+        self.assertIsNone(reason({}, "P1.1", "P1", "scoped"))
+        self.assertIsNone(reason({"applies_to": ["P2"]}, "P1.1", "P1", "legacy"))
+
+    def test_legacy_pack_keeps_unbound_content_and_full_upstream(self):
+        self.add_content()
+        self.set_mode("legacy")
+        self.start("P1.1")
+        self.finish("P1.1", notes="result")
+        ops.add_document(self.root, {"id": "second", "title": "Second", "applies_to": ["P1.2"],
+                                     "sections": [{"id": "s", "title": "S", "text": "t"}]})
+        force_patch(self.root, "P1.2", {"reads": [{"path": "@plan/knowledge/second.json", "why": "w", "required": True}]})
+        value = context.collect(self.load(), "P1.2")
+        self.assertNotIn("projection", value)
+        self.assertEqual(self.ids(value, "documents"), ["everywhere", "loose", "second"])
+        self.assertEqual(self.ids(value, "decisions"), [self.loose, self.pinned, self.phase, self.world])
+        self.assertEqual(value["reads"][-1]["content"]["id"], "second")
+        self.assertEqual(value["upstream"], [self.load().items["P1.1"]])
+        self.assertEqual(value["phase_dependencies"], [])
+
+    def test_scoped_pack_drops_unbound_content_and_keeps_global_and_explicit(self):
+        self.add_content()
+        value = context.collect(self.load(), "P1.1")
+        self.assertEqual(self.ids(value, "documents"), ["bound", "everywhere"])
+        self.assertEqual(self.ids(value, "decisions"), [self.pinned, self.phase, self.world])
+        self.assertEqual(context.collect(self.load(), "P1.2")["documents"][0]["id"], "everywhere")
+        self.assertEqual(self.ids(context.collect(self.load(), "P1.2"), "decisions"), [self.phase, self.world])
+
+    def test_scoped_reads_name_the_key_that_already_holds_the_source(self):
+        self.add_content()
+        reads = [{"path": "@plan/knowledge/bound.json", "section": "s", "why": "w", "required": True},
+                 {"path": "@plan/knowledge/bound.json", "section": "s", "why": "again", "required": True},
+                 {"ref": self.phase, "why": "w", "required": True},
+                 {"path": "@plan/plan.json", "why": "w", "required": True},
+                 {"path": "@plan/brief.json", "why": "w", "required": True},
+                 {"path": "@plan/phases/P1/phase.json", "why": "w", "required": True},
+                 {"path": "@plan/phases/P1/P1.1.json", "why": "w", "required": True},
+                 {"path": "@plan/knowledge/loose.json", "why": "unbound but asked for", "required": True}]
+        force_patch(self.root, "P1.1", {"reads": reads})
+        value = context.collect(self.load(), "P1.1")
+        self.assertEqual([r.get("included") for r in value["reads"]],
+                         ["documents", "documents", "decisions", "plan", "brief", "phase", "item", None])
+        self.assertTrue(all("content" not in r for r in value["reads"][:-1]))
+        self.assertEqual(value["reads"][-1]["content"]["id"], "loose")  # not in the pack: the read supplies it
+        self.assertEqual(value["reads"][0]["why"], "w")
+        self.assertTrue(value["reads"][0]["exists"])
+
+    def test_a_repeated_read_points_at_its_first_occurrence(self):
+        read = {"path": "@plan/knowledge/loose.json", "why": "w", "required": True}
+        ops.add_document(self.root, {"id": "loose", "title": "Loose", "sections": [{"id": "s", "title": "S", "text": "t"}]})
+        force_patch(self.root, "P1.1", {"reads": [read, {**read, "why": "twice"}, {**read, "section": "s"}]})
+        entries = context.collect(self.load(), "P1.1")["reads"]
+        self.assertEqual([e.get("included") for e in entries], [None, "reads/0", None])
+        self.assertIn("content", entries[0])
+        self.assertEqual(context.duplicate_target(self.load(), "P1.1", {"documents": [], "decisions": [],
+                                                                         "reads": entries}, 1), "reads/0")
+
+    def test_scoped_upstream_and_phase_dependencies_are_summaries(self):
+        self.start("P1.1")
+        self.finish("P1.1", notes="result")
+        value = context.collect(self.load(), "P1.2")
+        entry, = value["upstream"]
+        self.assertLessEqual(set(entry), set(context.UPSTREAM_KEYS) | {"result"})
+        self.assertEqual((entry["id"], entry["status"], entry["result"]["notes"]), ("P1.1", "done", "result"))
+        self.assertNotIn("validation", entry)
+        self.assertNotIn("reads", entry)
+        self.assertEqual(value["projection"]["mode"], "scoped")
+        self.assertIn("summaries", value["projection"]["note"])
+        deps = context.collect(self.load(), "P2.1")["phase_dependencies"]
+        self.assertTrue(all(set(d) <= set(context.PHASE_KEYS) for d in deps))
+
+
+class SchemaScopeTests(test_lifecycle.LifeCase):
+    def test_schema_accepts_global_and_the_new_settings(self):
+        ops.add_document(self.root, {"id": "g", "title": "G", "global": True, "sections": []})
+        ops.add_decision(self.root, "G", data={**DECISION, "global": True})
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": "legacy", "context_budget_kb": 64}})
+        self.assertEqual(self.load().plan["settings"]["context_budget_kb"], 64)
+
+    def test_schema_rejects_an_unknown_pack_mode_and_a_non_boolean_global(self):
+        with self.assertRaises(PlanError):
+            ops.patch(self.load(), "plan", {"settings": {"context_pack": "x"}})
+        with self.assertRaises(PlanError):
+            ops.add_document(self.root, {"id": "g", "title": "G", "global": "yes", "sections": []})
 
 
 if __name__ == "__main__":

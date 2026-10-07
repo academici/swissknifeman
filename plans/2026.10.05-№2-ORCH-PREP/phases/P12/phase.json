@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P12",
   "title": "Привязка знаний к пунктам и бюджет context pack: контроль после детализации",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Контекст пункта содержит только привязанное к нему знание: пустой `applies_to` не становится молчаливым «весь план», после детализации фазы протокол проверяет привязку knowledge/brief/plan-контента к пунктам и бюджет context pack, правило закреплено инструкцией plan-protocol (B52, M10).",
   "context": "Наблюдение (azguard PLAN2, 2026-10-07, детализация P5): `plan.py context <plan> <item> --stdout` весит ~1,0–1,1 МБ на\nлюбой открытый пункт, даже на скелетный P8.7 без reads. Состав для P5.2: documents 595 КБ, brief 199 КБ, decisions\n98 КБ, reads 91 КБ, plan 57 КБ, phase_dependencies 28 КБ.\n\nПричины (проверено по коду и данным):\n1. `lib/task/plan/context.py` `collect()`: документ knowledge без `applies_to` считается общим для плана и попадает в\n   каждый pack (правило `not d.get(\"applies_to\") or …`). Так же для accepted decisions в `selected_decisions()`.\n   Пустой `applies_to` — молчаливое «везде»; ни `check`, ни `design-done`, ни протокол не сигнализируют.\n2. Миграция в JSON (удалена в 73c0081d4) вывела `applies_to` по пути только для части файлов: в azguard 28 документов\n   `artifacts-*` (owner-review packets, environment, invariant-model) и `decisions-_index/_current/_archive` остались\n   с `[]` → ~575 КБ в каждом pack.\n3. `brief` включается в pack целиком: в azguard `sections` дублируют `messages` (те же 7 текстов, 97 КБ ×2), а\n   `messages` kind=record — это фазовые выдержки досье/матрица приёмки, а не сообщения владельца.\n4. `plan.sections` включаются целиком: legacy-проекции (`Legacy-status.md` 23 КБ, `Legacy-roadmap.md` 12 КБ) —\n   устаревший статус на момент миграции попадает исполнителю как контекст.\n5. `phase_dependencies` — полный JSON предыдущей фазы (P4: 28 КБ) даже для пунктов, которым он не нужен.\n\nРиск: слабый исполнитель получает мегабайт нерелевантного и устаревшего контекста; бюджет и качество исполнения\nтеряются незаметно (root.engineering-invariants: always-on контекст только с измеренным бюджетом).\nЛокальный фикс данных azguard выполняется отдельным агентом в azguard; эта фаза — генератор/протокол/контроль.",
   "scope": {
@@ -31,6 +31,44 @@
     "инструкция в plan-protocol и командах + проекции адаптеров",
     "измерение до/после на реальном плане (azguard PLAN2) в knowledge"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P12.1",
+    "P12.2",
+    "P12.3",
+    "P12.4",
+    "P12.5",
+    "P12.6"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P12.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P12.2",
+        "P12.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P12.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P12.5",
+        "P12.6"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

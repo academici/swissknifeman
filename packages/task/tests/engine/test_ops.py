@@ -94,7 +94,7 @@ class NewPlanTests(RootCase):
         events = store.read_log(root)
         self.assertEqual([e["type"] for e in events], ["plan_created"])
         self.assertEqual(plan.plan["created"], "2026-10-05")
-        self.assertEqual(plan.plan["settings"], {"design_audit": "none", "scout": "off"})
+        self.assertEqual(plan.plan["settings"], {"design_audit": "none", "scout": "off", "context_pack": "scoped"})
         self.assertEqual((root / "plan.json").read_text(encoding="utf-8"), store.canonical_dump(plan.plan, "plan"))
         self.assertEqual(errors(plan), [])
         warnings = sorted(i.where for i in check.check(plan) if i.level == "warning")

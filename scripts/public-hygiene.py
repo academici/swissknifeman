@@ -75,13 +75,24 @@ PLAN_REFERENCE_RULES = [
 ]
 
 
+# Plan-engine test data exercises the plan ID and Short-ID syntax itself (reference parsing, store,
+# views, bridges, golden outputs), so its identifiers cannot avoid that shape. They are synthetic and
+# these trees are exempt from the plan-reference rules ONLY; the content rules above still apply.
+PLAN_SYNTAX_TEST_TREES = {
+    "packages/task/tests/engine/": "plan engine tests and fixtures: ID, Short-ID and reference syntax",
+    "packages/task/bridges/orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
+    "packages/orch/fixtures/exec/": "orchestration exec-contract fixtures: plan-bound identifiers",
+    "packages/orch/tests/": "orchestration tests and goldens: plan-bound identifiers and profile examples",
+}
+
+
 def plan_reference_violations(paths, read=None):
     """Tracked files must not sit in working directories or reference concrete plans."""
     read = read or _read_text
     found = [(path, "tracked working document (plans/, roadmap/, tasks/, .cursor/plans/ are local-only)")
              for path in paths if path.startswith(WORKING_DOC_DIRS)]
     for path in paths:
-        if path.startswith(WORKING_DOC_DIRS):
+        if path.startswith(WORKING_DOC_DIRS) or path.startswith(tuple(PLAN_SYNTAX_TEST_TREES)):
             continue
         text = read(path)
         if path in CONTENT_PLAN_EXEMPT:

@@ -16,6 +16,24 @@ Run skiller budget --first-turn; target 16K, warn at 23K, and require an Owner v
 For Claude Code research, use the established `perplexity-web` route before `WebSearch`; this native routing does not replace the common external-claim verification rule.
 <!-- swissknifeman:instructions:root:claude-code:extension:end -->
 
+<!-- dev-autonomy:begin (temporary: remove this block when the ecosystem-split plan is closed) -->
+## Development mode: agent-owned decisions
+This package is under active restructuring on a development branch. The plan and its direction are
+already approved by the owner; the agent owns the implementation end to end.
+
+- Make all architectural, design, fix and sequencing decisions yourself. Record them in the plan
+  (`plan.py log`; an architectural choice becomes a plan decision) and keep going to the result.
+- Never ask for confirmation, "which option" or "should I continue". Continue to the next plan item.
+- Fix every defect you hit right away and properly, even when it exceeds a soft threshold or is not
+  strictly in scope; log the deviation. Do not leave known red checks or defer obvious fixes.
+- Quality over speed: root-cause fixes, verified by the item's checks and the affected suites.
+- Ask the owner only for what only they can do (a command needing their terminal or credentials,
+  changes to live machine state, pushes or publishing beyond the plan) or a truly irreversible
+  product-level choice.
+- Machine-specific rules (paths, pinned tooling) live in the untracked `CLAUDE.local.md` when present.
+- Reports stay short: done, verified, next. No "decision for you" blocks.
+<!-- dev-autonomy:end -->
+
 <!-- maind:healthcheck hash=70e92d16482a (managed by maind — do not edit manually) -->
 ## mAInd — temporary project context and graph
 

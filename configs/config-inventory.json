@@ -270,6 +270,15 @@
       "dynamic": true
     },
     {
+      "path": "packages/orch/bridges/task/bridge.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/bridges/task/discovery.py"
+      ],
+      "released": false,
+      "note": "declarative, no entrypoints; names the Task package-layout contract and the SKM_TASK_ROOT lookup"
+    },
+    {
       "path": "packages/orch/bridges/skiller/bridge.json",
       "owner": "orch",
       "consumers": [

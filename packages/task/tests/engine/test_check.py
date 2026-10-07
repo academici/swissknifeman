@@ -403,7 +403,7 @@ class PathTests(CheckCase):
         def change(doc):
             doc["reads"] = [{"path": "../outside.py", "why": "w", "required": False},
                             {"path": "lib/../../x", "why": "w", "required": False},
-                            {"path": "C:\\Users\\x", "why": "w", "required": False},
+                            {"path": "C:\\Users\\user", "why": "w", "required": False},
                             {"path": "~/secret", "why": "w", "required": False},
                             {"path": "@plan/../x", "why": "w", "required": False}]
             doc["task_files"] = [{"path": "a/../b", "change": "any"}]

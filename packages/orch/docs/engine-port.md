@@ -2,7 +2,7 @@
 
 `orch.port` is the boundary between the engine-neutral [exec/v1 contracts](contracts.md) and the
 engine bindings `native`, `cao` and `claude-only` (`BINDINGS`). It holds only the protocol, its errors
-and the `RunState` reducer; bindings and `prepare_common` arrive in PLAN2.P5.3.
+and the `RunState` reducer; bindings and `prepare_common` arrive in phase P5.3 of the orchestration-prep plan.
 
 Invariant: one run has one workflow owner. A binding never calls another binding; the CAO adapter does
 not start the native engine; Claude-only is a human or Claude session that receives a prompt and
@@ -23,7 +23,7 @@ returns a report.
 | `resume(run_id)` | run id, or `RESUME_REFUSED` | `NOT_IMPLEMENTED` |
 | `results(run_id)` | `{"stage_results": [...], "effect_receipts": [...]}` | `NOT_IMPLEMENTED` |
 
-`prepare` (PLAN2.P5.3) validates the input, policy and role manifests, orders stages by `depends_on`,
+`prepare` (phase P5.3) validates the input, policy and role manifests, orders stages by `depends_on`,
 enforces the minimum route of the primary stage, matches each model stage against the
 `(binding, provider)` capability record (a missing record counts as `unknown`), and resolves models only
 through the command-routing catalog. An unmet requirement of a `required` stage raises

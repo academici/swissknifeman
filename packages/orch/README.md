@@ -1,7 +1,7 @@
 # orch
 
 Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
-Status: **internal, not published (PLAN2.D2)**. Runtime code uses only the Python
+Status: **internal, not published (decision D2 of the orchestration-prep plan)**. Runtime code uses only the Python
 standard library and `orch`; it is independent of other packages of this repository.
 
 The package supplies a closed-profile JSON Schema validator, shared `exec/v1`
@@ -32,7 +32,7 @@ warning-only documents), `1` invalid input or refusal, `2` usage error.
 `--quiet` suppresses stdout and preserves diagnostics and the exit status.
 
 The registry rejects schema keywords outside its closed profile. Its validator
-is an adapted copy of the plan store's closed-profile validator (PLAN2.D4);
+is an adapted copy of the plan store's closed-profile validator (decision D4 of the orchestration-prep plan);
 the plan bridge tests keyword parity.
 
 ## Docs

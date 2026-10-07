@@ -32,7 +32,7 @@
     {
       "command": "bash packages/task/scripts/validate.sh --fleet",
       "exit_code": 1,
-      "reason": "Archived plan 2026.10.05-№1-TASK-PLAN-JSON has 24 human_view errors and 6 warnings. The same result was reproduced against the clean main baseline; archives were not migrated."
+      "reason": "An archived plan has 24 human_view errors and 6 warnings. The same result was reproduced against the clean main baseline; archives were not migrated."
     },
     {
       "command": "python3 scripts/version-guard.py status",

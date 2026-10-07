@@ -69,6 +69,22 @@ class TestPublicHygiene(unittest.TestCase):
         found = public_hygiene.plan_reference_violations(sorted(files), read=files.get)
         self.assertEqual(sorted({path.split(" ")[0] for path, _ in found}), ["a.md", "b.md", "c.md", "d.md"])
 
+    def test_plan_syntax_test_trees_are_exempt_from_plan_rules_only(self):
+        date = "2026" + ".07.24"
+        tree = next(iter(public_hygiene.PLAN_SYNTAX_TEST_TREES))
+        files = {f"{tree}t.py": f"id {date}-GOLD and PLAN" + "1.P1", "src/t.py": f"id {date}-GOLD"}
+        found = public_hygiene.plan_reference_violations(sorted(files), read=files.get)
+        self.assertEqual([path.split(" ")[0] for path, _ in found], ["src/t.py"])
+        leak = {f"{tree}t.py": "/home/" + "vostrikov/projects/x"}
+        self.assertEqual(len(public_hygiene.content_violations(sorted(leak), read=leak.get)), 1)
+
+    def test_plan_syntax_test_trees_are_live_directories(self):
+        tracked = public_hygiene.list_tracked_files()
+        for tree, reason in public_hygiene.PLAN_SYNTAX_TEST_TREES.items():
+            self.assertTrue(reason)
+            self.assertTrue(tree.endswith("/"), tree)
+            self.assertTrue(any(path.startswith(tree) for path in tracked), f"dead exemption: {tree}")
+
     def test_no_sealed_measurement_exemption_remains(self):
         self.assertEqual(public_hygiene.CONTENT_PLAN_EXEMPT, {})
         self.assertEqual(public_hygiene.CONTENT_PLAN_EXEMPT_SHA256, {})

@@ -200,14 +200,31 @@
    "grok": {
     "model_class": "implementation",
     "effort": "high",
-    "transport": "acp",
+    "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}/vendor",
+     "--",
      "grok",
-     "agent",
-     "stdio"
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write",
+     "--output-format",
+     "streaming-messages-json"
     ],
-    "timeout_s": 1800,
-    "model_set": "unknown"
+    "timeout_s": 3600,
+    "model_set": "supported"
    }
   },
   "registrar": {

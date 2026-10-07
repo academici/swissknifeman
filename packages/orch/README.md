@@ -13,6 +13,8 @@ models come from the `mappings` of a routing config (`--routing`, `ORCH_ROUTING`
 Starting runs is future work; `prepare` without `--dry-run` returns `NOT_IMPLEMENTED`.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
+The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
+writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; `{orch}` in an argv is this package root.
 Incompatible versions return `CONTRACT_VERSION` before schema validation.
 
 From the repository root:

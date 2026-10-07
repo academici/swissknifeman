@@ -4,7 +4,8 @@ Reads the role's entry from the partner's launch catalog (``orch.py launch``, as
 class to a model through Task's provider mapping (``class_selectors`` in ``configs/command-routing.json``), and
 prints ``{"argv", "transport", "timeout_s", "model", "model_class"}``. Models never come from the catalog.
 
-Run as ``plan.py bridge orch launch <role> <provider> [--effort E] [--cwd DIR] [--routing FILE]``.
+Run as ``plan.py bridge orch launch <role> <provider> [--model M] [--effort E] [--cwd DIR] [--routing FILE]``.
+``--model`` pins the exact model of an owner selector (``reviewer grok/grok-4.7``) instead of the class mapping.
 Nothing is started. Errors are ``CODE: message`` on stderr with exit 1.
 """
 from __future__ import annotations
@@ -25,6 +26,7 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="plan.py bridge orch launch", description=__doc__.splitlines()[0])
     p.add_argument("role")
     p.add_argument("provider")
+    p.add_argument("--model", help="exact model of an owner selector; replaces the class mapping")
     p.add_argument("--effort", help="override the catalog effort")
     p.add_argument("--cwd", default=".")
     p.add_argument("--routing", type=Path, default=ROUTING, help="routing file holding the provider mappings")
@@ -56,13 +58,16 @@ def resolve_effort(mapping: dict | None, effort: str) -> str:
     return selectors[0] if selectors else effort
 
 
-def build(role: str, provider: str, *, effort: str | None, cwd: str, routing: Path) -> dict:
+def build(role: str, provider: str, *, effort: str | None, cwd: str, routing: Path, model: str | None = None) -> dict:
     entry = _orch("show", role, provider)
     try:
         mapping = json.loads(routing.read_text(encoding="utf-8")).get("mappings", {}).get(provider)
     except (OSError, ValueError) as error:
         raise LaunchRefused("ROUTING_UNREADABLE", f"{routing}: {error}") from error
-    model = resolve_model(mapping, entry["model_class"])
+    if model is not None and (not model or entry["model_set"] != "supported"):
+        raise LaunchRefused("LAUNCH_INVALID", f"role {role!r} on {provider!r} takes no model argument" if model
+                            else "--model needs a model id")
+    model = model or resolve_model(mapping, entry["model_class"])
     if entry["model_set"] == "supported" and model is None:
         raise LaunchRefused("LAUNCH_MODEL_UNRESOLVED",
                             f"provider {provider!r} has no model for class {entry['model_class']!r} in {routing.name}")
@@ -76,7 +81,7 @@ def build(role: str, provider: str, *, effort: str | None, cwd: str, routing: Pa
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
-        out = build(args.role, args.provider, effort=args.effort, cwd=args.cwd, routing=args.routing)
+        out = build(args.role, args.provider, effort=args.effort, cwd=args.cwd, routing=args.routing, model=args.model)
     except LaunchRefused as error:
         print(error, file=sys.stderr)
         return 1

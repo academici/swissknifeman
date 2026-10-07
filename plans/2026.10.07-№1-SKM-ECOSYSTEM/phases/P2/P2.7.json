@@ -1,0 +1,119 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.7",
+  "title": "Закрытие фазы: широкий прогон, сверка E1, push",
+  "status": "todo",
+  "summary": "Закрыть фазу: один широкий прогон всех наборов тестов и проверок, сверка тезисов E1 фазы P2 по колонке «Проверка при аудите», docs-impact по диапазону фазы, push ветки ecosystem-split в origin.",
+  "why": "Правило плана: конец фазы — тесты и проверки автономности зелёные, push; широкая проверка фазы выполняется один раз здесь и переиспользуется (philosophy: broad checks run once). Сверка E1 обязательна по правилу плана. Риск — push неготового: push только после зелёного прогона, без force.",
+  "scope": {
+    "include": [
+      "наборы: skiller, harness, maind, orch, analyst test.sh; task validate.sh; core tests; все scripts/test-*.py",
+      "ecosystem-units check и standalone --baseline; golden check",
+      "docs-impact по диапазону origin/ecosystem-split..HEAD",
+      "сверка тезисов E13, E14, E15, E18, E20, E28, E35, E36, E45, E47, E48, E50 (plan.py log note со списком «реализован / перенесён решением»)",
+      "git push origin ecosystem-split"
+    ],
+    "exclude": [
+      "новые функции; найденный дефект чинится в его владельце (правило dev-режима), с повторным прогоном затронутого"
+    ]
+  },
+  "depends_on": [
+    "P2.6"
+  ],
+  "decisions": [
+    "D10",
+    "D23"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/modules-p2#e1",
+      "why": "тезисы фазы и их проверки",
+      "required": true
+    },
+    {
+      "path": "docs/develop.md",
+      "section": "Ecosystem split branch (temporary)",
+      "why": "ритм фазы и push",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops",
+      "why": "тезисы E28, E45, E47, E48, E50: колонка «Проверка при аудите»",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-extensions",
+      "why": "тезисы E05, E18, E36: проверка при аудите",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-contracts",
+      "why": "тезисы E13, E14, E15, E20, E35: проверка при аудите",
+      "required": true
+    }
+  ],
+  "rules": [
+    "Push — только ветки ecosystem-split в origin, без force; дерево чистое",
+    "Красная проверка не переводится в «известное»: чинится у владельца в этой же фазе, затем повторяется только затронутое и V-команда целиком",
+    "Тестовые наборы — штатными раннерами (они сами изолируют HOME)"
+  ],
+  "guidance": "Исполнитель: economy/medium.\n\nПорядок: V1 (долго — в фоне, дождаться) → V2 → V3 → V4 → сверка E1 (`plan.py log <plan> P2 --type note --summary \"E1 P2: E13 …; E14 …\"` со строкой на тезис) → commit пункта → push → V5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "set -e; for m in skiller harness maind orch analyst; do bash packages/$m/scripts/test.sh; done; bash packages/task/scripts/validate.sh; PYTHONPATH=. python3 -m unittest discover -s core/tests; for t in scripts/test-*.py; do python3 \"$t\"; done; bash scripts/test-bootstrap-machine.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone --baseline",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "git fetch -q origin && test -z \"$(git status --porcelain --untracked-files=no)\" && test \"$(git rev-list --count origin/ecosystem-split..HEAD)\" = 0",
+      "expect": "exit 0 (всё запушено, дерево чистое)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "зелёный широкий прогон фазы",
+    "сверка E1 в журнале плана",
+    "push ветки"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-07T20:28:50Z"
+}

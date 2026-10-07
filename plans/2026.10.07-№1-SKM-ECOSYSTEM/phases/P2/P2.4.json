@@ -1,0 +1,176 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.4",
+  "title": "Правило «папка = модуль» в корневых инструкциях через каталог harness",
+  "status": "todo",
+  "summary": "Добавить в каталог инструкций harness common-секцию root.module-folders и механизм закреплённых root common id (ROOT_PINNED_COMMON_IDS), обновить контракт и фикстуры harness, применить проекции: правило «папка = модуль» появляется в корневых CLAUDE.md, AGENTS.md, .cursor и .grok правилах; check clean, бюджет первого хода в норме.",
+  "why": "Архитектура §1 требует, чтобы корневые инструкции фиксировали правило модулей для любого агента в репозитории; root common сейчас on demand и в корень не проецируется (D29). Риск — сломать контракт инструкций (parity, conflict, literal coverage) и провенанс lock-файла: менять только через каталог и `harness instructions apply`, никогда руками в проекциях.",
+  "scope": {
+    "include": [
+      "packages/harness/configs/common/instructions/root/common.md: секция root.module-folders (текст §rule)",
+      "catalog.json: запись секции, catalog_version 1.3.0 → 1.4.0",
+      "packages/harness/lib/harness/instructions.py: COMMON_IDS root + ROOT_PINNED_COMMON_IDS и проекция для root",
+      "provider-instruction-contract.md: инвентарь и абзац Pinned root common",
+      "тесты и фикстуры harness, которых требует изменение",
+      "apply проекций в песочнице: корневые цели и все stale-source цели; lock .swissknifeman/provider-artifacts.lock.json"
+    ],
+    "exclude": [
+      "текст других root-секций (P3, P11, P12)",
+      "package-скоупы и их тексты",
+      "CHANGELOG (P2.6)"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D1",
+    "D29"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/modules-p2#rule",
+      "why": "текст секции, механизм, применение, бюджет",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "section": "COMMON_IDS, EXTENSION_IDS, _projection, catalog validation",
+      "why": "где закрепить id и как валидируется каталог",
+      "required": true
+    },
+    {
+      "path": "packages/harness/docs/reference/provider-instruction-contract.md",
+      "why": "контракт: инвентари, минорное добавление common-секции, состояния целей, apply/authorize",
+      "required": true
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/root/common.md",
+      "why": "формат фрагмента",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/harness/configs/common/instructions/root/common.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/catalog.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/provider-instruction-contract.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "CLAUDE.md",
+      "change": "modify",
+      "note": "только через apply"
+    },
+    {
+      "path": "AGENTS.md",
+      "change": "modify",
+      "note": "только через apply"
+    },
+    {
+      "path": ".cursor/rules/swissknifeman-instructions.mdc",
+      "change": "modify",
+      "note": "только через apply"
+    },
+    {
+      "path": ".grok/rules/swissknifeman-instructions.md",
+      "change": "modify",
+      "note": "только через apply"
+    },
+    {
+      "path": ".swissknifeman/provider-artifacts.lock.json",
+      "change": "modify",
+      "note": "только через apply"
+    },
+    {
+      "path": "packages/*/CLAUDE.md",
+      "change": "any",
+      "note": "только если apply их меняет"
+    },
+    {
+      "path": "packages/*/AGENTS.md",
+      "change": "any",
+      "note": "только если apply их меняет"
+    }
+  ],
+  "rules": [
+    "Сгенерированные проекции и lock меняются только harness instructions apply (правило root.generated-artifacts); блок dev-autonomy в CLAUDE.md вне managed-блоков сохраняется байт-в-байт",
+    "CLI harness — только в песочнице scripts/dev-sandbox.sh (guard dev-клона)",
+    "Контрактные фикстуры обновляются из контракта, а не подгоняются под вывод: каждое изменение фикстуры объясняется изменением контракта",
+    "Package-скоупы: проекция common не меняется; если apply трогает package-цели, то только lock/провенанс, не текст",
+    "Бюджет первого хода ≤ 16000 (сейчас 2302)"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\n1. Фрагмент: добавить в конец root/common.md блок из §rule (маркер `<!-- instruction:root.module-folders -->`, заголовок `## root.module-folders`, текст).\n2. instructions.py: добавить id в `COMMON_IDS[\"root\"]` последним; `ROOT_PINNED_COMMON_IDS = (\"root.module-folders\",)` рядом с COMMON_IDS; в `_projection`: `if scope_id == \"root\": projected_common_ids = ROOT_PINNED_COMMON_IDS` (иначе — как сейчас); `common_text` должен содержать только закреплённые секции — использовать существующий разбор фрагмента (`_fragment_body`/`fragment_section`) и собрать текст только из закреплённых id в порядке каталога; проверить, что `_managed` и валидация semantic_sections (`semantic[\"semantic_sections\"][\"common\"]` = всё COMMON_IDS или только проецируемые?) согласованы — следовать тому, как сейчас для package/codex с project_common=false.\n3. catalog.json (126 KB, в контекст не включён — читать фрагментами: grep -n \"root.docs-build\" и соседние root-записи): запись по образцу `root.docs-build` (order 19, kind common, provider_id null, intent \"Apply this source-derived instruction: …\", obligations must/root.maintainer/preserve, sources с sha256 нового common.md — пересчитать у всех root-записей, ссылающихся на этот фрагмент; compatibility_assertions — ключевые литералы). catalog_version 1.4.0; если валидатор хранит версию константой (CATALOG_VERSION) — обновить.\n4. Контракт: строка root в таблице инвентаря + абзац «Pinned root common»: root common проецируется on demand, кроме закреплённых id, которые проецируются всем провайдерам; добавление закреплённой секции — catalog minor + бюджет.\n5. `bash packages/harness/scripts/test.sh` — чинить фикстуры по смыслу.\n6. Песочница: `d=$(bash scripts/dev-sandbox.sh new --name p24 | tail -1)`; `bash scripts/dev-sandbox.sh run \"$d\" -- packages/harness/bin/harness instructions plan --target \"$PWD\" --json` → список целей и действий; `… instructions apply --target \"$PWD\" --authorize <цели>` (если authorize требует owner-decision — это stale-source update, он не требует adoption; при отказе прочитать код отказа в контракте); затем `check` → clean; `bash scripts/dev-sandbox.sh remove \"$d\"`.\n7. Бюджет: `bash scripts/dev-sandbox.sh run \"$d\" -- packages/skiller/bin/skiller budget --first-turn --target \"$PWD\"`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/harness/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "d=$(bash scripts/dev-sandbox.sh new --name p24v3-$$ | tail -1) && bash scripts/dev-sandbox.sh run \"$d\" -- packages/harness/bin/harness instructions check --target \"$PWD\"; rc=$?; bash scripts/dev-sandbox.sh remove \"$d\" >/dev/null; test $rc -eq 0",
+      "expect": "exit 0 (все проекции clean)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "for f in CLAUDE.md AGENTS.md .cursor/rules/swissknifeman-instructions.mdc .grok/rules/swissknifeman-instructions.md; do grep -q 'root.module-folders' \"$f\" && grep -q 'scripts/ecosystem-units.py check' \"$f\" || exit 1; done; ! grep -q 'root.repository-layout' CLAUDE.md && grep -q 'dev-autonomy:begin' CLAUDE.md",
+      "expect": "exit 0 (правило во всех 4 корневых проекциях, прочий root common не проецируется, dev-autonomy на месте)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "d=$(bash scripts/dev-sandbox.sh new --name p24v5-$$ | tail -1) && out=$(bash scripts/dev-sandbox.sh run \"$d\" -- packages/skiller/bin/skiller budget --first-turn --target \"$PWD\" 2>&1); bash scripts/dev-sandbox.sh remove \"$d\" >/dev/null; printf '%s\\n' \"$out\" | grep -E '^Total:' | grep -q 'OK'",
+      "expect": "exit 0 (бюджет первого хода OK)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "секция root.module-folders в каталоге",
+    "закрепление root common в harness",
+    "правило в корневых проекциях"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-07T20:29:24Z"
+}

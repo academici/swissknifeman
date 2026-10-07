@@ -158,3 +158,11 @@ harness doctor --provider-audit
 - Memory shares state with `skiller` (`~/.swissknifeman/`): installed hooks
   `~/.claude/hooks/memory/` read `topology.json`/`projects.json` from there.
 - Plugin `harness@swissknifeman` gives slash-commands `/harness:*`.
+
+## Development clone guard
+
+In a development clone of the repository (an untracked `.swissknifeman-dev` marker in the root) `bin/harness`
+refuses to run against the real `HOME`: exit code 3 and a `SKM_DEV_GUARD` line in stderr. Use a throwaway
+environment (`scripts/dev-sandbox.sh` in the repository root) or `SKM_DEV_ALLOW_LIVE=1` as a conscious
+exception. Installed copies and checkouts without the marker are unaffected. See `docs/develop.md`
+("Ecosystem split branch").

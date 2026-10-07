@@ -4,6 +4,12 @@
 
 ### Added
 
+- **scripts:** `dev-clone.sh` (`init`, `status`, `sync-main`) и guard dev-клона: одинаковый блок в 11 точках входа
+  (`bin/swissknifeman`, CLI модулей, установщики, `bootstrap-machine.sh`) отказывает с кодом 3 и `SKM_DEV_GUARD` при
+  реальном `HOME`, пока в корне клона есть неотслеживаемый маркер `.swissknifeman-dev`; раннеры тестов работают во
+  временном `HOME`.
+- **scripts:** `dev-sandbox.sh` (`new`, `run`, `list`, `remove`) — песочница с отдельным `HOME`/XDG и копиями проектов
+  для ручных проверок из dev-клона; `remove` удаляет только `skm-sandbox-*` с маркером прямо в `TMPDIR`.
 - **orch:** `scripts/ro-run.py` запускает команду под Landlock (Linux, без root и user namespaces):
   файловая система читается целиком, запись — только во временные каталоги, `~/.grok` и `--rw`. Роль
   `reviewer` на grok в каталоге запуска — headless `grok --prompt-file /dev/stdin` с `bypassPermissions` под

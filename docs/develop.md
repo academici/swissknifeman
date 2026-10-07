@@ -408,3 +408,46 @@ The main changes have these dispositions:
 Verification uses the Task, Harness, mAInd and Skiller validators, registry freshness and targeted
 route/workflow/memory/retirement tests. Archived PLAN1 may warn about old removed reads; it remains
 schema-valid historical data and is not rewritten by this reconciliation.
+
+## Ecosystem split branch (temporary)
+
+The ecosystem is being split into isolated modules on the long-lived branch `ecosystem-split`. This section
+describes how that work is isolated from a working machine. It is removed at cutover (the last phase of the plan).
+
+1. **Why a separate clone.** The live checkout `~/projects/packages/swissknifeman` stays on `main`. The CLIs in
+   `~/.local/bin`, the `swissknifeman` marketplace and the connected projects point to it, so a half-finished
+   branch must never run from there. The work happens in a second clone on the branch.
+2. **Setup on any computer.**
+   ```bash
+   git clone -b ecosystem-split https://github.com/academici/swissknifeman.git ~/projects/packages/swissknifeman-next
+   cd ~/projects/packages/swissknifeman-next && scripts/dev-clone.sh init
+   ```
+   `init` creates the untracked marker `.swissknifeman-dev` (never committed) and sets the upstream. It refuses
+   on `main`/`master` (`DEV_CLONE_ON_MAIN`) and is safe to repeat.
+3. **Guard.** While the marker exists, the entry points of the clone (`bin/swissknifeman`, the module CLIs, the
+   installers and `scripts/bootstrap-machine.sh`) refuse to run against the real `HOME`: exit code 3 and a
+   `SKM_DEV_GUARD` line in stderr. Run them inside a sandbox (next item). `SKM_DEV_ALLOW_LIVE=1` lifts the
+   guard and is a conscious exception, for example when deliberately switching the live installation over. The
+   test runners (`packages/*/scripts/test.sh`, `scripts/test-bootstrap-machine.sh`) use a throwaway `HOME`
+   themselves; running `python3 -m unittest` directly from the clone with the real `HOME` is refused by the
+   guard.
+4. **Sandbox.** `scripts/dev-sandbox.sh new [--name N] [--copy <project>]...` creates
+   `${TMPDIR:-/tmp}/skm-sandbox-<N>` with its own `HOME`/XDG directories and copies of the projects (the
+   originals are never modified) and prints its path. Use `run DIR -- <command>` to execute a command with that
+   environment (`packages/skiller/bin/skiller --help` passes the guard there), `source DIR/env.sh` for an
+   interactive shell, `list` to see sandboxes and `remove DIR` to delete one. `remove` deletes only a directory
+   named `skm-sandbox-*` that sits directly in `TMPDIR` and holds the `.skm-sandbox` marker. Provider CLIs
+   (`claude`, `codex`, `grok`) are not logged in inside a sandbox.
+5. **Plan execution.** The plan lives in `plans/<PLAN-ID>` of the clone; its architecture is in the plan's
+   `knowledge/architecture.json`. It is executed by the stable `plan.py` of the live checkout, not by the
+   `plan.py` in the clone, so the engine keeps working while the layout changes:
+   `python3 ~/projects/packages/swissknifeman/packages/task/scripts/plan.py <verb> <plan> ... --plans-root ~/projects/packages/swissknifeman-next/plans`.
+   The `/task:*` commands are installed from the live checkout (`claude plugin install task@swissknifeman
+   --scope local` in the clone). Do not edit the live checkout while a plan runs.
+6. **Phase rhythm.** At the start of a phase run `scripts/dev-clone.sh sync-main` (clean tree required; a
+   conflict stops with `DEV_CLONE_CONFLICT` and the file list, nothing is resolved automatically). Run the
+   package test runners and the standalone checks of the phase. At the end of the phase `git push origin
+   ecosystem-split` (no force). On another computer `scripts/dev-clone.sh status` shows the branch, whether the
+   marker is present and how far it is ahead of or behind `origin/main` and `origin/ecosystem-split`.
+7. **Removal.** The guard blocks, the marker, `scripts/dev-clone.sh`, `scripts/dev-sandbox.sh` and this section
+   are removed at cutover.

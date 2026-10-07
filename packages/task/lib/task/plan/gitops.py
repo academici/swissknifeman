@@ -271,3 +271,57 @@ def commit(plan_dir: str | Path, ref: str, *, role: str, paths: list[str] = (), 
         finally:
             lock.unlink(missing_ok=True)
         return result
+
+
+_LOG_FORMAT = "%H%x1f%s%x1f" + "%x1f".join(
+    f"%(trailers:key={key},valueonly,separator=%x1e)" for key in ("Plan", "Plan-Ref", "Plan-Role")) + "%x1e"
+
+
+def _trailer(value: str) -> str:
+    return value.replace("\x1e", "\n").strip().splitlines()[0] if value.strip() else ""
+
+
+def list_commits(plan_dir: str | Path, ref: str | None = None, *, role: str | None = None) -> dict:
+    """Read-only plan -> commits link: trailers in HEAD history, then legacy ``result.commits``."""
+    plan = store.load_plan(Path(plan_dir).resolve())
+    if ref is not None:
+        try:
+            parsed = parse_ref(ref)
+        except ValueError as exc:
+            raise PlanError("REF_INVALID", str(exc)) from exc
+        if parsed.plan or parsed.repo or parsed.kind not in ("item", "unit"):
+            raise PlanError("REF_INVALID", "commits requires a local item or item/unit reference")
+        if ref.split("/", 1)[0] not in plan.items or (parsed.kind == "unit" and ref not in plan.units):
+            raise PlanError("REF_UNKNOWN", f"unknown commit reference {ref!r}")
+    if role is not None and role not in ("executor", "reviewer", "fix"):
+        raise PlanError("CONTENT_INVALID", "commit role must be executor, reviewer or fix")
+    rows: dict[str, dict] = {}
+    try:
+        raw = _git(plan.root, "log", "-z", f"--format={_LOG_FORMAT}", code="GIT_FAILED")
+    except PlanError as exc:
+        if exc.code == "GIT_UNAVAILABLE":
+            raise
+        raw = b""  # no repository / empty history: nothing to read, not an error
+    for record in raw.decode("utf-8", errors="replace").split("\0"):
+        fields = record.strip("\n").rstrip("\x1e").split("\x1f")
+        if len(fields) != 5:
+            continue
+        sha, subject, plan_id, commit_ref, commit_role = fields[0], fields[1], *map(_trailer, fields[2:])
+        if plan_id != plan.plan["id"] or not commit_ref:
+            continue
+        if ref is not None and commit_ref != ref and not commit_ref.startswith(ref + "/"):
+            continue
+        if role is not None and commit_role != role:
+            continue
+        rows[sha] = {"sha": sha, "ref": commit_ref, "role": commit_role or None, "subject": subject,
+                     "source": "trailer"}
+    if role is None:
+        for item_id, item in plan.items.items():
+            if ref is not None and item_id != ref.split("/", 1)[0]:
+                continue
+            if ref is not None and "/" in ref:
+                continue
+            for sha in (item.get("result") or {}).get("commits", []):
+                if not any(known.startswith(sha) or sha.startswith(known) for known in rows):
+                    rows[sha] = {"sha": sha, "ref": item_id, "role": None, "subject": "", "source": "finish"}
+    return {"plan": plan.plan["id"], "ref": ref, "commits": list(rows.values())}

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-commits:v1",
+  "title": "Read Commits",
+  "type": "object",
+  "description": "Commits linked to a plan by Plan trailers in HEAD history, plus legacy result.commits entries.",
+  "properties": {
+    "plan": {
+      "type": "string",
+      "description": "Plan id.",
+      "minLength": 1
+    },
+    "ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Requested item or unit reference, or null for the whole plan."
+    },
+    "commits": {
+      "type": "array",
+      "description": "Trailer commits in git log order (newest first), then finish-recorded commits.",
+      "items": {
+        "description": "One linked commit.",
+        "$ref": "urn:swissknifeman:task:plan:read-commits:v1#/$defs/commit"
+      }
+    }
+  },
+  "required": [
+    "plan",
+    "ref",
+    "commits"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "commit": {
+      "type": "object",
+      "description": "Commit link record.",
+      "properties": {
+        "sha": {
+          "type": "string",
+          "description": "Commit SHA, 7-40 hex.",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Item or item/unit reference the commit belongs to.",
+          "minLength": 1
+        },
+        "role": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Plan-Role trailer; null for finish-recorded commits.",
+          "enum": [
+            "executor",
+            "reviewer",
+            "fix",
+            null
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "description": "Commit subject line; empty for finish-recorded commits."
+        },
+        "source": {
+          "type": "string",
+          "description": "Where the link was found.",
+          "enum": [
+            "trailer",
+            "finish"
+          ]
+        }
+      },
+      "required": [
+        "sha",
+        "ref",
+        "role",
+        "subject",
+        "source"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

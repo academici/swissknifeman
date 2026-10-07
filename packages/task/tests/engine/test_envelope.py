@@ -69,6 +69,7 @@ class VerbCoverageTests(EnvelopeCase):
             ("neighborhood", ["neighborhood", plan, "P1.1"], 0),
             ("schema", ["schema", "--verbs"], 0),
             ("bridge", ["bridge", "list"], 0),
+            ("commits", ["commits", plan], 0),
             ("commit", ["commit", plan, "P1.1", "--role", "executor", "--dry-run"], 1),  # outside Git
             ("check", ["check", plan], 0),
             ("next", ["next", plan], 0),
@@ -122,14 +123,16 @@ class VerbCoverageTests(EnvelopeCase):
 
 class ErrorEnvelopeTests(EnvelopeCase):
     def test_read_verbs_validate_data_before_printing(self):
-        from task.plan import query
+        from task.plan import gitops, query
         for name, call, invalid in (("get", ["get", self.root, "P1.1"], {"doc": {}}),
                                     ("list_rows", ["list", self.root, "items"], [{"ref": 3}]),
                                     ("events", ["events", self.root], [{"type": "note"}]),
                                     ("artifact", ["artifact", self.root, "artifact/a"], {"exists": True}),
                                     ("links", ["links", self.root, "P1.1"], {"ref": "P1.1"}),
-                                    ("neighborhood", ["neighborhood", self.root, "P1.1"], {"item": {}})):
-            with self.subTest(name=name), mock.patch.object(query, name, return_value=invalid):
+                                    ("neighborhood", ["neighborhood", self.root, "P1.1"], {"item": {}}),
+                                    ("list_commits", ["commits", self.root], {"plan": "x"})):
+            with self.subTest(name=name), mock.patch.object(gitops if name == "list_commits" else query, name,
+                                                            return_value=invalid):
                 doc = self.envelope(*call, code=1)
                 self.assertEqual(doc["error"]["code"], "SCHEMA_INVALID")
                 self.assertTrue(doc["error"]["issues"])

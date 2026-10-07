@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.4",
   "title": "Task: глагол чтения plan.py commits (trailers + result.commits)",
-  "status": "todo",
+  "status": "done",
   "summary": "Read-глагол `plan.py commits <plan> [<ref>] [--role R] [--json]` находит коммиты плана по trailers Plan/Plan-Ref/Plan-Role в истории HEAD и добавляет legacy `result.commits` item; схема данных read-commits.schema.json и регистрация в каталоге.",
   "why": "D23: sha не хранится в плане, поэтому связь план → коммиты должна читаться детерминированно для движка, аудита и close.",
   "scope": {
@@ -173,6 +173,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-06T19:13:00Z"
+  "result": {
+    "started_at": "2026-10-07T04:00:53Z",
+    "finished_at": "2026-10-07T04:03:31Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "10b04214-a747-4609-9482-61f698bb41da"
+    },
+    "notes": "commits read verb: gitops.list_commits, read-commits schema, catalog/cli registration, tests",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T04:03:31Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T04:03:31Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T04:03:31Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T04:03:31Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T04:03:31Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T04:03:31Z"
 }

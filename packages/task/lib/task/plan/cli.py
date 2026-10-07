@@ -19,7 +19,7 @@ from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
 _UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
-_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema")
+_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "commits")
 
 
 class UsageError(Exception):
@@ -188,6 +188,10 @@ def cmd_list(args) -> int:
 def cmd_events(args) -> int:
     return _read_result(query.events(store.load_plan(_plan_dir(args)), item=args.item, types=args.type,
                                     since=args.since, limit=args.limit), "read-events")
+
+
+def cmd_commits(args) -> int:
+    return _read_result(gitops.list_commits(_plan_dir(args), args.ref, role=args.role), "read-commits")
 
 
 def cmd_artifact(args) -> int:
@@ -559,6 +563,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--type", type=_csv, help="comma-separated event types")
     p.add_argument("--since", help="inclusive ISO timestamp with timezone")
     p.add_argument("--limit", type=int, help="latest N matching events, in journal order")
+
+    p = verb("commits", cmd_commits, "read commits linked to a plan by Plan trailers (JSON envelope)")
+    p.add_argument("ref", nargs="?", help="local Pn.m or Pn.m/U# (an item includes its units)")
+    p.add_argument("--role", choices=("executor", "reviewer", "fix"))
+    p.add_argument("--json", action="store_true", help="accepted for symmetry; output is always JSON")
 
     p = verb("artifact", cmd_artifact, "read artifact metadata and optional content (JSON envelope)")
     p.add_argument("ref")

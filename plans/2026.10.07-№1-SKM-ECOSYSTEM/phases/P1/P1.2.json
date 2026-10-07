@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.2",
   "title": "Песочница scripts/dev-sandbox.sh",
-  "status": "todo",
+  "status": "done",
   "summary": "Написать scripts/dev-sandbox.sh (new, run, list, remove) и scripts/test-dev-sandbox.py; шаг CI.",
   "why": "Ручная проверка CLI модулей из клона нужна на каждой фазе; без песочницы её можно сделать только с реальным HOME и на живых проектах. Песочница даёт отдельный HOME, XDG-места и копии проектов. Риск — удаление чужого каталога: remove проверяет маркер, префикс TMPDIR и имя.",
   "scope": {
@@ -109,6 +109,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T17:57:37Z"
+  "result": {
+    "started_at": "2026-10-07T19:50:30Z",
+    "finished_at": "2026-10-07T19:51:51Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "d2379738-2720-41b2-b716-85ade2cfb146"
+    },
+    "notes": "scripts/dev-sandbox.sh (new/run/list/remove, --help) и scripts/test-dev-sandbox.py (11 тестов: изоляция HOME/XDG, копии проектов без изменения оригинала, отказ remove для чужих каталогов, симлинков, неверных имён и вложенных путей, проход guard внутри песочницы); шаг hygiene.yml. Живое состояние машины не менялось.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T19:51:51Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T19:51:51Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T19:51:51Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T19:51:51Z"
 }

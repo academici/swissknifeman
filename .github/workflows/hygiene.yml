@@ -62,6 +62,9 @@ jobs:
       - name: dev-clone guard (entry points, scripts/dev-clone.sh)
         run: python3 scripts/test-dev-guard.py -v
 
+      - name: dev-sandbox (scripts/dev-sandbox.sh)
+        run: python3 scripts/test-dev-sandbox.py -v
+
       - name: agent-framework freshness (Skiller canon ↔ Harness pack.json)
         run: |
           python3 scripts/test-agent-framework-freshness.py -v

@@ -36,8 +36,13 @@ repository-relative or `@plan/…`; `..` is rejected. Stable identities may cont
 | snapshot | complete plan graph and events, used by export/import |
 
 A section is `{id, title, text}` and retains its complete body, including code/examples.
-A knowledge read can select its section id or exact title. A document without `applies_to`
-is global context; otherwise it applies to the named phases/items.
+A knowledge read can select its section id or exact title. Context scope: a document or accepted
+decision reaches an item's pack through `applies_to` (item or phase) or `global: true`
+(both together are a `scope_ambiguous` error). `settings.context_pack` is `legacy` (absent; a
+document without `applies_to` enters every pack) or `scoped` (written by `plan.py new`; unbound
+content is dropped, reads already present in the pack are marked `included`, upstream and
+phase dependencies are summaries). `settings.context_budget_kb` (default 256) is the warning
+threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
 An item read names exactly one of `path` or `ref`. Local refs include phases, items,
 units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
 The separate `section` key accepts a knowledge section id or exact title; it cannot

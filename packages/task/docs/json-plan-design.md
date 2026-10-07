@@ -72,6 +72,8 @@ are available without reading plan files.
    provider/model/effort/settings. Use one unit lifecycle and one dependency graph.
    Resolve scheduling policy from plan → phase → item. Python reports ready work; a future
    provider orchestrator launches it. Do not silently launch agents or commands.
+   Scope content to packs by `applies_to`/`global`; `check` warns on `context_unbound`,
+   `brief_duplicate`, `context_heavy` and `context_legacy`, and `design-done` prints a pack size report.
 3. Add schema-backed knowledge documents for variable design sections, runbooks, examples,
    risks and supporting evidence. Include selected sections in JSON context without reading
    human views. Keep references and content together during migration.

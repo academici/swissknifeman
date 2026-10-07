@@ -34,6 +34,7 @@
       "text": "Plan 1 **не** запускает модели, CAO, tmux и платные прогоны; `prepare` работает только `--dry-run`.\nPlan 2 (составляется отдельно) получает готовыми: схемы exec/v1, EnginePort + RunState, binding-матрицу,\ncapability seeds (status=declared), launch catalog, role manifests, `plan.py brief`, evidence/attempt/actor API Task,\nrender-prompt и CAO dry-render. Список «что Plan 2 строит на каком контракте» — в `knowledge/coverage` §plan2."
     }
   ],
+  "global": true,
   "provenance": {
     "path": "orch/DECISIONS.md",
     "note": "DECISIONS §2, §4, §6; owner answers 2026-10-05 (orch, internal, generated block)"

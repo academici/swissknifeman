@@ -69,6 +69,13 @@ main tree, the lane agents in their own worktrees:
 Integration is local: GitHub web-merge does not apply `merge=union`. Enforcement and automation belong to
 the future engine; an external run contract may carry the same intent as an isolation policy (one worktree per run, sequential integration).
 
+## Context pack scope
+
+`plan.py context <plan> <item> --budget [--json]` reports pack size by key, unbound content, duplicate reads
+and the scoped preview. `design-done` prints the same numbers per item of the phase and its context warnings;
+they never block. Switch a legacy plan after clearing `context_unbound`:
+`plan.py set <plan> plan --json '{"settings": {"context_pack": "scoped"}}'`.
+
 ## Scout
 
 An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic

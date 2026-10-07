@@ -4,6 +4,13 @@
 
 ### Added
 
+- **Task область видимости context pack:** `global` у document/decision, `settings.context_pack`
+  (`legacy|scoped`; `plan.py new` пишет `scoped`, существующие планы остаются `legacy`) и
+  `settings.context_budget_kb`; scoped отбрасывает непривязанное, помечает reads, уже лежащие в pack
+  (`included`), и сводит upstream/phase_dependencies. `plan.py context --budget [--json]` — отчёт размера;
+  `check` — `scope_ambiguous`, `context_unbound`, `brief_duplicate`, `context_heavy`, `context_legacy`;
+  `design-done` печатает отчёт pack по пунктам фазы (`--json`). Инструкции — plan-protocol, design-mode,
+  `task:plan-design`, `task:plan-run`.
 - **Config inventory:** `configs/config-inventory.json` records one owner and at least one consumer
   for every config in scope; `scripts/test-config-inventory.py` (CI hygiene) fails on an uncovered,
   dead or consumer-less entry.

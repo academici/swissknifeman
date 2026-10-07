@@ -1,0 +1,221 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.6",
+  "title": "Документация, CHANGELOG, измерение до/после, перевод плана в scoped и широкий validate",
+  "status": "done",
+  "summary": "Закрытие P12: документация (plan-structure, json-plan-design, workflows; копии docs/task), CHANGELOG [Unreleased], измерение до/после (azguard PLAN2 по коммитам 6b72182, b3d8444 и HEAD; этот план legacy → scoped) в knowledge §measurements-after, перевод этого плана в scoped (architecture и D11 → global), широкий validate.",
+  "why": "Деливерабл фазы — измерение до/после на реальном плане и закреплённое поведение в документации. Перевод собственного плана — проверка пути миграции на живых данных (dogfood). Риски: (1) azguard — чужой репозиторий в работе другого агента: только чтение через `git archive` в scratch, никаких записей и plan.py-мутаций в azguard; (2) перевод этого плана меняет pack оставшихся пунктов P5 — architecture и D11 сохраняются через global, итог фиксируется числами; (3) docs/plan-structure.md сейчас утверждает «document without applies_to is global context» — исправить формулировку под legacy/scoped.",
+  "scope": {
+    "include": [
+      "packages/task/docs/plan-structure.md, json-plan-design.md, workflows.md (+ docs/task/** если test_docs_sync требует копию)",
+      "CHANGELOG.md [Unreleased]: Added/Changed по фактическому diff",
+      "knowledge/context-scope-p12 §measurements-after — только через plan.py",
+      "этот план: knowledge/architecture и D11 → global: true; settings.context_pack → scoped — только через plan.py",
+      "широкий validate Task и orch"
+    ],
+    "exclude": [
+      "любые записи в репозиторий azguard",
+      "правка brief этого плана (история владельца) — только запись предупреждений в §measurements-after",
+      "новый код (кроме исправления, найденного широким validate, в файлах P12)"
+    ]
+  },
+  "depends_on": [
+    "P12.5"
+  ],
+  "decisions": [
+    "D27",
+    "D28",
+    "D29"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/context-scope-p12#measurements",
+      "why": "числа «до», метод измерения, коммиты azguard",
+      "required": true
+    },
+    {
+      "ref": "knowledge/context-scope-p12#dogfood",
+      "why": "порядок перевода этого плана",
+      "required": true
+    },
+    {
+      "ref": "knowledge/context-scope-p12#compat",
+      "why": "что описать в CHANGELOG как совместимое",
+      "required": true
+    },
+    {
+      "path": "packages/task/docs/plan-structure.md",
+      "section": "30-45",
+      "why": "строка про document без applies_to",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_docs_sync.py",
+      "why": "какие docs синхронизируются с docs/task",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "why": "формат [Unreleased]",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/docs/**",
+      "change": "modify"
+    },
+    {
+      "path": "docs/task/**",
+      "change": "modify",
+      "note": "только если test_docs_sync требует"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/knowledge/context-scope-p12.json",
+      "change": "modify",
+      "note": "только через plan.py push/set"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/knowledge/architecture.json",
+      "change": "modify",
+      "note": "только через plan.py set (global: true)"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/decisions/D11.json",
+      "change": "modify",
+      "note": "только через plan.py set (global: true)"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/plan.json",
+      "change": "modify",
+      "note": "только через plan.py set (settings.context_pack)"
+    }
+  ],
+  "rules": [
+    "Plan-файлы — только через plan.py",
+    "azguard: `git -C /home/vostrikov/projects/packages/azguard archive <commit> 'plans/2026.10.01-№1-AZGUARD-V1' | tar -x -C <scratch>/<commit>` и `plan.py context <scratch>/<commit>/plans/2026.10.01-№1-AZGUARD-V1 <item> --budget --json`; для HEAD — тот же archive HEAD; путь репозитория не хардкодить в knowledge, записать только коммиты и числа",
+    "Измерить P5.2, P5.4, P4.14 azguard (если пункта нет на коммите — пропустить с пометкой) и P5.1–P5.6 этого плана до и после перевода в scoped",
+    "§measurements-after: таблица item × (bytes legacy, scoped_preview или scoped bytes, unbound, duplicates) + вывод; добавить `plan.py push 2026.10.05-№2-ORCH-PREP knowledge/context-scope-p12 sections --json '{\"id\": \"measurements-after\", …}'`, при отказе push — get + set полного sections",
+    "Перед переводом в scoped: `plan.py get … plan` — merge-patch settings сохраняет design_audit/scout/evidence",
+    "CHANGELOG — по фактическому diff (`plan.py commits 2026.10.05-№2-ORCH-PREP` и git log по PLAN2.P12), без обещаний"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала измерения (до перевода плана), затем перевод и повторное измерение, затем docs/CHANGELOG, последним — широкий validate.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root . && python3 scripts/sync-managed-blocks.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "grep -q 'context_pack' packages/task/docs/plan-structure.md && grep -q 'context_pack' CHANGELOG.md && python3 packages/task/scripts/plan.py get 2026.10.05-№2-ORCH-PREP knowledge/context-scope-p12 --section measurements-after >/dev/null",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"errors\"]==0 and not [i for i in d[\"issues\"] if i[\"code\"]==\"context_unbound\"], d[\"issues\"]'",
+      "expect": "exit 0; 0 errors, нет context_unbound",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "python3 packages/task/scripts/plan.py context 2026.10.05-№2-ORCH-PREP P5.2 --budget --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"mode\"]==\"scoped\" and d[\"unbound\"][\"bytes\"]==0'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "docs и CHANGELOG по P12",
+    "knowledge §measurements-after: azguard и этот план до/после",
+    "этот план в режиме scoped",
+    "широкий validate GREEN"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T12:36:00Z",
+    "finished_at": "2026-10-07T12:50:33Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "afeb1a45-68d4-488f-9c63-4a24dc1be39e"
+    },
+    "notes": "Plan switched to scoped (architecture, D11 global); measurements-after pushed; docs and CHANGELOG updated; docs/task copy skipped (deprecated).",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-07T12:50:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T12:50:33Z"
+}

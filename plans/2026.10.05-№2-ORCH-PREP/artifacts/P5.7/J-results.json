@@ -1,0 +1,45 @@
+{
+  "commands": [
+    {
+      "cmd": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "prepare",
+        "--help"
+      ],
+      "exit": 0,
+      "locations": [
+        "packages/orch/README.md:10"
+      ]
+    },
+    {
+      "cmd": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "launch",
+        "--help"
+      ],
+      "exit": 0,
+      "locations": [
+        "packages/orch/README.md:14"
+      ]
+    },
+    {
+      "cmd": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "validate",
+        "--help"
+      ],
+      "exit": 0,
+      "locations": [
+        "packages/orch/README.md:21",
+        "packages/orch/docs/contracts.md:20"
+      ]
+    }
+  ],
+  "verb_count": 41,
+  "verbs_missing_in_docs": [
+    "supersede"
+  ]
+}

@@ -1,0 +1,10 @@
+usage: orch.py launch [-h] {list,show,argv} ...
+
+positional arguments:
+  {list,show,argv}
+    list            every entry without its argv
+    show            one entry as JSON
+    argv            command line of one entry; the process is not started
+
+options:
+  -h, --help        show this help message and exit

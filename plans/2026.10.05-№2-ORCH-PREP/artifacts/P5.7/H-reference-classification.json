@@ -1,0 +1,62 @@
+{
+  "tracked_json_scanned": 212,
+  "concrete_missing_refs": [],
+  "regex_candidates": {
+    "knowledge/brief": [
+      "plans/2026.10.05-№2-ORCH-PREP/brief.json",
+      "plans/2026.10.05-№2-ORCH-PREP/phases/P12/phase.json"
+    ],
+    "knowledge/decision": [
+      "plans/2026.10.05-№2-ORCH-PREP/decisions/D27.json",
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/context-scope-p12.json",
+      "plans/2026.10.05-№2-ORCH-PREP/phases/P12/P12.3.json"
+    ],
+    "knowledge/audit-plan2-": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/audit-method.json",
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/audit-method.json",
+      "plans/2026.10.05-№2-ORCH-PREP/phases/P5/P5.7.json",
+      "plans/2026.10.05-№2-ORCH-PREP/phases/P5/P5.7.json"
+    ],
+    "knowledge/review-p": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/conclusion.json"
+    ],
+    "knowledge/brief-": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/context-scope-p12.json",
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/context-scope-p12.json"
+    ],
+    "knowledge/x": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/context-scope-p12.json",
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/read-api.json"
+    ],
+    "knowledge/sections": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/instruction-split.json"
+    ],
+    "knowledge/artifacts": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/read-api.json"
+    ],
+    "knowledge/x.json": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/read-api.json"
+    ],
+    "artifacts/wrong-subject.json": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/review-p2.json",
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/review-p2.json"
+    ],
+    "artifacts/valid.json": [
+      "plans/2026.10.05-№2-ORCH-PREP/knowledge/review-p2.json"
+    ],
+    "knowledge/decisions": [
+      "plans/2026.10.05-№2-ORCH-PREP/phases/P12/P12.3.json"
+    ],
+    "knowledge/audit-plan2-*.json": [
+      "plans/2026.10.05-№2-ORCH-PREP/phases/P5/P5.7.json"
+    ]
+  },
+  "qualification": "All candidates independently read: prose categories/templates/output examples or PLAN1 scratch evidence embedded in review-p2, not missing PLAN2 sources.",
+  "closed_fc3_commit": "c51e9197",
+  "non_json_failed_stdout": [
+    {
+      "file": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P8.6/review-sandbox-failed-review-native.json",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    }
+  ]
+}

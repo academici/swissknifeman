@@ -1,0 +1,2 @@
+warning phase_closure_stale: phases/P5/phase.json/closed: P5 is closed but P5.7 is not terminal; reopen or finish P5.7
+0 error(s), 1 warning(s)

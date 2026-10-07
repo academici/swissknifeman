@@ -1,0 +1,5 @@
+packages/harness/lib/harness/run/gate.py
+packages/harness/lib/harness/run/journal.py
+packages/harness/lib/harness/run/plan_reader.py
+packages/harness/lib/harness/run/task_paths.py
+packages/harness/lib/harness/run/worker.py

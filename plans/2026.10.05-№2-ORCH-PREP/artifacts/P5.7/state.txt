@@ -1,0 +1,8 @@
+candidate=0559f3c9d30ed6869d39441b19e9b1f7d29a424e
+cwd=/home/vostrikov/projects/packages/swissknifeman
+actor=codex/gpt-6.1-sol/xhigh
+session=01a11749-1a0a-72f1-9737-6b8aee330f2c
+approval=never
+sandbox=danger-full-access
+scratch=/tmp/plan2-p57-4dpn45mo
+status before start:

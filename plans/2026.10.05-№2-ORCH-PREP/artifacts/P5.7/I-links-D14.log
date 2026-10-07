@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D14",
+    "edges": [
+      {
+        "from": "D14",
+        "to": "P4",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D14",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D14",
+        "to": "P7",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P7.1",
+        "to": "D14",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.2",
+        "to": "D14",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.6",
+        "to": "D14",
+        "kind": "decision"
+      },
+      {
+        "from": "P9.5",
+        "to": "D14",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D14",
+        "title": "Мосты Task к оркестраторам живут в task/bridges/<orchestrator>/",
+        "status": "accepted"
+      },
+      {
+        "ref": "P4",
+        "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+        "status": null
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      },
+      {
+        "ref": "P7",
+        "title": "Мосты: правило границ и связь Task ↔ orch",
+        "status": null
+      },
+      {
+        "ref": "P7.1",
+        "title": "Диспетчер мостов plan.py bridge, kind bridge и boundary-тест Task",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.2",
+        "title": "Мост task/bridges/orch: перенос brief (exec/v1) из ядра и тестов конформанса",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.6",
+        "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P7",
+        "status": "done"
+      },
+      {
+        "ref": "P9.5",
+        "title": "Мост task/bridges/orch: глагол commit → stage-result.commits[]",
+        "status": "done_with_deviations"
+      }
+    ]
+  }
+}

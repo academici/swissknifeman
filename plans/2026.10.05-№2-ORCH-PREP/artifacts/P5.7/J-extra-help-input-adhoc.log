@@ -1,0 +1,22 @@
+usage: orch.py input adhoc [-h] [--goal GOAL] [--why WHY]
+                           [--include INCLUDE [INCLUDE ...]]
+                           [--exclude EXCLUDE [EXCLUDE ...]] [--check V1=CMD]
+                           [--procedure V2=TEXT] [--expect EXPECT]
+                           [--read PATH [PATH ...]]
+                           [--class {economy,implementation,frontier}]
+                           [--effort {low,medium,high,xhigh,max,ultra}]
+                           [--review BASE..HEAD]
+
+options:
+  -h, --help            show this help message and exit
+  --goal GOAL
+  --why WHY
+  --include INCLUDE [INCLUDE ...]
+  --exclude EXCLUDE [EXCLUDE ...]
+  --check V1=CMD        command check, expects exit 0
+  --procedure V2=TEXT   manual check, expects observed
+  --expect EXPECT       expected outcome of every --check (default: exit 0)
+  --read PATH [PATH ...]
+  --class {economy,implementation,frontier}
+  --effort {low,medium,high,xhigh,max,ultra}
+  --review BASE..HEAD

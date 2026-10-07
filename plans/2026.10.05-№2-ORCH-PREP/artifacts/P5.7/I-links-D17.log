@@ -1,0 +1,175 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D17",
+    "edges": [
+      {
+        "from": "D17",
+        "to": "P10",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D17",
+        "to": "P11",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D17",
+        "to": "P4",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D17",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D17",
+        "to": "P9",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P10.1",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P10.2",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P10.3",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P10.4",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P10.5",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P10.6",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P4.1",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P9.1",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P9.6",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "P9.7",
+        "to": "D17",
+        "kind": "decision"
+      },
+      {
+        "from": "D17",
+        "to": "D6",
+        "kind": "supersedes"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D17",
+        "title": "Расширение Plan №2: git-дисциплина, хелперы запуска, конфиги, параллельность (данные); исполнение — Plan 2",
+        "status": "accepted"
+      },
+      {
+        "ref": "D6",
+        "title": "Где launch catalog в Plan 1",
+        "status": "superseded"
+      },
+      {
+        "ref": "P10",
+        "title": "Параллельность по цепочкам зависимостей (данные)",
+        "status": null
+      },
+      {
+        "ref": "P10.1",
+        "title": "orch: exec/v1 run-policy.isolation (worktree, sequential, recheck) + семантика и fixtures",
+        "status": "done"
+      },
+      {
+        "ref": "P10.2",
+        "title": "Task: модуль parallel.py — footprint, конфликт пары, граф ожидания; check dependency_deadlock",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P10.3",
+        "title": "Task: ready set по всему плану — plan.py next --parallel N + схема read-ready",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P10.4",
+        "title": "Task: plan.py reconcile — закрытие фаз интегратором, общий хелпер закрытия, git-тест двух worktree",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P10.5",
+        "title": "Правила параллельных полос в командах Task и plan-protocol + проекции адаптеров",
+        "status": "done"
+      },
+      {
+        "ref": "P10.6",
+        "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P10",
+        "status": "done"
+      },
+      {
+        "ref": "P11",
+        "title": "Рефакторинг конфигов: инвентаризация, владельцы, удаление лишнего",
+        "status": null
+      },
+      {
+        "ref": "P4",
+        "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+        "status": null
+      },
+      {
+        "ref": "P4.1",
+        "title": "Launch catalog роль × provider и argv-билдеры в orch; мост резолвит модель; scout Task без изменений",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      },
+      {
+        "ref": "P9",
+        "title": "Git-дисциплина: каждая операция завершается коммитом",
+        "status": null
+      },
+      {
+        "ref": "P9.1",
+        "title": "exec/v1 аддитивно: run-policy.commit, stage-result.commits, семантика, fixtures, docs",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P9.6",
+        "title": "Правила коммитов в командах Task и plan-protocol + проекции адаптеров",
+        "status": "done"
+      },
+      {
+        "ref": "P9.7",
+        "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P9",
+        "status": "done_with_deviations"
+      }
+    ]
+  }
+}

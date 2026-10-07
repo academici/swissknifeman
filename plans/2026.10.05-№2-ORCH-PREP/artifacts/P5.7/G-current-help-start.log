@@ -1,0 +1,24 @@
+usage: plan.py start [-h] [--plans-root PLANS_ROOT] --actor ACTOR
+                     [--registrar PROVIDER/MODEL[/EFFORT]] [--session SESSION]
+                     [--grant GATE] [--scout | --no-scout] [--json]
+                     plan item [item ...]
+
+start (or resume) items of one detailed phase
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+  item
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --actor ACTOR         PROVIDER/MODEL[/EFFORT] running the items
+  --registrar PROVIDER/MODEL[/EFFORT]
+                        who registers the start when it is not the executor
+                        (event registered_by)
+  --session SESSION     provider session id, or auto
+  --grant GATE          record an owner gate grant now
+  --scout, --no-scout   ask the provider's weak model for a context map
+                        (default: plan.settings.scout)
+  --json

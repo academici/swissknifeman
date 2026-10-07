@@ -1,0 +1,15 @@
+usage: plan.py add-document [-h] [--plans-root PLANS_ROOT]
+                            (--json JSON | --file FILE)
+                            plan
+
+add a schema-backed knowledge document
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --json JSON           JSON text, or @file
+  --file FILE           file holding the JSON

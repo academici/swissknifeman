@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D19",
+    "edges": [
+      {
+        "from": "D19",
+        "to": "P7",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P7.3",
+        "to": "D19",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.6",
+        "to": "D19",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D19",
+        "title": "Check-evidence в ядре Task — собственный контракт по ключевым полям, без URN orch",
+        "status": "accepted"
+      },
+      {
+        "ref": "P7",
+        "title": "Мосты: правило границ и связь Task ↔ orch",
+        "status": null
+      },
+      {
+        "ref": "P7.3",
+        "title": "Обратная регистрация в мосту (register), evidence по полям, нейтральный registrar",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.6",
+        "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P7",
+        "status": "done"
+      }
+    ]
+  }
+}

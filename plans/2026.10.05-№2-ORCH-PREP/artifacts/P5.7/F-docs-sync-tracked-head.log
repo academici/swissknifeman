@@ -1,0 +1,7 @@
+docs-sync:
+  docs/skiller not materialized; source tree playable
+  docs/harness not materialized; source tree playable
+  docs/maind not materialized; source tree playable
+  docs/analyst not materialized; source tree playable
+  docs/task fresh
+  docs/orch not materialized; source tree playable

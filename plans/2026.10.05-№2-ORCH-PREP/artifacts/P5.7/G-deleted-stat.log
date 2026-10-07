@@ -1,0 +1,25 @@
+ configs/profile-catalog.json                       |  78 ---
+ .../dev-skills}/harness-operations/SKILL.md        |   6 +-
+ .../repository-bootstrap/publication-lock.json     | 240 -------
+ .../configs/repository-bootstrap-skills.json       |  37 --
+ .../cross-project-optimizer/SKILL.md               |  81 ---
+ .../decision-verification/SKILL.md                 |  35 -
+ .../repository-bootstrap/docs-maintenance/SKILL.md |  93 ---
+ .../ecosystem-integration/SKILL.md                 | 150 -----
+ .../repository-bootstrap/ecosystem-mcp/SKILL.md    | 113 ----
+ .../repository-bootstrap/ecosystem-setup/SKILL.md  |  81 ---
+ .../field-feedback-loop/SKILL.md                   | 101 ---
+ .../repository-bootstrap/maind-overview/SKILL.md   | 113 ----
+ .../package-architecture/SKILL.md                  | 215 ------
+ .../project-tooling-runbook/SKILL.md               | 399 ------------
+ .../release-discipline/SKILL.md                    | 113 ----
+ .../repository-bootstrap/skill-authoring/SKILL.md  | 151 -----
+ .../tests/test_task_plugin_cache_revision.py       |  64 --
+ .../task-development-philosophy/SKILL.md           |   6 +-
+ packages/task/docs/migration/README.md             | 174 -----
+ packages/task/docs/migration/chatom-pilot.py       | 221 -------
+ packages/task/docs/migration/inventory.json        | 350 ----------
+ packages/task/docs/migration/legacy-v2.py          | 718 ---------------------
+ packages/task/docs/migration/retire-v2.py          |  86 ---
+ packages/task/docs/migration/tracker.py            | 163 -----
+ 24 files changed, 6 insertions(+), 3782 deletions(-)

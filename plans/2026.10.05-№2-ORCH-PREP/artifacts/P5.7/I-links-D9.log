@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D9",
+    "edges": [
+      {
+        "from": "D9",
+        "to": "P2",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P2.5",
+        "to": "D9",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D9",
+        "title": "Evidence в Task без импорта orch",
+        "status": "accepted"
+      },
+      {
+        "ref": "P2",
+        "title": "Task как поставщик данных: brief, полнота, ссылки, actor, evidence",
+        "status": null
+      },
+      {
+        "ref": "P2.5",
+        "title": "Evidence для finish и unit accept (T6) + settings.evidence",
+        "status": "done"
+      }
+    ]
+  }
+}

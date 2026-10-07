@@ -1,0 +1,1622 @@
+0559f3c9d30ed6869d39441b19e9b1f7d29a424e	docs(plan): P5.7 — F-C3 закрыт, уточнено указание аудитору
+c51e91977c2a0be65d20f4a8dc36ba1a8f63ca7a	docs(plan): закоммитить решения D26–D29, knowledge P10–P12 и research Q16–Q19 PLAN2 (F-C3)
+69bada51b2a1fc2a9f4f22255ad2c424963d2d0e	docs(plan): добавить P5.7 — общий аудит PLAN2 исполнителем Sol и методику audit-method
+9ef63db819d9677f4a75aedb06d0db419e25e0ed	feat(orch-prep): Итоговый вывод плана: сверка покрытия и записи (PLAN2.P5.6)
+6425acbe4ac4a5c0215139dd2aaf6c7e668b53fd	feat(orch-prep): Документация, CHANGELOG и широкий validate всех пакетов (PLAN2.P5.5)
+f7880c85dc49ea5168f179f0a2e9ff1d7da92b77	feat(orch-prep): Тест переносимости: один execution-input на трёх bindings (PLAN2.P5.4)
+59f8310f451982dbf63c0e5eac8ee1941bc030f5	feat(orch-prep): orch prepare --dry-run: native launch-plan, CAO profile, Claude-only prompt (PLAN2.P5.3)
+1005d9a39d53f1005902ea85be61d26ec6dcdce7	feat(orch-prep): orch render-prompt (Claude-only) и input adhoc (PLAN2.P5.2)
+617e7c7208c5d610cecd8b470c00f05cc25f7f2e	fix(orch-prep): Discovery Task без monorepo-хардкода (harness/run и orch) (PLAN2.P5.1)
+05ca9eece934d246aeb52e942ed2e9461f8f8920	feat(orch-prep): Discovery Task без monorepo-хардкода (harness/run и orch) (PLAN2.P5.1)
+26464159669fce399ac556047c256e95c3602e55	fix(orch-prep): Починка красного широкого validate: statusline-флак, drift инструкций, путь maind-overview (PLAN2.P11.5)
+8979df947465c5081ac6a1546bba6db06288ec67	feat(orch-prep): Документация конфигов, CHANGELOG и широкий validate всех пакетов (PLAN2.P11.4)
+65c004a3d98e14a0a031b2e5546db1248624877b	feat(orch-prep): Починка красного широкого validate: statusline-флак, drift инструкций, путь maind-overview (PLAN2.P11.5)
+0c4de9e917aa1f50954aec98febce1fb88666157	feat(orch-prep): Документация, CHANGELOG, измерение до/после, перевод плана в scoped и широкий validate (PLAN2.P12.6)
+11d3ced7452f3bc5910e5407d3459764db8e745f	feat(orch-prep): Инструкция привязки знаний в plan-protocol и командах + проекции адаптеров (PLAN2.P12.5)
+f9bdb7aa47c98e9be6bb2633ce0b27452363faf3	feat(orch-prep): Блок проверок после детализации: отчёт design-done (PLAN2.P12.4)
+990a79499d53751cdcab16b728acf67864f03aaf	feat(orch-prep): plan.py check: привязка knowledge/decisions и тяжёлый brief/plan-контент (PLAN2.P12.3)
+3b93e54568ed9cbfef52a588990c342a88777baf	feat(orch-prep): Измерение pack: budget.py и plan.py context --budget (PLAN2.P12.2)
+4d8a01b44b98bdb8f222a3d3c82833a76faba442	feat(orch-prep): Модель области видимости pack: global, settings.context_pack, проекция scoped в context.py (PLAN2.P12.1)
+43726dac1ff58482544c981d801a92051b8a383a	feat(orch-prep): Документация конфигов, CHANGELOG и широкий validate всех пакетов (PLAN2.P11.4)
+024429ced2b16b5f54216d9c9fd7c8ae5bcf6f2d	feat(orch-prep): Инвентарь конфигов configs/config-inventory.json и CI-guard владельца и потребителя (PLAN2.P11.3)
+013cd9662e7d0cd70749c099bde7ec2503b0b67f	feat(orch-prep): Task: guard согласия уровней capability_bindings с provider-capabilities (PLAN2.P11.2)
+c1ac9a936723761cf47081e776a33555ebea6c60	feat(orch-prep): Резолвер конфигов без fallback и удаление дубля configs/profile-catalog.json (PLAN2.P11.1)
+29ccd0c94875711fef411b4d712a3ba16ead77b0	fix(orch-prep): skiller resolve --role: closure skills роли и способ доставки (PLAN2.P4.4)
+805480f8b72c052ed81767147f5ff0cd77513eae	feat(orch-prep): skiller resolve --role: closure skills роли и способ доставки (PLAN2.P4.4)
+77097f295019acb2eae2bced0c98853774cb9126	feat(orch-prep): Capability seeds для native / CAO / Claude-only (PLAN2.P4.3)
+ae5d6e714e2be8f060a393bcc1bce27ddc69da29	feat(orch-prep): Role manifests пяти ролей (exec/v1) (PLAN2.P4.2)
+5da5a03a1adee7e9a9f2469bb65c109d332ee108	feat(orch-prep): Launch catalog роль × provider и argv-билдеры в orch; мост резолвит модель; scout Task без изменений (PLAN2.P4.1)
+5566733358f101d70a5c8b0029b9c7e8936c4cbf	feat(orch-prep): Launch catalog роль × provider; scout читает catalog (PLAN2.P4.1)
+0ff42166e62fdd4cb7f7aa069a2d283785494138	feat(orch-prep): Документация, CHANGELOG, architecture-bridges и широкий validate P10 (PLAN2.P10.6)
+2c4aa3cc296f4f405e2706d2262bf12051a730c9	feat(orch-prep): Правила параллельных полос в командах Task и plan-protocol + проекции адаптеров (PLAN2.P10.5)
+403963a8b7f4737bad35843039cb512ad098da95	feat(orch-prep): Task: plan.py reconcile — закрытие фаз интегратором, общий хелпер закрытия, git-тест двух worktree (PLAN2.P10.4)
+c1f732163b3ab23fb35340559c9265eba21838aa	feat(orch-prep): Task: ready set по всему плану — plan.py next --parallel N + схема read-ready (PLAN2.P10.3)
+be0dae4d5fc35b39d77942f5df6c049c51b7c49c	feat(orch-prep): Task: модуль parallel.py — footprint, конфликт пары, граф ожидания; check dependency_deadlock (PLAN2.P10.2)
+b18030e41c8cf66fcc6d688636854c3e354a621b	feat(orch-prep): orch: exec/v1 run-policy.isolation (worktree, sequential, recheck) + семантика и fixtures (PLAN2.P10.1)
+9547025ffaf80522867985184c53389f1839c2d8	feat(orch-prep): Документация, CHANGELOG, architecture-bridges и широкий validate P9 (PLAN2.P9.7)
+58f47b20d85fa9fa8633a7c83cf593ae4a664f8d	feat(orch-prep): добавить правила scoped-коммитов в plan-run и plan-protocol (PLAN2.P9.6)
+16a8555a5f9d19c2659f410633ee9e685ceb6cb2	feat(orch-prep): добавить мост orch commit → stage-result.commits (PLAN2.P9.5)
+7774bf16beca924c9f003ad6555152ae6d357ec3	feat(orch-prep): добавить глагол чтения plan.py commits (PLAN2.P9.4) (PLAN2.P9.4)
+8cdaa7bb0b43ef854e9681eebdf09bb25c5019cc	feat(orch-prep): добавить scoped-коммит операций плана (PLAN2.P9.3)
+806668f2df20089f00163b66fe2818960b1867fe	feat(task): добавить .gitattributes плана с log.jsonl merge=union (PLAN2.P9.2)
+756ecf932adae111d08d5ded44c54b82d86d4c14	feat(orch): добавить политику и результаты scoped-коммитов (PLAN2.P9.1)
+efcc12fc71879d837053c156428c014de874d936	docs(task): детализировать P9 — git-дисциплина коммитов (PLAN2.P9)
+98c645b93acd0e70f6e233760e01ac32b964f1ef	feat(skiller): добавить standalone-проверку и CI для P8.8
+a4a25899cada5f1aaca9611a4dda7235ce9c2069	refactor(skiller): делегирование окружения через host commands (PLAN2.P8.5)
+2b3239de26e7a12470f1590a477807054eece278	refactor(skiller): релиз, доставка и установка через host-конфиг (PLAN2.P8.4)
+5c656df88520b6dcd23a3a990402db263380ff7d	feat(skiller): host-конфиг — схема, загрузчик host.py и корневой configs/skiller-host.json (PLAN2.P8.2)
+b39b5cb25e335f168f9e5444ca0bb31077f0bbcd	test(skiller): закрепить границы пакета и владельцев миграции P8.1
+fd49aa8e756dbc8771be06b4233cd3552cd3e90a	docs(plan): детализация P8 — Skiller к переезду (PLAN2.P8)
+ac44f82798d2e7adbee90186e0a06f3e26caed61	docs(task): architecture-bridges, Package bridges и широкий прогон P7 (PLAN2.P7.6)
+9a72ee1b6a7e8bc273f9b087ef6ea461f6c93403	refactor(orch): нейтральное ядро и проверка границ пакета (PLAN2.P7.5)
+c95f4aed98774b60198ce6349139b20423be9e52	refactor(task): чистое ядро и передача задания исполнителю (PLAN2.P7.4)
+fbf0747ba93d592d8833654d77ad2b0395d39617	feat(task): обратная регистрация в мосте orch и evidence по полям ядра (PLAN2.P7.3)
+65d69012ec77f6e3cdb27043621fc056385f907b	feat(task): мост task/bridges/orch — brief (exec/v1) вынесен из ядра (PLAN2.P7.2)
+39ba0ab10771481de18cbc0fd5d95c491ae2c68c	feat(task): диспетчер мостов plan.py bridge и boundary-тест ядра (PLAN2.P7.1)
+57d63595834c23fc2cdf8291f73ede5c380bfc93	docs(plan): детальный дизайн фазы P7 — мосты и boundary-тесты (PLAN2.P7)
+cb887c641d73d8ab53240e935ade5729597803ed	docs(plan): мосты между пакетами и расширение Plan №2 (PLAN2 D13–D17)
+5a24ec9ac8eb0279ef6889e73c16ab53766e36f7	docs(plan): D12 — Task самодостаточен, P3.3 переопределён (PLAN2.P3.3)
+d13573e3fb5f8a8f38161efcbd82a65e160eb216	feat(orch): sync-managed-blocks и gate managed-блоков (PLAN2.P3.2)
+34d604f0b7a91b47136954bdd3fd03ab1eaa01e7	feat(orch): тексты ролей и тесты чистоты и паритета записи (PLAN2.P3.1)
+f36247cc0415f029e91a16456e01393465983fb1	fix(task): set/push отказывают на висячих связях по review P6 (PLAN2.P6.5, P6.3)
+a1877450fcb484b63e1ae8b1099e5364674e99b0	docs(plan): review P6 с вердиктом ATTENTION (PLAN2.P6.7)
+71bee0fe48a52937198017311bb49d504527a19c	docs(task): синхронизировать документацию Read API (PLAN2.P6.6)
+5daaabfedf947a88a9854fba4258da56faced39d	feat(task): добавить запись связей и артефактов link, unlink, add-artifact (P6.5)
+08eedb54181a7dac9a2ce4a664b0ff0b6478d8c4	feat(task): добавить каталог API и глагол schema (P6.4)
+b324fb4d0e5c260942cfb9ba38b5fa5a29fb0d1d	feat(task): добавить чтение связей и окружения пункта (P6.3)
+515ed7790d35a541604e1bdb5c000f98ff0b8ed0	feat(task): добавить глаголы чтения плана и схемы ответов (P6.2)
+76307d5b8c073aa8b89f83f06f7179693c5b393e	feat(task): грамматика ref и таблица рёбер edges.py, resolve в check (P6.1)
+f06c0f6e057af8d3ac29114c69af5032ab5eba0a	docs(task): синхронизировать протокол brief и evidence (P2.6)
+d889e8092f95e9be255a36561c24b54e87c391ca	feat(task): evidence для finish и unit accept, settings.evidence (P2.5)
+a0d036568fc46abd38070b6f903f684785524aeb	feat(task): раздельные actor и идемпотентная регистрация attempt (P2.4)
+b7a49d2dd19c37ab83e11e1097d54f9ed55cadf8	feat(task): resolver ссылок на другие планы refs.resolve, --repo и REF_UNRESOLVED (P2.3)
+c9c38a857cb9ffae4ff9dddf31a34d580d10b4e0	feat(task): brief.verify и BRIEF_INCOMPLETE, конформанс exec/v1 в orch (P2.2)
+c3b32061b7df7d893429afd46066f10799f69cb7	docs(plan): завершить P1.5 и сохранить независимый вердикт P1
+a2bbda0b28046e687b1527822485bfc415837493	feat(orch): добавить Engine Port, reducer RunState и binding-матрицу
+c10508059089df8119c8410ec7b863c0e1f9ced8	fix(task): не коммитить human views планов
+b23f8a033b72714c88e585349b3f2cd1612fcb68	docs(plan): уточнить неоднозначные места PLAN2
+58025e3a4a7b024f0a917bbbf3d13e9ffacf04de	docs(orch): спроектировать PLAN2 «Подготовка к оркестрации»
+a19eb61942d4a94ccda48e845a57f555b8f13fbf	chore(plans): состояние PLAN1 после закрытия P4
+f2e423749c2008501b573a5d462e346effd829d9	refactor(task): перенести канон plan-protocol из Skiller (PLAN1 P4.3)
+b5efa704a4d9e22c817440096fa3537b57b0a9e5	feat(task): units для субагентов, brief.md, UNITS_OPEN и plan.py stats (PLAN1 P4.2)
+91ce08a5590a6d11ccda32c8df0b1bb84f99459e	feat(task): scout — слабая модель провайдера строит карту контекста (PLAN1 P4.1)
+8dff949a680b9914b86f2a87bcb911abc2b188d7	refactor(task)!: удалён v2 runtime (PLAN1 P3.2)
+154eedcc6b67e142f5dbcbb075f62c85131305d8	refactor(task): убрать ссылки на v2 runtime из кода, тестов и доков (PLAN1 P3.2)
+7f13ed8b556cd1fc40f08bee78a38b6f7676c200	refactor(harness): проверка review-gate plan-lint переименована в plan-check (PLAN1 P3.2)
+0fe7efc0b4cfc482ca330c5585b8cc4f17d30f33	refactor(core): убрать политику route_evidence из provider-projection (PLAN1 P3.2)
+79bb6cfa778e85d8ec50a756105409ab122c18f8	refactor(harness): harness run читает план v3 через plan.py (PLAN1 P3.2)
+8c4db78d5be2e343d480e816e6262cc670eee630	docs(task): документация v3, validate.sh на plan.py check, правки инструкции миграции (PLAN1 P3.2)
+785a5bdb0ce0ee59d8156e22e9a05ce44a701cd2	feat(task): команды и канон v3, хуки harness, artifex на plan.py (PLAN1 P3.1)
+3f26517c29a2187601d71518c6c44e085b37cdc2	feat(task): контекст-пак плана v3 и глагол context (PLAN1 P2.2)
+1aea9a9a4c71c345d2b73b69c30a18b86b08a8ba	feat(task): lifecycle плана v3 — next/start/finish/log/decide/grant/reopen/archive (PLAN1 P2.1)
+38a5652d808d2797c2b0c583fafee9e0dad7690f	feat(task): шаблоны, шесть видов и CLI plan.py плана v3 (PLAN1 P1.3)
+035da08f3a76e2c0945b5bb81f418a43e8c8b027	feat(task): store, авторские мутации и check плана v3 (PLAN1 P1.2)
+9ac3bdea3928fbf67a1f4934113515b6ecdfd8d5	feat(task): JSON-схемы плана v1 и валидатор закрытого профиля (PLAN1 P1.1)
+c8f3623ccee93f0c3f2b0cd579d6b103f8d01740	fix(harness): закрыть P0.6/P0.7 по cursor rules и validate
+5d5d748ffcb418ce976836e28207e634e2d65054	chore(plan): закрыть P4.2 terminal adapters
+52a34552719e33f64e615b4222368c3c05223836	feat(task): добавить terminal admission P4.1
+7ebf9935c2188442d6dcafec086d55ac25ab8e93	chore(plan): закрыть forward repair P3.4
+daeafc9c2ce28026f882a9a9bb535fb4629f5780	chore(task): закрыли P3.4
+9361bbb48b19ef1c9222832c020c01f508f455a3	fix(plan): исправили вход P4.1
+f91be5e5fa6dda9ec02693a5317226be7d3b9ba5	docs(plan): закрыть P3.2 и подготовить P3.4
+f5f82209111b17f0799757adaa5b643ee09791e6	docs(plan): закрыть P3.1 и подготовить P3.2
+a1ed32c247d53aa1c49987038a50d1b7b72083fe	docs(plan): закрыть P7.1
+1c6c9c1566d2b4d8b2bdb4b1fc52ec2559ec2a03	docs(plan): закрыть P2.3 archive
+76b73ec7dce5909720f545fa51709eb45a3e74c0	docs(plan): закрыть P2.2 readiness
+7112bac2fd5fafa1d1be525b08f005cdda9882af	chore(plan): направить P2.2 на уточнение контракта
+60b8f4093a3ef955353a3c1ff3af9e0d1ec66e9a	chore(plan): закрыть P2.1 repair reducer
+b695335e057854d7c6cd29a026c534f1cc20eef6	chore(plan): подтвердить terminal-block P7.7
+793e60f48aa036171332e359820bfe7597cd06a7	chore(plan): закрыть RED-аудит P7.7
+49e57f97197325fbca9afea2128199086d531603	docs(plan): зафиксировать RED-аудит P7.7
+dd7fd3e2fb58d41fe77f45119c81ddcce7a4209f	chore(plan): закрыть P7.5 и P7.6
+519af66def68027738a0158142cf7a19050d3983	test(provider): закрепить регрессии P7.2
+84ce965510e68f49c1ef5664786511afa81b9a17	chore(plan): заморозить membership-контракт P6.3
+d51be9d544d0a2deb596c4bb31358fd2fef11305	chore(plan): обновить bundle P7.1 после D86
+2f6d59122735ef44d8cb1050d7ef43d4e1f85ccd	chore(plan): закрепить носители D86 для P6.3
+087e01df6a5a7727749c43a11c5421d09c4ab185	chore(plan): закрыть P6.3 evidence
+363d3626f8bc73572fc411c69aae266716dd28e4	feat(plan): добавить optional membership P6.3
+2d75e8693e513defa603c5b17fb8c38faabea040	fix(plan): включить measurement-оси в evidence P6.3
+8c291116906eafe0c63d39f72e0083d4afdc6c31	fix(plan): завершить terminal reconciliation P6.3
+69820c69468a890963afa64b86ebeef8bfe3ca3c	fix(plan): связать handoff с P6.3
+d2df9b1136dd79136d5c03b67f445b19212a66ea	chore(plan): закрыть P6.3 и передать P6 на аудит
+568c25ab4b42065a2c61dc6a7dc8aadbb1ad49b0	chore(plan): закрыть P6.2 зелёным
+1ac5f41a906293247595d7d249d054ab796abb33	fix(plan): обновить handoff после P6.1
+ec3e79b67d1d854fe42283916e0fbbdf41a7b2be	chore(plan): закрыть P6.1 и подготовить P6.2
+8d0b9de36f1e4c3fb40f19af39f71d9a5ff90c7d	feat(plan): завершить транзакцию Brain P6.1
+ebd843f20191c3508460e8b898ec5aa682040cfd	fix(plan): восстановить frozen validation P5.4
+0f4b162a3165ce669b4005442512cea5afdbd6d4	fix(plan): восстановить финальный lint P5.4
+9348022c8f311444a6ca86c7ecc78b0eea1183b4	chore(plan): закрыть P5.4 и передать аудит P5
+66f2392d37b1b0147cad543379ddf6b4cc85f7f5	chore(plan): закрыть P5.3 и передать P5.4
+7906a88e10470615e5424b84cb2323c24cb24a46	feat(plan): зафиксировать результат P5.3
+6afc56a19d7ba9ad0e95efaf5086648abdf0905b	fix(plan): сократить вход P5.3
+5eb4fe707b428184c9c8780308d907df7e3b87f1	chore(plan): закрыть P5.2 и передать P5.3
+822767d3795ed564961f13dd13fd7bca2d7dac2f	chore(plan): зафиксировать результат P5.2
+6e7c5f18890bd7669ee17a8463728e2df226a3fd	chore(plan): исправить terminal handoff P5.1
+3b929ef1aca005a91cd624bea650a5dc98dfd9c8	chore(plan): закрыть P5.1 и подготовить P5.2
+0b2bcf8cecde627057d442f316288bc5e43d7fc9	chore(locale): перевести служебную прозу P4.5
+ca774f056a7b3b5ec0c8288ade04a51dc9ad7dbb	docs(plan): передать P4.5 в новую сессию
+443fa0aca255eedc60d2418a375e2ae45873cd15	chore(locale): принять Task command batch P4.4
+d8a25c7d6a781c00db6edad2299e4eb0f7dfb072	fix(task): сохранить P4.4 вне generated-проекций
+50f175c0f6ab22739622eb6aaf24720c22ef55af	test(task): доказать preimage-защиту P4.4
+ea25281e3e822fcab2ffb97c12ad69acb94755ee	fix(task): закрыть literal coverage P4.4
+5064f777d47928e418ae9283e0fb68a058978799	fix(task): проверить полный literal inventory P4.4
+033f9df464492f5affecf1c3ac1a358a62d15455	fix(task): восстановить literal инвентарь P4.4
+e3555fd6e90c78eb60d05cb252fa505fe21c0176	chore(plan): сохранить второй review P4.4
+7038520d761bf3e5314c84870aacc250eacbcf82	chore(plan): обновить P4.4 checkpoint после фикса
+8b55d24451feb0e0e0f37a104affded61869e297	chore(plan): зафиксировать review P4.4
+58ba39b28addf2743bd7e82d1ec6134e58fdda3e	chore(plan): добавить Task checkpoint P4.4
+81eb29461e6691ba1578fc3f80c4294175412bcf	feat(locale): принять Task command batch P4.4
+980ee79d968e8440ab57b1cb36f986e7bae7bd88	fix(task): исправить route-start пример P4.4
+5d0a26de4e9a11fb66dc3f4dbde454677767f63c	chore(plan): закрыть P4.3 после локального ремонта
+755bfbb05c2b5a346806ca9438f7dff48cd6e348	feat(locale): подтвердить EN ownership root bootstrap (P4.3)
+943b8be92d4afc6db1336855e2ad3e45ccec80c8	chore(plan): зафиксировать блокировку P4.3
+a18e5490fb89df0362f7391a14ec56008930e2bb	chore(plan): обновить P4.2 write-site receipt
+9e11fe8ef391689465467a25a97e8bde24fe1d62	chore(plan): закрыть P4.2 locale corpus
+7ca3ad8be8002dbd5c556cfcd75f25ae67a40f13	feat(locale): добавить admission ledger (P4.2)
+a05ff5a93a6465c7a973897e168fca647d66f6b1	chore(plan): закрыть P4.1 и передать P4.2
+4565a2ccb9f577a400fd815202a3d0689ffb1c9b	fix(locale): исключить коллизию discovery со stdlib (P4.1)
+b2e0a21b49d26dab3304d7c8d4006891bc00f9ee	chore(plan): зафиксировать evidence runtime P4.1
+6c3a5cefa566cd5057458f260859b549c8f24c71	fix(locale): восстановить provider-покрытие (P4.1)
+f8a50b3d113084557dc02ad245edf7e33512fb94	feat(locale): реализовать общий runtime локали (P4.1)
+972635bd4a84d19c8ca6e3635496ce51d783e4bc	docs(plan): закрыть P3.2 и P3.3
+b92ff479accbd59af8769b3dfd8e1205636ba25e	feat(provider): добавить статус и диагностику (P3.3)
+4f180b932d658a2f8d6b836084830d64e885aac4	feat(provider): завершить skill adapter boundary (P3.2)
+bb80b1e49027b529c527b221d3cdeb00eebc2c60	feat(provider): добавить no-write reconciliation boundary (P3.2)
+54acf5c949858f517442bb964b8a69a1316d3382	docs(plan): закрыть P3.1 и подготовить P3.2
+b546c1710a9b986919b457dab8c2744031419014	feat(provider): добавить immutable desired snapshot (P3.1)
+03323f409a8beaf2dd72f566dd425f2caa6194a7	docs(plan): закрыли P2.2–P2.3 и передали P3
+94961e3f4ec54f0f6fe28ca332d6f561dbc93073	feat(locale): заморозили правила авторинга и evidence (P2.3)
+f293f945bfc1f283c0cdbbe6216b52bf70b1c7b4	feat(locale): заморозили английский канон и overlay (P2.2)
+0ff84769e4f35b35d38bf84ff986414e93edd53d	docs(plan): закрыть P2.1 и передать P2.2–P2.3
+428d38719ad7ef4d13f0dfe770569d5dda47d34d	feat(locale): заморозить контракт разрешения локали (P2.1)
+2313cf56039a02993e6865d67a947cc65c98ee46	docs(plan): закрыть P1.3 и передать аудит P1
+1919024b956c525e1419f2431d56bb4add5c15c2	feat(provider): заморозить контракт control plane v1 (P1.3)
+34f8334686cb540e85c45db214680c7637e3a166	fix(plan): исправить carrier handoff P1.2
+1e5023988e585fa51ed2a72f45f8d349b7378486	docs(plan): закрыть P1.2 и передать ускорение плана
+9d27e819a8e06443cfc7ff8ec81129b3de4c06f5	feat(plan): зафиксировать provider ownership contract (P1.2)
+e7c354da43a26b699ec8af254850fdc57a066b20	docs(plan): восстановить continue-first закрытие P1.1
+0aa0d665a0530e1ec51e36481158d0d05bd89bea	feat(plan): определить контракт provider control plane (P1.1)
+b865340d89482418f9029509a4036e0a17ebf820	docs(plan): закрыть live admission P0.10
+3208a774f6d9ebd029e2ee37e4d244171b4835af	fix(plan): завершить requalification P0.10
+fc3797d542034b6e8cc7655edcbcb30c8554c7e1	fix(plan): добавить live admission P0.10
+82a6cf4544cb648c57b5565634e554669c219ccd	docs(plan): закрыть перепривязку P0.9
+f3cd5a858f31d0f882e773a2ae77bda16aa8534a	fix(plan): перепривязать digest классификации (P0.9)
+c7928c8b58c0b778631905a3f0a2bee1aff61e6d	docs(plan): закрыть P7.5 и передать P7 на аудит
+57dba5d697baeca865466c718d4b3e69eb9135d7	fix(task): закрыть roadmap и reactivation lint (P7.5)
+46d1e1de72e71e51ad044a389a65b6bd91936bf6	docs(task): зафиксировать закрытие P7.4
+e3dc1d660887c47b7c8ea6aab249bab1b6cace86	fix(task): синхронизировать канон и provider-проекции (P7.4)
+a0db220a3d1a5416418e2289eaff5deb3238b9fb	docs(plan): закрыть P7.3 и передать P7.4
+a0451580a671b0d2f2e76c6c0d5869582e171272	fix(task): усилить policy terminal block (P7.3)
+36be9e0defa1cddff5b264ddea9cce29e49bfc19	docs(plan): передать P7.2 dependency gap в P7.3
+4e4e956cf7ec7a65abae84da48fad0ac26e893fb	fix(task): не устаревать receipt от bookkeeping P7.2
+59e4e1c938e4b7ef971ff26e75b586303defb185	docs(plan): восстановить и закрыть P7.2
+5237b6450a3250614411b289e59ca43afe0a9e67	fix(task): восстановить delivery и продолжение P7.2
+a3bc38cc184c73b003908ec04a9b99fd35e62ce5	docs(task): зафиксировать завершение P7.1
+5a7e9ee8be61906ee048b82cd42a2282435d17f4	feat(task): запечатать runtime-core маршрута и терминала (P7.1)
+dca9fb58035bea6cd8dc81b24d2a75e9484eb3ab	docs(task): закрыть P7.0 и передать P7.1
+23fddc8a8f180fb168da40f10acba28a368363c0	fix(task): ограничить bundle-gate следующим item (P7.0)
+9c163d57fdd760fe149d5df4f75d37bba4a23b5a	fix(task): восстановить обратную совместимость lint (P7.0)
+7472ace86bc227639de430d8cff576d9d6d7fd02	docs(roadmap): capture false P10.6 terminal block
+c5467e55d617be51152bb602dd26ac6c937f76ca	fix(plan): исправить P0.7 security evidence
+288133dde76ce9a0a296b2300490340e7f0533b5	chore(plan): зафиксировать выпуск P6.2 v0.13.2
+b09ae7857e33794f722157c4a15110b3f899b112	fix(task): синхронизировать golden manifest 0.13.2 (P6.2)
+10f1119ad7ec6bd6a0b26ddac8a63d979b880519	fix(task): выпустить 0.13.2 exact candidate (P6.2)
+9a7aaff2035d38d98e011be13c6080a2a8c83bb0	fix(task): разрешить forward recovery P6.2 (P6.2)
+508b4282ce1f04b6b3ea6261feeb4129f369296b	fix(plan): заполнить route handoff P6.2
+cba71bf3ccf5cf1e2872cc6222a5cb4a58ccc09e	fix(plan): исправить доказательство validation P6.2
+bfaa2ee84315f3f2f2f1a2676ab225fa2b83b5b5	docs(plan): закрыть P6.2 patch-релизом
+3e24951ec643ad8826cba3018883fc93acaba51f	fix(task): привязать fingerprint к tracked Files (P6.2)
+4e9d46b3d4948fde25624b36ba0bc042c3277c67	docs(plan): перепроектировать P6.2 для patch-релиза
+e8902458cba1990fffc107eeab84be14395f114b	chore(task): закрыть P6.4 bookkeeping (P6.4)
+7cd85e2dda65ba5b2713c76cc51e7afd0d4aa6a8	feat(task): зафиксировать rollout P6.4 (P6.4)
+71449c2ed802589b2b1a5361ec6b0e473c7af183	docs(plan): закрыть annotated tag P6.3
+da69a815445bf8261d5063860c8234e09957d139	chore(release): проверить tag v0.13.0 (P6.3)
+bc511cbe3bd3d9131d3d4d1cc16f9001728adb48	docs(plan): повторно квалифицировать candidate P6.2
+3c5548f7d15100e3b992e62e08f7e8ef2a92b0d0	chore(release): обновить candidate v0.13.0 (P6.2)
+3bc336b4a9f50c12d1bad1a382b79534845141c2	docs(plan): закрыть requalification P6.2
+54ab20587f2b53b57db04421f6add9068d1f05cf	docs(plan): зафиксировать candidate P6.2
+8ed159c9073143bee7c13e0e4b660202ff639846	docs(plan): восстановить bundle P1.1
+e41d4829dac535088c7eb68d73dfc487e3484d72	chore(release): подготовить v0.13.0 candidate (P6.2)
+c7c74fd32715d8092b1d0c07c6b941fb702007a1	docs(plan): синхронизировать границу P6.2
+707226f2bf54d4afd157b70a50cc5e23d5e25476	test(harness): мигрировать fixtures на Layout v2 (P6.2)
+97b143463a7577109ded62f1593c05d13e4573a3	docs(plan): зафиксировать границу P6.2 Harness
+94b921acbe2a5be2f1cf1e7900d5ae5c6b731293	docs(plan): разрешить Harness boundary P6.2
+be765443d1a7b8a2fabec334d0b99eadad0526bf	chore(plan): припарковать P6.2 на Harness gate
+8f98c8b871e2857d549cae58ae2d73c189d33953	docs(plan): перепроектировать выпуск после ремонта роутинга (P6.2)
+882425b7f30e7866c2dfdbea52df6792921835d8	docs(plan): зафиксировать release tree v0.13.0 (P6.1)
+4efef7a33e4f82738fc138252db505471812a5db	chore(task): подготовить версию 0.13.0 (P6.1)
+9bb2d83b0e65b7d87c39d9eeb9160beb74b4cd0f	chore(plan): обновить P6.1 bundle
+5e459359e05a95c669dc964d14f73fd1aec18e05	docs(plan): разрешить границу Files P5.3
+6f32db45da1739a99391518960a202552fb26c17	fix(task): закрыть границы audit-fixer (P5.2)
+83ea6eb8fd8c2352e6b13725404f60538ac9df74	chore(plan): завершить repair P5.3 (P5.3)
+0305e1e65dc281cb54ef1fa63e46069396195dbf	test(docs): исключить live runtime из snapshot (P5.3)
+2e24b08a33cfe0eff8ae8125f7fe7e4ff9d9f643	chore(plan): закрыть P5.3 parity (P5.3)
+4d03ff55ffb47c2d15f5c55ad295bc4c390c5b51	feat(task): синхронизировать audit-fixer projections (P5.3)
+ba5d313fa11944dc289f5ef0e0b78361cb1716b3	fix(plan): исправить корневой launch-block P5.3
+a4c347a4109cd6767a49091bf984578dc7fc9948	docs(plan): закрыть P5.2 (2026.08.12-№1-TASK-RESILIENCE)
+82f5c5974287da44525d810f9f26d651923699ca	feat(task): добавить audit-fixer в одном root (P5.2)
+876b2360d6de269831cba89083d8f7015c209dbf	docs(plan): эскалировать P5.2 scope conflict
+f0538e2f76ae45aaa0341e370221e6b010eaafb8	fix(task): обобщить owner override фазы (P5.2)
+f0bdf44122f44cf5f23938a9b8d0f29700e7261a	docs(plan): восстановить P5.1 state view
+3f48852b678639e3ef4f0ea9d5e72429eec4e961	docs(plan): закрыть P5.1 receipt evidence
+e2fce14a8e69566ac0022dd5ead0c40fbae8b56e	docs(plan): закрыть audit repair P4.2
+40e3efebe9405d7acace1ff042b8c4e035d1518b	docs(plan): закрыть audit repair P4.1
+623b63951b883c292e5c2777ecfeb9a63d650d5a	fix(task): закрыть обход external RAG (P4.1)
+52bf8e64bca77a1a6e34cb13c66ea29b64f1336c	docs(plan): закрыть P4.2 после provider parity repair
+f4916db8231f3024873383fc68b321856c51cfb9	docs(task): синхронизировать umbrella provider reference (P4.2)
+3f73c26d256ae53241492dcb746203d7b5285125	chore(task): синхронизировать provider projections (P4.2)
+804bc5f8a2a80f4c71d75990f9f25f5e83736188	docs(plan): разблокировать provider parity в P4.2
+2e54cb4b7430bb27e9797e68fb063f29ab619013	docs(plan): эскалировать P4.2 из-за phase-first deadlock
+1ea10e742795a25505b2e9ade2a41c20a18fbf0f	feat(task): унифицировать block confirmer в командах (P4.2)
+0c70c57c9bb3ea22bc75ca9e58a31f935f7b8003	docs(plan): закрыть P4.1 и передать P4.2
+cc7a0523eaddae16b45997948c119cef2a34e973	fix(task): проецировать write-site repair-forward (P4.1)
+aefd14508b0bc89080c8f5f4eefd51b041f85af0	feat(task): закрыть RAG-гейт block candidate (P4.1)
+f60e9a284a23dbab054112311fdf1ffc619bcbbb	docs(roadmap): нет launch-provenance адаптера у провайдера claude-code
+ce4af6aba071acd47bc2d768b3efe719f3447314	docs(plan): закрыть P3.3 audit-cap remediation
+30c712188937d25ee26abc18134d38b0735dc07d	fix(task): ограничить v2 orchestration Phase Context (P3.3)
+381adc748fba69f0187d07cc58b6e940bf3a41fd	docs(plan): закрыть P3.3 и передать P3 на аудит
+6a7c405f2c3d8e79be0207c181258291cd6081ce	docs(task): синхронизировать provider reference (P3.3)
+8506723de03e6c47e3471ccddd1d86013adf01bd	chore(task): синхронизировать runtime plan protocol (P3.3)
+2f7959436a4b8cf2e1ce392a1228d932d2e98faa	feat(task): учесть negation в workflow lint (P3.3)
+c1a92619f8f99255ce61e64180cc655b0965fd8a	docs(plan): закрыть P3.2 и зафиксировать D18
+1e8b5651b8515259021f77e772493890972443dc	feat(task): продолжить route evidence без terminal stop (P3.2)
+407d3276debdf2e153e51431a94de1c41fda49ce	docs(plan): подготовить batch P3.2–P3.3
+f152d19f9108dc8212c5d1ad67badce4b327972a	chore(task): закрыть P3.1 observation semantics
+a88677496f0981bb8fbcc0af94454d809c73ce17	feat(task): добавить rag-pending как observation (P3.1)
+223d47bc0c00da92eee512a47294f7267696047e	docs(plan): исправить отклонение P2.2
+43849ae9c3cf5b49bf955fc267ebbdb2e5f28aad	docs(plan): закрыть P2.2 (P2.2)
+8d7096cb0ac0838f95449f3d153e4cfc9d26f2bf	feat(task): уточнить внешние ссылки на item (P2.2)
+dcafcbaabcb06fc5711486888376f20dbf199d92	docs(plan): закрыть P2.1 (P2.1)
+2f22ad03018ab6ffd94e8851858d2c96a079114a	test(task): проверить Unicode PLAN-ID через CLI (P2.1)
+2c5a42026e2231c62d3e3d8201a32c4fcb805deb	docs(plan): отвязать bundle P1.5 от чужого dirty diff
+067d93208817485158823e1e043667497fd8795c	docs(plan): зафиксировать repair P1.5 после аудита
+6c07566c22f316518906a7e46d590aead893f0e5	fix(task): устранить дефекты аудита Layout v1 (P1.5)
+7b9eb5805b580cc33a32baa938db588ad70e2c1e	feat(task): завершить вывод Layout v1 (P1.5)
+28a2ba84d8158bca21316a776e5c2759a75675e2	chore(plan): зафиксировать закрытие P1.4
+5e2d9ff600685c11ad5483fe6634d72712046152	feat(task): выполнить cutover fleet layout v2 (P1.4)
+8825816f0db6c7da4d04430da824bdc66c7c5756	chore(plan): закрыть TASK-RESILIENCE P1.3
+3fd540d39bc9240a3f8247c974a316e0c95a0d7b	fix(task): нормализовать Meta already-v2 preview (P1.3)
+f524811c3a4b13039ae56910135cfb992e826ad3	feat(task): заморозить policy миграции fleet (P1.3)
+0fc60a42c7c90b143e3208d2bff9518434369d52	chore(plan): закрыть TASK-RESILIENCE P1.2
+2b85d96d1721aa4b7a88717cc5ebbae814ea7628	fix(task): нормализовать legacy Routing (P1.2)
+c6ce31b97420096c4a0982d2536464ebb53e3d5f	chore(task): припарковать P1.2 на owner gate
+7ae12d1a5125e77cf99f1ce204d8040a010c7ca1	docs(task): зафиксировать блок миграции P1.2
+b73cd3fe56b0c736d771b3867166efa13f10f123	docs(plan): закрыть инвентаризацию Layout v1 (P1.1)
+6553d06d7779d0d5bf4ede40597df22ca3c992ed	fix(task): укрепить инвентарь активных планов (P1.1)
+e4a93f82be555a52d993702a03fec11cd3a38734	docs(plan): зафиксировать блокировку P1.1
+6c3a894b261c52757b8b8580e68ae56059dd2a06	docs(task): исправить статус P0.3 по аудиту (P0.3)
+78a8cd18a21833d0f8f172bab32d27bd704d8798	docs(task): исправить статус P0.1 по аудиту (P0.1)
+eee77e91809388f168ae3720aefc64eb49368cf1	docs(plan): закрыть P0.3 и передать P0
+6f08c69dd75ae8fa34568b1d263c06d856d2c9cc	docs(task): зафиксировать downstream repair (P0.3)
+1db68de9574a29fdb48c287081a7e59db8ba3209	docs(task): закрыть Perplexity evidence gate (P0.3)
+10bf82b8eae10ea856449cf85675ac70b13bafa1	docs(roadmap): зафиксировать сбои Task при P6.3
+4618894ddced4b93da09b7d7d7974195de268c57	chore(plan): закрыть P0.2 и подготовить P0.3
+e01b2a65d581132b0ab3df9c9d0350d46990808b	feat(task): запечатать continue-first acceptance bank (P0.2)
+9a39a6c9f25ce76515038f673aff2b5fd9d86783	docs(plan): закрыть P0.1 и передать P0.2
+a8fd256d734ce8a43be7fe3c5ddc3d43f450943c	docs(plan): убрать лишние пробелы в finding (P0.1)
+5f34d99f54f2b415effcd2c10a63996f75820ad6	docs(plan): сверить roadmap с runtime (P0.1)
+50c25813746a5b571f1fb31503ba0b65c0462806	docs(plan): закрыть P0.3 terminal delivery
+c15ce41ddcf77b91d007e7689224c4b0050a2945	docs(plan): закрыть P0.2 политики блокировок
+4aebd319a04d2177825fe9b9b35d8259b604efc0	docs(plan): закрыть P0.1 нумерации планов
+d2bed1f22f04f7de59fe7e16f1f4d5b76597bdde	fix(task): исключить phase audit return (P5.6)
+f6373c011616740dae823a3919d58f650a3339c3	fix(task): добавить locked plan-protocol projection (P5.6)
+7fd19609942a525056bb1fcbd390144dd2aca3ec	docs(plan): requalify P3.2 after D26
+8c9aa2cb32470ceffadb4f40bc3c55c069350852	docs(plan): закрыть P3.4 и передать P3.2
+8fe77be9f14a415b94dbaa84a9e1e895b2074be6	docs(plan): зафиксировать validation evidence P3.4
+0cc5fe4510fe10b5960269264bde759ca51ca4d3	fix(task): принять config evidence и D76 remediation (P5.6)
+475264db83be6ce6e9034d7bd3610f007f64b6cb	docs(plan): закрыть P3.2 и передать аудит
+ee59ffdea709725432f4a936c12747e60ade4138	docs(plan): requalify P3 anchor (P3.2)
+ec5c71bcf36c1e9abf233953635194fee57a3fc3	docs(plan): закрыть P3.3 и передать P3.2
+57a922b39febc9dfb2eb2c19fb32ac2f284455b4	fix(task): убрать недостижимый route-gate (P3.3)
+d82149504b79a4cc2f8c724e6ca1e41f6f5a290b	docs(plan): закрыть P3.1 и подготовить P3.2
+ddc196471e59253abfd2770d6637952d179fff53	fix(task): закрыть fail-closed route и bundle (P3.1)
+ba59342810298c963fce516993e39eca35f4f633	docs(plan): завершить repair evidence P2.4
+9e2755325bdd3e6add93e75018511b4d615ba99c	docs(task): обновить provider commands (P2.4)
+092ef4d013eefb065916e80f40d46bf1abb1e28b	fix(task): учесть provider config Codex (P2.4)
+17d611f4d35147d5c4113912c252be4035814b6e	docs(plan): закрыть P2.4 field canary
+ee7a22e24273f7f9a03ad240aa874ea161be8de7	docs(plan): уточнить provenance P2.4
+b3f69d1f65fbb85d3ece84310fa9646fe11d4902	docs(plan): повторить field requalification (P2.4)
+679d4d396f2ef1394e1a35b780578d1b047d3c66	docs(plan): закрыть P2.3 status projection
+ba882c9ffcb48d06bacb0d6610f1488e283cac37	fix(task): исправить mixed-state status (P2.3)
+9575546923f31a15a1f2002ab3e6567b84a8fcd5	docs(plan): подготовить P2.3 status repair
+805a5b16a0ab940c4764dfd45caaa21855678098	docs(plan): закрыть P2.2 и направить status repair
+56081dae1b3c59eb3c4be87d74f71b2d15072bc8	fix(harness): восстановить v2 plan-driver (P2.2)
+f20bdf26dd1f7ca77c15fac4874c26cf258813b1	docs(plan): зафиксировать RED P1 и закрыть P2.1
+7444762c7c1ed69b00ebc5c9bd160baf6c0764bb	fix(task): закрыть находки ревью P2.1
+f3c0da6f67a4c47fe9c2593ccdee74f1b0e347b1	fix(task): восстановить integrity plan-контрактов (P2.1)
+6adf0328712556f9ecdc5c5c405c51a5c95baf92	chore(plan): закрыть bounded repair (P1.1)
+73e53f51b00e122319fd1e65ab52faa3483092e6	fix(task): завершить bounded repair (P1.1)
+bad13adef337b40e6c454a488753e26a595d25d2	docs(plan): зафиксировать canary P1.2 (P1.2)
+0b70f63a5ace631e011de38f9c14ce4a12138d0d	docs(reference): зафиксировать ledger P1.2
+f69a4f39fd40f6ed3ec86e43437b9352ca1de6f5	chore(plan): закрыть P1.1 с отклонением
+76d6676ad3651c4392e1e8eb82a4f17d55de37f6	chore(plan): закрыть P0.2 adaptive canon
+4d4da7410e8f0a0e4547c550acdbc567ddb45ad6	refactor(skiller): адаптивный канон plan-protocol (P0.2)
+7f584835f8317a859ff3be6674695b983c2e66b8	docs(plan): уточнить telemetry P0.1
+298249b5663a673ed305db14e74a2e667477c517	chore(plan): закрыть P0.1 с отклонением
+e777f6655bd6f2e596099bcd7e37b7153f938a1c	feat(harness): стабилизировать run-report (P0.1)
+c2a05a4d674ef10d7f9944dad5096e16671be6f4	docs(plan): закрыть bookkeeping P0.8 (P0.8)
+1e552dd4c62e8741b865735a40a371f249b676d8	fix(plan): восстановить валидацию P0.8 (P0.8)
+a900e3f75ccf17293de9c7b6baf0ae03deac7dc4	fix(plan): уточнить следующий шаг P0.8
+dabe7495e7d9010a99821b8ba3a9f3e90bc5067a	docs(plan): оформить эскалацию P0.8
+186ccbfbb3a1943f90839a6853979e5fc751474e	docs(plan): зафиксировать блокер P0.8
+73dbe192ec315ac60cc71eb110e505e7ed51bda5	feat(plan): построить provenance ledger (P0.8)
+8dfceb0a246a097f063ba4607bc5ec24f7a2dd49	docs(plan): закрыть P0.7 evidence remediation
+9d05faccdcc91572eb380d38d241866cd72db766	feat(plan): исполняемое P0.7 security evidence
+b9d71e6aad4fc13df48ec19501503e5d36596005	docs(plan): закрыть P0.6 recovery gates
+970ef84e326d44e4f3a09524a0a0e73bb8ba4d84	fix(plan): закрыть fail-open recovery checker (P0.6)
+ffc735d9309adeeedec4ebcc455aab6cf70f7b07	fix(plan): усилить recovery gates (P0.6)
+39fe0ea68124af3784ae0b772240d5b1dcb0ffbe	fix(plan): восстановить exact-set baseline (P0.5)
+18571a14c69a57f04a8a4db58a7039f627e27c13	feat(plan): зафиксировать recovery gates (P0.3)
+5703feb4ee8a086538f9bc64aa36b70de3f8c61f	feat(plan): классифицировать provider fleet (P0.2)
+5d599b7edc3a1bdd77b9136ccc4432775c227edf	docs(plan): зафиксировать блокер классификации (P0.2)
+3989711b9e20562370ea67e1e2b3f7af2d8ec1b9	docs(plan): зафиксировать готовность P0 (P0.1)
+0169e25678f94f601a9bb7ddc4ce80f9ede66156	chore(plan): обновить provider baseline (P0.1)
+8cb0cb7dcf21067dc0a358d028e3d0515d8f0734	chore(plan): зафиксировать эскалацию P0.1
+7b28cfbb1a791008026ad68d50385c7a2681ccac	feat(plan): зафиксировать baseline провайдеров (P0.1)
+ae3d6b574f8760b83c25c9dad5c1689eeb7c1c13	test(plan): подтвердить P2.10 downstream green
+a0d10a5358b50690f615ad197b344ec0c63bcf9d	chore(plan): обновить evidence P2.10
+d64ec4bcc567962344cf551064ccc1ed382ccbce	план: зафиксировать блокировку P6.8 после arm A
+a29439042849147a2daa5a99faf47e59b90d4868	docs(plan): закрыть P6.7 с отклонениями
+536a1b3e869f75c67af72b695fd88148fe6b1e5a	fix(task): сузить guard вложенного lint (P6.7)
+154cb3ec7e9f747792330ea7517a0b17511ac830	fix(task): исключить рекурсию downstream-гейта (P6.7)
+edf04aeee50439f8e5471c98575e4508a0b62c66	feat(task): перезаморозить stage-aware протокол приёмки (P6.7)
+41d7e43cb8fa34a230abf001e8057fdc32728d19	docs(plan): заблокировать приёмку по arm A (P6.8)
+f6c31e9efd2fc0181c13ada834010d5a913dabaa	test(task): зафиксировать провал приёмки arm A (P6.8)
+c46a6aca17c8bdb8dd32f63f969532e7822168ab	docs(plan): закрыть протокол приёмки с отклонением (P6.7)
+485226533359bf720b86dbcd2d083cde2f686b3a	feat(task): заморозить протокол приёмки (P6.7)
+af7db0a30fb68256f459531d77872c554a82347b	docs(plan): закрыть раскатку флота с отклонениями (P6.6)
+cdb99e04c7c38ec79dc8693b2d6527f3720b4d8c	docs(task): уточнить fail-closed миграцию планов (P6.6)
+a73653c9d832f0dfbf6cb5b3dd3fed1c8ec27161	docs(task): добавить runbook миграции планов (P6.6)
+8e01d28b3b9ab2c2b8e836f476f3651a887168f6	chore(plan): закрыть P6.5 плана PLAN-ECONOMY
+4146b486b5d8b888bc181fd29572bfd020e2be72	fix(task): ограничить inline-команду первым markdown-кодом (P6.5)
+e3d4b3da8e42e5005b3ab90401f2cb5ae251aad4	feat(task): ввести EN-only канон plan-protocol v2 (P6.5)
+3138238bf1d828bbf9b6ef4de02c9a594a93580c	fix(task): перепривязать EN-only гейты после удаления RU (P6.5)
+bce75cb5d0aebb5685be5a44e8faf7fa5c1ea7c6	refactor(skiller): перевести авторинг скиллов на EN-only (P6.5)
+d486c590f0ba83cef46455b62af69b6a92b33181	fix(plan): обновить digest status после блокировки P6.5
+c82f84ebcbef04a50a3c613c3dd35308f38ce56a	docs(plan): заблокировать P6.5 из-за расхождения scope
+ca402b4a81429a6b92919615daf04d63955452c0	docs(plan): закрыть P6.4 с отклонениями
+62ef05b3a44d6d3622e23be3f3140399d554a0d8	fix(task): не запускать пустую когорту гейтов (P6.4)
+2035d99a2fec3aa8c4a6ab267e1d291480bd7660	fix(task): включить join очереди решений (P6.4)
+0c1efcd338cd3fc1bebb273968222838ca2a6324	fix(task): включить owner gate return loop (P6.4)
+8394ac31aefa9d01a74d9d53b6acdab7b7ee8a59	fix(task): включить квалификацию return loop (P6.4)
+cbbf3ea183a26c4f081c369b4b847cdb0a685572	fix(task): включить downstream gate по границе (P6.4)
+0446ce4beaddb99307131a0762498dfb7322efa3	fix(task): добавить носитель границы активации (P6.4)
+0a808a083187a59b4b1e690d43fac711e795fe51	chore(plan): заблокировать P6.4 по конфликту носителя даты
+00e8bcfbdcde166441090299549634b6aa807e84	docs(plan): закрыть P6.3 с отклонениями
+4afb41d76a23583ef658e64c39d7073baafb6154	feat(task): добавить интерфейсы модельного суждения (P6.3)
+d66a5c5667cd29fd9bad152486ba65b325a5120b	docs(plan): закрыть P6.2
+3d4d5a625687b79805c4d3a3d28bbbec6d902526	feat(task): добавить производство закрытия планов (P6.2)
+f2ffe76cf8ac9affbb4e7fc82122d2e4d81cd065	chore(plan): зафиксировать блокировку P6.2
+1df6989bbfc9ae0bccae17d35e9d64591c27bfcd	docs(plan): закрыть P6.1
+f9370228b99918c8b7164a75b623f69558c6bcb4	feat(task): перевести чтение команд на Layout v2 (P6.1)
+deca34a250753dec644ad955d8ed3649c9f1431b	test(task): зафиксировать RED single-use P5.5
+f7a99e7f72fb230139fc26989e5436eb1f1a948e	feat(task): расширить acceptance очереди (P5.5)
+1b5751ba2e81256e679d51cc3bf307d38bada020	fix(task): восстановить fail-closed очередь P5.4
+af1f209f2737adb44b407e45f1d8fb039fa36c09	test(task): зафиксировать RED P5.4
+b08504ef2b4631a4cd13738d42fd5062a9797104	chore(plan): закрыть producer acceptance P5.5
+2c6f8d4ba6226d01a4e58048f16684da1dcee786	feat(task): добавить producer acceptance очереди (P5.5)
+b1152c4161471515feca4f1eb55f131a444573dc	fix(task): сверять digest пары автоответа (P5.4)
+ae56e9cd3f9f37b158976329f51639be65451570	fix(task): принудить контракт очереди решений (P5.4)
+c83506ef394a366e694c3ab489f443d341355716	fix(task): сохранить коды ошибок адаптера P5.5
+663ab4780d88bc2246f9abae7d2a817ed441537d	chore(plan): уточнить route evidence P5.5
+3ec56d752e8dde96028b252da2d39639ea392647	chore(plan): закрыть P5.5 (P5.5)
+a346dea735093c3af0d7b9cffa2bb9045e199d6b	feat(task): адаптировать return-loop owner-gate (P5.5)
+d1f4a20f556be6e118245d5799ef5f8ca8a566b0	chore(plan): закрыть P5.4
+f48421c8966a283c823d094341815e6374f267a8	feat(task): добавить очередь решений планов (P5.4)
+a10a694f9ff525da4ea4c7ff31349c70adbfbc44	chore(plan): зафиксировать эскалацию P5.4
+e94527cba60ca452060680906b9bf5f1a21df781	fix(plan): восстановить отклонение P5.3
+9c7ff018bbb763b58b82bee1a45ccf74aa64e037	fix(plan): уточнить валидацию P5.3
+dcaae9173d44a51328c618209adb76ab421765a9	chore(plan): закрыть резолвер полномочий (P5.3)
+98a23ea0f8b3d0d6cfd8ee3485720d2dd8b95378	feat(task): добавить резолвер полномочий (P5.3)
+124cfe34a2d2976b9f262739e97aceafafda7fad	chore(plan): синхронизировать проекции состояния P5.2
+58cf002c814e14b7594a93acc69a2c11b2d21fcd	docs(plan): закрыть P5.2
+7624eed57e50247a7d430f4003a2117a7d75cd7b	docs(plan): заморозить authority-frame v1 (P5.2)
+2d86d3e7a0844b930f3d7254dff68591edaa1e8c	chore(plan): закрыть P5.1 и обновить handoff
+7ba23f968bb454607dbf8932eb5f447b7b3b18a9	docs(plan): заморозить decision-request v1 (P5.1)
+00d7d46782e2101985e7324a34a708441a50e191	chore(plan): закрыть remediation P4.6 (P4.6)
+e534dbfb37a1192aff5ef3f41ed07a8906492379	fix(task): изолировать verdict по return event (P4.6)
+f7af4f3e750778e18f11a19407dcbe2f80938f73	docs(plan): закрыть remediation P4.4
+2dba3164a5e5013300835379860fc16954a27844	test(task): закрепить lint write-site P4.4
+ce36e693685a4e9c74ab43aba9c54551cc3d89dc	docs(plan): закрыть remediation P4.2
+48e87961ab375ac201583afe4f7db86c0a489cf6	fix(task): добавить event id возврата (P4.2)
+67277ba0180779a04f40c6edfd08cbcaab08c82e	fix(plan): уточнить отклонения P4.6
+22e2dc985ce698e6500a263c8a6a739f2b30fc98	docs(plan): закрыть P4.6 и фазу P4
+df6d098ba4078db981bcff68180cd4ef852e2333	feat(task): исполнить return-judgement v1 (P4.6)
+585ce4ee42de9e14acc187803256f34b4d75ab8a	docs(plan): закрыть P4.5 после D141
+567efe665a8755d4996acc9f9f5a736ba41d8487	fix(task): ограничить journal note и компактировать статус (P4.5)
+b60a4b09bcc74fb134fd514c244072fa385ab561	docs(plan): зафиксировать блокер закрытия P4.5
+39bd5e2a31ce3381a7b3322cceb748714667c393	docs(task): заморозить контракт среза-суждения (P4.5)
+08d22ac4f2a0bcf600a25eb43fabb95ca32e53ad	docs(plan): закрыть P4.4
+8f2cacd271ba0c19889319d650a6339700d4107a	feat(task): ограничить циклы возврата (P4.4)
+ec53cc488f8a66bc9f635d8fe16ab000806cdbea	docs(plan): уточнить fixture P4.4
+d36359b22ad5b10c51c00f3da896077269a4c996	docs(plan): задать evidence P4.4
+3edf394db2d653b015b96dba6e7e25e810e49dbd	docs(plan): разрулить ownership P4.4
+9a2f9eb6302509772cd9070e3bd7e2a20cc1cf05	docs(plan): зафиксировать эскалацию P4.4
+8d879f3dc870390cf1f20699a1851afe569ff206	docs(plan): закрыть P4.3 и передать P4.4
+bddb16e4b9b4b6f4bd860491c6e631c91ee4a291	docs(plan): заморозить контракт return-loop v1 (P4.3)
+64f95d5bdb815f398cc77afe51d02cf891923419	docs(plan): закрыть P4.2
+f3b21406c27cc9dd20f35d89b8883a67893f3f80	feat(task): добавить редьюсер возвратов (P4.2)
+09b3d44d319c29afa024061bd37b70f32d41308c	docs(plan): закрыть P4.1
+00569181a7fbd969ae82329990245a7665bb6ccc	docs(task): заморозить return-fingerprint v1 (P4.1)
+0148052dab02e2f380a6d00c3a9eca819a97b106	fix(plan): уточнить носитель seam для P4.1
+e1bbe02a527fa1686e9d2ac8729684c76ad0360a	fix(plan): синхронизировать проекции P4.1
+827926c59a203729fdf127e2c42a722a2e710b19	docs(plan): зафиксировать блокировку P4.1
+a98a86cc239e2d6ee38cbde98ca82f0d308e0299	docs(plan): закрыть P3.7 с отклонениями
+5632a2216a5985bd5f599dc7b47125cedea68e92	feat(task): добавить downstream-гейт потребителей (P3.7)
+cd1e243d12e35d83bc497ba04697d4becaf9e5ff	chore(plan): закрыть P3.6 с отклонениями
+0a1597c74eb8633cbf26e3feabd25ad28e8b9467	feat(task): сохранить проверки layout v2 (P3.6)
+6da47ea6c31721ec3848a0876706ff8e94cf4992	chore(plan): закрыть P3.5
+eeec746302bf953ae854938b8ae253c6d62b6d12	feat(task): включить гейт границ read path P3.5
+65840644f2cab9be8c9d68399374244d164673bc	chore(plan): закрыть P3.4
+08af02acc52f379643530b854d9323d02951a524	feat(task): включить гейт свежести bundle P3.4
+94f0800c8ad200d5495faa8aefe1d554b4eda356	docs(plan): закрыть P3.3
+2381ac2d6f2088b08d916d67c62a2b232c596c06	feat(task): включить гейт бюджета чтения P3.3
+19ddb24a52ee465d415a8453ccc6d9fef5a32fe3	docs(plan): закрыть P3.2
+6cfb9d6ace86c1dfbdc2aa944aefaab36e775f9b	feat(task): добавить детерминированный bundle P3.2
+5ded467ffdf74f53d505b98c4712787e5828d258	docs(plan): уточнить P3.2 по D132
+5cadde5380c489fd827991aeff17d15ba596d0b5	docs(plan): зафиксировать эскалацию P3.2
+762b9108d799bcdcd074b2e88e80da0b133b331b	docs(plan): закрыть P3.1 и передать P3.2
+31cf532bfed656c519353ed9305d7cd654415a37	docs(task): заморозить контракт bundle v1 (P3.1)
+4bfbb376badc361d3408ee3fe9d7dd5dba46649c	docs(plan): закрыть P2.10 self-host admission
+24c41692c8940e53ff1867f6e7916f50008bcc66	fix(plan): обновить state views после P2.9
+b60b45093dae211d4f2167538185f01e6b6f7f3a	docs(plan): закрыть P2.9 stage-aware admission
+3f478fa7ec6557812055c5bb3015bf1e5bdd41b6	feat(task): добавить stage-aware admission (P2.9)
+cf01271572dc372239b6756f950b8957439e09ec	docs(plan): закрыть ECONOMY P2.8
+76cc70351b6137e1fd3e079b57345ab659ba86f1	docs(plan): зафиксировать P2.7 review-fix
+e4674284d4aeac31f6e6d5104eaa97c61c296851	fix(task): учитывать статус v1-фазы (P2.7)
+df2968ddeb78e4501752474ab8d01980efb9fad2	docs(plan): закрыть P2.7
+f03d0eb9a476c7ff8f81d3dadc9cafe79f721dc1	feat(task): добавить closure-проекцию фазы (P2.7)
+06cd71b767416583c2667ef34edc092c40e735ca	fix(plan): оформить write-site P2.5
+d2a73099e04903bb93002d0e5322f2305fa5be57	docs(plan): закрыть P2.5 с отклонениями
+4a572568ade494ea06d09e658b44017a6d848f0a	feat(task): добавить слепки состояния пунктов v2 (P2.5)
+d0382a76adfb91fe51605002cb62fe94f395ac43	docs(plan): закрыть ECONOMY P2.4
+6f8633ade3a3818eabc05f88f6b2b9ad2c41c59c	feat(task): собрать owner status view v2 (P2.4)
+375f42328480d6395c5fe7153dd4871a3f413b7f	docs(plan): закрыть P2.3
+53f6a4811cb093d42bcf8cec235e90fed6909764	test(task): проверить сборку ТЗ v2 (P2.3)
+f1b2e2f03222f4c6595cce39897f8cc5707ce456	feat(task): разделить носители пунктов v2 (P2.3)
+07e68b0a63835325b98ed935f5152e2caaa66a52	docs(plans): закрыть P2.2 (P2.2)
+feae254cda5b6d788b46224591f79a70b54ced24	feat(task): добавить проекции решений (P2.2)
+0bb4d4100a8dd4355cf7eb7ab22826016855b070	docs(plans): закрыть ECONOMY P2.1
+19344b7f79eef048af743f12e8444f8cf9495163	docs(plan): закрыть P1.5 после ремедиации D126
+5633a75a289c7fc2b3575cd86cecf0e5d998c2c0	fix(task): закрепить runtime реконструкции P1.5
+da68b74f1a9013fd03469f1b5cec5eff21b0f839	fix(task): отвязать реконструкцию P1.5 от worktree
+d6aee4fd046b3cff43a25effab7c683fdc462b9b	fix(task): закрепить baseline оценки P1.5
+b82aa8ee480f66c309075645bbbd1f6e24dc3dfe	feat(task): заморозить reader-contract v1 (P1.5)
+7570391f3678ed789ca10fd467fa6940e5955d82	docs(plan): зафиксировать отклонение validation P1.4
+3d9b824ce7afb15fe33b7f633dc5a6b91d517ab5	docs(plan): закрыть batch B1 и передать P1.5
+300b3c061074db1ab830af63ebc5dd8e7a73d91a	docs(task): заморозить обязательный путь чтения (P1.4)
+990c83bc0909fedebdb1043c1688490fdd3f3aad	fix(task): выровнять волатильность phase-index (P1.1)
+b587053ad474f5bf545a83808743ca1f62e3e284	docs(plan): закрыть P1.3 и передать P1.4
+e97a0983ef6ab19d31871b8e700198065b745f1b	docs(task): заморозить историческую проекцию (P1.3)
+c5fa378268444f0d79bf7c2f1289d97344d5449c	docs(plan): закрыть P1.2 и продолжить batch
+d74130edba3d1a5cc215d98fd6d817663837baff	docs(task): заморозить проекцию состояния пункта (P1.2)
+69fb76f2f0efbc89abd418000eec7548d1df4afe	docs(plan): закрыть P1.1 и передать batch дальше
+5852fbb5d9bccad2873ac92fd02f2675cf8d34ae	docs(task): заморозить контракт читателей и реестр (P1.1)
+1b3ddfddf8490d27df4d8131dd104614468e179e	docs(plan): закрыть P0.5 (P0.5)
+6e5d5dcc068339b3fac1f6b59d08947b8c2d3185	fix(task): сделать контракт проверяемым (P0.5)
+ff8b84503cf19f48dd07a1fca6e00e99e0f61c59	docs(task): заморозить бюджет чтения (P0.5)
+da26f4117e24e5db9585afadca251cc1de2d48f2	docs(plan): закрыть калибровку P0.1
+30460ddfae64390f28f9cd6eacfb5bdd78267885	feat(task): калибровать токены через Codex (P0.1)
+d8548f2f67b60248bc0cefd357b3dd9243125f10	docs(plan): зафиксировать решения P0.5 и реопен P0.1
+277531daf62d3b32fe9a53231685e81e0cb53914	docs(plan): закрыть P0.4 — учёт корней sweep + замер флота (2026.08.07-PLAN-ECONOMY)
+d3d10db544c3b1a97ec76436f2bd5abb156fd8ae	fix(task): закрыть учёт корней в plan-weight.py sweep + замер флота (P0.4)
+70b19a2d3b10e80ad721608ee59e4cb3dd261918	docs(plan): эскалировать P0.4 — Validation-команда расходится с CLI plan-weight.py sweep (2026.08.07-PLAN-ECONOMY)
+523fedb81a5d0e2fa52689d7f08f3e31c568dcf6	fix(plan): убрать телеметрию .swissknife/analyst из bookkeeping P0.3 (2026.08.07-PLAN-ECONOMY)
+4d092411fc7f7017228b149c9b169b90de73709f	docs(plan): закрыть P0.3 — инструмент замера веса обязательного чтения (2026.08.07-PLAN-ECONOMY)
+9827885f7c332e53f3b00dac04067afc0904d14a	feat(task): собрать инструмент замера веса обязательного чтения (P0.3)
+5e3777b1be220fde19ff35d79693e26081760fdc	docs(plan): закрыть P0.2 — лимит одного чтения измерен зондом среды (2026.08.07-PLAN-ECONOMY)
+83a79f8c6ea823f3a7901a9b96cb2a1adf9abe27	feat(task): измерить лимит одного чтения зондом среды (P0.2)
+4a7810a904297c540bbc58efa15e65e5256fc3e5	fix(plan): починить plan-lint после эскалации P0.2 (2026.08.07-PLAN-ECONOMY)
+5a836f0b34703c036b0dd74b7b2defd936f4246f	docs(plan): эскалировать P0.2 — байтовый отказ Read вместо токенного (2026.08.07-PLAN-ECONOMY)
+a8adbea98634d6e60f13117ac0b2e6c9d9ec0619	docs(plan): закрыть P0.1 — оценка токенов сверху заморожена (2026.08.07-PLAN-ECONOMY)
+46a9a077bf931f6b11489ecb6ec3d60281fb37be	feat(task): откалибровать оценку токенов сверху и заморозить артефакт (P0.1)
+e0d65eedd76fa1d268dc3514c14cfaa8b4139000	docs(plan): закрыть находки design-аудита захода 2 N1–N11 решениями D96–D104 (2026.08.07-PLAN-ECONOMY)
+70b25c119fb5db1bdba7d2611eea287ffea2c4d8	docs(plan): закрыть находки design-аудита F1–F12 решениями D84–D95 (2026.08.07-PLAN-ECONOMY)
+a4ad0a456843c60ec9ca3405fdb7f01f1c193245	docs(plan): поставить ARTIFEX на паузу до оптимизации протокола планов (P5.4)
+89320b6ef6497c6e4ee113de15b808fb8639f2a1	fix(artifex): заякорить числитель интервенций на старт прогона P5.4 (P5.4)
+494366f1f467e80dc1dbbd8619f5d96b0c9ae0f1	docs(plan): записать первый прогон P5.4 — вердикт NO-GO, item остаётся НЕтерминальным (P5.4)
+137b8b714287cd68abc1377c6b4ecb88a5323712	feat(artifex): прогнать пять парных боевых волн и вынести вердикт NO-GO (P5.4)
+3eb0b95196f8914091e341c04ad4e5b379924b1d	docs(plan): закрыть P5.8 🟢 — три бесхозных гейта починены, pre-intent P5.4 14/14 (P5.8)
+b39435a9893ee32b7d742f2425478b8707b0651f	fix(artifex): починить три бесхозных гейта P5.8 — F12/validate-assurance/lane_units
+bcc36219f8522318c97d78e101bc72bd3ff7ca4d	docs(plan): закрыть P5.5 🟢 после четвёртого реопена D132 (P5.5)
+40e1446dfbaeb6b7dd67db9ca38a8f0b6ef1adc0	fix(artifex): зарегистрировать D125 и перенести branch внутрь строки батча (P5.5)
+95b8182a1632ca6858cc74939da819f5c9e6a5ab	docs(plan): расэскалировать P5.4 — D132–D135, регистрация D125 и три бесхозных гейта (P5.4)
+31d40c0b93b8f10215427703cf66b4b48e8b83a8	docs(plan): зафиксировать направление владельца о прямой сверке аудита/дизайна (P5.4)
+3371dc5ffe72184c1ea113fddd9fbb0172d820ee	docs(plan): эскалировать P5.4 🔴 — пакет отказывает все 10 D125-строк, 0 диспатчей (P5.4)
+ce9b6d841ce04486b209ee9ffa15b46de6d53fe4	docs(plan): уточнить статус validate-assurance.py — P5.4 его не называет (P5.1)
+8e7ca96b35850fd27e4b3e4326868f0e2b8fab62	docs(plan): закрыть P5.1 🟠 — третий (D125/D127) реопен, v3-набор парных волн (P5.1)
+8495fd9087965aab84d1ea1ef66bb4c2f90c45b7	feat(artifex): отчеканить аддитивный v3-набор носителей D125 для парных волн P5.4 (P5.1)
+0b7373d58420d4c14484d555c0c944ba9b1d7159	docs(plan): закрыть P5.5 🟠 — третий (D123/D127) реопен, измеренный economy-конверт (P5.5)
+746b6a0c6420789a0c9cadba349a04e4989ee797	docs(artifex): зафиксировать P5.5 economy-конверт в леджере и находке (P5.5)
+dd509e399f7a13fd4119d0d4c2fac8713be5e09a	feat(artifex): измерить провайдерский economy-конверт под economy-evidence-v2 (P5.5)
+57146612735204e40a7d09a9b702e27bfd22cbcf	docs(plan): закрыть P5.7 🟢 — economy-evidence-v2 заморожен, агрегат пересобран на восемь контрактов (P5.7)
+331edbf09112054353eecefc11efbc20b131f945	feat(artifex): заморозить economy-evidence-v2 и пересобрать агрегат из восьми контрактов (P5.7)
+5c75846610d00f9bbdcc6d6f2207493a79edfc9f	docs(plan): закрыть P5.6 🟢 — четыре generation-stale гейта реконсилированы (P5.6)
+759cae48bf1828ba92e137f0f38ba4925d87f116	fix(artifex): реконсилировать четыре generation-stale гейта (P5.6)
+3f08673a512a59b26c940fb0e88bd5220477b35e	docs(plan): выровнять Thinking в launch-block с пином plan-design (P5.4)
+c28582580ea607af2fbd159c0a6d5a755eea9558	docs(plan): эскалировать P5.4 🔴 — pre-intent гейт красный, 0 диспатчей, 5/5 D105-волн не потрачено (P5.4)
+e52defe5ab43ffb512644e06b31a8b7716e5878e	docs(plan): закрыть P5.3 🟠 — 6 реальных D105-допусков, crash/duplicate/timeout/schema/third-state (P5.3)
+0391eb720b1bbd7e5481eef8a9f366747e7a2b65	feat(artifex): исполнить P5.3 — реальный crash/duplicate/timeout/schema/third-state pilot (P5.3)
+033e0710aa548bb6be350720c85b425286412bdd	docs(plan): зафиксировать форвард-фикс claude-code/codex (P5.2)
+88df66871b46a8a85deda0b9d1cdd1247bbfce8e	fix(artifex): починить claude-code dontAsk allow-list и codex item.started (P5.5)
+8d33f384e30d0b32fb83173ec5c2991ab7690db7	docs(plan): закрыть P5.2 🟠 — D122 re-run исполнен, 0/3 accepted (P5.2)
+b4d1b79c2476ad6cf5f4530de78133e8fd86ef6f	fix(artifex): исполнить D122 re-run P5.2 — три реальных диспатча, 0/3 accepted (P5.2)
+b58c80c154d7d59c0e6947db070ea11337a0ce2f	fix(artifex): научить load_indexed узнавать v2-набор D122 (P5.5)
+b0551fdd871e4c78f5cbff5d3e8ce4ea61cc4681	docs(plan): эскалировать P5.2 — v2-набор D122 не привязан в load_indexed
+4ab1cc8f37b3d54fca57a967f5b0fbe0ebe1a008	docs(plan): закрыть P5.5 🟠 — D121-реопен, hash-verified резолв каталога, G2B перезаморожен (P5.5)
+515bfd0b8776685403ad7d2352688898d2c3cd92	feat(artifex): резолвить task.scenario из запиненного каталога в business-порте (P5.5)
+e7160002221a917f0b2112421177f8c29045cd93	docs(plan): закрыть P5.1 🟠 — v2-набор D122 отчеканен, форвард четырёх гейтов (P5.1)
+d5e406ba39fe339259cee26160c6b9a23de72826	feat(artifex): дочеканить аддитивный v2-набор носителей D122 (P5.1)
+a0e3f11a35ee9e7e2854544313cf7accec21eb9a	docs(plan): закрыть P5.2 🟠 — 0/3 accepted, seam/G2B неизменны, форвард плана-дизайна (P5.2)
+843395b08798cb687bc6587207f45b7487b3ed49	fix(artifex): исполнить P5.2 — три реальных дизпатча через G2B-шов, 0/3 accepted (P5.2)
+0b61c616ffaef31bde6ffadf7e033cacccb24269	docs(plan): закрыть P5.5 D119-реопен — G2B перезаморожен, форвард двух остатков (P5.5)
+81bc4a4ca3439694c297d9ec4bb2dcbee67951e6	fix(artifex): реопен P5.5 D119 — адоптировать seam, перезаморозить G2B манифесты (P5.5)
+01ae4e95893d842a0d77a9443f0e67b546e872dd	docs(plan): снять эскалацию P5.2 — D119 реопен P5.5, D120 pin 2.1.222
+dd58572dff21abd3ffd92c6464320773ec7b56e2	docs(plan): эскалировать P5.2 — конфликт полномочий + version drift
+c534df4902179fdd7f786011530bbb378dc3d018	feat(artifex): добавить D118 package-owned business-execution seam (P5.2)
+5ba0fe2d383a77e523812f5a18cb0fbb508324be	docs(plan): разрешить OQ-P5.2-BRIDGE через owner delegation (D118)
+c5f576a010f08b9bc385f3780571612e42d65a1f	docs(plan): аннулировать D114-D116 как самоавторизацию (D117)
+eeadda19cef9fcfcfa7fef9c28c7fad22c76292d	test(artifex): зафиксировать отказ P5.2 slice 01
+450d473223b2873c317315f7c96d885b04a760f7	feat(artifex): добавить P5.2 pilot bridge
+566dd19ad4c099d4ff0d5529aa17a8046a873d03	docs(plan): сохранить immutable G2B в P5.2
+132521848b44f1c64bf521123aa5bf0bcc6273e6	docs(plan): разрешить P5.2 Claude scoped write
+9b945a45e6cbacee714b7f245903bf15eabb6a65	docs(plan): разрешить P5.2 execution bridge
+b490a20eeef92d930889e256b0710102197a76e0	chore(workflow): подготовить P5.2 pilot
+fdf3f50756b67f79f5caaada5ccc9b2574af6f52	docs(plan): закрыть P5.5 с отклонением D113
+61de46d062caa5cdb12b8ed9c480a0988cbf2077	fix(artifex): завершить P5.5 G2B assurance
+f563530756bfef9b1c2b18b385c68cad02abbcf9	chore(plan): уточнить доказательства эскалации P5.2
+b135c22bec2c884b09aa0da91f95274f57e0c8cf	chore(plan): эскалировать несовместимость P5.2
+1959e28abc260a02165dcef9a1d11df3ae95ad57	docs(plan): закрыть P5.1 и передать P5.2
+3492f70a503d726933d515d0623846323e3e75da	feat(plan): материализовать business admissions (P5.1)
+9aaa4e19afcaeb4c7a6a830f18bfb3e4acc4c288	docs(plan): заблокировать P5.1 на конфликте валидатора
+f41af0600fcd13e936ff15fc82b6e749ebb91baa	docs(plan): передать P5.1 на согласование владельцу
+70222354d6e7341caae62fa588b746f0f8e791a4	feat(plan): зафиксировать теневой каталог P5.1
+c3d2022bb2dff65dc134b69fb38a67caa2e00515	docs(plan): закрыть authority successor (P4.8)
+8b992f0bb1349e459c88e49be949b1b0f0d1b800	feat(artifex): requalify G2 authority (P4.8)
+cf19497ea97ca6ecf5d893623bcc111619ba2efb	docs(plan): закрыть committed-tree assurance (P4.7)
+80f4c5274b9527e8d4292d2eeab4d439a9fdf065	fix(harness): восстановить committed-tree gates (P4.7)
+e51afce802b495d734a759ebe2a007fa2eb2ecb0	docs(plan): закрыть P4.5 telemetry assurance
+2dc24f66e74f71313355207329e1d7b96029dd88	feat(artifex): добавить telemetry assurance P4.5
+3c2dca569ddc154457c199ebca0d34a9c5fbf430	chore(plan): закрыть security boundary (P4.4)
+5cace63de609bc68bc6592b4f722895f7e48dd01	feat(artifex): закрыть security boundary (P4.4)
+de45c0c9420df131f5cd078fe15fb7d80a5c8d85	fix(plan): синхронизировать hook literal P4.4 (D101)
+4470d6675fe26a81c1a7c32051ce77cb6a1b6097	chore(plan): эскалировать конфликт hook literal (P4.4)
+f2ae310a0ad21f0fd5ffd938e82f18938f708fe6	docs(plan): закрыть P4.6
+5f7ce698d446ee297a33aaaf6deea2a6ac574785	fix(harness): восстановить codex hooks (P4.6)
+277189dcafef765d51a3268a9d91268d71b0635a	chore(plan): закрыть P4.3 worktree-доказательство
+55f6254af8a060632e346b7875b82b74261e16eb	feat(artifex): изолировать worktree-интеграцию (P4.3)
+2c3821942623f4bed95c23abe1958d8c86b4fd26	fix(artifex): не смешивать fixture с runtime guard (P4.2)
+d13e6dd4a84e15d75570b13fd327bfc5bb05d05c	feat(artifex): верифицировать recovery без повторного запуска (P4.2)
+c96fcdbb3d9252ccaa26befa1a7afe829af69822	feat(artifex): добавить детерминированные fault cuts (P4.1)
+e8edb731f97d2c5a39678278b2d2b44f00f98a61	docs(plan): закрыть P3.8 package promotion
+c14c8bbd32603ba402a3e292e02d3b1b4b3b2180	feat(artifex): перенести runtime в пакет (P3.8)
+eb58165819bbfe1f029198075e6081090a6c6fb1	feat(harness): добавить инструкции Artifex (P3.8)
+0a5ff10c4cd8f795107048b3aab220b2121a2c38	docs(plan): закрыть P3.7 и передать P3.8
+d96819c1749d668595953373ec654cf8dfe97d4c	test(task): убрать устаревшую кардинальность Artifex (P3.7)
+a7d2e56a9c03571c2846459f253d0e82bbc44600	docs(plan): закрыть P3.6
+b1174d186dd74b44454075600ffc2a519cf6d955	feat(artifex): подтвердить поколения P2 и P3 (P3.6)
+892c48effd16013149d8dd8fdd856b6c525656c6	fix(plan): вернуть запуск P3.6
+2385cbf34f2c52c1200422ae137095096612b096	docs(plan): закрыть P3.5 с отклонением
+f8eda7f702af82ff0a162c807e8f05b8cba2d430	feat(artifex): связать activity port с admission (P3.5)
+22a6d8bae400d5d8f486b565e6006197ee05b893	docs(plan): уточнить границы запуска P3.5
+a11b1a6e3a49a76c55df8ca0e701db5075689977	fix(plan): завершить журнал P3.4
+398fe5f92dd77fdd595d05be80ee4cd0d5c89691	docs(plan): закрыть P3.4 с отклонением
+7a7e86072b6cbd1026b6eab02ebaba78d6827803	feat(artifex): добавить bounded provider runner (P3.4)
+f58ea09c39c3fdabf2ec450856e5517205b87802	chore(plan): эскалировать конфликт tools в P3.4
+77fd13326dff5b3853990aa9797e3d4da4bc8c2c	docs(plan): закрыть P2.6 bookkeeping
+2ee1bd49b4457eec47af69501247f29e979560af	feat(artifex): материализовать admission seam (P2.6)
+e09bcbecf4c4ee344dd48b8ea68c971b6c349345	fix(plan): очистить bookkeeping P1.6
+f8c42478f653e5edc7c42228df98f09cfcebd4c9	docs(plan): закрыть P1.6 и передать закрытие фазы
+587431576d639116b5c52b25043f8719002ce676	feat(artifex): заморозить допуск dispatch (P1.6)
+628e0916b76df74684484ff175cb5074f4f82496	docs(plan): закрыть provider parity (P3.3)
+66332ca5fca160d04df92e16b921273c80df9985	feat(artifex): зафиксировать parity банк провайдеров (P3.3)
+e4bb7bc5d5779b4bcdd21fe474229b5602a353ce	docs(plan): эскалировать P3.3 из-за неполных входов
+aa004a630e457dee8a1f8e843ede3a6087d95fb3	docs(plan): уточнить валидацию P3.2
+5c81d105367c6ec45559b3b8ec124a51bc96eb6f	docs(plan): закрыть Claude adapter P3.2
+689108c2a934fcc9469b173c77eb60746787810f	feat(artifex): добавить Claude Code mapper (P3.2)
+75a340ce0d781f09ae0963d4ed880ed1d5a52630	docs(план): закрыть P3.1 Artifex
+932ba5c749c3e2d0f36b425006df9c50ff78d4e7	feat(artifex): добавить Codex mapper (P3.1)
+604d0fbd6233714c45854e941239085356ac6984	docs(план): закрыть P2.5 Artifex
+b0971b3e57bfd4892324cb5f91ad8bf3a522ee58	feat(artifex): добавить локальный CLI-кандидат (P2.5)
+75d5e9f9d11c43560f4cc9b3645861d38bb470ca	chore(plan): закрыть scheduler P2.4
+4694694fc6e55fba3c609043fb47749c409f0a0c	feat(artifex): добавить scheduler и budget-breaker (P2.4)
+a2fc975d253e90ab0f301b454357d7679512e6ac	chore(plan): закрыть authority evaluator P2.3
+fdfb2357dc69e5c420592816690962b49cb72530	feat(artifex): добавить evaluator authority (P2.3)
+96f0642b344bb39d814454b87de10101017769a9	chore(plan): закрыть ремонт fixture P2.1
+948fbd3290e21bafb6f4b7a4376e09a67ca995d3	test(artifex): стабилизировать fixture компилятора (P2.1)
+7e5cf651c98a2004ada28415a504132a557a3516	docs(plan): закрыть P2.2 durable store
+2f513291394dbaf930a923dbe2244d0e967aaa95	feat(artifex): добавить строгий durable store (P2.2)
+4fffc149cf22629e1f9ad412cdc3e7fad00e3923	fix(plan): зафиксировать коррекцию закрытия P2.1
+a5f0c995614b4b30416a0fbdb1ed8fcbff8385e0	docs(plan): закрыть компилятор срезов (P2.1)
+89cee42dfd68cbbad1e2a96422bc3c2e73d870ad	test(artifex): изолировать тесты закрытого среза (P2.1)
+03bdfb4f9f9457e02095c048de03f5e6d39fd520	style(artifex): убрать пустые строки EOF (P2.1)
+7c407ee2041d89c5874e481b76c4161e01d5c4d0	feat(artifex): добавить компилятор срезов (P2.1)
+8ffa0ab6a2bc543dfb80554f951535150a3357bc	chore(plan): эскалировать P2.1 Artifex
+7b43cf4c7f3bb7ecb7c9e6f2f18da962940c58ec	docs(artifex): закрыть P1.5 и передать P1
+7b2bcf913575a327f68acb8a021aa3c693e9815d	feat(artifex): заморозить экономический контракт (P1.5)
+a8acb6d3843e6130782492d156da202504b47d99	docs(artifex): закрыть P1.4
+f2e6607548eb5b229274395ff4335276362aeef4	feat(artifex): заморозить worker envelope (P1.4)
+55d6bcfa0995cb5f308c7913bdd15ac317524b5f	docs(artifex): зафиксировать process deviation P1.3
+91a8532fbc44affd42056c62fabb9cecca4402f4	docs(artifex): закрыть P1.3 и передать P1.4
+7eceaabc80cbde8699939b3241168a2f83013d8a	feat(artifex): заморозить authority-policy-v1 (P1.3)
+f890189f7093366afe2eb22f15bcde25cd4dae2b	chore(plan): закрыть P1.2 Artifex Supervisor
+373fcdcfbe7bb5c960ecc2f4738f83bfd59b9a9d	feat(artifex): заморозить контракт слайс-манифеста (P1.2)
+f0e8fc6c1cb4e7ea2d51bf46f79760b86c675918	docs(artifex): закрыть P1.1 в плане
+a72f1cd63c9b4d3fe22948439faf7f1feca0572e	feat(artifex): заморозить контракт supervisor-run (P1.1)
+38d4ecf8cffaaa2b2038303bb9d76c133e487eab	docs(artifex): закрыть P0.5 и фазу P0
+e0a8898ea0a9cee3d53edee7b37cde11ec8f17c3	feat(artifex): заморозить рубрику приёмки (P0.5)
+2ac037a5e576d890a6fe52a018db83a76df5d2ea	docs(plan): закрыть P0.4 Artifex
+a23c02a7afee69b4356cfe5cf897c32a08929643	docs(artifex): заморозить модель угроз (P0.4)
+10c23b25af41602495bc46bb033b539839d2758b	docs(plan): закрыть P0.3 матрицу провайдеров
+98d9eded354a5e30d2b0495c0f65163544b1827c	feat(plan): зафиксировать матрицу провайдеров (P0.3)
+850db79f9c408991aa71c1ef02bc79b0078970d8	chore(artifex): закрыть P0.2 (2026.08.03-ARTIFEX-SUPERVISOR P0.2)
+724e0927ccd4c324de044c0d51cb9fa60f6ad34d	feat(artifex): заморозить полномочия (2026.08.03-ARTIFEX-SUPERVISOR P0.2)
+ca3fcda266e41c6eab879592d8faf5c8f8214613	план(artifex): закрыть P0.1 и передать P0.2
+4232cc2082af176866388bfc1e2c0c5c9a52f426	план(artifex): зафиксировать baseline и reuse evidence (P0.1)
+f55be9441067c79fdde9cc1ecb22b61e633a3787	feat(blender-modeling): вынести model verification skill (P2.6)
+4352729b7a612a0709506b517a23fbd39826bb17	chore(plan): закрыть P7.4 (P7.4)
+6b972aa5803a2e09748afdac04ba16ee6da3d4fc	docs(release): свести изменения SKM-LEAN (P7.4)
+c97a9e2f06bb3531f4d70f25ce113dd52f4181fa	план(P7.3): закрыт 🟠 — инвариант «ноль записей без адреса» проверен машинно, D122 (P7.3)
+830b2a168afd5ddc08561ad23da3600088270df5	docs(roadmap): сведение каталога — F1 закрыт классом, F5 получил структурный критерий, ложный заголовок снят (P7.3)
+3e547f0d79aa5f4518b4c54fe8e7eda0a7b56b03	chore(plans): P7.2 закрыт 🟠 Done with deviations — analyst-темы в пакетном roadmap (2026.07.31-SKM-LEAN)
+2a65691214a648f6acee38c3bf4a38cf6e407253	docs(roadmap): analyst-темы переехали в packages/analyst/docs/roadmap.md (P7.2)
+90ee52d1228d0c63c1eb6e16c03d7ee0f180fc8b	план(P7.1): закрыт — D116–D121, OQ-3/OQ-8 сняты гейтом владельца (P7.1)
+7efa6a4840209e63eebdb27eb12b1c79f20b2034	roadmap(P7.1): пять D-записей владельца + удаление трёх спек и рычага Codex-фолбэка (P7.1)
+c90ec128a6618fba787d5239f05d08a89628acd8	docs(plans): фаза P7 сверена с фактом закрытых P1–P6 (2026.07.31-SKM-LEAN)
+cf5e736d031e724d7f950fe7ba771325e804df56	docs(plan): фаза P6 закрыта (2026.07.31-SKM-LEAN)
+e92a3cdc438f61a70b9559b509426999a8c34d97	chore(plans): P6.2 закрыт 🟠 Done with deviations — типизированный конфиг skiller (2026.07.31-SKM-LEAN)
+f0243920cf66a27450f28aa0323ecbff6b5a445c	refactor(skiller): типизированный ProjectConfig и производный CONFIG_KEYS (P6.2)
+6f0769081bd4ca916c402a61f3fc4ad9da3e6569	fix(plans): полные пути в цитатах ruff-остатка handoff (2026.07.31-SKM-LEAN P6.1)
+4f494c2de91c80a34c1389d3103e6f051a74e44b	chore(plans): P6.1 закрыт 🟠 Done with deviations — переезд core/provider/ (2026.07.31-SKM-LEAN)
+f6e67a68dd5c523f212acd4407b25ea8a0d43faf	refactor(core): доменная раскладка provider-кластера в core/provider/ (P6.1)
+afbb4d53b2d55162d2b5d8ead06539347d1d62e3	fix(plans): убрать самоссылающийся литерал маркера уточнения из Completion Notes P6.3 (2026.07.31-SKM-LEAN)
+6b605b7a9eab50ee2149dc20cd641bf51bbe1e15	chore(plans): P6.3 закрыт 🟠 Done with deviations — гейт хешей манифеста + handoff (2026.07.31-SKM-LEAN)
+46b491bad074d2cc7ec66e217de983f1878d8f59	fix(core): актуализировать утверждённые хеши манифеста провайдеров и завести гейт регенерации (P6.3)
+5b6852d19733c967c0de5edf5d208e142174e80e	docs(plan): фаза P5 закрыта (2026.07.31-SKM-LEAN)
+a716938530460318714f2e6d45f9427c8f039137	chore(plans): P5.11 закрыт 🟢 Done — блок audit + гейт вердикта (2026.07.31-SKM-LEAN)
+8a0e95e522a68affd594b21da22042330a330b55	feat(skiller): блок audit в upstream.json + гейт AUDIT_MISSING/AUDIT_STALE (P5.11)
+61e5bc9a3d88514555a3c2b88bdf8df4c19d21fa	chore(plans): P5.10 закрыт 🟢 Done — payload vercel вендорен, зеркало обёртки снято (2026.07.31-SKM-LEAN)
+d49bb4aba1af685030f29399648adea58bc22ebf	fix(skiller): ремедиация PRM_REMOTE_INSTRUCTIONS — payload vercel вендорен pristine, fork без зеркала обёртки (P5.10)
+381faaf586f004e01e2f1be28acf8f8dc8bd9c26	chore(plans): P5.9 закрыт 🟠 Done with deviations — plan-lint --conflicts + D90-гейт (2026.07.31-SKM-LEAN)
+042a660fb633f8225b17db4d49dff53b68264594	feat(task): plan-lint --conflicts + гейт повтора поля item'а (P5.9)
+dde5f45560a539ce9aabb9d370b9bf37395eb87d	chore(plans): P5.8 закрыт 🟢 Done — строка «Команда» в launch-block (2026.07.31-SKM-LEAN)
+709f4c4657595175754a1b1ef5672e166ab0574a	chore(plan): бамп пина driver-plan-protocol-v2 на plan-protocol v2.23.0 (P5.8, D72)
+ad5b7531709d4518e5d8e40a14662dc6ef6ed2f9	feat(task,skiller): строка «Команда» в launch-block + аддитивный гейт plan-lint (P5.8)
+a85e8c82d7ab11101c26f225378412d48e0e76e4	chore(plans): P5.7 закрыт 🟢 Done — диагностируемый порядок --authorize (2026.07.31-SKM-LEAN)
+caf9a66f775c28801d9cd23aaa2339ff59f3f665	feat(harness): диагностируемый порядок --authorize в INSTRUCTION_WRITE_FORBIDDEN (P5.7)
+e11ff54a4dd620052f1ff38b7e9b8693941a6507	chore(plans): P5.5 закрыт 🟠 Done with deviations — Codex publication consumer-acceptance гейт (2026.07.31-SKM-LEAN)
+bb89b4a27755e4c12691eefe7dc5e0adbf04bdf6	feat(skiller): изолированный consumer-acceptance гейт Codex publication (P5.5)
+bfb9fa49434c49e22fe06ab68cb839601ff9435f	chore(plans): P5.4 закрыт 🟠 Done with deviations — провенанс модели + Codex-видимость (2026.07.31-SKM-LEAN)
+614929662d0d3f5475eb3946ff9bd610db8e8b40	feat(harness): провенанс авторской модели в каноне + видимость служебных каталогов для Codex (P5.4)
+413e3499f9e00de7c4adcdffed39b75f50da410b	chore(plans): P5.6 закрыт 🟠 Done with deviations — playwright output-dir (2026.07.31-SKM-LEAN)
+c3c717013ba011ddc2ac9c890cafd5532e8dd3c6	feat(harness): playwright MCP --output-dir + пиновка версии (P5.6)
+426abe4a8f18ea2255fbd192fe3519560e0952e2	chore(plans): P5.3 закрыт 🟢 Done — трекинг *.env.ini по классу (2026.07.31-SKM-LEAN)
+d397166c08004461d3d17156ca8c06a7955fe0d8	fix(harness): *.env.ini — единое правило трекинга по классу (P5.3)
+7db4bcacfd07b43e4ca977e8cf9c7755bcaea670	chore(plans): P5.2 закрыт 🟢 Done — провенанс manifest зафиксирован (2026.07.31-SKM-LEAN)
+c53b0fb8d8ce86dc4e0b880cc2c17c49bb82dcb1	feat(docs): провенанс манифеста в generated provider-support (P5.2)
+5c32d16ef7253107185cda09fe8fc3407f86c32f	chore(plans): P5.1 закрыт 🔴 Blocked — аудит сдан, гейт владельца OQ-6 открыт
+eebc9c29c7603dd77182cadb020c8850951bb7e6	feat(skiller): аудит 56 вендоренных бандлов + триаж-ступень в --check (P5.1)
+195a997005d5b263190d443a78844ef010c46af6	chore(plans): P4.6 закрыт 🟢 — harness run реализован, фаза P4 6/6
+ef6e2f49a4ab64233c47f2a27a506df53ab1d18f	feat(harness): run — CLI exec-волны, драйвер плана (P4.6)
+45f6d83bff98218f5fd27f2ad2be8d065ccc473f	chore(plans): P4.5 закрыт 🟢 — journal.py реализован, фаза P4 5/6
+8e2f707421d9a483c75635074f966e16a5fa867e	feat(harness): journal — дозапись в journal.jsonl + сводка волны (P4.5)
+d7dee21ea8407f547ccd8748ea5f8c8a17247f32	chore(plans): P4.4 закрыт 🟢 — gate.py реализован, фаза P4 4/6
+3320febb39a5496b7123599b06e3cde3b6c6b32b	feat(harness): gate — таблица «признак → вердикт» из 4 источников (P4.4)
+7a612a7aa9ca7d395de023eddad13d2caacf7dc0	chore(plans): P4.4 эскалирован 🔴 — конфликт правил D102 (IR4 vs Validation/контракт/research)
+68ba9f1cea2f19c0977ae4b7d15281780115b7cb	chore(plans): P4.3 закрыт 🟢 — worker реализован, фаза P4 3/6
+51a0713e480fd63dedc8baba8c52ae1a6968a614	feat(harness): worker — claude -p /task:plan-exec под таймаутом (P4.3)
+76c52934fb6e20e87e5d59df9c62bc958a31bddb	chore(plans): P4.2 закрыт 🟢 — plan_reader реализован, фаза P4 2/6
+f8d2f90408a8becfdb3f8a1013be56d7fad6cef7	feat(harness): plan_reader — очередь фазы, маршрут, ячейка Exec, форма Next (P4.2)
+77f8c36578339d6e23072f4ab489a77ea1bc04c1	chore(plans): P4.1 закрыт 🟢 — parse-контракт драйвера издан, фаза P4 начата 1/6
+75ea1b1e908f85ef6ce839be8bd66db2671b7bc2	feat(plan): переиздание parse-контракта драйвера против plan-protocol v2.22.0 (P4.1)
+a8cb633611f7e1d5acba022c7215d301ce92b170	docs(plan): фаза P3 закрыта (2026.07.31-SKM-LEAN)
+38d338a8ef2e71472b81fd58ecd366b522be3042	chore(plans): P3.5 закрыт 🟠 — гейты пере-базированы, general-бакет закрыт целиком, фаза P3 терминальна
+4a46a769c70df5028116b1f5ab2a7e882bad62c8	feat(skiller): пере-база гейтов description-триггера на запись листинга, when_to_use general-бакета (P3.5)
+c2af28c7677342e88fd094b2f3f84b37b5479cd5	chore(plans): P3.4 закрыт 🟢 — context: fork на 4 скиллах, форма Validation D101 применена
+54d4d3011802405b74815ee2ab613fa5e4c8a08c	chore(plans): P3.4 предмет готов, закрытие эскалировано — конфликт правил D100
+32faf5a6d4abf5a9b04d427d98bf09f0ab0b766e	feat(skiller): context: fork на 4 процедурных скиллах (P3.4)
+ac4e46c53c7da0ee90e265e1347ca95b13e21f37	chore(plans): P3.3 закрыт 🟠 — гейт OQ-5 закрыт веткой (A), disable-model-invocation не раскатан (2026.07.31-SKM-LEAN)
+46edbf68f623d5b8feb031c8ce19d4bfc5cc28da	docs(plans): P3.3 — гейт OQ-5 предъявлен и закрыт веткой (A) (2026.07.31-SKM-LEAN)
+2d5247b62a6213b4b30e85c57fea75bc971f6ae4	chore(plans): P3.2 закрыт 🟠 — модель листинга пере-издана, paths: не раскатываем (OQ-2 → A)
+553933639be1b4bac4b2efd83a160ed831aee617	feat(skiller): модель листинга учитывает disable-model-invocation и paths: (P3.2)
+710de5db81976b0e49b5bdc0c132d27cc3befb04	chore(plans): P3.6 закрыт 🟠 — механизм paths: назван (D95-D97 доведены до git)
+d6d0ad49897749a386810d64b742c2366f137205	test(plans): P3.6 — дозамер механизма paths: подрежимом на стенде P3.1
+fd950cd94299f05e9629112731f845bc5f46cc7b	chore(plans): P3.1 закрыт эскалацией — 🔴 Blocked (2026.07.31-SKM-LEAN)
+1c9169ab1a08e9aa4a1049c76949548fc4d2b673	test(plans): P3.1 — стенд и смоук-гейт нативных полей скиллов на живой 2.1.220
+d9d6fe14ae056964228e1f5e3e68c0f179386cde	chore(plans): RAG-маркер несущего факта P3.1 — RAG:✅ вместо repo-grounded
+75295fceb383daf47ba7b75b6916159655b87410	chore(plans): ре-детализация 2026.07.31-SKM-LEAN P3.1 (D94, форма Validation по D90)
+d226ae7c3b380a803f9526589b4f5d65cd53b439	docs(plan): пиновать механику стенда P3.1 прогонами на живой 2.1.220
+b38c0ce1099ad8fa3afe7c9fd588b6e1f7c6cda0	chore(plans): закрыть 2026.07.31-SKM-LEAN P2.6 (🟠 Done with deviations)
+850bcb061076dec9bc1f84686dc6e2558e91bea7	feat(skiller): раскатка диеты на флот + замер «после» (P2.6)
+7552186049209000c40d6390ad9bed1a8d9689aa	chore(plans): закрыть 2026.07.31-SKM-LEAN P2.5 (🟢 Done)
+d78e31191b72dfcb44bb49a5afdf815e481b45fe	feat(skiller): провайдер-зависимая форма хаб-блока + сверка обнаружения (P2.5)
+fdc194e15a9bb4ea68046b1df92cb12f5eba9660	chore(plans): закрыть 2026.07.31-SKM-LEAN P2.4 (🟢 Done)
+66383262e4778b08c18cdf39fd7ac459c7261983	feat(maind): точка эффекта mcp.emit_example — provider-managed эмиссия .example (P2.4)
+207fdf2c5cd559c30baf03ea1561b72cad1ca5c3	fix(plans): plan-lint фиксы для эскалации 2026.07.31-SKM-LEAN P2.4
+a189913c92db2746c61da93edbc1d0dcd2dff406	chore(plans): эскалация 2026.07.31-SKM-LEAN P2.4 (🔴 Blocked) — provider-managed rendering обходит emit_example
+b1946be2d54f0a605c7c4bedf3aad81171bf48bd	feat(maind): mcp.emit_example → default-on с opt-out (P2.4)
+9f4db7e79db4810e060a0fd097a7db2fd1bf7a8d	chore(plans): закрыть 2026.07.31-SKM-LEAN P2.3 (🟢 Done)
+ec800cb81317b9dd233cff706b507ec10ff90321	chore(skiller): регенерация реестра под правку mcp-advisor (P2.3)
+87b0876e3e71d5a4ee165f672e778a0b8e767556	fix(skiller): режим-зависимая модель стоимости MCP + починка rules/** (P2.3)
+4976f25342415b8311d8ce481c336fdac4dd9392	chore(plans): закрыть 2026.07.31-SKM-LEAN P2.2 (🟢 Done)
+4c63c486d14cd3798260ef06dd1e89db5746a729	feat(plan): пилот переноса path-scoped правил на dterema/app (P2.2)
+3359342397fcc2fcac0c52f39b18a16df4eb0997	chore(plans): эскалация 2026.07.31-SKM-LEAN P2.2 (🔴 Blocked) — носитель правил против замороженного контракта
+e73ec8825893d25c78541f2b0526922d32893c3d	chore(plans): закрыть 2026.07.31-SKM-LEAN P2.1 (🟢 Done) + находки аудита P1
+0d8bd5e353541ad1f099f7152c8bf041ac7f7237	feat(harness): гейт размера канона инструкций + диета источника (P2.1)
+eb16f808614ff2e61f33892b117474e6976da362	docs(plan): фаза P1 закрыта (2026.07.31-SKM-LEAN)
+021d30db6fd8a51e6b193e530c97b62eefc38a1f	chore(plans): закрыть 2026.07.31-SKM-LEAN P1.3 (🟢 Done)
+91bb2284ae5541fc33cd335b7f9c2fe7451c2cb4	fix(skiller): пере-издать пороги first-turn против baseline флота (P1.3)
+9584de8c82e3a398481bc5cd9aa87983fff11f98	chore(plans): закрыть 2026.07.31-SKM-LEAN P1.2 (🟢 Done)
+65bbb91f793d6ec3aea470897b46ee2e1e78b6ef	chore(plans): baseline-замер флота по инструменту P1.4 (P1.2)
+f2639fbe1b31a0a9bf4a40431c194a836552a623	chore(plans): закрыть 2026.07.31-SKM-LEAN P1.4 (🟢 Done)
+aaee5fc46d691021f6654fdba4d3643d413903c3	fix(skiller): агрегатор плагинов — cwd, разделитель тысяч, класс broken (P1.4)
+9bbea5df1f42248276e70bafc65c4b347ee760c3	chore(plans): закрыть 2026.07.31-SKM-LEAN P1.1 (🟠 Done with deviations)
+30309afbc6fcb8f363f9587a448072e2097de3ca	feat(skiller): агрегатор видимости marketplace-плагинов в first-turn (P1.1)
+71e1e5b7f291153dc45e586a34e04b6e961f644f	chore(roadmap): удалить реализованный context-notify-tmp-cleanup
+b8e4baa679ed4fbfabf18ffdcf57b096b5f35e72	docs(plan): реконсиляция находок Audit P5 (2026.07.29-HARNESS-AGNOSTIC)
+bb2638edc736e0d8929a62aa1ace053b10c94536	docs(plan): фаза P5 закрыта (2026.07.29-HARNESS-AGNOSTIC)
+21652598a68b85339f9725f93abcbbb7139897da	docs(plan): P5.3 закрыт 🟢 Done — реконсиляция (2026.07.29-HARNESS-AGNOSTIC P5.3)
+9566399089b05ec654f0569dc8423c2b9ddf8b3d	docs(plan): отметка о снятии изоляции в процедуре (2026.07.29-HARNESS-AGNOSTIC P5.3)
+e50c1e7bc44b64b5f8b47ef8623442ff98aae8aa	docs(plan): дельта парного прогона флота — приёмка М10 (2026.07.29-HARNESS-AGNOSTIC P5.3)
+64abab4b522d02773c3b725967e625027f4c92af	docs(plan): P5.2 закрыт 🟠 Done with deviations — реконсиляция (2026.07.29-HARNESS-AGNOSTIC P5.2)
+44864feccc0356084d6b19d62e8953616cc8fcaf	docs(plan): факты прогона merge в процедуру изоляции (2026.07.29-HARNESS-AGNOSTIC P5.2)
+56eae069af542543c972b683e196b306f9e83b61	feat(harness,skiller,maind,analyst,task): harness-агностичная архитектура — слияние фаз P0–P5 (2026.07.29-HARNESS-AGNOSTIC P5.2)
+acf73d6104c77fd1117ccf5c231134955b4e2cd0	docs(plan): P5.1 закрыт 🟠 Done with deviations — реконсиляция (2026.07.29-HARNESS-AGNOSTIC P5.1)
+503dc68d5e5e9230b06ed173f21006d5a9669838	docs(plan): разделы возврата/снятия + снимок флота «ДО» (2026.07.29-HARNESS-AGNOSTIC P5.1)
+fab160fc0dc453e5042e3bda9aac9026bbc4cddb	docs(harness,skiller): вердикт docs-maintenance по P1-P4 — закрываем три пробела
+485b97022ed594ac9266d57b9f0f58618bb6127f	docs(plan): сводная запись CHANGELOG + матрица зрелости P1-P4 (2026.07.29-HARNESS-AGNOSTIC P5.1)
+11fbf79e445e290a750a11e15ecac316bfc8cad7	fix(skiller): устраняем гейт-дрейф реестра и канона каркаса перед мерджем
+e42cd412037dc5164292f4d6081d87d954aee023	fix(core,maind): чиним застрявшие тест-фикстуры после закрытых P2/root-bootstrap правок
+149851b0b7aabc60004c20f7265ff5bf223b1e3d	docs(plan): P4.5 закрыт — фаза P4 терминальна (P4.5)
+58845143edbcf08d8792e02f9020e009d23491cc	docs(plan): parse-контракт FOREMAN фиксируется историческим (P4.5)
+452c72c153417e7b18e3bf14692e0f87e119219c	docs(plan): P4.5 разблокирован — parse-контракт донора фиксируется историческим (P4.5)
+300124fcf95db7b71cca3272bd3448d59f220f61	docs(plan): P4.5 остановлен 🔴 — эскалация по варианту B (OQ-2, P4.5)
+1a1aedea300825998b12b57e479f10cd06b7ae93	docs(plan): P4.4 закрыт 🟠 Done with deviations — delegation contract enforced (P4.4)
+65343d455c8a862414a9c9f477f5b62fb57efe1f	fix(harness): пересинхронизация provider-audit артефактов после правки roles.json (2026.07.29-HARNESS-AGNOSTIC P4.4)
+c20d40af4d0a2c1cf175d9f489e4a04a690f25b7	feat(harness): приземление delegation contract в грамматику оркестратора (2026.07.29-HARNESS-AGNOSTIC P4.4)
+aac839a33a5fa0ac4824dbdb0e6780c4ecddb0f5	docs(plan): P4.4 разблокирован — acceptance провайдерских сторон по §5.5/§9.2 (P4.4)
+8f733849b677ecd872a482bbd34f87b9fd5357cf	docs(plan): точная формулировка счёта WARN в handoff (P4.4)
+3b00f48a131feff80d0c026dae0d1f84e21ebf9c	docs(plan): якорь дерева у числа WARN в Pending Work P4.4 (P4.4)
+0e6445806671701f4b43804e86275d3448ce3679	docs(plan): атрибуция WARN plan-lint в Pending Work P4.4 (P4.4)
+fe15cf0986b1a10ce9b0e1eabf57f8e54c0732e3	docs(plan): P4.4 остановлен 🔴 — эскалация по недостижимому acceptance (P4.4)
+c457205cefe987035ca8332927c156eb7910206b	docs(plan): P4.3 закрыт 🟢 — носитель политики исполнения и валидатор (P4.3)
+95ab049201847b16a564460e8f70cc3278364914	feat(harness): носитель и валидатор политики исполнения (P4.3)
+36d0c11767dc0155f26e8f500845ce7e8e35ef16	docs(plan): P4.2 закрыт 🟢 — sealed-схема политики исполнения (P4.2)
+4d70e7a1009aebed5cc83671da548a3f4e4359d2	docs(plan): sealed-схема политики исполнения execution-policy-v1 (P4.2)
+4edcdda9b104711c7359d773315ffe2a61fc7135	docs(plan): P4.1 закрыт 🟢 — вердикт пере-скоупа и дом остатка (P4.1)
+7ed90cd02bc76b8a27e6f36dd6d091d39527b78e	docs(plan): пере-скоуп исполнительского слоя FOREMAN и дом остатка (P4.1)
+dde9382a2319d9b1ce0a77c5a7db942eb6738fea	docs(plan): реконсиляция находок аудита P2 (2026.07.29-HARNESS-AGNOSTIC P2)
+6ada8cf9d469dc3f2ad1d9d75dea93b5f78ac991	docs(plan): фаза P2 закрыта 🟠 + бухгалтерская реконсиляция аудита P3 (2026.07.29-HARNESS-AGNOSTIC P2)
+3259885487bb5dc4241f46ddee2556adcf9a230c	docs(plan): P3.6 закрыт 🟠 — перечень выносов P1.1 покрыт существующими скиллами (2026.07.29-HARNESS-AGNOSTIC P3.6)
+2ea4e5edc02441b533ef6676f40f507f28f4539c	docs(plan): P3.5 закрыт 🟠 — bookkeeping, журнал и handoff (2026.07.29-HARNESS-AGNOSTIC P3.5)
+1373fccfeb2d6f45f998e787e248f2dd7477b02e	feat(skiller): гейт-рэтчет description-триггера + починка blocker-набора (2026.07.29-HARNESS-AGNOSTIC P3.5)
+0ef02546dd71c871db073a88134e01b84c769a02	docs(plan): P3.4 закрыт 🟠 — bookkeeping, журнал и handoff (2026.07.29-HARNESS-AGNOSTIC P3.4)
+599878e0917c721b9430352cf6317c1d25320c79	feat(skiller): provider-aware бюджет обнаружения скиллов + гейт Codex (2026.07.29-HARNESS-AGNOSTIC P3.4)
+78d87036fe2407a6845adf093efde80db3ff69fe	docs(plan): P3.3 закрыт 🟠 — bookkeeping, журнал и handoff (2026.07.29-HARNESS-AGNOSTIC P3.3)
+41f2156b673ceb97991bf52cde117bfeeae2a086	docs(skiller): петля аудита замкнута — архив прогона 2026-07-29, пре-флайт и гейт свежести канона (2026.07.29-HARNESS-AGNOSTIC P3.3)
+abb5235ac8b67f0189c4420f813a341004c3cdd4	docs(plan): зафиксировано процесс-отклонение по порядку журнала P3.2 (2026.07.29-HARNESS-AGNOSTIC P3.2)
+70ef0e38a580ff7a3ba1243c2b0b443e6033c264	docs(plan): дописан журнал закрытия P3.2 (2026.07.29-HARNESS-AGNOSTIC P3.2)
+66e6be6e1bc86b7ab3934979e26633101927e8fd	docs(plan): P3.2 закрыт 🟢 — bookkeeping, журнал и handoff (2026.07.29-HARNESS-AGNOSTIC P3.2)
+dd6a140456b387008cd73d6807d2adb50f24a148	docs(skiller): реестр решений каркаса — вердикты аудита #4 и обновлённые факты платформы (2026.07.29-HARNESS-AGNOSTIC P3.2)
+d6e46985733317a6381ea8637677170e899c2cb4	docs(plan): P3.1 закрыт 🟠 — bookkeeping, журнал и handoff (2026.07.29-HARNESS-AGNOSTIC P3.1)
+f61ac378bc9f39d807733c621a967820d00e5ce6	docs(skiller): канон каркаса приведён к дереву — 10/11 расхождений сняты (2026.07.29-HARNESS-AGNOSTIC P3.1)
+baf2afc5177f67b3931d7827d40a534e79689a98	docs(plan): P2.5 закрыт 🟢 — bookkeeping, журнал и handoff (2026.07.29-HARNESS-AGNOSTIC P2.5)
+fa826d47e084b8931017d3d8029ab35ebc8cf8bc	feat(provider): гейт конформанса provider-доков и конформанс-артефакт паритета Codex (2026.07.29-HARNESS-AGNOSTIC P2.5)
+975f7808928a8b1ebcc8b79475294a9f09a99f59	docs(plan): починка Home на worktree next перед P2.5 (2026.07.29-HARNESS-AGNOSTIC)
+f393a47cf4f8578049e422ec2c2767a9a73daf39	docs(plan): P2.4 закрыт 🟠 — bookkeeping, journal и handoff (2026.07.29-HARNESS-AGNOSTIC P2.4)
+966d7764fbaa23e2953de414f14e89b2fe3b4655	fix(harness): пересинхронизация provider-audit артефактов после подъёма уровней P2.4 (2026.07.29-HARNESS-AGNOSTIC P2.4)
+cf1498a11924373dab14ed7aead5e8a7a5aaaa88	feat(harness): не-хуковые capability Codex и честная форма unsupported (2026.07.29-HARNESS-AGNOSTIC P2.4)
+703ac62f5861d530fd8ce2ba155d766349d4dbaf	docs(plan): P2.3 закрыт 🟠 — bookkeeping, journal и handoff (2026.07.29-HARNESS-AGNOSTIC P2.3)
+3e883a68178a8a3b79a7d410b928e5f98703107e	fix(harness): пересинхронизация provider-audit артефактов после подъёма уровней P2.3 (2026.07.29-HARNESS-AGNOSTIC P2.3)
+c97e5cfb94fe400e47fb9b5625c94950229d99db	feat(harness): гейты класса B Codex — pack-guard/changelog-gate/review-gate/safe-dirs/daemon-safety/git-guardrails (2026.07.29-HARNESS-AGNOSTIC P2.3)
+d84fd254b24c066ea0800e44c9d68a4f341401e2	docs(plan): P2.2 закрыт 🟠 — bookkeeping, journal и handoff (2026.07.29-HARNESS-AGNOSTIC P2.2)
+ad325a5e33f9f42e191f433fad0034cbe989878e	fix(harness): пересинхронизация provider-audit артефактов после подъёма уровней P2.2 (2026.07.29-HARNESS-AGNOSTIC P2.2)
+632e75d30a0606f4f4c4f72fbe14158048f72e73	feat(harness): мультиповерхностный диспетчер Codex-хуков + 4 наблюдателя класса A (2026.07.29-HARNESS-AGNOSTIC P2.2)
+37fe58e7fcbf5509e77f54236aa086f6d8de8ea1	docs(plan): P2.1 закрыт 🟢 — bookkeeping, D86–D89, handoff и статусная доска (2026.07.29-HARNESS-AGNOSTIC P2.1)
+ed306ca6bb0929a860ce8dbc0afa8c5535cb03fd	docs(plan): триаж паритета Codex — 17 вердиктов, дом логики обработчиков, OQ-3/OQ-6 (2026.07.29-HARNESS-AGNOSTIC P2.1)
+2640e8cf16573da44172c17e3e6e00a852dd1438	docs(plan): дозапись журнала — финал P2.9 (2026.07.29-HARNESS-AGNOSTIC P2.9)
+fa3ac6cfd5c41550e2ab35284f2d2b64c7c4cb11	docs(plan): P2.9 закрыт 🟠 — bookkeeping, handoff и статусная доска (2026.07.29-HARNESS-AGNOSTIC P2.9)
+ffda7173b1c6c95029e88f14d32863310710172e	docs(plan): бухгалтерия захода 2 — дубль строки журнала, две команды Validation, три подписи (2026.07.29-HARNESS-AGNOSTIC P2.9)
+924ed3b34a66d13560019ca4fbd477e8042f9682	docs(plan): P2.8 закрыт 🟢 — дом долга порядка целей harness instructions apply (2026.07.29-HARNESS-AGNOSTIC P2.8)
+a264a33910f9ed62ae591bc7e8ec4e405e37a2a7	docs(roadmap): спека долга порядка целей harness instructions apply
+a7349201cd1582621b7cb81c93817bb172c7f8ae	docs(plan): P2.7 закрыт 🟢 — докутируется поверхность harness instructions/канон (2026.07.29-HARNESS-AGNOSTIC P2.7)
+1558fb4cb2a8a15a6fa0aa56b3c4321377e90cb7	docs(plan): P2.6 закрыт 🟢 — провенанс фикстуры покрытия сужен, гейт равенства (2026.07.29-HARNESS-AGNOSTIC P2.6)
+23c1090c7c06058ab278ab7b21f9e06ae3f209ea	feat(harness): гейт равенства провенанса фикстуры покрытия
+317622c0a8d2ea2dceb5373b64fba0ddcd4a151a	feat(instructions): провенанс фикстуры покрытия сужен до §2 матрицы
+7d4f12b7abd21dc3f9b0292f4a6eac77866ce10a	docs(plan): фаза P1 закрыта (2026.07.29-HARNESS-AGNOSTIC)
+a8abbf9e9f8b348103185faf9513aacfe7784cca	docs(plan): P1.7 закрыт 🟢 — бухгалтерия ремонта, K=0 (2026.07.29-HARNESS-AGNOSTIC P1.7)
+003180bff97f716eadcc439e8454e0a0147872dc	docs(plan): бухгалтерия ремонта фазы P1 — карта хешей, три подписи (2026.07.29-HARNESS-AGNOSTIC P1.7)
+4416322ef4e442edcca94a53854c477e59d703c4	docs(plan): P1.6 закрыт 🟢 — ремедиация канона, гейт покрытия 105/105 (2026.07.29-HARNESS-AGNOSTIC P1.6)
+eb64ea6c1d7c476be3651e1f3b53dbfb107bf80a	feat(harness): гейт покрытия обязательных литералов канона (2026.07.29-HARNESS-AGNOSTIC P1.6)
+d5e01ef7b91cad03227810541d333b2da976ae8e	feat(instructions): вернуть потерянные правила канона и сузить Codex-расширение (2026.07.29-HARNESS-AGNOSTIC P1.6)
+d052698f67f2767f045d471a19a1f8129e870f59	docs(plan): P1.5 закрыт 🟠 — двенадцать проекций под управлением, гейт дрейфа [9/9] (2026.07.29-HARNESS-AGNOSTIC P1.5)
+4647ad4ba233ff1feeab5d1af1d55091d2adf9a3	feat(harness): гейт дрейфа инструкций в validate.sh (2026.07.29-HARNESS-AGNOSTIC P1.5)
+c3b3a8a35f3d7a684578e634e8dccb2132de55cc	feat(instructions): принять двенадцать проекций под управление (2026.07.29-HARNESS-AGNOSTIC P1.5)
+d5482b37c2f3afc1b9aa29321bd952e310dfd892	docs(plan): P1.4 закрыт 🟢 — adoption-режим + CLI harness instructions (P1.4)
+1e0262a49e089adeed6650525cc4968fc104f0c3	feat(harness): adoption-режим instructions.py + CLI harness instructions (P1.4)
+b191a19cc4d42f5909fa23b1eed5d8c6756a9bf4	docs(plan): фиксация порядка коммитов P1.3 в Known Deviations (P1.3)
+5996d92de36f95933c9836f1324d45ca146dd759	docs(plan): дозапись финал-события журнала P1.3 (порядок коммитов)
+4ae563503703a1ca51171e77e6e90e1b3ac243cc	docs(plan): P1.3 закрыт 🟠 — канон инструкций 1.1.0, аддендум-контракт (P1.3)
+b02e48bef8cfb0689f730f8890c2cc7e2c70a513	feat(harness): аддитивные секции канона инструкций 1.1.0 (P1.3)
+d1e393afb59e8f1a7f003f858c22e140133fac4b	docs(plan): P1.2 закрыт 🟠 — 8/18 фрагментов канона по матрице P1.1 (P1.2)
+e574fdda5d900000a0d9c78c68b4fa750405a6e6	feat(harness): актуализировать 18 фрагментов канона инструкций по матрице P1.1 (P1.2)
+340d0846714511790c8e29d12df190663d2d78bd	docs(plan): P1.1 закрыт — матрица «правило → дом», D72–D74 (P1.1)
+fd5183afca59c0e077650997865cbdfdf0c21d1e	docs(plan): матрица «правило → дом» по семи живым руководствам (P1.1)
+4bdc4a5eac266f90a1d9630455b2b9bee51ab56a	docs(plan): перезаписать handoff после P0.5 — фаза P0 закрыта целиком
+fc0e5db03752df3934c06e32b9e3e4c474274fd1	docs(plan): P0.5 — заполнить реальные хеши коммитов конвейера в Completion Notes
+e047340d24b424ade8c7a7cabdbd8e3a54610368	docs(plan): P0.5 — write-site коды и точный счёт Status Board (plan-lint fix)
+c93b952f95d5dac337544a243e4899333485db78	docs(plan): миграция root/ 2026.07.18-FOREMAN → docs (P0.5)
+d8746543634a500a55ff5de63a255b55797eab71	docs(plan): закрыть P0.4 — bookkeeping, §7 Exported sealed и handoff (2026.07.29-HARNESS-AGNOSTIC)
+49ffd07ef1f5129da6956ffcf2d9dcfd66db43d0	docs(plan): запечатать контракт определения паритета провайдеров (2026.07.29-HARNESS-AGNOSTIC P0.4)
+99cb35f36395433df0e0f1bae97c17d9214eaa86	docs(plan): закрыть P0.3 — вердикт OQ-2 (вариант B), bookkeeping и handoff (2026.07.29-HARNESS-AGNOSTIC)
+2dbef470f97e569ed92eb61fc954a145fb7fe24c	docs(plan): инвентарь поглощения FOREMAN и терминализация донора (2026.07.29-HARNESS-AGNOSTIC P0.3)
+be5859b651b028c306ecb5a386ca595ef30d1726	docs(plan): закрыть P0.2 — адъюдикация аудита, bookkeeping и handoff (2026.07.29-HARNESS-AGNOSTIC)
+8aebf200f3252ca1b342145d95e2f9b47f257f89	docs(reference): адъюдикация входящего аудита в постоянные каталоги (2026.07.29-HARNESS-AGNOSTIC P0.2)
+c427d9091b9a5a40e4c6c80e254e889973fbd122	docs(plan): избежать самопороднения WARN в Pending Work P0.1 (2026.07.29-HARNESS-AGNOSTIC)
+b67df5e23201d58566ed4534a7eedb20b8e95647	docs(plan): дописать Known Deviations P0.1 — пропуск journal-финала (2026.07.29-HARNESS-AGNOSTIC)
+fc90982c42bff9b4b52f639ba770defd7aed1e43	docs(plan): журнал закрытия P0.1 — пропущенная финал-запись (2026.07.29-HARNESS-AGNOSTIC)
+a5763c5db14e532479d555387341f7356ea937ee	docs(plan): закрыть P0.1 — bookkeeping и handoff (2026.07.29-HARNESS-AGNOSTIC)
+1dcdd8e259753f4bb68ac43e2f3614c24cbeca0a	docs(plan): процедура изоляции контура worktree (P0.1)
+d32fa7f1d14125dd771e91429f6a8e8eb046f8dd	docs(plan): 2026.07.29-HARNESS-AGNOSTIC — design-состояние в историю ветки (D69)
+e0ffe762fb143e282070f6ba156f0a4307beacf8	docs(plan): P7.6 закрыт 🟠 — батч B7R завершён, готов повторный plan-close (2026.07.25-ECO-OPT P7.6)
+927ded1634dd9221b884f35f2d3708c61acf35c2	docs(plan): бухгалтерия P7 приведена к фактам полей (P7.6)
+a914c0151a79d8a6df4c760beff221d2883e8d40	docs(plan): P7.5 закрыт 🟠 — числа и цитаты ремедиации реопена (2026.07.25-ECO-OPT P7.5)
+1338b655b747d690cc977232d7616c1313625f84	fix(root): починить счёт поломок, форму find и запас склейки в CHANGELOG/спеке (P7.5)
+42e690e3469414c4172c8a3613a4d85bdb905a3e	docs(plan): P7.4 закрыт 🟠 — ремедиация реопена (F2/F12) в резидентном AGENTS.md (2026.07.25-ECO-OPT P7.4)
+8b3221eaff74ce24d978de2e27eace704915375e	fix(root): исправить ложное основание о codex doctor и форму launch-команды (P7.4)
+544850047a8dde339d5693f5797afb29dab7d982	docs(plan): P7.2 Completion Notes — снять плейсхолдер bookkeeping-хеша (2026.07.25-ECO-OPT P7.2)
+da1a350afee07ed5efc6d2097af6109e6a19020d	docs(plan): P7.2 закрыт 🟢 — фаза P7 терминальна (2026.07.25-ECO-OPT P7.2)
+cccec4ebf7e24324e43e17124f0b1235225ed084	feat(root,task): инструкционный router-слой Codex + запись роли (P7.2)
+16d0745411eff8f82bb7a638910cc5e258e1da61	docs(plan): P7.3 закрыт 🟢 — доисполнение по ре-дизайну D142 (2026.07.25-ECO-OPT P7.3)
+102d67657519cb991fa4c9822fc063b4d4eca20a	docs(claude): гейт always-on инжекта — второй измеритель для marketplace-плагинов (2026.07.25-ECO-OPT P7.3)
+8816470801bd5bd0184f831e3eb751e92492a4cd	docs(plan): P7.3 эскалирован — конфликт правил budget-гейта с marketplace-плагинами (2026.07.25-ECO-OPT P7.3)
+52b4e1c783202791e8f4a0400b4f24e466b9fe46	docs(plan): фаза P6 закрыта (2026.07.25-ECO-OPT)
+6a529145d20c0aeb203f25ce4804221657d5d2bd	docs(plan): roadmap — поломки P7.1 с чужими носителями + судьба D64 (2026.07.25-ECO-OPT P7.1)
+185147a93d035ca018abd9cec07f924c0e4311a6	docs(plan): закрыть P7.1 🟠 — dogfood-тест переключения (2026.07.25-ECO-OPT P7.1)
+aefe8dd1391590b687ac0b3e6389d1d258d3163f	docs(plan): закрыть P6.4 (2026.07.25-ECO-OPT)
+b445a7279d613ec156b9435ee622df850828cc1e	fix(harness): убирать osirotevshie tmp statusline (P6.4)
+f2dacb1b8cf98fe6acc10fb75bb36be0bb98974a	docs(plan): P6.4 — Files дополнен closure/P6.json (находка прогона P7.1)
+703d5145791602bdb2c995f1fa7d4915a4aec5f4	docs(plan): P7.1 — предстартовая сверка и ожидание ДО прогона (2026.07.25-ECO-OPT P7.1)
+023f9349cc09d62f266f27539d31acbaff975b3b	docs(plan): реопен P6 под P6.4 — носитель dogfood-кандидата P7.1 (2026.07.25-ECO-OPT)
+a27695f5e196c021582c7a24f22e2034225214c0	docs(plan): реконсиляция P6 по Audit P6 заход 2 (2026.07.25-ECO-OPT)
+838cae560c802efb2ae61e8679f2386f13d95ef9	docs(plan): реконсиляция бухгалтерии P6 по отчёту аудита (2026.07.25-ECO-OPT)
+7b0156d0c1dfa9938b7525f016da5f2fe96c4800	docs(plan): фаза P6 закрыта (2026.07.25-ECO-OPT)
+61ad855d93ebcdebf73660f36933b397be4a7746	docs(plan): фаза P2 закрыта (2026.07.25-ECO-OPT)
+51b1b1cb01e5860e8634e6ebcade0e5c59c7595b	chore(plan): P2.3 закрыт 🟠 — ревизия plan-*.md под Claude 5 (2026.07.25-ECO-OPT P2.3)
+e067a7dcfc00574f8ae0019e538f93c7eafc67ee	feat(task): кап делегирования, confidence в находке аудита, пункт DoR (P2.3)
+8466d71b644481daaf015af0ce722cd5fbb429e3	chore(plan): P2.2 закрыт 🟠 — капы делегирования + confidence в ревью-находках (2026.07.25-ECO-OPT P2.2)
+aec18754d59e93264918629f8f86563c7291265f	feat(task): капы делегирования + confidence в формате находки ревью (P2.2)
+915abad77c7f9604e2502741b8273e66f2a46159	chore(plan): P6.3 закрыт 🟠 — verify-claims anti-overconfidence + pressure-evals (2026.07.25-ECO-OPT P6.3)
+609ab63b59a86ef1e7912dfc01e3c9c8dc914b79	feat(skiller): verify-claims anti-overconfidence + pressure-evals (2026.07.25-ECO-OPT P6.3)
+77164dfce0f3b9bf33ac528007b1cd6f57424fbb	chore(plan): P6.1 закрыт 🟢 — statusline context-notify (2026.07.25-ECO-OPT P6.1)
+0c711cce353ccd678ea38f9f79a0e89782c3dca4	feat(harness): statusline context-notify — процент контекста + уведомление на пересечении полосы (2026.07.25-ECO-OPT P6.1)
+9eeedfba4603ff6b6dceecd476fdcdffa300bee4	chore(plan): P6.2 закрыт 🟠 — compact-дисциплина в скиллах (2026.07.25-ECO-OPT P6.2)
+0999805371155a0d7c93a057cbce51705e05cce6	feat(skiller): compact-дисциплина в context-economy и compact-responses (P6.2)
+a4b85a7d4ec50f9200b499a3e5436b3346931036	chore(plan): P4 закрыта 🟠 — все items фазы P4 терминальны (2026.07.25-ECO-OPT P4)
+2983af49dd9671bf8af2dc7618b97459891357c3	chore(plan): P4.3 закрыт 🟠 — rollout второй машины, все items P4 терминальны (2026.07.25-ECO-OPT P4.3)
+cb0203313f63850f3de31729dcfebed8a33a0f9e	feat(bootstrap): роль-осознанная ступень 5 + rollout-документация второй машины (2026.07.25-ECO-OPT P4.3)
+c77e86d1511ac4743037edd2880bd429663a6697	chore(plan): P4.2 закрыт 🟠 — cross-machine режим памяти реализован (2026.07.25-ECO-OPT P4.2)
+30137bbf11ab4618370bcffb3329addccf838bd2	feat(maind): cross-machine режим памяти — role/auth/бюджет ожидания (2026.07.25-ECO-OPT P4.2)
+42f918940a5f97235a1d5d79c4e2918c3a82d04f	chore(plan): P4.1 закрыт 🟢 — ADR-0001 cross-machine память mAInd (2026.07.25-ECO-OPT P4.1)
+47462ac49c6be5f2a402830008bfc7ee8058e11a	docs(plan): ADR-0001 cross-machine память mAInd — хост/транспорт/доверие/офлайн (2026.07.25-ECO-OPT P4.1)
+cc46cab78e7a777677420b88270a2fa815b45ed9	docs(plan): фаза P3 закрыта 🟠 (2026.07.25-ECO-OPT P3)
+3615e2c409e8c9bdf2a7c77c47dddd4ead1f365a	chore(plan): P3.3 закрыт 🟢 — owner-решения OQ-4/OQ-5 TELEMETRY-OPT (2026.07.25-ECO-OPT P3.3)
+2b715f25b835a8f37751e5da4025f72709a25737	docs(plan): owner-решения по OQ-4/OQ-5 TELEMETRY-OPT — D137/D138 (2026.07.25-ECO-OPT P3.3)
+5b1844b92e14e7f4345070e0fbe93a77ea357550	chore(plan): P3.4 закрыт 🟠 — модель листингового бюджета budget.py (2026.07.25-ECO-OPT P3.4)
+8cfa0a3da6b1d40152ed3a08fd68badcaf1af86d	feat(skiller): budget.py считает резидент листинга по модели бюджета, не суммой описаний (P3.4)
+37fc2e89efda899fca2c71a8b2c50e806ac907ee	chore(plan): фиксация процесс-отклонения bookkeeping-топологии P3.6 (2026.07.25-ECO-OPT P3.6)
+4f23a8e860f9ba4f32cbd52fd297dd6eee08b29a	chore(plan): журнал закрытия P3.6 (2026.07.25-ECO-OPT P3.6)
+7e5d838831ad5cf4cae1c0c6b7fcc79c15997483	chore(plan): P3.6 закрыт 🟠 — политика вендоринга (2026.07.25-ECO-OPT P3.6)
+aee52e7906ca39b884dc4125e7b0d80253d6de2a	docs(skiller): критерий fork в вендоринге + классификация 56 паспортов (P3.6)
+e505460b7effe722581a5b9e2f0a4ddbedbc9a80	chore(plan): P3.5 закрыт 🟠 — гигиена листинга (2026.07.25-ECO-OPT P3.5)
+501d27e10d804d6f50296946a06e7d2b83a695d5	feat(skiller): гигиена листинга скиллов — детектор каналов + бюджет профилей (2026.07.25-ECO-OPT P3.5)
+35eab64310ba7d595c2b3b94cdd3825f6650cc52	chore(plan): P3.1 закрыт 🟢 — бухгалтерия (2026.07.25-ECO-OPT P3.1)
+b0bf4399796f03cec22e3a37347ee58f4ad78401	docs(plan): P3.1 — диагноз листинга скиллов флота (2026.07.25-ECO-OPT P3.1)
+fc79e7c431a0999e74c8d6d85e0c11df7eb74b01	docs(plan): фаза P1 закрыта (2026.07.25-ECO-OPT)
+8ac027315ed62663d7a8d7e23c86fa01c21969a1	chore(plan): P1.1 закрыт ⛔ Skipped by decision — ветка A (2026.07.25-ECO-OPT P1.1)
+d68d1d49336f82fef0006b00f2529505a549da40	docs(plan): вердикт ENABLE_TOOL_SEARCH — ветка A, рычаг moot (D136, P1.1)
+bd506b145dc1f32e0265e594c8bd6c8338f41639	docs(plan): фаза P11 закрыта (2026.07.25-ECO-OPT)
+ed4bd3b4ce9d2f7c92647903656d866aab597ef4	chore(plan): P11.8 сверен 🟢 — бухгалтерия item'а дозаполнена по фактам коммита 60605c5b (2026.07.25-ECO-OPT)
+60605c5b045f184835194d24f8640a398847ddfc	chore(plan): реконсиляция P9 по 12 находкам аудита (P11.8, 2026.07.25-ECO-OPT)
+e508c3afe5aa982a6c9ab70f77d5d4f29c52e6be	chore(plan): P11.7 закрыт 🟠 — plan-citations в review-gate раскатан и подтверждён двумя live-прогонами, Live B — замена цели на AGENT-RELIABILITY (2026.07.25-ECO-OPT P11.7)
+39fb9c15ad01857f3c678c391dddc9f8130ed9ff	feat(harness): третья точка принуждения гейта цитат — plan-citations в review-gate (P11.7)
+441659437742ab7eec5b670889b2e077ff3770aa	chore(plan): P11.6 закрыт 🟠 — гейт цитат врезан в §8/plan-close.md, 16 pre-existing находок в P11.5 (K=0)
+665264b49946e780eca17b8ef0060d1d4b712a79	feat(plan-protocol): врезка гейта цитат в порядок закрытия item'а + plan-close.md
+2ea75cd3ae1dbc65519066c4c3be6670da191ef5	chore(plan): P11.5 закрыт 🟢 — гейт цитат чист, baseline-перечень исключений заведён (2026.07.25-ECO-OPT)
+08390020a1c82b665641e72bff1bca8df9ff0a4a	feat(plans): P11.5 — триаж 33 цитат гейта по R1–R4, заведён verify-citations-known-exceptions.json
+d8983d112e055433d112ff8fa69786ed5fb51081	chore(plan): P11.4 закрыт 🟢 — dogfood-снимок доказал F8-класс, F1/F2/F9 честно непойманы (2026.07.25-ECO-OPT)
+20111b2fb8742e7ad90be55dc8d1e99b1f994910	feat(plans): P11.4 — dogfood-снимок целевого гейта на непочиненном дереве (2026.07.25-ECO-OPT)
+05181229369c3e4d48899d583c07ed6a77fd4c4c	chore(plan): P11.3 закрыт 🟢 — handoff↔доска гейт нашёл живое P3-расхождение (2026.07.25-ECO-OPT)
+f9356837bcb761fa366aaa2723f0623bb1dc20f0	feat(task,skiller): P11.3 — кросс-документный чек handoff.md ↔ Status Board
+875cdf6327e1ad9a4a4831f388becd49fe44a960	chore(plan): P11.2 закрыт 🟢 — json-путь file.json::a.b.c с greedy-резолвом (2026.07.25-ECO-OPT)
+80547e713c354d4c56b3febec7362cff66886997	feat(plans): P11.2 — json-путь file.json::a.b.c с greedy-резолвом в verify-citations.py
+7e6a7139847f206c0ba8c034ed327a669d8247f5	chore(plan): P11.1 закрыт 🟢 — двухшаговый резолвер + расширение поверхности verify-citations.py (2026.07.25-ECO-OPT)
+45a1f7b9df50f7a0501f8c947dd9e8740ab8e81e	feat(plans): P11.1 — двухшаговый резолвер пути + семь шаблонов поверхности в verify-citations.py
+899cab9b2c010717fd9c5e14e66ce8f4e20ff448	chore(plan): P9.4 закрыт 🟠 Done with deviations — фаза P9 терминальна (2026.07.25-ECO-OPT)
+8f4152d566bc997b2c1c87d59fe678c10c6423b6	feat(task): P9.4 — повторный замер корпуса ревью, вердикт регресс ΔR=-0.12 (2026.07.25-ECO-OPT)
+7b6d256d296fd99187a92976a1509834a9ccfac4	chore(plan): P9.2 закрыт 🟢 Done — реестр ролей ревью как extension-таблица (2026.07.25-ECO-OPT)
+ffb52ea1501e40f66cd1985f3bc696ba07b4a9f0	feat(harness): P9.2 — реестр ролей ревью как extension-таблица + валидатор (D126)
+23db17077d36b206651040c43a0b18c48042790d	chore(plan): P9.3 закрыт 🟢 Done — эталон-корпус ревью + baseline воспроизводимости (2026.07.25-ECO-OPT)
+be6c88220fe41319e495f55c1ab4e6673608cee4	feat(task): P9.3 — три прогона ревью на кейс + baseline воспроизводимости (2026.07.25-ECO-OPT)
+a2ac24b1086fc24a05c5e317db099cee0b171c1c	feat(task): P9.3 — эталон-корпус ревью: ключ ≥50 находок + скорер до прогонов (2026.07.25-ECO-OPT)
+e877fc78d5459ebc068b4602959bd50d527048d5	chore(plan): P8.10 закрыт 🟠 Done with deviations — все 10 items P8 терминальны (2026.07.25-ECO-OPT)
+a020f4349730733d3daeb271bae7be2669e3d79b	feat(task): закрытый набор форм ячейки Items §3 + диагностичный отказ task_contract (P8.10)
+bf7de7c99199d61446e94cc24d0f14dab22eb811	chore(plan): P8.9 закрыт 🟢 Done — детерминизм benchmark.json, батч B5 завершён (2026.07.25-ECO-OPT)
+980ce398a014a618cae0f3ff560da1005b635b64	feat(skiller): skiller eval — детерминизм benchmark.json (P8.9)
+87514b301f01bffbf99479ca3ea38c7446f6ba0f	chore(plan): P8.8 закрыт 🟢 Done — три гейта validate.sh (2026.07.25-ECO-OPT)
+4ee3ba6dd1e52542736fc54a3af256ab05b3e1a3	feat(skiller): validate.sh — секции CORE, анти-дублирование проекций, полнота pressure (P8.8)
+fa66cb1d82819c1f9553bf40a74239378f32f05f	chore(plan): P8.7 закрыт 🟢 Done — assert_safe_replace_target, батч B4b завершён (2026.07.25-ECO-OPT)
+fa1ee8bfe97e13005a85d6bee977754f0451b3c2	feat(core): assert_safe_replace_target — проверка цели перед атомарной заменой (P8.7)
+e7fa822e29241716b3d0f943d96fa9a611d48b0f	chore(plan): P8.6 закрыт 🟢 Done — public-hygiene/verify-tag CI-гейты (2026.07.25-ECO-OPT)
+12ff61e1ab6db91b4d7a2992fab74ef9f2117231	feat(ci): гигиена дерева + тег=версия — public-hygiene/verify-tag (P8.6)
+8a6a339b24874da821bd4604eb30010faceeb65f	chore(plan): P8.5 закрыт 🟢 Done — матрица возможностей docs/status.md (2026.07.25-ECO-OPT)
+d12ccaf781f3736f632e413d0aa65d93023e8426	feat(docs): матрица возможностей docs/status.md с Evidence/boundary (P8.5)
+151b7b940cba7fb4ec5a80090b2e110e922900b3	chore(plan): P8.5/P8.6 эскалированы — task_contract не парсит батч-строку §3 Routing
+1ee6fcd5f42c03c1858d6003c219bca302bd0734	chore(plan): P8.4 закрыт 🟢 Done — docs-impact гейт (2026.07.25-ECO-OPT)
+5b7cc15e2db43ca6b65f4b93a907836c3550dc6c	feat(ci): docs-impact гейт — пакет-скоуп + escape hatch трейлером (P8.4)
+cd93dbc8be6185fb613c76df8ea2ad3342efbefe	docs(plan): реконсиляция P10 доведена до конца — F7-F14 (2026.07.25-ECO-OPT)
+1a1c2d779a187f4acda6a32151e2674e676d73b1	docs(plan): фаза P10 закрыта, бухгалтерия P5 выправлена (2026.07.25-ECO-OPT)
+aaf50abd6f6d9a4250803a94f08f41db5f5672c7	chore(plan): P5.6 закрыт 🟢, фаза P5 закрыта 🟠 Done with deviations (2026.07.25-ECO-OPT)
+9cafcac10fcd7adf8b77a0e1dd10a013bb373963	fix(maind): честная SERENA_SCHEMA_FIELDS — факт апстрима вместо формы шаблона (2026.07.25-ECO-OPT P5.6)
+8256f10edde7142df1653113bd134d5da5560314	chore(plan): P5.5 закрыт 🟢 — пин Serena в версионируемом слое, гейт doctor (2026.07.25-ECO-OPT P5.5)
+88f0c7ebc01ad75c82ccbd3d0c5973378870f01b	fix(maind): пин Serena в версионируемом слое + гейт связности в doctor (P5.5)
+a476527fea003f0bd428c0cc3c0d3cac24bb8e68	chore(plan): P5.2 закрыт 🟢 — OQ-1: вердикт skip по CRG, k-fold-усиление замера (2026.07.25-ECO-OPT P5.2)
+1844ab29e55080fd0bdccfffd9df776854a2eadb	docs(skiller): вердикт skip по code-review-graph — mcp-advisor + reference.md (2026.07.25-ECO-OPT P5.2)
+8149829f58a2d8256c39c748e2704835f6dc46b1	chore(plan): P5.2 — протокол k-fold-перезамера ДО прогона + D112 (2026.07.25-ECO-OPT P5.2)
+36607f2a6278e9e661dad23535565fab96d84e27	chore(plan): P5.1 закрыт 🟢 — kill-gate CRG skip, bookkeeping (2026.07.25-ECO-OPT P5.1)
+629cf09d6995a74852134e8db41ac11495a50195	feat(plan): P5.1 — kill-gate CRG vs Serena: skip по P_impact (2026.07.25-ECO-OPT P5.1)
+a8639c82b51e2e4f8047b06682770c9004c2bb04	chore(plan): P5.1 — эталон co-change ground truth ДО первого запуска CRG (2026.07.25-ECO-OPT P5.1)
+bbe3be21e7a106462d264874d1fe00083591d0c9	docs(plan): P5.4 закрыт 🟢 — гейт связности схема↔пин Serena (2026.07.25-ECO-OPT P5.4)
+253ae4a619c1cd4ca97b59dd072784dd5beff272	feat(maind): гейт связности схема Serena↔пин (P5.4)
+518df4efb4c30e3f8456ec083b3f2c718b9d10aa	docs(plan): P5.3 закрыт 🟠 — пин Serena на SHA D110 внесён во флот (2026.07.25-ECO-OPT)
+930ad0ac6515b96a2154c952cca5eddc4c4df54e	fix(maind): пин Serena на commit-SHA во флоте (2026.07.25-ECO-OPT P5.3)
+ef056839d235003a7df4f052bc389b06e475e89b	docs(plan): P5.3 повторно эскалирован — пин Serena v1.6.1 фатален на схеме .serena/project.yml (2026.07.25-ECO-OPT P5.3)
+b14d0f4dbb90408e70709ec514249d66a2f7a8cf	docs(plan): P5.3 эскалирован — версия пина Serena новее объявленной (2026.07.25-ECO-OPT P5.3)
+3c5e26101f3b53c62ccb739f1982afd7f8f49692	docs(plan): P10.4 закрыт 🟠 — усыновление unmanaged-target тиром 1 (2026.07.25-ECO-OPT)
+77bf9d8c8a24c7e5612bc498fd5dd30b40c566a0	fix(core): усыновление unmanaged-target тиром 1 при --repair (2026.07.25-ECO-OPT P10.4)
+d5aecc662acb417e94d8f65d84048b2c3fc5fa77	docs(plan): P10.3 закрыт 🟢 — резолвинг пути плана после архивации (2026.07.25-ECO-OPT)
+ae54d79044db86c4ed95fdb6aacf27044a7fcf8a	fix(core): резолвинг пути плана после архивации (2026.07.25-ECO-OPT P10.3)
+9b4d81d96b3e3ce3b667d3bf6a17d5678a818d39	docs(plan): P10.2 закрыт 🟢 — гейт ссылок-доказательств (2026.07.25-ECO-OPT)
+47d6972d597134a4053f916922002f8106149dcd	feat(plans): гейт «ссылка-доказательство резолвится до символа» (P10.2)
+0a60684a2bd59849fe72a5cb54b46b5eedd65a5b	docs(plan): P1.2 закрыт 🟢 — канон PLAN-ID + бэкфилл (2026.07.25-ECO-OPT)
+b44409c76a682262022f7cd247d4a010c14e3fe4	docs(canon): D3 полный PLAN-ID в код-ссылках + бэкфилл (2026.07.25-ECO-OPT P1.2)
+844615ad242689976ccd6b2e271443dbc2b25bbb	docs(plan): P2.1/P3.2 закрыты — Claude 5 model-notes + maind tool-result trimming (2026.07.25-ECO-OPT)
+03c529ba4a0cd656881f95fd9f7e8d0eee681f30	feat(maind): tool-result trimming + PARTIAL-receipt в MCP (P3.2)
+8b88d8fd7725f2bdce90f2cd80d77ee3ec0cf545	docs(reference): карточки Sonnet 5 prompting + Effort доков (P2.1)
+696fd888cb3da5a6935cb900ca52bf6e4a7be5d5	docs(plan): P9.1 закрыт 🟠 — review-gate с содержанием + live-прогон (2026.07.25-ECO-OPT)
+05c5d87e01711c417ca400d56eff146680e59e20	feat(harness): review-gate — гейт с содержанием вместо тихого но-опа (P9.1)
+058bbe3731a27208964e0df3e38d769ae016032f	docs(plan): P8.3 закрыт 🟠 — CHECKPOINTED + version-first отклонение (2026.07.25-ECO-OPT)
+c36bbee507f4edf333561cfe4271788c5618ebfb	feat(task,skiller): P8.3 — CHECKPOINTED: отказ несёт точную команду возобновления
+88f57d39b7cc9993c4eb2ba79365e6336bbfb225	docs(plan): P8.2 — Known Deviations честно фиксирует порядок правок закрытия (2026.07.25-ECO-OPT)
+9950eaa09812dce66cd187d9b3d4acfe90c9a279	docs(plan): P8.2 handoff — вписан хеш item-коммита (2026.07.25-ECO-OPT)
+2a6cbb3df3807145cd13de46362833e9daefee8c	docs(plan): P8.2 закрыт 🟢 — Consequences + словарь зрелости (2026.07.25-ECO-OPT)
+4d01d5471c212157f247c9769bd4fd46ade20cfc	feat(task,skiller): P8.2 — Consequences в D-записи + словарь зрелости возможности
+3a3f55e34e06491c8cec5399d3835e9191341f7e	docs(plan): P8.1 закрыт 🟠 — отчёт закрытия фазы closure/<Pn>.json v1 (2026.07.25-ECO-OPT)
+5f5dfa73fa7474e38b922a9832df81487f6146e0	feat(task,skiller): P8.1 — отчёт закрытия фазы closure/<Pn>.json с классом свидетельства
+9d0a30237a8e6c3b6d51762fb155fcce4d0d5120	docs(plan): P10.1 закрыт 🟢 — гейт кодов границ починен (2026.07.25-ECO-OPT)
+243254aa2a73046da486c93c850276717c1808f3	fix(task): P10.1 — гейт write-site не должен застревать на цитате шаблона строки
+0b33116c6f6dfc390030e807bf7d18c1176b9a09	fix(task,skiller): P10.1 — точность гейта write-site кодов границ (fail-open + ложный ERROR)
+fb9e20de30dacc8a8ff50c7f7b32cea635f0cf4a	docs(plan): фаза P4 закрыта 🟠 — Owner packet (HOLD), 2/5 🟢 (2026.07.24-AGENT-RELIABILITY)
+d6c12895e4bf97e63695ca53608ed48cfccaf668	docs(plan): P4.3 статус исправлен 🟢→🟠 — ревью ATTENTION, Known Deviations 6-8 (2026.07.24-AGENT-RELIABILITY)
+a8c2e401a910fa93d5dac7782da7cd8d7f109419	docs(plan): P4.3 закрыт 🟢 — docs синхронизированы, Owner packet собран (2026.07.24-AGENT-RELIABILITY)
+e0c7269c7c0d984011294eab440e7156f15aaf8b	docs(plan): синхронизация канонных доков + Owner decision packet (P4.3)
+f1b992decf5a8cf07503baa9160737339bc0e5ac	docs(plan): P4.2 закрыт 🟢 — снят ложный Blocked, исправлен носитель остановки (2026.07.24-AGENT-RELIABILITY)
+8995813b4a587b0924366a69d69d783947b55d4d	docs(plan): остановка фазы P4 на P4.2 — 🔴 Blocked, handoff (2026.07.24-AGENT-RELIABILITY)
+1e9006f4b156a064742e7da0d8da905fc46dcb07	feat(skiller): read-only composed effective-source doctor (P4.2)
+7fb38eb534fc9a5facc4e271b2b1aa47be97890e	docs(plan): закрыть P4.1 — статус, completion notes, handoff (2026.07.24-AGENT-RELIABILITY)
+a376a64e1ae37c2cec42cf5ec6d733eebc788652	docs(reliability): P4.1 — code-grounded вердикт по гипотезам внешнего аудита (P4.1)
+5c39a38d221bfc3b54636731b40a63c907b6b2c8	docs(plan): P4.5 закрыт 🟢 — оплата Contribution gate, коды границ (2026.07.24-AGENT-RELIABILITY)
+e45d0f8faaca14735d2e3d2cc235c3e52cb7f5ea	feat(analyst,harness): P4.5 — оплата Contribution gate: минорные бампы package-API
+99e0369c249c7bc01917d64a5c8db16feccc7538	docs(plan): закрыть P4.4 — статус, completion notes, handoff (2026.07.24-AGENT-RELIABILITY)
+b4c660738f2f205e5ef9882703d54e8912ed38e3	docs(plan): P4.4 закрыт 🟢 — машинный гейт кодов границ plan_lint (2026.07.24-AGENT-RELIABILITY)
+4ca7af67415876f43338edf9fedd3dd5279c0bab	feat(task,skiller): P4.4 — машинный гейт напечатанных кодов границ plan_lint (ремонт Ф2)
+f44a251077c580e3bef9410059c6e7f3fe44aae7	docs(plan): P3.11 закрыт 🟢 — аудит захода 2/2, ATTENTION/REMEDIATE, D88 (2026.07.24-AGENT-RELIABILITY)
+7601110f13c0316cdd9649c8d42a1a6677c6f1df	docs(reliability): P3.11 — повторный terminal audit, вердикт ATTENTION/REMEDIATE (P3.11)
+f14effefa08a368777d24796ffc34f61a49febaa	docs(plan): P3.10 закрыт 🟠 — живой парный layer-2 5/31, F8=+60pp (2026.07.24-AGENT-RELIABILITY)
+a84bf17165a14eb6509e068e4e52f4f3266ba1e7	feat(plan): P3.10 — живой парный layer-2 прогон 5/31 на PRE_PLAN_SHA (2026.07.24-AGENT-RELIABILITY)
+802a8317a1c12f9609548854c99674948c631bf4	docs(plan): P3.9 закрыт 🟢 — измеренная наблюдаемость 5/31 (2026.07.24-AGENT-RELIABILITY)
+a374c425c785de78cd15a2a88bd304f23c42fb52	feat(plan): харнес живого диспатча + измеренная наблюдаемость 5/31 (P3.9)
+e30c989c3b85000c73d6afbb25681c9b98a36b33	docs(plan): P3.8 закрыт 🟠 — честное F1 поверх trace-seam'а (2026.07.24-AGENT-RELIABILITY)
+9074edb844d32f581edac5de02b97c08f40e75c5	fix(plan): честное F1 — регенерация транскриптов P2.5 поверх trace-seam'а (P3.8)
+0c216ce227e5372ca278d042b3488589a51f3120	docs(plan): P3.7 закрыт 🟠 — read-only --check для verify_result_manifest.py, D87 (2026.07.24-AGENT-RELIABILITY)
+eb51347039790b9490a2fddf6ed8fa79e9a6086c	feat(plan): read-only --check для verify_result_manifest.py (P3.7)
+14bd1c86ac20c3638d26f56cd45e836e17dac518	docs(plan): P3.6 закрыт 🟠 — реконсиляция записи фазы P3 завершена (2026.07.24-AGENT-RELIABILITY)
+2532ec170f2d95c59a230e58ed0481fd36325698	docs(plan): реконсиляция записи фазы P3 — F2/F3/F4/F6/F7/F8 (P3.6)
+c452ad9d829d15e0b13d4b0285c162cd42161eee	docs(plan): handoff после дизайна фазы P3 — Next = P3.6 на дереве 684d0d34
+684d0d3435f3eb8ad7bceb24aa6d2b2627461535	docs(plan): P3 — ремедиация вердикта REMEDIATE, items P3.6–P3.11 до DoR (2026.07.24-AGENT-RELIABILITY)
+12636de126bee253a503648477e7b3dac6c5a459	docs(plan): P3.5 закрыт 🟢 — terminal audit, вердикт REMEDIATE (2026.07.24-AGENT-RELIABILITY)
+e17f61f730e2484c3172224d5d010c5653f0d69e	docs(reliability): P3.5 — независимый terminal reliability audit, вердикт REMEDIATE (P3.5)
+21ebd7b282961f414364abd668150e4a6d7a893a	docs(plan): P3.4 закрыт 🟢 — disposable-worktree self-host canary (2026.07.24-AGENT-RELIABILITY)
+cfd0e4ba0a59842c3d40997254828d01f964fd86	test(reliability): P3.4 — disposable-worktree self-host canary (2026.07.24-AGENT-RELIABILITY)
+c1513dbb579f36ffdc2979b7080ea73e6eca806c	docs(plan): P3.3 закрыт 🟢 — system-bank adapter (2026.07.24-AGENT-RELIABILITY)
+f2d693bcd441b0b1409ee888eb1978521b533a76	feat(skiller): system-bank adapter — deterministic structured graders (P3.3)
+b75b87665174ded16a3897d7772bad464b432dfb	docs(plan): P3.2 закрыт 🟢 — reliability metrics/digest (2026.07.24-AGENT-RELIABILITY)
+a4f79f8cbfbc3d71aba8b9a76fe51987f770ec47	fix(analyst): metrics — enforce resume/fork dedup внутри build_metric_record (P3.2)
+b1d264ca022e63307a0d642aed435b027ec8a87b	feat(analyst): reliability metric arithmetic и paired digest (P3.2)
+78831901cacf6665a310033e6ea2384108148748	docs(plan): P3.1 закрыт 🟠 — Unified Agent Trace v1 (2026.07.24-AGENT-RELIABILITY)
+3af26580721caaa785772fe95b442330d88180b3	feat(analyst,harness,task): единый Unified Agent Trace v1 — схема/провайдер-ридеры/journal-линковка (P3.1)
+290b4b04f728f94f565ad834462487964dcf580e	docs(plan): реконсиляция записи фазы P2 — заход 2 аудита (2026.07.24-AGENT-RELIABILITY)
+0d4907a839d5a0ddcf05e67f9fe871b287f92ad1	docs(plan): P2.9 закрыт 🟢 — реконсиляция записи фазы P2 завершена (2026.07.24-AGENT-RELIABILITY)
+b9ff62f6d9cdc85312000b7ec89e11367dc83302	docs(plan): реконсиляция записи фазы P2 — F6/F7/F10-F15 (P2.9)
+1f8ee001394e7fc46a982e9c3553adcac4c16f4f	docs(plan): P2.8 закрыт 🟠 — воспроизводимый генератор транскриптов (2026.07.24-AGENT-RELIABILITY)
+a36d489bc1b74669f752e30186976a2d8a39e707	fix(task): воспроизводимый детерминированный генератор для доказательства P2.5 (P2.8)
+9b20dafa20648b09c806e5ff4ceb5aa617e2b916	docs(plan): P2.11 закрыт 🟢 — бинарный pre-final гейт, маршрут исполнителя (2026.07.24-AGENT-RELIABILITY)
+abd53b4b09058949b52db3b899e493b5ff109235	fix(task,plan-protocol): маршрут исполнителя и бинарный гейт pre-final (P2.11)
+5a410858679c4bbc88862db681a20ab20c949e5f	docs(plan): P2.10 закрыт 🟠 — легаси-формы §3 читаются, typed-отказ (2026.07.24-AGENT-RELIABILITY)
+668012bd9bce68c05b360bb281f93c3111662e41	fix(task): компилятор читает легаси-формы §3 Routing без ValueError (P2.10)
+4bf546b8554c4eb5d53ca48bafe51026901410a4	docs(plan): разбор остановки P2.7 — D75–D79, items P2.10/P2.11 (2026.07.24-AGENT-RELIABILITY)
+c215bd04cce18931803bb3b294bd36ac62f1523a	docs(plan): остановка ремонта D70 на P2.7 — 🔴 Blocked, handoff
+afd9a0d59a12219e5d39a43b6f7388d40225a5d7	docs(plan): P2.7 закрыт 🟢 (2026.07.24-AGENT-RELIABILITY)
+d11c3b7453ef7e5dbbac9d1b3a5f3dcea65a8940	feat(task,plan-protocol): подключить write-site компилятора в командах (P2.7)
+fc09c687ea360d91388bd4547443dd707178c8d9	docs(plan): P2.6 закрыт 🟢 (2026.07.24-AGENT-RELIABILITY)
+a13614db745ef37de9f75e3d83002dc83479792c	feat(task): достроить компилятор — producer, bundle-предикат, cap, actor (P2.6)
+756f5d83aa8c0ad5b5c9a954f1d752c1a70aae20	docs(plan): фаза P2 закрыта (2026.07.24-AGENT-RELIABILITY)
+cbcb088e2319fe8768d7137e42fb7070171d746e	docs(plan): P2.5 закрыт 🟠, фаза P2 item-terminal (2026.07.24-AGENT-RELIABILITY)
+14b3e6ce4412d0286152a3b3e14421cf7d82d9f0	feat(task): доказать historical failure scenarios end-to-end (P2.5)
+ba8b4f88d96d88915a28e1ecb7e580d1bdf510f6	docs(plan): P2.4 закрыт 🟢 (2026.07.24-AGENT-RELIABILITY)
+97b4a7eb5c54e6f79a2bb2cc7d9cf3096f4d673c	feat(task): route/budget evidence и fail-closed dispatch-guard (P2.4)
+324bae5db833320e9bdd365694fec30ebfe6293e	docs(plan): P2.3 закрыт 🟢 (2026.07.24-AGENT-RELIABILITY)
+77b574b598bba658ef78278ed257772a88f6511b	feat(task): typed finding/review enforcement и loop breaker (P2.3)
+d5d60201cae8518da570c77fd8819323c6ab0842	docs(plan): P2.2 закрыт 🟢 (2026.07.24-AGENT-RELIABILITY)
+08e787b8a4ab97a58d037ac927b322640437a0ab	feat(task): Task Contract v1 compiler и tiered-portability lint (P2.2)
+79341e310a59ab3835b5c8783965a4a96a03a997	chore(task): regen provider-commands.md после правки P2.2-командных источников
+6e658fce1d3eb40840c9b3bf1dd22caab743ec78	docs(plan): P2.1 закрыт 🟢 (2026.07.24-AGENT-RELIABILITY)
+575a49b2382bb573b166e4629044eaf1c23036a0	feat(plan): запечатать три контракта execution/review/portability (P2.1)
+70e9e6aca5db9fb2c8d3b45943887a116e45b699	docs(plan): AGENT-RELIABILITY — спроектировать P2.1 (D64–D68)
+f6925bfccf85f3666731ce329ebd1b7a30f488ec	docs(plan): фаза P1 закрыта (2026.07.24-AGENT-RELIABILITY)
+68981df652ce3c531b4757cf0726620f84b90e97	docs(plan): AGENT-RELIABILITY — закрыть P1.4 (фаза P1 терминальна)
+2acab0048eabbbc83f4b38bf076545d5a2cd57d5	feat(skiller): effective-runtime conformance gate (P1.4)
+4cb727f7176351cc0fb5187faee1d01e22b990d3	docs(plan): AGENT-RELIABILITY — слои 1/2 к P1.4 (доказательства и синтез)
+38f466925eda0de8be1b16b3c08225e6fc93519d	docs(plan): AGENT-RELIABILITY — спроектировать P1.4 (D62, D63)
+a579cd213d5fbeae7232b72ae2a16e720e0a190a	docs(plan): AGENT-RELIABILITY — закрыть P1.5 (bookkeeping)
+0a87a4e563869efc50870ca32e359faec5be4fea	feat(skiller): закрыть измеренные коллизии — architect-дубли, workflow-craft class-B (P1.5)
+280862833fadb7a21acd6d5b11bb19dd4c2ab40d	docs(plan): AGENT-RELIABILITY — закрыть P1.3 (bookkeeping)
+c1c4a1f9ee8a4265417d2a1a656380b649c61eac	feat(task,harness): исправить task/harness projection и удалить шесть root-коллизий (P1.3)
+c3b26433cc33cee0b116bbac579622fe176a0108	docs(plan): AGENT-RELIABILITY — закрыть P1.2 (bookkeeping)
+589c320e2ca75e3918e98a662f03d1a2395cccf4	feat(skiller): канонизировать 13 bootstrap-скиллов, root-bootstrap публикация (P1.2)
+8e4107427fab7ed238b348b93426cb61624b0cbf	docs(plan): AGENT-RELIABILITY — закрыть P1.1 (bookkeeping)
+628092b3cf852449fdf74712dc94ab6815d78c84	feat(plan): AGENT-RELIABILITY P1.1 — покрыть hook identities в inventory (P1.1)
+1ba0b4e011809d5c2bbf3d5bc4b80de9d70ce1f8	feat(plan): AGENT-RELIABILITY P1.1 — запечатать identity/ownership/capability inventory (P1.1)
+a5d58bf43f8ab6687c53d672014b3881ab73c69c	docs(plan): AGENT-RELIABILITY — закрыть P0.4 (bookkeeping)
+9fdec6d3301df6920e8fd566c673c9609839a55e	fix(harness,maind): восстановить self-host Codex hook lifecycle (P0.4)
+5e9436cfca282948f7f0f0f01d616a4b865b4228	docs(plan): AGENT-RELIABILITY — закрыть P0.3 (bookkeeping)
+f405017a21c5cde1be694f0acf972f2fa47d8c24	feat(plan): AGENT-RELIABILITY P0.3 — Acceptance v1 и fixed bank (31 кейс, детерминированные грейдеры, layer-1 baseline, 14 floors)
+72d1bb3eec405d68a9b157fc6d7da52f734cb306	docs(plan): AGENT-RELIABILITY — закрыть P0.2 (bookkeeping)
+fab8620b9aec0053799efe7d101592ce8bcba4bb	feat(plan): AGENT-RELIABILITY P0.2 — Task Contract v1 (схема, предикаты, примеры, валидатор)
+78b55ea0862df7a7eebcc2a63f00e5f6cde8cfe2	docs(plan): AGENT-RELIABILITY P0.1 — записать инцидент bare-commit в Known Deviations
+44a5f8078cff6d34f93388766f62dc888b0156c8	revert(roadmap): restore 10 files accidentally swept into P0.1 bookkeeping commit
+55e8477bcc34857e04b346f2fa47e9f7067327fe	docs(plan): AGENT-RELIABILITY — закрыть P0.1 (bookkeeping)
+a81effd19c041cdc3d3c1f0f69b5d8f6d4a5f44e	feat(plan): AGENT-RELIABILITY P0.1 — semantic verification v1 of committed evidence bundle
+7479972f2a582ab8583270c30fad8da1ff56659e	docs(plan): ECO-OPT — design pass 2/2 (finish, D80–D85) + payload B/E аудита этапа C
+a04543820ba411d6d5050f76d041be3d3c707e39	docs(plan): FOREMAN — payload C аудита этапа C (Ф4/Ф6)
+1309cd176f634ad380526cca7b303251cd9db3b0	docs(plan): AGENT-RELIABILITY — payload A аудита этапа C (Ф1/Ф3/Ф8)
+50a8b4fd308185cd59b765cd332667a6236fdf19	docs(plans): программа design-first — этапы A–D + межплановый гейт
+fbee937e2518feae8751062d1050552a836da7a1	docs(plans): досинхронизировать P1.5 FOREMAN и висячую ссылку ECO-OPT
+51b316bac3066f8cbf370cff0f0bfefcb86d87eb	docs(plans): выстроить межплановую очередь и владение поверхностями
+c368deeb1beafb8a2b61f8a3d4f9ababaca8a51a	docs(plan): AGENT-RELIABILITY — handoff на P0.1 с хешем post-repair дерева
+8e712b41519cb91403a14ce240089f8acb5ae93f	docs(plan): AGENT-RELIABILITY — ремонт A1+A3 и Owner authority E (v1.10.0)
+a86cf425cf2acdd8b9a044710b009146d591936c	docs(plan): уточнить D14 cleanup deviation (P2.2)
+24b4d080ff3dc5d47bfd8ee3bb90e0231df64000	fix(maind): устранить ruff regression (P2.2)
+360d9cb284d9bfd3376cfb0fbcd931dd23f7535b	chore(plan): закрыть P2.2 fix-forward adoption (P2.2)
+be968b96c24650042541148fd5c4dfed2c6a95e2	fix(maind): записать lock при exact adoption (P2.2)
+094b75e24deea27d7061daa7729c4e84f03e6f4b	chore(plan): закрыть P2.2 internal rollout fixes (P2.2)
+48c7abbe9f35101bc560016d9fd8b18fc842c144	fix(skiller): исключить duplicate Codex vendor carrier (P2.2)
+63edc6dac1cba3d4f914c7cdce28776f7f6f5e2d	fix(maind): сохранить lock при exact adoption (P2.2)
+8f91865e2a4becc10efd936fd6bb4c417784c9e8	fix(maind): учесть project provider carrier (P2.2)
+17ec6f19c14d970176691765b96a6ecc6b47dde9	docs(plan): разблокировать автономный P2.2 (P2.2)
+2b47c98435fe621fce57c2d4983a555ef4a1bc5f	docs(plan): зафиксировать блокировку rollout (P2.2)
+9472950f3ad029629f644600e5c94a1453a8c12d	docs(plan): зафиксировать D7 blockers (P2.2)
+3c1fed746d377a8228ecaa212da5b91d91a51af9	docs(plan): закрыть traceability prerequisite (P2.1)
+906dddc63827879fde4c5a340ba0a0c7acb47528	docs(plan): закрепить traceability P1.1 (P2.1)
+2070a92df30a00675a3924e4a1d7be1ee72a35a2	docs(plan): пропустить условную ремедиацию P1.2
+7bf7030954b1d97bc4cd5ce2d3055ec63a2267f8	docs(plan): закрыть conformance-пилот (P1.1)
+d72fe7b6d2c623673a5006ab4c3a64e1fb8c5610	test(maind): зафиксировать conformance MVP (P1.1)
+6b9bfe6733ead5df657805f14307bf918698ed0b	docs(plan): разрешить disposable pilot P1.1
+e6101ceca837be7e14c00d1ff1ed9c50cf928cb0	docs(plan): уточнить блокер P1.1
+3f43ac2dda47436c17d80691c62043d9f2599ab8	docs(plan): зафиксировать D8 D7 блокер P1.1
+42005c76c8a1223601e52044646ed6c026833eb5	docs(plan): продолжить P1.1 dual-provider rollout
+25f712a7c7ba66715fbd94554199bdf212765a4e	docs(plan): зафиксировать блокировку replacement pilot P1.1
+e80b59de6379cf874485bf5bddbb1b245e3c02d1	fix(maind): вывести scope инструкций из topology (P1.1)
+489093a65697ca2d59d569b7a54efaf042a7ff36	docs(plan): уточнить границы запуска P1.1
+b0f05dcadb755f5472b0fe9d297d3f5a822a494c	docs(plan): закрыть owner skip P1.1
+28236355f3f2e599da8d8003eecf164ae04fac5d	docs(plan): зафиксировать блокер pilot P1.1
+34df513e3c5255fd7064f18526026c8cdb1df765	docs(plan): закрыть P0.2 fleet rerun (P0.2)
+283ccf54a1fc1e107477cdcaa3c453ed5205e224	fix(maind): квалифицировать недоступные проекты в sync (P0.2)
+64d5e3dfe94371f01509d11427c20a3807201f48	chore(plan): зафиксировать green audit P0.1
+af9fb9bcbbbeb74dd5085dc75db8690dce923086	chore(plan): закрыть attempt 3 Codex carrier (P0.1)
+9a01050f87dd2b98040f394e1540e8682fa1040b	fix(skiller): включить runtime tree в Codex core (P0.1)
+0ebf9208a1dd20386aec929f81bdc8d8bbcdaac4	chore(plan): переоткрыть P0.1 после audit
+ca8cdb19b54d1941b74aca6e5ec335ff8bf918a1	chore(plan): закрыть repair Codex carrier (P0.1)
+2ad6b4d5b4cd2c4236644cffe58fb15b36efe94f	fix(skiller): доставить runtime-файлы Codex bundle (P0.1)
+1e7e1854140f9f7ec057da8b727b35578305c18a	chore(plan): переоткрыть P0.1 после review
+7f140e4807e784f1f1691ffac6068301a625205b	chore(plan): закрыть Codex carrier (P0.1)
+dc9a3fd93cb2c85ca5b3f4f206e39b2147df948b	feat(skiller): добавить Codex carrier connect (P0.1)
+4dd4528322ca23560d11fbf8492419450b10ff30	docs(plan): снять stale P7.3 audit pending work
+44d215fbdcdbe2fc813fd4b5427b720121414d85	docs(plan): зафиксировать D127 P7.3 evidence fact
+ae36f82773b4f2dee9f6bb4cf99e43c4b397fa7d	docs(plan): скорректировать P7.3 cleanup evidence (P7.3)
+caa492d60e1f62e1846bedc7aa54af62bfbfaf06	docs(plan): разрешить evidence-коррекцию P7.3
+952ac80db9ac6cc27ff856205d4662aa589d0606	docs(plan): зафиксировать P7.4 hygiene repair
+f1998246a0db7bdf98f8bd5ce66a6fcd5d62d2ef	docs(plan): исправить hygiene P7.4 evidence
+8ece81676f95ac70a594b2765a4ee1429e63a7a2	docs(plan): закрыть P7.4 с ATTENTION
+ff4b89c32d3cf3a61245abf34383e381c80dcacf	docs(plan): зафиксировать P7.4 ATTENTION verdict
+b8e2c12a1c3e0c0ef024159b71aa7735293486d6	docs(plan): открыть P7.4 по D126
+3df2f7e921ed1d2c8d5c7ea860beab9b03c78f84	docs(plan): закрыть P7.3 без cleanup mutation
+d43f9549827f7d862d291b8594830d574ea74e0c	docs(plan): зафиксировать P7.3 cleanup inventory
+29f8d537e71a9d823f5669be4a2348ddd86aa523	docs(plan): открыть P7.3 inventory по D125
+098df29d7840829c3b1e47a5c96243a88cc57ef4	docs(plan): закрыть P7.2 с отклонением
+9057b3f4297d244f6d52289fcc977d368f9f9804	docs(plan): уточнить verdict P7.2
+e286328e2c1dea0cebecbd3ab234e024d6b0cec7	fix(plan): убрать trailing whitespace P7.2
+460019a25eba9a829024ec62392c14fbc83a4771	docs(plan): зафиксировать self-host E2E P7.2
+d0caeeac701b1d20115b5c79bbf115053c2db1f9	docs(plan): зафиксировать routing-block P7.2
+af809ee9299619e1fcf1543472c6407fe2dc5dd9	docs(plan): возобновить P7.2 по D124
+5cb4b2197cb3d27ba9d229887d6d4db5b4facbc2	docs(plan): закрыть P6.11 D123 bookkeeping
+1c0a6990e7e3c7b6d6f78c2b6f2a4d7bdc8df364	docs(plan): подтвердить D123 replay P6.12
+572503b5ddf483738b728bc5c02547aaad412a46	docs(plan): спроектировать D123 rollback lifecycle (P6.12)
+0304558db8021570a44f095c2e225dd1ee9f9d68	docs(plan): эскалировать P6.12 residue (P6.12)
+f8d46602bce4683f6162f185fbf584e5ef14da8d	docs(plan): зафиксировать RED P6.12 proof (P6.12)
+1ef2e601018b9cfd7481d099fd9bf61294089402	docs(plan): переоткрыть P6.11 для D122 noop
+4c24e0671ac87535635eb623102b412f29fcbf6c	docs(plan): заблокировать P7.2 после D121 (P7.2)
+3cebf7fb22903f33997cf51c905a92774b3b029b	test(p7): зафиксировать D121 rollback (P7.2)
+34aeeca57a5363dd5ac879dae08c5319e3ff82ee	docs(plan): оформить carrier D120 P7.2
+ab4cf1d1b9e749a1b2e70c99bc6c97c177f6c9c1	docs(plan): зафиксировать native proof P7.2
+81d9930ce5a17db7e1d093faf969da7e7cd5425d	docs(plan): изолировать Codex state для P7.2
+dd34abebc776004433069ff47ca73adbc55ddef7	docs(plan): открыть P7.2 design gate
+19c122debbf28416cbe9ba8912d487e5208cd3cb	docs(plan): закрыть D115 и P6.12 GREEN
+822234bec390d6e550ddcf45593af181b9ecc685	fix(maind): запечатать D115 unchanged MCP (P6.11)
+ac2bd8a7b11c90a2087c10efd437033f17573c29	docs(plan): заблокировать P6.12 после D114 (DUAL-PROVIDER)
+20e31b76d04ab6dab823b3cc279fb0dc49ef467e	test(maind): зафиксировать RED D108 после D114 (P6.12)
+c5d9490b5013f9db5cc3cdb2d432536ca57315c3	docs(plan): закрыть D114 P6.11 (DUAL-PROVIDER)
+fef7bd1bafc6e97750d2a5f8d3e1e9bc5a5351ea	fix(maind): использовать D108 MCP identity из конфига (P6.11)
+37d960d19d9e3e47371efce34e4abc379b26b311	docs(plan): заблокировать P6.12 по RED D108
+f41730e16926f289a65a33d795397ad605d952e1	test(maind): зафиксировать RED conformance D108 (P6.12)
+279f1a54f81ee5369143f0628b8fe79c842b2cdc	fix(plan): исправить handoff P6.11
+370d75c48d04f6d786d698019399f14529c59a44	docs(plan): закрыть D112 P6.11 (DUAL-PROVIDER)
+d2be3487557c91a3b830db252f2d3ba88a7e90e5	fix(maind): исправить D112 D108 preflight (P6.11)
+01f90e8afe1c2c19eccdd3fd30ba28446b48edf9	docs(plan): переоткрыть P6.11 по D112
+e601e171b7d87e6f19ce973facc8b2d35e34ea45	docs(plan): заблокировать P6.12 по RED reader
+261da27a77f2ae2d94cf8e31bcdcee924950fc2e	test(maind): зафиксировать RED conformance D108 (P6.12)
+d1a7c6eaa7d2871afcd21e4bf7fb19364d0b8ec3	docs(plan): закрыть P6.11 D108 carrier
+8618034ed0fe71dd66199aa2c098dad95624f6e0	feat(maind): спланировать D108 project carrier (P6.11)
+16f4fde641a146369d152a128a41e57183f07d69	docs(plan): закрыть P2.7 (DUAL-PROVIDER)
+b39229cc623dc004e91878753add534c20f067de	fix(core): запечатать D110 chained transfer (P2.7)
+99fc010b8926e021b9675e1399b905a9410b1411	feat(core): добавить D108 chained transfer (P2.7)
+badaf43669b201304e543e0b008d53d5c5acc745	docs(plan): исправить carriers P2.7
+e576ba88d24b9669fe7ea67894cb90a91e4da8e4	docs(plan): оформить owner gate P7.2
+f8bccaf01d550353e5009a784f62811f1fdf3623	docs(plan): закрыть P6.10 D106 proof
+2bc3a56e0ce37f939f4e3fe6c270d77bdaff7a7b	docs(maind): дополнить D106 matrix (P6.10)
+432cfd9730fd00b4be8965dd051508f4a006dd64	docs(maind): доказать D106 split verdict (P6.10)
+6c5d72b4d90d8d78ccc9b4b3db28e90ceb38a9bb	docs(plan): закрыть P6.9 D106 preflight
+89bd4afef0b4771040472eb612b6243ed5ac0b2c	docs(maind): дополнить D104 conformance (P6.9)
+5e372d4e6763dac174698619357db54315abe22a	fix(maind): закрыть D104 отказ до конфигурации (P6.9)
+0b1bff8aa285c2d24fc0060e87c141d6447cfa65	fix(maind): предусматривать D104 до записи (P6.9)
+439968d61c02112933ff4234780fb7cd490fd1bc	docs(plan): закрыть P6.8 с admission deviation
+f18fbd4bd05cb042a20f56360986bd3483d92a37	test(maind): зафиксировать admission evidence (P6.8)
+f29653a7e9eb5dd342c0780a1d797cebfc2192fb	docs(plan): закрыть P6.7 и передать P6.8
+19303e4f0dd29991a9364a35244bb1934792bff4	feat(maind): добавить D104 bootstrap transfer (P6.7)
+2e677ff543cd5e7dfdb0ab425962c517f812f758	docs(plan): закрыть P5.8 и передать P5 audit
+1402873d03dd6530cae5f2966282e34ee059cee8	feat(harness): добавить D104 lifecycle fragment (P5.8)
+5dcf5d2dce467fa58f00049a77f0f70249050881	docs(plan): закрыть D105 P2.6 bookkeeping
+294157ec354148c8a954b758bface0fd547e9437	fix(core): запечатать dispatch bootstrap-transfer (P2.6)
+5fd7ea18f90af2e9cb9d0a583407f6a6f1e9c0c7	docs(plan): close D104 P2.6 bookkeeping
+bff7095331f3b2adf3d547d400a6ba37ee257e50	feat(core): D104 bootstrap-transfer admission (P2.6)
+0141600a102370b90ecdca9a1ea9df5543b5be7a	chore(plan): закрыть P7.1 capability manifest
+d68ec94d1cd644c90a0b683f4898cd08efdef00a	docs(provider): зафиксировать conformance P7.1
+4177967cc363e6160c5fc42164e663f3addd7a15	feat(provider): внедрить capability manifest и docs (P7.1)
+6805ca261bcfc14a3967c9dedf069c7948fa6bbd	test(maind): синхронизировать bare maind baseline (P7.1)
+c9265ebf71a34d859d2bd0c26a20dbe8f5985196	docs(plan): зафиксировать D98 remediation P7.1
+729c503f360ce2cec1a1451935cb51455cfb3fdd	docs(plan): эскалировать P7.1 docs generator
+94a590824ed83ba588108a3a983d5f842301c981	docs(plan): продолжить P7.1 без возврата к P6.2
+8f9485294c9da32095b185a9d1c81e335f9cbe84	docs(plan): зафиксировать блокировку P7.1 preflight
+28d04d7dc50c1426b4337800afbb192e641b529e	docs(plan): reclose P6.2 strict health repair
+57fccc1b48a925b0d019b5d483a57e6b4db0821a	fix(maind): fail closed strict health on provider trust (P6.2)
+ae8586fa553122c182afb7267c638cefb3f94237	docs(plan): correct P6.6 checkpoint carriers
+e3e8266e34a761d46fdaa15e9feea4f7aee7ff52	docs(plan): finalize P6.6 checkpoint bookkeeping
+bb8c5b199464fdb4989d902f080cdabdb864dcf3	docs(plan): correct P6.6 checkpoint evidence
+0bfd12b8601ffb7f977a339609e6598853a1fca1	docs(plan): close P6.6 bookkeeping
+84b2db3ae7b7e8d93c2a2863876ea1e0e1648102	docs(plan): add P6.6 cold restart evidence
+5ed9d26e6afb508760e6d5b6442808240ead0d77	chore(plan): закрыть P6.5 checkpoint
+35924d427b6bcb7ca31effda744c441359c6984e	test(plan): зафиксировать P6.5 checkpoint evidence
+b7373334aa1e56f44cfe89cf04e1ce5e6397d232	docs(plan): зафиксировать ремонт изоляции P6.2
+884e146b1670fc08431fbc412cb26092a6d0fff6	fix(maind): изолировать явный scope recall (P6.2)
+317f1b3831a64d497072a8b7488d7521560eed20	test(plan): зафиксировать memory isolation RED P6.5
+d7d80c967d9145097d33c7875db5857101190554	docs(plan): фиксирует P6.5 repair 2
+93b157bce8e63177549d782a74b338c7fff7593c	test(maind): чинит fixture P6.5
+a6fcf462a72fdc6c479b433cce209f66aa9f85dc	test(plan): зафиксировать terminal RED P6.5
+1ca0c398bf03af898313bf6f7ae128c127f84e64	docs(plan): зафиксировать P6.5 RED repair pointer
+887a714bda19f5b1e87502684264b64d54d70fb9	test(maind): закрепить P6.5 isolated conformance
+24569b4ba86386b22b1f4d7bf2d8cc50056f9b1c	fix(maind): восстановить isolated conformance (P6.5)
+36a606b8fe7344ee92a6b5f4f27105b7891ab219	test(plan): зафиксировать первый RED P6.5
+91855d6f8da92fca9b93e8524b3fda73977fe25a	chore(plan): reclose P6.4 reads repair
+e5d3e06b7b24ab2b64bb1a0bcf3aaa87ca785642	chore(plan): reclose P6.4 analytics repair
+1f467a0f978bfc9e03a9ff693610d54dab1bc40a	test(plan): correct P6.4 analytics evidence
+5fe60da8160c84194e8b5b37adf7d96244933f08	chore(plan): reopen P6.4 analytics repair
+08c5ce21d469c71a5c47bf3c427447ded4c64351	chore(plan): закрыть P6.4 analytics migration
+68b8575e9c58c2faed9f202433312721dd96018e	test(plan): зафиксировать analytics conformance (P6.4)
+2b4621edb2de9f56d63c04b6032db19477d7203c	feat(analyst): добавить capture и migrate CLI (P6.4)
+45a57c485bd3561b67ded242cf3eb3560f4e1788	feat(harness): генерировать codex capture bundle (P6.4)
+c3b4d341900a4585d2f1e82ba85cbeccc7aab829	feat(maind): читать neutral analytics (P6.4)
+fec5769a78d71978c8f4b40e9da7758fc4f62d18	feat(analyst): добавить neutral readers и migration (P6.4)
+b7548c9667ed6a7aeec01a0aa0f7b787586aea14	feat(core): добавить neutral event envelope (P6.4)
+ef21dce73c476d9382c41570ffc84adf4e8b3f29	test(core): зафиксировать analytics fixtures (P6.4)
+2b25356405bcb8e98a4df017055e939d233f85a7	chore(plan): закрыть P6.3 analytics contract
+79ad2acf51d3c513ffe50d48b10954eff7aaba54	fix(plan): уточнить stable provider ID P6.3
+5f25cdfd93041cb29b43a2a650a985d5b77f1e75	feat(plan): заморозить analytics contract (P6.3)
+a0885ceb456447af8b2925a0387726b510a1b4b8	docs(plan): закрыть P6.2 provider provisioning
+70416c97fbe0cd98899a78aad13635deb8fc9977	test(maind): ужесточить conformance-оракул (P6.2)
+2255414b07915b0da934a27472903c37f0bb6701	test(maind): расширить conformance-матрицу (P6.2)
+57f36d7bd3b2d996b8a19614943e86c9256ae7a5	test(maind): доказать provider provision conformance (P6.2)
+3443fc9f026d7feee71a453f8a174f76a3f0c540	feat(maind): провиженить инструкции через harness (P6.2)
+56605f39f9ba659bc782cd96459884d1a5dad02b	fix(maind): expose provider trust in health and doctor (P6.2)
+81660eb92b8dd65e2d957745a1232422920e6266	feat(maind): expose provider trust diagnostics (P6.2)
+691915a2a9dbe8d12f1a84e4b16d816a8b62394e	fix(maind): avoid provider context re-resolution (P6.2)
+7d9cb9043cc4799df9901dd3419e24016aeeaa5f	feat(maind): reuse provider context in sync (P6.2)
+a4987286e41ea93b768acce5ef65109b2cc1c9df	chore(plan): закрыть P6.1 supervisor GREEN
+44d7defc09558406b3bb8b5363803f39b6d311b8	fix(maind): добавить repair provider deploy (P6.1)
+17fc1cc5d62d24b549f1a92222135640f4d1ff7f	test(maind): добавить provider deploy acceptance proofs (P6.1)
+c5ed44e0fd3d90357e95cd46ccfb1d270ef14eda	fix(maind): строить provider projections в deploy CLI (P6.1)
+c5a9abb1c24a0cbb32ad366a7960e1e0eaacc957	chore(plan): reopen P6.1 supervisor acceptance repair
+939d5b3cae4257b9f5f5e6b31f20f6367183ae01	fix(maind): применить provider deploy в facade (P6.1)
+e3beaf971fe401c0efa64636543779e0a0aedd01	chore(plan): закрыть D88 repair P6.1
+99f1852312be2e5f03922a32cad6501b224646bf	test(maind): покрыть inventory и provider refusal (P6.1)
+e958d2328fb0a70343042ee0dfb72382643e60f9	fix(maind): загрузить P5 MCP API для conformance CLI (P6.1)
+055ac2d7e7c745d751f0ffa39dc1649a2e5868ff	feat(maind): добавить P2 provider deploy check и repair (P6.1)
+9eeb2e367db3e3a8158e11ac546dc5537f7071e7	feat(maind): резолвить provider deploy и генерировать отчёт (P6.1)
+6f098c55aa85239cc097c7475b2f6ed71979a124	chore(plan): reopen P6.1 first-RED repair
+d47795a85f4edeb2e7ad73c9b83ee10c0e09a56a	fix(maind): хранить provider deploy state (P6.1)
+2155bbcf5fa7038657567812e9e71c189216679c	chore(plan): уточнить P6.1 retry evidence
+ffabecad25fd2093d625b0caf0a7c08aaee98391	chore(plan): закрыть P6.1 provider deploy
+34b33fe9693fe0e088c0d846c0a6ad16ee76fd2c	feat(maind): завершить provider deploy seam P6.1
+17b49fe22ada5f3c99991415ad978815cf73038a	feat(maind): добавить provider deploy plan P6.1
+71b9c4be6407447ef5b3504092db4f9ba7f93d39	fix(plan): возобновить P6.1 MCP projection
+badd278a01db8b36001faa3fabcb326f89f7cc30	chore(plan): эскалировать P6.1 MCP contract
+d5a33df6694507041c41074d54dd8bc94fa5c8c2	fix(harness): исправить P2 identity агентов P5.4
+bffd137c1d8577ba54812d0e363b99ea66ee4a43	feat(harness): добавить instruction projections (P5.7)
+da056700008fbd185dc136cc16f142f9b2b11f13	docs(plan): запечатать instruction contract (P5.6)
+722d4825254b40cec52bdb6043403a242d116607	fix(harness): уточнить Codex unsupported consumers (P5.5)
+4ed956138bae38e31e3bbf9c6b05e3928603edb8	fix(harness): закрыть conformance P5.5 attempt 4
+2f676c79dd188ec3e95d21ac0ca10a0573623a88	fix(harness): восстановить evidence conformance P5.5
+d9305a8ea3fe809176cbe2bfb4c826ed24ec1c50	fix(harness): repair P5.5 conformance acceptance
+ff78490676a623dca8dc0d29ca9d8e5c341c04de	feat(harness): conformance provider audit (P5.5)
+9e401c703e95490e3987142436f072279d17dd70	feat(harness): нативные lifecycle hooks P5.3
+1f69f7e0664a4ee54fae138042c98f3a33d4e15f	feat(harness): common profiles и provider projections (P5.2)
+8192ef4bf79987c8c1d389d35f34b3e7b566c57a	feat(harness): запечатать provider contract (P5.1)
+6627f8a7d5837c8aa9cdaf94371011d2f3bcb4b3	docs(plan): зафиксировать hash P4.5
+82892b0d06b95e73412a9ee77a0c2bffd48649f1	feat(task): доказать provider command parity (P4.5)
+1780d825bdc8a0126256d87798f63244bead8a7e	chore(plan): записать коммит P4.4
+bafa54d39648f8f96c0f2cabb5f3ca77619dc6bf	docs(plan): зафиксировать hash P4.3
+4162100c0a74b2720c301e04ae2014404e72e1cb	feat(task): сохранить Claude command parity (P4.3)
+5408e3e0d171a4b8927ae22df22b03d4c883460e	docs(plan): зафиксировать хеш P4.2
+4869813ec2f5d0bd84200ebb91c3a3d229e42f8d	feat(task): добавить Codex adapters команд (P4.2)
+34eb2368a24588ff6da0e06fbc79a5b95c227813	docs(plan): зафиксировать hash P4.1
+a83289807585bf11a50689dd7854fc01c9e2a6c3	docs(plan): запечатать routing команд (P4.1)
+bcd353cb91cf812ceeb6aabead2c60580bf574f9	docs(plan): повторить P3.5 parity (P3.5)
+119dd7b3bba0ed51aadcfb5655332236844ef2d0	docs(plan): close P3.3 cache repair
+4bd66bf9cd598994c328a46dd02bf9a53eb00323	docs(plan): reopen P3.3 for registry cache repair
+f72432741992b9d71b7f389cf0154f2ae825a27d	docs(plan): закрыть P3.5 parity (P3.5)
+1e19d4783318e8f48b372df0bfa90c1cc40e7fb4	test(skiller): доказать publication parity (P3.5)
+c96af82a55e2449026e0cabcc3b3092e2075f07f	docs(plan): close P3.4 bundled remediation
+d5dddf2d5a45e1f56a45dcdda4e5e1ae8636b3f9	docs(plan): close P3.4 ownership remediation
+c27f679b59ed8d39849e7b3491dc39e19f88fb7a	docs(changelog): record provider sync refusal (P3.4)
+c36733576d151bcf3442d6debe4f3c2949eba4ca	fix(skiller): fail closed before provider sync writes (P3.4)
+20af9f6773623b7f27830f8d7746f49b75de1e49	docs(plan): reopen P3.4 for ownership repair (D78)
+08835ef8f659cab8ea40c6c86b93b3df2002f81a	docs(plan): закрыть provider distribution (P3.4)
+1d739632c086c65534b6d390eb6700bdd8728bec	feat(skiller): providerize distribution flows (P3.4)
+8b12112eb142c1bc9bd304ab6af778eeb34d1804	docs(plan): закрыть Codex publication adapter (P3.3)
+302a5f0aa836cd2fbf9b3d9df592e349cbfefccc	feat(skiller): добавить Codex publication adapter (P3.3)
+5983da504d348f4ad2d804c6c5ae326120e0fb5a	docs(plan): закрыть Claude publication adapter (P3.2)
+28dc93e37946eeec4578bbc5c7831e4a0f0015e6	feat(skiller): выделить Claude publication catalog (P3.2)
+b79f9aeeb1561899f763e47fa40d1da5bc728868	chore(plan): закрыть контракт публикации навыков (P3.1)
+2b5fbbe36232e1566eb0d78d7a1cf47a62656ee9	docs(plan): заморозить контракт публикации навыков (P3.1)
+1e04ba33c1b1a3709259732c5f5584fed1581fb4	docs(plan): закрыть P2.5 conformance (P2.5)
+5db342e0333477ca13024dd4509d755f346d0b59	fix(core): закрыть P2 contract-safety gaps (P2.5)
+b005605d083c635d357591186cc6b8b55729ec3c	docs(plan): закрыть P2.4 conformance (P2.4)
+3a0fd3428b2588e51d54343b83ba6b7dc1b00b0c	docs(plan): заякорить P2 conformance evidence (P2.4)
+56c579f90570db23f520e9a9451a56850bd33fc5	feat(core): добавить P2 conformance projections (P2.4)
+80cbf81423f038515da3ab00fe3ccd417522926c	docs(plan): закрыть P2.3 adapter registry
+35105f1f3b9f4adfd3dee2fb661ab14f4be65ef0	feat(core): добавить capability-aware adapter catalog (P2.3)
+b0117686f6901c0c1e0085aec4564706530ddad3	docs(plan): закрыть P2.2 artifact lock
+7035a63879af7ac1841dd7624436b2ae1b82fcfd	feat(core): добавить fail-closed artifact lock (P2.2)
+2e542eb2900c24912979ff84b9f26f73614487d7	docs(plan): закрыть P2.1 artifact kernel
+0dfdcd6e6f6fa2e022a957eaff4becfea232bf0c	feat(core): добавить deterministic artifact kernel (P2.1)
+bf4997cb3c3b956f979ae490e474929211717e81	docs(plan): закрыть ownership P1 projections (P1.6)
+8cb4a5ab178e992f996dbd408a1fc2f2cf489203	docs(plan): верифицировать P1 projections (P1.6)
+34d628a7b50013becb1afdb3a3c9d3e0665c31f0	docs(plan): закрыть synthetic G02 evidence (P1.5)
+7637cadbf95da711e35861be771205abe448427c	test(provider): зафиксировать synthetic G02 proof (P1.5)
+3c7543e024a9663139765c3d9e7b5ae9824d9200	fix(plan): зафиксировать процессное отклонение P1.4
+6ef9027eed911b068189867ec4bf6e774e464fa9	docs(plan): закрыть P1.4 (P1.4)
+58a6f5d202a15e164849b1dc901e98924da8c480	test(provider): зафиксировать совместимость конфигов (P1.4)
+cd4fdb9b8ebc0eb079992fda8e37e9e6074c7f46	docs(plan): зафиксировать P1.3 review fix
+061a2cb822812c30ea5ab1855a4aebef066c2308	fix(provider): обработать отсутствующий fleet override (P1.3)
+1f8b3b0aa64774a2678e6aa5fe7d18db8b68c850	docs(plan): закрыть P1.3 (P1.3)
+8f377e109041a391235d40be9bec73ad6f4d7f89	feat(provider): добавить resolver и carrier adapters (P1.3)
+5bea967d7e61ed19a5f32d041a3ce0c4158c330a	docs(plan): закрыть P1.2 (P1.2)
+57b9b2e96f1e56dc06ba4841586e6e4958ac91a8	feat(core): добавить immutable provider domain (P1.2)
+9fb9f1412c6b9dd195831212d16b63aa06f29029	fix(plan): убрать whitespace из review P1.2
+1e9fa8de0768423316e8e5e8e8ddf728193207e6	docs(plan): предложить shared-core API P1.2
+c68defce78111cf655ab0394768e06b8594fd330	fix(plan): исправить ложный routing block P1.2
+c09f8764d8eaf823395fd88d4e4e7ecaa96a7547	chore(plan): зафиксировать routing block P1.2
+ee08addde5e99ef159957e0d0597aaa34cda8818	docs(plan): закрыть P1.1 и открыть P1.2
+23250271c6fa224f3b8758ed4d0de38a3acd74ed	chore(plan): зафиксировать P0.7 review reconciliation
+daab68188d5f93850167710103ea91fffe121fce	chore(plan): закрыть P0.7 bookkeeping
+1c1184c595aa4ee5027738b71166b1b7313d34fb	fix(plan): запечатать D65 reconciliation (P0.7)
+9dcb46be59f99936ae98272327f136138fc60363	docs(plan): спроектировать P0.7 ATTENTION fix-forward
+cc7f5341045b2709fdd1251cc1f5f37ebd7e3fee	docs(plan): закрыть P0.6 после D65-A
+d77a7a4cd77f2c13f7e0a570904917c9418a5fc4	docs(plan): сверить final evidence P0.6
+c924fcb2c6ca023dfb7f168c5718ea7fc2fdb443	fix(plan): герметизировать anchors P0.6 evidence
+54629e7202cdbba84493d2545c0cf6572fee79f4	docs(plan): повторно закрыть P0.4 после D60
+df100a2250128ed7775f89c5d4bce292e7ed817d	fix(plan): исправить validation P0.4 migration gates
+69e84610aa7e3b878a514de560698b599b4e3f71	chore(plan): закрыть P0.4 migration gates
+3eb6aa2c8f91c2057f65e99ec596dd11ee15421f	docs(provider): заморозить migration gates (P0.4)
+a826c489eafc9f1ac5ef5dd10a9d841ff30c3118	docs(plan): закрыть provider contracts P0.3
+67b0edb4fbd4ff94c6376c136118b8e2dbb5dacd	docs(plan): заморозить provider contracts (P0.3)
+731ad8b4d3ac06347fec1abadbdd3714251288b7	docs(plan): закрыть vocabulary freeze P0.2
+66036471d98498006747ced356435cf53f747671	docs(plan): утвердить provider vocabulary (P0.2)
+566719e2602b2571726c91e72d5f71cec99c441d	docs(plan): закрыть correction carrier P0.5
+56239e92dfaa3aa7ec51e15727e94783f14c9370	feat(plan): исправить command-surface inventory (P0.5)
+d8ac22c04fc4d4219dc95244ee9d181e92553a74	docs(plan): закрыть P0.1 inventory
+f4d230e6e83aac56ab7fe82a085b7bb18d59d6de	feat(plan): зафиксировать inventory провайдеров (P0.1)
+9844f499797faf063aede49b79703c71f7ef666e	docs(plan): FOREMAN P1.4 in progress, journal backfill; TOKEN-ECON paused
+c85702af4d3792da40a6b4dad42d14a3ffa50e29	docs(plan): P1.3 закрыт 🟢 — журнал исполнения интегрирован в close-протокол (2026.07.18-FOREMAN)
+94eada83735e024b243ac1d19a56adcc7eedb508	feat(task): интеграция записи журнала в close-протокол plan-* (P1.3)
+2cf26e8535a5b36623de003d2a764a470da7ab11	fix(task,skiller): Tier policy §9 + гранулярность Routing — блочный тир фазы over-provision'ил fable на разнородные items
+baa194c23519cf3513fb99db8cfaebbb12d856bb	fix(maind): признать memory.digest валидным ключом схемы конфига
+6a60e5f32bfbfbc9af869dceffa8a62224883982	docs(plan): P5.3 закрыт 🟢 — verify-only i18n-keep-гейт (2026.07.15-PLANFLOW-UX)
+346a90c33ebe1a0f81f483d5f43b676a46d73d8e	docs(plan): P5.2 закрыт 🟢 — §6 carve-out производных артефактов (2026.07.15-PLANFLOW-UX)
+439120b98f85aec3d75d902206ec8394efbda233	docs(plan-protocol): carve-out §6 для детерминированных производных артефактов (P5.2)
+7eaf75bbcd71e79e935e045c2f2caad54d0e25e0	docs(plan): реальный хеш bookkeeping-коммита P5.1 (плейсхолдер <BK> → 2deb44d)
+2deb44de0736d5f7994989ee42a95c920538e9dd	docs(plan): P5.1 закрыт 🟢 — RECOVERY-дисциплина клинча (2026.07.15-PLANFLOW-UX)
+d9225f54ba92c1c3a6d753215207cb653b661209	docs(plan-protocol): подраздел «RECOVERY при клинче» в §7 + зеркало plan-design (P5.1)
+0f1c10ed143d24bec774e3362c5ae1eec639c9ee	docs(plan): фаза P4 закрыта (2026.07.15-PLANFLOW-UX)
+5a6b12a68805ab4cf2ae90ff0951c25aeb55e5a2	docs(plan): P4.3 закрыт 🟠, фаза P4 терминальна — адаптивная глубина ревью (2026.07.15-PLANFLOW-UX)
+51e8a7d9bfaf4909005204ed82fc9d26c53e4f17	chore(plan-protocol): регенерённые skills.json/budget.md (P4.3)
+7f155fadd02672a6aeec0e4cacc190e0a9c01fe5	docs(plan-protocol): подраздел «Адаптивная глубина ревью» — наполнение enum Review (P4.3)
+7f29fa946524446377e523fbd50f2f8e81768206	docs(plan): P4.2 закрыт 🟠 — §3 Routing +Batch/Review + батчинг (2026.07.15-PLANFLOW-UX)
+8a0f2f61e65608af8fffe0327faa7b01abad2e58	docs(plan-protocol): §3 Routing +Batch/Review + подраздел «Батчинг подфаз» (P4.2)
+c05d0ac7dce6580164117f61763d57921c65ac76	docs(plan): P4.1 закрыт 🟠 — contract-first в plan-protocol (2026.07.15-PLANFLOW-UX)
+5b0bf0e4b97db454f6593d489befd37ac8165789	docs(plan-protocol): contract-first дизайн-флоу в канон + plan-design + phase-template (P4.1)
+82e70fbb3ac769e891eedce2be572c59d326a4b2	docs(plan): P3.5 закрыт 🟢 — P3 терминальна, bookkeeping (2026.07.15-PLANFLOW-UX)
+42965f872fad39602df74d7d8af57156fd946bd8	docs(plan): P3.5 budget-квантификация доставки workflow-craft + рекомендация канала (OQ-3)
+2173b27f0cc6aef1da717dd6a1975859e8c8685a	docs(plan): P3.4 закрыт 🟠 — bookkeeping (2026.07.15-PLANFLOW-UX)
+0636c2839cfa262c4567882ae0682d2fddf7b3ba	fix(harness): embed-or-guard SLICES в 5 dev-loop.js (P3.4)
+c0822069f053a06a21490599dafd54d4046e79fb	docs(plan): P3.3 закрыт 🟢 — bookkeeping (2026.07.15-PLANFLOW-UX)
+337f0248b4fca3aed70c0be8546feadb69b3ab17	fix(task): dev-loop.js exempt в plan-lint workflow-скрипт-чеке (P3.3)
+878e87b2646e86ec29aca384f9757659ff81d9d9	docs(plan): P3.2 закрыт 🟠 — bookkeeping (2026.07.15-PLANFLOW-UX)
+47ed9a31cf9622ce40c092c0072dfd7b7ba061fc	chore(skiller): регенерация registry (skills.json/budget.md) — побочный эффект P3.2
+b36db626ccc70235fa27361fe17aacbda7f8fd83	feat(workflow-craft): хардненинг 4 канон-шаблонов + эталоны §2.1 (P3.2)
+ebdd1f373e9a1e70179b8ed715543534848231c3	docs(plan): P3.1 закрыт 🟠 — bookkeeping (2026.07.15-PLANFLOW-UX)
+22440c41b86954d55e68f423d3eb39b6f322850b	fix(workflow-craft): рекалибровка ревьюера make-workflow — снять 3 ложных-RED (P3.1)
+c23171f9992e2926ed3fb1678ee9c64efb9ebb0b	chore(skiller): регенерация registry (skills.json/budget.md)
+2aa68ea73b2795d70337b16bdd29c6073b76ce77	docs(planflow-ux): P2.2 закрыт 🟢, фаза P2 терминальна 🟠 — bookkeeping + handoff
+5fddb52ba681e94254de18021be8539d58da5432	feat(plan-protocol): дисциплина «ошибка при exec → сразу фикс-предложение» (P2.2)
+895e64f27604a926f3ba05ec0e42dd3f146a9ffa	docs(planflow-ux): P2.1 закрыт 🟠 — bookkeeping + handoff + подхват untracked plan-файлов (F1)
+13daef6eaf3a871f1e215699f199dbf3b72fa117	feat(plan-protocol): 9-я форма Next «ОЖИДАНИЕ» + lint-детект прозы-оговорки + миграция SKM-MASTER-002 (P2.1)
+e5a33be5a46c77fff30349fd11144d2a5f849923	docs(planflow-ux): P1.1 закрыт 🟢, фаза P1 терминальна — bookkeeping + handoff
+0ad2b340a70b6740bfbdad77e56904d5bda38675	docs(planflow-ux): P1.1 recon-доказбаза — 2×2 workflow + клинч + handoff-конформанс + скилл-критика
+14b2180f29ae1412792cdca82e39e188493c9178	docs(plan): P6.1 закрыт — инвентарь MCP-поверхности 22 проектов (2026.07.15-TOKEN-ECON-P6)
+e265153073ffadef76c2bf58a54ef6123b1f3571	feat(skiller): guidance-правка mcp-advisor — прополка резидентного MCP (P6.1)
+7e3120cd46ad33bcf73e0f5a17bd614fcf1b4f1d	docs(plan): план 2026.07.15-TELEMETRY-OPT закрыт целиком (все фазы терминальны, plan-lint 0/0)
+98be47f92f4d0b8b5fb6fd9a29da6d68bc69f382	docs(plan): P5.3 закрыт, фаза P5 терминальна — bookkeeping (Status Board 3/3🟢, Phase Handoff, handoff, plan-lint 0/0) (2026.07.15-TELEMETRY-OPT)
+39ff401ed15d9987b7dc2e2bf6ffc02a17c47f18	docs(plan): P5.3 — ROI-backlog рычагов токен-экономии (синтез P5.1∥P5.2) (P5.3)
+b040ca843c78654fa3c4dde0b3ee5a4cbde454c1	docs(plan): P5.2 закрыт — bookkeeping (Status Board, Completion Notes, handoff, plan-lint 0/0) (2026.07.15-TELEMETRY-OPT)
+77829c4b7f096dd43da094c91d43913d6bc6d60c	docs(plan): P5.2 — внешний RAG-развед токен-экономии 2026: 8 кандидатов (2 adopt-кандидата C4/C5, 2 skip → rejected-optimizations) (P5.2)
+ebff5f2b5b1f221609d7202d7ea5da7ff53c436d	docs(plan): P5.1 закрыт — bookkeeping (Status Board, handoff, plan-lint 0/0) (2026.07.15-TELEMETRY-OPT)
+464d80a2404689be3692e28bb26d84df873eefb6	docs(plan): P5.1 — внутренний аудит always-on бюджета: 5 проектов, MCP/CLAUDE.md/skill-desc кандидаты (2026.07.15-TELEMETRY-OPT)
+31f700ccbf6d7a00242bf6b1f4f974b292446067	docs(plan): P4.2 закрыт, фаза P4 терминальна — DENY-дисциплина в anti-drift, OQ-5 уточнён (2026.07.15-TELEMETRY-OPT)
+dd7b55386ced160a72c78a76d420c7f329383809	feat(skiller): DENY-циркуит-брейкер в anti-drift — не retry denied-форму verbatim (P4.2)
+51508bf945970e8b22857c092287802678bb0fde	docs(plan): P4.1 закрыт — bookkeeping (Status Board, handoff, D10-уточнение) (2026.07.15-TELEMETRY-OPT)
+db0a1b2a4432d69c78ec6e33ba9090beef9f7329	feat(plan): P4.1 — инвентаризация DENY-фрикции: 98 policy-shaped denies (Bash 75 + Read 23), бакеты a=16/b=46/c=36 (2026.07.15-TELEMETRY-OPT)
+55e4d1aad429d0ab3feb9fb37424b5a717d6c737	docs(plan): P3.2 закрыт — фаза P3 терминальна (2/2 🟢); D9, OQ-4, handoff (2026.07.15-TELEMETRY-OPT)
+cafaa139e8bcf6427cfe8069607fde3de874792c	feat(task): P3.2 — dev/make-workflow пины Opus→Sonnet/high + политик-док model-routing (2026.07.15-TELEMETRY-OPT)
+6f7d30812cf4179292ed998ff6db2e04976e6662	docs(plan): P3.1 закрыт — bookkeeping (2026.07.15-TELEMETRY-OPT)
+cbdb47b2379b7acfc1a2bad0bb0607c98138d99a	docs(plan): P3.1 — аудит 7 Opus-пинов task-команд (keep×4 / downgrade-cand×2 / needs-Owner×1) (2026.07.15-TELEMETRY-OPT)
+5ae6488073c798bb2fd8e570ea493f655b2ee3e5	docs(plan): P2.2 закрыт — фаза P2 терминальна (2026.07.15-TELEMETRY-OPT)
+54eb431406aa16483e5804ebac82da398f5bc8c1	feat(skiller): файловая гигиена операций в anti-drift (read-before-edit/якорь/анти-reread) (P2.2)
+c7612b4202435d5c0135c889c1944d727f726f31	docs(plan): P2.1 закрыт — bookkeeping (2026.07.15-TELEMETRY-OPT)
+f173c0b9e6f590273e4208ac19a26d38c48ad276	docs(plan): инвентаризация churn файл-операций — reread доминирует над edit-fail (P2.1)
+903ef2e3af3566c229b8f0178d2681eccaa25b26	docs(plan): P1.3 закрыт, фаза P1 терминальна (2026.07.15-TELEMETRY-OPT)
+1e100a24f5492714222ca1b954e43897aa0812a0	feat(analyst,skiller): сигнал workflow_relaunch в digest + анти-релонч-дисциплина (P1.3)
+bf983aaf72f10d661e1d5038fdbb9477caf6e3ee	docs(plan): P1.2 закрыт — bookkeeping (2026.07.15-TELEMETRY-OPT)
+c612e980bfad16bc6b0acbf65adab9d4d9543e6c	feat(harness): детектор workflow_relaunch в run-report hook (P1.2)
+77e0e55fc9bd395d58a4e41d730a0eb685e3fff7	docs(plan): P1.1 закрыт — bookkeeping (2026.07.15-TELEMETRY-OPT)
+85ee6a19d587659fe4635a351230dfbb0b223e77	docs(plan): recon корневой причины 15× dterema-релонча (P1.1)
+fa3838b0de441f8e3efb1b7663f9a4e2efdefd1f	docs(plan-protocol-gap): OQ-1 закрыт D58 — soft-пункт Validation запрещён (plan-protocol 2.8.0)
+7cb7d7352aa2b2dc338f9c17fed28c31cb0308d2	docs(plan-protocol-gap): P4.3 закрыт 🟢, фаза P4 терминальна — CHANGELOG/доки/провенанс (46713a4)
+46713a4901520be4cc70d2803770c23e44366139	docs: кластер protocol-gap — CHANGELOG, plan-structure, провенанс (P4.3)
+d3ed6938cf9439010cc4dc449196bdd91e585812	docs(plan-protocol-gap): P4.2 закрыт 🟢 — эскалация REGHUB снята + скелет P3 (78→0)
+13042083448713eb8c11d74a173943ec7a7df6db	docs(plan-protocol-gap): P4.1 закрыт 🟢 — bookkeeping + handoff (next P4.2, opus/high manual)
+4922ddcab18020f88711af55136fe64c7b40e0d6	test(task): регресс plan-lint по 10 корням plans/ — 0 новых ERROR (P4.1)
+591b70c6c65e8313f7a7ddd599e530bd52d4fbcb	docs(plan-protocol-gap): аудит P3 заход 2+3 (🟠 ATTENTION, AUDIT-CAP) + детализация P4
+f21d951fffd4eaefab3fbc6e9e219d0b0da8c9fd	docs(plan-protocol-gap): handoff Next — сужённый аудит P3 (семантика реопен-волны)
+311a7c0ea7fbc227ce74903d8d83bf5e1a17ecd5	docs(plan-protocol-gap): P3.11 закрыт 🟢 + фаза P3 закрыта 🟠 — реопен снят
+99ad792746a3c4d9de95a77eb9ef8db287f05f55	feat(plan-protocol): скилл 2.7.0 — EN-канон реопена + сквозная сверка 46/46 (P3.11)
+4e2f9b5ee2a9c1dccfff7e23f51a860b910c10ac	docs(plan-protocol-gap): P3.10 закрыт 🟢 — bookkeeping + handoff (next P3.11, opus/high manual)
+be3b636787c962142b8ec55cbf89ed69675b00f0	fix(plan-protocol): plan-exec — обязанность §11 Contracts (P3.10)
+ec757e60fd974da5e76a9cc1eba651ca65e034cf	docs(plan-protocol-gap): P3.9 закрыт 🟢 — bookkeeping + handoff (next P3.10, sonnet/medium, plan-exec)
+4d9252dad97b4b848e455fc5f85b14c52e66c95a	fix(plan-protocol): plan-close — адресат Update Log, шаг коммита фазы, status-rule, механический агрегат (P3.9)
+526b39048de1b94000d97b9c9a0ef879624d522a	docs(plan-protocol-gap): P3.8 закрыт 🟢 — bookkeeping + handoff (next P3.9, opus/high manual)
+d9ab955be699e24708235664154c441f5ecfc199	fix(plan-protocol): правила, исполнимые собственным линтером — J3/A4/J8 + следы D40/D37/дельта (P3.8)
+bb33af7c7d06790b6ac294d3487538e12cf00a36	docs(plan-protocol-gap): P3.7 закрыт 🟢 — bookkeeping + handoff (next P3.8, opus/high manual)
+e08a7fed9e573732b424cb6835d4a9fb08d1f227	fix(task): гейт «Phase Handoff протух» судит субъект утверждения, не слово (P3.7)
+4bf6c1fbb7e3e6c32063c39214460604f246293e	docs(plan-protocol-gap): реопен фазы P3 (D48) — ТЗ P3.7–P3.11, D48–D56, findings, open-questions
+8f0e2bc16f1ae05f224a9079ff21f8194a1f3919	docs(plan-protocol-gap): P3.6 закрыт 🟢 — bookkeeping + handoff (все items P3 терминальны, next plan-close P3)
+eea2a9a73bda696079658bfdcfc24894550af3d6	feat(skill): plan-protocol 2.6.0 — /task:plan-run в §13 + сквозная сверка команд (P3.6)
+7c96ce2ea7d4c5bbd1f817dd21731daf085b23b5	docs(plan-protocol-gap): P3.5 закрыт 🟠 — bookkeeping + handoff (next P3.6 ЗАПУСК ВРУЧНУЮ opus/high)
+b4146eba2118bf1bdf52ec17a177f56dccfa68fa	feat(task): plan-run — исполнение item'а под моделью сессии (D18, P3.5)
+36adcfe6d4c719c3c5cce7d4a158f9bb85a2ee8d	docs(plan-protocol-gap): P3.4 закрыт 🟢 — bookkeeping + handoff (next P3.5 plan-run)
+c95caed8db28b99c486474b64860887dfdb8799d	feat(task): plan-design — канон-Routing с Exec, полный скелет, реопен-протокол, Contracts (P3.4)
+18fa65ab995e12aeba731717e07ce5b5c25e33fd	docs(plan-protocol-gap): P3.3 закрыт 🟢 — bookkeeping + handoff (D46: ТЗ синхронизировано с PROMOTE аудита №4)
+f4ce8c9f3189d9ce787aa730d9a859f8cdef4c41	feat(task): plan-audit — правила остановки (scope/severity/потолок раундов) + чеклист 2.5.0 (D44/A5/m7/B1, P3.3)
+39441c03de5d21334a6ec639e6de4fecad73ed82	docs(plan-protocol-gap): P3.2 закрыт 🟢 — bookkeeping + handoff (next P3.3 ЗАПУСК ВРУЧНУЮ opus/high)
+0823cb4613a32b06f4dd060b38bd5d29e3a434b8	fix(task): plan-close — enum форм Next, заголовок after Pn, честный lint закрытия (m8/B1, P3.2)
+7c7625c28e6f8540d9c77fe56b6f3f425a512af1	docs(plan-protocol-gap): P3.1 закрыт 🟢 — bookkeeping + handoff (next P3.2 plan-close)
+4cfc10a743f160ba13f1b924569537a5e244712e	feat(task): plan-exec — routing-гейт §3 + топология двух коммитов + честный lint (F7/B1, P3.1)
+7de9841f67e63b7afb0c5060c56cee54ca9dc01e	docs(plan-protocol-gap): фаза P3 спроектирована — 6 items по канону 2.5.0, D42–D45, спека audit-loop
+8fc42495ed9cffd19a443da1b03acec496509651	docs(plan-protocol-gap): P2.13 закрыт 🟢 — bookkeeping + handoff (фаза P2 терминальна, next plan-close)
+d92ace02c09418a4f56431ce91d747e0278a6fd2	docs(plan-protocol): EN-канон 2.5.0 — топология коммита, carve-out, RAG:—, after Pn (P2.13)
+466c7c4bb937808191fdfdc0422a11a1cd427bbb	docs(plan-protocol-gap): P2.18 закрыт 🟢 — bookkeeping + handoff (next P2.13, ЗАПУСК ВРУЧНУЮ)
+39d1a43f556f8f4fba912904cc63ec51aa167638	docs(plan-protocol-gap): bookkeeping-правда — обоснование борда, числа, «посимвольно», карта коммитов (H4/H5/H6/H8/H12, P2.18)
+20bf3202e70feb30652113aabe07226c39975617	docs(plan-protocol-gap): P2.17 закрыт 🟢 — bookkeeping + handoff (next P2.18)
+ba89c624bcb6fdfb58ba31d98499e21af12764ee	fix(plan-protocol): §6 — проза топологии и якоря провенанса; гейт item-формы handoff; резолвер Next по строке-объявлению (H7/H9/H10, P2.17)
+db3da50c87bfb84b71b9af621e240bbdb80cf592	docs(plan-protocol-gap): P2.16 закрыт 🟢 — bookkeeping + handoff (next P2.17)
+34c165a24bd885407ed0e7a7289f4791cffd37ca	feat(task): реестр CANON_LITERALS + AST-гейт полноты i18n-keep (H3/H13, P2.16)
+290eec96740bb02fa95da2c264c21d2fb4808bef	docs(plan-protocol-gap): P2.15 закрыт 🟢 — bookkeeping + handoff (next P2.16)
+87022d6cee4aec35db30ccdaa7e4845844c5b9b1	feat(plan-protocol): реопен инвалидирует Phase Handoff — канон §3 + гейт линтера (H2, P2.15)
+ddfbee25bb32214ed7fed9f525264a47b5a276f3	docs(plan-protocol-gap): фикс числа в Known Deviations P2.14 по правилу якоря дерева (D36)
+20e1671d1c1bfeeea309232c45ffa93a42eb4d76	docs(plan-protocol-gap): P2.14 закрыт 🟢 — bookkeeping + handoff (next P2.15)
+7110507969533df4542f52926d80e537c967ed75	docs(plan-protocol): §8 — Context manual-item, якорь дерева чисел, Last Updated (H1/H4-H6/H12, P2.14)
+0eebe4b078e9b3db7a16d771d7d8c5e83c77a37e	docs(plan-protocol-gap): P2.12 закрыт 🟢 — bookkeeping + handoff (next P2.13)
+7bbeb76affd72aa99d40e1fb377231b67aff0c29	docs(plan-protocol-gap): bookkeeping-правда по git-фактам — G5/G6 (P2.12)
+5e6fa3660abf70b6863f41360df367fe8a161ccc	docs(plan-protocol-gap): P2.11 закрыт 🟢 — bookkeeping + handoff (next P2.12)
+4a0e6f67962838e22f1ddcfb8790c15df225f3a0	feat(skiller): гейт непереводимых литералов EN-канона + фикс --stamp (G3/G11, P2.11)
+475a094234a7ead81971e7510a006ac06fbd5b26	docs(plan-protocol-gap): P2.10 закрыт 🟢 — bookkeeping + handoff (next P2.11)
+f33a6cc14e76b8b901a1b794c316754f4d55657b	fix(plan-protocol): §7/§8 — RAG:—, заголовок handoff after Pn, Context шага-не-item (G7/G9/G10, P2.10)
+41b2049a4872ad454279ccbfa1d23b7f2b95db9d	docs(plan-protocol-gap): P2.9 закрыт 🟢 — bookkeeping + handoff (next P2.10)
+270d460c039acb99b8868ae8351182b40118d712	docs(plan-protocol-gap): реопен №2 фазы P2 — D26–D31 + ТЗ P2.9–P2.13 (дифф plan-design)
+3f70d2c92082640a4cd5fb643cee1a19d0e816cd	fix(plan-protocol): §6/§8 — одна топология item-коммита + carve-out плановых путей (G1/G2, P2.9)
+620ef0d772eb464609a8f64a831dfadaba078569	docs(plan-protocol-gap): P2.8 закрыт 🟢 — все items P2 терминальны, next plan-close P2
+bef52c734f0348f4d9d230bbd590dae05747cc84	docs(plan-protocol): EN-канон 2.4.0 — коммит-гигиена + носитель развилок (регенерация из RU, P2.8)
+6501ea8a8731e12e47320d47493856e35945d299	docs(plan-protocol-gap): handoff — after P2.7, next P2.8
+4cb9b77eb655515bf66d73f9101c23bcdc768cf7	docs(plan-protocol-gap): ремедиация аудита P2 — P2.4 🟠, статусы развилок, F4 (P2.7)
+d17ad8cc89be24f589ab7f7961f8f1eb04094c50	docs(plan-protocol): §3/§4 — секция Обсуждение как носитель развилок, open-questions как трекер (F3, P2.6)
+9f3ec282c88aa4cb6264df37411fb0363c5948c3	docs(plan-protocol-gap): handoff — реальный хеш коммита P2.5 вместо плейсхолдера
+4a4af60ee7d2fd0bfe9c8bdb36962baf8e79c6d5	docs(plan-protocol): §6 коммит-гигиена item'а + 6-й material-триггер (F1/F2, P2.5)
+c90b5fbd5df5d1c4967896da0049034ec02faa28	docs(plan-protocol-gap): реопен P2 по RED-аудиту — D21–D25, ТЗ P2.5–P2.8 (plan-design)
+365079c9169edbda2cf6b78fb07b8b07da40094e	docs(plan-protocol): snippets + EN-канон 2.3.0 (регенерация из RU, P2.4)
+1451ed97aee8ba7f7c63cf52553b239c8286c00f	feat(plan-protocol): §7 Contracts — cross-plan notification + сверка в plan-lint (m7, P2.3)
+cd749ab7ea5c280df0f8efc68d572e430939b702	docs(plan-protocol): §6 status-rule material vs process (A5/D21, P2.2)
+fc575619ce73ab963532cabfc00f155d1c7607d9	docs(plan): D18 + item P3.5 — команда plan-run без пина модели (решение владельца)
+38954ab799b3e29e8ef9fca1491b5131391a6e40	docs(plan-protocol): §9 routing-гейт + канон-форма строки Routing (F7, P2.1)
+348c60ab89f89eba67c065d50a694d5c8c687242	docs(plan): P1.2 закрыт, фаза P1 терминальна — handoff на P2.1 (opus/high manual)
+b45cd519a24109e8b1647bb25fbc7a66182d55ae	feat(task): plan-lint --baseline — детерминированный счёт новых ошибок (B1, P1.2)
+e95bf2f61cf53921ce7d063409fdad305c1e1ce7	docs(plan): P1.1 закрыт — enum форм Next + N3-фикс archive (2026.07.13-PLAN-PROTOCOL-GAP)
+4c03715bb16420363c69c6958f8a7b1082fd1afc	fix(task): enum форм handoff.Next + честный порядок закрытия (m8/B1/N1/N2, P1.1)
+dd57d80bbb690ca6ca0c2f7cf95ff8a1fe5aae47	docs(roadmap): otel-preset — полный верифицированный список env-переменных (RAG 2026-07-12)
+36f2fe377da2be419a7cb291e756bc2f3aa410b3	chore(maind): досинк ecosystem-mcp skill в swissknifeman (флот-волна setup/ecosystem-skill)
+d2043ea0c548f0fd50c16a1e65cfcf0b88ff39e1	docs(plan): P8.4 закрыт — тег v0.9.0 в origin, план 2026.07.12-CONTEXT-ECONOMY терминален
+d93c9d129c373577f364cda0dac2276dbc8b0287	feat(plan-protocol,task): критерий Workflow-оркестрации + session-restart discipline (P8.5)
+9ce2d552a68dde56e2f8c4593bac8bcdf5dd563d	docs(plan): P8.3 закрыт — CHANGELOG-срез v0.9.0 + версии D9, handoff → P8.5
+e203afe3f361e17c324aa9fdc96a16be84e51101	docs(release): CHANGELOG-срез v0.9.0 + версии D9 (maind/skiller/harness) — P8.3
+35a0e6fe619c9a1be8fc608b0d95826bcc00b041	docs(plan): P8.2 handoff — следующий шаг P8.3 (релиз-подготовка)
+8d05003c062495a7d36021113b21a37adceaac2e	docs(P8.2): скиллы/доки синхронизированы с философией релиза context-economy
+4144dcaee39605e03b5529c33bab038c11ec6b99	docs(plan): P8.1 закрыт — доктрина budget-гейта в CLAUDE.md + память mAInd
+04476f96c39bf59ade19740f98085a0390291cb1	docs(root): доктрина бюджета always-on инжектов в CLAUDE.md (P8.1)
+61f3a189b132a70b748e0519be780a6af1c0eb69	docs(plan): P6.4 after-замер и приёмка — 0/3 критериев формально, честный разбор остатка (P6.4)
+b5d00c47a61df6a16d978f8d9987b1c74db4ff5c	docs(plan): P6.3 закрыт с отклонениями — ревизия бакетов флота (D17-эвристика)
+06cc3b5c2909e2ebb3e68b1074059e82a94722df	docs(plan): D17 — разовое исключение phase-first, форсированная workflow-оркестровка P6.3→P8.3+P8.5
+26a9274870a6e3ab2107d481172b0022606438d9	docs(plan): P6.2 handoff — Update Log укорочен под plan-lint, следующий шаг P6.3
+df3bef938c69c1f348a7aaa6376919e8cbc627c4	docs(plan): P6.2 закрыт — sync-волны на флот (router v2 + maind-хуки + packs + гигиена)
+0af700a5ad11c0672de1b7d31c974177e2963f07	chore(harness): апгрейд agent-packs role-maintainer/role-tech-lead в swissknifeman (P6.2)
+2bd282163ef31cb881a520f62ea03f57ea2e3d44	docs(plan): P6.1 handoff — next Brain-first sync-волна (P6.2)
+bd7eff8fdc0c6f8f093485fb9776d7766d83d211	docs(plan): P6.1 baseline-замер до раскатки — doctor --context + analyst sessions
+ac159d88a253e078f6d7b90e48189d7516ce43ba	docs(plan): P7.2 gate-red — plan-lint формат-фиксы (Escalation Needed, handoff header)
+9bca7835c5bf8effc4037a63633c1abf29837b44	feat(root): манифест проектов + доки развёртывания + roadmap межмашинной памяти (2026.07.12-CONTEXT-ECONOMY P7.2)
+17b98cb94cf2506bf8de499c32f967a4b06ccde5	chore(workflow): SLICES обрезан до P7.2 — P5 и P7.1 закрыты вне очереди
+a317d8478559965b72cb7f0877a795b77b5a51a5	test(skiller): P5.1 review-фикс — реальная проверка исключения path-scoped правил
+35ef80ff670c4008ae3913df00bf414f6440ff18	fix(harness): apply-permissions.sh --global --dry-run больше не пишет на диск (P7.1 gate-red)
+1a3bafef44157cd6862533d5873d8d4eee1b0f87	feat(root): bootstrap-machine.sh — развёртывание машины одной командой (2026.07.12-CONTEXT-ECONOMY P7.1)
+bd931d3c35f4021d08a627731e0c952f855e98f3	docs(plan): P5 закрыта — P5.4 Skip по D7, каталог отклонённых оптимизаций
+92706de2ca8fee2e7d41561e433f9d3af4ea2931	fix(analyst): trend-warn игнорирует несмежные ISO-недели (P5.3 gate-red)
+8595a3c5f5750ea54dc8490887d3632eb5c23a65	feat(analyst,harness): сессионная токен-аналитика — usage в run-report + analyst sessions (2026.07.12-CONTEXT-ECONOMY P5.3)
+8ad3c8b558e98a8c0164349b187a36239760e183	feat(maind): doctor --context — футпринт первого хода по флоту (2026.07.12-CONTEXT-ECONOMY P5.2)
+ca92e0908362ad19cb6843edd93ff40c290b9152	feat(skiller): budget --first-turn — замер always-on футпринта проекта (2026.07.12-CONTEXT-ECONOMY P5.1)
+bc0915520690805a6b2e86c7e8becf2ffc7b63cd	docs(plan): P8.5 — критерий Workflow-оркестрации + session-restart discipline
+25907dc69f72d7cbe5e7bb315e73a2c80e755480	chore(workflow): обрезать SLICES до остатка (P5.1→P7.2) — P1–P4 закрыты
+27aa8d56a4026e475637d93815ad5c9be3b8228a	chore(workflow): GATE_ATTEMPT 3→4 — форс-ререн gate:P4.2 после фикса handoff/маркеров
+cece125df4fd740152fa648c49a6b8ef45160c83	test(harness): cap-гейт описаний паков + .bak-warn в doctor (2026.07.12-CONTEXT-ECONOMY P4.2)
+5c6055a4ef480306046d150eb793b5cc049a0755	docs(plan): D15 — Brain первым проектом в волнах P6.2 rollout
+6f58dfe7660d0ed10d47b9310ad8bca2fa2f4bee	refactor(harness): диета описаний agent-packs, cap 600B (2026.07.12-CONTEXT-ECONOMY P4.1)
+8e63c500e111f15fddc470be5da27095b7cd45ca	feat(skiller): desc-гейт error>450/warn>300 + burn-down рэтчет (2026.07.12-CONTEXT-ECONOMY P3.2)
+af9df21f5dfd9eb109a6ee895d9badaf5a2d11b2	refactor(skiller): диета description худших скиллов (2026.07.12-CONTEXT-ECONOMY P3.1)
+b8bcb16cbbc2af6f92aae21f4bf441fddb156392	feat(harness): agent-router policy v2 — терс-EN ≤400 ток (2026.07.12-CONTEXT-ECONOMY P2.1)
+e38e1cf13019fdc2524e657634ff28bf532f8101	chore(plan): P1.3 закрыт — фаза P1 3/3, Status Board/handoff/Update Log (2026.07.12-CONTEXT-ECONOMY)
+90a3a38009a76e574ecda8de1f4cb0c9ccaf073e	docs(maind): гайдлайн межпроектной памяти — digest project-only, shared по запросу (2026.07.12-CONTEXT-ECONOMY P1.3)
+f5b10a2790a54ef1b9442fdc2b3a673479bf0e4c	fix(workflow): инвалидировать кэш gate-промпта — «свежий git-статус»
+c9b435cec750cbddf00a83141ee3bc98553fea19	feat(maind): health-хук тихий при OK, digest-шаблон v2 (2026.07.12-CONTEXT-ECONOMY P1.2)
+bd4c9735b1cb2c4dd04d99121c36179796a0affc	chore(plan): P1.1 закрыт — Status Board/handoff/Update Log (2026.07.12-CONTEXT-ECONOMY)
+97eb5b7617d33e2ed9134807420de721dd8a7a2c	feat(maind): digest-бюджет — project-only + байт-кап (2026.07.12-CONTEXT-ECONOMY P1.1)
+7cfa22c19dc80a0911131123cc671740768a5de3	chore(park): грязное дерево перед P1.1 — mcp-builder + regen-артефакты + план CONTEXT-ECONOMY
+4e3af7bdafa1851b073f7dbc62e48773b73ee08a	fix(harness): бамп версий 5 agent-packs — P6.2 менял reviewer.md без бампа
+3bae858321fa7ff95ee2560b30d638568876109e	fix(harness): settings-doctor #5 — раскрывать ~ и интерпретатор-префикс (ложные error)
+ec3096672a02df2f1fbbd6e9ce8b8077c8d1414c	docs(plan): SKM-ROADMAP-005 закрыт целиком — P6.4 → ⛔ (term-index передан в roadmap), P6 🟠, Meta 🟠, ACTIVE сброшен
+6abb6db5742a2e10ea2745daf37a56e64ad84764	docs(plan): SKM-ROADMAP-005 P7.2 — handoff перезаписан, plan-lint ERROR зафиксирован как известное отклонение (P7.2)
+d8831a15ac3012af451ef2c97014a7a11e78ea09	docs(plan): SKM-ROADMAP-005 P7.2 закрыт — сверка витрин, готовность к архивации (P7.2)
+ab5cb5f3ef751a00583cd890e12ba78da1ac5721	docs(plan): SKM-ROADMAP-005 P7.1 закрыт — стаб ephemeral-discipline удалён, handoff → P7.2
+a7a4303a20e466998957aaf561a0cc1b9dd38c66	docs(roadmap): снять ссылки на ephemeral-discipline в plan-homes/changelog-discipline (SKM-ROADMAP-005 P7.1)
+416882e3d0d49e0c9791c2786d54fdb6d62378c8	docs(roadmap): удалить ephemeral-discipline — перенесено в ROADMAP (SKM-ROADMAP-005 P7.1)
+84e53b72949fef297b3a72a70e7739d1db9ca225	docs(plan): SKM-ROADMAP-005 P6.3 закрыт — Status Board, Update Log, handoff → P7 design
+803782006f00e2be0d9dd505a8183d08e9aec072	feat(skiller): скилл-указатель axioma-glossary на term-index Brain (SKM-ROADMAP-005 P6.3)
+da65aded3c8b2a1e38ce42a0b21e9aed58426221	docs(plan): SKM-ROADMAP-005 P6.2 закрыт — статус-доска, Update Log, handoff → P6.3
+889a57aa5adaad7f13200eb8e2ed2bbe4431491c	feat(harness,task): glossary-conformance в ревью-паках и task:review (SKM-ROADMAP-005 P6.2)
+c3752d429b8d8906fcb304caeab68ca3cf7e50ad	docs(roadmap): ephemeral-discipline — заглушка «разобраться» (смысл не определён)
+6d5acb9dcd6ac1dadd76246a5c27072296dff5a5	fix(plan): SKM-ROADMAP-005 P6.1 review-fix — честный sha-стамп domain-modeling, 🟠 + OQ1 (vendor-vs-bilingual)
+6ba45fb19d2e56c2fc98af98b2eb4d20d4336eca	feat(skiller): domain-modeling — триггеры обновления CONTEXT.md и Rule of Two term-index (SKM-ROADMAP-005 P6.1)
+e0e5163d14612266604521dc4fa978e1e576d206	docs(plan): SKM-ROADMAP-005 — фаза P5 закрыта, handoff → P6.1
+beee3b4fe65c21b3b4552714dad52cf77f36275e	feat(skiller): release — сборка предложения релиза монорепо (SKM-ROADMAP-005 P5.3)
+bd04ef09b83ec01c6a6434ee2e8995b968944689	feat(harness): changelog-gate — opt-in commit-гейт CHANGELOG-дисциплины (SKM-ROADMAP-005 P5.2)
+07d7c9c259e9c4a560db0158865e524675953732	feat(skiller): release-engineering — повседневная дисциплина CHANGELOG (SKM-ROADMAP-005 P5.1)
+641d5b09017036e51ae269e4b28a9287fc3964bf	docs(plan): SKM-ROADMAP-005 P4.6 — бэкфилл хэша коммита в Completion Notes
+4a32e40cd2138e03b1522d803317d77911bd6659	feat(plan-protocol): workflow-как-DoR для фаз с заявленной оркестрацией (SKM-ROADMAP-005 P4.6)
+751c92f4bec0e3016367dee4033133ba4270de31	docs(claude): секция «документация и планы» в CLAUDE.md — vault + монорепо (SKM-ROADMAP-005 P4.5)
+edfab0ab258de6f69ad2db3e83ff6ca64a7f5d6a	docs(plan): SKM-ROADMAP-005 P4.4 закрыт — статус, Completion Notes, Update Log
+b84d3ec6001da3aa828eb79edb66faab14be4710	feat(skiller): скилл-карта ecosystem-map в бакете axioma (SKM-ROADMAP-005 P4.4)
+346c3f35a0b0c4311e3c1b3a68c640790f3d0d93	feat(task): plan_lint — правила ID/workflow-скрипта/supersedes (SKM-ROADMAP-005 P4.3)
+ebcb00f21c67cf21e92e6d51fbf3079f411ef3c2	docs(plan): SKM-ROADMAP-005 P4.2 закрыт — статус, Completion Notes, Update Log
+04e3930a6ec6d8ba746b045f2593d1304dd7f754	docs(plan-protocol): дом workflow-скриптов plans/<ID>/workflows/ + канон имён (SKM-ROADMAP-005 P4.2)
+f73deb0adf7bd01b0df76c78741dd8c1e24695dd	docs(plan): P4.1 Completion Notes — фактический хеш коммита
+4ce733a8a1fca6c6752a3e55b54cda775cfec8de	feat(plan-protocol): репо-дом по умолчанию + поля visibility/supersedes + датовый ID (2.1.0)
+a3994555cdd85452c981fd53742aa3266611b939	docs(plan): SKM-ROADMAP-005 P3 закрыта — handoff на P4.1 (plan-lint зелёный)
+331109b62054cbb323d97707704f3499fdb9bc3d	docs(skiller): workflow-craft — разведение design vs dev, эталон-cross-ref (SKM-ROADMAP-005 P3.5)
+a9f8ef9233759d767ecda8b5c386debe399473c1	feat(task): выходной статический ревьюер в /task:make-workflow (SKM-ROADMAP-005 P3.4)
+740f2ea4a452190c045f65f39e0493d1b5deafbd	feat(task): команда-гейт /task:make-workflow (SKM-ROADMAP-005 P3.3)
+b9fcae2558848cde917af63730b55c54e8a2a0e2	docs(task): прошивка ссылки на workflow-craft в команды-источники workflow (SKM-ROADMAP-005 P3.2)
+0cdce9a219e143efdd1a68c565ff2d1e96f3685d	feat(skiller): скилл workflow-craft — дисциплина авторинга workflow-скриптов (SKM-ROADMAP-005 P3.1)
+175aefc9a2ff68064cc899758eb9ae5cad551915	fix(plan): SKM-ROADMAP-005 P2 — статус фазы 4/5 🟠, канонический статус item P2.4 (review-fix)
+2b09d5bc40c166fdc2f8e0083589bb867ea40b1f	docs(task): подсказка «swissknifeman wf status, не /workflows» в dev.md и конструктор workflow
+b12d56413120fab1358aaee012716e1bd9c07e0f	docs(plan): SKM-ROADMAP-005 P2.4 закрыт (с отклонением) — статус и Completion Notes
+6bf62cfaff6e5cb2be7d3b1732de116f5b7050e5	feat(harness): wf status — CLI harness wf status + root-фасад swissknifeman wf status
+08447b1b8d6ff94d0199551251c7f2b1ddfdf29f	feat(harness): wf-status — фиксированный шаблон отчёта, --json, --watch (P2.3)
+c8422cab6239d23f0e154bc19c3a4241dc944e99	feat(harness): wf-status — discovery прогонов по mtime, --run, --project
+eacb600ae3242249d9d048db7a884f280b9b26f1	docs(plan): SKM-ROADMAP-005 — коммитим findings/P2-workflow-transcript-format.md (review-fix P2.1)
+fb0fd94305d26a5272b14fefe06a396ad10c819a	feat(harness): wf_status — защищённый парсер transcript-директории workflow-прогона (SKM-ROADMAP-005 P2.1)
+11a10d8f0dda070d01eeb95bd5513c63d0d99bd1	fix(harness): settings-doctor #13 — guard на «нет VSCode» и битый JSON (review-fix P1.5)
+0aa267c36a601bde1557979551f6068e79b39a8d	docs(plan): SKM-ROADMAP-005 P1.5 закрыт — статус и Completion Notes
+2d99ac39450d6e200fe0f808622d0f28dfe7649c	docs(plan): SKM-ROADMAP-005 P1.4 закрыт (🟢) — CLI settings-doctor + фасад
+ce078b28d67fb7d492be70270d956be206a88fa7	feat(harness): CLI settings-doctor — отчёт, --json, exit-code
+a647d7e659e8ee5b103270dcd94ee96c778198eb	docs(plan): SKM-ROADMAP-005 P1.3 закрыт — policy-профили и проверки 4,11
+bea938287b6a2273650a69a048479abc951167e3	feat(skiller): ключ policy_profile в .swissknife.json
+07fff759de8bfa3825ca70102cd9d2dd01bd60b7	feat(harness): policy-профили settings-doctor и проверки 4,11
+36fa749a9804b698b4065b83e1aae7f530f9ebcf	docs(plan): SKM-ROADMAP-005 P1.2 закрыт — статусы item'а и фазы
+91cd0156341c60d8759b9cbe46eadfc3096000c0	feat(harness): settings-doctor — проверки 1-3,5,9 и снапшот канонических ключей
+57f50602416e6f0890699bb05408bafc349b9a95	feat(harness): ядро settings-doctor — слои настроек CC и эффективная конфигурация
+34c9e4082835c80f4cdeb40b370c37506d526833	docs(plan): SKM-ROADMAP-005 — план дисциплины (P1 развёрнута), P1.1 закрыт
+7168b865e704ecbf15c86a99719cccc0ab272452	Merge pull request #140 from academici/sync/main-backlog-2026-07-10
+a0cffe21c3563de811f38b061846913cef27f5a6	docs(skiller): авторинг-стандарт секции ## Conformance + примеры в 3 скиллах (P5.2 блок 11)
+2c5060c0aabe95a8580ff85ed586cdb19aaecbfa	feat(task): review 2.0 — оркестратор conformance-ревью по скиллам реестра (P5.2 блок 11)
+48d11eecb7e654adcc4bb2e4150a663917902cf8	feat(quality): скилл artifact-review — таксономия ревью по типу артефакта (P5.2 блок 12)
+dfb84b57e144c83b1632109156b1a04c3ec002fe	docs(task): методология plan-protocol 2.0 — цикл, структура, шаблоны, workflows (P5.2 блок 10)
+84112f2fa6b2e48bc3a25c90e67ffd56de211643	feat(task): конструктор workflow-шаблонов — 4 канонических скрипта (P5.2 блок 9)
+37013817f1b82e116904859c0db3dd6a93e5f0d1	feat(task): plan-lint 2.0 — 7 warning-проверок схемы 2.0 (P5.2 блок 13)
+294e3f5925bf6d882838415944cc1fa6e628daec	feat(plan-protocol): snippets 2.0 — launch-block, code-guidance-паттерны, DoR/RAG в шаблонах (P5.2 блок 13)
+1e0513d7f6534815d6bc149c6ff8a5d35f324f31	feat(task): plan-exec/plan-close 2.0 — routing-gate, дом, archive-режим (P5.2 блок 7)
+b3b1b8dd28a3360b8404059764bbfdf1f40f60b3	feat(task): plan-design 2.0 — DoR/refine, маркеры, constitution-гейт (P5.2 блок 6)
+6e4b76c2701901232a627f70c1b25ed7781aaf23	feat(task): plan-audit 2.0 — RAG/DoR/OQ/routing-измерения (P5.2 блок 8)
+a7b0df66ab307097a31ea1dbcb0f1a8e6cd36710	feat(plan-protocol): ядро 2.0 — refine/DoR, корень плана, два дома, launch-block (ECOSYSTEM P5.2 блоки 1-5)
+d71041d0396a4eb29f334c3809dc57474e878855	docs(plan): SKM-AUDIT-004 P5.2 закрыта, план терминален (тег v0.8.0)
+34e26940ae5955549f3fd7de1adaf4c991e7e225	docs(plan): SKM-AUDIT-004 P7 закрыта (5/5), handoff → P5.2
+0b7fca8b88bdbf5d4979a676b8b8dc593602a6c0	feat(harness): laravel-скилл + чек-лист конвенций моделей в reviewer-паках (P7.5)
+5f8d6251058d230843509845c5ed2b73a47c1671	feat(plan-exec): коммит-гейт закрытия item'а (P7.4)
+c8fd503e14bf5d2e7d9ce81c6f67ce81732064c5	feat(plan-protocol): канонизация findings/ как план-артефактов (P7.3)
+42367ea4aed2f371cc0fc3c49134794fffd195a8	feat(task): RAG-верификация в командах dev/review/fix (P7.2)
+e418fda72ec41de8852084509f818677ecd76b54	feat(skiller): query-craft — контракт вывода для ИИ-потребителя (P7.1)
+ff40341432c28970f889bcbb8aa978bffc01b617	docs(release): CHANGELOG [Unreleased] + план SKM-AUDIT-004 (P5.1)
+9dbfa6aa9a63f438c611dd0fbaeff3df372c767a	feat(maind): doctor --audit pao — fleet-гейт отсутствующего Laravel PAO
+59d4784771ef0843707aea7f2ea6df00f5a8578c	feat(maind): провиженер Laravel PAO — установка при онбординге PHP-проектов
+63d4cddfaf9dfb081a5ce20882c9f3e988fa6d28	fix(harness): perplexity-web больше не промптит (plugin_core + enabledMcpjsonServers)
+e9fb8e18113bb36c83973083ab81aa120ef8ad5c	docs(skiller): CORE_SKILLS 8→9 (+plan-protocol), уточнить резидент-текст
+8167d8ea0b2a3343fc213c4983a9406fe7fafe39	chore(install): пояснить исключение task из установки
+b1d2d8728eaee4c0eaf8f407d386a831b3e207cb	docs(root): вписать пакет task в корневой CLAUDE.md
+365e3e7e59af999202dc6212e8e5988d9eb2e2f7	feat(plan-система): per-project plan-протокол — plansDirectory тремя слоями, ACTIVE.md, from-draft (SKM-MASTER-003 P1)
+e9757f667e07348dfecfcd5c0d01bf496ac85532	feat(task,plans): волна 4 — живой цикл протокола, ужесточение команд по findings аудитов (SKM-MASTER-002 P1.8/P1.10/P8.1)
+d4bed8b1599fe3e5ff85b0722a398ddd72417ada	feat(harness): pack-guard — опциональный PreToolUse-слой защиты generated-ассетов (SKM-MASTER-002 P5.6)
+620a310a93a69777b9281c81ce4aa77a6ff91454	feat(skiller): фаза G — bucket-audit, thin-навигаторы 10 монолитов, alias-механизм (SKM-MASTER-002 P7)
+c70d72d7e6e445ac5245218fd9c0268b707ea6e9	chore(skiller,plans): хвосты волны 1 + реконсиляция SKM-MASTER-002 после волны 2

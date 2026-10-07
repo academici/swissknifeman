@@ -1,0 +1,1 @@
+skiller vendor [--agent claude|cursor|generic] [--profile P|--buckets a,b] [--exclude x,y] [--skills-path P] [--list] [--dry-run] [--force] [--hub] [--no-core] [--no-permissions]

@@ -1,0 +1,40 @@
+usage: plan.py unit [-h] [--plans-root PLANS_ROOT] [--title TITLE]
+                    [--json JSON | --file FILE]
+                    [--agent PROVIDER/MODEL[/EFFORT]] [--notes NOTES]
+                    [--changed PATH] [--minutes MINUTES]
+                    [--executed-by PROVIDER/MODEL[/EFFORT]] [--attempt-id ID]
+                    [--evidence V1=PATH] [--actor ACTOR]
+                    plan item add|next|U#
+                    [context|dispatch|return|accept|rework|reject]
+
+split an item into units and move them: add | <U#>
+dispatch|return|accept|rework|reject
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+  item
+  add|next|U#
+  context|dispatch|return|accept|rework|reject
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --title TITLE         add: unit title
+  --json JSON           JSON text, or @file
+  --file FILE           file holding the JSON
+  --agent PROVIDER/MODEL[/EFFORT]
+                        dispatch: the worker
+  --notes NOTES
+  --changed PATH        return: a changed path (repeatable)
+  --minutes MINUTES
+  --executed-by PROVIDER/MODEL[/EFFORT]
+                        return: who did the work when not the dispatched
+                        worker; route-checked
+  --attempt-id ID       return|accept: registration attempt; a repeat is a no-
+                        op
+  --evidence V1=PATH    accept: check-evidence file of the unit (Task field
+                        contract; see `plan.py schema check-evidence`;
+                        repeatable)
+  --actor ACTOR         PROVIDER/MODEL[/EFFORT] (default: the item executor,
+                        else plan authoring)

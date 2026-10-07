@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D25",
+    "edges": [
+      {
+        "from": "D25",
+        "to": "P4",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P4.1",
+        "to": "D25",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D25",
+        "title": "P4.1: launch catalog в orch, scout Task на собственном конфиге",
+        "status": "accepted"
+      },
+      {
+        "ref": "P4",
+        "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+        "status": null
+      },
+      {
+        "ref": "P4.1",
+        "title": "Launch catalog роль × provider и argv-билдеры в orch; мост резолвит модель; scout Task без изменений",
+        "status": "done_with_deviations"
+      }
+    ]
+  }
+}

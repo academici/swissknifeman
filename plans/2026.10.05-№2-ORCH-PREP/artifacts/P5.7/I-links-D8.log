@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D8",
+    "edges": [
+      {
+        "from": "D8",
+        "to": "P2",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P2.3",
+        "to": "D8",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D8",
+        "title": "Разрешение ссылок на другие планы",
+        "status": "accepted"
+      },
+      {
+        "ref": "P2",
+        "title": "Task как поставщик данных: brief, полнота, ссылки, actor, evidence",
+        "status": null
+      },
+      {
+        "ref": "P2.3",
+        "title": "Resolver ссылок на другие планы (T4)",
+        "status": "done_with_deviations"
+      }
+    ]
+  }
+}

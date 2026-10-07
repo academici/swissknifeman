@@ -1,0 +1,3 @@
+2feece57b4cda3709398094d2bb711419b95491d	fix(orch): закрыть read-only полномочия и warning-only валидацию
+31a4ad876ab529ac5dfb26b74d11eb6e5f31d4e5	feat(orch): создать каркас контрактов exec/v1 и CLI validate
+58025e3a4a7b024f0a917bbbf3d13e9ffacf04de	docs(orch): спроектировать PLAN2 «Подготовка к оркестрации»

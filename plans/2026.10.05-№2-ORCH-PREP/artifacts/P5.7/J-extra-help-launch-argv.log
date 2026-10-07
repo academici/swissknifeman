@@ -1,0 +1,12 @@
+usage: orch.py launch argv [-h] [--model MODEL] [--effort EFFORT] [--cwd CWD]
+                           role provider
+
+positional arguments:
+  role
+  provider
+
+options:
+  -h, --help       show this help message and exit
+  --model MODEL    required when the entry's model_set is supported
+  --effort EFFORT
+  --cwd CWD

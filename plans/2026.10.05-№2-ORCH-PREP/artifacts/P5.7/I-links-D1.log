@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D1",
+    "edges": [
+      {
+        "from": "D1",
+        "to": "P1",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D1",
+        "to": "P3",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D1",
+        "to": "P4",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D1",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P1.1",
+        "to": "D1",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D1",
+        "title": "Имя пакета контрактов",
+        "status": "accepted"
+      },
+      {
+        "ref": "P1",
+        "title": "Контракты exec/v1 и Engine Port (packages/orch)",
+        "status": null
+      },
+      {
+        "ref": "P1.1",
+        "title": "Каркас packages/orch: валидатор, CLI validate, CI",
+        "status": "done"
+      },
+      {
+        "ref": "P3",
+        "title": "Разделение инструкций по ролям (рефакторинг R19)",
+        "status": null
+      },
+      {
+        "ref": "P4",
+        "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+        "status": null
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      }
+    ]
+  }
+}

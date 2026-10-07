@@ -1,0 +1,18 @@
+usage: plan.py add-item [-h] [--plans-root PLANS_ROOT] --title TITLE
+                        [--batch BATCH] [--json JSON | --file FILE]
+                        plan phase
+
+add a skeleton item to a phase
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+  phase
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --title TITLE
+  --batch BATCH         join (or create) this batch; default a solo batch
+  --json JSON           JSON text, or @file
+  --file FILE           file holding the JSON

@@ -1,0 +1,17 @@
+usage: plan.py events [-h] [--plans-root PLANS_ROOT] [--item ITEM]
+                      [--type TYPE] [--since SINCE] [--limit LIMIT]
+                      plan
+
+read journal events with filters (JSON envelope)
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --item ITEM
+  --type TYPE           comma-separated event types
+  --since SINCE         inclusive ISO timestamp with timezone
+  --limit LIMIT         latest N matching events, in journal order

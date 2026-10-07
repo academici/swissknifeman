@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D10",
+    "edges": [
+      {
+        "from": "D10",
+        "to": "P2",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D10",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P2.1",
+        "to": "D10",
+        "kind": "decision"
+      },
+      {
+        "from": "P2.2",
+        "to": "D10",
+        "kind": "decision"
+      },
+      {
+        "from": "D15",
+        "to": "D10",
+        "kind": "supersedes"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D10",
+        "title": "Форма brief и где конформанс",
+        "status": "superseded"
+      },
+      {
+        "ref": "D15",
+        "title": "exec/v1-проекция brief переезжает из ядра Task в мост task/bridges/orch",
+        "status": "accepted"
+      },
+      {
+        "ref": "P2",
+        "title": "Task как поставщик данных: brief, полнота, ссылки, actor, evidence",
+        "status": null
+      },
+      {
+        "ref": "P2.1",
+        "title": "plan.py brief: проекция execution-input (T1, T3)",
+        "status": "done"
+      },
+      {
+        "ref": "P2.2",
+        "title": "Полнота brief (T2) и конформанс exec/v1 в orch",
+        "status": "done"
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      }
+    ]
+  }
+}

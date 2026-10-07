@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.7",
   "title": "Общий аудит Plan №2: независимая сквозная проверка (Sol)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Независимый read-only аудит всего Plan №2 по методике knowledge/audit-method (блоки A–K): перепроверка вывода P5.6 по каждому R/I/B, сквозной живой контракт Task → exec/v1 → prepare, границы пакетов, широкие проверки, совместимость с v0.28.6, полнота записи и ссылок в git, решения, docs, гигиена. Вердикт в knowledge `audit-plan2-<дата>`, артефакты, note-события.",
   "why": "Владелец (2026-10-07): последний пункт плана — общий аудит всего плана исполнителем gpt-6.1-sol. Вывод P5.6 написан исполнителем плана; R25/R27/R28 требуют независимой сверки, а conclusion уже показал три находки (F-C1–F-C3), которые P5.4/P5.5 не поймали.",
   "scope": {
@@ -168,6 +168,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T15:51:23Z"
+  "result": {
+    "started_at": "2026-10-07T16:55:08Z",
+    "finished_at": "2026-10-07T17:21:33Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a11749-1a0a-72f1-9737-6b8aee330f2c"
+    },
+    "notes": "Независимый read-only аудит A–K кандидата 0559f3c9d30ed6869d39441b19e9b1f7d29a424e: knowledge/audit-plan2-2026-10-07, ATTENTION, 2 новые Major (inventory bridge manifest, lexical refusal отрицательной декларации role-manifest), 5 Minor; F-C1/F-C2 подтверждены, F-C3 закрыт c51e9197. 52 строки: 42 CONFIRMED, 6 STALE, 3 WRONG, 1 UNVERIFIABLE. Живой контракт: 8/70 pass, 40 included failures, 18 BRIEF_INCOMPLETE, 4 historical READ_MISSING; demo 4/4 и три bindings GREEN. Task, Skiller, Harness, standalone, render и registry GREEN. Сырые orch/docs-sync RED квалифицированы ограничениями среды, узкие контрольные проверки GREEN. Все raw commands/exits и пробы в artifacts/P5.7; notes P5 и owning items записаны. Фактический reviewer codex/gpt-6.1-sol/xhigh, session 01a11749-1a0a-72f1-9737-6b8aee330f2c. Продукт не изменялся; docs not needed для read-only аудита. task:review рекомендован после исправления публичного exec/v1 seam.",
+    "deviations": [
+      "F: исходный широкий orch validate RED из-за PATH Skiller v0.28.6 без resolve; docs-sync RED на ignored docs/skiller. Среда не менялась; вместо повторного широкого прогона выполнены узкие local-Skiller bridge tests и docs-check tracked HEAD. G: plan.py и его cli.py отсутствуют в release v0.28.6, проверены все 41 текущие verbs --help; неприменимость и ограничения сохранены в not-checked."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T17:21:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T17:21:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T17:21:33Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T17:21:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T17:21:33Z"
 }

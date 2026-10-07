@@ -1,0 +1,2 @@
+packages/orch/docs/architecture.md:12:discovered by `orch.discovery`.
+packages/task/docs/json-plan-design.md:54:`--relation informs|consumes|conflicts|follows_up|supersedes` and optionally accept `--note TEXT`.

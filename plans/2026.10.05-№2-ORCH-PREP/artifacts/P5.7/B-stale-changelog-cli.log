@@ -1,0 +1,3 @@
+usage: skiller resolve [-h] [--provider {claude-code,codex,grok}] [--json]
+                       SKILL [SKILL ...]
+skiller resolve: error: unrecognized arguments: --role

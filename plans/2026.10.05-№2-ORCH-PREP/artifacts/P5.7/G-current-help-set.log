@@ -1,0 +1,15 @@
+usage: plan.py set [-h] [--plans-root PLANS_ROOT] (--json JSON | --file FILE)
+                   plan ref
+
+merge-patch plan, brief, a phase, item, decision or unit
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+  ref                   plan | brief | Pn | Pn.m | D# | Pn.m/U#
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --json JSON           JSON text, or @file
+  --file FILE           file holding the JSON

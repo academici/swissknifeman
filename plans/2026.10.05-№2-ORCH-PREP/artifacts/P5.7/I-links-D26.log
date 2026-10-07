@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D26",
+    "edges": [
+      {
+        "from": "D26",
+        "to": "P11",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P11.1",
+        "to": "D26",
+        "kind": "decision"
+      },
+      {
+        "from": "P11.2",
+        "to": "D26",
+        "kind": "decision"
+      },
+      {
+        "from": "P11.3",
+        "to": "D26",
+        "kind": "decision"
+      },
+      {
+        "from": "P11.4",
+        "to": "D26",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D26",
+        "title": "P11: консолидация конфигов — что удалить, что оставить, чем удерживать правило владельца",
+        "status": "accepted"
+      },
+      {
+        "ref": "P11",
+        "title": "Рефакторинг конфигов: инвентаризация, владельцы, удаление лишнего",
+        "status": null
+      },
+      {
+        "ref": "P11.1",
+        "title": "Резолвер конфигов без fallback и удаление дубля configs/profile-catalog.json",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P11.2",
+        "title": "Task: guard согласия уровней capability_bindings с provider-capabilities",
+        "status": "done"
+      },
+      {
+        "ref": "P11.3",
+        "title": "Инвентарь конфигов configs/config-inventory.json и CI-guard владельца и потребителя",
+        "status": "done"
+      },
+      {
+        "ref": "P11.4",
+        "title": "Документация конфигов, CHANGELOG и широкий validate всех пакетов",
+        "status": "done"
+      }
+    ]
+  }
+}

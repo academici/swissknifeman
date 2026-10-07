@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D27",
+    "edges": [
+      {
+        "from": "D27",
+        "to": "P12",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P12.1",
+        "to": "D27",
+        "kind": "decision"
+      },
+      {
+        "from": "P12.3",
+        "to": "D27",
+        "kind": "decision"
+      },
+      {
+        "from": "P12.5",
+        "to": "D27",
+        "kind": "decision"
+      },
+      {
+        "from": "P12.6",
+        "to": "D27",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D27",
+        "title": "P12: семантика пустого applies_to и миграция существующих планов",
+        "status": "accepted"
+      },
+      {
+        "ref": "P12",
+        "title": "Привязка знаний к пунктам и бюджет context pack: контроль после детализации",
+        "status": null
+      },
+      {
+        "ref": "P12.1",
+        "title": "Модель области видимости pack: global, settings.context_pack, проекция scoped в context.py",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P12.3",
+        "title": "plan.py check: привязка knowledge/decisions и тяжёлый brief/plan-контент",
+        "status": "done"
+      },
+      {
+        "ref": "P12.5",
+        "title": "Инструкция привязки знаний в plan-protocol и командах + проекции адаптеров",
+        "status": "done"
+      },
+      {
+        "ref": "P12.6",
+        "title": "Документация, CHANGELOG, измерение до/после, перевод плана в scoped и широкий validate",
+        "status": "done"
+      }
+    ]
+  }
+}

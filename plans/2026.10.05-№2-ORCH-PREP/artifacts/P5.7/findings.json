@@ -1,0 +1,79 @@
+[
+  {
+    "id": "A-1",
+    "severity": "Major",
+    "confidence": "high",
+    "owner": "P11.3",
+    "title": "Инвентарь конфигов не покрывает новый мост discovery",
+    "where": "scripts/test-config-inventory.py:88; configs/config-inventory.json:263; packages/orch/bridges/task/bridge.json:1",
+    "repro": "`python3 scripts/test-config-inventory.py` → exit 1, `configs without an inventory entry: packages/orch/bridges/task/bridge.json`; 5/6 tests pass, `test_scope_covered` fails. Лог `@plan/artifacts/P5.7/B-config-inventory.log`.",
+    "expect": "B50, D26 и P11.3 V1: каждый config в scope имеет owner и consumer, acceptance exit 0. Manifest добавлен позже в P5.1, а закрытие P5.5 не проверило корневой hygiene gate.",
+    "recommendation": "Добавить manifest с его owner/consumer в инвентарь и выполнить затронутый gate при интеграции последующих конфигов."
+  },
+  {
+    "id": "A-2",
+    "severity": "Major",
+    "confidence": "high",
+    "owner": "P2.2",
+    "title": "Guard brief считает декларацию запрета lifecycle-инструкцией",
+    "where": "packages/task/bridges/orch/brief.py:207; packages/orch/roles/executor.json:25",
+    "repro": "`python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P4.4 --out \"$S/p44.json\"` → exit 1, `/reads/6/content/forbidden_inputs/1: lifecycle phrase report_api`. `report_api` здесь является значением enum в `forbidden_inputs` role-manifest, а не указанием вызывать API. Логи `D-negative-role-input.log`, `D-negative-role-literal.log`; источник текущего переноса — P7.2.",
+    "expect": "R1/I1, P2.2 T2: полный worker input по обязательным reads без исполняемых lifecycle-инструкций; запрет не должен делать недоступным чтение собственного нейтрального manifest. В D получено 18 BRIEF_INCOMPLETE (включая и намеренно запрещённый lifecycle в guidance), но этот reproducer изолирует машинную отрицательную декларацию.",
+    "recommendation": "Согласовать обработку деклараций forbidden_inputs с запретом исполняемых инструкций и покрыть живой brief с role-manifest тестом в мосту."
+  },
+  {
+    "id": "A-3",
+    "severity": "Minor",
+    "confidence": "high",
+    "owner": "P5.5",
+    "title": "Свежие записи CHANGELOG описывают заменённую архитектуру",
+    "where": "CHANGELOG.md:7; CHANGELOG.md:8; CHANGELOG.md:139",
+    "repro": "`packages/skiller/bin/skiller resolve --role reviewer --json` → exit 2, `unrecognized arguments: --role` (`B-stale-changelog-cli.log`). Каталог находится в `packages/orch/configs/launch-catalog.json:1`, а Task review method остаётся собственным (`packages/task/skills/plan-protocol/references/review-mode.md:1`; E boundary exit 0).",
+    "expect": "D12/D15/D16/D25: Skiller resolve принимает skill IDs, роли раскрывает мост потребителя; каталог принадлежит orch; review-методика Task не генерируется из Skiller. В более поздних записях этого же Unreleased уже описано правильное поведение.",
+    "recommendation": "Удалить или переписать три противоречащие D12/D25 строки Unreleased по фактическим владельцам и CLI."
+  },
+  {
+    "id": "A-4",
+    "severity": "Minor",
+    "confidence": "high",
+    "owner": "P11.4",
+    "title": "Удалённый profile-catalog ошибочно назван never released",
+    "where": "CHANGELOG.md:187; core/config_paths.py:11",
+    "repro": "`git cat-file -e v0.28.6:configs/profile-catalog.json` → exit 0 (`G-profile-released.log`). `git show v0.28.6:core/config_paths.py` → exit 0: root config был primary. Scratch-проба в `B-extra-contract-probes.log` (exit 0) показывает root-only layout: release path exists=True, current owner path exists=False.",
+    "expect": "R21 и блок G: release provenance должна соответствовать tag. Перенос к владельцу прямо принят D26 и уже описан в Changed; аудит не предлагает отменять его. Утверждение never released фактически неверно.",
+    "recommendation": "Указать реальную историю выпуска, новый путь владельца и смысл изменения при обновлении существующих root configs."
+  },
+  {
+    "id": "A-5",
+    "severity": "Minor",
+    "confidence": "high",
+    "owner": "P5.5",
+    "title": "Architecture docs ссылаются на отсутствующий orch.discovery",
+    "where": "packages/orch/docs/architecture.md:12; packages/orch/docs/architecture.md:35",
+    "repro": "`rg -n orch.discovery packages/orch/docs/architecture.md` → exit 0 (строка 12); файла `packages/orch/lib/orch/discovery.py` нет. Реальный discovery — `packages/orch/bridges/task/discovery.py:28`, каталог вызывает нейтральный bridge resolver (`packages/orch/lib/orch/catalog.py:1`).",
+    "expect": "R12/R19, D13 и P5.5: docs описывают текущую границу пакета, всё знание о партнёре находится в bridge.",
+    "recommendation": "Описать bridge discovery вместо несуществующего модуля ядра и обновить layout docs."
+  },
+  {
+    "id": "A-6",
+    "severity": "Minor",
+    "confidence": "high",
+    "owner": "P6.6",
+    "title": "Документация не покрывает глагол supersede из актуального CLI-каталога",
+    "where": "packages/task/lib/task/plan/cli.py:799; packages/task/docs/json-plan-design.md:1",
+    "repro": "`plan.py schema --verbs` → exit 0, 41 verbs; независимый поиск всех имён в `packages/task/docs/*.md` не находит только supersede (`J-results.json`, `J-schema-verbs.log`). `plan.py supersede --help` → exit 0 (`G-current-help-supersede.log`).",
+    "expect": "Блок J и P6.6: документация/каталог дают полный способ работы с решениями, в том числе superseded и supersedes.",
+    "recommendation": "Добавить supersede и его синтаксис в существующий справочник Task по JSON API."
+  },
+  {
+    "id": "A-7",
+    "severity": "Minor",
+    "confidence": "high",
+    "owner": "P5.5",
+    "title": "Новые конкретные ссылки на PLAN2 остаются в общих docs и коде",
+    "where": "packages/orch/README.md:4; packages/orch/README.md:33; packages/orch/docs/engine-port.md:5; packages/orch/lib/orch/schema.py:3",
+    "repro": "`python3 scripts/public-hygiene.py` → exit 1 (`K-hygiene-head.log`); на базе плана с отдельным candidate-bound git index → exit 1 (`K-hygiene-base-indexed.log`). Delta на изменённых файлах содержит 44 строки (`K-hygiene-delta.json`), включая README/engine-port с PLAN2.D2/D4/P5.3. Остальная большая часть delta — синтетические fixtures/tests; их идентификаторы не доказывают утечку реальных данных.",
+    "expect": "Блок K: новые реальные ссылки на план в общих продуктовых файлах должны быть отделены от приватных материалов плана и синтетических тестовых идентификаторов.",
+    "recommendation": "Заменить ссылки на конкретные items/decisions в общих docs нейтральным описанием контрактов и отдельно согласовать область hygiene guard для synthetic fixtures."
+  }
+]

@@ -1,0 +1,2340 @@
+[
+  {
+    "block": "A",
+    "cmd": "python3 packages/task/scripts/plan.py check PLAN2",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/A-check.log",
+    "seconds": 0.253
+  },
+  {
+    "block": "A",
+    "cmd": "python3 packages/task/scripts/plan.py stats PLAN2",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/A-stats.log",
+    "seconds": 0.059
+  },
+  {
+    "block": "A",
+    "cmd": "python3 packages/task/scripts/plan.py --output json get PLAN2 plan",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/A-plan.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "A",
+    "cmd": "python3 packages/task/scripts/plan.py next PLAN2",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/A-next.log",
+    "seconds": 0.059
+  },
+  {
+    "block": "F",
+    "cmd": "bash packages/orch/scripts/validate.sh",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-orch-validate.log",
+    "seconds": 3.132
+  },
+  {
+    "block": "A",
+    "cmd": "git -C /tmp/plan2-p57-4dpn45mo init -q",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/A-scratch-init.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "A",
+    "cmd": "python3 packages/task/scripts/plan.py --output json list PLAN2 items",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/A-items.log",
+    "seconds": 0.064
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.5 --out /tmp/plan2-p57-4dpn45mo/p55.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc1-brief.log",
+    "seconds": 0.131
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/p55.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc1-validate.log",
+    "seconds": 0.032
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/task/scripts/plan.py set PLAN2 P5.5 --plans-root /tmp/plan2-p57-4dpn45mo/plans --json '{\"route\": {\"class\": \"implementation\", \"effort\": \"high\", \"settings\": {\"reasoning_effort\": \"high\"}}}'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc2-set-copy.log",
+    "seconds": 0.677
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief '/tmp/plan2-p57-4dpn45mo/plans/2026.10.05-№2-ORCH-PREP' P5.5 --out /tmp/plan2-p57-4dpn45mo/p55-settings.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc2-brief.log",
+    "seconds": 0.103
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/p55-settings.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc2-validate.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "C",
+    "cmd": "git archive HEAD | tar -x -C /tmp/plan2-p57-4dpn45mo/head",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-archive-head.log",
+    "seconds": 0.262
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief '/tmp/plan2-p57-4dpn45mo/plans/2026.10.05-№2-ORCH-PREP' P5.5 --out /tmp/plan2-p57-4dpn45mo/p55-settings.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc2-brief-with-tracked-reads.log",
+    "seconds": 0.125
+  },
+  {
+    "block": "C",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/p55-settings.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/C-fc2-validate-with-tracked-reads.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P1.1 --out /tmp/plan2-p57-4dpn45mo/P1.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P1.1.log",
+    "seconds": 0.121
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P1.2 --out /tmp/plan2-p57-4dpn45mo/P1.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P1.2.log",
+    "seconds": 0.128
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P1.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P1.2.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P1.3 --out /tmp/plan2-p57-4dpn45mo/P1.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P1.3.log",
+    "seconds": 0.119
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P1.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P1.3.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P1.4 --out /tmp/plan2-p57-4dpn45mo/P1.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P1.4.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P1.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P1.4.log",
+    "seconds": 0.031
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P1.5 --out /tmp/plan2-p57-4dpn45mo/P1.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P1.5.log",
+    "seconds": 0.126
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P1.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P1.5.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.1 --out /tmp/plan2-p57-4dpn45mo/P2.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.1.log",
+    "seconds": 0.122
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.2 --out /tmp/plan2-p57-4dpn45mo/P2.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.2.log",
+    "seconds": 0.114
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.3 --out /tmp/plan2-p57-4dpn45mo/P2.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.3.log",
+    "seconds": 0.117
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.4 --out /tmp/plan2-p57-4dpn45mo/P2.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.4.log",
+    "seconds": 0.125
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.5 --out /tmp/plan2-p57-4dpn45mo/P2.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.5.log",
+    "seconds": 0.119
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.6 --out /tmp/plan2-p57-4dpn45mo/P2.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.6.log",
+    "seconds": 0.122
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P2.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P2.6.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P2.7 --out /tmp/plan2-p57-4dpn45mo/P2.7.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P2.7.log",
+    "seconds": 0.115
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P3.1 --out /tmp/plan2-p57-4dpn45mo/P3.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P3.1.log",
+    "seconds": 0.137
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P3.2 --out /tmp/plan2-p57-4dpn45mo/P3.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P3.2.log",
+    "seconds": 0.113
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P3.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P3.2.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P4.1 --out /tmp/plan2-p57-4dpn45mo/P4.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P4.1.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P4.2 --out /tmp/plan2-p57-4dpn45mo/P4.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P4.2.log",
+    "seconds": 0.117
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P4.3 --out /tmp/plan2-p57-4dpn45mo/P4.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P4.3.log",
+    "seconds": 0.115
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P4.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P4.3.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P4.4 --out /tmp/plan2-p57-4dpn45mo/P4.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P4.4.log",
+    "seconds": 0.129
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.1 --out /tmp/plan2-p57-4dpn45mo/P5.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P5.1.log",
+    "seconds": 0.121
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P5.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P5.1.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.2 --out /tmp/plan2-p57-4dpn45mo/P5.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P5.2.log",
+    "seconds": 0.12
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.3 --out /tmp/plan2-p57-4dpn45mo/P5.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P5.3.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.4 --out /tmp/plan2-p57-4dpn45mo/P5.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P5.4.log",
+    "seconds": 0.125
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P5.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P5.4.log",
+    "seconds": 0.033
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.5 --out /tmp/plan2-p57-4dpn45mo/P5.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P5.5.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P5.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P5.5.log",
+    "seconds": 0.031
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P5.6 --out /tmp/plan2-p57-4dpn45mo/P5.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P5.6.log",
+    "seconds": 0.127
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P5.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P5.6.log",
+    "seconds": 0.03
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.1 --out /tmp/plan2-p57-4dpn45mo/P6.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.1.log",
+    "seconds": 0.12
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.1.log",
+    "seconds": 0.03
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.2 --out /tmp/plan2-p57-4dpn45mo/P6.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.2.log",
+    "seconds": 0.12
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.2.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.3 --out /tmp/plan2-p57-4dpn45mo/P6.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.3.log",
+    "seconds": 0.115
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.3.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.4 --out /tmp/plan2-p57-4dpn45mo/P6.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.4.log",
+    "seconds": 0.112
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.4.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.5 --out /tmp/plan2-p57-4dpn45mo/P6.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.5.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.5.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.6 --out /tmp/plan2-p57-4dpn45mo/P6.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.6.log",
+    "seconds": 0.113
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.6.log",
+    "seconds": 0.034
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P6.7 --out /tmp/plan2-p57-4dpn45mo/P6.7.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P6.7.log",
+    "seconds": 0.113
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P6.7.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P6.7.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P7.1 --out /tmp/plan2-p57-4dpn45mo/P7.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P7.1.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P7.2 --out /tmp/plan2-p57-4dpn45mo/P7.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P7.2.log",
+    "seconds": 0.105
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P7.3 --out /tmp/plan2-p57-4dpn45mo/P7.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P7.3.log",
+    "seconds": 0.108
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P7.4 --out /tmp/plan2-p57-4dpn45mo/P7.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P7.4.log",
+    "seconds": 0.128
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P7.5 --out /tmp/plan2-p57-4dpn45mo/P7.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P7.5.log",
+    "seconds": 0.13
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P7.6 --out /tmp/plan2-p57-4dpn45mo/P7.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P7.6.log",
+    "seconds": 0.132
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.1 --out /tmp/plan2-p57-4dpn45mo/P8.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.1.log",
+    "seconds": 0.126
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.1.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.2 --out /tmp/plan2-p57-4dpn45mo/P8.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.2.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.2.log",
+    "seconds": 0.035
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.3 --out /tmp/plan2-p57-4dpn45mo/P8.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.3.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.3.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.4 --out /tmp/plan2-p57-4dpn45mo/P8.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.4.log",
+    "seconds": 0.13
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.4.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.5 --out /tmp/plan2-p57-4dpn45mo/P8.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.5.log",
+    "seconds": 0.125
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.5.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.6 --out /tmp/plan2-p57-4dpn45mo/P8.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.6.log",
+    "seconds": 0.104
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.7 --out /tmp/plan2-p57-4dpn45mo/P8.7.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.7.log",
+    "seconds": 0.122
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.7.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.7.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.8 --out /tmp/plan2-p57-4dpn45mo/P8.8.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.8.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P8.8.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P8.8.log",
+    "seconds": 0.03
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P8.9 --out /tmp/plan2-p57-4dpn45mo/P8.9.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P8.9.log",
+    "seconds": 0.127
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.1 --out /tmp/plan2-p57-4dpn45mo/P9.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.1.log",
+    "seconds": 0.127
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.1.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.2 --out /tmp/plan2-p57-4dpn45mo/P9.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.2.log",
+    "seconds": 0.121
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.2.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.3 --out /tmp/plan2-p57-4dpn45mo/P9.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.3.log",
+    "seconds": 0.131
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.3.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.4 --out /tmp/plan2-p57-4dpn45mo/P9.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.4.log",
+    "seconds": 0.124
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.4.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.5 --out /tmp/plan2-p57-4dpn45mo/P9.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.5.log",
+    "seconds": 0.125
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.5.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.6 --out /tmp/plan2-p57-4dpn45mo/P9.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.6.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.6.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P9.7 --out /tmp/plan2-p57-4dpn45mo/P9.7.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P9.7.log",
+    "seconds": 0.132
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P9.7.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P9.7.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P10.1 --out /tmp/plan2-p57-4dpn45mo/P10.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P10.1.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P10.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P10.1.log",
+    "seconds": 0.032
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P10.2 --out /tmp/plan2-p57-4dpn45mo/P10.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P10.2.log",
+    "seconds": 0.123
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P10.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P10.2.log",
+    "seconds": 0.025
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P10.3 --out /tmp/plan2-p57-4dpn45mo/P10.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P10.3.log",
+    "seconds": 0.122
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P10.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P10.3.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P10.4 --out /tmp/plan2-p57-4dpn45mo/P10.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P10.4.log",
+    "seconds": 0.128
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P10.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P10.4.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P10.5 --out /tmp/plan2-p57-4dpn45mo/P10.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P10.5.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P10.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P10.5.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P10.6 --out /tmp/plan2-p57-4dpn45mo/P10.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P10.6.log",
+    "seconds": 0.135
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P10.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P10.6.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P11.1 --out /tmp/plan2-p57-4dpn45mo/P11.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P11.1.log",
+    "seconds": 0.131
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P11.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P11.1.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P11.2 --out /tmp/plan2-p57-4dpn45mo/P11.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P11.2.log",
+    "seconds": 0.118
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P11.3 --out /tmp/plan2-p57-4dpn45mo/P11.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P11.3.log",
+    "seconds": 0.125
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P11.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P11.3.log",
+    "seconds": 0.031
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P11.4 --out /tmp/plan2-p57-4dpn45mo/P11.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P11.4.log",
+    "seconds": 0.137
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P11.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P11.4.log",
+    "seconds": 0.031
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P11.5 --out /tmp/plan2-p57-4dpn45mo/P11.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P11.5.log",
+    "seconds": 0.112
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P11.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P11.5.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P12.1 --out /tmp/plan2-p57-4dpn45mo/P12.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P12.1.log",
+    "seconds": 0.139
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P12.1.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P12.1.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P12.2 --out /tmp/plan2-p57-4dpn45mo/P12.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P12.2.log",
+    "seconds": 0.127
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P12.2.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P12.2.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P12.3 --out /tmp/plan2-p57-4dpn45mo/P12.3.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P12.3.log",
+    "seconds": 0.122
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P12.3.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P12.3.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P12.4 --out /tmp/plan2-p57-4dpn45mo/P12.4.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P12.4.log",
+    "seconds": 0.122
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P12.4.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P12.4.log",
+    "seconds": 0.031
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P12.5 --out /tmp/plan2-p57-4dpn45mo/P12.5.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P12.5.log",
+    "seconds": 0.12
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P12.5.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P12.5.log",
+    "seconds": 0.034
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P12.6 --out /tmp/plan2-p57-4dpn45mo/P12.6.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-brief-P12.6.log",
+    "seconds": 0.127
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/P12.6.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-validate-P12.6.log",
+    "seconds": 0.031
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief '/tmp/plan2-p57-4dpn45mo/plans/2026.10.05-№7-DEMO' P1.1 --out /tmp/plan2-p57-4dpn45mo/DEMO-P1.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-brief-P1.1.log",
+    "seconds": 0.1
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/DEMO-P1.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-validate-P1.1.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief '/tmp/plan2-p57-4dpn45mo/plans/2026.10.05-№7-DEMO' P1.2 --out /tmp/plan2-p57-4dpn45mo/DEMO-P1.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-brief-P1.2.log",
+    "seconds": 0.1
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/DEMO-P1.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-validate-P1.2.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief '/tmp/plan2-p57-4dpn45mo/plans/2026.10.05-№7-DEMO' P2.1 --out /tmp/plan2-p57-4dpn45mo/DEMO-P2.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-brief-P2.1.log",
+    "seconds": 0.097
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/DEMO-P2.1.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-validate-P2.1.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief '/tmp/plan2-p57-4dpn45mo/plans/2026.10.05-№7-DEMO' P2.2 --out /tmp/plan2-p57-4dpn45mo/DEMO-P2.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-brief-P2.2.log",
+    "seconds": 0.101
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/DEMO-P2.2.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-demo-validate-P2.2.log",
+    "seconds": 0.033
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate execution-input /tmp/plan2-p57-4dpn45mo/normalized.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-normalized-validate.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py prepare --binding native --provider claude-code --input /tmp/plan2-p57-4dpn45mo/normalized.json --policy packages/orch/fixtures/exec/v1/valid/run-policy/solo.json --out /tmp/plan2-p57-4dpn45mo/prepare-native --dry-run",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-prepare-native.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate launch-plan /tmp/plan2-p57-4dpn45mo/launch-native.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-launch-validate-native.log",
+    "seconds": 0.025
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py prepare --binding cao --provider claude-code --input /tmp/plan2-p57-4dpn45mo/normalized.json --policy packages/orch/fixtures/exec/v1/valid/run-policy/solo.json --out /tmp/plan2-p57-4dpn45mo/prepare-cao --dry-run",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-prepare-cao.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate launch-plan /tmp/plan2-p57-4dpn45mo/launch-cao.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-launch-validate-cao.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py prepare --binding claude-only --provider claude-code --input /tmp/plan2-p57-4dpn45mo/normalized.json --policy packages/orch/fixtures/exec/v1/valid/run-policy/solo.json --out /tmp/plan2-p57-4dpn45mo/prepare-claude-only --dry-run",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-prepare-claude-only.log",
+    "seconds": 0.03
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/orch/scripts/orch.py validate launch-plan /tmp/plan2-p57-4dpn45mo/launch-claude-only.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-launch-validate-claude-only.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "E",
+    "cmd": "bash -c 'cd packages/task && PYTHONPATH=lib python3 -m unittest tests.test_boundary -v'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/E-task-boundary.log",
+    "seconds": 0.133
+  },
+  {
+    "block": "E",
+    "cmd": "bash -c 'cd packages/orch && PYTHONPATH=lib python3 -m unittest tests.test_boundaries -v'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/E-orch-boundary.log",
+    "seconds": 0.078
+  },
+  {
+    "block": "E",
+    "cmd": "bash -c 'cd packages/skiller && PYTHONPATH=lib:.:../.. python3 -m unittest tests.test_boundary -v'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/E-skiller-boundary.log",
+    "seconds": 1.008
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py --output json commits PLAN2",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-commits.log",
+    "seconds": 0.089
+  },
+  {
+    "block": "F",
+    "cmd": "bash packages/task/scripts/validate.sh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-task-validate.log",
+    "seconds": 151.662
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py --output json events PLAN2",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-events.log",
+    "seconds": 0.103
+  },
+  {
+    "block": "H",
+    "cmd": "git log --format=%H%x09%s --grep=PLAN2 '--grep=P[0-9][0-9]*\\.[0-9][0-9]*'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-git-log.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json list PLAN2 decisions",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-decisions.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "F",
+    "cmd": "bash packages/skiller/scripts/validate.sh && bash packages/skiller/scripts/test.sh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-skiller-validate-test.log",
+    "seconds": 22.919
+  },
+  {
+    "block": "H",
+    "cmd": "python3 /tmp/p57_H.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-records.log",
+    "seconds": 0.225
+  },
+  {
+    "block": "F",
+    "cmd": "bash packages/harness/scripts/validate.sh && bash packages/harness/scripts/test.sh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-harness-validate-test.log",
+    "seconds": 117.388
+  },
+  {
+    "block": "F",
+    "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root .",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-provider-render.log",
+    "seconds": 0.095
+  },
+  {
+    "block": "F",
+    "cmd": "packages/skiller/bin/skiller registry --check",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-registry.log",
+    "seconds": 0.332
+  },
+  {
+    "block": "F",
+    "cmd": "bash scripts/docs-sync.sh --check",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-docs-sync.log",
+    "seconds": 0.06
+  },
+  {
+    "block": "F",
+    "cmd": "bash scripts/skiller-standalone-check.sh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-standalone.log",
+    "seconds": 19.495
+  },
+  {
+    "block": "G",
+    "cmd": "git tag --sort=-creatordate",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-tags.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git merge-base --is-ancestor 58025e3a4 v0.28.6",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-release-ancestor.log",
+    "seconds": 0.005
+  },
+  {
+    "block": "G",
+    "cmd": "git diff --stat --diff-filter=DR 083fdfe1262b812ac4d863b461d57c991234b844..HEAD -- packages/task packages/skiller packages/harness configs",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-deleted-stat.log",
+    "seconds": 0.042
+  },
+  {
+    "block": "G",
+    "cmd": "git diff --name-status --diff-filter=DR 083fdfe1262b812ac4d863b461d57c991234b844..HEAD -- packages/task packages/skiller packages/harness configs",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-deleted-paths.log",
+    "seconds": 0.023
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:configs/profile-catalog.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-0.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/harness-operations/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-1.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/adapters/repository-bootstrap/publication-lock.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-2.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/configs/repository-bootstrap-skills.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-3.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/cross-project-optimizer/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-4.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/decision-verification/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-5.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/docs-maintenance/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-6.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-7.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-8.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/ecosystem-setup/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-9.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-10.log",
+    "seconds": 0.005
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-11.log",
+    "seconds": 0.005
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-12.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-13.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-14.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-15.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/tests/test_task_plugin_cache_revision.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-16.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-17.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/task/docs/migration/README.md",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-18.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/task/docs/migration/chatom-pilot.py",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-19.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/task/docs/migration/inventory.json",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-20.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/task/docs/migration/legacy-v2.py",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-21.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/task/docs/migration/retire-v2.py",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-22.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:packages/task/docs/migration/tracker.py",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-path-23.log",
+    "seconds": 0.001
+  },
+  {
+    "block": "G",
+    "cmd": "git show v0.28.6:packages/task/lib/task/plan/cli.py",
+    "exit": 128,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-cli.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "packages/skiller/bin/skiller --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-help-skiller.log",
+    "seconds": 0.007
+  },
+  {
+    "block": "G",
+    "cmd": "packages/skiller/bin/skiller connect --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-help-connect.log",
+    "seconds": 0.094
+  },
+  {
+    "block": "G",
+    "cmd": "packages/skiller/bin/skiller vendor --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-help-vendor.log",
+    "seconds": 0.084
+  },
+  {
+    "block": "G",
+    "cmd": "packages/skiller/bin/skiller sync --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-help-sync.log",
+    "seconds": 0.086
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-candidate-git-log.log",
+    "seconds": 0.003
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D1",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D1.log",
+    "seconds": 0.071
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D2",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D2.log",
+    "seconds": 0.062
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D3",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D3.log",
+    "seconds": 0.064
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D4",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D4.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D5",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D5.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D6",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D6.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D7",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D7.log",
+    "seconds": 0.075
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D8",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D8.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D9",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D9.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D10",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D10.log",
+    "seconds": 0.069
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D11",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D11.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D12",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D12.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D13",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D13.log",
+    "seconds": 0.066
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D14",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D14.log",
+    "seconds": 0.067
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D15",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D15.log",
+    "seconds": 0.067
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D16",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D16.log",
+    "seconds": 0.069
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D17",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D17.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D18",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D18.log",
+    "seconds": 0.062
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D19",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D19.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D20",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D20.log",
+    "seconds": 0.062
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D21",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D21.log",
+    "seconds": 0.074
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D22",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D22.log",
+    "seconds": 0.064
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D23",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D23.log",
+    "seconds": 0.072
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D24",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D24.log",
+    "seconds": 0.062
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D25",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D25.log",
+    "seconds": 0.062
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D26",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D26.log",
+    "seconds": 0.064
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D27",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D27.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D28",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D28.log",
+    "seconds": 0.063
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py --output json links PLAN2 D29",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-links-D29.log",
+    "seconds": 0.066
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py prepare --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-help-0.log",
+    "seconds": 0.029
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py launch --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-help-1.log",
+    "seconds": 0.033
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py validate --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-help-2.log",
+    "seconds": 0.024
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/task/scripts/plan.py schema --verbs",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-schema-verbs.log",
+    "seconds": 0.061
+  },
+  {
+    "block": "K",
+    "cmd": "git diff --check 083fdfe1262b812ac4d863b461d57c991234b844..HEAD",
+    "exit": 2,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-diff-check.log",
+    "seconds": 0.104
+  },
+  {
+    "block": "K",
+    "cmd": "rg -n -- --bare packages/orch/configs packages/task/bridges",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-bare.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "K",
+    "cmd": "python3 scripts/public-hygiene.py",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-hygiene-head.log",
+    "seconds": 1.633
+  },
+  {
+    "block": "K",
+    "cmd": "git archive 083fdfe1262b812ac4d863b461d57c991234b844 | tar -x -C /tmp/plan2-p57-4dpn45mo/base",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-archive-base.log",
+    "seconds": 0.099
+  },
+  {
+    "block": "K",
+    "cmd": "cd /tmp/plan2-p57-4dpn45mo/base && python3 scripts/public-hygiene.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-hygiene-base.log",
+    "seconds": 0.025
+  },
+  {
+    "block": "F",
+    "cmd": "command -v skiller; readlink -f \"$(command -v skiller)\"",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-skiller-path.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "F",
+    "cmd": "SKM_SKILLER_ROOT=/home/vostrikov/projects/packages/swissknifeman/packages/skiller python3 -m unittest discover -s packages/orch/bridges/skiller/tests -t packages/orch/bridges/skiller/tests -p \"test_*.py\"",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-skiller-bridge-local.log",
+    "seconds": 1.308
+  },
+  {
+    "block": "F",
+    "cmd": "bash /tmp/plan2-p57-4dpn45mo/head/scripts/docs-sync.sh --check",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-docs-sync-tracked-head.log",
+    "seconds": 0.065
+  },
+  {
+    "block": "F",
+    "cmd": "git check-ignore docs/skiller docs/harness docs/task",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/F-docs-ignored.log",
+    "seconds": 0.007
+  },
+  {
+    "block": "G",
+    "cmd": "git ls-tree -r --name-only v0.28.6 packages/task/scripts packages/task/lib/task/plan",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-task-layout.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "G",
+    "cmd": "rg -n 'profile-catalog|Repository bootstrap|14 canonical|publication-lock|repository-bootstrap-skills' CHANGELOG.md",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-changelog-removed.log",
+    "seconds": 0.005
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py schema --verbs",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-verbs.log",
+    "seconds": 0.071
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py add-artifact --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-add-artifact.log",
+    "seconds": 0.045
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py add-decision --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-add-decision.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py add-document --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-add-document.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py add-item --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-add-item.log",
+    "seconds": 0.052
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py add-phase --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-add-phase.log",
+    "seconds": 0.057
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py apply --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-apply.log",
+    "seconds": 0.073
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py archive --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-archive.log",
+    "seconds": 0.053
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py artifact --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-artifact.log",
+    "seconds": 0.048
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py batches --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-batches.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py bridge --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-bridge.log",
+    "seconds": 0.049
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py check --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-check.log",
+    "seconds": 0.053
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py commit --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-commit.log",
+    "seconds": 0.054
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py commits --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-commits.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py context --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-context.log",
+    "seconds": 0.048
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py decide --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-decide.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py design-done --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-design-done.log",
+    "seconds": 0.048
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py events --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-events.log",
+    "seconds": 0.045
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py export --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-export.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py finish --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-finish.log",
+    "seconds": 0.051
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py get --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-get.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py grant --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-grant.log",
+    "seconds": 0.048
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py import --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-import.log",
+    "seconds": 0.048
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py link --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-link.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py links --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-links.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py list --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-list.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py log --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-log.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py neighborhood --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-neighborhood.log",
+    "seconds": 0.049
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py new --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-new.log",
+    "seconds": 0.054
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py next --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-next.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py push --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-push.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py reconcile --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-reconcile.log",
+    "seconds": 0.052
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py render --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-render.log",
+    "seconds": 0.046
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py reopen --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-reopen.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py schema --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-schema.log",
+    "seconds": 0.048
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py set --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-set.log",
+    "seconds": 0.052
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py show --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-show.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py start --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-start.log",
+    "seconds": 0.051
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py stats --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-stats.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py supersede --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-supersede.log",
+    "seconds": 0.052
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py unit --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-unit.log",
+    "seconds": 0.045
+  },
+  {
+    "block": "G",
+    "cmd": "python3 packages/task/scripts/plan.py unlink --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-current-help-unlink.log",
+    "seconds": 0.047
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P1/P1.3.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P1.3.log",
+    "seconds": 0.033
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P1/P1.2.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P1.2.log",
+    "seconds": 0.01
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P1/P1.4.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P1.4.log",
+    "seconds": 0.011
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P1/P1.1.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P1.1.log",
+    "seconds": 0.007
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P8/P8.6.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P8.6.log",
+    "seconds": 0.007
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P8/P8.3.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P8.3.log",
+    "seconds": 0.01
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P8/P8.7.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P8.7.log",
+    "seconds": 0.012
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P8/P8.9.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P8.9.log",
+    "seconds": 0.015
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P2/P2.7.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P2.7.log",
+    "seconds": 0.009
+  },
+  {
+    "block": "H",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD --format=%H%x09%s -- 'plans/2026.10.05-№2-ORCH-PREP/phases/P2/P2.1.json'",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-path-history-P2.1.log",
+    "seconds": 0.009
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py input adhoc --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-extra-help-input-adhoc.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py render-prompt --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-extra-help-render-prompt.log",
+    "seconds": 0.041
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py launch list --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-extra-help-launch-list.log",
+    "seconds": 0.028
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py launch show --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-extra-help-launch-show.log",
+    "seconds": 0.026
+  },
+  {
+    "block": "J",
+    "cmd": "python3 packages/orch/scripts/orch.py launch argv --help",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-extra-help-launch-argv.log",
+    "seconds": 0.027
+  },
+  {
+    "block": "J",
+    "cmd": "rg -n 'orch.discovery|supersede' packages/orch/docs/architecture.md packages/task/docs",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/J-stale-doc-locations.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "K",
+    "cmd": "git diff --check 083fdfe1262b812ac4d863b461d57c991234b844..HEAD -- packages configs scripts",
+    "exit": 2,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-product-whitespace.log",
+    "seconds": 0.039
+  },
+  {
+    "block": "E",
+    "cmd": "python3 /tmp/p57_followups.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/E-scan-and-followups.log",
+    "seconds": 4.186
+  },
+  {
+    "block": "B",
+    "cmd": "python3 /tmp/p57_B.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-source-recheck.log",
+    "seconds": 0.079
+  },
+  {
+    "block": "B",
+    "cmd": "python3 /tmp/p57_B.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-source-final.log",
+    "seconds": 0.101
+  },
+  {
+    "block": "B",
+    "cmd": "python3 scripts/test-config-inventory.py",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-config-inventory.log",
+    "seconds": 0.051
+  },
+  {
+    "block": "B",
+    "cmd": "python3 scripts/sync-managed-blocks.py --check",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-managed-blocks.log",
+    "seconds": 0.02
+  },
+  {
+    "block": "B",
+    "cmd": "python3 packages/task/scripts/plan.py context PLAN2 P5.6 --budget",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-conclusion-context-budget.log",
+    "seconds": 0.107
+  },
+  {
+    "block": "B",
+    "cmd": "git log 083fdfe1262b812ac4d863b461d57c991234b844..HEAD '--format=%H %s' -- packages/artifex",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-artifex-history.log",
+    "seconds": 0.008
+  },
+  {
+    "block": "B",
+    "cmd": "git diff --name-only 083fdfe1262b812ac4d863b461d57c991234b844..HEAD -- packages/harness/lib/harness/run",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-harness-run-paths.log",
+    "seconds": 0.001
+  },
+  {
+    "block": "D",
+    "cmd": "python3 packages/task/scripts/plan.py bridge orch brief PLAN2 P4.4 --out /tmp/plan2-p57-4dpn45mo/p44.json",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-negative-role-input.log",
+    "seconds": 0.116
+  },
+  {
+    "block": "D",
+    "cmd": "rg -n report_api packages/orch/roles/executor.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/D-negative-role-literal.log",
+    "seconds": 0.002
+  },
+  {
+    "block": "G",
+    "cmd": "git cat-file -e v0.28.6:configs/profile-catalog.json",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-profile-released.log",
+    "seconds": 0.001
+  },
+  {
+    "block": "G",
+    "cmd": "git show v0.28.6:core/config_paths.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/G-released-config-resolver.log",
+    "seconds": 0.001
+  },
+  {
+    "block": "I",
+    "cmd": "rg -n '^#|^def |schemas/plan/v1|core|prepare_common|role-skills|bridges' packages/task/skills/plan-protocol/references/review-mode.md packages/task/lib/task/plan/bridges.py packages/task/lib/task/plan/lifecycle.py packages/task/lib/task/plan/gitops.py packages/task/lib/task/plan/parallel.py packages/orch/bridges/skiller/resolve_role.py packages/orch/lib/orch/launch.py packages/skiller/lib/skiller/host.py scripts/skiller-standalone-check.sh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-implementation-locations.log",
+    "seconds": 0.004
+  },
+  {
+    "block": "B",
+    "cmd": "python3 /tmp/p57_extra.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-extra-contract-probes.log",
+    "seconds": 0.422
+  },
+  {
+    "block": "H",
+    "cmd": "python3 /tmp/p57_H.py",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-records-final.log",
+    "seconds": 0.096
+  },
+  {
+    "block": "H",
+    "cmd": "python3 /tmp/p57_H.py",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-records-complete.log",
+    "seconds": 0.096
+  },
+  {
+    "block": "I",
+    "cmd": "python3 packages/task/scripts/plan.py set PLAN2 P6.7 --plans-root /tmp/plan2-p57-4dpn45mo/plans --json '{\"depends_on\":[\"P99.9\"]}'",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/I-review-p6-f1-check.log",
+    "seconds": 0.405
+  },
+  {
+    "block": "B",
+    "cmd": "packages/skiller/bin/skiller resolve --role reviewer --json",
+    "exit": 2,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/B-stale-changelog-cli.log",
+    "seconds": 0.083
+  },
+  {
+    "block": "K",
+    "cmd": "env GIT_INDEX_FILE=/tmp/plan2-p57-4dpn45mo/base-audit.index git read-tree 083fdfe1262b812ac4d863b461d57c991234b844",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-baseline-index.log",
+    "seconds": 0.007
+  },
+  {
+    "block": "K",
+    "cmd": "cd /tmp/plan2-p57-4dpn45mo/base && env GIT_DIR=/home/vostrikov/projects/packages/swissknifeman/.git GIT_WORK_TREE=/tmp/plan2-p57-4dpn45mo/base GIT_INDEX_FILE=/tmp/plan2-p57-4dpn45mo/base-audit.index python3 scripts/public-hygiene.py",
+    "exit": 1,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/K-hygiene-base-indexed.log",
+    "seconds": 1.465
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P5 --type note --summary 'audit ATTENTION: @plan/knowledge/audit-plan2-2026-10-07.json; reviewer codex/gpt-6.1-sol/xhigh, session 01a11749-1a0a-72f1-9737-6b8aee330f2c; 2 new Major, 5 Minor; F-C1/F-C2 confirmed, F-C3 closed.' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-0.log",
+    "seconds": 0.131
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P12.1 --type note --summary 'F-C1 confirmed (Major): 40/70 completed live briefs fail exec/v1 on reads[].included; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-1.log",
+    "seconds": 0.127
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P2.1 --type note --summary 'F-C2 confirmed (Major, review-p2 F1): route.settings still fails /route/minimum/settings on scratch brief; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-2.log",
+    "seconds": 0.126
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P11.3 --type note --summary 'finding A-1 (Major): Инвентарь конфигов не покрывает новый мост discovery; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-3.log",
+    "seconds": 0.135
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P2.2 --type note --summary 'finding A-2 (Major): Guard brief считает декларацию запрета lifecycle-инструкцией; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-4.log",
+    "seconds": 0.13
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P5.5 --type note --summary 'finding A-3 (Minor): Свежие записи CHANGELOG описывают заменённую архитектуру; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-5.log",
+    "seconds": 0.128
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P11.4 --type note --summary 'finding A-4 (Minor): Удалённый profile-catalog ошибочно назван never released; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-6.log",
+    "seconds": 0.121
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P5.5 --type note --summary 'finding A-5 (Minor): Architecture docs ссылаются на отсутствующий orch.discovery; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-7.log",
+    "seconds": 0.128
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P6.6 --type note --summary 'finding A-6 (Minor): Документация не покрывает глагол supersede из актуального CLI-каталога; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-8.log",
+    "seconds": 0.128
+  },
+  {
+    "block": "H",
+    "cmd": "python3 packages/task/scripts/plan.py log PLAN2 P5.5 --type note --summary 'finding A-7 (Minor): Новые конкретные ссылки на PLAN2 остаются в общих docs и коде; @plan/knowledge/audit-plan2-2026-10-07.json' --actor codex/gpt-6.1-sol/xhigh",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/H-audit-note-9.log",
+    "seconds": 0.121
+  },
+  {
+    "block": "V",
+    "cmd": "python3 -c \"import json,glob,sys; f=glob.glob('plans/2026.10.05-№2-ORCH-PREP/knowledge/audit-plan2-*.json'); assert len(f)==1, f; d=json.load(open(f[0])); ids=[s['id'] for s in d['sections']]; assert ids==['verdict','method','findings','coverage-recheck','recording-recheck','compat','not-checked','recommendations'], ids; assert d['sections'][0]['text'].split()[0].strip('*.:') in ('GREEN','ATTENTION','RED'); assert d['applies_to']==['P5.7']; rows=[l for l in d['sections'][3]['text'].splitlines() if l.startswith('| ') and l.split('|')[1].strip()[:1] in 'RIB' and l.split('|')[1].strip()[1:2].isdigit()]; assert len(rows)>=52, len(rows)\"",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/V-V1.log",
+    "seconds": 0.013
+  },
+  {
+    "block": "V",
+    "cmd": "python3 -c \"import json,sys; p='plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/'; assert open(p+'commands.log').read().strip(); assert open(p+'state.txt').read().strip(); v=json.load(open(p+'validation.json')); b={r['block'] for r in v}; assert b>=set('ABCDEFGHIJK'), sorted(set('ABCDEFGHIJK')-b); assert all('cmd' in r and 'exit' in r for r in v)\"",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/V-V2.log",
+    "seconds": 0.014
+  },
+  {
+    "block": "V",
+    "cmd": "python3 -c \"import json,glob,sys; bad=[f for f in glob.glob('plans/2026.10.05-№2-ORCH-PREP/phases/*/P*.json') if (d:=json.load(open(f)))['status'] in ('done','done_with_deviations') and not ((d.get('result') or {}).get('notes') and {c['id'] for c in (d.get('result') or {}).get('checks',[])} >= {v['id'] for v in d.get('validation',[]) if v['kind']=='acceptance'})]; print(bad); sys.exit(1 if bad else 0)\"",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/V-V3.log",
+    "seconds": 0.02
+  },
+  {
+    "block": "V",
+    "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP",
+    "exit": 0,
+    "log": "plans/2026.10.05-№2-ORCH-PREP/artifacts/P5.7/V-V4.log",
+    "seconds": 0.271
+  }
+]

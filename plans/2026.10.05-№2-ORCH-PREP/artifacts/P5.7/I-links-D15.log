@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D15",
+    "edges": [
+      {
+        "from": "D15",
+        "to": "P2",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D15",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D15",
+        "to": "P7",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P7.1",
+        "to": "D15",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.2",
+        "to": "D15",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.3",
+        "to": "D15",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.6",
+        "to": "D15",
+        "kind": "decision"
+      },
+      {
+        "from": "D15",
+        "to": "D10",
+        "kind": "supersedes"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D10",
+        "title": "Форма brief и где конформанс",
+        "status": "superseded"
+      },
+      {
+        "ref": "D15",
+        "title": "exec/v1-проекция brief переезжает из ядра Task в мост task/bridges/orch",
+        "status": "accepted"
+      },
+      {
+        "ref": "P2",
+        "title": "Task как поставщик данных: brief, полнота, ссылки, actor, evidence",
+        "status": null
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      },
+      {
+        "ref": "P7",
+        "title": "Мосты: правило границ и связь Task ↔ orch",
+        "status": null
+      },
+      {
+        "ref": "P7.1",
+        "title": "Диспетчер мостов plan.py bridge, kind bridge и boundary-тест Task",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.2",
+        "title": "Мост task/bridges/orch: перенос brief (exec/v1) из ядра и тестов конформанса",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.3",
+        "title": "Обратная регистрация в мосту (register), evidence по полям, нейтральный registrar",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.6",
+        "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P7",
+        "status": "done"
+      }
+    ]
+  }
+}

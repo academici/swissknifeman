@@ -1,0 +1,16 @@
+usage: plan.py batches [-h] [--plans-root PLANS_ROOT]
+                       (--json JSON | --file FILE)
+                       plan phase
+
+replace the batches of a phase
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+  phase
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --json JSON           JSON text, or @file
+  --file FILE           file holding the JSON

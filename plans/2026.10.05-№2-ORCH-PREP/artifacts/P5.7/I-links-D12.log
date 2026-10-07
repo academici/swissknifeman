@@ -1,0 +1,75 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D12",
+    "edges": [
+      {
+        "from": "D12",
+        "to": "P3",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D12",
+        "to": "P7",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D12",
+        "to": "P8",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P3.3",
+        "to": "D12",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.4",
+        "to": "D12",
+        "kind": "decision"
+      },
+      {
+        "from": "D12",
+        "to": "D3",
+        "kind": "supersedes"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D12",
+        "title": "Task самодостаточен: review-методика остаётся в Task, без зависимости от Skiller",
+        "status": "accepted"
+      },
+      {
+        "ref": "D3",
+        "title": "Перенос методики ревью без breaking",
+        "status": "superseded"
+      },
+      {
+        "ref": "P3",
+        "title": "Разделение инструкций по ролям (рефакторинг R19)",
+        "status": null
+      },
+      {
+        "ref": "P3.3",
+        "title": "Review-методика остаётся в Task; guard самодостаточности Task от Skiller",
+        "status": "skipped"
+      },
+      {
+        "ref": "P7",
+        "title": "Мосты: правило границ и связь Task ↔ orch",
+        "status": null
+      },
+      {
+        "ref": "P7.4",
+        "title": "Чистое ядро Task: dedupe reviewer, executor handoff, нейтрализация, без allowlist",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P8",
+        "title": "Skiller: чистый пакет общих skills, готовый к переезду",
+        "status": null
+      }
+    ]
+  }
+}

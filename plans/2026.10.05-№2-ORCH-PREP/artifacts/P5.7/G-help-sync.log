@@ -1,0 +1,6 @@
+skiller sync [--target DIR] [--dry-run] [--force] [--repair] [--hub] [--no-hub] [--no-core]
+  Applies .swissknifeman/config.json (mode=vendor): copies skills from the library to the project, writes skills-lock.json (managed),
+  manifest .swissknifeman-manifest.json and deletes the retired ones managed-skills. Doesn't touch other people's skills (--force grinds
+  occupied by someone else's path with a version from the library); --repair restores
+  confirmed only managed-drift with recoverable pre-image. CORE-skills are distributed by default (--no-core disables). Skill Index
+  (managed-block CLAUDE.md / .ai/guidelines) is updated if it is already in the project or passed --hub; --no-hub disables.

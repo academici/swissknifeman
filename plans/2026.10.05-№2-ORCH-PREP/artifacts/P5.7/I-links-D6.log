@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D6",
+    "edges": [
+      {
+        "from": "D6",
+        "to": "P4",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D6",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P5.3",
+        "to": "D6",
+        "kind": "decision"
+      },
+      {
+        "from": "D17",
+        "to": "D6",
+        "kind": "supersedes"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D17",
+        "title": "Расширение Plan №2: git-дисциплина, хелперы запуска, конфиги, параллельность (данные); исполнение — Plan 2",
+        "status": "accepted"
+      },
+      {
+        "ref": "D6",
+        "title": "Где launch catalog в Plan 1",
+        "status": "superseded"
+      },
+      {
+        "ref": "P4",
+        "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+        "status": null
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      },
+      {
+        "ref": "P5.3",
+        "title": "orch prepare --dry-run: native launch-plan, CAO profile, Claude-only prompt",
+        "status": "done_with_deviations"
+      }
+    ]
+  }
+}

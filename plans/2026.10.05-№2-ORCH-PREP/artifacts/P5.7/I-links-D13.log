@@ -1,0 +1,167 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D13",
+    "edges": [
+      {
+        "from": "D13",
+        "to": "P3",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D13",
+        "to": "P4",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D13",
+        "to": "P5",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D13",
+        "to": "P7",
+        "kind": "applies_to"
+      },
+      {
+        "from": "D13",
+        "to": "P8",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P3.3",
+        "to": "D13",
+        "kind": "decision",
+        "relation": "result"
+      },
+      {
+        "from": "P3.4",
+        "to": "D13",
+        "kind": "decision",
+        "relation": "result"
+      },
+      {
+        "from": "P7.1",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.2",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.3",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.4",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.5",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "P7.6",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "P9.5",
+        "to": "D13",
+        "kind": "decision"
+      },
+      {
+        "from": "D13",
+        "to": "D7",
+        "kind": "supersedes"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D13",
+        "title": "Именованные мосты: пакеты чистые, связи только через bridges/",
+        "status": "accepted"
+      },
+      {
+        "ref": "D7",
+        "title": "Discovery Task для потребителей",
+        "status": "superseded"
+      },
+      {
+        "ref": "P3",
+        "title": "Разделение инструкций по ролям (рефакторинг R19)",
+        "status": null
+      },
+      {
+        "ref": "P3.3",
+        "title": "Review-методика остаётся в Task; guard самодостаточности Task от Skiller",
+        "status": "skipped"
+      },
+      {
+        "ref": "P3.4",
+        "title": "Dedupe reviewer-абзаца, plan-run units → brief + executor handoff; широкий validate",
+        "status": "skipped"
+      },
+      {
+        "ref": "P4",
+        "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+        "status": null
+      },
+      {
+        "ref": "P5",
+        "title": "Развязка путей, переносимость, документация, итоговый вывод",
+        "status": null
+      },
+      {
+        "ref": "P7",
+        "title": "Мосты: правило границ и связь Task ↔ orch",
+        "status": null
+      },
+      {
+        "ref": "P7.1",
+        "title": "Диспетчер мостов plan.py bridge, kind bridge и boundary-тест Task",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.2",
+        "title": "Мост task/bridges/orch: перенос brief (exec/v1) из ядра и тестов конформанса",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.3",
+        "title": "Обратная регистрация в мосту (register), evidence по полям, нейтральный registrar",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.4",
+        "title": "Чистое ядро Task: dedupe reviewer, executor handoff, нейтрализация, без allowlist",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.5",
+        "title": "Чистое ядро orch: фразы lifecycle, reviewer без skills, boundary-тест orch",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P7.6",
+        "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P7",
+        "status": "done"
+      },
+      {
+        "ref": "P8",
+        "title": "Skiller: чистый пакет общих skills, готовый к переезду",
+        "status": null
+      },
+      {
+        "ref": "P9.5",
+        "title": "Мост task/bridges/orch: глагол commit → stage-result.commits[]",
+        "status": "done_with_deviations"
+      }
+    ]
+  }
+}

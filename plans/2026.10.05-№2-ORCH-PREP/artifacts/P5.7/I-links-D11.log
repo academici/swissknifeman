@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D11",
+    "edges": [
+      {
+        "from": "P6.1",
+        "to": "D11",
+        "kind": "decision"
+      },
+      {
+        "from": "P6.2",
+        "to": "D11",
+        "kind": "decision"
+      },
+      {
+        "from": "P6.3",
+        "to": "D11",
+        "kind": "decision"
+      },
+      {
+        "from": "P6.4",
+        "to": "D11",
+        "kind": "decision"
+      },
+      {
+        "from": "P6.5",
+        "to": "D11",
+        "kind": "decision"
+      },
+      {
+        "from": "P6.6",
+        "to": "D11",
+        "kind": "decision"
+      },
+      {
+        "from": "P6.7",
+        "to": "D11",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D11",
+        "title": "Read API и жёсткий формат связей: агент работает с планом только через plan.py",
+        "status": "accepted"
+      },
+      {
+        "ref": "P6.1",
+        "title": "Грамматика ref и таблица рёбер: edges.py, resolve в check",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P6.2",
+        "title": "Глаголы чтения get, list, events, artifact + схемы data",
+        "status": "done"
+      },
+      {
+        "ref": "P6.3",
+        "title": "Связи: links и neighborhood",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P6.4",
+        "title": "Каталог API: глагол schema",
+        "status": "done"
+      },
+      {
+        "ref": "P6.5",
+        "title": "Запись связей и артефактов: link, unlink, add-artifact",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P6.6",
+        "title": "Документация, CHANGELOG и широкий validate Task (Read API)",
+        "status": "done"
+      },
+      {
+        "ref": "P6.7",
+        "title": "Review P6: независимая проверка Read API",
+        "status": "done"
+      }
+    ]
+  }
+}

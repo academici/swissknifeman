@@ -1,0 +1,17 @@
+usage: plan.py add-decision [-h] [--plans-root PLANS_ROOT] --title TITLE
+                            [--actor ACTOR] [--json JSON | --file FILE]
+                            plan
+
+add a decision or open question
+
+positional arguments:
+  plan                  plan id, PLAN<N> or path
+
+options:
+  -h, --help            show this help message and exit
+  --plans-root PLANS_ROOT
+                        plans/ directory (default: nearest up from cwd)
+  --title TITLE
+  --actor ACTOR         PROVIDER/MODEL[/EFFORT] (default: plan authoring)
+  --json JSON           JSON text, or @file
+  --file FILE           file holding the JSON

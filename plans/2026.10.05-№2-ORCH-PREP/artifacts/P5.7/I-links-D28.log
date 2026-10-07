@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "D28",
+    "edges": [
+      {
+        "from": "D28",
+        "to": "P12",
+        "kind": "applies_to"
+      },
+      {
+        "from": "P12.1",
+        "to": "D28",
+        "kind": "decision"
+      },
+      {
+        "from": "P12.6",
+        "to": "D28",
+        "kind": "decision"
+      }
+    ],
+    "nodes": [
+      {
+        "ref": "D28",
+        "title": "P12: проекция context pack в режиме scoped — дедуп reads, сводки upstream и phase_dependencies",
+        "status": "accepted"
+      },
+      {
+        "ref": "P12",
+        "title": "Привязка знаний к пунктам и бюджет context pack: контроль после детализации",
+        "status": null
+      },
+      {
+        "ref": "P12.1",
+        "title": "Модель области видимости pack: global, settings.context_pack, проекция scoped в context.py",
+        "status": "done_with_deviations"
+      },
+      {
+        "ref": "P12.6",
+        "title": "Документация, CHANGELOG, измерение до/после, перевод плана в scoped и широкий validate",
+        "status": "done"
+      }
+    ]
+  }
+}

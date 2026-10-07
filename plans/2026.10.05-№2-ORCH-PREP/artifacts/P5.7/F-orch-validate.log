@@ -1,0 +1,252 @@
+[1/6] python compile
+[2/6] bash syntax
+[3/6] required files
+[4/6] schemas load
+[5/6] fixtures
+enum: /stream: must be one of "supported", "adapted", "unsupported", "unknown"
+CAPABILITY_EVIDENCE: declared supported capabilities require doc or code evidence
+EVIDENCE_CARRIER: command evidence requires exit without verdict
+EVIDENCE_CARRIER: manual evidence requires verdict and observation without exit
+additional: /unexpected: unexpected property 'unexpected'
+RECEIPT_RECONCILE: unknown effect outcome requires a reconciliation method
+one_of: /provenance: matches 0 of 3 oneOf branches, expected exactly 1
+DIGEST_MISMATCH: digest does not match canonical JSON
+additional: /unexpected: unexpected property 'unexpected'
+LIFECYCLE_LEAK: lifecycle instruction is present in execution input
+required: /: missing required property 'goal'
+INPUT_AUTHORITY: read-only input requires write_authority none
+enum: /stages/0/transport: must be one of "jsonl", "acp", "tui", "prompt", "none"
+type: environment variable value must be a string
+required: /: missing required property 'refusals'
+additional: /instructions/0/body: unexpected property 'body'
+ROLE_AUTHORITY: write authority conflicts with tool permissions
+ATTEMPT_RANGE: attempt must be at least 1
+enum: /kind: must be one of "started", "model_wait", "output", "tool", "question", "check", "quota_block", "auth_block", "provider_error", "timeout", "cancelled", "unknown_outcome", "completed", "failed"
+COMMIT_POLICY_CONFLICT: commit policy requires git_action commit
+enum: /isolation/mode: must be one of "worktree", "shared"
+ISOLATION_POLICY_CONFLICT: worktree isolation needs git_action commit to integrate
+POLICY_REQUIRED_REFUSE: required stages must refuse when unavailable
+POLICY_REVIEW_LIMIT: max_rounds must not exceed 2
+POLICY_PRIMARY: policy must have exactly one primary stage
+enum: /commits/0/role: must be one of "executor", "reviewer", "fix"
+COMMIT_SHA_DUPLICATE: commit hashes must be unique
+COMPLETED_PARSE_ERROR: completed stage cannot contain a parse error
+COST_FORMAT: cost_usd must be a decimal string
+USAGE_UNKNOWN_NUMERIC: unknown usage must not include token counts or cost
+[6/6] tests
+....................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 164 tests in 0.565s
+
+OK
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+OK
+..FFF...F.FE.
+======================================================================
+ERROR: test_unknown_skill_exits_1_with_error_diagnostic (test_resolve_role.ResolveRole.test_unknown_skill_exits_1_with_error_diagnostic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 84, in test_unknown_skill_exits_1_with_error_diagnostic
+    self.assertIn("SKILL_UNKNOWN", [d["code"] for d in json.loads(done.stdout)["diagnostics"]])
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+======================================================================
+FAIL: test_every_role_resolves_on_every_provider (test_resolve_role.ResolveRole.test_every_role_resolves_on_every_provider) (role='reviewer', provider='claude-code')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 39, in test_every_role_resolves_on_every_provider
+    out = self.resolve(role, provider)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 32, in resolve
+    self.assertEqual(done.returncode, 0, done.stderr + done.stdout)
+AssertionError: 1 != 0 : RESOLVE_FAILED: Unknown command: resolve
+
+Commands (are run from the consuming project, the root is looked up from CWD):
+  connect   connect the project via plugin marketplace Claude Code
+  vendor    vendor skills to the project (Cursor and other agents)
+  integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+  update    update connection/vendoring of the current project (--all: all)
+  init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+  sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+  lock      update skills-lock.json project (external skill map: skm + boost)
+  status    report on the current project (read-only)
+  budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+  eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+  analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+  bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+  list      registered projects (~/.swissknifeman/projects.json)
+  topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+  release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+            (opt --dry-run; does NOT tag/does not push - prints the command)
+
+Maintainer Commands (work with the registry itself):
+  registry  regenerate skills.json + plugin manifests + graph
+  validate  scripts/validate.sh
+  doctor    environment diagnostics
+  version   version (git SHA) and registry path
+
+
+======================================================================
+FAIL: test_every_role_resolves_on_every_provider (test_resolve_role.ResolveRole.test_every_role_resolves_on_every_provider) (role='reviewer', provider='codex')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 39, in test_every_role_resolves_on_every_provider
+    out = self.resolve(role, provider)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 32, in resolve
+    self.assertEqual(done.returncode, 0, done.stderr + done.stdout)
+AssertionError: 1 != 0 : RESOLVE_FAILED: Unknown command: resolve
+
+Commands (are run from the consuming project, the root is looked up from CWD):
+  connect   connect the project via plugin marketplace Claude Code
+  vendor    vendor skills to the project (Cursor and other agents)
+  integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+  update    update connection/vendoring of the current project (--all: all)
+  init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+  sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+  lock      update skills-lock.json project (external skill map: skm + boost)
+  status    report on the current project (read-only)
+  budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+  eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+  analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+  bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+  list      registered projects (~/.swissknifeman/projects.json)
+  topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+  release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+            (opt --dry-run; does NOT tag/does not push - prints the command)
+
+Maintainer Commands (work with the registry itself):
+  registry  regenerate skills.json + plugin manifests + graph
+  validate  scripts/validate.sh
+  doctor    environment diagnostics
+  version   version (git SHA) and registry path
+
+
+======================================================================
+FAIL: test_every_role_resolves_on_every_provider (test_resolve_role.ResolveRole.test_every_role_resolves_on_every_provider) (role='reviewer', provider='grok')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 39, in test_every_role_resolves_on_every_provider
+    out = self.resolve(role, provider)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 32, in resolve
+    self.assertEqual(done.returncode, 0, done.stderr + done.stdout)
+AssertionError: 1 != 0 : RESOLVE_FAILED: Unknown command: resolve
+
+Commands (are run from the consuming project, the root is looked up from CWD):
+  connect   connect the project via plugin marketplace Claude Code
+  vendor    vendor skills to the project (Cursor and other agents)
+  integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+  update    update connection/vendoring of the current project (--all: all)
+  init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+  sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+  lock      update skills-lock.json project (external skill map: skm + boost)
+  status    report on the current project (read-only)
+  budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+  eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+  analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+  bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+  list      registered projects (~/.swissknifeman/projects.json)
+  topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+  release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+            (opt --dry-run; does NOT tag/does not push - prints the command)
+
+Maintainer Commands (work with the registry itself):
+  registry  regenerate skills.json + plugin manifests + graph
+  validate  scripts/validate.sh
+  doctor    environment diagnostics
+  version   version (git SHA) and registry path
+
+
+======================================================================
+FAIL: test_reviewer_has_code_review_and_no_plan_protocol (test_resolve_role.ResolveRole.test_reviewer_has_code_review_and_no_plan_protocol)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 50, in test_reviewer_has_code_review_and_no_plan_protocol
+    out = self.resolve("reviewer", "codex")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 32, in resolve
+    self.assertEqual(done.returncode, 0, done.stderr + done.stdout)
+AssertionError: 1 != 0 : RESOLVE_FAILED: Unknown command: resolve
+
+Commands (are run from the consuming project, the root is looked up from CWD):
+  connect   connect the project via plugin marketplace Claude Code
+  vendor    vendor skills to the project (Cursor and other agents)
+  integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+  update    update connection/vendoring of the current project (--all: all)
+  init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+  sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+  lock      update skills-lock.json project (external skill map: skm + boost)
+  status    report on the current project (read-only)
+  budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+  eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+  analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+  bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+  list      registered projects (~/.swissknifeman/projects.json)
+  topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+  release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+            (opt --dry-run; does NOT tag/does not push - prints the command)
+
+Maintainer Commands (work with the registry itself):
+  registry  regenerate skills.json + plugin manifests + graph
+  validate  scripts/validate.sh
+  doctor    environment diagnostics
+  version   version (git SHA) and registry path
+
+
+======================================================================
+FAIL: test_text_output_lists_skills (test_resolve_role.ResolveRole.test_text_output_lists_skills)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/swissknifeman/packages/orch/bridges/skiller/tests/test_resolve_role.py", line 98, in test_text_output_lists_skills
+    self.assertEqual(done.returncode, 0, done.stderr)
+AssertionError: 1 != 0 : RESOLVE_FAILED: Unknown command: resolve
+
+Commands (are run from the consuming project, the root is looked up from CWD):
+  connect   connect the project via plugin marketplace Claude Code
+  vendor    vendor skills to the project (Cursor and other agents)
+  integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+  update    update connection/vendoring of the current project (--all: all)
+  init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+  sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+  lock      update skills-lock.json project (external skill map: skm + boost)
+  status    report on the current project (read-only)
+  budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+  eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+  analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+  bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+  list      registered projects (~/.swissknifeman/projects.json)
+  topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+  release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+            (opt --dry-run; does NOT tag/does not push - prints the command)
+
+Maintainer Commands (work with the registry itself):
+  registry  regenerate skills.json + plugin manifests + graph
+  validate  scripts/validate.sh
+  doctor    environment diagnostics
+  version   version (git SHA) and registry path
+
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.847s
+
+FAILED (failures=5, errors=1)
+  FAIL: bridge unittest bridges/skiller/tests
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+OK
+validate: FAILURE

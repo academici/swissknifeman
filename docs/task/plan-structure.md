@@ -84,6 +84,15 @@ phases close without blockers. `reopen` clears the affected item/phase closure.
 
 Batches cover every phase item exactly once and preserve execution order. Recommended batches
 can be split; required batches are atomic. Explicit phase dependencies express parallel branches.
+An item may depend on a concrete item of another phase instead of the whole phase, and a phase may declare
+`depends_on: []` and rely on item dependencies; `check` reports a cycle that crosses an item and a phase
+dependency as `dependency_deadlock`. `next --parallel N [--json]` is a read-only ready set across the whole
+plan: lanes for items whose dependencies are met, `task_files` do not overlap with running or selected lanes
+(an item without `task_files` conflicts with every lane), plus `running`, `conflicts`, `waiting` and `deferred`;
+plain `next` is unchanged. When every item of a phase is terminal but the phase is not closed (lanes finished
+in separate worktrees), the integrator runs `plan.py reconcile <plan>`: it closes such phases and the plan,
+idempotently and without a second writer. `check` warns with `phase_unclosed` and `phase_closure_stale`.
+Lanes are integrated locally and one at a time (GitHub web-merge does not apply `merge=union`).
 `next --json` reports one semantic action and its required route. Owner gates are declared in
 `authority`, granted through `grant --note` with authentic owner permission.
 

@@ -47,6 +47,12 @@ The commit holds the item's plan JSON and `task_files` only; foreign dirty paths
 amend or push in plan-run. `plan.py commits PLAN1 [P1.1]` lists the commits linked to the plan or
 item by `Plan` trailers. Details: [Plan structure](./plan-structure).
 
+## Parallel lanes
+
+`plan.py next <plan> --parallel N` lists independent lanes (non-overlapping `task_files`, met dependencies);
+each lane runs in its own worktree and branch after a committed claim. The integrator merges lanes one at a time
+locally, re-runs acceptance checks, then runs `plan.py reconcile <plan>`. Details: [Plan structure](./plan-structure).
+
 ## Scout
 
 An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic

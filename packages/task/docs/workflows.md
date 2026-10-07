@@ -47,6 +47,28 @@ The commit holds the item's plan JSON and `task_files` only; foreign dirty paths
 amend or push in plan-run. `plan.py commits PLAN1 [P1.1]` lists the commits linked to the plan or
 item by `Plan` trailers. Details: [Plan structure](./plan-structure).
 
+## Parallel lanes
+
+`plan.py next <plan> --parallel N` names up to N independent lanes (read-only). The integrator works in the
+main tree, the lane agents in their own worktrees:
+
+1. Claim: `plan.py start` the lane items, then one claim commit
+   (`plan.py commit … --role executor --type chore --trailer "Plan-Op: claim" --leave-outside`) before branching.
+2. Isolate: `git worktree add -b plan/<PLANn>/<item> <path> HEAD` per lane; set `gc.auto 0` and
+   `maintenance.auto false` for the round.
+3. Lane agent: `plan-run` in its worktree with its own `finish` and `commit`; it never runs `reconcile`
+   and never edits `phase.json` or `plan.json` by hand.
+4. Integrate one branch at a time in plan order (`git merge --no-ff`, or rebase and fast-forward);
+   `log.jsonl` merges through `union`, a conflict in a product file means incomplete `task_files`:
+   abort, log a `blocker`, re-run that lane later.
+5. Re-run the item's acceptance checks on the merged tree; red means `git revert -m 1 <merge>`, no `reset --hard`.
+6. After the round `plan.py reconcile <plan>` closes finished phases; commit its result with
+   `--trailer "Plan-Op: reconcile"`.
+7. Clean up with `git worktree remove` and `git branch -d`.
+
+Integration is local: GitHub web-merge does not apply `merge=union`. Enforcement and automation belong to
+the future engine; an external run contract may carry the same intent as an isolation policy (one worktree per run, sequential integration).
+
 ## Scout
 
 An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic

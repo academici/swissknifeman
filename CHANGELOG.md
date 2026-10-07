@@ -4,6 +4,17 @@
 
 ### Added
 
+- **Task параллельные полосы:** `plan.py next <plan> --parallel N [--json]` — read-only
+  ready set по всему плану (зависимости, непересекающиеся `task_files`, `running`/`conflicts`/
+  `waiting`/`deferred`; схема `read-ready`; обычный `next` без изменений). `plan.py reconcile`
+  закрывает фазы и план интегратором (идемпотентно, общий хелпер закрытия с `finish`);
+  `check` ловит межфазный `dependency_deadlock` и предупреждает `phase_unclosed`/`phase_closure_stale`.
+  Правила полос (claim-коммит, worktree и ветка на полосу, последовательная локальная
+  интеграция с повторной проверкой, затем reconcile) описаны в docs и командах Task;
+  GitHub web-merge union не применяет.
+- **orch exec/v1 isolation:** аддитивное `run-policy.isolation` (`mode: worktree|shared`,
+  `integration: sequential`, `recheck`); `worktree` при `git_action: none` отклоняется
+  как `ISOLATION_POLICY_CONFLICT`.
 - **Task scoped-коммит операции:** `plan.py commit` для executor/reviewer/fix
   проверяет scope item/unit, сохраняет чужие staged-файлы, поддерживает dry-run,
   явные пути и настройки сообщения. Plan trailers связывают коммит с операцией;

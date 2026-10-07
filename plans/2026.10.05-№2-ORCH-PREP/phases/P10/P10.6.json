@@ -1,0 +1,207 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.6",
+  "title": "Документация, CHANGELOG, architecture-bridges и широкий validate P10",
+  "status": "done",
+  "summary": "Документация Task (plan-structure: Lifecycle and scheduling; workflows: Parallel lanes) и зеркала docs/task, orch docs при пробеле, CHANGELOG [Unreleased], knowledge architecture-bridges через plan.py; широкий validate Task и orch.",
+  "why": "Последний item фазы: фиксирует поведение для людей и следующего плана (движок) и прогоняет широкие проверки обоих затронутых пакетов (правило плана: широкий validate — только здесь).",
+  "scope": {
+    "include": [
+      "packages/task/docs/**, docs/task/**",
+      "packages/orch/docs/** (если P10.1 оставил пробел)",
+      "CHANGELOG.md",
+      "knowledge architecture-bridges (plan.py)"
+    ],
+    "exclude": [
+      "изменения кода (красный прогон — repair в той же сессии, не редизайн)"
+    ]
+  },
+  "depends_on": [
+    "P10.5",
+    "P10.1"
+  ],
+  "decisions": [
+    "D17",
+    "D24"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "что документировать",
+      "required": true,
+      "section": "item-map"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "правило изоляции и интеграции",
+      "required": true,
+      "section": "integration"
+    },
+    {
+      "path": "@plan/knowledge/parallel-p10.json",
+      "why": "ограничения и факты",
+      "required": true,
+      "section": "research"
+    },
+    {
+      "path": "packages/task/docs/plan-structure.md",
+      "why": "раздел Lifecycle and scheduling",
+      "required": true,
+      "section": "117-160"
+    },
+    {
+      "path": "packages/task/docs/workflows.md",
+      "why": "раздел Scoped commits per operation — рядом новый Parallel lanes",
+      "required": true,
+      "section": "34-50"
+    },
+    {
+      "path": "docs/task/plan-structure.md",
+      "why": "зеркальная страница корня",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "why": "формат [Unreleased]",
+      "required": true,
+      "section": "1-60"
+    },
+    {
+      "path": "@plan/knowledge/architecture-bridges.json",
+      "why": "разделы, куда добавить P10",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/docs/**",
+      "change": "modify"
+    },
+    {
+      "path": "docs/task/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "modify",
+      "note": "только если P10.1 оставил пробел"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/2026.10.05-№2-ORCH-PREP/knowledge/architecture-bridges.json",
+      "change": "modify",
+      "note": "только через plan.py add-document/set"
+    }
+  ],
+  "rules": [
+    "Plan-файлы — только через plan.py",
+    "CHANGELOG — по фактическому diff (`plan.py commits 2026.10.05-№2-ORCH-PREP` и git log по PLAN2.P10), без обещаний",
+    "Явно описать: интеграция веток полос — локально и последовательно; GitHub web-merge не применяет union"
+  ],
+  "guidance": "Исполнитель: economy/medium (Sol). Запустить `python3 scripts/docs-impact.py`, если есть.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s bridges/orch/tests -t bridges/orch/tests -p 'test_*.py' -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/render-provider-commands.py --check --root . && python3 scripts/sync-managed-blocks.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "grep -q -- '--parallel' packages/task/docs/workflows.md && grep -q 'reconcile' packages/task/docs/plan-structure.md && grep -q 'reconcile' CHANGELOG.md && grep -q 'isolation' packages/orch/docs/contracts.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 packages/task/scripts/plan.py check 2026.10.05-№2-ORCH-PREP",
+      "expect": "exit 0; 0 errors",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "docs Task/orch по P10",
+    "CHANGELOG [Unreleased]",
+    "широкий validate зелёный"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-07T09:30:10Z",
+    "finished_at": "2026-10-07T10:02:30Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "198e55ea-667b-4acc-955f-c533c4819f0f"
+    },
+    "notes": "Docs Task (plan-structure, workflows) + зеркала docs/task, CHANGELOG, architecture-bridges-parallel; широкий validate Task и orch зелёный. orch docs без изменений: P10.1 уже описал isolation.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T10:02:30Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T10:02:30Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T10:02:30Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T10:02:30Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T10:02:30Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T10:02:30Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T10:02:30Z"
+}

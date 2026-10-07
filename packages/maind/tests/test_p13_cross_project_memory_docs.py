@@ -23,12 +23,12 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]  # .../packages/maind/tests →
 
 _ECOSYSTEM_MCP_TEMPLATE = (_REPO_ROOT / "packages" / "maind" / "templates" / "skills"
                            / "ecosystem-mcp" / "SKILL.md")
-_BOOTSTRAP_SKILLS = _REPO_ROOT / "packages" / "skiller" / "skills" / "repository-bootstrap"
+_BOOTSTRAP_SKILLS = _REPO_ROOT / "bootstrap" / "skills"
 _LOCAL_SKILLS = {
     # Root-bootstrap projections under .claude/skills/ are thin pointer stubs (Class-A
     # projection design, P1.2) — no copied body, so the caveat
     # phrase is checked against the canonical source they point back at.
-    "maind-overview": _BOOTSTRAP_SKILLS / "maind-overview" / "SKILL.md",
+    "maind-overview": _REPO_ROOT / "packages" / "maind" / "dev-skills" / "maind-overview" / "SKILL.md",
     "cross-project-optimizer": _BOOTSTRAP_SKILLS / "cross-project-optimizer" / "SKILL.md",
     "ecosystem-integration": _BOOTSTRAP_SKILLS / "ecosystem-integration" / "SKILL.md",
 }

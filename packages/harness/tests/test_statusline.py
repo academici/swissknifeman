@@ -120,6 +120,14 @@ class StatuslineScriptCase(unittest.TestCase):
         self.write_env(cooldown=0)
 
     def tearDown(self):
+        # The script detaches its notifier; it may still append to notify.log
+        # while the directory is removed (ENOTEMPTY) — retry until it finishes.
+        for _ in range(40):
+            try:
+                self._tmp.cleanup()
+                return
+            except OSError:
+                time.sleep(0.05)
         self._tmp.cleanup()
 
     def write_env(self, thresholds="80,90", cooldown=0, debug="false"):

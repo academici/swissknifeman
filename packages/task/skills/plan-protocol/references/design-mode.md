@@ -10,8 +10,12 @@ Goal: an item that a weaker model can execute from `context/<item>.json` alone.
    `kind: acceptance`), `deliverables`, `route`, `authority`, `depends_on`/`related`.
 4. Put long reasoning, algorithms and worked examples in JSON `sections` or `knowledge/<id>.json`
    through `add-document`, and reference the section id from `reads` or `examples`.
-5. Open questions become decisions (`add-decision`); an item that relies on one names it in
+5. Bind every knowledge document and decision you add (`applies_to` item or phase; `global: true` only for
+   plan-wide rules). After `design-done`, read its report: fix `context_unbound`, duplicate reads and
+   `OVER budget` items (`plan.py context <plan> <item> --budget`) by binding, splitting sections or reading a
+   section instead of a whole document. The report warns; it never trims the pack.
+6. Open questions become decisions (`add-decision`); an item that relies on one names it in
    `decisions`. Accept with `decide` and a rationale.
-6. Detail one phase at a time when later phases depend on real code; `design-done` only after
+7. Detail one phase at a time when later phases depend on real code; `design-done` only after
    `plan.py check` reports 0 errors.
-7. Design never executes items and never adds review items unless `--review` or the owner asks.
+8. Design never executes items and never adds review items unless `--review` or the owner asks.

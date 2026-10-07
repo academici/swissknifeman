@@ -26,7 +26,8 @@ context pack alone, and `plan.py check` passes.
    Optional units for a large item: `plan.py unit <plan> <Pn.m> add --title … --json '{"files": […], "mode": "delegate|self|either", …}'`;
    independent units need disjoint `files` and their own checks; `check` enforces it.
 6. Batches: `plan.py batches <plan> <Pn> --json '[{"id": "B1", "items": […], "mode": "recommended"}]'`.
-7. `plan.py check <plan>` until 0 errors, then `plan.py design-done <plan> <Pn>`.
+7. `plan.py check <plan>` until 0 errors, then `plan.py design-done <plan> <Pn>`;
+   then read the design-done report and resolve its context warnings (bind knowledge, drop duplicate reads).
 
 **Rules**
 - Change plans only through `plan.py`; never edit the generated Markdown views.
@@ -40,6 +41,7 @@ context pack alone, and `plan.py check` passes.
   JSON `sections` or `knowledge/<id>.json` and reference it through item reads; name enforcement, bypass and
   interfering operation/lock pairs. Use existing rules and validation fields, not new mandatory gates.
 - For parallel phases keep `task_files` exact: `next --parallel` treats an item without `task_files` as conflicting with every lane.
+- Bind knowledge and decisions to the items or phases that use them (`applies_to`); `global: true` only for plan-wide content.
 - Design does not execute items.
 
 **Done when** `plan.py check <plan>` reports 0 errors, the target phase is `detailed`, and the report

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:b3d9f5275fc0e42a602a8327ad74ef72f1343cf37ec9bd54d6139703ce396f95
+Canonical SHA-256: sha256:ffa93f736fe1e5c5843e7155e31aa712396deab3b1c7b50fe2f7753530bb108b
 Adapter: task.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -70,6 +70,7 @@ one commit per item, inside the item's scope.
 - `--review`: after the last green item, one `task:review` pass over the scope diff; fix a confirmed
   finding in its open item, report findings of closed items as recommendations.
 - Parallel lanes: take them from `plan.py next <plan> --parallel N`; one worktree and branch per lane after a committed claim; integrate lanes one at a time, re-run the item's acceptance checks, then `plan.py reconcile <plan>`.
+- The context pack is complete; do not trim it. Irrelevant or stale pack content is a design defect: `plan.py log <plan> <item> --type difficulty` with `plan.py context <plan> <item> --budget` numbers.
 - Stop only at an owner gate, a missing decision, an external wait or exhausted context; existing dirty
   changes belong to the owner.
 

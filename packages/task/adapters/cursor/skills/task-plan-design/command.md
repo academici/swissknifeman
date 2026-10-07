@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:a9376cdd18fd7ec690fb37c8fb74e6e772378f9a542d1258728fc992e2737d73
+Canonical SHA-256: sha256:4fae8fde546e7ad16e8bd83de29d9dc3c6266cb71528014c8254802c2f4d4d6d
 Adapter: task.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -45,7 +45,8 @@ context pack alone, and `plan.py check` passes.
    Optional units for a large item: `plan.py unit <plan> <Pn.m> add --title … --json '{"files": […], "mode": "delegate|self|either", …}'`;
    independent units need disjoint `files` and their own checks; `check` enforces it.
 6. Batches: `plan.py batches <plan> <Pn> --json '[{"id": "B1", "items": […], "mode": "recommended"}]'`.
-7. `plan.py check <plan>` until 0 errors, then `plan.py design-done <plan> <Pn>`.
+7. `plan.py check <plan>` until 0 errors, then `plan.py design-done <plan> <Pn>`;
+   then read the design-done report and resolve its context warnings (bind knowledge, drop duplicate reads).
 
 **Rules**
 - Change plans only through `plan.py`; never edit the generated Markdown views.
@@ -59,6 +60,7 @@ context pack alone, and `plan.py check` passes.
   JSON `sections` or `knowledge/<id>.json` and reference it through item reads; name enforcement, bypass and
   interfering operation/lock pairs. Use existing rules and validation fields, not new mandatory gates.
 - For parallel phases keep `task_files` exact: `next --parallel` treats an item without `task_files` as conflicting with every lane.
+- Bind knowledge and decisions to the items or phases that use them (`applies_to`); `global: true` only for plan-wide content.
 - Design does not execute items.
 
 **Done when** `plan.py check <plan>` reports 0 errors, the target phase is `detailed`, and the report

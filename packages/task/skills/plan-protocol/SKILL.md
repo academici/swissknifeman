@@ -116,6 +116,10 @@ Exit codes: 0 ok, 1 refusal or check errors (text mode: `CODE: message` on stder
 - Batches group items that share files or context; `mode: required` only for an atomic group.
 - Owner gates: `authority: {kind: owner_gate, gate: X}`; `start` refuses until `plan.py grant X`
   records the owner's message.
+- Context scope: a knowledge document or accepted decision reaches an item's pack only through `applies_to`
+  (item or phase) or `global: true`; `settings.context_pack: scoped` (default for new plans) drops unbound
+  content, `legacy` still sends it everywhere. Bind with `plan.py link <plan> knowledge/<id> <Pn|Pn.m> --kind applies_to`.
+  Keep phase records out of `brief` and stale projections out of `plan.sections`; `design-done` reports pack sizes.
 
 ## 7. Review and audit
 

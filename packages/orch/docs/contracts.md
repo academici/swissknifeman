@@ -1,7 +1,7 @@
 # exec/v1 contracts
 
 Engine-neutral documents exchanged between plan bridges, roles and engine bindings. The schemas in
-[`schemas/exec/v1/`](../schemas/exec/v1/) are the source of truth; this page is a short map.
+`schemas/exec/v1/` are the source of truth; this page is a short map.
 Engine operations and run states are described in [engine-port.md](engine-port.md).
 
 ## Conventions

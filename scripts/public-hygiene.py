@@ -83,6 +83,7 @@ PLAN_SYNTAX_TEST_TREES = {
     "packages/task/bridges/orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
     "packages/orch/fixtures/exec/": "orchestration exec-contract fixtures: plan-bound identifiers",
     "packages/orch/tests/": "orchestration tests and goldens: plan-bound identifiers and profile examples",
+    "tests/golden/": "golden fixtures of the plan CLI output on the synthetic engine demo plan: its ID shape",
 }
 
 

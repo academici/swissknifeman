@@ -18,6 +18,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Overview', link: '/' },
       { text: 'Development', link: '/develop', activeMatch: '/develop' },
+      { text: 'Architecture', link: '/architecture/', activeMatch: '/architecture/' },
       { text: 'Status', link: '/status', activeMatch: '/status' },
       { text: 'Environment', link: '/harness/', activeMatch: '/harness/' },
       { text: 'Skills', link: '/skiller/guide/', activeMatch: '/skiller/' },
@@ -242,6 +243,52 @@ export default withMermaid(defineConfig({
         },
       ],
 
+      '/architecture/': [
+        {
+          text: 'Architecture',
+          items: [
+            { text: 'Overview', link: '/architecture/' },
+            { text: 'Ecosystem', link: '/architecture/ecosystem' },
+            { text: 'Contracts', link: '/architecture/contracts' },
+            { text: 'Ownership map', link: '/architecture/ownership' },
+          ],
+        },
+        {
+          text: 'Decisions',
+          collapsed: true,
+          items: [
+            { text: 'Format and index', link: '/architecture/decisions/README' },
+            { text: '0001 Modules are isolated folders with a manifest; no new repositories yet', link: '/architecture/decisions/0001-modules-as-isolated-folders' },
+            { text: '0002 A module depends only on its own library and on aicore', link: '/architecture/decisions/0002-module-dependencies-only-on-aicore' },
+            { text: '0003 Three kinds of links; bridges connect planner and orch', link: '/architecture/decisions/0003-three-kinds-of-links-and-bridges' },
+            { text: '0004 aicore is the foundation, with a strict generalisation boundary', link: '/architecture/decisions/0004-aicore-foundation-and-generalisation-boundary' },
+            { text: '0005 Layered configuration and standard state locations', link: '/architecture/decisions/0005-layered-config-and-standard-state-locations' },
+            { text: '0006 Extensibility through events, subscriptions, overlays and external commands', link: '/architecture/decisions/0006-extensibility-events-subscriptions-overlays' },
+            { text: '0007 brain is a hub module; only its foundation is in scope', link: '/architecture/decisions/0007-brain-module-scope' },
+            { text: '0008 Only shared skills stay in skiller; module skills move to their module', link: '/architecture/decisions/0008-skills-live-in-their-module' },
+            { text: '0009 task becomes planner, with aliases; plan URNs do not change', link: '/architecture/decisions/0009-task-renamed-to-planner' },
+            { text: '0010 Transition through swissknifeman upgrade and an upgrade guide', link: '/architecture/decisions/0010-upgrade-command-and-guide' },
+            { text: '0011 TOML for human-edited configuration layers, JSON for generated state', link: '/architecture/decisions/0011-toml-for-human-edited-config' },
+            { text: '0012 Planner budgets, thresholds and behaviour are configurable', link: '/architecture/decisions/0012-planner-configuration' },
+            { text: '0013 Orchestration scenarios and execution through a prepared brief', link: '/architecture/decisions/0013-orchestration-scenarios-and-prepared-brief' },
+            { text: '0014 Language-neutral contracts live in aicore', link: '/architecture/decisions/0014-language-neutral-contracts-in-aicore' },
+            { text: '0015 Versions by dimension and stability stages', link: '/architecture/decisions/0015-versions-by-dimension-and-stability-stages' },
+            { text: '0016 Extension model: levels, manifest before launch, handshake, trust', link: '/architecture/decisions/0016-extension-model-levels-and-trust' },
+            { text: '0017 Boundary between aicore.provider and the orch engines; error taxonomy', link: '/architecture/decisions/0017-provider-boundary-and-error-taxonomy' },
+            { text: '0018 Execution protocol: event identity, fencing, idempotency, immutable launch plan', link: '/architecture/decisions/0018-execution-protocol-identity-fencing-idempotency' },
+            { text: '0019 Configuration semantics: merging, removal, explain, secrets, invocation layer', link: '/architecture/decisions/0019-config-semantics' },
+            { text: '0020 Migration discipline: golden fixtures, shims with a window, shadow comparison, rollback', link: '/architecture/decisions/0020-migration-discipline' },
+            { text: '0021 Durable architecture documentation and decision records in the repository', link: '/architecture/decisions/0021-durable-architecture-docs' },
+            { text: '0022 Doctor is a contract of every module', link: '/architecture/decisions/0022-doctor-as-module-contract' },
+            { text: '0023 Releases and supply chain: what is needed now and what waits for a trigger', link: '/architecture/decisions/0023-releases-and-supply-chain' },
+            { text: '0024 Python package names of modules', link: '/architecture/decisions/0024-python-package-names' },
+            { text: '0025 Shape of unit.json and the aicore skeleton', link: '/architecture/decisions/0025-unit-manifest-shape-and-aicore-skeleton' },
+            { text: '0026 The folder-is-a-module rule through a pinned root common instruction', link: '/architecture/decisions/0026-pinned-root-common-instruction' },
+            { text: '0027 Golden fixtures: location, normalisation, lifecycle outside CI', link: '/architecture/decisions/0027-golden-fixtures-lifecycle' },
+          ],
+        },
+      ],
+
       '/': [
         {
           text: 'Ecosystem',
@@ -249,6 +296,7 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/' },
             { text: 'Get started', link: '/getting-started' },
             { text: 'Development with Claude Code', link: '/develop' },
+            { text: 'Architecture', link: '/architecture/' },
             { text: 'Deployment: new host / team', link: '/deploy' },
             { text: 'Routing sources and tasks', link: '/routing' },
             { text: 'Control-surface projects', link: '/control-surface' },

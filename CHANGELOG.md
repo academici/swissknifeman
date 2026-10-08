@@ -147,6 +147,25 @@
   workflows и `.grok/config.toml.example`. Рантайм `.grok/review-gate.state.json`
   игнорируется. `git rm --cached` sync не запускает. Повтор ничего не дописывает.
 
+- **aicore:** module skeleton `packages/aicore` with the manifest schema `unit/v1` and the diagnostic result schema
+  `check-result/v1` (JSON Schema draft 2020-12, with valid and invalid example documents); every other module
+  (`analyst`, `harness`, `maind`, `orch`, `skiller`, `task`) gets a `unit.json` that declares its identity, version,
+  dependencies, CLI, plugins, contracts, doctor probes and developer commands.
+- **scripts:** `ecosystem-units.py` with `check` (manifests, ownership map, schema identifiers, module boundaries
+  against the baseline `configs/ecosystem-baseline.json`, `--strict`), `baseline --update`, `render [--check]`
+  (`docs/architecture/ownership.md` from `configs/ecosystem-units.json`), `standalone` (a module's tests in an isolated
+  copy; `--baseline` for CI) and `list`; CI runs it in the hygiene and test workflows.
+- **harness:** pinned root instruction `root.module-folders` ("every `packages/<id>/` folder is an independent module")
+  in the common catalog, projected into the root `AGENTS.md`, `CLAUDE.md`, Cursor and Grok rules through
+  `ROOT_PINNED_COMMON_IDS`; instruction catalog version 1.4.0.
+- **scripts:** `golden.py` (`list`, `check`, `capture --reason`) with golden fixtures in `tests/golden/` — the output of
+  26 CLI cases and sha256 digests of the outputs of 10 generators plus their `--check` — as scaffolding for the module
+  split; not a CI step.
+- **docs:** `docs/architecture/` — the ecosystem architecture, the inventory of contracts with the evolution policy of each
+  contract, the generated ownership map, 27 decision records (`decisions/`) and the distribution tables of skills and
+  service files; Architecture section in the site navigation; the branch section of `docs/develop.md` describes the module
+  checks, the baseline and the golden cycle.
+
 ### Changed
 
 - **task:** review method is generated from `quality:code-review` / `quality:artifact-review`.
@@ -197,6 +216,8 @@
 
 ### Removed
 
+- `scripts/skiller-standalone-check.sh`: replaced by `ecosystem-units.py standalone`, which runs the same check for every
+  module and compares it with the recorded baseline; the CI job `skiller-standalone` became `standalone`.
 - Duplicate `configs/profile-catalog.json` (never released); the canon is
   `packages/harness/configs/common/profile-catalog.json`.
 

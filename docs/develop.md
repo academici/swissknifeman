@@ -449,5 +449,32 @@ describes how that work is isolated from a working machine. It is removed at cut
    package test runners and the standalone checks of the phase. At the end of the phase `git push origin
    ecosystem-split` (no force). On another computer `scripts/dev-clone.sh status` shows the branch, whether the
    marker is present and how far it is ahead of or behind `origin/main` and `origin/ecosystem-split`.
-7. **Removal.** The guard blocks, the marker, `scripts/dev-clone.sh`, `scripts/dev-sandbox.sh` and this section
-   are removed at cutover.
+7. **Module checks.** Every `packages/<id>/` folder is a module described by its `unit.json`
+   ([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
+   - `check [--strict] [--json]` runs the manifest, ownership-map, schema-identifier and boundary checks. Boundary
+     violations that exist today are recorded in `configs/ecosystem-baseline.json`: a new violation (or a larger count)
+     fails with `ECOSYSTEM_BOUNDARY_NEW`, a smaller one is reported as an improvement, and `--strict` fails on any.
+   - `baseline --update` recomputes the baseline and prints the difference. Commit it only together with the reason in
+     the commit message; a baseline update never hides a violation that was just introduced.
+   - `render [--check]` regenerates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and the
+     manifests; `--check` fails when the file differs.
+   - `standalone <id>... | --all | --baseline [--update-baseline]` runs the tests of a module in a copy of its folder
+     with a stand-in for `aicore` and its own `HOME`. `--baseline` runs the modules recorded as `pass` and fails if any
+     stops passing; it is the CI job `standalone`. Modules recorded as `fail` become autonomous in their own stages.
+   - `list [--json]` prints the modules with kind, version, destination, stability and requirements.
+
+   The tests are `python3 scripts/test-ecosystem-units.py`; CI runs the checks and `render --check` in the hygiene
+   workflow.
+8. **Golden cycle.** `scripts/golden.py` pins the behaviour that must survive the move: the output of 26 CLI cases
+   (`tests/golden/cases.json`, `tests/golden/cli/*.txt`, run in a throwaway sandbox with paths, hashes and timestamps
+   normalised) and sha256 digests of generated files plus the `--check` of each generator
+   (`tests/golden/generation.json`). It is migration scaffolding, not a CI step.
+   - `golden.py list` shows the cases; `golden.py check [--only ID,...]` compares and prints a diff per differing case
+     (exit 1).
+   - At the start of a stage, after `scripts/dev-clone.sh sync-main`, run `golden.py check`. If `main` changed generated
+     output, run `golden.py capture --reason "sync main <sha>"` in a separate commit before moving any code.
+   - A stage that moves code must pass `golden.py check` byte for byte. An intended change of behaviour is recorded with
+     `golden.py capture --only ID,... --reason "..."` in the same change, with the explanation in the commit message.
+   - The fate of the fixtures after the merge is decided at the cutover.
+9. **Removal.** The guard blocks, the marker, `scripts/dev-clone.sh`, `scripts/dev-sandbox.sh` and this section
+   are removed at cutover. The module checks and `docs/architecture/` stay.

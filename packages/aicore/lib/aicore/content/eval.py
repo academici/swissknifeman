@@ -417,7 +417,7 @@ def _parse_claude_json(stdout):
     models = []
     model_usage = data.get("modelUsage") if isinstance(data, dict) else None
     if isinstance(model_usage, dict):
-        models = sorted(str(name) for name in model_usage)
+        models = sorted(str(name) for name in model_usage if name)
     return text, tokens, models
 
 
@@ -486,6 +486,24 @@ _VERSION_RE = re.compile(r"^\d+(\.\d+)+[\w.+-]*$")
 _MISSING = object()
 
 
+def fixtures_digest(value):
+    """Tagged digest of fixture documents (a mapping). The canonical JSON of `aicore.util.digest`
+    refuses floats, but fixtures may legitimately hold them (an assertion value, a bank outcome
+    score); each float is digested as `{"float": repr(x)}`, so the digest stays deterministic and
+    a document without floats gets exactly `digest_json(value)`."""
+    return digest_json(_floats_as_text(value))
+
+
+def _floats_as_text(value):
+    if isinstance(value, float):
+        return {"float": repr(value)}
+    if isinstance(value, dict):
+        return {key: _floats_as_text(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_floats_as_text(item) for item in value]
+    return value
+
+
 def runner_context(claude, models):
     """`runner` block of the context. `cli_version` — the first word of the first stdout
     line of `<claude> --version` (10 s timeout) when it looks like a version; a missing binary,
@@ -495,14 +513,14 @@ def runner_context(claude, models):
         try:
             proc = subprocess.run([claude, "--version"], capture_output=True, text=True,
                                   timeout=VERSION_PROBE_TIMEOUT, check=False)
-        except (OSError, subprocess.SubprocessError):
+        except (OSError, subprocess.SubprocessError, UnicodeDecodeError):
             proc = None
         if proc is not None and proc.returncode == 0:
             words = (proc.stdout.strip().splitlines() or [""])[0].split()
             if words and _VERSION_RE.match(words[0]):
                 cli_version = words[0]
     return {"provider": "claude-code", "cli_version": cli_version,
-            "models": sorted({str(m) for m in (models or [])})}
+            "models": sorted({str(m) for m in (models or []) if m})}
 
 
 def _check_part(name, part, keys, errors):
@@ -543,6 +561,8 @@ def eval_context(*, skill=None, fixtures, grader, runner):
         models = runner["models"]
         if not isinstance(models, list) or not all(isinstance(m, str) and m for m in models):
             errors.append("runner.models must be a list of non-empty strings")
+        elif models != sorted(set(models)):
+            errors.append("runner.models must be sorted and unique")
     if errors:
         raise ValueError("invalid eval context: " + "; ".join(errors))
     return {
@@ -563,7 +583,7 @@ def skill_eval_context(skill_dir, skill_id, runner):
                 "pressure": safe_load_json(evals_dir / "pressure.json")}
     return eval_context(
         skill={"id": skill_id, "digest": skill_digest(skill_dir)},
-        fixtures={"id": EVALS_SUBDIR, "version": None, "digest": digest_json(fixtures)},
+        fixtures={"id": EVALS_SUBDIR, "version": None, "digest": fixtures_digest(fixtures)},
         grader={"id": "skill-eval", "version": GRADER_VERSION},
         runner=runner)
 
@@ -962,7 +982,7 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
         "generated_at": generated_at,
         "context": eval_context(
             fixtures={"id": "system-bank", "version": cases_doc.get("bank_version"),
-                      "digest": digest_json(cases_doc)},
+                      "digest": fixtures_digest(cases_doc)},
             grader={"id": "system-bank", "version": graders_doc.get("grader_version")},
             runner=runner or {"provider": "claude-code", "cli_version": None, "models": []}),
         "bank_version": cases_doc.get("bank_version"),

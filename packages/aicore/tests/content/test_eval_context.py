@@ -125,6 +125,28 @@ class SkillContextCase(unittest.TestCase):
         claude = write_fake_claude(self.tmp, version="2.1.294 (Claude Code)")
         self.assertEqual(ev.runner_context(claude, [])["cli_version"], "2.1.294")
 
+    def test_undecodable_version_output_gives_null(self):
+        probe = Path(self.tmp) / "bytes.py"
+        write(probe, "#!/usr/bin/env python3\nimport sys\nsys.stdout.buffer.write(b'\\xff\\xfe')\n")
+        probe.chmod(0o755)
+        self.assertIsNone(ev.runner_context(str(probe), [])["cli_version"])
+
+    def test_fixtures_with_floats_are_digested(self):
+        write(self.skill_dir / "evals" / "evals.json", json.dumps({"skill": "demo", "cases": [
+            {"id": 1, "prompt": "p", "assertions": [{"type": "min_words", "value": 1.5}]}]}))
+        runner = ev.runner_context(None, [])
+        context = ev.skill_eval_context(self.skill_dir, "quality/demo", runner)
+        self.assertEqual(validate(context), [])
+        write(self.skill_dir / "evals" / "evals.json", json.dumps({"skill": "demo", "cases": [
+            {"id": 1, "prompt": "p", "assertions": [{"type": "min_words", "value": 2.5}]}]}))
+        changed = ev.skill_eval_context(self.skill_dir, "quality/demo", runner)
+        self.assertEqual(ev.compare_eval_context(context, changed), ["fixtures.digest"])
+        self.assertEqual(ev.fixtures_digest({"a": [1, "x"]}), digest_json({"a": [1, "x"]}))
+
+    def test_empty_model_names_are_not_observations(self):
+        self.assertEqual(ev._parse_claude_json(json.dumps({"result": "r", "modelUsage": {"": {}, "m": {}}}))[2], ["m"])
+        self.assertEqual(ev.runner_context(None, ["", "m"])["models"], ["m"])
+
     def test_run_records_the_models_it_observed(self):
         claude = write_fake_claude(self.tmp, models=("m-1", "m-2"))
         run = ev.run_case(self.skill_dir, {"id": 1, "prompt": "p"}, with_skill=False,
@@ -168,6 +190,12 @@ class SystemBankContextCase(unittest.TestCase):
                                                "digest": digest_json(self.cases_doc)})
         self.assertEqual(context["grader"], {"id": "system-bank", "version": "test-1.0.0"})
         self.assertEqual(context["runner"], {"provider": "claude-code", "cli_version": None, "models": []})
+
+    def test_bank_with_a_float_outcome_still_builds(self):
+        self.cases_doc["cases"][0]["baseline"]["outcome"]["score"] = 0.5
+        bench = self.build()
+        self.assertEqual(validate(bench["context"]), [])
+        self.assertEqual(bench["context"]["fixtures"]["digest"], ev.fixtures_digest(self.cases_doc))
 
     def test_a_given_runner_is_recorded(self):
         runner = {"provider": "claude-code", "cli_version": "9.9.9", "models": ["m"]}
@@ -216,6 +244,7 @@ class EvalContextShapeCase(unittest.TestCase):
             "grader.version": lambda p: p["grader"].update(version=1),
             "runner.cli_version": lambda p: p["runner"].update(cli_version=2),
             "runner.models": lambda p: p["runner"].update(models="m"),
+            "sorted and unique": lambda p: p["runner"].update(models=["m", "m"]),
             "runner must be": lambda p: p.update(runner={"provider": "claude-code"}),
         }
         for needle, mutate in cases.items():
@@ -225,6 +254,12 @@ class EvalContextShapeCase(unittest.TestCase):
                 with self.assertRaises(ValueError) as caught:
                     ev.eval_context(**parts)
                 self.assertIn(needle, str(caught.exception))
+
+    def test_unsorted_models_are_refused(self):
+        parts = self.parts()
+        parts["runner"]["models"] = ["b", "a"]
+        with self.assertRaises(ValueError):
+            ev.eval_context(**parts)
 
     def test_compare_reports_sorted_paths_and_whole_sections(self):
         a, b = valid_context(), copy.deepcopy(valid_context())

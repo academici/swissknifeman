@@ -85,7 +85,7 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 | [`packages/analyst`](packages/analyst/) | continuous learning: capturing lessons from runs, man-gate, provenance | `analyst` |
 | [`packages/task`](packages/task/) | task intent commands (`/task:*`, `$ task:*`, Cursor `task:*`) | plugins Claude Code, Codex and Grok |
 
-General foundation - package [`core`](core/) (stdlib-only: `Env`, output, slug).
+General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, `provider`, `artifacts`, `usage`; the root [`core`](core/) is a transitional shim over it).
 
 ## Installation
 

@@ -88,6 +88,18 @@ class DocsImpactTests(unittest.TestCase):
         ]
         self.assertEqual(missing_count(entries), 1)
 
+    def test_foundation_docs_credit_aicore_only(self):
+        entries = [
+            ("A", "packages/aicore/lib/aicore/x.py"),
+            ("A", "docs/architecture/decisions/0099-x.md"),
+        ]
+        self.assertEqual(missing_count(entries), 0)
+        entries = [
+            ("A", "packages/maind/lib/maind/x.py"),
+            ("A", "docs/architecture/decisions/0099-x.md"),
+        ]
+        self.assertEqual(missing_count(entries), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

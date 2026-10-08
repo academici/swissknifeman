@@ -7,7 +7,8 @@ three independent packages (`skiller`, `harness`, `maind`) + general `core` + ro
 ## Layout
 
 ```
-core/                 # general stdlib-only package (Env/io/cli/term/text/repo)
+packages/aicore/      # foundation: stdlib-only util/provider/artifacts/usage, schemas, provider data
+core/                 # transitional shim over aicore (until the hub modules move onto aicore)
 packages/skiller/     # skill registry            (CLI skiller)   — see packages/skiller/CONTRIBUTING.md
 packages/harness/     # environment Claude Code      (CLI harness)
 packages/maind/       # memory hub/column/coordination (CLI maind)   — see packages/maind/CONTRIBUTING.md
@@ -61,8 +62,8 @@ PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # transitional core
 
 ## Conventions
 
-- **stdlib-only** in Python (`lib/`, `core/`) — none pip-dependencies at runtime.
-- **`Env` is passed explicitly** (frozen dataclass, heir `core.BaseEnv`) — without modular globals,
+- **stdlib-only** in Python (`lib/`, `core/`; minimum Python 3.9) — none pip-dependencies at runtime.
+- **`Env` is passed explicitly** (frozen dataclass, heir `aicore.util.env.BaseEnv`) — without modular globals,
   everything is tested in tmpdir.
 - **Atomic write** files/JSON — via `core.atomic_write_text` / `atomic_write_json`.
 - **Messages - in Russian** (`die`, `warn`).

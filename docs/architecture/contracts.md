@@ -33,7 +33,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | --- | --- | --- | --- | --- |
 | Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/task/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
 | Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1`, `packages/orch/bridges/*/bridge.json` | orch | alpha | no schema file; unify the two descriptors in the bridges stage: P10 |
-| Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; schema with the move into `aicore`: P3 |
+| Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; the files moved into `aicore` unchanged and the schema is still open |
 | Model catalog (transitional copy) | `mappings.<provider>` in `packages/task/configs/command-routing.json` | planner | development | equal to the aicore catalog (parity test); removed in P9 |
 
 ### Inventory of execution contracts
@@ -44,15 +44,15 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | ExecutionPlan | `exec/v1` `launch-plan` (`prepare --dry-run`) | orch | digests, module versions, decisions, proof: P10 |
 | RunEvent | `exec/v1` `run-event` (`run_id`, `stage_id`, `attempt`, `seq`, `ts`, `kind`, `data`, `raw_ref`, `route_observed`) | orch | `event_id`, causation and correlation, `owner_epoch`: P10 |
 | StageResult / RunResult | `exec/v1` `stage-result` | orch | module versions and skill digest: P10 |
-| CapabilityManifest | `exec/v1` `capability-record` | orch, with support levels in aicore | source, freshness, remediation; shared support levels: P3, P10 |
+| CapabilityManifest | `exec/v1` `capability-record`; support levels and dimensions in `capability-support/v1` | orch, with support levels in aicore | the record adopts source, freshness and remediation: P10 |
 | PluginManifest | `unit.json` | aicore | schema now; manifest of an external plugin: P6 |
 | ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog is separate: `model-catalog/v1` |
 | SkillDescriptor | skill frontmatter, `skills.json`, `skills-lock.json` | aicore (content) | license, compatibility, required tools, provenance: P5 |
 | HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | modules' own `doctor` formats differ: P11, P12 |
 | PolicyDecision | refusals `CODE: message`, run-policy | orch | structured decision inside the launch plan: P10 |
 | EffectRequest / Receipt | `exec/v1` `effect-receipt` | orch | `effect_id` as idempotency key: P10 |
-| Error taxonomy | `error/v1`, `aicore.provider.errors`, rules in `packages/aicore/configs/provider-errors.json` | aicore (provider) | development | the engine port and the modules adopt the classes: P10, P11 |
-| Canonical digest | `digest/v1`; implementation `aicore.util.digest` (canonical JSON bytes, tagged sha256, test vectors) | aicore | development | `exec` and plan digests move onto it: P9, P10 |
+| Error taxonomy | `error/v1`, `aicore.provider.errors`, rules in `packages/aicore/configs/provider-errors.json` | aicore (provider) | the engine port and the modules adopt the classes: P10, P11 |
+| Canonical digest | `digest/v1`; implementation `aicore.util.digest` (canonical JSON bytes, tagged sha256, test vectors) | aicore | `exec` and plan digests move onto it: P9, P10 |
 | Schema evolution | rule of `exec/v1` | aicore | policy per contract (below) |
 | Ecosystem event envelope | `{id, ts, source, type, project, subject, data}` | aicore (ext) | CloudEvents-style fields, envelope apart from data: P6 |
 | Check evidence | `exec/v1` `check-evidence`, plan evidence | orch and planner | none |
@@ -200,10 +200,10 @@ delivery), after which they follow the closed profile like the others.
 
 | Aspect | Policy |
 | --- | --- |
-| Reads | the provider layer reads the `schema_version` (or `contract_version`) `1.0.0` documents |
+| Reads | `aicore.provider` reads the `schema_version` (or `contract_version`) `1.0.0` documents |
 | Writes | the same version field; the capability manifest also carries `catalog_version` |
 | Upcast | none |
-| Deprecation window | none yet; a JSON Schema is added when the provider layer moves into `aicore` |
+| Deprecation window | none yet; the files live in `aicore` but still have no JSON Schema |
 | Unknown fields | not enforced by a schema today |
 | Fixtures | tests of the provider layer; golden fixtures pin the generated output |
 

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.5",
   "title": "Документация aicore и архитектуры: README модуля, ADR 0028–0033, инвентаризация контрактов, CHANGELOG",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "packages/aicore/README.md (подсистемы, раскладка, локатор, shim и его окно, контракты, тесты), ADR 0028–0033 для D31–D36, строки инвентаризации E13 в docs/architecture/contracts.md, docs/architecture/ecosystem.md (aicore существует), docs/core/index.md → страница о переходном shim, docs/status.md, CHANGELOG [Unreleased] корня и модуля; docs-impact по диапазону фазы. В docs/architecture/ecosystem.md — глоссарий шести сущностей (model provider, agent runtime, tool provider, execution substrate, durable runtime, remote agent) с владельцем каждой (R01) и список не-целей (D35).",
   "why": "D24: архитектурные решения живут в docs/architecture с ADR; без README модуль нельзя использовать «как отдельный репозиторий»; shim без описанного окна — незавершённый по D23. Риск — устаревшие ссылки на core/ и старые пути конфигов в документации. D35/D36 и E2 (R01, R23, R24): критерии «готовое вместо своего», не-цели (движок не durable runtime, MCP не шина событий) и дополнение error/v1 должны жить в ADR, иначе правило забудется.",
   "scope": {
@@ -221,6 +221,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T09:38:11Z"
+  "result": {
+    "started_at": "2026-10-08T10:53:28Z",
+    "finished_at": "2026-10-08T10:57:10Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "0f62b326-df6e-4200-9727-2e4e02495570"
+    },
+    "notes": "README и CHANGELOG aicore, ADR 0028–0033, инвентаризация контрактов, глоссарий и не-цели в ecosystem.md, страница core как shim, status, CHANGELOG корня",
+    "deviations": [
+      "гейты docs-impact и status-check расширены для aicore (см. log)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T10:57:10Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T10:57:10Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T10:57:10Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T10:57:10Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T10:57:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T10:57:10Z"
 }

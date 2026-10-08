@@ -4,6 +4,13 @@
 
 ### Added
 
+- **docs:** ADR 0028–0033 (aicore subsystems and the `core` shim, the locator fragment, shared contracts, the model
+  catalog in aicore, ready-made-or-own criteria with non-goals and Python 3.9, `error/v1` with `context_limit`).
+- **docs:** `docs/architecture/ecosystem.md` has a glossary of six entities (model provider, agent runtime, tool
+  provider, execution substrate, durable runtime, remote agent) and the list of non-goals; `contracts.md` lists
+  the digest, error, capability-support and model-catalog contracts; `docs/core/index.md` describes the shim.
+- **aicore:** README (layout, subsystems, locator, shim window, contracts, tests) and a module CHANGELOG.
+
 - **scripts:** `dev-clone.sh` (`init`, `status`, `sync-main`) и guard dev-клона: одинаковый блок в 11 точках входа
   (`bin/swissknifeman`, CLI модулей, установщики, `bootstrap-machine.sh`) отказывает с кодом 3 и `SKM_DEV_GUARD` при
   реальном `HOME`, пока в корне клона есть неотслеживаемый маркер `.swissknifeman-dev`; раннеры тестов работают во

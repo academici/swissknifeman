@@ -49,7 +49,8 @@ swissknifeman/                      # the hub repository
   configs/  scripts/  bootstrap/  docs/  .github/
 ```
 
-`core/` dissolves into `aicore` and `analyst`; `packages/artifex` is retired and stays in history by tag;
+`core/` dissolves into `aicore` and `analyst` (the shared code is already in `packages/aicore`; `core/` keeps a
+compatibility shim and the modules of later stages, see [ADR 0028](decisions/0028-aicore-subsystems-and-core-shim.md)); `packages/artifex` is retired and stays in history by tag;
 `packages/task` becomes `packages/planner`; the root research folder of orchestration moves into
 `packages/orch/docs/research/`. Until a module is moved, the transitional roots (`core/`, `orch/`, `packages/artifex/`,
 `packages/task/`) are covered by the ownership map. The legacy driver `harness/run` stays until `orch` reaches parity.
@@ -58,7 +59,7 @@ swissknifeman/                      # the hub repository
 
 | Module | Purpose | Depends on | Built from (current paths) |
 | --- | --- | --- | --- |
-| `aicore` | foundation | none | `core/*` except analytics; `core/provider/*`; `core/usage.py`; `configs/provider-*.json`; generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `task` command rendering |
+| `aicore` | foundation | none | exists: `core/*` except analytics, `core/provider/*`, `core/usage.py` and `configs/provider-*.json` moved in; still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `task` command rendering |
 | `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/task` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch`, root `orch/` |
@@ -137,8 +138,9 @@ automatically by `python3 scripts/ecosystem-units.py check`:
 - **Standalone:** the module's tests pass in a copy of its folder with only a stand-in for `aicore`
   (`ecosystem-units.py standalone`).
 - **Finding `aicore`** by the `bin/` wrapper: `AICORE_ROOT`, then `<module>/_vendor/aicore`, then the neighbouring
-  `../aicore` (only inside the hub repository, a development mode). How `aicore` is delivered after modules move out is
-  decided together with that move.
+  `../aicore` (only inside the hub repository, a development mode). One canonical fragment does the search and a miss
+  ends with `AICORE_NOT_FOUND` ([ADR 0029](decisions/0029-aicore-locator-fragment.md)). How `aicore` is delivered after
+  modules move out is decided together with that move.
 - **Plugin** manifests for Claude Code are generated from `unit.json` by `aicore`, not written twice by hand.
 
 ## 4. aicore: the foundation
@@ -431,3 +433,30 @@ sandbox and on the second computer; only then is the branch merged and a major v
 - Implementing the native engine and the CAO adapter of orchestration.
 - Moving all code from the external vault tooling; only the `brain` foundation is in scope.
 - Changing the content of shared skills.
+
+## 14. Glossary of entities
+
+A provider, an agent, a tool, an execution environment, a durable runtime and a remote agent are different things and
+are never folded into one `Provider`. The table states what each is here and who owns it; it adds no requirements.
+
+| Entity | In this ecosystem | Owner |
+| --- | --- | --- |
+| model provider | facts about a provider: capabilities, models, errors, authorisation routes (`aicore.provider`) | `aicore` |
+| agent runtime | an orch engine binding together with the provider CLI it starts | `orch` |
+| tool provider | an MCP server or a bridge that offers tools | the module that publishes it (`maind` for memory and graph) |
+| execution substrate | a process, a worktree, a Landlock sandbox | `orch` and `harness` |
+| durable runtime | timers, signals, replay, compensation, multi-day runs; deferred, not built | none |
+| remote agent | an agent running outside the machine; deferred, not built | none |
+
+A new entity is not added to `aicore.provider`.
+
+## 15. Non-goals
+
+Recorded in [ADR 0032](decisions/0032-ready-made-or-own-and-non-goals.md):
+
+- The orch engines are not a durable runtime: no timers, signals, replay, compensation or multi-day runs. A specialised
+  runtime would be an optional adapter behind a port.
+- MCP is a tool surface. It is not the event bus `aicore.ext`, not the source of truth about a run and not a
+  replacement of contracts.
+- A model gateway, if one appears, does not own the state of a run.
+- Servers and frameworks are not dependencies of the core; the minimum Python version is 3.9.

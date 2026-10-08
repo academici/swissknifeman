@@ -53,3 +53,9 @@ by a new record.
 | [0025](0025-unit-manifest-shape-and-aicore-skeleton.md) | Shape of unit.json and the aicore skeleton | Accepted |
 | [0026](0026-pinned-root-common-instruction.md) | The folder-is-a-module rule through a pinned root common instruction | Accepted |
 | [0027](0027-golden-fixtures-lifecycle.md) | Golden fixtures: location, normalisation, lifecycle outside CI | Accepted |
+| [0028](0028-aicore-subsystems-and-core-shim.md) | aicore subsystems and the `core` compatibility shim | Accepted |
+| [0029](0029-aicore-locator-fragment.md) | Finding aicore through one canonical locator fragment | Accepted |
+| [0030](0030-shared-contracts-digest-error-capability-catalog.md) | Shared contracts: digest, error, capability support, model catalog | Accepted |
+| [0031](0031-model-catalog-in-aicore.md) | The model catalog belongs to aicore | Accepted |
+| [0032](0032-ready-made-or-own-and-non-goals.md) | Ready-made or own: criteria, non-goals, Python 3.9 | Accepted |
+| [0033](0033-error-record-context-limit-and-unknown.md) | error/v1: `context_limit`, request identity, `unknown` is not `unknown_outcome` | Accepted |

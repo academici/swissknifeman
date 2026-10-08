@@ -5,7 +5,7 @@ Everything here is kept in the repository so that it outlives any working plan.
 
 | Page | What it answers |
 | --- | --- |
-| [Ecosystem](ecosystem.md) | principles, layout, module contract, `aicore`, configuration and state, extensibility, what each module owns, skill and service-file distribution, migration discipline, transition, risks |
+| [Ecosystem](ecosystem.md) | principles, layout, module contract, `aicore`, configuration and state, extensibility, what each module owns, skill and service-file distribution, migration discipline, transition, risks, glossary of entities, non-goals |
 | [Contracts](contracts.md) | inventory of contracts with owners and gaps, versioning and the evolution policy of each contract |
 | [Ownership map](ownership.md) | generated table of modules and of files that move to another module (do not edit by hand) |
 | [Decisions](decisions/README.md) | numbered architecture decision records with context, alternatives and consequences |

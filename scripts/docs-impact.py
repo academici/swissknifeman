@@ -75,17 +75,20 @@ def surface(path: str) -> str | None:
     return None
 
 
-def credit(path: str) -> str | None:
+def credit(path: str) -> set[str]:
+    """Classes whose docs `path` counts as. The foundation's durable docs are the architecture pages and the core page."""
     m = re.match(r"^packages/([^/]+)/docs/", path)
     if m:
-        return "pkg:" + m.group(1)
+        return {"pkg:" + m.group(1)}
     if path.startswith("docs/task/"):
-        return "pkg:task"
+        return {"pkg:task"}
     if path.startswith("docs/core/"):
-        return "core"
+        return {"core", "pkg:aicore"}
+    if path.startswith("docs/architecture/"):
+        return {"pkg:aicore"}
     if re.match(r"^docs/[^/]+\.md$", path):
-        return "root"
-    return None
+        return {"root"}
+    return set()
 
 
 def docs_hint(klass: str) -> str:
@@ -139,9 +142,7 @@ def classify(entries: list[tuple[str, str]]):
             triggers = status in ("A", "D") or (status == "M" and INTERFACE.match(path))
             if triggers:
                 needed.setdefault(klass, []).append((path, status))
-        got = credit(path)
-        if got:
-            credited.add(got)
+        credited |= credit(path)
     return needed, credited
 
 

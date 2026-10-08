@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P4",
   "title": "aicore: конфиг и состояние",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "aicore.config (слои defaults → машина → проект → env → флаги, схемы модулей, explain) и aicore.state (XDG-места, проектный .swissknifeman/{config.json,state,backups}, SKM_HOME, бэкапы с ротацией вместо *.bak) работают; swissknifeman config show/set/explain; первый модуль переведён, старые файлы читаются с предупреждением.",
-  "context": "D5; knowledge/architecture §5. Детализируется после P3. Формат слоёв — TOML, состояние — JSON, config.example.toml из схемы (D14); конфиг planner — первый крупный потребитель (D15). Внешнее ревью E1: тезисы E30–E33, E39 (knowledge/review-e1-*). Внешнее ревью E2 (knowledge/review-e2-foundation, D35): R04 — schema_version у файла конфига и explain --json; R05 — тест редактирования секретов охватывает исключения и трейсбеки, схемы secret_ref открыты внешнему резолверу-плагину; R15 — конфликт минимумов Python (D14 ≥ 3.11, правила пунктов 3.9, doctor 3.8): чтение TOML через tomllib при ≥ 3.11, иначе vendored tomli, а перед собственным писателем TOML для config set оценить vendoring готового по первоисточнику (лицензия, пин, поведение с комментариями).",
+  "context": "D5, D14, D15, D22, D35; решения детализации D37 (TOML: tomllib или vendored tomli 2.3.1, свой редактор со сверкой), D38 (модель конфига: умолчания в схеме, _unset/_append, x-skm-layers, x-skm-secret, schema_version, env с __, дополнительные слои), D39 (места состояния, SKM_HOME, наследие без копирования, бэкапы с ротацией, gitignore-политика в aicore.state, удаление config_paths; первый модуль — analyst); knowledge/config-p4 (факты кода, модель, секреты, explain, CLI, analyst, проверки, тезисы), knowledge/architecture §5. Внешнее ревью E1: E30–E33, E39 (knowledge/review-e1-config); E2: R04, R05, R15 (knowledge/review-e2-foundation) — сопоставление в knowledge/config-p4 §e1. Начало фазы — sync-main и golden check в P4.1; конец — широкий прогон и push в P4.7. Ревью: none для всех пунктов (opt-in). Конфиг planner (D15) — в P9 через дополнительные слои aicore.config.",
   "scope": {
     "include": [
       "aicore.config",
@@ -31,10 +31,53 @@
     "P3"
   ],
   "deliverables": [
-    "слоёный конфиг",
-    "стандартные места состояния",
-    "SKM_HOME"
+    "aicore.state: места XDG и SKM_HOME, наследие с предупреждением, бэкапы с ротацией, gitignore-политика",
+    "aicore.config: слои, слияние, env, --config, schema_version, secret_ref, explain (config-explain/v1)",
+    "vendored tomli 2.3.1 и редактор TOML со сверкой",
+    "aicore config / swissknifeman config: show, explain, set, unset, init, example, paths",
+    "analyst переведён: пороги в конфиге, состояние в стандартном месте",
+    "ADR 0034–0036"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P4.1",
+    "P4.2",
+    "P4.3",
+    "P4.4",
+    "P4.5",
+    "P4.6",
+    "P4.7"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P4.1",
+        "P4.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P4.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P4.4",
+        "P4.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P4.6",
+        "P4.7"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

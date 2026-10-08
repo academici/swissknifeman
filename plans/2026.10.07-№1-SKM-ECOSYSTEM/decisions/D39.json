@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D39",
+  "title": "Места состояния: SKM_HOME и XDG, наследие без копирования, бэкапы с ротацией, gitignore-политика в aicore.state; первый модуль — analyst",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Как устроены места состояния и переход на них в P4 (D5, архитектура §5.2): SKM_HOME, наследные места, бэкапы, судьба config_paths и gitignore_policy, и какой модуль переводится первым?",
+  "options": [
+    {
+      "id": "A",
+      "text": "aicore.state: SKM_HOME (абсолютный) переносит config/state/data/cache в $SKM_HOME/{config,state,data,cache} и отключает чтение наследных мест; иначе XDG с умолчаниями. Наследие: resolve_with_legacy — новое место, если есть; иначе существующее старое с одним предупреждением на процесс, без копирования (чтение и запись в одном каталоге, перенос — swissknifeman upgrade, P13). Бэкапы: <project>/.swissknifeman/backups/<stamp>/<relpath> или state/backups/<stamp>/…, ротация keep=10 только по каталогам-штампам; backup_file и *.bak у вызывающих меняются в P8/P11. gitignore_policy → aicore.state.gitignore (git mv), данные → packages/aicore/configs, новые записи .swissknifeman/config.toml (commit) и .swissknifeman/state/ (ignore); shim сохраняет core.gitignore_policy; core/config_paths.py удаляется вместе с именем shared_config_path в фасаде core (потребителей нет; остальные имена были межмодульными путями). MIN_PYTHON = (3, 9) в aicore. Первый модуль — analyst: 9 порогов recompute/digest в конфиг, машинное состояние в aicore.state с наследным ~/.swissknifeman/analyst; проектные уроки и узловой config.json — в P11.",
+      "pros": "Малый модуль с реальной политикой и реальным наследным каталогом; без риска для хука безопасности; не пересекается с переименованием planner; изоляция тестов одной переменной"
+    },
+    {
+      "id": "B",
+      "text": "Первым — harness safe-dirs",
+      "cons": "Конфиг читает хук безопасности из ~/.claude/hooks вне репозитория; ошибка блокирует rm везде или ослабляет защиту"
+    },
+    {
+      "id": "C",
+      "text": "Первым — конфиг planner (D15)",
+      "cons": "P9 начинается с инвентаризации констант и переименования task → planner; перевод раньше дублирует работу"
+    },
+    {
+      "id": "D",
+      "text": "Наследные места копировать в новые при первом чтении",
+      "cons": "Раздвоение состояния при откате и скрытая запись в HOME; перенос — задача upgrade"
+    }
+  ],
+  "context": "Сейчас: aicore.util.paths.state_dir → ~/.swissknifeman[/app]; backup_file пишет *.bak рядом; core/config_paths.py нужен только core/gitignore_policy.py; gitignore-policy.json в корне хаба; maind импортирует core.gitignore_policy. Кандидаты на первый модуль: analyst (9 порогов-констант, машинное состояние ~/.swissknifeman/analyst, малый), harness safe-dirs (конфиг читает хук безопасности вне репозитория), skiller и maind (крупные, свои фазы P8/P11), planner (P9 с переименованием).",
+  "decision": "A — aicore.state: SKM_HOME (абсолютный) переносит config/state/data/cache в $SKM_HOME/{config,state,data,cache} и отключает чтение наследных мест; иначе XDG с умолчаниями. Наследие: resolve_with_legacy — новое место, если есть; иначе существующее старое с одним предупреждением на процесс, без копирования (чтение и запись в одном каталоге, перенос — swissknifeman upgrade, P13). Бэкапы: <project>/.swissknifeman/backups/<stamp>/<relpath> или state/backups/<stamp>/…, ротация keep=10 только по каталогам-штампам; backup_file и *.bak у вызывающих меняются в P8/P11. gitignore_policy → aicore.state.gitignore (git mv), данные → packages/aicore/configs, новые записи .swissknifeman/config.toml (commit) и .swissknifeman/state/ (ignore); shim сохраняет core.gitignore_policy; core/config_paths.py удаляется вместе с именем shared_config_path в фасаде core (потребителей нет; остальные имена были межмодульными путями). MIN_PYTHON = (3, 9) в aicore. Первый модуль — analyst: 9 порогов recompute/digest в конфиг, машинное состояние в aicore.state с наследным ~/.swissknifeman/analyst; проектные уроки и узловой config.json — в P11.",
+  "rationale": "Архитектура §5.2, §12 (P4: первый модуль переведён, старые файлы читаются с предупреждением); выбор модуля по коду при детализации P4 (knowledge/config-p4#facts, #analyst).",
+  "applies_to": [
+    "P4",
+    "P8",
+    "P11",
+    "P13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

@@ -1,0 +1,193 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.5",
+  "title": "Первый модуль: analyst на aicore.config (пороги recompute и digest) и aicore.state (наследный ~/.swissknifeman/analyst с предупреждением)",
+  "status": "todo",
+  "summary": "configs/config.schema.json analyst с девятью порогами (default = прежние константы), unit.json provides.config, сгенерированный config.example.toml; analyst/settings.py (Thresholds, load_thresholds); проводка порогов в recompute, status, digest без смены поведения по умолчанию; Env.state_dir через aicore.state с чтением наследного каталога и предупреждением; раннер analyst снимает XDG_*/SKM_HOME; тесты; README и docs analyst.",
+  "why": "Архитектура §12: «первый модуль переведён; старые файлы читаются с предупреждением»; D39 выбирает analyst. Риски: (1) смена поведения без конфигов — golden analyst-status и существующие тесты не меняются, тест паритета default и констант; (2) раздвоение состояния между старым и новым каталогом — resolve_with_legacy без копирования.",
+  "scope": {
+    "include": [
+      "packages/analyst/configs/config.schema.json, packages/analyst/config.example.toml, packages/analyst/unit.json",
+      "packages/analyst/lib/analyst/{settings,common,recompute,status,digest}.py",
+      "packages/analyst/tests/{test_settings,test_state_location}.py",
+      "packages/analyst/scripts/test.sh: unset XDG_*/SKM_HOME/SKM_UNITS_PATH",
+      "packages/analyst/README.md и docs (раздел Configuration), packages/analyst/CHANGELOG.md, если есть, иначе запись в корневой CHANGELOG в P4.6"
+    ],
+    "exclude": [
+      "импорты core → aicore в остальном коде analyst (P11)",
+      "проектные уроки .swissknife/analyst и узловой config.json (P11)",
+      "остальные константы analyst (модельные параметры)"
+    ]
+  },
+  "depends_on": [
+    "P4.4"
+  ],
+  "decisions": [
+    "D39",
+    "D38",
+    "D5"
+  ],
+  "reads": [
+    {
+      "why": "схема, Thresholds, проводка, состояние, тесты",
+      "required": true,
+      "ref": "knowledge/config-p4#analyst"
+    },
+    {
+      "why": "resolve_with_legacy и state_dir",
+      "required": false,
+      "ref": "knowledge/config-p4#state"
+    },
+    {
+      "why": "константы стр. 22–28 и их использование стр. 30–130",
+      "required": true,
+      "path": "packages/analyst/lib/analyst/recompute.py"
+    },
+    {
+      "why": "curated-ready стр. 15–30 и cmd_status",
+      "required": true,
+      "path": "packages/analyst/lib/analyst/status.py"
+    },
+    {
+      "why": "PATHOLOGY_* стр. 91–92, 114, 210–250 и cmd_digest",
+      "required": true,
+      "path": "packages/analyst/lib/analyst/digest.py"
+    },
+    {
+      "why": "Env.state_dir",
+      "required": true,
+      "path": "packages/analyst/lib/analyst/common.py"
+    },
+    {
+      "why": "раннер: HOME и PYTHONPATH",
+      "required": true,
+      "path": "packages/analyst/scripts/test.sh"
+    },
+    {
+      "why": "provides",
+      "required": true,
+      "path": "packages/analyst/unit.json"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/analyst/configs/config.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/config.example.toml",
+      "change": "create",
+      "note": "генерируется aicore config example --write"
+    },
+    {
+      "path": "packages/analyst/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/settings.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/recompute.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/status.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/digest.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/tests/test_settings.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/tests/test_state_location.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/analyst/CHANGELOG.md",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Без файлов конфига поведение analyst байт-в-байт прежнее: существующие тесты analyst не правятся (кроме вызовов, которым нужен новый необязательный параметр), golden analyst-* без перезахвата",
+    "Новый код analyst импортирует aicore (from aicore.config import …, from aicore.state import …), не core; остальные импорты core остаются до P11",
+    "config.example.toml только генерируется (aicore config example packages/analyst --write), руками не правится",
+    "Ошибка конфига в CLI analyst → die(str(err)) с файлом и строкой, без трейсбека",
+    "Самопроверка стиля: если в PATH есть ruff — `ruff check <изменённые .py>` без новых F/B-замечаний (не приёмка: scripts/lint.sh требует ruff 0.15.19 или pipx, на машине их нет)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: схема (таблица §analyst; description по-английски у каждого листа; minimum/maximum) → unit.json provides.config → `packages/aicore/bin/aicore config example packages/analyst --write` (в песочнице или с HOME=tmp) → settings.py → проводка: найти все чтения девяти констант, добавить параметр thresholds по образцу §analyst → cmd_recompute/cmd_status/cmd_digest вызывают load_thresholds(project_path) → Env.state_dir → test.sh unset → тесты (7 случаев §analyst) → README/docs: раздел Configuration (ключи, слои, пример `swissknifeman config set analyst.recompute.candidate_min_n 20 --project`, место состояния и предупреждение о наследном каталоге) → CHANGELOG.\n\nСмоук в песочнице: `scripts/dev-sandbox.sh` → в копии проекта `swissknifeman config set analyst.recompute.candidate_min_n 20 --project` → `swissknifeman config explain analyst recompute.candidate_min_n` показывает project, файл и строку.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/analyst/scripts/test.sh && bash packages/analyst/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "T=$(mktemp -d) && mkdir -p \"$T/p/.git\" && env -i PATH=\"$PATH\" HOME=\"$T\" SKM_HOME=\"$T/skm\" bash -c 'set -e; cd \"$1/p\"; R=\"$2\"; \"$R/bin/swissknifeman\" config set analyst.recompute.candidate_min_n 20 --project; \"$R/bin/swissknifeman\" config explain analyst recompute.candidate_min_n --json | python3 -c \"import json, sys; e = json.load(sys.stdin)[\\\"entries\\\"][0]; assert e[\\\"value\\\"] == 20 and e[\\\"layer\\\"] == \\\"project\\\" and e[\\\"line\\\"]\"; grep -q \"^schema_version = 1\" .swissknifeman/config.toml' _ \"$T\" \"$PWD\"; rc=$?; rm -rf \"$T\"; exit $rc",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 -c 'import json, sys; sys.exit(0 if json.load(open(\"packages/analyst/unit.json\"))[\"provides\"].get(\"config\") == \"configs/config.schema.json\" else 1)' && test -z \"$(git grep -lE '^(import|from) (tomllib|tomli)' -- 'packages/analyst/lib/*.py')\" && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "analyst: девять порогов в конфиге со схемой и примером",
+    "состояние analyst в стандартном месте с чтением наследного каталога и предупреждением",
+    "тесты переопределений, ошибок и мест состояния"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-08T11:40:06Z"
+}

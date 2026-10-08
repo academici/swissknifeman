@@ -177,6 +177,9 @@ class TestImportBoundary(unittest.TestCase):
             "estimate_tokens": "lib/aicore/content/budget.py",
             "skill_budget": "lib/aicore/content/budget.py",
             "measure_listing_budget": "lib/aicore/content/budget.py",
+            "render_whole_file": "lib/aicore/content/publication.py",
+            "codex_plugin_manifest": "lib/aicore/content/publication.py",
+            "manifest_bytes": "lib/aicore/content/publication.py",
         }
         roots = [ROOT / "lib"]
         packages = ROOT.parent

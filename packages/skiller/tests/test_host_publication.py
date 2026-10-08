@@ -85,7 +85,7 @@ class HostPublicationCase(unittest.TestCase):
                          ["other/hidden", "plugins/alpha", "plugins/omega"])
 
     def test_empty_source_provenance_uses_actual_package_prefix(self):
-        from skiller import publication
+        from aicore.content import publication
         real_render = publication.plan_artifact_render
         with mock.patch.object(publication, "plan_artifact_render", wraps=real_render) as render:
             self._marketplace(build_claude_publication)

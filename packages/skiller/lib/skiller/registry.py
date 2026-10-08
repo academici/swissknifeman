@@ -10,6 +10,8 @@ from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .host import host_plugin_dirs, load_host
+from aicore.content.publication import manifest_bytes
+
 from .publication import (SiblingPlugin, package_rel, assert_root_bootstrap_set_completeness,
                           build_publication_catalog, render_claude_publication,
                           render_codex_publication, render_repository_bootstrap_projections)
@@ -441,10 +443,6 @@ def build_plugin_manifests(env, bucket_meta, bucket_dirs, registry=None):
             for artifact in build_claude_publication(env, bucket_meta, bucket_dirs, registry)]
 
 
-def _manifest_text(data):
-    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-
-
 def _has_repository_bootstrap_config(root):
     """Standalone/fixture roots predating carry no root-bootstrap config — skip the
     renderer entirely rather than fail closed on a file that was never meant to exist there."""
@@ -479,7 +477,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     """Write all plugin-manifests + marketplace.json (atomically). Returns the number of plugins."""
     manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
     for path, data in manifests:
-        atomic_write_text(path, _manifest_text(data))
+        atomic_write_text(path, manifest_bytes(data).decode("utf-8"))
     codex_artifacts = build_codex_publication(env, bucket_meta, bucket_dirs)
     _prune_publication_artifacts(codex_artifacts)
     for artifact in codex_artifacts:
@@ -526,7 +524,7 @@ def check_drift(env):
     _cmp(root / "skills.json", json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
     _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
     for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs, registry):
-        _cmp(path, _manifest_text(data))
+        _cmp(path, manifest_bytes(data).decode("utf-8"))
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
         _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
     if _has_repository_bootstrap_config(root):

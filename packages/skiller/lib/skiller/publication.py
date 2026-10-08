@@ -17,21 +17,22 @@ import subprocess
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from core.provider.manifest import default_manifest_path
-from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
+from core import (ArtifactAdapterIdentity,
                   ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
                   ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
-                  CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
-                  connect_channel, load_distribution_catalog,
-                  load_provider_manifest, plan_artifact_lock, plan_artifact_render,
-                  provider_config_catalog, vendor_channel)
+                  CapabilityRequirement, ProviderId, SupportLevel,
+                  connect_channel, plan_artifact_lock, plan_artifact_render,
+                  vendor_channel)
 from core.provider.lock import LOCK_RELATIVE_PATH
 
-
-def package_rel(repo_root: Path, package_root: Path) -> str:
-    """Package prefix relative to its host root, empty for standalone layouts."""
-    relative = package_root.relative_to(repo_root).as_posix()
-    return "" if relative == "." else relative
+# Publication primitives: moved to aicore.content.publication, re-exported under the historical
+# names (after the first ``core`` import, which puts aicore on sys.path).
+from aicore.content.publication import (  # noqa: F401
+    codex_marketplace_entry as _codex_marketplace_entry,
+    codex_plugin_manifest as _codex_plugin_manifest, contained as _contained,
+    distribution_catalog as _distribution_catalog, manifest_bytes as _manifest_text,
+    package_rel, publication_lock, render_whole_file,
+    skill_runtime_files as _codex_skill_runtime_files, validate_publication_capabilities)
 
 
 def _generator(package_prefix: str) -> str:
@@ -50,43 +51,6 @@ _CODEX_ADAPTER = ArtifactAdapterIdentity(
     (CapabilityRequirement(CapabilityId("skills.repository"),
                            (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
 )
-
-_CURSOR_ADAPTER = ArtifactAdapterIdentity(
-    "skiller.cursor-publication", "1.0.0", ProviderId.CURSOR, "1.0.0",
-    (CapabilityRequirement(CapabilityId("skills.repository"),
-                           (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
-)
-
-_PUBLICATION_ADAPTERS = {
-    ProviderId.CLAUDE_CODE: _CLAUDE_ADAPTER,
-    ProviderId.CODEX: _CODEX_ADAPTER,
-    ProviderId.CURSOR: _CURSOR_ADAPTER,
-}
-
-_DISTRIBUTION_CATALOG = None
-
-
-def _distribution_catalog():
-    global _DISTRIBUTION_CATALOG
-    if _DISTRIBUTION_CATALOG is None:
-        _DISTRIBUTION_CATALOG = load_distribution_catalog()
-    return _DISTRIBUTION_CATALOG
-
-
-def validate_publication_capabilities(provider_id: ProviderId, *, manifest_path=None):
-    """Fail closed against the root manifest before publication bytes are rendered."""
-    manifest_path = Path(manifest_path) if manifest_path is not None else (
-        default_manifest_path())
-    manifest = load_provider_manifest(manifest_path)
-    identity = _PUBLICATION_ADAPTERS[provider_id]
-    gate = AdapterCatalog((AdapterDescriptor(
-        "skills.publication", identity, lambda _request: b""),)).select(
-            provider_id=provider_id, artifact_kind="skills.publication",
-            capability_catalog=provider_config_catalog(manifest),
-            effective_provider=EffectiveProvider(provider_id, True))
-    if gate.selection is None:
-        raise ValueError(",".join(item.code for item in gate.diagnostics))
-    return manifest
 
 
 @dataclass(frozen=True)
@@ -457,26 +421,6 @@ def render_cursor_publication(catalog: PublicationCatalog, *, repo_root: Path,
     return ()
 
 
-def _codex_plugin_manifest(name: str, version: str, description: str,
-                           skills: list[str]) -> dict[str, object]:
-    return {"name": name, "version": version, "description": description, "skills": skills}
-
-
-def _codex_marketplace_entry(name: str, path: str, description: str,
-                             metadata: Mapping[str, object]) -> dict[str, object]:
-    if not path.startswith("./") or ".." in Path(path).parts:
-        raise ValueError("Codex marketplace source path must be contained and ./-prefixed")
-    return {
-        "name": name,
-        "source": path,
-        "description": description,
-        "category": metadata.get("category", ""),
-        "tags": list(metadata.get("tags", [])),
-        "install_policy": "explicit",
-        "auth": "none",
-    }
-
-
 def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
                          members: tuple[SemanticSkill, ...], repo_root: Path, package_root: Path, *,
                          description: str, skill_root: str) -> tuple[CodexPublicationArtifact, ...]:
@@ -525,8 +469,7 @@ def _codex_bundle_lock(root: Path, unit: PublicationUnit, package_version: str,
                 "source_hash": artifact.source_hash, "rendered_hash": artifact.rendered_hash}
                for artifact in artifacts]
     return _render_codex_artifact(root / "publication-lock.json", unit,
-                                  {"contract_version": "1.0.0", "publication_unit": unit.unit_id,
-                                   "version": unit.content_version, "artifacts": records}, (),
+                                  publication_lock(unit.unit_id, unit.content_version, records), (),
                                   repo_root, package_version, content_version=unit.content_version,
                                   package_root=package_root)
 
@@ -546,13 +489,12 @@ def _render_codex_artifact(target: Path, unit: PublicationUnit, data: Mapping[st
             "sha256:" + "0" * 64),)
     rendered = data if isinstance(data, bytes) else _manifest_text(data)
     plugin_version = content_version if content_version is not None else package_version
-    result = plan_artifact_render(ArtifactRenderRequest(
-        f"skiller.codex.{unit.plugin_id}.{target.relative_to(repo_root).as_posix().lstrip('.').replace('/', '-').replace('.', '-').lower()}", source_records,
-        ArtifactTarget(target.relative_to(repo_root).as_posix(), ("whole-file", ())),
-        _CODEX_ADAPTER, (), {"publication_unit": unit.unit_id,
-                              "plugin_version": plugin_version},
-        lambda _request: rendered,
-    ))
+    result = render_whole_file(
+        artifact_id=f"skiller.codex.{unit.plugin_id}.{target.relative_to(repo_root).as_posix().lstrip('.').replace('/', '-').replace('.', '-').lower()}",
+        target=target.relative_to(repo_root).as_posix(), sources=source_records,
+        adapter=_CODEX_ADAPTER, parameters={"publication_unit": unit.unit_id,
+                                            "plugin_version": plugin_version},
+        rendered=rendered)
     return CodexPublicationArtifact(target, unit.unit_id, package_version, result.managed_bytes,
                                     result.provenance.source_hash, result.provenance.rendered_hash)
 
@@ -570,18 +512,13 @@ def _render_artifact(target: Path, unit: PublicationUnit, data: Mapping[str, obj
             "skiller.publication.meta",
             (Path(package_rel(repo_root, package_root)) / "package.json").as_posix(),
             "sha256:" + "0" * 64),)
-    result = plan_artifact_render(ArtifactRenderRequest(
-        f"skiller.claude.{unit.plugin_id}", source_records,
-        ArtifactTarget(relative_target, ("whole-file", ())), _CLAUDE_ADAPTER, (),
-        {"publication_unit": unit.unit_id, "plugin_version": package_version},
-        lambda _request: _manifest_text(data),
-    ))
+    result = render_whole_file(
+        artifact_id=f"skiller.claude.{unit.plugin_id}", target=relative_target,
+        sources=source_records, adapter=_CLAUDE_ADAPTER,
+        parameters={"publication_unit": unit.unit_id, "plugin_version": package_version},
+        rendered=_manifest_text(data))
     return ClaudePublicationArtifact(target, unit.unit_id, package_version, result.managed_bytes,
                                      result.provenance.source_hash, result.provenance.rendered_hash)
-
-
-def _manifest_text(data: Mapping[str, object]) -> bytes:
-    return (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
 
 def _claude_skill_dirs(unit: PublicationUnit, by_id: Mapping[str, SemanticSkill]) -> list[str]:
@@ -905,40 +842,6 @@ def _codex_bundle_artifacts(*, source_root: Path, bundle_root: Path, plugin: str
     return tuple(artifacts)
 
 
-def _codex_skill_runtime_files(skill_root: Path, *, source_root: Path,
-                               plugin: str) -> tuple[Path, ...]:
-    """Enumerate one consumer skill tree with the canonical vendor exclusions."""
-    from .common import SKILL_IGNORE, die
-
-    ignore = shutil.ignore_patterns(*SKILL_IGNORE)
-    pending = [skill_root]
-    seen_dirs = set()
-    files = []
-    while pending:
-        directory = pending.pop()
-        resolved_dir = _contained(
-            source_root, directory, plugin=plugin, label="runtime support directory")
-        if resolved_dir in seen_dirs:
-            continue
-        seen_dirs.add(resolved_dir)
-        try:
-            entries = sorted(directory.iterdir(), key=lambda item: item.name)
-        except OSError as exc:
-            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
-                f"target {directory}: cannot read runtime support files: {exc}")
-        excluded = ignore(str(directory), [entry.name for entry in entries])
-        for entry in entries:
-            if entry.name in excluded:
-                continue
-            resolved = _contained(
-                source_root, entry, plugin=plugin, label="runtime support file")
-            if resolved.is_dir():
-                pending.append(entry)
-            elif resolved.is_file():
-                files.append(entry)
-    return tuple(files)
-
-
 def _codex_local_source(entry: Mapping[str, object], *, plugin: str) -> str:
     from .common import die
 
@@ -953,19 +856,6 @@ def _codex_local_source(entry: Mapping[str, object], *, plugin: str) -> str:
         die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {plugin}: "
             "marketplace source must be a contained local ./ path")
     return path
-
-
-def _contained(root: Path, candidate: Path, *, plugin: str, label: str) -> Path:
-    from .common import die
-
-    root = root.resolve()
-    resolved = candidate.resolve(strict=False)
-    try:
-        resolved.relative_to(root)
-    except ValueError:
-        die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {plugin}, "
-            f"{label} {candidate} escapes {root}")
-    return resolved
 
 
 def _distribution_artifact(root: Path, target: Path, managed_bytes: bytes,

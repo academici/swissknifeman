@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
   "title": "aicore.content.publication: примитивы публикации (артефакт целого файла, манифесты, Codex plugin.json, lock, runtime-файлы skill); skiller на них",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Создать aicore/content/publication.py: package_rel, manifest_bytes, distribution_catalog и validate_publication_capabilities, render_whole_file, capability_requirements, codex_plugin_manifest, codex_marketplace_entry, publication_lock, skill_runtime_files, contained; перевести skiller/publication.py (сборщики артефактов, Codex bundle и lock) и registry.py (_manifest_text) на них без изменения байтов; тесты aicore; убрать гипотезу registry.py.",
   "why": "D40: общая механика публикации нужна skiller и task (одинаковые Codex plugin.json и publication-lock), позже — хабу (P12). Жёсткие риски: (1) изменение провенанса или хешей в adapters/codex/**/publication-lock.json и маркетплейсах — golden skiller-registry; (2) смена порядка ключей при сериализации (skiller — порядок вставки); (3) ошибочная потеря проверки containment у runtime-файлов skill.",
   "scope": {
@@ -156,6 +156,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:45:01Z"
+  "result": {
+    "started_at": "2026-10-08T15:49:08Z",
+    "finished_at": "2026-10-08T15:56:37Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "e0dcf3b3-829e-487d-8b17-157ca87c059b"
+    },
+    "notes": "aicore.content.publication создан; skiller publication/registry на нём, байты и golden без изменений; гипотеза registry.py удалена; ownership перегенерирован; baseline без изменений (улучшений нет)",
+    "deviations": [
+      "нейтральная идентичность шлюза в aicore; удалены мёртвые _CURSOR_ADAPTER/_PUBLICATION_ADAPTERS; registry decode; цель mock.patch в test_host_publication"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T15:56:37Z"
 }

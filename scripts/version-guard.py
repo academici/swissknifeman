@@ -21,9 +21,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(ROOT), str(ROOT / "packages/skiller/lib")]
+sys.path[:0] = [str(ROOT), str(ROOT / "packages/aicore/lib")]
 
-from skiller import release_attestation as attestation  # noqa: E402
+from aicore.release import attestation  # noqa: E402
 
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 SHA = re.compile(r"^[0-9a-f]{12}$")
@@ -87,7 +87,7 @@ def installed_drift(current: dict) -> list[str]:
 
 def cmd_status(args: argparse.Namespace) -> int:
     previous = latest_snapshot(args.since)
-    current = attestation.build(ROOT, None)
+    current = attestation.build(ROOT, None, package_root=ROOT / "packages/skiller")
     print(f"baseline {previous['umbrella']['tag']}, working tree umbrella {current['umbrella']['version']}")
     rows = changed_units(previous, current)
     stale = [row for row in rows if row["state"] == "NOT-BUMPED"]

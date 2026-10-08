@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 import unittest
 
-from skiller.release_attestation import (Source, build, check_transition, surface,
-                                         tree_digest, version_errors)
+from aicore.release.attestation import (Source, build, check, check_transition, surface,
+                                        tree_digest, version_errors)
 import subprocess
 import tempfile
 
@@ -123,6 +123,61 @@ class HostPolicyBuildTests(unittest.TestCase):
         _host_repo(self.root, _policy(schema_version="release-unit-policy/v0"))
         with self.assertRaisesRegex(ValueError, "RELEASE_UNIT_POLICY_INVALID"):
             build(self.root)
+
+
+class PackageRootTests(unittest.TestCase):
+    """`package_root` names where the publication-version map and the package's own skills live in the host."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        policy = _policy()
+        policy["plugins"]["plugin-a"] = {"version_owner": "skiller-publication-map"}
+        _host_repo(self.root, policy)
+        versions = {"default_unit_version": "9.9.9", "units": {"plugin-a": "1.2.0"}}
+        _write(self.root, "packages/pub/configs/publication-versions.json", versions)
+        _write(self.root, "configs/publication-versions.json",
+               {"default_unit_version": "7.7.7", "units": {}})
+
+    def version_source(self, **kwargs):
+        unit = {u["id"]: u for u in build(self.root, **kwargs)["units"]}["plugin-a"]
+        return unit["expected_version"], unit["version_source"]
+
+    def test_publication_map_is_read_below_the_package_prefix(self):
+        self.assertEqual(self.version_source(package_root=self.root / "packages/pub"),
+                         ("1.2.0", "packages/pub/configs/publication-versions.json"))
+
+    def test_without_package_root_the_prefix_is_empty(self):
+        self.assertEqual(self.version_source(), ("7.7.7", "configs/publication-versions.json"))
+
+    def test_package_outside_the_host_root_has_an_empty_prefix(self):
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(self.version_source(package_root=Path(folder)),
+                             ("7.7.7", "configs/publication-versions.json"))
+
+    def test_package_that_is_the_host_root_has_an_empty_prefix(self):
+        self.assertEqual(self.version_source(package_root=self.root),
+                         ("7.7.7", "configs/publication-versions.json"))
+
+    def test_package_skills_are_released_as_a_whole_tree(self):
+        _write(self.root, ".claude-plugin/marketplace.json", {"plugins": [
+            {"name": "plugin-a", "source": "vendor/plugin-a"},
+            {"name": "plugin-b", "source": "vendor/plugin-b"},
+            {"name": "skill-pack", "source": "packages/pub/skills/pack"}]})
+        _write(self.root, "packages/pub/skills/pack/.claude-plugin/plugin.json", {"version": "1.2.0"})
+        _write(self.root, "packages/pub/skills/pack/skill/SKILL.md", "skill\n")
+        inside = {u["id"]: u for u in build(self.root, package_root=self.root / "packages/pub")["units"]}
+        outside = {u["id"]: u for u in build(self.root)["units"]}
+        self.assertEqual(set(inside["skill-pack"]["providers"]["claude-code"]["files"]),
+                         {"skill/SKILL.md", ".claude-plugin/plugin.json"})
+        self.assertNotIn("skill/SKILL.md", outside["skill-pack"]["providers"]["claude-code"]["files"])
+
+    def test_check_passes_package_root_to_the_rebuild(self):
+        package_root = self.root / "packages/pub"
+        value = build(self.root, "v1.2.0", package_root=package_root)
+        self.assertEqual(check(self.root, value, package_root=package_root), [])
+        self.assertIn("RELEASE_SNAPSHOT_STALE", check(self.root, value))
 
 
 class ReleaseAttestationTests(unittest.TestCase):

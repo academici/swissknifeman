@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.8",
   "title": "aicore.release: аттестация, версии и CHANGELOG; скрипты хаба без импорта skiller",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "git mv skiller/release_attestation.py → aicore/release/attestation.py и тест; PACKAGE_ROOT → параметр package_root; функции версий и CHANGELOG из skiller/release.py → aicore/release/{version,changelog}.py, parse_released и регулярные выражения из scripts/verify-tag.py → changelog.py; skiller release.py и тонкий release_attestation.py (PACKAGE_ROOT, cmd_attest, cmd_version, реэкспорт); scripts/verify-tag.py и scripts/version-guard.py импортируют aicore.release; тесты; удалить гипотезы release.py и release_attestation.py.",
   "why": "D40: аттестация выпуска уже нужна хабу (verify-tag, version-guard тянут lib skiller через sys.path) и skiller (delivery, attest) — два потребителя; разбор CHANGELOG продублирован в verify-tag. Жёсткие риски: (1) после переноса Path(__file__).parents[2] указывал бы на aicore — константа убирается, префикс пакета передаётся явно; (2) изменение digest/tree_digest аттестаций — тесты аттестации и releases/v*.json; (3) расхождение префикса пакета у хаба (должен быть packages/skiller).",
   "scope": {
@@ -192,12 +192,44 @@
   },
   "result": {
     "started_at": "2026-10-08T17:51:27Z",
+    "finished_at": "2026-10-08T17:59:14Z",
     "executor": {
       "provider": "claude",
       "model": "sonnet-5.5",
       "effort": "high",
       "session": "fb18de3e-94e8-44eb-a614-09810f99fb00"
-    }
+    },
+    "notes": "aicore.release: attestation (package_root вместо PACKAGE_ROOT), version, changelog (parse_released, release_changelog); skiller release.py/release_attestation.py тонкие (PACKAGE_ROOT, cmd_attest, cmd_version, обёртки build/check); verify-tag.py и version-guard.py на aicore.release; тесты aicore/tests/release; гипотезы release.py и release_attestation.py удалены, карта перегенерирована; CHANGELOG aicore. Жёсткие риски (digest аттестаций, префикс пакета хаба): проверено V1–V5, golden без перезахвата.",
+    "deviations": [
+      "UNRELEASED_SECTION_RE/NEXT_HEADING_RE в changelog.py; package_path вместо package_root в цикле build; fixture перенесён в aicore; test-task-plugin-cache-revision на aicore.release"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-08T17:51:27Z"
+  "updated_at": "2026-10-08T17:59:14Z"
 }

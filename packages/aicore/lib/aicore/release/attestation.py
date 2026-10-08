@@ -6,14 +6,10 @@ from pathlib import Path
 import re
 import subprocess
 
-from core import atomic_write_json, find_repo_root
-from .common import SKILL_IGNORE, die, parse_flags
+from ..content.skill import SKILL_IGNORE
 
 POLICY_PATH = "configs/release-units.json"
 POLICY_SCHEMA = "release-unit-policy/v1"
-# Location of this Skiller package; its prefix in the host root names the
-# publication-version map and the skill sources released as their own units.
-PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 
 
 def digest(data):
@@ -95,17 +91,23 @@ def surface(source, root, roots, *, manifest=None):
     return {"source": root, "files": files, "tree_digest": tree_digest(files)}
 
 
-def _package_rel(root):
-    """This package's POSIX prefix inside the host root ("" when it is the root)."""
+def _package_rel(root, package_root):
+    """The package's POSIX prefix inside the host root ("" when it is the root or `package_root` is None).
+
+    `package_root` is the location of the package that owns the publication-version map and the
+    skill sources released as their own units; its prefix in the host root names them.
+    """
+    if package_root is None:
+        return ""
     try:
-        relative = PACKAGE_ROOT.relative_to(Path(root).resolve()).as_posix()
+        relative = Path(package_root).resolve().relative_to(Path(root).resolve()).as_posix()
     except ValueError:
         return ""
     return "" if relative == "." else relative
 
 
-def _in_package(relative, root):
-    prefix = _package_rel(root)
+def _in_package(relative, root, package_root):
+    prefix = _package_rel(root, package_root)
     return f"{prefix}/{relative}" if prefix else relative
 
 
@@ -166,7 +168,7 @@ def _package_units(source, policy):
     return units
 
 
-def _expected_plugin_version(source, policy, name, umbrella_version):
+def _expected_plugin_version(source, policy, name, umbrella_version, package_root=None):
     rule = policy.get("plugins", {}).get(name, {})
     owner = rule.get("version_owner", policy.get("default_plugin_version_owner"))
     if owner == "umbrella":
@@ -183,7 +185,7 @@ def _expected_plugin_version(source, policy, name, umbrella_version):
             raise ValueError(f"RELEASE_UNIT_POLICY_INVALID: {name}: explicit version missing")
         return expected, POLICY_PATH
     if owner == "skiller-publication-map":
-        path = _in_package("configs/publication-versions.json", source.root)
+        path = _in_package("configs/publication-versions.json", source.root, package_root)
         versions = source.json(path)
         expected = versions.get("units", {}).get(name, versions["default_unit_version"])
         return expected, path
@@ -215,7 +217,7 @@ def version_errors(value):
     return errors
 
 
-def build(root, tag=None, *, ref=None):
+def build(root, tag=None, *, ref=None, package_root=None):
     source = Source(root, ref)
     changelog = source.read("CHANGELOG.md").decode()
     headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$",
@@ -263,7 +265,7 @@ def build(root, tag=None, *, ref=None):
                 declaration = source.json(claude_root + "/" + claude_manifest)
                 if declaration.get("version"):
                     provider_versions["claude-code"] = declaration["version"]
-                if claude_root.startswith(_in_package("skills/", source.root)):
+                if claude_root.startswith(_in_package("skills/", source.root, package_root)):
                     roots = ["."]
                 else:
                     roots = ["lib", "scripts", "references", "configs", "runtime"]
@@ -275,7 +277,7 @@ def build(root, tag=None, *, ref=None):
         if name == "core":
             providers["runtime"] = surface(source, "core", ["."],
                                             manifest=None)
-        expected, version_source = _expected_plugin_version(source, policy, name, version)
+        expected, version_source = _expected_plugin_version(source, policy, name, version, package_root)
         actual = (provider_versions.get("codex") or provider_versions.get("claude-code")
                   or expected)
         units.append({"id": name, "version": actual, "expected_version": expected,
@@ -284,12 +286,12 @@ def build(root, tag=None, *, ref=None):
                           "required_providers", []),
                       "provider_versions": provider_versions, "providers": providers,
                       "tree_digest": tree_digest({p: s["tree_digest"] for p, s in providers.items()})})
-    for package, package_root in sorted(_package_units(source, policy).items()):
-        metadata = source.json(package_root + "/package.json")
-        runtime = surface(source, package_root, ["lib", "bin", "scripts", "configs", "install.sh", "package.json"])
+    for package, package_path in sorted(_package_units(source, policy).items()):
+        metadata = source.json(package_path + "/package.json")
+        runtime = surface(source, package_path, ["lib", "bin", "scripts", "configs", "install.sh", "package.json"])
         units.append({"id": "package." + package, "version": metadata["version"],
                       "expected_version": metadata["version"],
-                      "version_source": package_root + "/package.json",
+                      "version_source": package_path + "/package.json",
                       "required_providers": [], "provider_versions": {},
                       "providers": {"runtime": runtime}, "tree_digest": runtime["tree_digest"]})
     return {"schema_version": "release-attestation/v1",
@@ -316,13 +318,13 @@ def check_transition(previous, current):
     return errors
 
 
-def check(root, value, *, previous_ref=None):
+def check(root, value, *, previous_ref=None, package_root=None):
     errors = []
-    if build(root, value["umbrella"]["tag"]) != value:
+    if build(root, value["umbrella"]["tag"], package_root=package_root) != value:
         errors.append("RELEASE_SNAPSHOT_STALE")
     errors.extend(version_errors(value))
     if previous_ref:
-        errors.extend(check_transition(build(root, ref=previous_ref), value))
+        errors.extend(check_transition(build(root, ref=previous_ref, package_root=package_root), value))
     for path in sorted((Path(root) / "releases").glob("v*.json")):
         historical = json.loads(path.read_text())
         if historical["umbrella"]["tag"] == value["umbrella"]["tag"]:
@@ -333,41 +335,3 @@ def check(root, value, *, previous_ref=None):
         errors.extend(check_transition(historical, value))
     return sorted(set(errors))
 
-
-def cmd_attest(env, argv):
-    opts = parse_flags(argv, {"--release": "str", "--previous": "str", "--check": "bool"})
-    if opts["help"]:
-        print("skiller attest [--release vX.Y.Z] [--previous vX.Y.Z] [--check]")
-        return
-    root = find_repo_root(env.root) or env.root
-    try:
-        value = build(root, opts["release"])
-        path = root / "releases" / (value["umbrella"]["tag"] + ".json")
-        errors = check(root, value, previous_ref=opts["previous"])
-        if errors:
-            die("; ".join(errors))
-        if opts["check"]:
-            if not path.is_file() or json.loads(path.read_text()) != value:
-                die("RELEASE_ATTESTATION_STALE: " + str(path))
-        else:
-            atomic_write_json(path, value)
-        print(f"{value['umbrella']['tag']}: {len(value['units'])} units; {path}")
-    except (ValueError, OSError, KeyError, subprocess.CalledProcessError) as exc:
-        die(f"RELEASE_ATTESTATION_INVALID: {exc}")
-
-
-def cmd_version(env, argv):
-    opts = parse_flags(argv, {"--json": "bool"})
-    root = find_repo_root(env.root) or env.root
-    value = build(root)
-    result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
-    value["umbrella"]["commit"] = result.stdout.strip() or "unknown"
-    for unit in value["units"]:
-        for projection in unit["providers"].values():
-            projection.pop("files")
-    if opts["json"]:
-        print(json.dumps(value, ensure_ascii=False))
-    else:
-        print(f"swissknifeman {value['umbrella']['tag']} ({value['umbrella']['commit'][:12]})")
-        for unit in value["units"]:
-            print(f"  {unit['id']}@{unit['version']} {unit['tree_digest']}")

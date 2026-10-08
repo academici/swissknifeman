@@ -22,8 +22,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `packages/skiller/lib/skiller/release.py` | skiller | aicore | release | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/release_attestation.py` | skiller | aicore | release | P5 | hypothesis | - |
 | `packages/maind/scripts/cache-brain-docs.sh` | maind | brain | - | P7 | fixed | - |
 | `packages/skiller/lib/skiller/brain_sync.py` | skiller | brain | - | P7 | fixed | - |
 | `packages/skiller/skills/system/brain-locator/` | skiller | brain | skills | P7 | fixed | - |

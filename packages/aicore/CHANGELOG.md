@@ -131,6 +131,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   (add, update, remove, keep, conflicts, drift repair) and writes the lock, the manifest and the optional
   `.gitignore` of the managed copies. Choosing the skills and planning stay with the caller: `sync_skillset` takes
   the plan, or a `planner` that makes it. Formats, marker and report counts are unchanged.
+- **`aicore.release`**: release identity and rules moved in from the skill library — the attestation of a release
+  (`attestation`: tagged digests, the release-unit policy, `build`, `check`, `check_transition`, `version_errors`),
+  the version rules (`version`: last tag, commits since it, the semver bump with no MAJOR, the next free version,
+  the version files of a host) and the changelog format (`changelog`: the Unreleased section, its move under a
+  version, `parse_released` with the heading grammar). The location of the package that owns the publication-version
+  map is the `package_root` parameter of `build` and `check` (none means no prefix), so the foundation names no
+  package. Digests and attested bytes are unchanged.
 
 ### Changed
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to

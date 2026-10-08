@@ -10,11 +10,12 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(REPO_ROOT / "packages/skiller/lib"), str(REPO_ROOT)]
+sys.path[:0] = [str(REPO_ROOT / "packages/skiller/lib"), str(REPO_ROOT / "packages/aicore/lib"),
+                str(REPO_ROOT)]
 
-from skiller.release_attestation import (Source, _expected_plugin_version,  # noqa: E402
-                                         _release_unit_policy, check_transition,
-                                         version_errors)
+from aicore.release.attestation import (Source, _expected_plugin_version,  # noqa: E402
+                                        _release_unit_policy, check_transition,
+                                        version_errors)
 
 
 class TaskPluginCacheRevisionTests(unittest.TestCase):

@@ -5,33 +5,17 @@ Umbrella version media - root CHANGELOG.md, not package.json (no root); P8.6, tr
 raytsystem verify_tag.py.
 """
 import os
-import re
 import sys
 
-RELEASED_RE = re.compile(r"^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$")
-UNRELEASED_RE = re.compile(r"^## \[Unreleased\]$")
-ANY_HEADER_RE = re.compile(r"^## \[")
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path[:0] = [os.path.join(REPO_ROOT, "packages/aicore/lib")]
+
+from aicore.release.attestation import check  # noqa: E402
+from aicore.release.changelog import parse_released  # noqa: E402
 
 MALFORMED_MSG = (
     "released view header not found `## [X.Y.Z] - YYYY-MM-DD` in CHANGELOG.md"
 )
-
-
-def parse_changelog(text):
-    """Returns (released, malformed): released — [(ver, date)] in file order."""
-    released = []
-    malformed = False
-    for line in text.splitlines():
-        if not ANY_HEADER_RE.match(line):
-            continue
-        if UNRELEASED_RE.match(line):
-            continue
-        m = RELEASED_RE.match(line)
-        if m:
-            released.append(m.group(1))
-        else:
-            malformed = True
-    return released, malformed
 
 
 def verify(tag, changelog_path):
@@ -43,7 +27,7 @@ def verify(tag, changelog_path):
         return 2, MALFORMED_MSG
     with open(changelog_path, encoding="utf-8") as f:
         text = f.read()
-    released, malformed = parse_changelog(text)
+    released, malformed = parse_released(text)
     if malformed and not released:
         return 2, MALFORMED_MSG
     if not released:
@@ -59,14 +43,12 @@ def main(argv):
     if len(argv) != 2:
         print("usage: verify-tag.py <vX.Y.Z>", file=sys.stderr)
         return 2
-    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    repo_root = REPO_ROOT
     code, message = verify(argv[1], os.path.join(repo_root, "CHANGELOG.md"))
     if not code and os.path.isfile(os.path.join(repo_root, ".agents/plugins/marketplace.json")):
         from pathlib import Path
         import json
         import subprocess
-        sys.path[:0] = [repo_root, os.path.join(repo_root, "packages/skiller/lib")]
-        from skiller.release_attestation import check
         try:
             path = Path(repo_root) / "releases" / ("v" + argv[1].removeprefix("v") + ".json")
             value = json.loads(path.read_text())
@@ -75,7 +57,8 @@ def main(argv):
             current = "v" + argv[1].removeprefix("v")
             previous = next((t for t in tags if t != current and
                              tuple(map(int, t[1:].split("."))) < tuple(map(int, current[1:].split(".")))), None)
-            errors = check(Path(repo_root), value, previous_ref=previous)
+            errors = check(Path(repo_root), value, previous_ref=previous,
+                           package_root=Path(repo_root) / "packages/skiller")
             if errors:
                 code, message = 1, "; ".join(errors)
         except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as exc:

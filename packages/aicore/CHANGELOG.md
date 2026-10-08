@@ -10,6 +10,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   the content hash (`skill_content_hash`, new `skill_digest`) and the transitive `requires` resolution
   (`resolve_requires_bfs`, `aggregate_dependency_diagnostics`). Bodies are unchanged, so every `content_sha256`
   stays the same.
+- **`aicore.content.budget`**: the context-budget math moved in from the skill library — the token estimate
+  (`estimate_tokens`, one formula for every consumer), skill and set budgets, the listing budget per provider, the
+  typed measurement rows (`make_measurement`, `aggregate_measurements`), the first-turn source meters (agents,
+  instructions, hooks, MCP) with the verdict and the text reports. `measure_mcp(target, *, host_servers=None)` takes
+  the host-owned server data from the caller, so the foundation reads no host configuration. Numbers, thresholds
+  and report text are unchanged.
 - **`skill-descriptor/v1` contract** with `SkillDescriptor` and `describe_skill`: identity, content digest, the
   optional fields of the Agent Skills standard (`license`, `compatibility`, `allowed-tools`, `metadata`),
   `adapters`, `requires`, `risk` and provenance from `upstream.json`; read-only, an absent value is null or empty.

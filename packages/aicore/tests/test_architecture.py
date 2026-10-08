@@ -174,6 +174,9 @@ class TestImportBoundary(unittest.TestCase):
         owners = {
             "skill_content_hash": "lib/aicore/content/skill.py",
             "resolve_requires_bfs": "lib/aicore/content/skill.py",
+            "estimate_tokens": "lib/aicore/content/budget.py",
+            "skill_budget": "lib/aicore/content/budget.py",
+            "measure_listing_budget": "lib/aicore/content/budget.py",
         }
         roots = [ROOT / "lib"]
         packages = ROOT.parent

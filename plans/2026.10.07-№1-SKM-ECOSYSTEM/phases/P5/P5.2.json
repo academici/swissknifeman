@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
   "title": "aicore.content.budget: математика токенов, листинг, измерения первого хода; skiller и harness на одной формуле",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Перенести из skiller/budget.py в aicore/content/budget.py оценку токенов, бюджет skill и набора, измерение листинга по провайдерам, записи измерений и измерители поверхностей первого хода (агенты, CLAUDE.md, инструкции, хуки, MCP с явным host_servers), вердикт и форматирование; в skiller оставить композицию (resolve_active_set, _measure_skills, first_turn_report, cmd_budget, карта бюджета) с реэкспортом; harness: удалить копию estimate_tokens и CHARS_PER_TOKEN_*, импортировать из aicore, тест на тождество функции, обновить instruction-canon.md; тесты aicore; карта и базовая линия.",
   "why": "D40: первый реальный второй потребитель — harness держит копию формулы, сверяемую тестом через импорт соседнего пакета (нарушение границы в базовой линии). Жёсткие риски: (1) изменение чисел бюджета — docs/guide/budget.md в golden skiller-registry и тесты test_budget*; (2) измерение MCP перестанет видеть серверы host-конфига, если host_servers не передан из skiller; (3) patch-цели test_budget_first_turn.py.",
   "scope": {
@@ -187,6 +187,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:45:00Z"
+  "result": {
+    "started_at": "2026-10-08T15:18:58Z",
+    "finished_at": "2026-10-08T15:38:34Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "9cabcd9b-ae21-4337-855f-a57a4f98dc9f"
+    },
+    "notes": "aicore.content.budget перенесён дословно по таблице (measure_mcp с host_servers), skiller/budget.py — композиция с реэкспортом и обёрткой _measure_mcp, harness без копии формулы (тест на тождество функции, instruction-canon.md), карта без budget.py, baseline обновлён (-2 нарушения), golden без перезахвата, skiller 803 и harness 736 тестов зелёные.",
+    "deviations": [
+      "TOP_N перенесена вместе с format_report (нет в таблице allocation)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T15:38:34Z"
 }

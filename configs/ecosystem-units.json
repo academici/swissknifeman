@@ -77,7 +77,6 @@
     {"path": "packages/orch/bridges/harness/", "target": "bridges/orch-harness", "phase": "P10", "confidence": "hypothesis", "note": "not described by the architecture; refine in P10"},
     {"path": "packages/skiller/lib/skiller/registry.py", "target": "aicore", "subsystem": "content", "phase": "P5", "confidence": "hypothesis"},
     {"path": "packages/skiller/lib/skiller/publication.py", "target": "aicore", "subsystem": "content", "phase": "P5", "confidence": "hypothesis"},
-    {"path": "packages/skiller/lib/skiller/budget.py", "target": "aicore", "subsystem": "content", "phase": "P5", "confidence": "hypothesis"},
     {"path": "packages/skiller/lib/skiller/common.py", "target": "aicore", "subsystem": "content", "phase": "P5", "confidence": "hypothesis"},
     {"path": "packages/skiller/lib/skiller/quality/", "target": "aicore", "subsystem": "content", "phase": "P5", "confidence": "hypothesis"},
     {"path": "packages/skiller/lib/skiller/connect.py", "target": "aicore", "subsystem": "delivery", "phase": "P5", "confidence": "hypothesis"},

@@ -8,13 +8,13 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import hashlib
 import json
-import math
 from pathlib import Path
 import re
 import sys
 from typing import Mapping
 
 from core.cli import parse_args
+from aicore.content.budget import CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT, estimate_tokens  # noqa: F401 (re-export)
 from core.io import atomic_write_text
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from core.provider.projection import load_projection_catalog, project_common_instructions
@@ -178,13 +178,6 @@ PACKAGE_CANON_LINE_LIMIT = 100
 PACKAGE_CANON_TOKEN_LIMIT = 3_000
 
 
-# `packages/skiller/lib/skiller/budget.py:48–64` (`estimate_tokens`,
-
-
-
-# `tests/test_instruction_size_gate.py::test_token_estimate_matches_skiller_formula`.
-CHARS_PER_TOKEN_CYR = 2.9
-CHARS_PER_TOKEN_LAT = 3.4
 _IDENTIFIER = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _DIGEST = re.compile(r"^(?:sha256:)?[0-9a-f]{64}$")
 _TAG = re.compile(r"^<!-- instruction:([a-z][a-z0-9.-]*) -->$", re.M)
@@ -481,14 +474,6 @@ def plan_instructions(request: InstructionRequest, *,
     if semantic_diagnostics:
         return InstructionOperationResult(request, (), semantic_diagnostics, False)
     return _observe(request, value)
-
-
-def estimate_tokens(text: str) -> int:
-    """Internal documentation."""
-    if not text:
-        return 0
-    cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
-    return math.ceil(cyr / CHARS_PER_TOKEN_CYR + (len(text) - cyr) / CHARS_PER_TOKEN_LAT)
 
 
 def canon_size_limits(scope_id: str) -> tuple[int, int]:

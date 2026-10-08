@@ -193,18 +193,20 @@ class TestProviderPublicationParity(unittest.TestCase):
                 do_sync(env, project, {"dry_run": True, "no_core": True}, register=False)
             self.assertEqual(_snapshot(project), before)
 
-            with mock.patch("skiller.common.now_iso",
-                            return_value="2026-07-23T12:57:20Z"), \
+            with mock.patch("aicore.delivery.materialize.now_iso",
+                            return_value="2026-07-23T12:57:20Z") as first_clock, \
                     contextlib.redirect_stdout(io.StringIO()):
                 do_sync(env, project, {"no_core": True}, register=False)
+            self.assertTrue(first_clock.called)  # the manifest was written with the frozen time
             self.assertTrue((project / ".claude/skills/code-style/SKILL.md").is_file())
             codex_skill = project / ".agents/skills/code-style/SKILL.md"
             self.assertTrue(codex_skill.is_file())
             applied = _snapshot(project)
-            with mock.patch("skiller.common.now_iso",
-                            return_value="2026-07-23T12:57:21Z"), \
+            with mock.patch("aicore.delivery.materialize.now_iso",
+                            return_value="2026-07-23T12:57:21Z") as second_clock, \
                     contextlib.redirect_stdout(io.StringIO()):
                 do_sync(env, project, {"no_core": True}, register=False)
+            second_clock.assert_not_called()  # an unchanged manifest keeps its installed_at
             self.assertEqual(_snapshot(project), applied)
 
             codex_skill.write_text("local drift\n", encoding="utf-8")

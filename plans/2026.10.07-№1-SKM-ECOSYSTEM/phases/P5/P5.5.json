@@ -1,0 +1,190 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.5",
+  "title": "aicore.content.eval: перенос eval skills и контекст результата eval-context/v1 (R12)",
+  "status": "todo",
+  "summary": "git mv skiller/quality/eval.py → aicore/content/eval.py; cmd_eval и всё, что читает env, — обратно в тонкий skiller/quality/eval.py с реэкспортом; контракт eval-context/v1; eval_context, runner_context (claude --version, модели из modelUsage), compare_eval_context; GRADER_VERSION; benchmark skill → skill-benchmark/v3 с context, системный банк → system-bank-benchmark/v2 с context; render_markdown показывает контекст; тесты на фейковом claude; убрать гипотезу quality/ (audit.py и analyze.py остаются в skiller).",
+  "why": "D42, R12: два результата eval сейчас нельзя сравнить — нет digest skill, модели, версии CLI и фикстур. Жёсткие риски: (1) выдуманные значения модели/версии — только наблюдаемые (modelUsage, claude --version), иначе null/[]; (2) eval-тесты skiller ломаются переносом (импорты из skiller.quality.eval) — реэкспорт; (3) реальный claude в тестах — только фейковый бинарь через SKM_CLAUDE_BIN во временном каталоге.",
+  "scope": {
+    "include": [
+      "git mv packages/skiller/lib/skiller/quality/eval.py packages/aicore/lib/aicore/content/eval.py (отдельный коммит), затем правки",
+      "новый packages/skiller/lib/skiller/quality/eval.py: cmd_eval и функции с env + реэкспорт имён, которые импортируют тесты skiller и plugins.py",
+      "packages/aicore/schemas/eval-context/v1/ (схема, примеры), schemas/README.md, unit.json provides.contracts",
+      "packages/aicore/tests/content/{test_eval_context,test_eval}.py (+ fixtures/ с копией system-reliability-*-v1.json); правка ожиданий schema_version и отчёта в packages/skiller/tests/test_eval.py",
+      "configs/ecosystem-units.json: удалить гипотезу packages/skiller/lib/skiller/quality/; render; CHANGELOG aicore"
+    ],
+    "exclude": [
+      "quality/audit.py и quality/analyze.py (остаются, D40)",
+      "поведенческие и safety-датасеты, лимиты стоимости (R66, отложено)",
+      "переписывание существующих benchmark.json (они в .gitignore)"
+    ]
+  },
+  "depends_on": [
+    "P5.4"
+  ],
+  "decisions": [
+    "D42",
+    "D40"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5-eval#design",
+      "why": "перенос, контракт, версии, тесты — реализуется дословно",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "git mv, реэкспорт, patch-цели",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#facts",
+      "why": "внешние предпосылки: modelUsage, claude --version",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/quality/eval.py",
+      "why": "исходник: run_case, _parse_claude_json, build_benchmark, build_system_benchmark, cmd_eval",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_eval.py",
+      "why": "какие имена и ожидания используют тесты",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/digest.py",
+      "why": "digest_json для fixtures.digest",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/config-explain/v1/config-explain.schema.json",
+      "why": "образец стиля схемы",
+      "required": false
+    },
+    {
+      "ref": "knowledge/review-e2-deferred#register",
+      "why": "R44 и R66 (оптимизация skills и поведенческие датасеты eval) остаются отложенными — не расширять объём",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/content/eval.py",
+      "change": "create",
+      "note": "через git mv"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/quality/eval.py",
+      "change": "any",
+      "note": "git mv, затем новый тонкий модуль"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/plugins.py",
+      "change": "modify",
+      "note": "только импорт claude_bin"
+    },
+    {
+      "path": "packages/aicore/schemas/eval-context/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "modify",
+      "note": "импорты, ожидания schema_version и контекста"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    }
+  ],
+  "rules": [
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-eval#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "git mv — отдельным коммитом без правок содержимого, затем коммит правок (rename-детекция)",
+    "Значения контекста только наблюдаемые: models — объединение ключей modelUsage из JSON-ответов прогонов, cli_version — из `<claude> --version` (таймаут 10 с), иначе null/[]; заявленное флагом не пишется как наблюдённое",
+    "Остальные ключи benchmark (with_skill, baseline, delta, provenance, cases, counts, pair, sample, provider_capability) и детерминизм отчёта при инъецированных часах не меняются",
+    "Тесты не вызывают настоящий claude: фейковый исполняемый скрипт во временном каталоге через SKM_CLAUDE_BIN (CLAUDE_BIN_ENV)",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: коммит `git mv` → правки `aicore/content/eval.py`: импорты (content-p5-eval#design), вырезать `cmd_eval` (и функции, читающие `env`) → новый `skiller/quality/eval.py` = `cmd_eval` + явный реэкспорт (список — по `grep -o \"ev\\.[a-zA-Z_]*\" packages/skiller/tests/test_eval.py | sort -u` и импортам `plugins.py`) → `_parse_claude_json` возвращает `(text, tokens, models)`; `run_case` кладёт `models` в запись прогона; поправить всех вызывающих → `GRADER_VERSION = \"1\"`, `runner_context(claude, models)`, `eval_context(...)`, `compare_eval_context(a, b)` → `cmd_eval`: `bench[\"schema_version\"] = \"skill-benchmark/v3\"`, `bench[\"context\"] = eval_context(skill={\"id\": skill_name, \"digest\": skill_digest(skill_dir)}, fixtures=…, grader={\"id\": \"skill-eval\", \"version\": GRADER_VERSION}, runner=runner_context(claude, sorted(union models)))` → `build_system_benchmark`: `\"system-bank-benchmark/v2\"` + `context` (skill `null`, fixtures из `cases_doc`, grader из `graders_doc`, runner — параметр `runner=None` → `{\"provider\": \"claude-code\", \"cli_version\": null, \"models\": []}`, потому что сейчас банк пересчитывает записанные транскрипты) → `render_markdown`: строка `Context: skill <digest[:19]>…, models <…|unobserved>, claude <cli_version|unknown>` → схема `eval-context/v1` + примеры + `unit.json` → тесты (content-p5-eval#design) → поправить ожидания `test_eval.py` (только schema_version/контекст/строка отчёта) → карта → CHANGELOG aicore.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "test -f packages/aicore/lib/aicore/content/eval.py && test -f packages/aicore/tests/content/test_eval_context.py && ls packages/aicore/schemas/eval-context/v1/examples/valid/*.json packages/aicore/schemas/eval-context/v1/examples/invalid/*.json >/dev/null && test -z \"$(git grep -n -E '^def (grade_assertion|build_benchmark|build_system_benchmark|run_case)\\b' -- packages/skiller/lib)\" && git grep -q 'skill-benchmark/v3' -- packages/skiller/lib/skiller/quality/eval.py && git grep -q 'system-bank-benchmark/v2' -- packages/aicore/lib/aicore/content/eval.py && PYTHONPATH=packages/aicore/lib python3 -c 'from aicore.content.eval import compare_eval_context; a = {\"schema\": \"eval-context/v1\", \"skill\": {\"id\": \"x/y\", \"digest\": \"sha256:\" + \"0\" * 64}, \"fixtures\": {\"id\": \"evals\", \"version\": None, \"digest\": \"sha256:\" + \"1\" * 64}, \"grader\": {\"id\": \"skill-eval\", \"version\": \"1\"}, \"runner\": {\"provider\": \"claude-code\", \"cli_version\": None, \"models\": []}}; import copy; b = copy.deepcopy(a); b[\"skill\"][\"digest\"] = \"sha256:\" + \"2\" * 64; assert compare_eval_context(a, a) == [] and compare_eval_context(a, b) == [\"skill.digest\"]'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.content.eval",
+    "контракт eval-context/v1",
+    "skill-benchmark/v3 и system-bank-benchmark/v2 с контекстом",
+    "сравнение результатов по контексту"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-08T14:45:02Z"
+}

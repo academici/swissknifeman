@@ -1,0 +1,219 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.1",
+  "title": "Начало фазы, пакеты aicore.content/delivery/release и слои; модель skill и контракт skill-descriptor/v1 (E27)",
+  "status": "todo",
+  "summary": "Влить origin/main и сверить golden; создать пакеты aicore.content, aicore.delivery, aicore.release (docstring-заглушки) и закрепить их слои в test_architecture; перенести из skiller/common.py и budget.py модель skill (SKILL_IGNORE, чтение frontmatter, split_frontmatter, skill_content_hash, разрешение requires) в aicore/content/skill.py с реэкспортом в skiller; добавить skill_digest, SkillDescriptor/describe_skill и контракт skill-descriptor/v1 с примерами; тесты; убрать гипотезы карты для resolve.py и lock.py (остаются в skiller по D40).",
+  "why": "D40, D41, E27: модель skill — основа всех следующих пунктов (budget, publication, eval, materialize импортируют её), поэтому идёт первой вместе с каркасом и правилом слоёв. Жёсткие риски: (1) тихое изменение content_sha256 в skills.json при переносе skill_content_hash — ловит golden skiller-registry; (2) циклический импорт aicore.content ↔ delivery — правило слоёв в test_architecture до появления кода; (3) дескриптор, который выдумывает значения, — поля только из frontmatter и upstream.json, неизвестное null.",
+  "scope": {
+    "include": [
+      "scripts/dev-clone.sh sync-main и python3 scripts/golden.py check в начале",
+      "packages/aicore/lib/aicore/{content,delivery,release}/__init__.py (docstring: назначение подпакета, ссылка на слои); content/skill.py",
+      "packages/skiller/lib/skiller/common.py: реэкспорт перенесённых имён под старыми именами; packages/skiller/lib/skiller/budget.py: `_split_frontmatter` — реэкспорт `split_frontmatter`",
+      "packages/aicore/schemas/skill-descriptor/v1/ (схема, examples/valid, examples/invalid), packages/aicore/schemas/README.md, packages/aicore/unit.json provides.contracts",
+      "packages/aicore/tests/content/{__init__,test_skill}.py; tests/test_architecture.py: слои content/delivery/release и test_content_primitives_are_defined_once (skill_content_hash, resolve_requires_bfs)",
+      "configs/ecosystem-units.json: удалить гипотезы resolve.py и lock.py; render; CHANGELOG aicore [Unreleased]"
+    ],
+    "exclude": [
+      "вызов describe_skill из registry и любые изменения skills.json, skills/ и frontmatter (D41)",
+      "receipt skill-digest в run (P10)",
+      "бюджет, публикация, eval, доставка, выпуски (P5.2–P5.8)"
+    ]
+  },
+  "depends_on": [
+    "P4.7"
+  ],
+  "decisions": [
+    "D40",
+    "D41",
+    "D4",
+    "D17"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5#facts",
+      "why": "факты кода и внешние предпосылки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-skill#allocation",
+      "why": "таблица aicore.content.skill и карта",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "техника переноса, импорты, слои",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-skill#design",
+      "why": "поля дескриптора, контракт, тесты — реализуется дословно",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "why": "переносимые функции (строки 43, 240–389)",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/text.py",
+      "why": "parse_frontmatter(text), parse_inline_list",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/config-explain/v1/config-explain.schema.json",
+      "why": "образец стиля схемы контракта",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/test_architecture.py",
+      "why": "правило слоёв и поиск определений",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/test_contracts.py",
+      "why": "как обходятся примеры схем",
+      "required": false
+    },
+    {
+      "path": "packages/skiller/tests/test_requires.py",
+      "why": "кейсы разрешения requires для копии в aicore",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/content/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/delivery/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/release/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/skill-descriptor/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "modify",
+      "note": "только цели импортов/патчей, если тест ломается переносом"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify",
+      "note": "только baseline --update"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только ecosystem-units.py render"
+    }
+  ],
+  "rules": [
+    "Первое действие пункта: scripts/dev-clone.sh sync-main на чистом дереве, затем python3 scripts/golden.py check; DEV_CLONE_CONFLICT — разрешить по смыслу обеих сторон и записать plan.py log",
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-skill#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "describe_skill только читает: frontmatter через aicore.util.text.parse_frontmatter, upstream.json через json; значения не нормализуются сверх описанного в content-p5-skill#design; отсутствующее — null/[]/{}; ошибки — ValueError с префиксом SKILL_DESCRIPTOR_INVALID",
+    "skill_content_hash переносится побайтно (порядок обхода, исключения, кодировка пути) — content_sha256 в skills.json не должен измениться",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: sync-main → golden check → пакеты `content/`, `delivery/`, `release/` с `__init__.py` (одна строка docstring: что за подсистема) → `tests/test_architecture.py`: в `test_subpackage_layering` добавить `check(\"content\", (\"util\", \"provider\", \"artifacts\", \"config\"))`, `check(\"delivery\", (\"util\", \"state\", \"config\", \"provider\", \"artifacts\", \"content\", \"release\"))`, `check(\"release\", (\"util\", \"content\"))` и запрет для util/state/config/provider/artifacts/usage импортировать content/delivery/release; новый `test_content_primitives_are_defined_once` (content-p5#checks п.2) с первыми именами `skill_content_hash`, `resolve_requires_bfs` → `content/skill.py`: перенос из `common.py` (`SKILL_IGNORE`, `parse_frontmatter` → `read_frontmatter`, `parse_frontmatter_fields` → `read_frontmatter_fields`, `DEPENDENCY_DIAGNOSTIC_CODES`, `aggregate_dependency_diagnostics`, `resolve_requires_bfs`, `skill_content_hash`) и из `budget.py` (`_split_frontmatter` → `split_frontmatter`); `skill_digest`; `SkillDescriptor` (frozen dataclass, `to_json()`), `describe_skill` по таблице content-p5-skill#design → в `common.py` вместо тел — `from aicore.content.skill import (…)` под старыми именами (`read_frontmatter as parse_frontmatter`, …), в `budget.py` — `from aicore.content.skill import split_frontmatter as _split_frontmatter` → схема `skill-descriptor/v1` + примеры (valid: local и upstream; invalid: без digest, лишний ключ) → `unit.json` provides.contracts → тесты `tests/content/test_skill.py` (content-p5-skill#design) → карта: удалить записи `packages/skiller/lib/skiller/resolve.py` и `lock.py`; `python3 scripts/ecosystem-units.py render` → CHANGELOG aicore ([Unreleased] Added: aicore.content.skill, skill-descriptor/v1; layering of content/delivery/release).\n\nПроверка вручную перед приёмкой: `PYTHONPATH=packages/aicore/lib python3 -c \"from pathlib import Path; from aicore.content.skill import describe_skill; import json; print(json.dumps(describe_skill(Path('packages/skiller/skills/frontend-nuxt/nuxt-seo'), skill_id='frontend-nuxt/nuxt-seo').to_json(), indent=2))\"` — лицензия MIT из upstream.json, provenance с файлами.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "git fetch -q origin && git merge-base --is-ancestor origin/main HEAD",
+      "expect": "exit 0 (main влит в начале фазы)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "test -f packages/aicore/lib/aicore/delivery/__init__.py && test -f packages/aicore/lib/aicore/release/__init__.py && ls packages/aicore/schemas/skill-descriptor/v1/examples/valid/*.json packages/aicore/schemas/skill-descriptor/v1/examples/invalid/*.json >/dev/null && test -z \"$(git grep -n -E '^def (skill_content_hash|resolve_requires_bfs|aggregate_dependency_diagnostics)\\b' -- packages/skiller/lib)\" && PYTHONPATH=packages/aicore/lib python3 -c 'import json, sys; from pathlib import Path; from aicore.content.skill import describe_skill, skill_digest, skill_content_hash; d = describe_skill(Path(\"packages/skiller/skills/frontend-nuxt/nuxt-seo\"), skill_id=\"frontend-nuxt/nuxt-seo\").to_json(); assert d[\"schema\"] == \"skill-descriptor/v1\" and d[\"license\"] == \"MIT\" and d[\"provenance\"][\"source\"] == \"github\"; assert d[\"digest\"] == \"sha256:\" + skill_content_hash(Path(\"packages/skiller/skills/frontend-nuxt/nuxt-seo\")); c = [x[\"id\"] for x in json.load(open(\"packages/aicore/unit.json\"))[\"provides\"][\"contracts\"]]; sys.exit(0 if \"urn:swissknifeman:aicore:skill-descriptor\" in c else 1)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "пакеты aicore.content, aicore.delivery, aicore.release и правило слоёв",
+    "aicore.content.skill с реэкспортом в skiller",
+    "SkillDescriptor/describe_skill и контракт skill-descriptor/v1",
+    "main влит"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-08T14:44:59Z"
+}

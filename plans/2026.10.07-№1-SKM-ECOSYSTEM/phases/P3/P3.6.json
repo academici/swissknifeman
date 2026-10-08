@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.6",
   "title": "Закрытие фазы: широкий прогон, сверка E1 и E2, push",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Один широкий прогон всех наборов и проверок, сверка тезисов E1 фазы P3 (E03, E13, E21, E29, E10) и E2 (R01, R03, R14) по колонке «Проверка при аудите», push ветки ecosystem-split в origin.",
   "why": "Ритм фазы (архитектура §10): конец фазы — зелёные тесты и проверки автономности, push; правило плана — сверка с реестром E1. Риск — частичный прогон после правок P3.3–P3.5 пропустит регресс в потребителе.",
   "scope": {
@@ -121,6 +121,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T09:38:11Z"
+  "result": {
+    "started_at": "2026-10-08T10:57:19Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "0f62b326-df6e-4200-9727-2e4e02495570"
+    }
+  },
+  "updated_at": "2026-10-08T10:57:19Z"
 }

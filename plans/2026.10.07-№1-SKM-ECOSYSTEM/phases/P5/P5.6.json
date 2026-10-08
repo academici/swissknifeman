@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.6",
   "title": "aicore.delivery: Codex (TOML через aicore.config), Claude (плагины и слияние settings), планы распространения",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "git mv skiller/native_codex.py → aicore/delivery/codex.py и тест; собственный TOML-парсер заменить на aicore.config.toml.loads; plugins.py → aicore/delivery/claude.py вместе с redacted_settings_preview и чистой enable_marketplace_plugins (слияние extraKnownMarketplaces/enabledPlugins из _do_connect_claude, тексты notes дословно); MARKETPLACE в aicore.delivery; планы распространения и Codex connect-артефакты → aicore/delivery/distribution.py (providers явным параметром); skiller — обёртки и реэкспорт; тесты; убрать гипотезы connect, vendor, update, status, native_codex, plugins, publication.",
   "why": "D40: подключение плагинов к проекту — механика, общая для всех модулей с плагинами (архитектура §4 aicore.delivery); единый вход TOML (D35/D37) — у skiller был свой урезанный парсер. Жёсткие риски: (1) изменение вывода skiller connect (порядок notes и строк) — тесты connect/status/update; (2) поведение Codex-выбора на Python < 3.11 меняется с урезанного парсера на полный TOML — единственное допустимое изменение, фиксируется в CHANGELOG; (3) patch-цели subprocess/shutil у перенесённых функций.",
   "scope": {
@@ -196,6 +196,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:45:03Z"
+  "result": {
+    "started_at": "2026-10-08T16:57:35Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "4e863c18-d28b-4fb2-b512-ab2408971b7f"
+    }
+  },
+  "updated_at": "2026-10-08T16:57:35Z"
 }

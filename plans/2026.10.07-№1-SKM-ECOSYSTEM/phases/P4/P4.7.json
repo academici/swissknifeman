@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.7",
   "title": "Закрытие фазы: широкий прогон, сверка E1 и E2, push",
-  "status": "todo",
+  "status": "done",
   "summary": "Один широкий прогон всех наборов и проверок, сверка тезисов E1 (E30–E33, E39) и E2 (R04, R05, R15) по колонке «Проверка при аудите», push ветки ecosystem-split в origin.",
   "why": "Ритм фазы (архитектура §10): конец фазы — зелёные тесты и проверки автономности, push; правило плана — сверка с реестрами E1 и E2. Риск — частичные прогоны пунктов пропустят регресс у потребителя shim (maind, skiller) или в standalone.",
   "scope": {
@@ -116,6 +116,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T11:40:07Z"
+  "result": {
+    "started_at": "2026-10-08T13:18:44Z",
+    "finished_at": "2026-10-08T13:33:18Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "b59485ee-2705-4941-a6be-d9cd66497124"
+    },
+    "notes": "Широкий прогон зелёный (aicore, core, skiller, harness, maind, orch, analyst, task validate, scripts/test-*.py, bootstrap); ecosystem-units, render, standalone --baseline, golden, docs-impact, public-hygiene; сверка E1/E2 записана; push ниже",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T13:33:18Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T13:33:18Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T13:33:18Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T13:33:18Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T13:33:18Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T13:33:18Z"
 }

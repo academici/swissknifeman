@@ -4,7 +4,7 @@
   "title": "orch и мосты",
   "design": "skeleton",
   "goal": "bridges/planner-orch и bridges/orch-skiller в хабе с контрактными тестами; порт «источник работы» в orch; выбор движка в конфиге с отказом при нехватке возможностей; события orch.run.*; поиск соседей по путям удалён. Сценарии оркестрации — профили run-policy в конфиге orch (стадии, классы моделей, ревью, раунды, бюджеты стадий); бриф пункта строится кодом (обязательное дословно) + необязательная сжатая часть дешёвой моделью со ссылками на оригиналы, хранится артефактом пункта по digest; закрытие — по evidence (D16).",
-  "context": "D3, D6; knowledge/architecture §7 orch, §9. Детализируется после P9. D16, research/Q6.md; существующие exec/v1 execution-input, роли orch и профили run-policy PLAN2 — основа, движок вне плана. Внешнее ревью E1: тезисы E04, E08–E11, E19, E21, E23–E26, E38, E54–E57, E59 (knowledge/review-e1-*).",
+  "context": "D3, D6; knowledge/architecture §7 orch, §9. Детализируется после P9. D16, research/Q6.md; существующие exec/v1 execution-input, роли orch и профили run-policy PLAN2 — основа, движок вне плана. Внешнее ревью E1: тезисы E04, E08–E11, E19, E21, E23–E26, E38, E54–E57, E59 (knowledge/review-e1-*). Внешнее ревью E2 (knowledge/review-e2-execution, D35, D36): R20–R22 — входы решения о повторе, таблица действий по классу ошибки (context_limit → replan), watch(run_id, after_seq); R23, R24 — не-цели движка и MCP не шина; R25, R26 — property-тесты reducer и иерархия ключей идемпотентности; R27–R29 — структурное решение политики, повторная проверка перед эффектом, config digest и considered[] маршрута в launch-plan; R09 — run-policy.sandbox на общем словаре permissions; R10 — minor-совместимость exec/v1 доказывается инструментом совместимости схем; R30 — conformance движков; R07 — artifact-ref в брифе и raw_ref.",
   "scope": {
     "include": [
       "перенос мостов",
@@ -18,7 +18,18 @@
       "ключи идемпотентности",
       "launch-plan с digest-ами, proof и explain",
       "capability-record: source, свежесть, remediation",
-      "профили run-policy как версионированные пакеты политик с тестами"
+      "профили run-policy как версионированные пакеты политик с тестами",
+      "входы решения о повторе (класс ошибки, запись или чтение, diff worktree, receipt) и действия по классу ошибки (R20, R21)",
+      "watch(run_id, after_seq) (R22)",
+      "property-тесты reducer и событие неизвестной версии (R25)",
+      "иерархия ключей идемпотентности (R26)",
+      "структурное решение политики и повторная проверка перед эффектом (R27)",
+      "config digest и considered[] маршрута в launch-plan (R28, R29)",
+      "run-policy.sandbox на общем словаре permissions (R09)",
+      "artifact-ref в брифе и raw_ref (R07)",
+      "conformance движков: перечень сценариев (R30)",
+      "раздел Non-goals в docs orch (R23)",
+      "тест: движок не пишет вне каталога run и worktree (R32)"
     ],
     "exclude": [
       "native-движок и CAO (вне плана)"

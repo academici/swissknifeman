@@ -4,7 +4,7 @@
   "title": "planner: переименование, конфиг, оверлеи, события",
   "design": "skeleton",
   "goal": "packages/planner (бывший task) с алиасами /task:* и SKM_TASK_ROOT; конфиг, оверлеи слотов команд, события planner.*, внешние проверки плана; команды и skills через aicore.content; URN схем неизменны; старые планы читаются; planner автономен. Бюджеты, пороги, умолчания и политики planner настраиваются конфигом с приоритетом defaults → машина → проект → plan.settings → флаги (D15); planner/config.example.toml.",
-  "context": "D2, D6, D9; knowledge/architecture §7 planner. Детализируется после P5 и P6. D15: начать с инвентаризации зашитых констант и политик (DEFAULT_BUDGET_KB, HEAVY_TEXT_BYTES, TOP_SOURCES, MAX_CHAIN, умолчания settings, раунды ревью). D16: умолчание сценария оркестрации по классу пункта в конфиге planner, переопределение полем orchestration пункта. Внешнее ревью E1: тезисы E04, E44 (старые планы читаются) (knowledge/review-e1-*).",
+  "context": "D2, D6, D9; knowledge/architecture §7 planner. Детализируется после P5 и P6. D15: начать с инвентаризации зашитых констант и политик (DEFAULT_BUDGET_KB, HEAVY_TEXT_BYTES, TOP_SOURCES, MAX_CHAIN, умолчания settings, раунды ревью). D16: умолчание сценария оркестрации по классу пункта в конфиге planner, переопределение полем orchestration пункта. Внешнее ревью E1: тезисы E04, E44 (старые планы читаются) (knowledge/review-e1-*). E2 R04: config.example.toml planner несёт schema_version.",
   "scope": {
     "include": [
       "переименование",
@@ -15,7 +15,8 @@
       "config.example.toml planner",
       "выбор сценария оркестрации по умолчанию",
       "один владелец попытки пункта",
-      "фикстуры совместимости схем планов"
+      "фикстуры совместимости схем планов",
+      "schema_version в config.example.toml planner (R04)"
     ],
     "exclude": [
       "мосты к orch (P10)"

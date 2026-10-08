@@ -4,12 +4,13 @@
   "title": "aicore: контент и доставка",
   "design": "skeleton",
   "goal": "aicore.content (разбор и проверка skills/commands, каталог, бюджет, проекция в провайдеров, plugin.json и маркетплейс, eval/аудит), aicore.delivery (подключение плагинов к проектам) и aicore.release обобщены из skiller и task/command_render; skiller и task используют их; сгенерированные артефакты байт-в-байт прежние.",
-  "context": "D4; knowledge/architecture §4. Детализируется после P3/P4 по инвентаризации модулей skiller (P2). Внешнее ревью E1: тезисы E27 (knowledge/review-e1-*).",
+  "context": "D4; knowledge/architecture §4. Детализируется после P3/P4 по инвентаризации модулей skiller (P2). Внешнее ревью E1: тезисы E27 (knowledge/review-e1-*). Внешнее ревью E2: R12 — результат eval несёт digest skill, модель и провайдер, версии банка и оценщика (system-bank-benchmark/v1 уже несёт bank_version и grader_version; остальное проверить при обобщении eval).",
   "scope": {
     "include": [
       "обобщение кода skiller и command_render",
       "перевод skiller и task",
-      "модель skill-артефакта: таблица пробелов E27"
+      "модель skill-артефакта: таблица пробелов E27",
+      "провенанс результата eval: digest skill, модель и провайдер, версии банка и оценщика (R12)"
     ],
     "exclude": [
       "перенос skills по модулям (P7, P8)"

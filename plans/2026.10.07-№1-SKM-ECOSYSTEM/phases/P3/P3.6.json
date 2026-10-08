@@ -1,16 +1,16 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.6",
-  "title": "Закрытие фазы: широкий прогон, сверка E1, push",
+  "title": "Закрытие фазы: широкий прогон, сверка E1 и E2, push",
   "status": "todo",
-  "summary": "Один широкий прогон всех наборов и проверок, сверка тезисов E1 фазы P3 (E03, E13, E21, E29, E10) по колонке «Проверка при аудите», push ветки ecosystem-split в origin.",
+  "summary": "Один широкий прогон всех наборов и проверок, сверка тезисов E1 фазы P3 (E03, E13, E21, E29, E10) и E2 (R01, R03, R14) по колонке «Проверка при аудите», push ветки ecosystem-split в origin.",
   "why": "Ритм фазы (архитектура §10): конец фазы — зелёные тесты и проверки автономности, push; правило плана — сверка с реестром E1. Риск — частичный прогон после правок P3.3–P3.5 пропустит регресс в потребителе.",
   "scope": {
     "include": [
       "наборы aicore, core, skiller, harness, maind, orch, analyst; task validate; все scripts/test-*.py; bootstrap test",
       "ecosystem-units check, render --check, standalone --baseline; golden check",
       "docs-impact и public-hygiene",
-      "plan.py log note со сверкой E1",
+      "plan.py log note со сверкой E1 и E2",
       "git push origin ecosystem-split"
     ],
     "exclude": [
@@ -44,6 +44,11 @@
       "ref": "knowledge/review-e1-execution#register",
       "why": "E10, E21, E29",
       "required": false
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "колонка «Проверка при аудите» R01, R03, R14",
+      "required": false
     }
   ],
   "task_files": [
@@ -59,7 +64,7 @@
     "Тестовые наборы — штатными раннерами",
     "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit"
   ],
-  "guidance": "Исполнитель: economy/medium.\n\nПорядок: V1 (долго — в фоне, дождаться) → V2 → V3 → V4 → сверка E1: `plan.py log <plan> P3 --type note --summary \"E1 P3: E03 …; E13 …; E21 …; E29 …; E10 …\"` — по строке на тезис «реализован (где) / перенесён решением (D#, фаза)» по knowledge/aicore-p3 §e1 → commit пункта → push → V5.",
+  "guidance": "Исполнитель: economy/medium.\n\nПорядок: V1 (долго — в фоне, дождаться) → V2 → V3 → V4 → сверка E1: `plan.py log <plan> P3 --type note --summary \"E1 P3: E03 …; E13 …; E21 …; E29 …; E10 …; E2 P3: R01 …; R03 …; R14 …\"` — по строке на тезис «реализован (где) / перенесён решением (D#, фаза)» по knowledge/aicore-p3 §e1 → commit пункта → push → V5.",
   "validation": [
     {
       "id": "V1",
@@ -99,7 +104,7 @@
   ],
   "deliverables": [
     "зелёный широкий прогон",
-    "сверка E1 фазы P3 в журнале",
+    "сверка E1 и E2 фазы P3 в журнале",
     "ветка запушена"
   ],
   "route": {
@@ -117,5 +122,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-08T06:02:04Z"
+  "updated_at": "2026-10-08T09:38:11Z"
 }

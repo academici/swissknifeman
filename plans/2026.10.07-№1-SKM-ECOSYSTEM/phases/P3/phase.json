@@ -4,7 +4,7 @@
   "title": "aicore: основа — util, provider, artifacts, usage",
   "design": "detailed",
   "goal": "packages/aicore — автономный модуль с util, provider (включая каталог моделей), artifacts, usage, перенесёнными из core с сохранением истории; core реэкспортирует aicore (shim), потребители не сломаны; bin-обёртки модулей находят aicore по правилу AICORE_ROOT → _vendor → соседняя папка.",
-  "context": "D2, D4, D17, D20, D23, D28, D30; решения детализации D31 (раскладка и shim), D32 (локатор), D33 (общие контракты), D34 (каталог моделей); knowledge/aicore-p3 (факты кода, таблица переноса, контракты пунктов), knowledge/architecture §3, §4. Внешнее ревью E1: E03, E13, E21, E29, E10 (часть P3) — сопоставление в knowledge/aicore-p3 §e1. Начало фазы — sync-main и golden check в P3.1; конец — широкий прогон и push в P3.6. Ревью: requested для P3.2 и P3.3, self для P3.1 и P3.4.",
+  "context": "D2, D4, D17, D20, D23, D28, D30; решения детализации D31 (раскладка и shim), D32 (локатор), D33 (общие контракты), D34 (каталог моделей), D35 (критерии «готовое вместо своего»), D36 (дополнение error/v1); knowledge/aicore-p3 (факты кода, таблица переноса, контракты пунктов), knowledge/architecture §3, §4. Внешнее ревью E1: E03, E13, E21, E29, E10 (часть P3) — сопоставление в knowledge/aicore-p3 §e1. Внешнее ревью E2: R01, R03, R14 (knowledge/review-e2-foundation). Начало фазы — sync-main и golden check в P3.1; конец — широкий прогон и push в P3.6. Ревью: requested для P3.2 и P3.3, self для P3.1 и P3.4.",
   "scope": {
     "include": [
       "локатор aicore (AICORE_ROOT → _vendor → соседняя папка) в обёртках и раннерах",

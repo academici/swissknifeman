@@ -1,15 +1,15 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.5",
-  "title": "Документация aicore и архитектуры: README модуля, ADR 0028–0031, инвентаризация контрактов, CHANGELOG",
+  "title": "Документация aicore и архитектуры: README модуля, ADR 0028–0033, инвентаризация контрактов, CHANGELOG",
   "status": "todo",
-  "summary": "packages/aicore/README.md (подсистемы, раскладка, локатор, shim и его окно, контракты, тесты), ADR 0028–0031 для D31–D34, строки инвентаризации E13 в docs/architecture/contracts.md, docs/architecture/ecosystem.md (aicore существует), docs/core/index.md → страница о переходном shim, docs/status.md, CHANGELOG [Unreleased] корня и модуля; docs-impact по диапазону фазы.",
-  "why": "D24: архитектурные решения живут в docs/architecture с ADR; без README модуль нельзя использовать «как отдельный репозиторий»; shim без описанного окна — незавершённый по D23. Риск — устаревшие ссылки на core/ и старые пути конфигов в документации.",
+  "summary": "packages/aicore/README.md (подсистемы, раскладка, локатор, shim и его окно, контракты, тесты), ADR 0028–0033 для D31–D36, строки инвентаризации E13 в docs/architecture/contracts.md, docs/architecture/ecosystem.md (aicore существует), docs/core/index.md → страница о переходном shim, docs/status.md, CHANGELOG [Unreleased] корня и модуля; docs-impact по диапазону фазы. В docs/architecture/ecosystem.md — глоссарий шести сущностей (model provider, agent runtime, tool provider, execution substrate, durable runtime, remote agent) с владельцем каждой (R01) и список не-целей (D35).",
+  "why": "D24: архитектурные решения живут в docs/architecture с ADR; без README модуль нельзя использовать «как отдельный репозиторий»; shim без описанного окна — незавершённый по D23. Риск — устаревшие ссылки на core/ и старые пути конфигов в документации. D35/D36 и E2 (R01, R23, R24): критерии «готовое вместо своего», не-цели (движок не durable runtime, MCP не шина событий) и дополнение error/v1 должны жить в ADR, иначе правило забудется.",
   "scope": {
     "include": [
       "packages/aicore/README.md, packages/aicore/CHANGELOG.md",
-      "docs/architecture/decisions/0028–0031 и decisions/README.md",
-      "docs/architecture/{contracts.md,ecosystem.md,index.md}",
+      "docs/architecture/decisions/0028–0033 и decisions/README.md",
+      "docs/architecture/{contracts.md,ecosystem.md,index.md} (в ecosystem.md — глоссарий сущностей и не-цели)",
       "docs/core/index.md, docs/status.md, docs/index или навигация, если ссылаются на core",
       "CHANGELOG.md [Unreleased]"
     ],
@@ -26,7 +26,9 @@
     "D32",
     "D33",
     "D34",
-    "D24"
+    "D24",
+    "D35",
+    "D36"
   ],
   "reads": [
     {
@@ -78,6 +80,11 @@
       "path": "scripts/docs-impact.py",
       "why": "что проверяет docs-impact",
       "required": false
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "R01 глоссарий, R03 состав error/v1; R23, R24 не-цели в review-e2-execution",
+      "required": true
     }
   ],
   "task_files": [
@@ -104,6 +111,14 @@
     },
     {
       "path": "docs/architecture/decisions/0031-*.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/0032-*.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/0033-*.md",
       "change": "create"
     },
     {
@@ -148,11 +163,11 @@
     "Stdlib-only, совместимость с Python 3.9; тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
     "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
   ],
-  "guidance": "Исполнитель: implementation/medium.\n\n`git grep -n 'core/' -- docs README.md CONTRIBUTING.md` и `git grep -n 'configs/provider-' -- docs` — пройти каждое совпадение. README aicore — разделы: Purpose; Layout (дерево §layout); Subsystems (util, provider, artifacts, usage — что внутри, потребители); Finding aicore (локатор, AICORE_ROOT, _vendor, sibling, AICORE_NOT_FOUND); Compatibility shim (`core`, окно до удаления core/, новый код импортирует aicore); Contracts (таблица из schemas/README.md); Tests (`scripts/test.sh`, standalone). Затем `python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD` до зелёного.",
+  "guidance": "Исполнитель: implementation/medium.\n\n`git grep -n 'core/' -- docs README.md CONTRIBUTING.md` и `git grep -n 'configs/provider-' -- docs` — пройти каждое совпадение. README aicore — разделы: Purpose; Layout (дерево §layout); Subsystems (util, provider, artifacts, usage — что внутри, потребители); Finding aicore (локатор, AICORE_ROOT, _vendor, sibling, AICORE_NOT_FOUND); Compatibility shim (`core`, окно до удаления core/, новый код импортирует aicore); Contracts (таблица из schemas/README.md); Tests (`scripts/test.sh`, standalone). Затем `python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD` до зелёного.\n\nADR 0032 (D35): пять критериев выбора «готовое или своё», исходы (формат, библиотека, сервер, паттерн), vendoring только по проверке первоисточника, не-цели (движки orch не durable runtime; MCP — поверхность инструментов, не шина aicore.ext; шлюз не владеет состоянием run), снятие расхождения минимумов Python (3.9; doctor 3.8 и D14 3.11 устаревают). ADR 0033 (D36): состав error/v1 и различие unknown и unknown_outcome. Глоссарий — таблица «сущность → у нас → владелец», без новых требований.",
   "validation": [
     {
       "id": "V1",
-      "cmd": "for n in 0028 0029 0030 0031; do ls docs/architecture/decisions/$n-*.md >/dev/null || exit 1; done; grep -q 0031 docs/architecture/decisions/README.md",
+      "cmd": "for n in 0028 0029 0030 0031 0032 0033; do ls docs/architecture/decisions/$n-*.md >/dev/null || exit 1; done; grep -q 0033 docs/architecture/decisions/README.md",
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "."
@@ -177,12 +192,20 @@
       "expect": "exit 0 (старый путь манифеста нигде в docs)",
       "kind": "acceptance",
       "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "grep -qi 'glossary' docs/architecture/ecosystem.md && grep -qi 'durable runtime' docs/architecture/ecosystem.md && grep -qi 'durable runtime' docs/architecture/decisions/0032-*.md",
+      "expect": "exit 0 (глоссарий и не-цели записаны)",
+      "kind": "acceptance",
+      "cwd": "."
     }
   ],
   "deliverables": [
     "README и CHANGELOG aicore",
-    "ADR 0028–0031",
-    "инвентаризация контрактов и ecosystem.md актуальны"
+    "ADR 0028–0033",
+    "инвентаризация контрактов и ecosystem.md актуальны",
+    "глоссарий сущностей и не-цели в ecosystem.md"
   ],
   "route": {
     "class": "implementation",
@@ -199,5 +222,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-08T06:02:31Z"
+  "updated_at": "2026-10-08T09:38:11Z"
 }

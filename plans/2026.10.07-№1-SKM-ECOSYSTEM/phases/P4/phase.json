@@ -4,7 +4,7 @@
   "title": "aicore: конфиг и состояние",
   "design": "skeleton",
   "goal": "aicore.config (слои defaults → машина → проект → env → флаги, схемы модулей, explain) и aicore.state (XDG-места, проектный .swissknifeman/{config.json,state,backups}, SKM_HOME, бэкапы с ротацией вместо *.bak) работают; swissknifeman config show/set/explain; первый модуль переведён, старые файлы читаются с предупреждением.",
-  "context": "D5; knowledge/architecture §5. Детализируется после P3. Формат слоёв — TOML, состояние — JSON, config.example.toml из схемы (D14); конфиг planner — первый крупный потребитель (D15). Внешнее ревью E1: тезисы E30–E33, E39 (knowledge/review-e1-*).",
+  "context": "D5; knowledge/architecture §5. Детализируется после P3. Формат слоёв — TOML, состояние — JSON, config.example.toml из схемы (D14); конфиг planner — первый крупный потребитель (D15). Внешнее ревью E1: тезисы E30–E33, E39 (knowledge/review-e1-*). Внешнее ревью E2 (knowledge/review-e2-foundation, D35): R04 — schema_version у файла конфига и explain --json; R05 — тест редактирования секретов охватывает исключения и трейсбеки, схемы secret_ref открыты внешнему резолверу-плагину; R15 — конфликт минимумов Python (D14 ≥ 3.11, правила пунктов 3.9, doctor 3.8): чтение TOML через tomllib при ≥ 3.11, иначе vendored tomli, а перед собственным писателем TOML для config set оценить vendoring готового по первоисточнику (лицензия, пин, поведение с комментариями).",
   "scope": {
     "include": [
       "aicore.config",
@@ -17,7 +17,10 @@
       "правила слияния и удаления",
       "explain с файлом и строкой",
       "secret_ref и тест редактирования",
-      "слой --config FILE"
+      "слой --config FILE",
+      "schema_version файла конфига и explain --json (R04)",
+      "тест: значение секрета не попадает в исключения и трейсбеки (R05)",
+      "чтение и запись TOML на Python 3.9–3.10: vendoring вместо своего парсера (D35, R15)"
     ],
     "exclude": [
       "массовая миграция модулей (P8–P11)",

@@ -4,14 +4,16 @@
   "title": "Модули хаба: maind, analyst, harness; удаление core и artifex",
   "design": "skeleton",
   "goal": "maind, analyst, harness работают на aicore и новых местах конфига/состояния (*.env.ini, .maind*.json, ~/.maind, *.bak уходят); рендереры провайдеров перенесены по правилу «рендер — aicore, каталоги — harness»; core/ и artifex удалены; проверка границ --strict зелёная.",
-  "context": "D2, D5, D8; knowledge/architecture §5.3, §7. Детализируется после P8 и P10. Внешнее ревью E1: тезисы E28, E30, E37 (knowledge/review-e1-*).",
+  "context": "D2, D5, D8; knowledge/architecture §5.3, §7. Детализируется после P8 и P10. Внешнее ревью E1: тезисы E28, E30, E37 (knowledge/review-e1-*). Внешнее ревью E2: R31 — MCP-сервер maind: согласование версии протокола (сейчас возвращает запрошенную клиентом), conformance с официальным клиентом, digest tools в doctor; R11 — имена spans; D35 — порог версии Python в doctor из одной константы (сейчас ≥ 3.8 у analyst, maind, skiller).",
   "scope": {
     "include": [
       "перевод модулей хаба",
       "удаление core и artifex",
       "strict-проверка границ",
       "doctor модулей по контракту",
-      "редактирование секретов"
+      "редактирование секретов",
+      "MCP-сервер maind: согласование версии, conformance, tools_digest (R31)",
+      "порог версии Python в doctor модулей из одной константы 3.9 (D35)"
     ],
     "exclude": [
       "umbrella CLI (P12)"

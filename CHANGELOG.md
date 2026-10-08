@@ -4,6 +4,18 @@
 
 ### Added
 
+- **aicore:** layered configuration and standard state places. `aicore.config` resolves a module's settings from the
+  schema defaults, the machine file, the project file, environment, `--config FILE` and flags, with `_unset` and
+  `_append`, `x-skm-layers`, secret references and `explain`; `aicore.state` gives the XDG and `SKM_HOME` places,
+  legacy lookup with a warning and timestamped backups with rotation; the `aicore config` and `swissknifeman config`
+  commands (`show`, `explain`, `set`, `unset`, `init`, `example`, `paths`); TOML read by `tomllib` or the vendored
+  `tomli` 2.3.1 and written by a minimal comment-keeping editor. `shared_config_path` of `core` is removed.
+- **analyst:** the recompute and digest thresholds are configuration of the `analyst` section
+  (`config.example.toml`), and state lives in the new machine state place; the old `~/.swissknifeman/analyst` is
+  still read, with a warning.
+- **docs:** ADR 0034–0036 (layered config semantics, state locations with legacy reads and backups, vendored
+  `tomli` and the minimal TOML editor); `contracts.md` lists `config-explain/v1` and the contract of a module's
+  config section; `ecosystem.md` describes the six layers and the places (defaults are the schema's `default`).
 - **docs:** ADR 0028–0033 (aicore subsystems and the `core` shim, the locator fragment, shared contracts, the model
   catalog in aicore, ready-made-or-own criteria with non-goals and Python 3.9, `error/v1` with `context_limit`).
 - **docs:** `docs/architecture/ecosystem.md` has a glossary of six entities (model provider, agent runtime, tool

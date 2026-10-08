@@ -59,3 +59,6 @@ by a new record.
 | [0031](0031-model-catalog-in-aicore.md) | The model catalog belongs to aicore | Accepted |
 | [0032](0032-ready-made-or-own-and-non-goals.md) | Ready-made or own: criteria, non-goals, Python 3.9 | Accepted |
 | [0033](0033-error-record-context-limit-and-unknown.md) | error/v1: `context_limit`, request identity, `unknown` is not `unknown_outcome` | Accepted |
+| [0034](0034-layered-config-semantics.md) | Layered config semantics: schema, file, layers, merge operators, environment, secrets, explain | Accepted |
+| [0035](0035-state-locations-legacy-reads-and-backups.md) | State locations, legacy reads and backups | Accepted |
+| [0036](0036-toml-vendored-tomli-and-minimal-editor.md) | TOML: vendored tomli and a minimal verified editor | Accepted |

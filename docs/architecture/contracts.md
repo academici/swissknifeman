@@ -23,6 +23,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Error `error/v1` | `urn:swissknifeman:aicore:error:v1`, `packages/aicore/schemas/error/v1` | aicore (provider) | development | orch and the engines adopt the classes: P10 |
 | Capability support `capability-support/v1` | `urn:swissknifeman:aicore:capability-support:v1`, `packages/aicore/schemas/capability-support/v1` | aicore (provider) | development | the record of `exec/v1` `capability-record` adopts it: P10 |
 | Model catalog `model-catalog/v1` | `urn:swissknifeman:aicore:model-catalog:v1`, `packages/aicore/schemas/model-catalog/v1`, data `packages/aicore/configs/model-catalog.json` | aicore (provider) | development | readers move from `command-routing.json`: planner P9, orch P10, harness P11 |
+| Config explain `config-explain/v1` | `urn:swissknifeman:aicore:config-explain:v1`, `packages/aicore/schemas/config-explain/v1` | aicore (config) | development | none yet; modules adopt `aicore.config.resolve` with their own section schemas: P8 to P11 |
 | Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
 | Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/task/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
 | Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
@@ -127,6 +128,28 @@ aicore schema is `aicore.util.schema`; the hub script `scripts/ecosystem-units.p
 points to an artifact. Classification is by data (`provider-errors.json`), and `aicore.provider` neither waits nor
 retries; the run policy decides. `capability-support` separates what a provider can do (`feature`) from what is
 available now (`resource`), allowed (`policy`) and working (`health`); only a feature can be `unsupported`.
+
+### config-explain/v1 and module config sections
+
+| Aspect | Policy |
+| --- | --- |
+| Reads | `v1` only; consumers read the output of `aicore config explain <module> --json` |
+| Writes | `$schema: urn:swissknifeman:aicore:config-explain:v1`, `module`, `project`, `config_file_version`, `layers`, `entries` |
+| Upcast | none |
+| Deprecation window | set with `v2` |
+| Unknown fields | rejected |
+| Fixtures | `packages/aicore/schemas/config-explain/v1/examples/{valid,invalid}` |
+
+Each entry has `key`, `value` (a secret shows its reference), `layer`, `file`, `line`, `source`, `secret`, `default`
+and `overridden` (the lower layers that set the key, nearest first). The config file itself is versioned by
+`schema_version` (now `1`): a newer value is rejected, a missing one is an error.
+
+A module's section schema is a contract of the module, not of aicore. Its `$id` is `urn:swissknifeman:<id>:config:v1`,
+the path is `provides.config` in `unit.json`, and it follows the closed profile plus `minimum`, `maximum` and the
+annotations `x-skm-secret` and `x-skm-layers` (a profile extension that older validators ignore only as annotations).
+Adding an optional key is a minor change; removing or retyping a key, or narrowing `x-skm-layers`, is a new major
+version with the old keys kept readable for the window recorded here. Rules of the layers are in
+[ADR 0034](decisions/0034-layered-config-semantics.md).
 
 ### check-result/v1
 

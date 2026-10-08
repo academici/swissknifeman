@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.6",
   "title": "Документация конфига и состояния: README aicore, ADR 0034–0036, contracts и ecosystem, CHANGELOG",
-  "status": "todo",
+  "status": "done",
   "summary": "README aicore (разделы aicore.state и aicore.config: места, SKM_HOME, слои, слияние, env, секреты, explain, CLI, vendored tomli); ADR 0034 «Layered config semantics», 0035 «State locations, legacy reads and backups», 0036 «TOML: vendored tomli and a minimal verified editor»; docs/architecture/contracts.md (config-explain/v1, схема секции модуля, расширение профиля), ecosystem.md (слои и места; defaults в схеме), ownership.md при необходимости; корневой CHANGELOG [Unreleased].",
   "why": "D24 (документация решений), правило фазы: решения D37–D39 и правила D22 записаны в docs/architecture, пользователь находит настройку в README. Риск — расхождение документации и кода: примеры в README берутся из реального вывода в песочнице.",
   "scope": {
@@ -167,6 +167,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T11:44:53Z"
+  "result": {
+    "started_at": "2026-10-08T13:15:42Z",
+    "finished_at": "2026-10-08T13:18:40Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "b59485ee-2705-4941-a6be-d9cd66497124"
+    },
+    "notes": "ADR 0034-0036, индекс, contracts (config-explain/v1, секция конфига модуля), ecosystem (шесть слоёв, места, default схемы), README и CHANGELOG aicore, корневой CHANGELOG; примеры README из песочницы",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T13:18:40Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T13:18:40Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T13:18:40Z"
 }

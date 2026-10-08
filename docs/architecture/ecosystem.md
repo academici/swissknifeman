@@ -120,9 +120,8 @@ packages/<id>/
   bin/<cli>                    # thin wrapper: finds its lib and aicore
   lib/<id>/                    # Python: stdlib plus aicore
   skills/  commands/  hooks/  agents/     # content canon for providers, if any
-  configs/defaults.json        # defaults, read-only
-  configs/config.schema.json   # schema of the user section of the config
-  config.example.toml          # generated from schema and defaults
+  configs/config.schema.json   # schema of the module's config section; its `default` keywords are the defaults
+  config.example.toml          # generated from the schema (aicore config example)
   schemas/                     # public contracts (JSON Schema), if any
   docs/  tests/  scripts/{test.sh,validate.sh}
 ```
@@ -176,18 +175,23 @@ the ownership map marks each entry `fixed` or `hypothesis`.
 
 | # | Layer | Where | Written by |
 | --- | --- | --- | --- |
-| 1 | module defaults | `packages/<id>/configs/defaults.json` | module developer |
+| 1 | module defaults | the `default` keywords of `packages/<id>/configs/config.schema.json` | module developer |
 | 2 | machine and user | `~/.config/swissknifeman/config.toml` (one section per module) | person, `swissknifeman config set` |
 | 3 | project | `<project>/.swissknifeman/config.toml` (in git) | person, module commands |
-| 4 | environment | `SKM_<MODULE>_<KEY>` | the invocation |
-| 5 | flags | CLI | the invocation |
+| 4 | environment | `SKM_<MODULE>_<PATH>` (`__` between path segments) | the invocation |
+| 5 | `--config FILE` | a file in the same format as layers 2 and 3 | the invocation |
+| 6 | flags | CLI | the invocation |
 
-Each section is validated by the schema of its module. `swissknifeman config show <module> --explain` shows the
-resulting value and the layer it came from. Machine configuration (project paths, pools, MCP) lives in `~/.config`, not
+A module may add its own layers between 3 and 4 (a legacy file of the module, plan settings of the planner).
+
+Each section is validated by the schema of its module. `swissknifeman config explain <module>` shows the
+resulting value, the layer, file and line it came from and the values it overrides. Machine configuration (project paths, pools, MCP) lives in `~/.config`, not
 in the repository working copy, so different computers and a development clone do not compete for one file. Layers
 edited by hand are TOML; generated state, lock files and module defaults are JSON; every module ships
-`config.example.toml` generated from its schema and defaults ([ADR 0011](decisions/0011-toml-for-human-edited-config.md)).
-Merge, removal, explain, secrets and the invocation layer follow [ADR 0019](decisions/0019-config-semantics.md).
+`config.example.toml` generated from its schema (defaults are the schema's `default` keywords) ([ADR 0011](decisions/0011-toml-for-human-edited-config.md)).
+Merge, removal, explain, secrets and the invocation layer follow [ADR 0019](decisions/0019-config-semantics.md) as
+made exact in [ADR 0034](decisions/0034-layered-config-semantics.md); config files are TOML 1.0
+([ADR 0036](decisions/0036-toml-vendored-tomli-and-minimal-editor.md)).
 
 ### 5.2 State locations
 
@@ -200,7 +204,11 @@ Merge, removal, explain, secrets and the invocation layer follow [ADR 0019](deci
 | project configuration | `<project>/.swissknifeman/config.toml`, in git |
 | project state (lock files, receipts, event journal) | `<project>/.swissknifeman/state/`, in `.gitignore` |
 | project backups | `<project>/.swissknifeman/backups/<ts>/...`, in `.gitignore`, with rotation |
-| isolation (tests, sandbox, development clone) | `SKM_HOME=<dir>` moves all of the above into one directory |
+| isolation (tests, sandbox, development clone) | `SKM_HOME=<dir>` moves the four machine places to `<dir>/{config,state,data,cache}` and switches off legacy lookups |
+
+Places are resolved by `aicore.state`; a relative `XDG_*` value is ignored and a relative `SKM_HOME` is an error. A file
+found only at a legacy location is read from there with one warning per process, and is never copied until
+`swissknifeman upgrade` ([ADR 0035](decisions/0035-state-locations-legacy-reads-and-backups.md)).
 
 Provider surfaces (`.claude/settings*.json`, `.codex/config.toml`, `.grok/`, `.cursor/`, `.mcp.json`) stay with the
 providers. They are written only through `aicore.artifacts`, with a lock file and a backup under

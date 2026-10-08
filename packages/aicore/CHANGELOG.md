@@ -14,7 +14,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   `config.example.toml` is rendered from each schema.
 - **Locator fragment** `scripts/aicore-locator.sh`: the one canonical way for a wrapper or test runner to find
   `aicore` (`AICORE_ROOT`, `_vendor/aicore`, sibling), with `AICORE_NOT_FOUND` and exit code 2 on a miss.
-- **README** with the layout, subsystems, locator, compatibility shim, contracts and tests.
+- **README** with the layout, subsystems, locator, compatibility shim, contracts and tests, and a section on
+  configuration and state: places and `SKM_HOME`, layers, merging, environment, secrets, the command line, the
+  vendored `tomli` and the TOML 1.0 rule.
 - **Shared code moved in from the root `core/` package** (history preserved): `aicore.util` (block, cli, env, http,
   io, paths, proc, project, repo, term, text), `aicore.provider` (the provider model and its catalogs),
   `aicore.artifacts` (artifact rendering, locking and reconciliation) and `aicore.usage`. There is no flat facade;

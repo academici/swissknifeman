@@ -59,7 +59,7 @@ MOVED_FILES = (
 
 class TestAliases(unittest.TestCase):
     def test_every_alias_is_the_same_module_object(self):
-        self.assertEqual(len(core._ALIASES), 29)
+        self.assertEqual(len(core._ALIASES), 31)
         for old, new in core._ALIASES.items():
             with self.subTest(old=old):
                 self.assertIs(importlib.import_module(old), importlib.import_module(new))

@@ -87,6 +87,22 @@ class TestImportBoundary(unittest.TestCase):
         self.assertEqual(definitions, ["util/digest.py"])
         self.assertEqual(hashing, [])
 
+    def test_provider_layer_has_no_waiting_or_retry(self):
+        """The provider layer states facts; waiting and repeating belong to the run engine."""
+        offenders = []
+        for path in sorted((LIB / "provider").rglob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and re.search(
+                        r"retry|backoff", node.name, re.I):
+                    offenders.append(f"{path.name}:{node.lineno} defines {node.name}")
+                elif isinstance(node, ast.Call):
+                    func = node.func
+                    name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+                    if name == "sleep":
+                        offenders.append(f"{path.name}:{node.lineno} calls sleep")
+        self.assertEqual(offenders, [])
+
     def test_schema_validator_is_defined_once(self):
         defining = [path.relative_to(ROOT).as_posix() for path in sorted(LIB.rglob("*.py"))
                     if "def load_registry" in path.read_text(encoding="utf-8")]

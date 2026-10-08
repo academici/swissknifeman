@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:error:v1",
+  "title": "error",
+  "type": "object",
+  "description": "Normalized provider failure: a closed class, a stable code, whether a retry can help, and a message that is safe to show. The raw provider text never appears in a field; diagnostic_ref points to an artifact that holds it. The class 'unknown' means the failure could not be classified; it is not the orchestration stage status 'unknown_outcome' (the request may have been executed), which needs reconciliation before any retry. Retry decisions belong to the run policy, not to this record.",
+  "properties": {
+    "class": {
+      "$ref": "#/$defs/error-class",
+      "description": "Failure class."
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "description": "Stable upper-case code of the failure within its class."
+    },
+    "retryable": {
+      "type": "boolean",
+      "description": "Whether repeating the same request can succeed; a default of the class that a rule may override."
+    },
+    "safe_message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short message without provider text, safe to show and log."
+    },
+    "retry_after_s": {
+      "type": "integer",
+      "description": "Seconds to wait before a retry, when the provider said so."
+    },
+    "scope": {
+      "$ref": "#/$defs/scope",
+      "description": "What the failure applies to."
+    },
+    "provider": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Provider id that produced the failure."
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the request at the provider or the CLI, for diagnostics."
+    },
+    "diagnostic_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to an artifact that holds the raw provider output; the text itself is never copied here."
+    }
+  },
+  "required": [
+    "class",
+    "code",
+    "retryable",
+    "safe_message"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "error-class": {
+      "enum": [
+        "authentication",
+        "authorization",
+        "quota",
+        "rate_limit",
+        "invalid_request",
+        "model_unavailable",
+        "content_policy",
+        "transport",
+        "provider_internal",
+        "timeout",
+        "context_limit",
+        "unknown"
+      ],
+      "description": "Failure class: authentication (credentials rejected), authorization (not allowed), quota (usage limit reached), rate_limit (too many requests), invalid_request (the request is wrong), model_unavailable (the model cannot serve), content_policy (refused by policy), transport (connection or protocol failure), provider_internal (provider-side fault), timeout (no answer in time), context_limit (the context is exhausted: a retry or another provider does not help, the plan has to change), unknown (not classified)."
+    },
+    "scope": {
+      "enum": [
+        "request",
+        "session",
+        "account",
+        "provider"
+      ],
+      "description": "What the failure applies to: one request, the session, the account, or the whole provider."
+    }
+  }
+}

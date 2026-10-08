@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.4",
   "title": "Контракты провайдера: таксономия ошибок, уровни поддержки capability, каталог моделей",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Схемы error/v1, capability-support/v1, model-catalog/v1 с примерами; aicore.provider.errors (классы D20 и context_limit по D36, ProviderError, classify_failure по данным configs/provider-errors.json), перечисления SupportSource и AvailabilityDimension в provider.values, aicore.provider.models с каноническим configs/model-catalog.json; первые потребители: harness run worker классифицирует квоту через aicore, тест task сверяет переходную копию каталога в command-routing.json. Тест архитектуры: aicore.provider без time.sleep и функций retry/backoff (D20, R14).",
   "why": "D20/E29: нормализованные ошибки провайдеров и реестр классов в aicore; E21: capability не смешивается с квотой, политикой и здоровьем; §4: каталог моделей — часть aicore.provider (гипотеза карты подтверждена D34). Риски: изменение классификации в harness worker (держим тем же результатом OUTCOME_QUOTA на тех же маркерах и тестами harness), дрейф переходной копии каталога (тест паритета), изменение генерации команд task (схема командного каталога не меняется; golden). D36/E2 (R03): до первых читателей закрытого enum добавляется класс context_limit и необязательные request_id, diagnostic_ref; без этого P10 менял бы error/v1 несовместимо.",
   "scope": {
@@ -255,6 +255,61 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T09:37:17Z"
+  "result": {
+    "started_at": "2026-10-08T10:23:28Z",
+    "finished_at": "2026-10-08T10:50:13Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "c3607acf-9f26-478f-a88c-f0770ff976d6"
+    },
+    "notes": "error/v1 (12 классов, request_id, diagnostic_ref), capability-support/v1, model-catalog/v1 с примерами; provider.errors + provider-errors.json, provider.models + model-catalog.json, SupportSource/AvailabilityDimension; harness worker классифицирует квоту через aicore, тест паритета task, инвентарь, карта, тест провайдерского слоя без повторов. ruff недоступен локально.",
+    "deviations": [
+      "схема model-catalog получила необязательные status/notes/policy/auto_mode ради дословной копии; правила ошибок — необязательные safe_message/retryable и exit_code_any; shim core: алиасы errors и models (31)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-08T10:50:13Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T10:50:13Z"
 }

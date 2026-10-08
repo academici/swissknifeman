@@ -129,6 +129,26 @@
       "released": false
     },
     {
+      "path": "packages/aicore/configs/provider-errors.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/errors.py",
+        "packages/harness/lib/harness/run/worker.py"
+      ],
+      "released": false,
+      "note": "classification rules of provider failures (data, not code)"
+    },
+    {
+      "path": "packages/aicore/configs/model-catalog.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/models.py",
+        "packages/task/tests/test_model_catalog_parity.py"
+      ],
+      "released": false,
+      "note": "canonical model catalog; command-routing.json keeps a transitional copy"
+    },
+    {
       "path": "configs/release-units.json",
       "owner": "root",
       "consumers": [

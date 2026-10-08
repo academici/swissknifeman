@@ -1,0 +1,6 @@
+{
+  "class": "overloaded",
+  "code": "PROVIDER_QUOTA",
+  "retryable": false,
+  "safe_message": "provider quota exhausted"
+}

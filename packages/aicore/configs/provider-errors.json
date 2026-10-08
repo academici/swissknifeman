@@ -1,0 +1,13 @@
+{
+  "schema_version": "provider-errors/v1",
+  "rules": [
+    {
+      "provider": "claude-code",
+      "class": "quota",
+      "code": "PROVIDER_QUOTA",
+      "scope": "account",
+      "safe_message": "provider quota exhausted",
+      "match": {"text_contains_any": ["session limit", "weekly limit"]}
+    }
+  ]
+}

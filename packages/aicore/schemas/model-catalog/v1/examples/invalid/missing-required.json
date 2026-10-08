@@ -1,0 +1,55 @@
+{
+  "schema_version": "model-catalog/v1",
+  "catalog_version": "1.0.0",
+  "providers": [
+    {
+      "provider_id": "sample",
+      "class_selectors": {
+        "economy": [
+          "small"
+        ],
+        "implementation": [
+          "medium"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-10-08",
+        "source": "provider documentation",
+        "verification": "checked by hand",
+        "entries": [
+          {
+            "id": "small",
+            "roles": [
+              "economy"
+            ]
+          },
+          {
+            "id": "large",
+            "roles": [
+              "frontier",
+              "review"
+            ],
+            "patterns": [
+              "large-.*"
+            ],
+            "notes": "flagship"
+          }
+        ]
+      }
+    }
+  ]
+}

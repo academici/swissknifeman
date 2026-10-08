@@ -1,0 +1,5 @@
+{
+  "class": "quota",
+  "code": "PROVIDER_QUOTA",
+  "retryable": false
+}

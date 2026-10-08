@@ -20,6 +20,9 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Module manifest `unit/v1` | `urn:swissknifeman:aicore:unit:v1`, `packages/aicore/schemas/unit/v1` | aicore | development | manifest of external plugins and `permissions` enforcement: P6 |
 | Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | modules still print text in `doctor`; conversion P11, aggregation P12 |
 | Digest `digest/v1` | `urn:swissknifeman:aicore:digest:v1`, `packages/aicore/schemas/digest/v1` | aicore | development | `exec` and plan digests still use the bare-hex form and their own copies; they adopt it with their modules: P9, P10 |
+| Error `error/v1` | `urn:swissknifeman:aicore:error:v1`, `packages/aicore/schemas/error/v1` | aicore (provider) | development | orch and the engines adopt the classes: P10 |
+| Capability support `capability-support/v1` | `urn:swissknifeman:aicore:capability-support:v1`, `packages/aicore/schemas/capability-support/v1` | aicore (provider) | development | the record of `exec/v1` `capability-record` adopts it: P10 |
+| Model catalog `model-catalog/v1` | `urn:swissknifeman:aicore:model-catalog:v1`, `packages/aicore/schemas/model-catalog/v1`, data `packages/aicore/configs/model-catalog.json` | aicore (provider) | development | readers move from `command-routing.json`: planner P9, orch P10, harness P11 |
 | Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
 | Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/task/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
 | Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
@@ -31,7 +34,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/task/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
 | Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1`, `packages/orch/bridges/*/bridge.json` | orch | alpha | no schema file; unify the two descriptors in the bridges stage: P10 |
 | Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; schema with the move into `aicore`: P3 |
-| Model catalog | `packages/task/configs/command-routing.json` | aicore (provider) | development | still inside the task package: P3 |
+| Model catalog (transitional copy) | `mappings.<provider>` in `packages/task/configs/command-routing.json` | planner | development | equal to the aicore catalog (parity test); removed in P9 |
 
 ### Inventory of execution contracts
 
@@ -43,12 +46,12 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | StageResult / RunResult | `exec/v1` `stage-result` | orch | module versions and skill digest: P10 |
 | CapabilityManifest | `exec/v1` `capability-record` | orch, with support levels in aicore | source, freshness, remediation; shared support levels: P3, P10 |
 | PluginManifest | `unit.json` | aicore | schema now; manifest of an external plugin: P6 |
-| ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog from command routing: P3 |
+| ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog is separate: `model-catalog/v1` |
 | SkillDescriptor | skill frontmatter, `skills.json`, `skills-lock.json` | aicore (content) | license, compatibility, required tools, provenance: P5 |
 | HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | modules' own `doctor` formats differ: P11, P12 |
 | PolicyDecision | refusals `CODE: message`, run-policy | orch | structured decision inside the launch plan: P10 |
 | EffectRequest / Receipt | `exec/v1` `effect-receipt` | orch | `effect_id` as idempotency key: P10 |
-| Error taxonomy | scattered codes; classes `quota`, `auth`, `timeout` in the engine port | aicore (provider) and modules | one registry of classes and codes: P3 |
+| Error taxonomy | `error/v1`, `aicore.provider.errors`, rules in `packages/aicore/configs/provider-errors.json` | aicore (provider) | development | the engine port and the modules adopt the classes: P10, P11 |
 | Canonical digest | `digest/v1`; implementation `aicore.util.digest` (canonical JSON bytes, tagged sha256, test vectors) | aicore | development | `exec` and plan digests move onto it: P9, P10 |
 | Schema evolution | rule of `exec/v1` | aicore | policy per contract (below) |
 | Ecosystem event envelope | `{id, ts, source, type, project, subject, data}` | aicore (ext) | CloudEvents-style fields, envelope apart from data: P6 |
@@ -107,6 +110,23 @@ cannot express such maps ([ADR 0025](decisions/0025-unit-manifest-shape-and-aico
 Canonical JSON: keys sorted by code point, no whitespace, UTF-8 with only the JSON-mandatory escapes, floats
 rejected. A change of these rules is a breaking change and creates `digest/v2`. Closed-profile validation of every
 aicore schema is `aicore.util.schema`; the hub script `scripts/ecosystem-units.py` uses it.
+
+### error/v1, capability-support/v1, model-catalog/v1
+
+| Aspect | Policy |
+| --- | --- |
+| Reads | `v1` only; a new class or enum value is a breaking change and creates `v2` |
+| Writes | `error`: `class`, `code`, `retryable`, `safe_message` required; `capability-support`: `capability`, `provider`, `dimension`, `level`, `source` required; `model-catalog`: `schema_version`, `catalog_version`, `providers` |
+| Upcast | none |
+| Deprecation window | set with `v2` |
+| Unknown fields | rejected |
+| Fixtures | `packages/aicore/schemas/<contract>/v1/examples/{valid,invalid}` |
+
+`error` has twelve classes. `unknown` means the failure could not be classified; it is not the orchestration status
+`unknown_outcome` (the request may have been executed). The raw provider text never enters a record: `diagnostic_ref`
+points to an artifact. Classification is by data (`provider-errors.json`), and `aicore.provider` neither waits nor
+retries; the run policy decides. `capability-support` separates what a provider can do (`feature`) from what is
+available now (`resource`), allowed (`policy`) and working (`health`); only a feature can be `unsupported`.
 
 ### check-result/v1
 

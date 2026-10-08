@@ -1,0 +1,360 @@
+{
+  "schema_version": "model-catalog/v1",
+  "catalog_version": "1.0.0",
+  "providers": [
+    {
+      "provider_id": "claude-code",
+      "class_selectors": {
+        "economy": [
+          "haiku"
+        ],
+        "implementation": [
+          "sonnet"
+        ],
+        "frontier": [
+          "opus"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "claude --help @ 2.1.266",
+        "verification": "cli-help-and-frozen-mapping; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (fable, overlapping roles, family patterns)",
+        "entries": [
+          {
+            "id": "fable",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ],
+            "patterns": [
+              ".*fable.*"
+            ]
+          },
+          {
+            "id": "opus",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ],
+            "patterns": [
+              ".*opus.*"
+            ]
+          },
+          {
+            "id": "sonnet",
+            "roles": [
+              "implementation",
+              "review"
+            ],
+            "patterns": [
+              ".*sonnet.*"
+            ]
+          },
+          {
+            "id": "haiku",
+            "roles": [
+              "economy",
+              "explore"
+            ],
+            "patterns": [
+              ".*haiku.*"
+            ],
+            "status": "confirmed"
+          }
+        ]
+      }
+    },
+    {
+      "provider_id": "codex",
+      "class_selectors": {
+        "economy": [
+          "gpt-5.6-luna"
+        ],
+        "implementation": [
+          "gpt-6-sol"
+        ],
+        "frontier": [
+          "gpt-6-astra"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-09-23",
+        "source": "docs/provider-support.md and Codex provider thread state",
+        "verification": "frozen mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles)",
+        "entries": [
+          {
+            "id": "gpt-5.6-luna",
+            "roles": [
+              "economy",
+              "explore"
+            ]
+          },
+          {
+            "id": "gpt-5.6-terra",
+            "roles": [
+              "implementation",
+              "review"
+            ]
+          },
+          {
+            "id": "gpt-5.6-sol",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ]
+          },
+          {
+            "id": "gpt-6-astra",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ],
+            "patterns": [
+              "gpt-6(\\.\\d+)*-astra"
+            ]
+          },
+          {
+            "id": "gpt-6-sol",
+            "roles": [
+              "implementation",
+              "review"
+            ]
+          },
+          {
+            "id": "gpt-6.1-sol",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ],
+            "patterns": [
+              "gpt-6\\.[1-9]\\d*-sol"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "provider_id": "cursor",
+      "class_selectors": {
+        "economy": [
+          "composer-2.5-fast"
+        ],
+        "implementation": [
+          "composer-2.5"
+        ],
+        "frontier": [
+          "claude-opus-5-thinking-high",
+          "grok-4.7",
+          "grok-4.6"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "agent --list-models @ 2026.09.15-d2fe57e",
+        "verification": "2026-10-01 pool extended by owner (overlapping roles, family patterns); ids not re-listed from the CLI",
+        "entries": [
+          {
+            "id": "composer-2.5-fast",
+            "roles": [
+              "economy",
+              "explore"
+            ]
+          },
+          {
+            "id": "composer-2.5",
+            "roles": [
+              "implementation",
+              "review"
+            ]
+          },
+          {
+            "id": "claude-opus-5-thinking-high",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ],
+            "patterns": [
+              "claude-(opus|fable)-.*"
+            ]
+          },
+          {
+            "id": "grok-4.7",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review"
+            ],
+            "patterns": [
+              "grok-4\\.\\d+"
+            ],
+            "notes": "live cli-config selectedModel; reasoning_effort=high maps through effort_selectors"
+          },
+          {
+            "id": "grok-4.6",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review"
+            ],
+            "notes": "live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort"
+          },
+          {
+            "id": "gpt-5.6-sol-medium",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "alternate"
+            ]
+          },
+          {
+            "id": "auto",
+            "roles": [
+              "routing-assist"
+            ],
+            "policy": "never-substitute-fixed-frontier"
+          }
+        ],
+        "auto_mode": {
+          "allowed_for": [
+            "economy",
+            "adhoc-explore"
+          ],
+          "forbidden_for": [
+            "fixed-frontier-commands",
+            "plan-design",
+            "plan-audit"
+          ]
+        }
+      }
+    },
+    {
+      "provider_id": "grok",
+      "class_selectors": {
+        "economy": [
+          "grok-4.5"
+        ],
+        "implementation": [
+          "grok-4.6"
+        ],
+        "frontier": [
+          "grok-4.7"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-10-03",
+        "source": "grok --help / grok models and ~/.grok/config.toml [models].default",
+        "verification": "CLI --model plus config.toml default; live session GROK_SESSION_ID; agent is the same grok binary",
+        "entries": [
+          {
+            "id": "grok-4.5",
+            "roles": [
+              "economy",
+              "explore"
+            ],
+            "patterns": [
+              "grok-4\\.5.*"
+            ]
+          },
+          {
+            "id": "grok-4.6",
+            "roles": [
+              "implementation",
+              "review"
+            ],
+            "patterns": [
+              "grok-4\\.6.*"
+            ]
+          },
+          {
+            "id": "grok-4.7",
+            "roles": [
+              "frontier",
+              "implementation",
+              "review",
+              "design",
+              "audit"
+            ],
+            "patterns": [
+              "grok-4\\.7.*"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

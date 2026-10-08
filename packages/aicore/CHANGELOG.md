@@ -18,6 +18,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   language-neutral test vectors (`schemas/digest/v1/vectors.json`). `aicore.artifacts.artifact`,
   `provider.control_plane` and `provider.health` use it instead of their own copies; the digests they produce are
   unchanged for the values they hash. Floats and non-string object keys are now rejected everywhere.
+- **Provider contracts**: `error/v1`, `capability-support/v1` and `model-catalog/v1` with examples.
+  `aicore.provider.errors` has the twelve failure classes, `ProviderError` and `classify_failure`, which classifies
+  by the rules of `configs/provider-errors.json` and never copies provider text into a record;
+  `aicore.provider.models` reads `configs/model-catalog.json` (`load_model_catalog`, `select_model`,
+  `select_effort`, `inventory`); `SupportSource` and `AvailabilityDimension` join `provider.values`. A test keeps the
+  provider layer free of waiting and retry code.
 - **`aicore.util.schema`**: the closed-profile JSON Schema validator, with `load_contract` for a
   `<contract>/v<N>/` directory; `scripts/ecosystem-units.py` validates all aicore contracts with it.
 - **Architecture tests**: `aicore` imports only itself and the standard library; `usage.py` stays self-sufficient.

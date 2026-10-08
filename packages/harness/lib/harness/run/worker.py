@@ -7,6 +7,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from core.provider.errors import ErrorClass, classify_failure
+
 from . import task_paths
 
 
@@ -34,9 +36,6 @@ WORKER_COMMAND_ID = "task:plan-run"
 DEFAULT_TIMEOUT = 1800
 
 
-
-
-_QUOTA_TEXT_MARKERS = ("session limit", "weekly limit")
 
 
 class WorkerUnavailable(RuntimeError):
@@ -109,8 +108,8 @@ def _capture_client_version(claude_bin_path, *, timeout=10):
 
 
 def _is_quota_text(text):
-    lowered = text.lower()
-    return any(marker in lowered for marker in _QUOTA_TEXT_MARKERS)
+    failure = classify_failure("claude-code", text=text)
+    return failure is not None and failure.error_class is ErrorClass.QUOTA
 
 
 def _outcome(kind, *, argv, client_version, reason=None, raw_stdout=None, exit_code=None,

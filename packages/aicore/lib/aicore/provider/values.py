@@ -29,6 +29,23 @@ class SupportLevel(str, Enum):
     UNSUPPORTED = "unsupported"
 
 
+class SupportSource(str, Enum):
+    """How a support fact was obtained (capability-support/v1)."""
+
+    DECLARED = "declared"
+    PROBED = "probed"
+    INFERRED = "inferred"
+
+
+class AvailabilityDimension(str, Enum):
+    """Kind of a support fact: a missing feature, an exhausted resource, a policy ban or a failing dependency."""
+
+    FEATURE = "feature"
+    RESOURCE = "resource"
+    POLICY = "policy"
+    HEALTH = "health"
+
+
 class DiagnosticSeverity(str, Enum):
     ERROR = "error"
     WARNING = "warning"

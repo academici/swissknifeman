@@ -73,7 +73,7 @@
     {"path": "orch/", "target": "orch", "subsystem": "docs/research", "phase": "P10", "confidence": "fixed", "note": "root research documents of the orchestration module"},
     {"path": "packages/artifex/", "target": "retired", "phase": "P11", "confidence": "fixed", "note": "module is retired and not scanned by the boundary check"},
     {"path": "packages/task/", "target": "planner", "phase": "P9", "confidence": "fixed", "note": "folder is renamed to planner (module_aliases)"},
-    {"path": "packages/task/configs/command-routing.json", "target": "aicore", "subsystem": "provider", "phase": "P3", "confidence": "hypothesis", "note": "model catalog; the rest of the folder is planner"},
+    {"path": "packages/task/configs/command-routing.json", "target": "planner", "phase": "P9", "confidence": "fixed", "note": "mappings.<provider>.{class_selectors,effort_selectors,model_inventory} are a transitional copy of packages/aicore/configs/model-catalog.json (parity test); the copy is removed in P9"},
     {"path": "packages/task/lib/task/command_render.py", "target": "aicore", "subsystem": "content", "phase": "P5", "confidence": "hypothesis", "note": "shared rendering part; the rest of the folder is planner"},
     {"path": "packages/task/bridges/orch/", "target": "bridges/planner-orch", "phase": "P10", "confidence": "fixed"},
     {"path": "packages/orch/bridges/task/", "target": "bridges/planner-orch", "phase": "P10", "confidence": "fixed"},

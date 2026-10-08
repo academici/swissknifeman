@@ -35,8 +35,8 @@ def _ensure_aicore():
 _ensure_aicore()
 
 _UTIL = ("block", "cli", "env", "http", "io", "paths", "proc", "project", "repo", "term", "text")
-_PROVIDER = ("config", "control_plane", "diagnostics", "distribution", "health", "manifest",
-             "projection", "registry", "request_lifecycle", "runtime", "skill_adapter",
+_PROVIDER = ("config", "control_plane", "diagnostics", "distribution", "errors", "health", "manifest",
+             "models", "projection", "registry", "request_lifecycle", "runtime", "skill_adapter",
              "status", "values")
 _ARTIFACTS = ("artifact", "lock", "reconcile")
 

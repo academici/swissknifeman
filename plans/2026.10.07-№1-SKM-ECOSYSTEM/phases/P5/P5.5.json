@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.5",
   "title": "aicore.content.eval: перенос eval skills и контекст результата eval-context/v1 (R12)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "git mv skiller/quality/eval.py → aicore/content/eval.py; cmd_eval и всё, что читает env, — обратно в тонкий skiller/quality/eval.py с реэкспортом; контракт eval-context/v1; eval_context, runner_context (claude --version, модели из modelUsage), compare_eval_context; GRADER_VERSION; benchmark skill → skill-benchmark/v3 с context, системный банк → system-bank-benchmark/v2 с context; render_markdown показывает контекст; тесты на фейковом claude; убрать гипотезу quality/ (audit.py и analyze.py остаются в skiller).",
   "why": "D42, R12: два результата eval сейчас нельзя сравнить — нет digest skill, модели, версии CLI и фикстур. Жёсткие риски: (1) выдуманные значения модели/версии — только наблюдаемые (modelUsage, claude --version), иначе null/[]; (2) eval-тесты skiller ломаются переносом (импорты из skiller.quality.eval) — реэкспорт; (3) реальный claude в тестах — только фейковый бинарь через SKM_CLAUDE_BIN во временном каталоге.",
   "scope": {
@@ -185,6 +185,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:45:02Z"
+  "result": {
+    "started_at": "2026-10-08T16:18:09Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "931c186c-e267-49f6-ad43-367e18ea99a0"
+    }
+  },
+  "updated_at": "2026-10-08T16:18:09Z"
 }

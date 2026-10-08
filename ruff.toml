@@ -4,5 +4,8 @@
 # Narrow set: F (pyflakes — real bugs: undefined/unused) + B (bugbear), without style.
 target-version = "py39"   # minimum from matrix CI; also gates B905 (zip strict= — 3.10 only+)
 
+# Vendored third-party code is kept byte-for-byte (see packages/aicore/lib/aicore/_vendor/VENDORED.json).
+extend-exclude = ["packages/aicore/lib/aicore/_vendor"]
+
 [lint]
 select = ["F", "B"]

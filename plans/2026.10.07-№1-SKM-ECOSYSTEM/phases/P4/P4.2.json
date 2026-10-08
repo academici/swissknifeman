@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
   "title": "TOML: vendored tomli 2.3.1, бэкенд чтения с LineIndex и минимальный редактор со сверкой",
-  "status": "todo",
+  "status": "done",
   "summary": "aicore/_vendor/tomli (2.3.1 из чистого wheel с проверкой sha256, LICENSE, VENDORED.json, тест целостности); aicore.config.toml (tomllib при ≥ 3.11, иначе vendored; ConfigError с файлом и строкой; LineIndex ключ → строка); aicore.config.toml_edit (set/unset одного листа с сохранением комментариев и обязательной сверкой разбором); тесты на обоих бэкендах; ruff extend-exclude для _vendor.",
   "why": "D37, R15: TOML на Python 3.9–3.10 без pip и без собственного парсера; config set не должен терять комментарии примера. Риски: (1) расхождение TOML 1.0/1.1 между бэкендами — пин ветки 2.3.x и тест паритета; (2) редактор, портящий файл, — сверка разбором до записи; (3) подмена vendored-кода — хеши в VENDORED.json.",
   "scope": {
@@ -152,6 +152,38 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T11:40:05Z"
+  "result": {
+    "started_at": "2026-10-08T12:07:07Z",
+    "finished_at": "2026-10-08T12:27:00Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "2ffd486f-1d91-404e-8cf1-14c3ab7326d6"
+    },
+    "notes": "vendored tomli 2.3.1 (wheel sha256 сверен), aicore.config.toml (бэкенды, ConfigError с файлом и строкой, LineIndex), toml_edit со сверкой; 452 теста aicore, ruff 0.16 без замечаний на новых файлах",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T12:27:00Z"
 }

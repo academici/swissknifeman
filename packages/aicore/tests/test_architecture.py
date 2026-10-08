@@ -13,7 +13,8 @@ _STDLIB_FALLBACK = frozenset({
     "__future__", "ast", "collections", "concurrent", "contextlib", "copy", "dataclasses",
     "datetime", "enum", "fcntl", "functools", "hashlib", "http", "inspect", "io",
     "itertools", "json", "math", "os", "pathlib", "re", "select", "shutil", "signal",
-    "subprocess", "sys", "tempfile", "textwrap", "threading", "time", "types", "typing",
+    "subprocess", "sys", "tempfile", "textwrap", "threading", "time", "tomllib", "types",
+    "typing",
     "unittest", "urllib", "uuid",
 })
 STDLIB = frozenset(getattr(sys, "stdlib_module_names", ())) | _STDLIB_FALLBACK
@@ -94,6 +95,35 @@ class TestImportBoundary(unittest.TestCase):
                 for target, line in aicore_targets(path):
                     self.assertNotEqual(target, "state", f"{name}/{path.name}:{line}")
         self.assertNotIn("state", [t for t, _ in aicore_targets(LIB / "usage.py")])
+
+    def test_config_layer_uses_only_util_and_state(self):
+        for path in sorted((LIB / "config").glob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.level >= 2 and node.module:
+                    self.assertIn(node.module.split(".")[0], ("util", "state", "_vendor"),
+                                  f"config/{path.name}:{node.lineno}")
+
+    def test_toml_is_imported_in_one_place_only(self):
+        """``tomllib`` and ``tomli`` are imported only by ``config/toml.py`` (and inside ``_vendor``)."""
+        offenders = []
+        for path in sorted(LIB.rglob("*.py")):
+            where = path.relative_to(LIB).as_posix()
+            if where.startswith("_vendor/") or where == "config/toml.py":
+                continue
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                names = []
+                if isinstance(node, ast.Import):
+                    names = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    names = [node.module or ""] + [alias.name for alias in node.names]
+                for name in names:
+                    if {"tomllib", "tomli"} & set(name.split(".")):
+                        offenders.append(f"{where}:{node.lineno} imports {name}")
+        self.assertEqual(offenders, [])
+        imports = {name for name, _level, _line in _imports(LIB / "config" / "toml.py")}
+        self.assertIn("tomllib", imports)
 
     def test_one_canonical_json_and_one_digest_implementation(self):
         """Canonical JSON and tagged SHA-256 of JSON live in util/digest.py only."""

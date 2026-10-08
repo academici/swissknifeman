@@ -1,0 +1,19 @@
+{
+  "packages": [
+    {
+      "name": "tomli",
+      "version": "2.3.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/tomli/2.3.1/",
+      "artifact": "tomli-2.3.1-py3-none-any.whl",
+      "artifact_sha256": "94004df25851c4e811a5135545a470a823f9e31418ea3eb07c9440aec09c4369",
+      "files": {
+        "tomli/__init__.py": "sha256:aacd12e34a097e45c84249dc7586733fcc587f4a5425bd7cd31192de340f5ed7",
+        "tomli/_parser.py": "sha256:dc5162e65002cfd79fe268d8296e12c38f1ed7986f76000e204bc500d51c7edf",
+        "tomli/_re.py": "sha256:9fcf88a3c64ad54f85ea3ce583b3da6dce3484b149b1ac04dae34b287f70ee25",
+        "tomli/_types.py": "sha256:f864c6d9552a929c7032ace654ee05ef26ca75d21b027b801d77e65907138b74",
+        "tomli/LICENSE": "sha256:b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe"
+      }
+    }
+  ]
+}

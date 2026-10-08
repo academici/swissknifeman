@@ -39,6 +39,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   `.swissknifeman/backups` (or the machine state directory) and rotate only stamp-named directories.
 - **`aicore.MIN_PYTHON = (3, 9)`**, the single minimum Python version, and a test that parses every module with the
   3.9 grammar; the architecture test also checks the layer of `state` (only `util`).
+- **`aicore.config` (first part): TOML reading and editing.** `config.toml` reads with `tomllib` on Python 3.11+ and
+  with the vendored `tomli` 2.3.1 (`aicore/_vendor`, byte-for-byte from the pure wheel, pinned by hash in
+  `VENDORED.json`, covered by an integrity test) before that, so a file means the same on 3.9 to 3.13. A syntax error
+  becomes `ConfigError("CONFIG_FILE_INVALID")` with the file and the line; `LineIndex` maps key paths to lines.
+  `config.toml_edit` sets or removes one leaf value, keeps comments, indentation and every other line, refuses
+  dotted keys, inline tables, arrays of tables and multi-line values with a hint to edit by hand, and parses its
+  own result and compares it with the expected document before returning it. Architecture tests keep the TOML
+  import in `config/toml.py` only and the `config` layer on `util` and `state`.
 
 ### Changed
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to

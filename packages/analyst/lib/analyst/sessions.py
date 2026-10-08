@@ -7,7 +7,7 @@ Reference logic - scratchpad-script `analyze_sessions.py` (session 4af788f3, SCR
 REPO - only the extract of the algorithm has been moved here):
   - `first_turn_overhead` = input + cache_creation FIRST assistant-session records
     (not the sum of all - a single source of mathematics now `core.usage.feed_event`,
-    see edit `core/usage.py`, no need to duplicate it here);
+    see edit `aicore/usage.py`, no need to duplicate it here);
   - `fresh_per_turn` = (Σinput + Σcache_creation) / turns (`turns` = number
     assistant-events, `core.usage.finish(...)["msgs"]`);
   - transcript path: `~/.claude/projects/<encoded-cwd>/<session_id>.jsonl`.

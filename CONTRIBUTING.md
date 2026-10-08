@@ -31,6 +31,19 @@ install.sh            # umbrella installer (delegates install.sh packages)
   (`.gitignore`); templates - `.mcp.json.example` / `config.example.json`. Real `.mcp.json` for
   of this repo generates `maind` (sync/deploy).
 
+## Development prerequisites
+
+Runtime needs only `python3` (>= 3.9) and `bash`; nothing is pip-installed. Contributing also needs:
+
+| Tool | Why | Install |
+|:--|:--|:--|
+| `git` | the file list of `scripts/ecosystem-units.py` and `golden.py` comes from git | system package |
+| `pipx` (or `ruff==0.15.19` on `PATH`) | `bash scripts/lint.sh` — the CI lint step (ruff F + B, `ruff.toml`) | `sudo apt install pipx` or `python3 -m pip install --user pipx` |
+
+`scripts/lint.sh` fetches the pinned ruff on demand, prints `LINT_TOOL_MISSING` with the install hint when neither
+pipx nor ruff is available, and is the single place that holds the ruff version and the linted paths (CI calls it).
+Run it before a PR together with the validation below.
+
 ## Tests and validation
 
 Before each PR — green validation on affected packages + smoke `core`:

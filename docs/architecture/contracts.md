@@ -29,7 +29,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | --- | --- | --- | --- | --- |
 | Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/task/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
 | Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1`, `packages/orch/bridges/*/bridge.json` | orch | alpha | no schema file; unify the two descriptors in the bridges stage: P10 |
-| Provider manifests | `configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; schema with the move into `aicore`: P3 |
+| Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; schema with the move into `aicore`: P3 |
 | Model catalog | `packages/task/configs/command-routing.json` | aicore (provider) | development | still inside the task package: P3 |
 
 ### Inventory of execution contracts
@@ -42,7 +42,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | StageResult / RunResult | `exec/v1` `stage-result` | orch | module versions and skill digest: P10 |
 | CapabilityManifest | `exec/v1` `capability-record` | orch, with support levels in aicore | source, freshness, remediation; shared support levels: P3, P10 |
 | PluginManifest | `unit.json` | aicore | schema now; manifest of an external plugin: P6 |
-| ProviderDescriptor | provider manifest, `configs/provider-capabilities.json` | aicore (provider) | model catalog from command routing: P3 |
+| ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog from command routing: P3 |
 | SkillDescriptor | skill frontmatter, `skills.json`, `skills-lock.json` | aicore (content) | license, compatibility, required tools, provenance: P5 |
 | HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | modules' own `doctor` formats differ: P11, P12 |
 | PolicyDecision | refusals `CODE: message`, run-policy | orch | structured decision inside the launch plan: P10 |

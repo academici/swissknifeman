@@ -12,7 +12,7 @@ from harness.provider_audit import (ProviderAuditReport, audit_package, audited_
                                     render_operator_reference,
                                     _map_diagnostics)
 from harness.profiles import load_catalog, resolve_profile
-from harness.mcp import load_mcp_catalog, plan_mcp_projection
+from harness.mcp import load_mcp_catalog
 from harness.hooks import LifecycleRequest, plan_lifecycle
 from core.provider.manifest import default_manifest_path
 from core import (EffectiveProvider, ProviderId, ProviderManifestError,

@@ -81,4 +81,4 @@ jobs:
       - name: Ruff (bugs — pyflakes F + bugbear B)
         # lib + tests: Previously it was only linted lib/, and in tests/ garbage was piling up (unused
         # imports/variables). Now both — so that the test code maintains the same level.
-        run: pipx run ruff==0.15.19 check core/ core/tests packages/aicore/lib packages/aicore/tests packages/skiller/lib packages/skiller/tests packages/harness/lib packages/harness/tests packages/maind/lib packages/maind/tests packages/task/lib packages/task/tests
+        run: bash scripts/lint.sh

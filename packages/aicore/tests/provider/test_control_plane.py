@@ -1,5 +1,4 @@
 import unittest
-from pathlib import Path
 
 from aicore.provider.values import (CapabilityId, ConfigSource, NativeExtensionId, ProviderId,
                                     SupportLevel)

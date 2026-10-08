@@ -9,7 +9,7 @@ LIB = ROOT / "lib" / "aicore"
 
 # Python 3.9 has no sys.stdlib_module_names; this list covers the modules aicore uses.
 _STDLIB_FALLBACK = frozenset({
-    "__future__", "collections", "concurrent", "contextlib", "copy", "dataclasses",
+    "__future__", "ast", "collections", "concurrent", "contextlib", "copy", "dataclasses",
     "datetime", "enum", "fcntl", "functools", "hashlib", "http", "inspect", "io",
     "itertools", "json", "math", "os", "pathlib", "re", "select", "shutil", "signal",
     "subprocess", "sys", "tempfile", "textwrap", "threading", "time", "types", "typing",

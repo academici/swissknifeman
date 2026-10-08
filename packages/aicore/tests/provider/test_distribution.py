@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from aicore.provider.distribution import (DistributionCatalog, connect_channel,
+from aicore.provider.distribution import (connect_channel,
                                           load_distribution_catalog, vendor_channel)
 from aicore.provider.values import ProviderId
 

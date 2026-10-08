@@ -7,7 +7,7 @@ and command invocation). Packages read this catalog through
 ## Location
 
 - Catalog: [`packages/aicore/configs/provider-projection.json`](../../packages/aicore/configs/provider-projection.json)
-- Loader: `core/provider/projection.py`
+- Loader: `packages/aicore/lib/aicore/provider/projection.py`
 - Consumers:
   - `packages/harness/lib/harness/instructions.py` — `project_common_instructions`
   - `packages/task/lib/task/command_render.py` — invocation style dispatch

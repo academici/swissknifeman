@@ -7,7 +7,7 @@ provider-specific `if provider == "cursor"` skips in Python.
 ## Location
 
 - Catalog: [`packages/aicore/configs/provider-distribution.json`](../../packages/aicore/configs/provider-distribution.json)
-- Loader: `core/provider/distribution.py`
+- Loader: `packages/aicore/lib/aicore/provider/distribution.py`
 - Primary consumer: `packages/skiller/lib/skiller/publication.py` (`build_connect_distribution_plan`, `build_vendor_distribution_plan`)
 
 ## Shape

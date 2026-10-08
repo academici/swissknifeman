@@ -208,45 +208,45 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-07T19:10:04Z",
-    "finished_at": "2026-10-07T19:35:25Z",
+    "started_at": "2026-10-08T20:13:29Z",
+    "finished_at": "2026-10-08T20:17:26Z",
     "executor": {
-      "provider": "claude",
-      "model": "claude-sonnet-5-5",
-      "effort": "high",
-      "session": "d2379738-2720-41b2-b716-85ade2cfb146"
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a11d1e-47ea-78a1-82de-32ecb9b8e2b5"
     },
-    "notes": "Guard в 11 точках, .gitignore, dev-clone.sh, test-dev-guard.py (14 тестов), шаг hygiene.yml, маркер создан. Базовая линия до правок: skiller 31s, maind 39s, harness 161s, analyst <1s, root-install 1s, bootstrap 14s — все зелёные; после: те же наборы зелёные с маркером (skiller 803, maind 608, harness 734, analyst 264 тестов). Живое состояние машины не менялось (отпечаток до/после совпал). Прямой запуск unittest из клона с реальным HOME теперь отказывает с SKM_DEV_GUARD — это штатно; наборы запускать через scripts/test.sh.",
+    "notes": "Audit correction A1: restored dev-clone marker with init, verified 6 real-HOME guard refusals and all P1 acceptance checks. Public hygiene baseline is now green. Module tests use isolated HOME; skiller validated in clean tracked worktree because the pre-existing gitignored next-base-tooling projection violates root-bootstrap completeness only in the configured checkout.",
     "deviations": [
-      "(1) Порог §baseline (>5 файлов) превышен: 9 файлов роняли guard; исправлено не правкой тестов, а изоляцией HOME в раннерах packages/{skiller,maind,harness}/scripts/test.sh и scripts/test-bootstrap-machine.sh (временный HOME на весь прогон) — файлы вне task_files, добавлены через --path. (2) V5: public-hygiene.py красный до изменений (66 одинаковых находок на чистом HEAD вне scope P1), test-public-hygiene.py и шаг CI зелёные."
+      "V4 Skiller runs in a clean tracked worktree with the same product inputs; local next-base-tooling is preserved. Original P1 migration deviations remain documented in the journal and reviewer baseline."
     ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-07T19:35:25Z"
+        "at": "2026-10-08T20:17:26Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-07T19:35:25Z"
+        "at": "2026-10-08T20:17:26Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-07T19:35:25Z"
+        "at": "2026-10-08T20:17:26Z"
       },
       {
         "id": "V4",
         "exit": 0,
-        "at": "2026-10-07T19:35:25Z"
+        "at": "2026-10-08T20:17:26Z"
       },
       {
         "id": "V5",
-        "exit": 1,
-        "at": "2026-10-07T19:35:25Z"
+        "exit": 0,
+        "at": "2026-10-08T20:17:26Z"
       }
     ]
   },
-  "updated_at": "2026-10-07T19:35:25Z"
+  "updated_at": "2026-10-08T20:17:26Z"
 }

@@ -86,9 +86,9 @@ def safe_copy_skill(src, dst, dest_root):
     security details). Steps: lex. containment (traversal via '../' in name → stop),
     remove existing dst (symlink/file/dir, symlink DO NOT dereference), re-check
     against race (TOCTOU: someone else's process could recreate dst symlink outwards), copytree with
-    SKILL_IGNORE. Return True when copying, False when skipping (with warn). is_within/
-    is_within_lexical — now from core (re-export above)."""
-    if not is_within_lexical(dst, dest_root):
+    SKILL_IGNORE. The destination must be a child of dest_root: replacing the whole root
+    would remove sibling skills. Return True when copying, False when skipping (with warn)."""
+    if not is_within_lexical(dst, dest_root, allow_root=False):
         warn(f"skip: path outside the destination directory: {dst}")
         return False
     if dst.is_symlink() or dst.is_file():

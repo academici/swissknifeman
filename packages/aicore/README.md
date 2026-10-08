@@ -35,6 +35,10 @@ packages/aicore/
 
 ### Layers inside aicore
 
+Managed skill copies require a destination strictly below the skills root. The path gate normalizes a final
+`..`, permits replacing a leaf symlink without following it, and refuses parent symlink escapes and resolution
+errors. It also refuses replacing the root itself, which would delete other installed skills.
+
 `content` imports `util`, `provider`, `artifacts` and `config`; `release` imports `util` and `content`; `delivery`
 imports everything below it; the older subpackages import none of the three (`tests/test_architecture.py`). The three
 take their data from the caller as explicit parameters (the package that owns the publication versions, the identities

@@ -4,6 +4,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 
 ## [Unreleased]
 
+### Fixed
+- **Managed skill copies:** normalize a final `..` before checking containment, reject replacing the destination
+  root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
+
 ### Added
 - **`aicore.content.skill`**: the skill model moved in from the skill library — the files that never travel with a
   skill (`SKILL_IGNORE`), frontmatter reading (`read_frontmatter`, `read_frontmatter_fields`, `split_frontmatter`),

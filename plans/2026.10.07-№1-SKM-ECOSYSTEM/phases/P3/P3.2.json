@@ -71,18 +71,18 @@
       "required": true
     },
     {
-      "path": "core/config_paths.py",
-      "why": "пути provider-конфигов",
+      "path": "packages/aicore/lib/aicore/state/locations.py",
+      "why": "Current locations after the P4 removal of core.config_paths; historical baseline is knowledge/aicore-p3#facts.",
       "required": true
     },
     {
-      "path": "core/provider/distribution.py",
-      "why": "чтение конфига через shared_config_path (стр. 70–85)",
+      "path": "packages/aicore/lib/aicore/provider/distribution.py",
+      "why": "Canonical moved provider distribution (P3.2).",
       "required": true
     },
     {
-      "path": "core/provider/projection.py",
-      "why": "то же (стр. 45–60)",
+      "path": "packages/aicore/lib/aicore/provider/projection.py",
+      "why": "Canonical moved provider projection (P3.2).",
       "required": true
     },
     {
@@ -322,60 +322,60 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-08T06:53:06Z",
-    "finished_at": "2026-10-08T07:37:54Z",
+    "started_at": "2026-10-08T20:20:27Z",
+    "finished_at": "2026-10-08T20:35:04Z",
     "executor": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-5-5",
-      "effort": "high",
-      "session": "ff2fb33c-9471-4f9d-aca3-c69f9db555fa"
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a11d1e-47ea-78a1-82de-32ecb9b8e2b5"
     },
-    "notes": "util, provider, artifacts, usage и три provider-конфига перенесены в packages/aicore (чистый git mv отдельным коммитом a274c7a7); shim core с 29 алиасами и тестом идентичности; aicore автономен (standalone pass, записан в базовую линию); потребители и CI на новых путях; golden provider-docs перезахвачен с причиной.",
+    "notes": "Audit A3 security correction complete: lexical containment normalizes final .., safe_copy_skill requires a strict child, symlink resolution errors fail closed. Four regressions verify data preservation and normal symlink replacement. A4 inventory omission registered. aicore929, core59, skiller780, harness736, maind608, orch169, analyst280, task validate 785+691+98, units117, inventory6, locator9, golden26/10, scoped Ruff0.15.19, hygiene and structure green. Migration/history and core facade retained; evidence report knowledge/audit-p1-p5-execution-2026-10-08.json.",
     "deviations": [
-      "ecosystem-units.py: собственное имя aicore для фундамента и path_allow (+тесты); потребители пути манифеста шире списка (skiller, task, provider-docs); тесты чужих модулей разведены; локатор в skiller validate.sh"
+      "Correction delta repairs the shared seam used by P5.7 and the inventory omission of P4.5; stale required reads updated through API. Skiller/golden use clean tracked candidate bytes to preserve local Next bootstrap; Task validation unsets PYTHONSAFEPATH only in sandbox. Stale ignored core/provider bytecode preserved by moving it outside checkout. README/root CHANGELOG and existing golden exception chaining added explicitly; no release/version/schema changes."
     ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V4",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V5",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V6",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V7",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       },
       {
         "id": "V8",
         "exit": 0,
-        "at": "2026-10-08T07:37:54Z"
+        "at": "2026-10-08T20:35:04Z"
       }
     ]
   },
-  "updated_at": "2026-10-08T07:37:54Z"
+  "updated_at": "2026-10-08T20:35:04Z"
 }

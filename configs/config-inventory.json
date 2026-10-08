@@ -15,6 +15,18 @@
   ],
   "entries": [
     {
+      "path": "packages/analyst/configs/config.schema.json",
+      "owner": "analyst",
+      "consumers": [
+        "packages/analyst/lib/analyst/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "analyst thresholds, schema defaults and generated config.example.toml"
+    },
+    {
       "path": ".codex/config.toml.example",
       "owner": "root",
       "consumers": [

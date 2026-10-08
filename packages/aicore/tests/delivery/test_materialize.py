@@ -102,6 +102,28 @@ class SafeCopyCase(Base):
         self.assertTrue((outside / "keep.txt").is_file())
         self.assertFalse((outside / "SKILL.md").exists())
 
+    def test_refuses_parent_and_root_destinations_without_deleting_files(self):
+        sibling = self.dest_root / "other" / "SKILL.md"
+        outside = self.dest_root.parent / "keep.txt"
+        write(sibling, "other skill")
+        write(outside, "outside the skills directory")
+        for dst in (self.dest_root / "..", self.dest_root,
+                    self.dest_root / "child" / "..", self.dest_root / "."):
+            with self.subTest(dst=str(dst)):
+                copied, _stderr = quiet(m.safe_copy_skill, self.src, dst, self.dest_root)
+                self.assertFalse(copied)
+                self.assertEqual(sibling.read_text(), "other skill")
+                self.assertEqual(outside.read_text(), "outside the skills directory")
+                self.assertEqual((self.src / "SKILL.md").read_bytes(), SKILL)
+
+    def test_refuses_a_cyclic_parent_symlink_without_deleting_files(self):
+        loop = self.dest_root / "loop"
+        loop.symlink_to("loop")
+        copied, _stderr = quiet(m.safe_copy_skill, self.src, loop / "demo", self.dest_root)
+        self.assertFalse(copied)
+        self.assertTrue(loop.is_symlink())
+        self.assertEqual((self.src / "SKILL.md").read_bytes(), SKILL)
+
     def test_replaces_an_existing_directory_and_a_file(self):
         dst = self.dest_root / "demo"
         write(dst / "old.txt")

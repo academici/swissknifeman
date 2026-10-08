@@ -294,7 +294,7 @@ def load(root: Path):
         cases = json.loads((root / CASES_FILE).read_text(encoding="utf-8"))
         generation = json.loads((root / GENERATION_FILE).read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        raise GoldenError(f"cannot read golden files: {exc}")
+        raise GoldenError(f"cannot read golden files: {exc}") from exc
     validate_rules(cases["normalize"])
     return cases, generation
 

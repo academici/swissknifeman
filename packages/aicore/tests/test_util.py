@@ -264,7 +264,33 @@ class TestPaths(unittest.TestCase):
             root.mkdir()
             # name with '../' lexically escapes dest → False
             self.assertFalse(is_within_lexical(root / ".." / "evil", root))
+            self.assertFalse(is_within_lexical(root / "..", root))
             self.assertTrue(is_within_lexical(root / "skill", root))
+
+    def test_is_within_lexical_can_require_a_child_without_following_leaf_symlinks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "dest"
+            root.mkdir()
+            outside = Path(tmp) / "outside"
+            outside.mkdir()
+            link = root / "skill"
+            link.symlink_to(outside, target_is_directory=True)
+            self.assertFalse(is_within(link, root))
+            self.assertTrue(is_within_lexical(link, root, allow_root=False))
+            self.assertTrue(is_within_lexical(root / "child" / "..", root))
+            self.assertFalse(is_within_lexical(root / "child" / "..", root, allow_root=False))
+            self.assertFalse(is_within_lexical(link / "child", root))
+
+    def test_path_resolution_errors_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "dest"
+            root.mkdir()
+            loop = root / "loop"
+            loop.symlink_to("loop")
+            for check in (is_within, is_within_lexical):
+                with self.subTest(check=check.__name__):
+                    self.assertFalse(check(loop / "child", root))
+                    self.assertFalse(check(root / "child", loop))
 
     def test_state_dir_umbrella_root(self):
         home = Path("/home/u")

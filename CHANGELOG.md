@@ -253,6 +253,11 @@
 
 ### Fixed
 
+- **analyst:** the settings schema is registered in the config inventory with its owner and consumers.
+
+- **aicore:** managed skill copying rejects a final `..` escape and replacing the destination root; path
+  containment fails closed on symlink loops, preserving sibling skills and files outside the destination.
+
 - **golden:** project-state cases can set an isolated `cwd`; `analyst status` reads an empty sandbox project,
   so lessons in the development checkout no longer change its expected output.
 

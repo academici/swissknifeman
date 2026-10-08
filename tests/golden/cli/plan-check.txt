@@ -1,0 +1,15 @@
+exit: 0
+--- stdout ---
+warning modify_missing: phases/P1/P1.1.json/task_files/0/path: lib/pkg/config.py is marked modify but does not exist
+warning modify_missing: phases/P1/P1.1.json/task_files/1/path: tests/test_config.py is marked modify but does not exist
+warning modify_missing: phases/P1/P1.2.json/task_files/0/path: lib/pkg/config.py is marked modify but does not exist
+warning modify_missing: phases/P1/P1.2.json/task_files/1/path: tests/test_config.py is marked modify but does not exist
+warning read_missing: phases/P2/P2.1.json/reads/0/path: required read lib/pkg/config.py does not exist and no dependency produces it
+warning modify_missing: phases/P2/P2.1.json/task_files/0/path: lib/pkg/config.py is marked modify but does not exist
+warning modify_missing: phases/P2/P2.1.json/task_files/1/path: tests/test_config.py is marked modify but does not exist
+warning modify_missing: phases/P2/P2.2.json/task_files/0/path: lib/pkg/config.py is marked modify but does not exist
+warning modify_missing: phases/P2/P2.2.json/task_files/1/path: tests/test_config.py is marked modify but does not exist
+warning context_unbound: knowledge/design.json/applies_to: knowledge/design (1 KB) has no applies_to and enters every context pack; bind it (plan.py link <plan> knowledge/design <Pn|Pn.m> --kind applies_to) or set global: true
+0 error(s), 10 warning(s)
+--- stderr ---
+

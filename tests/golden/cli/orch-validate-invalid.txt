@@ -1,0 +1,5 @@
+exit: 1
+--- stdout ---
+[{"path": "", "code": "required", "message": "/: missing required property 'goal'", "level": "error"}]
+--- stderr ---
+required: /: missing required property 'goal'

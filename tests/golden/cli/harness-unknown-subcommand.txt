@@ -1,0 +1,31 @@
+exit: 1
+--- stdout ---
+
+--- stderr ---
+Unknown command: no-such-subcommand
+harness — CLI environment settings Claude Code (permissions, MCP, hooks).
+Thin launcher: checks the environment and transfers control to the package lib/harness
+(python3 -m harness). All logic is in lib/ (importable and testable: see tests/).
+
+Commands (run from the consuming project / with --target):
+  permissions  pour in permissions-presets in .claude/settings*.json (alias: apply)
+               [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
+  mcp          pour in MCP-presets in .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
+  hooks        enable project hooks / install hook files globally
+               [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--run-report on|off] [--output-style lean|off] [--file F] [--global] [--dry-run]
+  router       generate feature catalog intent-router in .claude/agent-router.config.json
+               --generate --target P [--dry-run]
+  agent-packs  deterministic render/upgrade of a pack of subagents to the project (without agent)
+               <list|render|upgrade|doctor> [--pack P] [--target P] [--auto] [--answer K=V] [--dry-run]
+  safe-dirs    allowlist trusted directories for rm/rmdir (machine-owned)
+               <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global] [--target P] [--all-projects] [--dry-run]
+  wf           background status workflow-run Claude Code (deterministic pars)
+               status [--run WF_ID] [--project PATH] [--json] [--last N] [--watch] [--interval S]
+  run          exec-plan wave (driver P4.2-P4.6): queue → worker → verdict → log
+               <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S] [--plans-root PATH] [--json]
+  instructions root ownership/batch CLAUDE.md/AGENTS.md (provider parity,
+               owner-gated adoption, drift gate): <plan|check|adopt|apply|repair>
+               [--target P] [--scope a,b] [--provider a,b] [--authorize a,b]
+               [--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] [--json]
+  doctor       environment diagnostics (presets, script, hook files in ~/.claude)
+  version      version (git SHA) and package path

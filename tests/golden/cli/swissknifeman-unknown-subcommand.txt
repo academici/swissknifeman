@@ -1,0 +1,23 @@
+exit: 1
+--- stdout ---
+
+--- stderr ---
+Unknown command: no-such-subcommand
+swissknifeman — umbrella root control layer (router + setup-facade).
+Umbrella = unified control; packages = capabilities. Subtle dispatcher: knows three
+package and cross-package onboarding, does not implement the logic itself (delegates).
+
+Groups (canonical):
+  skills <args>   → skiller  (skill registry: connect, vendor, registry, …)
+  env <args>      → harness  (environment: permissions, mcp, hooks — full passthrough)
+  maind <args>    → maind    (hub: memory, graph, onboard, deploy, sync, health, …)
+  analyst <args>  → analyst  (training: digest, review, promote, deprecate, doctor)
+  setup <project> → maind onboard (full onboarding: skills+environment+memory+graph)
+  setup --machine → scripts/bootstrap-machine.sh (deploying a machine with one command)
+  doctor          → diagnostics of all packages (fan-out)
+  status [<id>]   → single 4-layer project inventory/fleet (maind projects status:
+                    skills+packs+mcp+memory + drift→fix); bare/--target → skiller status
+  wf <args>       → harness   (detailed background status workflow-run: wf status)
+  release <args>  → skiller   (monorepo release proposal: [Unreleased]+conventional commits)
+  release-fleet   → validated local post-tag delivery + fleet sync (never pushes/publishes)
+  -V, --version   → umbrella version (git describe)

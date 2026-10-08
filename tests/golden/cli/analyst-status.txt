@@ -1,0 +1,17 @@
+exit: 0
+--- stdout ---
+
+analyst status — 0 lesson(ov)
+
+  ephemeral   0
+  candidate   0
+  curated     0
+  deprecated  0
+
+  curated-ready:  0  (there are numbers - we need a person)
+  promote_failed: 0
+  events:        0
+  last digest:    —
+  last recompute: —
+--- stderr ---
+

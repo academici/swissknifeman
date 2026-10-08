@@ -1,0 +1,17 @@
+exit: 0
+--- stdout ---
+usage: orch.py [-h] {validate,launch,input,render-prompt,prepare} ...
+
+positional arguments:
+  {validate,launch,input,render-prompt,prepare}
+    validate            validate an exec/v1 JSON document
+    launch              read the launch catalog (role x provider)
+    input               create an execution-input without a plan
+    render-prompt       role prompt for a Claude-only run (Markdown)
+    prepare             launch-plan of a run; --dry-run writes projection
+                        files only
+
+options:
+  -h, --help            show this help message and exit
+--- stderr ---
+

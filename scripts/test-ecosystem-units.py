@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Tests of scripts/ecosystem-units.py: unit/v1 and check-result/v1 schemas, caret ranges, manifest checks.
+"""Tests of scripts/ecosystem-units.py: unit/v1 and check-result/v1 schemas, caret ranges, manifest checks,
+ownership map, repository schemas, boundaries with the baseline, render.
 
-Manifest checks run on temporary git trees (``--root``); only one test touches the real repository.
+Checks run on temporary git trees (``--root``); only the last class touches the real repository.
 """
 from __future__ import annotations
 
@@ -153,7 +154,8 @@ class Tree:
         self.write("packages/alpha/bin/alpha", "#!/bin/sh\n", mode=0o755)
         self.write("packages/alpha/scripts/alpha.py", "print(1)\n")
         self.write_json("packages/alpha/.claude-plugin/plugin.json", {"name": "alpha", "version": "1.2.0"})
-        self.write("packages/alpha/schemas/data/v1/data.schema.json", "{}\n")
+        self.write_json("packages/alpha/schemas/data/v1/data.schema.json", {
+            "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:swissknifeman:alpha:data:v1"})
         self.write("packages/alpha/lib/alpha/__init__.py", "")
         self.flush()
 
@@ -173,6 +175,25 @@ class Tree:
     def check(self, *flags: str):
         self.flush()
         return run(self.root, "check", *flags)
+
+    def add_module(self, name: str, requires_foundation: bool = False):
+        """A second module with no cli and no plugins; it requires the foundation only on request."""
+        self.write_json(f"packages/{name}/unit.json", {
+            "$schema": "urn:swissknifeman:aicore:unit:v1", "id": name, "title": name.title(), "kind": "capability",
+            "version": "0.1.0", "stability": "alpha", "destination": "hub",
+            "requires": [{"unit": "aicore", "range": "^0.1"}] if requires_foundation else [], "provides": {}})
+        self.write_json(f"packages/{name}/package.json", {"name": name, "version": "0.1.0"})
+        self.write(f"packages/{name}/lib/{name}/__init__.py", "")
+        self.config["version_sources"][name] = {"path": f"packages/{name}/package.json", "read": "json:version"}
+
+    def use_boundary_config(self):
+        """The path patterns and suffixes of the real configuration."""
+        real = json.loads((ROOT / "configs/ecosystem-units.json").read_text(encoding="utf-8"))
+        self.config["path_patterns"] = real["path_patterns"]
+        self.config["path_suffixes"] = real["path_suffixes"]
+
+    def set_baseline(self, violations: dict, standalone=None):
+        self.write("configs/ecosystem-baseline.json", eu.baseline_text(violations, standalone or {}))
 
 
 class ManifestCheckTests(unittest.TestCase):
@@ -325,6 +346,433 @@ class ManifestCheckTests(unittest.TestCase):
         self.assertIn("version_sources", result.stderr)
 
 
+class ConfigShapeTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = Tree(self)
+
+    def test_path_pattern_needs_reason_and_target_group(self):
+        self.tree.config["path_patterns"] = [{"id": "a", "regex": "x(?P<target>y)"}]
+        result = self.tree.check()
+        self.assertIn("ECOSYSTEM_CONFIG", codes(result))
+        self.assertIn("reason", result.stderr)
+        self.tree.config["path_patterns"] = [{"id": "a", "regex": "xy", "reason": "why"}]
+        self.assertIn("named group", self.tree.check().stderr)
+        self.tree.config["path_patterns"] = [{"id": "a", "regex": "x(", "reason": "why"}]
+        self.assertIn("invalid regex", self.tree.check().stderr)
+
+    def test_transitional_roots_and_suffixes_shape(self):
+        self.tree.config["transitional_roots"] = ["core"]
+        self.tree.config["path_suffixes"] = ["py"]
+        result = self.tree.check()
+        self.assertIn("transitional_roots", result.stderr)
+        self.assertIn("path_suffixes", result.stderr)
+
+
+class MapCheckTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.config["transitional_roots"] = ["legacy/"]
+        self.tree.write("legacy/a.py", "")
+        self.tree.write("legacy/sub/b.py", "")
+        self.tree.config["ownership"] = [
+            {"path": "legacy/", "target": "hub", "phase": "P3", "confidence": "fixed"},
+        ]
+
+    def assertFails(self, code: str):
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(f"ECOSYSTEM_{code}", codes(result), result.stderr)
+        return result
+
+    def test_covered_tree_passes(self):
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_uncovered_file_in_transitional_root(self):
+        self.tree.config["ownership"] = [
+            {"path": "legacy/a.py", "target": "hub", "phase": "P3", "confidence": "fixed"}]
+        result = self.assertFails("MAP_UNCOVERED")
+        self.assertIn("legacy/sub/b.py", result.stderr)
+        self.assertNotIn("legacy/a.py:", result.stderr)
+
+    def test_stale_entry(self):
+        self.tree.config["ownership"].append(
+            {"path": "legacy/gone.py", "target": "hub", "phase": "P3", "confidence": "fixed"})
+        result = self.assertFails("MAP_STALE")
+        self.assertIn("legacy/gone.py", result.stderr)
+
+    def test_stale_directory_entry(self):
+        self.tree.config["ownership"].append(
+            {"path": "nothing/", "target": "hub", "phase": "P3", "confidence": "fixed"})
+        self.assertFails("MAP_STALE")
+
+    def test_directory_entry_needs_trailing_slash(self):
+        self.tree.config["ownership"].append(
+            {"path": "legacy/sub", "target": "hub", "phase": "P3", "confidence": "fixed"})
+        result = self.assertFails("MAP_STALE")
+        self.assertIn("end the path with '/'", result.stderr)
+
+    def test_entry_fields_are_validated(self):
+        bad = [({"target": "nowhere"}, "target"), ({"phase": "P2"}, "phase"), ({"phase": "P14"}, "phase"),
+               ({"confidence": "sure"}, "confidence"), ({"note": ""}, "note"), ({"extra": 1}, "unknown keys")]
+        for change, word in bad:
+            with self.subTest(change=change):
+                entry = {"path": "legacy/a.py", "target": "hub", "phase": "P3", "confidence": "fixed", **change}
+                self.tree.config["ownership"] = [{"path": "legacy/", "target": "hub", "phase": "P3",
+                                                  "confidence": "fixed"}, entry]
+                self.assertIn(word, self.assertFails("MAP_ENTRY").stderr)
+
+    def test_duplicate_and_unsafe_paths(self):
+        entry = {"path": "legacy/", "target": "hub", "phase": "P3", "confidence": "fixed"}
+        self.tree.config["ownership"] = [entry, dict(entry)]
+        self.assertIn("duplicate", self.assertFails("MAP_ENTRY").stderr)
+        self.tree.config["ownership"] = [entry, {**entry, "path": "../legacy/"}]
+        self.assertIn("inside the repository", self.assertFails("MAP_ENTRY").stderr)
+
+    def test_longest_prefix_wins(self):
+        entries = [{"path": "legacy/", "target": "hub"}, {"path": "legacy/sub/", "target": "alpha"},
+                   {"path": "legacy/sub/b.py", "target": "retired"}]
+        self.assertEqual(eu.owner_entry("legacy/a.py", entries)["target"], "hub")
+        self.assertEqual(eu.owner_entry("legacy/sub/c.py", entries)["target"], "alpha")
+        self.assertEqual(eu.owner_entry("legacy/sub/b.py", entries)["target"], "retired")
+        self.assertIsNone(eu.owner_entry("other/a.py", entries))
+        self.assertIsNone(eu.owner_entry("legacy", entries))
+
+
+class SchemaCheckTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = Tree(self)
+        self.draft = "https://json-schema.org/draft/2020-12/schema"
+
+    def schema(self, rel: str, **fields):
+        self.tree.write_json(rel, {"$schema": self.draft, "$id": "urn:x:thing:v1", "type": "object", **fields})
+
+    def assertFails(self, code: str):
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(f"ECOSYSTEM_{code}", codes(result), result.stderr)
+        return result
+
+    def test_valid_schemas_pass(self):
+        self.schema("packages/alpha/schemas/thing/v1/thing.schema.json")
+        self.schema("packages/alpha/schema/flat.schema.json", **{"$schema": "http://json-schema.org/draft-07/schema#"})
+        self.assertEqual(self.tree.check().returncode, 0)
+
+    def test_missing_or_unknown_draft(self):
+        self.tree.write_json("packages/alpha/schemas/a.schema.json", {"$id": "urn:x:a:v1"})
+        self.assertIn("$schema", self.assertFails("SCHEMA_ID").stderr)
+        self.schema("packages/alpha/schemas/a.schema.json", **{"$schema": "http://json-schema.org/draft-04/schema#"})
+        self.assertIn("$schema", self.assertFails("SCHEMA_ID").stderr)
+
+    def test_missing_or_unversioned_id(self):
+        self.tree.write_json("packages/alpha/schemas/a.schema.json", {"$schema": self.draft})
+        self.assertIn("$id", self.assertFails("SCHEMA_ID").stderr)
+        for bad in ("urn:x:a", "https://example.com/a.json", "urn:x:a:v", "urn:X:a:v1", "urn:x:a:1"):
+            with self.subTest(bad=bad):
+                self.schema("packages/alpha/schemas/a.schema.json", **{"$id": bad})
+                self.assertFails("SCHEMA_ID")
+
+    def test_folder_version_must_match_id(self):
+        self.schema("packages/alpha/schemas/thing/v2/thing.schema.json")
+        result = self.assertFails("SCHEMA_VERSION")
+        self.assertIn("v2", result.stderr)
+        self.schema("packages/alpha/schemas/thing/v2/thing.schema.json", **{"$id": "urn:x:thing:v2"})
+        self.assertEqual(self.tree.check().returncode, 0)
+
+    def test_aicore_schemas_must_be_2020_12(self):
+        self.schema("packages/aicore/schemas/extra/v1/extra.schema.json",
+                    **{"$schema": "http://json-schema.org/draft-07/schema#"})
+        self.assertIn("aicore schemas", self.assertFails("SCHEMA_ID").stderr)
+
+    def test_unparsable_schema(self):
+        self.tree.write("packages/alpha/schemas/a.schema.json", "{nope")
+        self.assertFails("PARSE")
+
+    def test_fixture_test_and_example_schemas_are_skipped(self):
+        for folder in ("tests", "fixtures", "examples"):
+            self.tree.write_json(f"packages/alpha/{folder}/bad.schema.json", {"type": "object"})
+        self.assertEqual(self.tree.check().returncode, 0)
+
+
+class BoundaryTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.add_module("beta")
+        self.tree.use_boundary_config()
+        self.tree.set_baseline({})
+
+    def violations(self, *flags: str) -> dict:
+        data = json.loads(self.tree.check("--json", *flags).stdout)
+        return {v["key"]: v["count"] for v in data["violations"]}
+
+    def assertFails(self, code: str, *flags: str):
+        result = self.tree.check(*flags)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(f"ECOSYSTEM_{code}", codes(result), result.stderr)
+        return result
+
+    def test_clean_tree_has_no_violations(self):
+        self.assertEqual(self.violations(), {})
+        self.assertEqual(self.tree.check().returncode, 0)
+
+    def test_import_of_neighbour_is_a_new_violation(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\nfrom beta.sub import thing\n")
+        result = self.assertFails("BOUNDARY_NEW")
+        self.assertIn("packages/alpha/lib/alpha/use.py", result.stderr)
+        self.assertEqual(self.violations(), {"import|packages/alpha/lib/alpha/use.py|beta": 2})
+
+    def test_violation_in_baseline_passes(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        self.tree.set_baseline({"import|packages/alpha/lib/alpha/use.py|beta": 1})
+        result = self.tree.check()
+        self.assertEqual((result.returncode, result.stderr), (0, ""))
+
+    def test_more_occurrences_than_baseline_fail(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\nimport beta.x\n")
+        self.tree.set_baseline({"import|packages/alpha/lib/alpha/use.py|beta": 1})
+        self.assertIn("baseline allows 1", self.assertFails("BOUNDARY_NEW").stderr)
+
+    def test_removed_violation_is_an_improvement(self):
+        self.tree.set_baseline({"import|packages/alpha/lib/alpha/use.py|beta": 2, "path|packages/alpha/x.py|beta": 1})
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("improvement: import|packages/alpha/lib/alpha/use.py|beta: 2 -> 1", result.stderr)
+        self.assertIn("improvement: path|packages/alpha/x.py|beta: 1 -> 0", result.stderr)
+        data = json.loads(self.tree.check("--json").stdout)
+        self.assertTrue(data["ok"])
+        self.assertEqual(sorted((i["key"], i["count"]) for i in data["improvements"]),
+                         [("import|packages/alpha/lib/alpha/use.py|beta", 1), ("path|packages/alpha/x.py|beta", 0)])
+
+    def test_strict_ignores_the_baseline(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        self.tree.set_baseline({"import|packages/alpha/lib/alpha/use.py|beta": 1})
+        self.assertEqual(self.tree.check().returncode, 0)
+        result = self.assertFails("BOUNDARY", "--strict")
+        self.assertNotIn("BOUNDARY_NEW", result.stderr)
+
+    def test_strict_on_clean_tree_passes(self):
+        self.assertEqual(self.tree.check("--strict").returncode, 0)
+
+    def test_key_has_no_line_numbers(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        self.tree.set_baseline({"import|packages/alpha/lib/alpha/use.py|beta": 1})
+        self.tree.write("packages/alpha/lib/alpha/use.py", "# moved down\n\n\nimport beta\n")
+        self.assertEqual(self.tree.check().returncode, 0)
+
+    def test_imports_are_found_anywhere_in_the_file(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py",
+                        "def f():\n    try:\n        from beta import x\n    except ImportError:\n        pass\n")
+        self.assertEqual(self.violations(), {"import|packages/alpha/lib/alpha/use.py|beta": 1})
+
+    def test_own_package_stdlib_and_relative_imports_are_fine(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py",
+                        "import os\nimport alpha\nfrom alpha import x\nfrom . import y\nfrom .z import w\n")
+        self.assertEqual(self.violations(), {})
+
+    def test_tests_and_scripts_are_scanned_too(self):
+        self.tree.write("packages/alpha/tests/test_x.py", "import beta\n")
+        self.tree.write("packages/alpha/scripts/tool.py", "from beta import x\n")
+        self.assertEqual(sorted(self.violations()),
+                         ["import|packages/alpha/scripts/tool.py|beta", "import|packages/alpha/tests/test_x.py|beta"])
+
+    def test_foundation_import_needs_requires(self):
+        self.tree.write("packages/beta/lib/beta/use.py", "import core\nfrom core.io import read\nimport aicore\n")
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import core\nfrom aicore import x\n")
+        self.assertEqual(self.violations(), {"undeclared|packages/beta/lib/beta/use.py|aicore": 3})
+        self.assertIn("does not require it", self.assertFails("BOUNDARY_NEW").stderr)
+
+    def test_retired_folder_is_not_scanned(self):
+        self.tree.write("packages/old/lib/old/use.py", "import beta\nPATH = 'packages/beta/x'\n")
+        self.assertEqual(self.violations(), {})
+
+    def test_retired_folder_name_is_still_a_module_name(self):
+        self.tree.write("packages/old/lib/old/__init__.py", "")
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import old\n")
+        self.assertEqual(self.violations(), {"import|packages/alpha/lib/alpha/use.py|old": 1})
+
+    def test_unparsable_python_is_an_error_not_a_violation(self):
+        self.tree.write("packages/alpha/lib/alpha/broken.py", "def (:\n")
+        result = self.assertFails("PARSE")
+        self.assertIn("broken.py", result.stderr)
+        self.assertEqual(self.violations(), {})
+
+    def test_sibling_path_in_python_and_shell(self):
+        self.tree.write("packages/alpha/lib/alpha/p.py", "ROOT = 'packages/beta/data'\nOTHER = 'packages/beta/x'\n")
+        self.tree.write("packages/alpha/scripts/run.sh", "cd packages/beta/bin\n")
+        self.tree.write("packages/alpha/bin/tool", "#!/bin/sh\nexec packages/beta/bin/b\n", mode=0o755)
+        self.assertEqual(self.violations(), {
+            "path|packages/alpha/lib/alpha/p.py|beta": 2, "path|packages/alpha/scripts/run.sh|beta": 1,
+            "path|packages/alpha/bin/tool|beta": 1})
+        self.assertFails("BOUNDARY_NEW")
+
+    def test_markdown_and_docs_are_not_scanned(self):
+        self.tree.write("packages/alpha/README.md", "see packages/beta/x\n")
+        self.tree.write("packages/alpha/docs/guide.txt", "packages/beta/x\n")
+        self.tree.write("packages/alpha/docs/guide.json", '{"p": "packages/beta/x"}\n')
+        self.tree.write("packages/alpha/notes.txt", "packages/beta/x\n")
+        self.assertEqual(self.violations(), {})
+
+    def test_own_path_and_unknown_folder_are_not_violations(self):
+        self.tree.write("packages/alpha/lib/alpha/p.py",
+                        "A = 'packages/alpha/x'\nB = 'packages/unknown/x'\nC = 'packages/<id>/x'\nD = 'packages/'\n")
+        self.assertEqual(self.violations(), {})
+
+    def test_climb_leaving_the_module_is_an_escape(self):
+        self.tree.write("packages/alpha/package.json", '{"scripts": {"s": "bash ../../scripts/x.sh"}}\n')
+        self.tree.write("packages/alpha/lib/alpha/p.py", "A = '../../../../core/x'\n")
+        self.assertEqual(self.violations(), {"path|packages/alpha/package.json|scripts": 1,
+                                             "path|packages/alpha/lib/alpha/p.py|core": 1})
+
+    def test_climb_inside_the_module_is_not_an_escape(self):
+        self.tree.write("packages/alpha/scripts/run.sh", 'DIR="$HERE/../configs/x"\n')
+        self.tree.write("packages/alpha/tests/t.py", "A = '../bin/x'\nB = '../../bin/x'\n")
+        self.assertEqual(self.violations(), {})
+
+    def test_climb_to_a_sibling_module(self):
+        self.tree.write("packages/alpha/package.json", '{"p": "../orch/x"}\n')
+        self.tree.write("packages/beta/lib/beta/p.py", "A = '../orch/x'\n")  # orch is no folder here
+        self.tree.write("packages/orch/lib/orch/__init__.py", "")
+        result = json.loads(self.tree.check("--json").stdout)
+        self.assertEqual({v["key"] for v in result["violations"]}, {"path|packages/alpha/package.json|orch"})
+
+    def test_files_without_scanned_suffix_are_skipped(self):
+        self.tree.write("packages/alpha/data.bin", "packages/beta/x\n")
+        self.tree.write("packages/alpha/data.txt", "packages/beta/x\n")
+        self.assertEqual(self.violations(), {})
+
+    def test_baseline_file_errors(self):
+        self.tree.write("configs/ecosystem-baseline.json", "{nope")
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("ecosystem-baseline.json", result.stderr)
+        self.tree.write("configs/ecosystem-baseline.json", '{"violations": {"k": "x"}}')
+        self.assertEqual(self.tree.check().returncode, 2)
+
+    def test_missing_baseline_means_empty_baseline(self):
+        (self.tree.root / "configs/ecosystem-baseline.json").unlink()
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        self.assertFails("BOUNDARY_NEW")
+
+
+class BaselineCommandTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.add_module("beta")
+        self.tree.use_boundary_config()
+        self.tree.flush()
+
+    def baseline(self):
+        return run(self.tree.root, "baseline", "--update")
+
+    def read(self) -> dict:
+        return json.loads((self.tree.root / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))
+
+    def test_update_writes_sorted_violations_and_prints_diff(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        self.tree.write("packages/alpha/a.json", '{"p": "packages/beta/x"}\n')
+        result = self.baseline()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("+ import|packages/alpha/lib/alpha/use.py|beta: 0 -> 1", result.stdout)
+        doc = self.read()
+        self.assertEqual(doc["schema_version"], "ecosystem-baseline/v1")
+        self.assertEqual(list(doc["violations"]), sorted(doc["violations"]))
+        self.assertEqual(doc["violations"], {"import|packages/alpha/lib/alpha/use.py|beta": 1,
+                                             "path|packages/alpha/a.json|beta": 1})
+        self.assertEqual(doc["standalone"], {})
+        text = (self.tree.root / "configs/ecosystem-baseline.json").read_text(encoding="utf-8")
+        self.assertTrue(text.endswith("}\n"))
+        self.assertEqual(self.tree.check().returncode, 0)
+
+    def test_update_is_reproducible_and_reports_removals(self):
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\n")
+        self.baseline()
+        first = (self.tree.root / "configs/ecosystem-baseline.json").read_bytes()
+        self.assertNotIn("->", self.baseline().stdout.split("configs/")[0])
+        self.assertEqual((self.tree.root / "configs/ecosystem-baseline.json").read_bytes(), first)
+        self.tree.write("packages/alpha/lib/alpha/use.py", "")
+        result = self.baseline()
+        self.assertIn("- import|packages/alpha/lib/alpha/use.py|beta: 1 -> 0", result.stdout)
+        self.assertEqual(self.read()["violations"], {})
+
+    def test_update_keeps_the_standalone_section(self):
+        self.tree.set_baseline({}, {"alpha": "pass"})
+        self.baseline()
+        self.assertEqual(self.read()["standalone"], {"alpha": "pass"})
+
+    def test_update_refuses_on_parse_errors(self):
+        self.tree.write("packages/alpha/lib/alpha/broken.py", "def (:\n")
+        result = self.baseline()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("ECOSYSTEM_PARSE", result.stderr)
+        self.assertFalse((self.tree.root / "configs/ecosystem-baseline.json").exists())
+
+    def test_update_flag_is_required(self):
+        result = run(self.tree.root, "baseline")
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+
+class RenderTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.config["ownership"] = [
+            {"path": "packages/alpha/lib/alpha/__init__.py", "target": "aicore", "subsystem": "util",
+             "phase": "P10", "confidence": "hypothesis", "note": "a | pipe"},
+            {"path": "packages/alpha/bin/alpha", "target": "hub", "phase": "P9", "confidence": "fixed"},
+            {"path": "packages/aicore/unit.json", "target": "aicore", "phase": "P9", "confidence": "fixed"},
+        ]
+        self.tree.flush()
+        self.doc = self.tree.root / "docs/architecture/ownership.md"
+
+    def render(self, *flags):
+        return run(self.tree.root, "render", *flags)
+
+    def test_render_writes_modules_and_map(self):
+        result = self.render()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        text = self.doc.read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("<!-- generated by scripts/ecosystem-units.py render; do not edit -->"))
+        self.assertIn("| alpha | capability | 1.2.0 | hub | beta | aicore |", text)
+        self.assertIn("| aicore | foundation | 0.1.0 | own-repo | development | - |", text)
+        self.assertIn("| `packages/alpha/bin/alpha` | alpha | hub | - | P9 | fixed | - |", text)
+        self.assertIn("a \\| pipe", text)
+
+    def test_map_is_sorted_by_numeric_phase_then_path(self):
+        self.render()
+        rows = [line for line in self.doc.read_text(encoding="utf-8").splitlines() if line.startswith("| `")]
+        self.assertEqual([r.split("`")[1] for r in rows],
+                         ["packages/aicore/unit.json", "packages/alpha/bin/alpha", "packages/alpha/lib/alpha/__init__.py"])
+
+    def test_alias_is_shown(self):
+        self.tree.config["module_aliases"] = {"alpha": "aicore"}
+        self.tree.flush()
+        self.render()
+        self.assertIn("| alpha (renamed to aicore) |", self.doc.read_text(encoding="utf-8"))
+
+    def test_render_is_deterministic_and_free_of_absolute_paths(self):
+        self.render()
+        first = self.doc.read_bytes()
+        self.render()
+        self.assertEqual(self.doc.read_bytes(), first)
+        self.assertNotIn(str(self.tree.root), first.decode("utf-8"))
+        self.assertNotIn("/home/", first.decode("utf-8"))
+
+    def test_check_passes_when_current_and_fails_when_stale_or_missing(self):
+        missing = self.render("--check")
+        self.assertEqual(missing.returncode, 1, missing.stderr)
+        self.assertIn("ECOSYSTEM_RENDER_STALE", missing.stderr)
+        self.render()
+        self.assertEqual(self.render("--check").returncode, 0)
+        self.doc.write_text(self.doc.read_text(encoding="utf-8") + "edited\n", encoding="utf-8")
+        stale = self.render("--check")
+        self.assertEqual(stale.returncode, 1)
+        self.assertIn("ECOSYSTEM_RENDER_STALE", stale.stderr)
+
+    def test_check_does_not_write(self):
+        self.render("--check")
+        self.assertFalse(self.doc.exists())
+
+
 class EnvironmentTests(unittest.TestCase):
     def test_not_a_git_tree(self):
         tmp = Path(tempfile.mkdtemp(prefix="skm-eu-test-")).resolve()
@@ -373,6 +821,23 @@ class RealRepositoryTests(unittest.TestCase):
     def test_check_passes(self):
         result = subprocess.run([sys.executable, str(SCRIPT), "check"], capture_output=True, text=True, cwd=ROOT)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def run_script(self, *args):
+        return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, cwd=ROOT)
+
+    def test_baseline_is_current_and_strict_fails(self):
+        self.assertEqual(self.run_script("check").returncode, 0)
+        self.assertEqual(self.run_script("check", "--strict").returncode, 1)
+        baseline = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["violations"]
+        self.assertTrue(any(k.startswith("import|packages/maind/") and k.endswith("|harness") for k in baseline))
+        self.assertTrue(any(k.startswith("import|packages/analyst/") and k.endswith("|task") for k in baseline))
+
+    def test_ownership_doc_is_current(self):
+        self.assertEqual(self.run_script("render", "--check").returncode, 0)
+
+    def test_map_covers_transitional_roots(self):
+        data = json.loads(self.run_script("check", "--json").stdout)
+        self.assertEqual([e for e in data["errors"] if e["code"].startswith("ECOSYSTEM_MAP")], [])
 
     def test_modules_and_aliases(self):
         data = json.loads(subprocess.run([sys.executable, str(SCRIPT), "list", "--json"], capture_output=True,

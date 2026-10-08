@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.2",
   "title": "Карта принадлежности и проверка границ с базовой линией",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Дополнить scripts/ecosystem-units.py проверками map (карта принадлежности), schemas ($schema и $id с версией у всех схем репозитория) и boundaries (импорты и пути между модулями) с базовой линией configs/ecosystem-baseline.json, режимом --strict, командами baseline --update и render (docs/architecture/ownership.md); заполнить ownership и path_patterns в configs/ecosystem-units.json; тесты и CI.",
   "why": "Правило «папка = модуль» без исполняемой проверки — пожелание (D23, E47). Базовая линия фиксирует текущие нарушения (maind→harness, analyst→task, строковые packages/<другой>/), чтобы CI ловил только новые, а каждая фаза видела, сколько осталось; P11 требует --strict зелёным. Риск — ложные срабатывания и шум: ключ нарушения без номеров строк, шаблоны путей — данные с причиной, docs и *.md не сканируются.",
   "scope": {
@@ -168,6 +168,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T20:28:23Z"
+  "result": {
+    "started_at": "2026-10-08T03:08:30Z",
+    "finished_at": "2026-10-08T03:16:02Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "90aa0b4d-2043-49ab-b95e-f3c076cdfb15"
+    },
+    "notes": "ecosystem-units.py: map, schemas, boundaries, --strict, baseline --update, render [--check]; 72 ownership entries; baseline 53 keys (maind imports of harness 6 keys, analyst->task, harness tests->analyst, maind tests->skiller, 44 path keys); docs/architecture/ownership.md; baseline registered in config-inventory; render --check in hygiene.yml; 94 tests.",
+    "deviations": [
+      "repo-escape pattern got a climb flag to remove false positives (fix in the check)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T03:16:02Z"
 }

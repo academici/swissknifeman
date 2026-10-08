@@ -65,10 +65,11 @@ jobs:
       - name: dev-sandbox (scripts/dev-sandbox.sh)
         run: python3 scripts/test-dev-sandbox.py -v
 
-      - name: ecosystem-units (module manifests, aicore schemas)
+      - name: ecosystem-units (manifests, ownership map, schemas, boundaries against the baseline)
         run: |
           python3 scripts/test-ecosystem-units.py -v
           python3 scripts/ecosystem-units.py check
+          python3 scripts/ecosystem-units.py render --check
 
       - name: agent-framework freshness (Skiller canon ↔ Harness pack.json)
         run: |

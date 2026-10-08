@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.4",
   "title": "Правило «папка = модуль» в корневых инструкциях через каталог harness",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Добавить в каталог инструкций harness common-секцию root.module-folders и механизм закреплённых root common id (ROOT_PINNED_COMMON_IDS), обновить контракт и фикстуры harness, применить проекции: правило «папка = модуль» появляется в корневых CLAUDE.md, AGENTS.md, .cursor и .grok правилах; check clean, бюджет первого хода в норме.",
   "why": "Архитектура §1 требует, чтобы корневые инструкции фиксировали правило модулей для любого агента в репозитории; root common сейчас on demand и в корень не проецируется (D29). Риск — сломать контракт инструкций (parity, conflict, literal coverage) и провенанс lock-файла: менять только через каталог и `harness instructions apply`, никогда руками в проекциях.",
   "scope": {
@@ -171,6 +171,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T20:29:24Z"
+  "result": {
+    "started_at": "2026-10-08T03:08:30Z",
+    "finished_at": "2026-10-08T03:33:55Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "90aa0b4d-2043-49ab-b95e-f3c076cdfb15"
+    },
+    "notes": "root.module-folders pinned via ROOT_PINNED_COMMON_IDS (catalog 1.4.0); projected to all four root targets; contract paragraph Pinned root common; harness tests and fixtures updated from the contract; projections applied through harness instructions apply in the sandbox.",
+    "deviations": [
+      "generator script, generated reference and literal-coverage fixture regenerated; contract root inventory row completed"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T03:33:55Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T03:33:55Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T03:33:55Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T03:33:55Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T03:33:55Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T03:33:55Z"
 }

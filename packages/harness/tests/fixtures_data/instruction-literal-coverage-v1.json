@@ -1,12 +1,12 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "71ed83a7edfa68cf132bb97e442335fa42aae08200046179b815724aef731719",
+    "source_sha256": "440403f0a30adc82418586db43e13b42264efc5b97c9abf2c7c18471fbc97d93",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 313
+    "literal_count": 316
   },
   "literals": [
     {
@@ -252,6 +252,18 @@
     {
       "semantic_id": "root.docs-build",
       "literal": "package documentation builds standalone and in the umbrella aggregate; internal documentation links stay relative"
+    },
+    {
+      "semantic_id": "root.module-folders",
+      "literal": "Every `packages/<id>/` folder is an independent module described by its `unit.json`"
+    },
+    {
+      "semantic_id": "root.module-folders",
+      "literal": "reaches other modules only through bridges (`bridges/`) or events, never by import or path"
+    },
+    {
+      "semantic_id": "root.module-folders",
+      "literal": "Check boundaries with `python3 scripts/ecosystem-units.py check`."
     },
     {
       "semantic_id": "root.claude-code.native-surfaces",

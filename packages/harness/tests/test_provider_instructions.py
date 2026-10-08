@@ -14,7 +14,7 @@ from core.provider.artifact import sha256_digest
 from core.provider.lock import serialize_lock
 from harness.instructions import (
     CATALOG_VERSION, COMMON_IDS, CONTRACT_VERSION, DIAGNOSTIC_CODES, EXTENSION_IDS,
-    PROVIDERS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
+    PROVIDERS, ROOT_PINNED_COMMON_IDS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
     adopt_instructions, apply_instructions, check_instructions, load_catalog,
     plan_instructions, repair_instructions,
 )
@@ -65,13 +65,13 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_63_common_28_extension_91_total_and_twenty_eight_targets(self):
+    def test_exact_64_common_28_extension_92_total_and_twenty_eight_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (63, 28, 91))
+        self.assertEqual((common, extensions, common + extensions), (64, 28, 92))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
@@ -87,18 +87,21 @@ class SemanticCatalogTests(unittest.TestCase):
             by_provider = {item.provider_id: item
                            for item in result.targets if item.scope_id == scope}
             claude, codex, cursor, grok = (by_provider[provider] for provider in PROVIDERS)
-            common = COMMON_IDS[scope] if scope != "root" else ()
+            # Root common is on demand except the pinned ids, which every root target carries;
+            # package common is projected to Claude Code only.
+            pinned = ROOT_PINNED_COMMON_IDS if scope == "root" else ()
+            common = pinned or COMMON_IDS[scope]
             self.assertEqual(claude.ordered_semantic_ids[:len(common)], common)
             self.assertEqual(
                 claude.ordered_semantic_ids[len(common):],
                 EXTENSION_IDS[(scope, "claude-code")])
             self.assertEqual(
                 codex.ordered_semantic_ids,
-                EXTENSION_IDS[(scope, "codex")])
+                pinned + EXTENSION_IDS[(scope, "codex")])
             self.assertEqual(cursor.ordered_semantic_ids,
-                             EXTENSION_IDS[(scope, "cursor")])
+                             pinned + EXTENSION_IDS[(scope, "cursor")])
             self.assertEqual(grok.ordered_semantic_ids,
-                             EXTENSION_IDS[(scope, "grok")])
+                             pinned + EXTENSION_IDS[(scope, "grok")])
 
     def test_missing_id_refuses_before_p2(self):
         result = altered_result(lambda value: root_records(value).pop(0))
@@ -133,7 +136,7 @@ class SemanticCatalogTests(unittest.TestCase):
 
     def test_provider_mismatch_and_namespace_refuse_before_p2(self):
         def mismatch(value):
-            record = root_records(value)[21]
+            record = next(item for item in root_records(value) if item["id"] == "root.codex.bootstrap")
             record["provider_id"] = "claude-code"
         result = altered_result(mismatch)
         self.assertIn("INSTRUCTION_EXTENSION_ID_INVALID", diagnostic_codes(result))

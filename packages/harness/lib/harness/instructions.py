@@ -29,7 +29,7 @@ from core.provider.lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.3.0"
+CATALOG_VERSION = "1.4.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex")
 _SCOPE_TARGET_KEYS = {
@@ -82,7 +82,7 @@ COMMON_IDS = {
              "root.development-validation", "root.reference-provenance",
              "root.decision-verification", "root.provider-parity", "root.worktree-safety",
              "root.untrusted-content", "root.evidence-integrity", "root.generated-artifacts",
-             "root.speculative-work", "root.docs-build"),
+             "root.speculative-work", "root.docs-build", "root.module-folders"),
     "skiller": ("skiller.identity", "skiller.distribution-channels",
                 "skiller.configuration-ownership", "skiller.core-policy",
                 "skiller.layout-and-generation", "skiller.module-boundaries",
@@ -104,6 +104,9 @@ COMMON_IDS = {
                  "artifex.provenance", "artifex.engineering-invariants",
                  "artifex.validation-release"),
 }
+# Root common is on demand for every provider except these ids: they are projected to every root
+# target, so the rule reaches any agent that opens the repository (the first-turn budget gates additions).
+ROOT_PINNED_COMMON_IDS = ("root.module-folders",)
 EXTENSION_IDS = {
     ("root", "claude-code"): ("root.claude-code.native-surfaces",
                               "root.claude-code.context-budget",
@@ -899,8 +902,9 @@ def _validate_projection_semantics(value: dict[str, object],
             continue
         for projection in scoped:
             rendered = projection.result.managed_bytes.decode("utf-8")
-            expected_common = (COMMON_IDS[scope_id] if scope_id != "root" and
-                project_common_instructions(projection_policy, ProviderId(projection.provider_id)) else ())
+            expected_common = (ROOT_PINNED_COMMON_IDS if scope_id == "root" else
+                               COMMON_IDS[scope_id] if project_common_instructions(
+                                   projection_policy, ProviderId(projection.provider_id)) else ())
             if projection.common_ids != expected_common:
                 diagnostics.append(_diag(
                     "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
@@ -997,11 +1001,17 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     if hint is not None:
         semantic["adoption"] = dict(hint)
     catalog = load_projection_catalog()
-    # Repository-wide common guidance is on demand for every provider. Package
-    # guides retain their provider policy, so entering a package still supplies it.
-    projected_common_ids = (common_ids if scope_id != "root" and
-                            project_common_instructions(catalog, ProviderId(provider)) else ())
-    common_text = (common.read_text(encoding="utf-8") if projected_common_ids else "")
+    # Repository-wide common guidance is on demand for every provider, except the pinned ids,
+    # which every root target carries. Package guides retain their provider policy, so entering
+    # a package still supplies it.
+    if scope_id == "root":
+        projected_common_ids = ROOT_PINNED_COMMON_IDS
+    else:
+        projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
+                                else ())
+    common_source = common.read_text(encoding="utf-8") if projected_common_ids else ""
+    common_text = ("".join(_fragment_body(common_source, semantic_id) for semantic_id in projected_common_ids)
+                   if scope_id == "root" else common_source)
     result = plan_artifact_render(ArtifactRenderRequest(
         artifact_id, sources,
         ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,

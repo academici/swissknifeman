@@ -109,3 +109,5 @@
 {"v":1,"ts":"2026-10-08T11:35:54Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D38 accepted","data":{"id":"D38","by":"agent","option":"A"}}
 {"v":1,"ts":"2026-10-08T11:35:55Z","type":"decision","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"D39 accepted","data":{"id":"D39","by":"agent","option":"A"}}
 {"v":1,"ts":"2026-10-08T11:40:29Z","type":"design_done","phase":"P4","actor":{"provider":"anthropic","model":"claude-opus-5-5","effort":"xhigh"},"summary":"P4 design done"}
+{"v":1,"ts":"2026-10-08T12:07:07Z","type":"start","item":"P4.1","phase":"P4","actor":{"provider":"claude","model":"sonnet-5.5","effort":"high","session":"2ffd486f-1d91-404e-8cf1-14c3ab7326d6"},"summary":"start P4.1 (batch B1)","data":{"requested":["P4.1","P4.2"],"route":"ROUTE_MODEL_UNKNOWN"}}
+{"v":1,"ts":"2026-10-08T12:07:07Z","type":"start","item":"P4.2","phase":"P4","actor":{"provider":"claude","model":"sonnet-5.5","effort":"high","session":"2ffd486f-1d91-404e-8cf1-14c3ab7326d6"},"summary":"start P4.2 (batch B1)","data":{"requested":["P4.1","P4.2"],"route":"ROUTE_MODEL_UNKNOWN"}}

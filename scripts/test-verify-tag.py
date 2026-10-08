@@ -82,7 +82,7 @@ class TestVerifyTag(unittest.TestCase):
             path = _changelog(tmp, MALFORMED)
             code, message = verify_tag.verify("v1.2.0", path)
             self.assertEqual(code, 2)
-            self.assertIn("released header not found", message)
+            self.assertIn("released view header not found", message)
 
     def test_missing_changelog_file(self):
         with tempfile.TemporaryDirectory() as tmp:

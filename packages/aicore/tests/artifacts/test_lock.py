@@ -13,15 +13,16 @@ from threading import Barrier
 import unittest
 from unittest.mock import patch
 
-import core.provider.lock as provider_lock
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ArtifactActionKind, CapabilityId, CapabilityRequirement,
-                  BootstrapTransferAdmission, ChainedBootstrapTransferAdmission, DriftObservation,
-                  ProviderId, SupportLevel, apply_plan, parse_lock, plan_artifact_lock,
-                  plan_artifact_render, plan_bootstrap_transfer,
-                  plan_chained_bootstrap_transfer,
-                  rollback_chained_bootstrap_transfer, serialize_lock)
-from core import ArtifactLock, replace_owner_records
+import aicore.artifacts.lock as provider_lock
+from aicore.artifacts.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+                                       ArtifactSource, ArtifactTarget, plan_artifact_render)
+from aicore.artifacts.lock import (ArtifactActionKind, BootstrapTransferAdmission,
+                                   ChainedBootstrapTransferAdmission, DriftObservation,
+                                   apply_plan, parse_lock, plan_artifact_lock,
+                                   plan_bootstrap_transfer, plan_chained_bootstrap_transfer,
+                                   rollback_chained_bootstrap_transfer, serialize_lock)
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from aicore.artifacts.lock import ArtifactLock, replace_owner_records
 
 
 HASH = "sha256:" + "a" * 64
@@ -43,7 +44,7 @@ def result(*, body=b"managed\n", artifact_id="task.plan-run.codex-skill",
         (CapabilityRequirement(CapabilityId("skills.repository"), (SupportLevel.NATIVE,)),),
     )
     return plan_artifact_render(ArtifactRenderRequest(
-        artifact_id, (ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", HASH),),
+        artifact_id, (ArtifactSource("task.command.plan-run", "commands/plan-run.md", HASH),),
         ArtifactTarget(target, boundary), adapter, (),
         semantic_parameters or {"title": "Plan exec"}, lambda _request: body,
         contract_version,
@@ -747,14 +748,14 @@ class ProviderLockTests(unittest.TestCase):
     def test_writer_guard_releases_after_killed_process(self):
         script = (
             "from pathlib import Path\n"
-            "from core.provider.lock import _writer_guard\n"
+            "from aicore.artifacts.lock import _writer_guard\n"
             "import signal, sys\n"
             "with _writer_guard(Path(sys.argv[1])):\n"
             "    print('locked', flush=True)\n"
             "    signal.pause()\n"
         )
         env = os.environ.copy()
-        repo = str(Path(__file__).resolve().parents[3])
+        repo = str(Path(__file__).resolve().parents[2] / "lib")
         env["PYTHONPATH"] = os.pathsep.join(filter(None, (repo, env.get("PYTHONPATH"))))
         holder = subprocess.Popen(
             (sys.executable, "-c", script, str(self.root)),

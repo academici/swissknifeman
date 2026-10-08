@@ -9,7 +9,7 @@ skills through `.agents/skills`, environment via `.cursor/*`, without dual-write
 | Surface | Channel | Note |
 |:--|:--|:--|
 | Skills | `.agents/skills/` | Cursor reads natively; skiller **not** writes `.cursor/skills` |
-| Connect/vendor | — | Channels are declared in `configs/provider-distribution.json` (`discovery` only); without `if cursor` in Python |
+| Connect/vendor | — | Channels are declared in `packages/aicore/configs/provider-distribution.json` (`discovery` only); without `if cursor` in Python |
 | Instructions (extension) | `.cursor/rules/swissknifeman-*.mdc` | only self-host umbrella; trigger-scoped |
 | MCP | `.cursor/mcp.json` | merge-only; writes `maind sync` when the provider is enabled |
 | CLI permissions | `.cursor/cli.json` | only `permissions`; `deny` is worried `--force` |

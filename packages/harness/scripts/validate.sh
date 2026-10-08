@@ -30,12 +30,7 @@ python3 -m compileall -q lib tests || err "py_compile"
 
 echo "[2/12] vendoring _usage.py (SCHEMA=2 run-report)"
 USAGE_DST="configs/claude-code/hooks/run-report/_usage.py"
-# Until the code moves into aicore, fall back to the legacy core location.
 USAGE_SRC="$AICORE_LIB/aicore/usage.py"
-if [[ ! -f "$USAGE_SRC" ]]; then
-  MONOREPO_ROOT_USAGE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-  USAGE_SRC="$MONOREPO_ROOT_USAGE/core/usage.py"
-fi
 if [[ -f "$USAGE_SRC" ]]; then
   cmp -s "$USAGE_SRC" "$USAGE_DST" \
     || err "vendor _usage.py separated from the aicore usage module — run scripts/sync-usage.sh"

@@ -15,7 +15,7 @@ a Cursor inventory id) are Cursor models, not this provider.
 | Surface | Channel | Note |
 |:--|:--|:--|
 | Skills | `.agents/skills/` | Grok reads natively; skiller does not write `.grok/skills` |
-| Connect/vendor | — | `configs/provider-distribution.json` discovery only |
+| Connect/vendor | — | `packages/aicore/configs/provider-distribution.json` discovery only |
 | Instructions (extension) | `.grok/rules/*.md` | common contract stays in `AGENTS.md`; `root.grok.*` only |
 | MCP | `.grok/config.toml` `[mcp_servers]` | Codex TOML adapter, merge-only |
 | Permissions | `.grok/config.toml` `[permission]` | deny floor only; mode is a launch flag |

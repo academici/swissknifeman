@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core.provider.skill_adapter import SkillAdapterDescriptor, SkillAdapterRegistry, SkillCoreRef
+from aicore.provider.skill_adapter import SkillAdapterDescriptor, SkillAdapterRegistry, SkillCoreRef
 
 
 def descriptor(provider_id="codex"):

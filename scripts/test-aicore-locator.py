@@ -28,6 +28,7 @@ CARRIERS = [
     "packages/skiller/scripts/test.sh",
     "packages/harness/scripts/sync-usage.sh",
     "packages/harness/scripts/validate.sh",
+    "packages/skiller/scripts/validate.sh",
 ]
 
 

@@ -3,11 +3,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import (CapabilityId, CapabilitySupport, ConfigSource, NativeExtension,
-                  NativeExtensionId, ProviderConfigCatalog, ProviderConfigLayer,
-                  ProviderId, SupportLevel, effective_projection,
-                  load_provider_manifest, provider_config_catalog,
-                  resolve_provider_config)
+from aicore.provider.values import (CapabilityId, ConfigSource, NativeExtensionId, ProviderId,
+                                    SupportLevel)
+from aicore.provider.config import (CapabilitySupport, NativeExtension, ProviderConfigCatalog,
+                                    ProviderConfigLayer, effective_projection,
+                                    resolve_provider_config)
+from aicore.provider.manifest import (default_manifest_path, load_provider_manifest,
+                                      provider_config_catalog)
 
 
 def catalog():
@@ -58,9 +60,8 @@ def compatibility_layers(case_layers):
 
 class TestProviderConfigResolution(unittest.TestCase):
     def test_root_manifest_projection_resolves_supported_and_unsupported(self):
-        root = Path(__file__).resolve().parents[3]
         projected = provider_config_catalog(load_provider_manifest(
-            root / "configs/provider-capabilities.json"))
+            default_manifest_path()))
         accepted = resolve_provider_config(
             catalog=projected,
             project=layer("project", config({"codex": {

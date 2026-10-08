@@ -9,9 +9,9 @@ from .repo import find_monorepo_root
 _PATHS = {
     "command-routing": "packages/task/configs/command-routing.json",
     "profile-catalog": "packages/harness/configs/common/profile-catalog.json",
-    "provider-capabilities": "configs/provider-capabilities.json",
-    "provider-distribution": "configs/provider-distribution.json",
-    "provider-projection": "configs/provider-projection.json",
+    "provider-capabilities": "packages/aicore/configs/provider-capabilities.json",
+    "provider-distribution": "packages/aicore/configs/provider-distribution.json",
+    "provider-projection": "packages/aicore/configs/provider-projection.json",
     "gitignore-policy": "configs/gitignore-policy.json",
 }
 

@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
+from core.provider.manifest import default_manifest_path
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
                   ResolvedProviderConfig, detect_project_type, load_provider_manifest,
                   provider_config_catalog,
@@ -292,7 +293,7 @@ def resolve_provider_config(config, catalog: ProviderConfigCatalog, *, project_i
 def resolve_distribution_providers(config, *, project_id="local", manifest_path=None):
     """Resolve selected skill-distribution providers through the frozen P1 adapter."""
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     catalog = provider_config_catalog(load_provider_manifest(manifest_path))
     return resolve_provider_config(config, catalog, project_id=project_id)
 

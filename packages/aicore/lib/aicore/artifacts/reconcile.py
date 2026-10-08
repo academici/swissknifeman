@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Protocol
 
-from .values import ProviderId
+from ..provider.values import ProviderId
 
 
 class ReconcileState(str, Enum):

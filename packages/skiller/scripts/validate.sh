@@ -6,6 +6,28 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+# The first Python block imports skiller.host, which needs `core` and, through it, `aicore`.
+export PYTHONPATH="$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}"
+
 # P4.2: the generate-skill snippet is a generated projection of the EN canonical
 # template. Keep this as integration-only composition: ownership of both predicates
 # stays in their dedicated scripts. Isolated legacy validator fixtures intentionally
@@ -1259,7 +1281,7 @@ echo "CLI + shell scripts: syntax OK"
 # optional: in standalone-directory layout core no, the path is not added.
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import skiller.cli" || {
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import skiller.cli" || {
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
 "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
 
@@ -1361,7 +1383,7 @@ PY
 _CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$_CORE_ROOT/core" ] || _CORE_ROOT=""
 _host_rc=0
-PYTHONPATH="$REPO_ROOT/lib${_CORE_ROOT:+:$_CORE_ROOT}" python3 -c \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${_CORE_ROOT:+:$_CORE_ROOT}" python3 -c \
   'import sys; from pathlib import Path; from skiller.host import load_host; sys.exit(0 if load_host(Path(sys.argv[1])).default_command_plugins else 3)' \
   "$REPO_ROOT" || _host_rc=$?
 if [ "$_host_rc" -ne 0 ] && [ "$_host_rc" -ne 3 ]; then

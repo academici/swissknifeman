@@ -13,6 +13,7 @@ import json
 import re
 import sys
 
+from core.provider.manifest import default_manifest_path
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, ArtifactAction, ArtifactActionKind, ArtifactLock,
                   ArtifactPlan, CapabilityId, CapabilityRequirement, DriftObservation,
@@ -521,7 +522,7 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
     """Project caller-owned descriptors through P5-owned target/serialization records."""
     from harness.mcp import McpProjection, render_mcp_projection
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     try:
         manifest = load_provider_manifest(manifest_path)
         capability_catalog = provider_config_catalog(manifest)

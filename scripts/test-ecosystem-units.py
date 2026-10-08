@@ -582,6 +582,24 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual(self.violations(), {"undeclared|packages/beta/lib/beta/use.py|aicore": 3})
         self.assertIn("does not require it", self.assertFails("BOUNDARY_NEW").stderr)
 
+    def test_foundation_may_import_itself_but_not_its_old_alias(self):
+        self.tree.write("packages/aicore/lib/aicore/use.py", "import aicore\nfrom aicore.util import io\nimport core\n")
+        self.assertEqual(self.violations(), {"undeclared|packages/aicore/lib/aicore/use.py|aicore": 1})
+
+    def test_path_allow_exempts_a_file_from_path_patterns_only(self):
+        self.tree.use_boundary_config()
+        self.tree.write("packages/alpha/data.json", '{"source": "packages/beta/doc.md"}\n')
+        self.tree.write("packages/alpha/lib/alpha/use.py", "import beta\nP = 'packages/beta/x'\n")
+        self.tree.config["path_allow"] = [{"path": "packages/alpha/data.json", "reason": "pointers as data"},
+                                          {"path": "packages/alpha/lib/alpha/use.py", "reason": "fixture"}]
+        self.assertEqual(self.violations(), {"import|packages/alpha/lib/alpha/use.py|beta": 1})
+
+    def test_path_allow_needs_a_reason(self):
+        self.tree.config["path_allow"] = [{"path": "packages/alpha/data.json"}]
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("path_allow", result.stderr)
+
     def test_retired_folder_is_not_scanned(self):
         self.tree.write("packages/old/lib/old/use.py", "import beta\nPATH = 'packages/beta/x'\n")
         self.assertEqual(self.violations(), {})

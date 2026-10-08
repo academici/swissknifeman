@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from core.provider.manifest import default_manifest_path
 from core import (DiagnosticSeverity, EffectiveProvider, ProviderCapabilityManifest,
                   ProviderId, load_provider_manifest, support_for)
 
@@ -14,8 +15,7 @@ _SURFACE_KINDS = frozenset({"settings", "security", "lifecycle", "context", "mcp
                             "agents", "agent-packs", "workflows", "doctor"})
 _SCOPES = frozenset({"project", "user", "managed"})
 _ORIGINS = frozenset({"operation", "project", "fleet-project", "fleet-defaults", "legacy"})
-_CAPABILITY_MANIFEST_PATH = (Path(__file__).resolve().parents[4]
-                             / "configs" / "provider-capabilities.json")
+_CAPABILITY_MANIFEST_PATH = default_manifest_path()
 
 
 @dataclass(frozen=True, order=True)

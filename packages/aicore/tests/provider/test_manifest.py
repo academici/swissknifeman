@@ -5,37 +5,37 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import (ProviderId, ProviderManifestError, SupportLevel,
-                  load_provider_manifest, parse_provider_manifest,
-                  provider_config_catalog, provider_manifest_canonical_bytes,
-                  provider_manifest_sha256, provider_support_projection)
+from aicore.provider.values import ProviderId, SupportLevel
+from aicore.provider.manifest import (ProviderManifestError, default_manifest_path,
+                                      load_provider_manifest, parse_provider_manifest, provider_config_catalog,
+                                      provider_manifest_canonical_bytes, provider_manifest_sha256,
+                                      provider_support_projection)
 
 
-ROOT = Path(__file__).resolve().parents[3]
-MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
+MANIFEST_PATH = default_manifest_path()
 # Reviewed against the Grok managed-provider addition: four providers × 37
 # capabilities, not a generator rewrite of the hand-authored manifest.
 APPROVED_CANONICAL_SHA256 = "5d6faa26b0541b74a38262da24fbeafb2967b59b1ecf8fac12d13162afb5f545"
 APPROVED_CARRIER_SHA256 = "a4c58558ccaeecd6a815e3f911a6fd08e2b6a8a89afc9e9ee9a7299bf350c03d"
 
 REGENERATION_DIAGNOSTIC = (
-    "manifest hash mismatch — configs/provider-capabilities.json was likely "
+    "manifest hash mismatch — packages/aicore/configs/provider-capabilities.json was likely "
     "regenerated via `scripts/provider-docs.py --write`. Before touching the "
     "approved constants: (1) confirm the diff is benign — "
     "`python3 -c \"import json,difflib; a=json.load(open('OLD.json')); "
-    "b=json.load(open('configs/provider-capabilities.json')); "
+    "b=json.load(open('packages/aicore/configs/provider-capabilities.json')); "
     "fmt=lambda v: json.dumps(v, indent=1, ensure_ascii=False, sort_keys=True).splitlines(); "
     "print('\\n'.join(difflib.unified_diff(fmt(a), fmt(b), lineterm='')))\"` — "
     "only `evidence[].source` path rewrites are benign; anything touching "
     "providers/capabilities/support/native_extensions/contract_version/catalog_version "
     "is manifest corruption, not regeneration; (2) if benign, recompute the snapshot — "
-    "`PYTHONPATH=. python3 -c \"import hashlib; from core import "
+    "`PYTHONPATH=packages/aicore/lib python3 -c \"import hashlib; from aicore.provider.manifest import "
     "parse_provider_manifest, provider_manifest_sha256; "
-    "raw=open('configs/provider-capabilities.json','rb').read(); "
+    "raw=open('packages/aicore/configs/provider-capabilities.json','rb').read(); "
     "print(provider_manifest_sha256(parse_provider_manifest(raw))); "
     "print(hashlib.sha256(raw).hexdigest())\"` — and update "
     "APPROVED_CANONICAL_SHA256 / APPROVED_CARRIER_SHA256 in "
-    "core/tests/provider/test_manifest.py (the single home both runners consume)."
+    "packages/aicore/tests/provider/test_manifest.py (the single home both runners consume)."
 )
 
 

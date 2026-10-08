@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest import mock
 
 from core import find_repo_root
+from core.provider.manifest import default_manifest_path
 from skiller.common import Env
 from skiller.publication import run_codex_native_install
 from skiller.publication import validate_publication_capabilities
@@ -135,7 +136,7 @@ class TestProviderPublicationParity(unittest.TestCase):
                                          for path in manifest.get("skills", [])))
 
     def test_manifest_gate_refuses_missing_unsupported_and_catalog_mismatch_before_write(self):
-        source = json.loads((Path(__file__).resolve().parents[3] / "configs/provider-capabilities.json").read_text())
+        source = json.loads(default_manifest_path().read_text())
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             sentinel = root / "sentinel"

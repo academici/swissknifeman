@@ -11,8 +11,8 @@ import shlex
 from typing import Mapping
 
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
-from core.provider.manifest import (ProviderCapabilityManifest, load_provider_manifest,
-                                    provider_support_projection)
+from core.provider.manifest import (ProviderCapabilityManifest, default_manifest_path,
+                                    load_provider_manifest, provider_support_projection)
 from core.provider.projection import ProjectionCatalog, load_projection_catalog, projection_spec
 from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
                                     ArtifactRenderResult, ArtifactSource, ArtifactTarget,
@@ -249,7 +249,7 @@ def mapping_from_catalog(catalog: CommandCatalog, provider_id: str, *,
         raise ValueError(f"CMD_INVOCATION_INVALID: {provider_id}")
     if manifest is None:
         manifest_path = Path(manifest_path) if manifest_path is not None else (
-            Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+            default_manifest_path())
         manifest = load_provider_manifest(manifest_path)
     try:
         provider = ProviderId(provider_id)

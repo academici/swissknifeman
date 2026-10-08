@@ -439,9 +439,25 @@ def check_config(ctx: Context) -> list:
             bad(f"path_patterns: {problem}")
     if not isinstance(config.get("path_patterns"), list):
         bad("path_patterns must be a list")
+    allow = config.get("path_allow", [])
+    if not isinstance(allow, list):
+        bad("path_allow must be a list")
+    else:
+        for entry in allow:
+            problem = _allow_problem(entry)
+            if problem:
+                bad(f"path_allow: {problem}")
     if not isinstance(config.get("ownership"), list):
         bad("ownership must be a list")
     return issues
+
+
+def _allow_problem(entry):
+    """Why a path_allow entry is unusable, or None."""
+    if not (isinstance(entry, dict) and set(entry) == {"path", "reason"}
+            and all(isinstance(entry[k], str) and entry[k] for k in ("path", "reason"))):
+        return "each entry must be {path, reason} with non-empty strings (an exemption needs a reason)"
+    return None
 
 
 def _pattern_problem(pattern):
@@ -607,6 +623,7 @@ def scan_boundaries(ctx: Context):
     patterns = [(p["id"], re.compile(p["regex"]), bool(p.get("climb"))) for p in config.get("path_patterns") or ()
                 if _pattern_problem(p) is None]
     suffixes = config.get("path_suffixes") or ()
+    path_allowed = {entry["path"] for entry in config.get("path_allow") or () if _allow_problem(entry) is None}
 
     def hit(kind, path, target):
         key = f"{kind}|{path}|{target}"
@@ -630,11 +647,13 @@ def scan_boundaries(ctx: Context):
                 names = []
             for name in names:
                 if name in foundation_names:
+                    if folder == foundation_id and name == foundation_id:
+                        continue  # the foundation imports its own package; its old aliases stay violations
                     if not requires_foundation.get(folder, False):
                         hit("undeclared", path, foundation_id)
                 elif name in modules and name != folder:
                     hit("import", path, name)
-        if patterns and scannable_for_paths(path, suffixes):
+        if patterns and path not in path_allowed and scannable_for_paths(path, suffixes):
             text = ctx.text(path) or ""
             inside = len(parts) - 3  # directories between the module root and the file
             for _pattern_id, regex, climb in patterns:

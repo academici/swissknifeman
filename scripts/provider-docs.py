@@ -18,7 +18,8 @@ from core import (ProviderId, SupportLevel, load_provider_manifest,
                   provider_manifest_sha256, support_for)
 
 
-MANIFEST_PATH = ROOT / "configs/provider-capabilities.json"
+MANIFEST_REL = "packages/aicore/configs/provider-capabilities.json"
+MANIFEST_PATH = ROOT / MANIFEST_REL
 README_PATH = ROOT / "README.md"
 GUIDE_PATH = ROOT / "docs/provider-support.md"
 BEGIN = "<!-- BEGIN GENERATED PROVIDER CAPABILITIES -->"
@@ -96,7 +97,7 @@ def production_requirements(root: Path = ROOT) -> tuple[tuple[str, str, str, fro
 
 
 def conformance(root: Path = ROOT) -> dict[str, object]:
-    manifest_path = root / "configs/provider-capabilities.json"
+    manifest_path = root / MANIFEST_REL
     manifest = load_provider_manifest(manifest_path)
     inventory = independent_inventory(root)
     actual = tuple(item.capability_id.value for item in manifest.capabilities)
@@ -177,7 +178,7 @@ def render_readme_block(manifest, report) -> str:
         (f"Single manifest: contract `{manifest.contract_version}`, catalog "
          f"`{manifest.catalog_version}`, canonical SHA-256 "
          f"`{report['canonical_sha256']}`. Manifest ("
-         "`configs/provider-capabilities.json`) — source of truth, hand-edited, no "
+         "`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no "
          "generator: `root.generated-artifacts` does not apply to it. Details and "
          "operations: [provider support](docs/provider-support.md)."),
         "",
@@ -205,12 +206,12 @@ def render_guide(manifest, report) -> bytes:
         f"- Common capabilities: `{len(manifest.capabilities)}`; Native Extensions: `{len(manifest.native_extensions)}`",
         "",
         "Support levels, provider bindings, limitations, evidence and diagnostics below come only from "
-        "[`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own "
+        "[`packages/aicore/configs/provider-capabilities.json`](../packages/aicore/configs/provider-capabilities.json). Package catalogs own "
         "semantic intent and requirements, not a second support matrix.",
         "",
         "## Manifest provenance",
         "",
-        "`configs/provider-capabilities.json` is the source of truth, hand-written, with no "
+        "`packages/aicore/configs/provider-capabilities.json` is the source of truth, hand-written, with no "
         "generator; it is edited by a human or agent directly. `root.generated-artifacts` "
         "(\"generated manifests and documents are produced by their generator and never "
         "hand-edited\") does not apply to it — the manifest is this page's *input*, not one of "
@@ -309,7 +310,7 @@ def _thaw(value):
 
 
 def expected_outputs(root: Path = ROOT) -> dict[Path, bytes]:
-    manifest = load_provider_manifest(root / "configs/provider-capabilities.json")
+    manifest = load_provider_manifest(root / MANIFEST_REL)
     report = conformance(root)
     if not report["green"]:
         raise ValueError("PROVIDER_DOCS_CONFORMANCE_FAILED:" + json.dumps(

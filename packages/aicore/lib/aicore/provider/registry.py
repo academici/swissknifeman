@@ -13,8 +13,8 @@ from typing import Callable
 
 from .values import (CapabilityId, CapabilityRequirement, EffectiveProvider,
                      NativeExtensionId, ProviderId, SupportLevel)
-from .artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
-                       ArtifactRenderResult, plan_artifact_render)
+from ..artifacts.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+                                  ArtifactRenderResult, plan_artifact_render)
 from .config import ProviderConfigCatalog
 
 

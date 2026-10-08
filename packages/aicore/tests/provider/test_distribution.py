@@ -1,12 +1,12 @@
-"""Tests for configs/provider-distribution.json and core.provider.distribution."""
+"""Tests for configs/provider-distribution.json and aicore.provider.distribution."""
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from core.provider.distribution import (DistributionCatalog, connect_channel,
-                                        load_distribution_catalog, vendor_channel)
-from core.provider.values import ProviderId
+from aicore.provider.distribution import (DistributionCatalog, connect_channel,
+                                          load_distribution_catalog, vendor_channel)
+from aicore.provider.values import ProviderId
 
 
 class DistributionCatalogTests(unittest.TestCase):

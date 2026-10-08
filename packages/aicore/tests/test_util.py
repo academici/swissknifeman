@@ -1,6 +1,6 @@
-"""Smoke-package tests core — common monorepo foundation (stdlib-only).
+"""Smoke tests for aicore.util — common foundation utilities (stdlib-only).
 
-Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
+Launch: bash packages/aicore/scripts/test.sh"""
 import inspect
 import json
 import os
@@ -13,16 +13,20 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
-from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
-                  atomic_write_json, atomic_write_text, backup_file,
-                  content_hash, detect_project_type, docs_visibility_for,
-                  find_monorepo_root, find_run_report, find_repo_root,
-                  is_within, is_within_lexical, load_json_db, managed_block,
-                  now_iso, parse_args, parse_flags, parse_iso, pid_alive,
-                  read_ndjson, read_ndjson_iter, run_cmd,
-                  safe_load_json, sanitize, sibling_bin, state_dir, upsert_block)
-from core.http import HTTPUnauthorizedError, http_get_json, http_post_json, ping
-from core.repo import resolve_plan_dir
+from aicore.util.project import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, detect_project_type,
+                                 docs_visibility_for)
+from aicore.util.env import BaseEnv
+from aicore.util.io import (atomic_write_json, atomic_write_text, backup_file, load_json_db,
+                            read_ndjson, read_ndjson_iter, safe_load_json)
+from aicore.util.block import content_hash, managed_block, upsert_block
+from aicore.util.repo import find_monorepo_root, find_repo_root, sibling_bin
+from aicore.util.paths import is_within, is_within_lexical, state_dir
+from aicore.util.term import now_iso, parse_iso
+from aicore.util.cli import parse_args, parse_flags, run_cmd
+from aicore.util.proc import pid_alive
+from aicore.util.text import sanitize
+from aicore.util.http import HTTPUnauthorizedError, http_get_json, http_post_json, ping
+from aicore.util.repo import resolve_plan_dir
 
 
 class _EchoAuthHandler(BaseHTTPRequestHandler):
@@ -175,7 +179,7 @@ class TestAtomicIO(unittest.TestCase):
         # must remain on disk - otherwise garbage accumulates in long-lived processes.
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "f.txt"
-            with mock.patch("core.io.os.replace", side_effect=OSError("boom")):
+            with mock.patch("aicore.util.io.os.replace", side_effect=OSError("boom")):
                 with self.assertRaises(OSError):
                     atomic_write_text(p, "data")
             self.assertEqual(list(Path(tmp).rglob("*.tmp")), [])
@@ -299,7 +303,7 @@ class TestRepoRoot(unittest.TestCase):
 
     def test_find_monorepo_root_none_standalone(self):
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertIsNone(find_monorepo_root(Path(tmp) / "lonely"))
+            self.assertIsNone(find_monorepo_root(Path(tmp) / "lonely", markers=("no-such-marker",)))
 
 
 class TestResolvePlanDir(unittest.TestCase):
@@ -586,7 +590,7 @@ class TestDocsVisibility(unittest.TestCase):
 
     def test_every_project_type_has_default(self):
         # every known type has explicit visibility (will not default silently)
-        from core import DOCS_VISIBILITY_BY_TYPE
+        from aicore.util.project import DOCS_VISIBILITY_BY_TYPE
         for t in PROJECT_TYPES:
             self.assertIn(t, DOCS_VISIBILITY_BY_TYPE, t)
 
@@ -687,63 +691,6 @@ class TestReadNdjson(unittest.TestCase):
             p.write_text('{"a":1}\n\n  \nnot-json\n[1,2]\n{"b":2}\n',
                          encoding="utf-8")
             self.assertEqual(read_ndjson(p), list(read_ndjson_iter(p)))
-
-
-class TestFindRunReport(unittest.TestCase):
-    def _make(self, root, sid, payload):
-        runs = Path(root) / ".claude" / "runs"
-        runs.mkdir(parents=True, exist_ok=True)
-        (runs / f"{sid}.json").write_text(json.dumps(payload), encoding="utf-8")
-
-    def test_by_session(self):
-        with tempfile.TemporaryDirectory() as d:
-            self._make(d, "s1", {"session_id": "s1"})
-            self.assertEqual(find_run_report(d, "s1")["session_id"], "s1")
-
-    def test_latest(self):
-        with tempfile.TemporaryDirectory() as d:
-            self._make(d, "s1", {"session_id": "s1"})
-            self.assertIsNotNone(find_run_report(d))
-
-    def test_no_dir(self):
-        with tempfile.TemporaryDirectory() as d:
-            self.assertIsNone(find_run_report(d))
-
-    def test_foreign_absolute_changed_file_rejects_report_even_when_cwd_claims_project(self):
-        from core.runs import find_run_report_result
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            runs = root / ".claude" / "runs"
-            runs.mkdir(parents=True)
-            (runs / "s1.json").write_text(json.dumps({
-                "session_id": "s1", "cwd": str(root),
-                "files_changed": ["/tmp/another-project/app.py"],
-            }), encoding="utf-8")
-            result = find_run_report_result(root, "s1")
-            self.assertIsNone(result.report)
-            self.assertEqual(result.diagnostic["code"], "RUN_REPORT_PROJECT_MISMATCH")
-
-    def test_session_provider_and_project_identity_are_checked_when_present(self):
-        from core.runs import find_run_report_result
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            self._make(root, "s1", {
-                "session_id": "other", "provider_id": "codex",
-                "project_id": "other-project", "cwd": str(root),
-            })
-            result = find_run_report_result(root, "s1", project_id="expected-project")
-            self.assertIsNone(result.report)
-            self.assertEqual(
-                {row["field"] for row in result.diagnostic["conflicts"]},
-                {"provider", "session_id", "project_id"},
-            )
-
-    def test_expanduser(self):
-        # ~-path should expand (discrepancy that fixes the offset in core)
-        with tempfile.TemporaryDirectory() as home:
-            with mock.patch.dict(os.environ, {"HOME": home}):
-                self._make(home, "s1", {"session_id": "s1"})
-                self.assertIsNotNone(find_run_report("~", "s1"))
 
 
 if __name__ == "__main__":

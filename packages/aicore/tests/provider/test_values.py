@@ -2,11 +2,11 @@
 from dataclasses import FrozenInstanceError, asdict
 import unittest
 
-import core
-from core import (CapabilityId, CapabilityRequirement, ConfigProvenance, ConfigSource,
-                  DiagnosticSeverity, EffectiveProvider, NativeExtensionId,
-                  ProviderDecision, ProviderDiagnostic, ProviderId, ProviderSelection,
-                  SupportLevel)
+from aicore.provider import values as values_module
+from aicore.provider.values import (CapabilityId, CapabilityRequirement, ConfigProvenance,
+                                    ConfigSource, DiagnosticSeverity, EffectiveProvider,
+                                    NativeExtensionId, ProviderDecision, ProviderDiagnostic,
+                                    ProviderId, ProviderSelection, SupportLevel)
 
 
 class TestProviderDomain(unittest.TestCase):
@@ -64,8 +64,7 @@ class TestProviderDomain(unittest.TestCase):
             "ProviderSelection", "EffectiveProvider", "ConfigSource", "ConfigProvenance",
             "ProviderDiagnostic", "ProviderAdapter",
         }
-        self.assertTrue(expected.issubset(core.__all__))
-        self.assertEqual({name for name in core.__all__ if name in expected}, expected)
+        self.assertTrue(all(hasattr(values_module, name) for name in expected))
 
 
 if __name__ == "__main__":

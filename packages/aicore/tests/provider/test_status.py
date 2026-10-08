@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from core.provider.status import ProviderStatusRow, StatusDiagnostic, aggregate, write_adapter_status
+from aicore.provider.status import ProviderStatusRow, StatusDiagnostic, aggregate, write_adapter_status
 
 
 class StatusTests(TestCase):

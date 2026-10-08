@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core.provider.health import (
+from aicore.provider.health import (
     HealthEvidence,
     HealthRequirement,
     evaluate_fleet,

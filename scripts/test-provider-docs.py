@@ -16,7 +16,7 @@ provider_docs = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(provider_docs)
 
 MANIFEST_SPEC = importlib.util.spec_from_file_location(
-    "test_provider_manifest", ROOT / "core/tests/provider/test_manifest.py")
+    "test_provider_manifest", ROOT / "packages/aicore/tests/provider/test_manifest.py")
 manifest_snapshot = importlib.util.module_from_spec(MANIFEST_SPEC)
 MANIFEST_SPEC.loader.exec_module(manifest_snapshot)
 
@@ -64,7 +64,7 @@ class ProviderDocsTests(unittest.TestCase):
             (root / "packages/harness/configs/common/instructions").mkdir(parents=True)
             # The generator intentionally consumes these bounded sources; copy exact fixtures.
             for relative in (
-                "configs/provider-capabilities.json",
+                "packages/aicore/configs/provider-capabilities.json",
                 "packages/task/configs/command-routing.json",
                 "packages/harness/configs/common/profile-catalog.json",
                 "packages/harness/configs/common/instructions/catalog.json",
@@ -85,12 +85,12 @@ class ProviderDocsTests(unittest.TestCase):
             self.assertEqual(provider_docs.run("check", root), 0)
 
     def test_manifest_is_not_an_output_of_the_generator(self):
-        # configs/provider-capabilities.json is the generator's INPUT (P5.2, D-provenance):
+        # packages/aicore/configs/provider-capabilities.json is the generator's INPUT (P5.2, D-provenance):
         # a hand-written SSOT with no owning generator, so `root.generated-artifacts`
         # ("regenerate through the owning tool") does not apply to it. This is a structural
         # assertion about expected_outputs(), not a text-presence check.
         expected = provider_docs.expected_outputs(ROOT)
-        self.assertNotIn(ROOT / "configs/provider-capabilities.json", expected)
+        self.assertNotIn(ROOT / "packages/aicore/configs/provider-capabilities.json", expected)
         guide = expected[ROOT / "docs/provider-support.md"].decode()
         self.assertIn("no generator", guide)
         self.assertIn("root.generated-artifacts", guide)

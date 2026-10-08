@@ -1,6 +1,6 @@
 from unittest import TestCase
-from core.provider.diagnostics import render
-from core.provider.status import StatusDiagnostic
+from aicore.provider.diagnostics import render
+from aicore.provider.status import StatusDiagnostic
 
 
 class DiagnosticTests(TestCase):

@@ -17,11 +17,12 @@ import subprocess
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from core.provider.manifest import default_manifest_path
 from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
                   ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
                   CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
-                  connect_channel, find_repo_root, load_distribution_catalog,
+                  connect_channel, load_distribution_catalog,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
                   provider_config_catalog, vendor_channel)
 from core.provider.lock import LOCK_RELATIVE_PATH
@@ -68,15 +69,14 @@ _DISTRIBUTION_CATALOG = None
 def _distribution_catalog():
     global _DISTRIBUTION_CATALOG
     if _DISTRIBUTION_CATALOG is None:
-        root = find_repo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
-        _DISTRIBUTION_CATALOG = load_distribution_catalog(root / "configs/provider-distribution.json")
+        _DISTRIBUTION_CATALOG = load_distribution_catalog()
     return _DISTRIBUTION_CATALOG
 
 
 def validate_publication_capabilities(provider_id: ProviderId, *, manifest_path=None):
     """Fail closed against the root manifest before publication bytes are rendered."""
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     manifest = load_provider_manifest(manifest_path)
     identity = _PUBLICATION_ADAPTERS[provider_id]
     gate = AdapterCatalog((AdapterDescriptor(

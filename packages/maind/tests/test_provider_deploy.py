@@ -5,6 +5,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 
+from core.provider.manifest import default_manifest_path
 from core import (ArtifactActionKind, ArtifactAdapterIdentity,
                   ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
                   ConfigSource, ProviderConfigCatalog,
@@ -737,7 +738,7 @@ class TestProviderDeploy(unittest.TestCase):
             with self.assertRaisesRegex(ProviderDeployError,
                                         "MAIND_CAPABILITY_MANIFEST_INVALID"):
                 plan_provider_deploy(bases, servers, manifest_path=root / "missing.json")
-            value = json.loads((repo / "configs/provider-capabilities.json").read_text())
+            value = json.loads(default_manifest_path().read_text())
             row = next(item for item in value["capabilities"]
                        if item["id"] == "mcp.catalog")["support"]["codex"]
             row.pop("adapter_id")

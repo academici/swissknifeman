@@ -14,6 +14,7 @@ from harness.provider_audit import (ProviderAuditReport, audit_package, audited_
 from harness.profiles import load_catalog, resolve_profile
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from harness.hooks import LifecycleRequest, plan_lifecycle
+from core.provider.manifest import default_manifest_path
 from core import (EffectiveProvider, ProviderId, ProviderManifestError,
                   load_provider_manifest)
 
@@ -22,7 +23,7 @@ PACKAGE = Path(__file__).resolve().parents[1]
 
 class ProviderConformanceTests(unittest.TestCase):
     def test_profile_catalog_default_path_cannot_bypass_manifest_gate(self):
-        manifest_path = PACKAGE.parents[1] / "configs/provider-capabilities.json"
+        manifest_path = default_manifest_path()
         manifest = load_provider_manifest(manifest_path)
         with patch("harness.profiles.load_provider_manifest", return_value=manifest) as loader:
             catalog = load_catalog(PACKAGE / "configs/common/profile-catalog.json")
@@ -35,7 +36,7 @@ class ProviderConformanceTests(unittest.TestCase):
                     load_catalog(PACKAGE / "configs/common/profile-catalog.json")
 
     def test_manifest_gate_refuses_missing_and_support_mismatch_before_audit_output(self):
-        manifest_path = PACKAGE.parents[1] / "configs/provider-capabilities.json"
+        manifest_path = default_manifest_path()
         source = json.loads(manifest_path.read_text())
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -57,7 +58,7 @@ class ProviderConformanceTests(unittest.TestCase):
 
     def test_profile_requirement_level_mismatch_is_rejected(self):
         manifest = load_provider_manifest(
-            PACKAGE.parents[1] / "configs/provider-capabilities.json")
+            default_manifest_path())
         value = json.loads((PACKAGE / "configs/common/profile-catalog.json").read_text())
         surface = next(item for item in value["surfaces"]
                        if item["id"] == "doctor.provider")

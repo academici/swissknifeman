@@ -1,4 +1,4 @@
-"""Load provider skill-distribution channels from the monorepo SSOT catalog."""
+"""Load provider skill-distribution channels from the packaged catalog."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Mapping
 
+from .data import config_path
 from .values import ProviderId
 
 
@@ -73,10 +74,9 @@ def _parse_provider(raw: object) -> ProviderDistributionSpec:
 
 
 def load_distribution_catalog(path: Path | None = None) -> DistributionCatalog:
-    """Read ``configs/provider-distribution.json`` from *path* or the repo default."""
+    """Read ``configs/provider-distribution.json`` from *path* or the packaged default."""
     if path is None:
-        from ..config_paths import shared_config_path
-        path = shared_config_path("provider-distribution")
+        path = config_path("provider-distribution.json")
     path = Path(path)
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))

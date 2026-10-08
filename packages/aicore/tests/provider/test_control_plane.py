@@ -1,10 +1,12 @@
 import unittest
 from pathlib import Path
 
-from core import (CapabilityId, CapabilitySupport, ConfigSource, NativeExtension,
-                  NativeExtensionId, ProviderConfigCatalog, ProviderConfigLayer, ProviderId, SupportLevel,
-                  canonical_desired_bytes, parse_desired_snapshot,
-                  resolve_desired_snapshot, resolve_provider_config)
+from aicore.provider.values import (CapabilityId, ConfigSource, NativeExtensionId, ProviderId,
+                                    SupportLevel)
+from aicore.provider.config import (CapabilitySupport, NativeExtension, ProviderConfigCatalog,
+                                    ProviderConfigLayer, resolve_provider_config)
+from aicore.provider.control_plane import (canonical_desired_bytes, parse_desired_snapshot,
+                                           resolve_desired_snapshot)
 
 
 def catalog():

@@ -1,8 +1,9 @@
 """Provider-model domain cluster.
 
-``core.__init__`` is the sole public facade; import submodules directly for deep
-imports to avoid a duplicate export surface.
+There is no flat facade: import submodules directly (``aicore.provider.values``,
+``aicore.provider.manifest``, ...). Artifact rendering and locking live in
+:mod:`aicore.artifacts`.
 
-Provider-health composition lives in :mod:`core.provider.health`; package
+Provider-health composition lives in :mod:`aicore.provider.health`; package
 adapters pass owner-produced evidence to it and never write through this layer.
 """

@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 import tempfile
 
+from core.provider.manifest import default_manifest_path
 from core import (ArtifactActionKind, EffectiveProvider, ProviderId, SupportLevel,
                   apply_plan, load_provider_manifest, plan_artifact_lock,
                   serialize_lock, support_for)
@@ -152,7 +153,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
     root = Path(package_root)
     fixture = _fixture(fixture_path or root / "tests/fixtures_data/provider-harness-cases.json")
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     manifest = load_provider_manifest(manifest_path)
     catalog_path = root / "configs/common/profile-catalog.json"
     catalog = load_catalog(catalog_path, capability_manifest=manifest)

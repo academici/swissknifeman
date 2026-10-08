@@ -1,12 +1,12 @@
-"""Tests for configs/provider-projection.json and core.provider.projection."""
+"""Tests for configs/provider-projection.json and aicore.provider.projection."""
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from core.provider.projection import (load_projection_catalog, projection_spec,
+from aicore.provider.projection import (load_projection_catalog, projection_spec,
                                         project_common_instructions)
-from core.provider.values import ProviderId
+from aicore.provider.values import ProviderId
 
 
 class ProjectionCatalogTests(unittest.TestCase):

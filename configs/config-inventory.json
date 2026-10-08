@@ -92,24 +92,26 @@
       "note": "registry is empty; gate kept for P5.5"
     },
     {
-      "path": "configs/provider-capabilities.json",
-      "owner": "core",
+      "path": "packages/aicore/configs/provider-capabilities.json",
+      "owner": "aicore",
       "consumers": [
-        "core/provider/config.py",
+        "packages/aicore/lib/aicore/provider/manifest.py",
         "packages/harness/lib/harness/profiles.py",
         "packages/harness/lib/harness/provider_audit.py",
         "packages/maind/lib/maind/config.py",
         "packages/maind/lib/maind/provider_deploy.py",
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/publication.py",
         "packages/task/lib/task/command_render.py"
       ],
       "released": false,
       "note": "SSOT of support levels"
     },
     {
-      "path": "configs/provider-distribution.json",
-      "owner": "core",
+      "path": "packages/aicore/configs/provider-distribution.json",
+      "owner": "aicore",
       "consumers": [
-        "core/provider/distribution.py",
+        "packages/aicore/lib/aicore/provider/distribution.py",
         "packages/skiller/lib/skiller/doctor.py",
         "packages/skiller/lib/skiller/publication.py",
         "scripts/release-fleet.sh",
@@ -118,10 +120,10 @@
       "released": false
     },
     {
-      "path": "configs/provider-projection.json",
-      "owner": "core",
+      "path": "packages/aicore/configs/provider-projection.json",
+      "owner": "aicore",
       "consumers": [
-        "core/provider/projection.py",
+        "packages/aicore/lib/aicore/provider/projection.py",
         "configs/ecosystem-units.json"
       ],
       "released": false

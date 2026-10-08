@@ -10,10 +10,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skiller" / "lib"))
 from maind.config import (load_config, map_brain_project, merge_defaults,
                           provider_config_layers, resolve_provider_config,
                           validate_config)
-from core.tests.provider.test_config import catalog, config
-from core import effective_projection
+from core import (CapabilityId, CapabilitySupport, NativeExtension, NativeExtensionId,
+                  ProviderConfigCatalog, ProviderId, SupportLevel, effective_projection)
 from skiller.config import resolve_provider_config as resolve_skiller_provider_config
 from tests.fixtures import make_repo, write_brain_projects, write_maind_config
+
+
+def catalog():
+    return ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX),
+        (CapabilitySupport(CapabilityId("instructions.project"), ProviderId.CLAUDE_CODE, SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("skills.repository"), ProviderId.CODEX, SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("hooks.lifecycle"), ProviderId.CODEX, SupportLevel.UNSUPPORTED)),
+        (NativeExtension(NativeExtensionId("claude-code.fixture-native"), ProviderId.CLAUDE_CODE),
+         NativeExtension(NativeExtensionId("codex.fixture-native"), ProviderId.CODEX)))
+
+
+def config(selection):
+    return {"contract_version": "1.0.0", "selection": selection}
 
 
 class TestValidate(unittest.TestCase):

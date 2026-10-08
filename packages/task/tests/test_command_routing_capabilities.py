@@ -3,10 +3,12 @@ import json
 from pathlib import Path
 import unittest
 
+from core.provider.manifest import default_manifest_path
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ROUTING = REPO_ROOT / "packages/task/configs/command-routing.json"
-MANIFEST = REPO_ROOT / "configs/provider-capabilities.json"
-SOURCE = ("the source of truth for levels is configs/provider-capabilities.json "
+MANIFEST = default_manifest_path()
+SOURCE = ("the source of truth for levels is packages/aicore/configs/provider-capabilities.json "
           "(command_render.py reads levels from it)")
 
 

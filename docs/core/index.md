@@ -29,7 +29,7 @@ here, not parallel copies. Domain add-ons (path-property `Env` of each package) 
 
 ### Subpackage `provider/`
 
-Single domain cluster `core/` — six modules connected by mutual imports and common
+Single domain cluster `packages/aicore/lib/aicore/provider/` (`core.provider` is a compatibility alias) — six modules connected by mutual imports and common
 dictionary (other modules are flat: the domain subpackage is started when ≥3 modules linked
 MUTUAL imports and share the domain dictionary, «similar in topic» — not a criterion).
 
@@ -42,12 +42,12 @@ MUTUAL imports and share the domain dictionary, «similar in topic» — not a c
 | `provider.lock` | lock-managed artifact file and plan application: `plan_artifact_lock` · `apply_plan` · `artifact_dry_run` · `parse_lock` |
 | `provider.registry` | adapter registry and selection from the catalog: `AdapterCatalog` · `AdapterDescriptor` · `AdapterSelection` |
 
-Re-exports to `core/provider/__init__.py` NO: The only package facade is `core/__init__.py`
-(`from core import …`), deep-import goes directly to the submodule (`core.provider.lock`).
+Re-exports to `packages/aicore/lib/aicore/provider/__init__.py` NO: `core/__init__.py` is the transitional facade
+(`from core import …`), deep-import goes directly to the submodule (`aicore.provider.manifest`, `aicore.artifacts.lock`).
 
 ## Reference: run telemetry (SCHEMA=2)
 
-`core/usage.py` — a single accumulator of tokens on which all telemetry is based. Capture run
+`packages/aicore/lib/aicore/usage.py` — a single accumulator of tokens on which all telemetry is based. Capture run
 does SessionEnd-hook harness (`hooks/run-report/`): parses the transcript line by line → writes
 `<project>/.claude/runs/<sid>.json` (**SCHEMA=2**: tests/lint/files/tool-failures/dev-loop-signal +
 usage-partition in/out by model). This run-report read:
@@ -61,5 +61,6 @@ The operational layer of this is [Development §9](/develop#_9-performance-measu
 ## Development
 
 ```bash
-PYTHONPATH=. python3 -m unittest discover -s core/tests   # smoke-tests core
+bash packages/aicore/scripts/test.sh                       # aicore tests
+PYTHONPATH=. python3 -m unittest discover -s core/tests   # transitional core shim
 ```

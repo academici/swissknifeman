@@ -57,7 +57,7 @@
     "path|packages/task/tests/test_boundary.py|maind": 1
   },
   "standalone": {
-    "aicore": "n/a",
+    "aicore": "pass",
     "analyst": "fail",
     "harness": "fail",
     "maind": "fail",

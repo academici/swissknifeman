@@ -18,7 +18,7 @@ process. Details Claude Code — in [developer's runbook](docs/develop.md).
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Provider support (generated)
 
-Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `5d6faa26b0541b74a38262da24fbeafb2967b59b1ecf8fac12d13162afb5f545`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
+Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `5d6faa26b0541b74a38262da24fbeafb2967b59b1ecf8fac12d13162afb5f545`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor | Grok |
 |:--|:--:|:--:|:--:|:--:|

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.2",
   "title": "Перенос core → packages/aicore (util, provider, artifacts, usage, данные провайдеров) и shim core",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "git mv модулей util, provider, artifacts, usage, их тестов и configs/provider-*.json в packages/aicore по таблице переноса; относительные импорты под новую раскладку; данные провайдеров ищутся от пакета (aicore.provider.data, default_manifest_path); core/__init__.py — shim с таблицей sys.modules и прежним фасадом; aicore получает test.sh/validate.sh и dev в unit.json, становится автономным (standalone pass); потребители правят только жёсткие пути к манифесту; карта, инвентарь, CI, базовая линия.",
   "why": "Главный результат фазы (архитектура §12: «aicore автономен; потребители не сломаны»). Риски: (1) поломка 135 импортов потребителей и строковых mock.patch — держит shim, отдающий те же объекты модулей, и полные наборы тестов; (2) потеря истории — отдельный коммит чистого git mv; (3) скрытая зависимость aicore от core или корня монорепозитория — проверка границ (импорт core из aicore = ошибка), standalone aicore и поиск данных от файла пакета; (4) изменение поведения CLI/генерации — golden check.",
   "scope": {
@@ -321,6 +321,61 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T06:02:03Z"
+  "result": {
+    "started_at": "2026-10-08T06:53:06Z",
+    "finished_at": "2026-10-08T07:37:54Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "ff2fb33c-9471-4f9d-aca3-c69f9db555fa"
+    },
+    "notes": "util, provider, artifacts, usage и три provider-конфига перенесены в packages/aicore (чистый git mv отдельным коммитом a274c7a7); shim core с 29 алиасами и тестом идентичности; aicore автономен (standalone pass, записан в базовую линию); потребители и CI на новых путях; golden provider-docs перезахвачен с причиной.",
+    "deviations": [
+      "ecosystem-units.py: собственное имя aicore для фундамента и path_allow (+тесты); потребители пути манифеста шире списка (skiller, task, provider-docs); тесты чужих модулей разведены; локатор в skiller validate.sh"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-08T07:37:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T07:37:54Z"
 }

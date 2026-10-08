@@ -6,7 +6,7 @@ and command invocation). Packages read this catalog through
 
 ## Location
 
-- Catalog: [`configs/provider-projection.json`](../../configs/provider-projection.json)
+- Catalog: [`packages/aicore/configs/provider-projection.json`](../../packages/aicore/configs/provider-projection.json)
 - Loader: `core/provider/projection.py`
 - Consumers:
   - `packages/harness/lib/harness/instructions.py` — `project_common_instructions`
@@ -21,7 +21,7 @@ and command invocation). Packages read this catalog through
 | `cursor` | no (Codex-sibling) | `semantic` |
 | `grok` | no | `slash` |
 
-Grok is already in [`configs/provider-projection.json`](../../configs/provider-projection.json).
+Grok is already in [`packages/aicore/configs/provider-projection.json`](../../packages/aicore/configs/provider-projection.json).
 A further provider still means extending that catalog and registering its
 invocation renderer, not scattering conditionals across packages.
 
@@ -43,9 +43,9 @@ models and forbid slash syntax.
 
 | File | Role |
 |:--|:--|
-| `configs/provider-capabilities.json` | 36-capability matrix |
-| `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
-| `configs/provider-projection.json` | Instruction/command projection policies |
+| `packages/aicore/configs/provider-capabilities.json` | 36-capability matrix |
+| `packages/aicore/configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
+| `packages/aicore/configs/provider-projection.json` | Instruction/command projection policies |
 | `packages/task/configs/command-routing.json` | Task command routing SSOT |
 | `packages/harness/configs/common/profile-catalog.json` | Harness profile catalog SSOT |
 

@@ -10,15 +10,17 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
-                  ArtifactActionKind, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, CapabilityId, CapabilityRequirement,
-                  CapabilitySupport, DriftObservation, EffectiveProvider,
-                  ProviderConfigCatalog, ProviderId, SupportLevel, apply_plan,
-                  plan_artifact_lock, plan_artifact_render, serialize_lock)
-import core.provider.lock as provider_lock
-from core.provider.lock import (artifact_doctor, artifact_dry_run,
-                                render_artifact_projection)
+from aicore.provider.registry import AdapterCatalog, AdapterDescriptor
+from aicore.artifacts.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+                                       ArtifactSource, ArtifactTarget, plan_artifact_render)
+from aicore.artifacts.lock import (ArtifactActionKind, DriftObservation, apply_plan,
+                                   plan_artifact_lock, serialize_lock)
+from aicore.provider.values import (CapabilityId, CapabilityRequirement, EffectiveProvider,
+                                    ProviderId, SupportLevel)
+from aicore.provider.config import CapabilitySupport, ProviderConfigCatalog
+import aicore.artifacts.lock as provider_lock
+from aicore.artifacts.lock import (artifact_doctor, artifact_dry_run,
+                                   render_artifact_projection)
 
 
 HASH = "sha256:" + "a" * 64

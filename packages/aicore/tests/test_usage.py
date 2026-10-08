@@ -1,21 +1,21 @@
-"""Tests core/usage.py — single transcript parser usage-metrics Claude Code.
+"""Tests aicore/usage.py — single transcript parser usage-metrics Claude Code.
 
 Fixtures - inline events in the form of real JSONL-transcript lines
 (~/.claude/projects/<slug>/*.jsonl). We separately protect the self-sufficiency of the module:
 it is copied byte-for-byte into the hook without PYTHONPATH, therefore any
-not-stdlib imports (from core... / from .).
+not-stdlib imports (from aicore... / from .).
 
-Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
+Launch: bash packages/aicore/scripts/test.sh"""
 import json
 import re
 import tempfile
 import unittest
 from pathlib import Path
 
-from core.usage import (feed_event, finish, iter_jsonl, merge, new_acc,
-                        similar_ratio)
+from aicore.usage import (feed_event, finish, iter_jsonl, merge, new_acc,
+                          similar_ratio)
 
-USAGE_PY = Path(__file__).resolve().parent.parent / "usage.py"
+USAGE_PY = Path(__file__).resolve().parent.parent / "lib" / "aicore" / "usage.py"
 
 
 def _assistant(model="claude-opus-4", usage=None, content=None, ts=None):
@@ -225,14 +225,14 @@ class TestIterJsonl(unittest.TestCase):
 class TestSelfContained(unittest.TestCase):
     def test_no_forbidden_imports(self):
         """Protecting self-sufficiency: usage.py is copied to the hook without PYTHONPATH,
-        therefore relative/core-imports would break it silently."""
+        therefore relative/aicore-imports would break it silently."""
         src = USAGE_PY.read_text(encoding="utf-8")
-        self.assertIsNone(re.search(r"^\s*from\s+core\b", src, re.M),
-                          "usage.py should not import from core")
+        self.assertIsNone(re.search(r"^\s*from\s+(?:core|aicore)\b", src, re.M),
+                          "usage.py should not import from core or aicore")
         self.assertIsNone(re.search(r"^\s*from\s+\.", src, re.M),
                           "usage.py should not use relative imports")
-        self.assertIsNone(re.search(r"^\s*import\s+core\b", src, re.M),
-                          "usage.py should not import the package core")
+        self.assertIsNone(re.search(r"^\s*import\s+(?:core|aicore)\b", src, re.M),
+                          "usage.py should not import the package core or aicore")
 
 
 if __name__ == "__main__":

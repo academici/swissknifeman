@@ -15,6 +15,7 @@ import re
 from types import MappingProxyType
 from typing import Mapping
 
+from .data import config_path
 from .values import (CapabilityId, NativeExtensionId, ProviderId,
                      SupportLevel)
 from .config import (CapabilitySupport, NativeExtension,
@@ -170,6 +171,11 @@ def parse_provider_manifest(value: bytes | Mapping[str, object], *,
         contract_version, catalog_version, tuple(sorted(providers, key=lambda item: item.value)),
         tuple(sorted(capabilities, key=lambda item: item.capability_id.value)),
         tuple(sorted(extensions, key=lambda item: item.extension_id.value)))
+
+
+def default_manifest_path() -> Path:
+    """Path of the packaged capability manifest; a pure path, nothing is read or searched."""
+    return config_path("provider-capabilities.json")
 
 
 def load_provider_manifest(path: Path) -> ProviderCapabilityManifest:

@@ -23,6 +23,7 @@ from task.command_render import (build_provider_command_parity_report,
                                  render_provider_model_roles_reference,
                                  validate_route)
 from core import ProviderManifestError
+from core.provider.manifest import default_manifest_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -72,7 +73,7 @@ class ProviderCommandParityTests(unittest.TestCase):
             self.assertEqual(verbs[0], verbs[2], command)
 
     def test_mapping_support_is_manifest_derived_and_missing_manifest_fails_closed(self):
-        manifest = json.loads((REPO_ROOT / "configs/provider-capabilities.json").read_text())
+        manifest = json.loads(default_manifest_path().read_text())
         expected = {item["id"]: item["support"]["codex"]["level"]
                     for item in manifest["capabilities"]}
         self.assertEqual(dict(self.mappings["codex"].capability_bindings),

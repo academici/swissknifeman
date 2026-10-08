@@ -122,6 +122,7 @@ ls_workspace_folders:
 - "./packages/skiller"
 - "./packages/harness"
 - "./core"
+- "./packages/aicore"
 
 # list of additional workspace folder paths for cross-package reference support.
 # Paths can be absolute or relative to the project root.

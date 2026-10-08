@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+from core.provider.manifest import default_manifest_path
 from core import ProviderId, load_provider_manifest, support_for
 from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload, plan_lifecycle,
                            render_codex_hook_handler, render_codex_hooks)
@@ -19,7 +20,7 @@ PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
 BINDINGS = PACKAGE / "configs/codex/hooks/lifecycle-context-bindings.json"
-MANIFEST = ROOT / "configs/provider-capabilities.json"
+MANIFEST = default_manifest_path()
 
 CLASS_A_SURFACES = ("lifecycle.command-log", "lifecycle.run-report", "lifecycle.router",
                    "lifecycle.memory")

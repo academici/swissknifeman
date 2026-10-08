@@ -22,30 +22,11 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `configs/provider-capabilities.json` | configs (hub root) | aicore | provider | P3 | fixed | - |
-| `configs/provider-distribution.json` | configs (hub root) | aicore | provider | P3 | fixed | - |
-| `configs/provider-projection.json` | configs (hub root) | aicore | provider | P3 | fixed | - |
-| `core/__init__.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/block.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/cli.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/env.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/http.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/io.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/paths.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/proc.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/project.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/provider/` | core (hub root) | aicore | provider | P3 | fixed | - |
-| `core/provider/artifact.py` | core (hub root) | aicore | artifacts | P3 | fixed | - |
-| `core/provider/lock.py` | core (hub root) | aicore | artifacts | P3 | fixed | - |
-| `core/provider/reconcile.py` | core (hub root) | aicore | artifacts | P3 | fixed | - |
-| `core/repo.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/term.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/tests/` | core (hub root) | aicore | tests | P3 | fixed | default for the foundation tests |
-| `core/text.py` | core (hub root) | aicore | util | P3 | fixed | - |
-| `core/usage.py` | core (hub root) | aicore | usage | P3 | fixed | - |
 | `packages/task/configs/command-routing.json` | task | aicore | provider | P3 | hypothesis | model catalog; the rest of the folder is planner |
 | `core/config_paths.py` | core (hub root) | aicore | config | P4 | hypothesis | - |
 | `core/gitignore_policy.py` | core (hub root) | aicore | state | P4 | hypothesis | - |
+| `core/tests/test_config_paths.py` | core (hub root) | aicore | tests | P4 | hypothesis | - |
+| `core/tests/test_gitignore_policy.py` | core (hub root) | aicore | tests | P4 | hypothesis | - |
 | `packages/skiller/lib/skiller/budget.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/common.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/connect.py` | skiller | aicore | delivery | P5 | hypothesis | - |
@@ -80,12 +61,15 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | `packages/orch/bridges/skiller/` | orch | bridges/orch-skiller | - | P10 | fixed | - |
 | `packages/orch/bridges/task/` | orch | bridges/planner-orch | - | P10 | fixed | - |
 | `packages/task/bridges/orch/` | task | bridges/planner-orch | - | P10 | fixed | - |
+| `core/__init__.py` | core (hub root) | aicore | shim | P11 | fixed | transitional alias package; deleted with core/ |
 | `core/codegraph_telemetry.py` | core (hub root) | analyst | - | P11 | fixed | - |
 | `core/pathology.py` | core (hub root) | analyst | - | P11 | fixed | - |
 | `core/runs.py` | core (hub root) | analyst | - | P11 | fixed | - |
 | `core/tests/test_codegraph_telemetry.py` | core (hub root) | analyst | tests | P11 | fixed | - |
+| `core/tests/test_find_run_report.py` | core (hub root) | analyst | tests | P11 | fixed | - |
 | `core/tests/test_pathology.py` | core (hub root) | analyst | tests | P11 | fixed | - |
 | `core/tests/test_runs.py` | core (hub root) | analyst | tests | P11 | fixed | - |
+| `core/tests/test_shim.py` | core (hub root) | aicore | shim | P11 | fixed | deleted with core/ |
 | `packages/artifex/` | artifex | retired | - | P11 | fixed | module is retired and not scanned by the boundary check |
 | `packages/harness/lib/harness/cursor_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
 | `packages/harness/lib/harness/grok_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |

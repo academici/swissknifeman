@@ -5,7 +5,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"                 # packages/harness
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"           # swissknifeman root
 
 # --- aicore locator ---
 # Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
@@ -26,9 +25,7 @@ AICORE_LIB="$AICORE_ROOT/lib"
 unset -f _aicore_ok
 # --- end aicore locator ---
 
-# Until the code moves into aicore, fall back to the legacy core location.
 SRC="$AICORE_LIB/aicore/usage.py"
-[[ -f "$SRC" ]] || SRC="$MONOREPO_ROOT/core/usage.py"
 DST="$REPO_ROOT/configs/claude-code/hooks/run-report/_usage.py"
 
 [[ -f "$SRC" ]] || { echo "Error: not found $SRC" >&2; exit 1; }

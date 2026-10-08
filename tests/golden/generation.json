@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "dcce8d39372d",
-  "reason": "initial capture before code moves",
+  "captured_from": "a274c7a7e1d5",
+  "reason": "provider data moved to packages/aicore/configs: the manifest path in the generated provider-support page changed",
   "generators": [
     {
       "id": "skiller-registry",
@@ -202,7 +202,7 @@
     ".cursor/rules/swissknifeman-router.mdc": "7a927516e865d2d2eaffb189f6c5f9f7e598dd5cf946c1e79ace01adb45f68a1",
     ".grok/rules/swissknifeman-instructions.md": "d7450cad926742183bf3557e8d574fd8bbae9b81e0b5742b167a6ebce2012354",
     "bootstrap/publication-lock.json": "bf124c750a7c7c8ed1e5f71fdaf34f9aa6bb6313a45ff2a8126e93bf729ff682",
-    "docs/provider-support.md": "fcadd1f5cda796a678361124e478a3570a6a63bbeef25450662dbcc544ff4ed2",
+    "docs/provider-support.md": "a502c02dd4cd841f29cee7f14de9576f9150abe5c072cc0c2e650260ae47a467",
     "packages/harness/docs/reference/provider-instructions.md": "b3c19918179a3dcca9570b4cbd9ba71de9e3a99804d0f78d33369d3fcdb2aabf",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "0f985b5f7e78f6505d76f3df82e98eef70ae16619a25f523b5395748d395dc75",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "40aa013bca21f181e007ad52aac83643e43169ef231691f3b0bfeba2c2ef149d",

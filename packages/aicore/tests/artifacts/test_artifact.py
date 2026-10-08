@@ -1,10 +1,10 @@
 """Conformance tests for the pure P2.1 artifact render seam."""
 import unittest
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, CapabilityId, CapabilityRequirement, ProviderId,
-                  SupportLevel, canonical_json_bytes, plan_artifact_render,
-                  sha256_digest, validate_target_path)
+from aicore.artifacts.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+                                       ArtifactSource, ArtifactTarget, canonical_json_bytes,
+                                       plan_artifact_render, sha256_digest, validate_target_path)
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 
 
 SOURCE_HASH_A = "sha256:" + "a" * 64
@@ -40,8 +40,8 @@ class ProviderArtifactTests(unittest.TestCase):
 
     def test_same_semantics_have_same_bytes_and_hashes_despite_mapping_order(self):
         sources = (
-            ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A),
-            ArtifactSource("task.shared.policy", "packages/task/policy.md", SOURCE_HASH_B),
+            ArtifactSource("task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A),
+            ArtifactSource("task.shared.policy", "policy.md", SOURCE_HASH_B),
         )
         first = _request(
             sources=sources,
@@ -60,7 +60,7 @@ class ProviderArtifactTests(unittest.TestCase):
 
     def test_v1_0_default_stays_exact_and_v1_1_carries_immutable_semantic_metadata(self):
         source = ArtifactSource(
-            "task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A)
+            "task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A)
         semantic = {"z": {"second": [2, 1], "first": "one"}, "a": "first"}
         old_positional_request = ArtifactRenderRequest(
             "task.plan-run.codex-skill", (source,),
@@ -82,7 +82,7 @@ class ProviderArtifactTests(unittest.TestCase):
 
     def test_rejects_unsupported_contract_version(self):
         source = ArtifactSource(
-            "task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A)
+            "task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A)
         with self.assertRaisesRegex(ValueError, "unsupported artifact contract version"):
             _request(sources=(source,), contract_version="1.2.0")
 
@@ -95,7 +95,7 @@ class ProviderArtifactTests(unittest.TestCase):
                     b"artifact-id: task.plan-run.codex-skill\n---\nprint('ok')\n")
 
         result = plan_artifact_render(_request(
-            sources=(ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A),),
+            sources=(ArtifactSource("task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A),),
             renderer=renderer,
         ))
         self.assertEqual(calls, ["task.plan-run.codex-skill"])
@@ -125,7 +125,7 @@ class ProviderArtifactTests(unittest.TestCase):
         self.assertEqual(result.provenance.managed_boundary, ("managed-blocks", ("common", "codex")))
 
     def test_rejects_malformed_or_ambiguous_override_layers(self):
-        source = ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A)
+        source = ArtifactSource("task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A)
         invalid_layers = (
             ({"id": "project", "order": 0, "provenance": {"path": "x"}},),
             ({"id": "project", "owner": "project", "order": True,
@@ -142,7 +142,7 @@ class ProviderArtifactTests(unittest.TestCase):
                     _request(sources=(source,), override_layers=layers)
 
     def test_capability_requirements_contribute_to_the_source_envelope(self):
-        source = ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A)
+        source = ArtifactSource("task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A)
         native = _request(sources=(source,))
         adapted_adapter = ArtifactAdapterIdentity(
             "task.codex-skill", "1.0.0", ProviderId.CODEX, "1.0.0",
@@ -170,7 +170,7 @@ class ProviderArtifactTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ArtifactTarget("x", ("managed-blocks", ()))
         request = _request(
-            sources=(ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", SOURCE_HASH_A),),
+            sources=(ArtifactSource("task.command.plan-run", "commands/plan-run.md", SOURCE_HASH_A),),
             renderer=lambda _request: "text",  # type: ignore[return-value]
         )
         with self.assertRaises(TypeError):

@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+from core.provider.manifest import default_manifest_path
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
                   ResolvedProviderConfig,
                   load_provider_manifest, provider_config_catalog,
@@ -471,7 +472,7 @@ def resolve_provider_config(config, catalog: ProviderConfigCatalog | None, proje
                             project_config=None, operation=None) -> ResolvedProviderConfig:
     """Thin maind carrier adapter; fleet/project precedence is owned by core."""
     if catalog is None:
-        manifest_path = Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json"
+        manifest_path = default_manifest_path()
         catalog = provider_config_catalog(load_provider_manifest(manifest_path))
     defaults, projects = provider_config_layers(config, project_id)
     project_layer = None if project_config is None else ProviderConfigLayer(

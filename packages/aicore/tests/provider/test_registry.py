@@ -1,15 +1,15 @@
 import unittest
-from pathlib import Path
 
-from core.provider.values import (CapabilityId, CapabilityRequirement, EffectiveProvider,
-                                  NativeExtensionId, ProviderDecision, ProviderId,
-                                  SupportLevel)
-from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
-                                    ArtifactSource, ArtifactTarget)
-from core.provider.lock import ArtifactLock, LOCK_SCHEMA_VERSION
-from core.provider.config import CapabilitySupport, NativeExtension, ProviderConfigCatalog
-from core.provider.registry import (AdapterCatalog, AdapterDescriptor, RegistrySeverity)
-from core.provider.manifest import load_provider_manifest, provider_config_catalog
+from aicore.provider.values import (CapabilityId, CapabilityRequirement, EffectiveProvider,
+                                    NativeExtensionId, ProviderDecision, ProviderId,
+                                    SupportLevel)
+from aicore.artifacts.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+                                       ArtifactSource, ArtifactTarget)
+from aicore.artifacts.lock import ArtifactLock, LOCK_SCHEMA_VERSION
+from aicore.provider.config import CapabilitySupport, NativeExtension, ProviderConfigCatalog
+from aicore.provider.registry import (AdapterCatalog, AdapterDescriptor, RegistrySeverity)
+from aicore.provider.manifest import (default_manifest_path, load_provider_manifest,
+                                      provider_config_catalog)
 
 
 class ProviderRegistryTests(unittest.TestCase):
@@ -49,9 +49,8 @@ class ProviderRegistryTests(unittest.TestCase):
         self.assertEqual(left.descriptors, right.descriptors)
 
     def test_root_manifest_projection_gates_level_before_render(self):
-        root = Path(__file__).resolve().parents[3]
         catalog = provider_config_catalog(load_provider_manifest(
-            root / "configs/provider-capabilities.json"))
+            default_manifest_path()))
         descriptor = self._descriptor(requirements=(CapabilityRequirement(
             self.skills, (SupportLevel.ADAPTED,)),))
         result = AdapterCatalog((descriptor,)).select(

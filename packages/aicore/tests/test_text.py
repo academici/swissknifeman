@@ -1,9 +1,9 @@
-"""Tests core.text.parse_frontmatter — single superset-parser frontmatter.
+"""Tests aicore.util.text.parse_frontmatter — single superset-parser frontmatter.
 
-Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
+Launch: bash packages/aicore/scripts/test.sh"""
 import unittest
 
-from core import parse_frontmatter, parse_inline_list
+from aicore.util.text import parse_frontmatter, parse_inline_list
 
 
 class TestParseFrontmatter(unittest.TestCase):

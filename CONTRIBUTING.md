@@ -39,7 +39,8 @@ Before each PR — green validation on affected packages + smoke `core`:
 bash packages/skiller/scripts/validate.sh
 bash packages/harness/scripts/validate.sh
 bash packages/maind/scripts/validate.sh
-PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # foundation core
+bash packages/aicore/scripts/test.sh -v                        # foundation (aicore)
+PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # transitional core shim
 ```
 
 `validate.sh` of each packet runs `py_compile`, `bash -n`, checks JSON and unit tests

@@ -1,13 +1,13 @@
 """Tests assert_safe_replace_target/atomic_write_text (P8.7) — 4 target class + tmp-cleanup.
 
-core/tests/test_core.py already covers creating parents/indent/mode/tmp-cleanup when
+aicore tests/test_util.py already covers creating parents/indent/mode/tmp-cleanup when
 os.replace-falling; here is ONLY a new goal invariant (do not duplicate)."""
 import os
 import tempfile
 import unittest
 from pathlib import Path
 
-from core.io import assert_safe_replace_target, atomic_write_text
+from aicore.util.io import assert_safe_replace_target, atomic_write_text
 
 
 class TestAssertSafeReplaceTarget(unittest.TestCase):

@@ -9,11 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import hashlib
-import json
 import re
 from typing import Literal
 
+from ..util.digest import digest_json
 from .status import StatusDiagnostic
 
 
@@ -235,7 +234,7 @@ def evaluate_project(*, project_id: str, requirements: tuple[HealthRequirement, 
         rows=ordered_rows,
         diagnostics=ordered_diagnostics,
         aggregate=aggregate,
-        result_digest=_digest(unsigned),
+        result_digest=digest_json(unsigned),
     )
 
 
@@ -287,7 +286,7 @@ def evaluate_fleet(*, required_project_ids: tuple[str, ...],
         projects=ordered_projects,
         diagnostics=ordered_diagnostics,
         aggregate=aggregate,
-        result_digest=_digest(unsigned),
+        result_digest=digest_json(unsigned),
     )
 
 
@@ -373,11 +372,6 @@ def _diagnostic_value(value: StatusDiagnostic) -> dict[str, str]:
         "message": value.message,
         "source_ref": value.source_ref,
     }
-
-
-def _digest(value: dict[str, object]) -> str:
-    raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    return "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 def _require_identifier(value: object, label: str) -> None:

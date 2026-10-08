@@ -5,14 +5,13 @@ provide immutable semantic input and a renderer; P2.2 owns all target writes,
 locks, drift classification, and repair.
 """
 from dataclasses import dataclass
-from hashlib import sha256
-import json
 import re
 from pathlib import PurePosixPath
 from types import MappingProxyType
 from typing import Callable, Mapping
 
 from ..provider.values import CapabilityRequirement, ProviderId
+from ..util.digest import canonical_json_bytes, canonical_value, sha256_tagged
 
 
 _DEFAULT_CONTRACT_VERSION = "1.0.0"
@@ -184,17 +183,7 @@ class ArtifactRenderResult:
     provenance: ArtifactProvenance
 
 
-def canonical_json_bytes(value: object) -> bytes:
-    """Serialize a JSON value with the frozen UTF-8 canonical source rules."""
-    return json.dumps(_json_value(value), sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=False).encode("utf-8")
-
-
-def sha256_digest(bytes_: bytes) -> str:
-    """Return the contract's lowercase, tagged SHA-256 digest."""
-    if not isinstance(bytes_, bytes):
-        raise TypeError("bytes_ must be bytes")
-    return f"sha256:{sha256(bytes_).hexdigest()}"
+sha256_digest = sha256_tagged  # public name kept for the artifact contract
 
 
 def validate_target_path(path: str) -> str:
@@ -278,7 +267,7 @@ def _immutable_mapping(value: object, label: str) -> tuple[tuple[str, object], .
         raise TypeError(f"{label} must be a mapping")
     if not all(isinstance(key, str) for key in value):
         raise TypeError(f"{label} keys must be strings")
-    return tuple((key, _json_value(item)) for key, item in sorted(value.items()))
+    return tuple((key, canonical_value(item)) for key, item in sorted(value.items()))
 
 
 def _validate_semantic_metadata(value: object) -> tuple[tuple[str, object], ...]:
@@ -331,7 +320,7 @@ def _validate_override_layers(value: object, label: str) -> tuple[tuple[tuple[st
         provenance = data["provenance"]
         if provenance in ({}, (), [], None, ""):
             raise ValueError("override provenance must be non-empty")
-        _json_value(provenance)
+        canonical_value(provenance)
         if data["id"] in ids or data["owner"] in owners or order in orders:
             raise ValueError("override layers must have unique IDs, owners, and orders")
         ids.add(data["id"])
@@ -348,20 +337,6 @@ def _is_pairs(value: object) -> bool:
 
 def _mapping_from_pairs(value: tuple[tuple[str, object], ...]) -> dict[str, object]:
     return {key: item for key, item in value}
-
-
-def _json_value(value: object) -> object:
-    if value is None or isinstance(value, (str, int, bool)):
-        return value
-    if isinstance(value, float):
-        raise TypeError("canonical JSON values must not use floats")
-    if isinstance(value, Mapping):
-        if not all(isinstance(key, str) for key in value):
-            raise TypeError("canonical JSON object keys must be strings")
-        return {key: _json_value(item) for key, item in sorted(value.items())}
-    if isinstance(value, (tuple, list)):
-        return tuple(_json_value(item) for item in value)
-    raise TypeError("value is not canonical JSON data")
 
 
 def _require_identifier(value: object, label: str) -> None:

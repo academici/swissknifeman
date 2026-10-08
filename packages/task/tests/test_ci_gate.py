@@ -49,11 +49,13 @@ class TaskCiGateTests(unittest.TestCase):
         self.assertEqual(self.jobs["task"]["runs"].count(command), 1)
 
     def test_task_sources_and_tests_are_in_the_authoritative_ruff_step(self):
+        # The lint job calls scripts/lint.sh; the pinned ruff command and the path list live in that script.
         runs = self.jobs["lint"]["runs"]
-        ruff = [command for command in runs if "ruff==" in command and " check " in command]
-        self.assertEqual(len(ruff), 1)
-        self.assertIn("packages/task/lib", ruff[0])
-        self.assertIn("packages/task/tests", ruff[0])
+        self.assertEqual([command for command in runs if "scripts/lint.sh" in command], ["bash scripts/lint.sh"])
+        script = (ROOT / "scripts/lint.sh").read_text(encoding="utf-8")
+        self.assertEqual(script.count('pipx run "ruff==$RUFF_VERSION" check'), 1)
+        self.assertIn("packages/task/lib", script)
+        self.assertIn("packages/task/tests", script)
 
 
 if __name__ == "__main__":

@@ -14,4 +14,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   replaces hard-coded repository paths in consumers.
 - **`scripts/test.sh` and `scripts/validate.sh`**: the module tests and the fast structural checks run on their own,
   without any other module.
+- **`digest/v1` contract and `aicore.util.digest`**: canonical JSON bytes and the tagged SHA-256 digest with
+  language-neutral test vectors (`schemas/digest/v1/vectors.json`). `aicore.artifacts.artifact`,
+  `provider.control_plane` and `provider.health` use it instead of their own copies; the digests they produce are
+  unchanged for the values they hash. Floats and non-string object keys are now rejected everywhere.
+- **`aicore.util.schema`**: the closed-profile JSON Schema validator, with `load_contract` for a
+  `<contract>/v<N>/` directory; `scripts/ecosystem-units.py` validates all aicore contracts with it.
 - **Architecture tests**: `aicore` imports only itself and the standard library; `usage.py` stays self-sufficient.

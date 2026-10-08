@@ -10,7 +10,8 @@
   "provides": {
     "contracts": [
       {"id": "urn:swissknifeman:aicore:unit", "path": "schemas/unit/v1", "version": "v1", "stability": "development"},
-      {"id": "urn:swissknifeman:aicore:check-result", "path": "schemas/check-result/v1", "version": "v1", "stability": "development"}
+      {"id": "urn:swissknifeman:aicore:check-result", "path": "schemas/check-result/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:digest", "path": "schemas/digest/v1", "version": "v1", "stability": "development"}
     ]
   },
   "dev": {

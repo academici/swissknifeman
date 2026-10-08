@@ -131,14 +131,14 @@ def build_context(root: Path) -> Context:
 
 
 def schema_validator():
-    """Closed-profile validator of the orchestration module (the hub's copy, until the foundation owns one)."""
-    lib = str(HUB_ROOT / "packages" / "orch" / "lib")
+    """Closed-profile validator of the foundation (``aicore.util.schema``)."""
+    lib = str(HUB_ROOT / "packages" / "aicore" / "lib")
     if lib not in sys.path:
         sys.path.insert(0, lib)
     try:
-        from orch import schema  # type: ignore
+        from aicore.util import schema  # type: ignore
     except ImportError as exc:
-        raise EnvironmentProblem(f"cannot import orch.schema from {lib}: {exc}") from exc
+        raise EnvironmentProblem(f"cannot import aicore.util.schema from {lib}: {exc}") from exc
     return schema
 
 
@@ -379,7 +379,7 @@ def _check_paths(ctx, folder, manifest, doc) -> list:
 
 
 def check_aicore_schemas(ctx: Context) -> list:
-    """The aicore schemas must load under the closed profile (draft 2020-12, no free-form keywords)."""
+    """Every aicore contract must load under the closed profile (draft 2020-12, no free-form keywords)."""
     if not (ctx.root / "packages" / "aicore").is_dir():
         return []
     schema = schema_validator()
@@ -387,10 +387,11 @@ def check_aicore_schemas(ctx: Context) -> list:
     for kind, rel in AICORE_SCHEMAS:
         if not (ctx.root / rel).is_dir():
             issues.append(Issue("SCHEMA_PROFILE", rel, "schema directory is missing"))
-            continue
+    schemas_dir = ctx.root / "packages" / "aicore" / "schemas"
+    for directory in sorted(schemas_dir.glob("*/v*")):
+        rel = directory.relative_to(ctx.root).as_posix()
         try:
-            registry = schema.load_registry(ctx.root / rel, urn_prefix=AICORE_SCHEMA_URN_PREFIX, kinds=(kind,))
-            registry.for_kind(kind)
+            schema.load_contract(directory)
         except schema.SchemaProfileError as exc:
             issues.append(Issue("SCHEMA_PROFILE", rel, str(exc)))
     return issues

@@ -8,11 +8,10 @@ control-plane layers.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import hashlib
-import json
 import re
 from typing import Mapping
 
+from ..util.digest import canonical_json_bytes, digest_json, is_tagged_digest
 from .config import ProviderConfigCatalog, ResolvedProviderConfig, effective_projection
 from .values import ConfigProvenance, ConfigSource, ProviderId
 
@@ -60,9 +59,9 @@ class DesiredSnapshot:
         if tuple(item.effective_path for item in self.provenance) != tuple(
                 sorted(item.effective_path for item in self.provenance)):
             raise ValueError("provenance must be sorted by effective path")
-        if not _is_digest(self.semantic_digest):
+        if not is_tagged_digest(self.semantic_digest):
             raise ValueError("semantic_digest must be a sha256 digest")
-        if self.semantic_digest != _digest(self._unsigned_value()):
+        if self.semantic_digest != digest_json(self._unsigned_value()):
             raise ValueError("semantic_digest does not match canonical desired state")
 
     def _unsigned_value(self) -> dict[str, object]:
@@ -127,7 +126,7 @@ def resolve_desired_snapshot(*, project_id: str, config: ResolvedProviderConfig,
             capability_catalog_version=catalog.catalog_version,
             selection=selection,
             provenance=provenance,
-            semantic_digest=_digest(unsigned),
+            semantic_digest=digest_json(unsigned),
         ), ())
     except (TypeError, ValueError) as error:
         return _failure("PCP_PROVENANCE_INVALID", str(error))
@@ -165,7 +164,7 @@ def canonical_desired_bytes(snapshot: DesiredSnapshot) -> bytes:
     """Return the canonical serialized desired-state snapshot."""
     if not isinstance(snapshot, DesiredSnapshot):
         raise TypeError("snapshot must be DesiredSnapshot")
-    return _canonical_bytes(snapshot.to_dict())
+    return canonical_json_bytes(snapshot.to_dict())
 
 
 def _failure(code: str, message: str) -> ControlPlaneResolution:
@@ -226,18 +225,6 @@ def _parse_provenance(value: object) -> ConfigProvenance:
                      _string(source["carrier"]), _string(source["path"])),
         _string(value["source_path"]), _bool(value["explicit"]),
     )
-
-
-def _canonical_bytes(value: object) -> bytes:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-
-
-def _digest(value: object) -> str:
-    return "sha256:" + hashlib.sha256(_canonical_bytes(value)).hexdigest()
-
-
-def _is_digest(value: object) -> bool:
-    return isinstance(value, str) and bool(re.fullmatch(r"sha256:[0-9a-f]{64}", value))
 
 
 def _is_v1(value: object) -> bool:

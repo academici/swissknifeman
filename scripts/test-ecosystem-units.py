@@ -41,6 +41,9 @@ class SchemaFixtureTests(unittest.TestCase):
     def setUpClass(cls):
         cls.schema = eu.schema_validator()
 
+    def test_validator_is_the_foundation_one(self):
+        self.assertEqual(self.schema.__name__, "aicore.util.schema")
+
     def registry(self, kind: str):
         return self.schema.load_registry(AICORE_SCHEMAS / kind / "v1", urn_prefix=eu.AICORE_SCHEMA_URN_PREFIX,
                                          kinds=(kind,))
@@ -336,6 +339,21 @@ class ManifestCheckTests(unittest.TestCase):
         schema = json.loads(path.read_text(encoding="utf-8"))
         schema["properties"]["id"]["format"] = "uri"
         self.tree.write_json("packages/aicore/schemas/unit/v1/unit.schema.json", schema)
+        self.assertFails("SCHEMA_PROFILE")
+
+    def test_broken_digest_contract_fails_profile(self):
+        path = "packages/aicore/schemas/digest/v1/digest.schema.json"
+        schema = json.loads((self.tree.root / path).read_text(encoding="utf-8"))
+        schema["minimum"] = 0
+        self.tree.write_json(path, schema)
+        result = self.assertFails("SCHEMA_PROFILE")
+        self.assertIn("unsupported keyword 'minimum'", result.stderr)
+
+    def test_contract_id_must_match_its_directory(self):
+        path = "packages/aicore/schemas/digest/v1/digest.schema.json"
+        schema = json.loads((self.tree.root / path).read_text(encoding="utf-8"))
+        schema["$id"] = "urn:swissknifeman:aicore:digest:v2"
+        self.tree.write_json(path, schema)
         self.assertFails("SCHEMA_PROFILE")
 
     def test_config_shape(self):

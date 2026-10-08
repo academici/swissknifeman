@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.3",
   "title": "Контракт digest и единые реализации digest и валидатора схем в aicore",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Схема digest/v1 с правилами канонического JSON и языконезависимыми тест-векторами; aicore.util.digest как единственная реализация внутри aicore (artifact, control_plane, health переходят на неё); aicore.util.schema — закрытый профиль валидатора (обобщение копий orch и task) с load_contract; хаб-скрипт ecosystem-units.py переходит на валидатор aicore; тест примеров всех схем aicore.",
   "why": "E13: «Канонический digest — одна реализация» и валидатор схем для контрактов aicore (D28: хаб пользуется orch.schema только до появления валидатора в aicore). Сейчас пять копий digest и три копии валидатора. Риск — тонкая разница правил (строгий vs нестрогий JSON) меняет digest-ы lock-файлов и снапшотов: тест-векторы, полный набор тестов aicore и потребителей, golden check.",
   "scope": {
@@ -218,6 +218,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T06:02:31Z"
+  "result": {
+    "started_at": "2026-10-08T09:53:39Z",
+    "finished_at": "2026-10-08T10:23:19Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "c3607acf-9f26-478f-a88c-f0770ff976d6"
+    },
+    "notes": "util.digest (одна реализация, реэкспорт в artifact, control_plane и health переведены), util.schema с load_contract, схема digest/v1 с 8 векторами, хаб на валидаторе aicore, тесты digest/schema/contracts/architecture, unit.json, README, contracts.md. ruff недоступен локально (нет pipx), lint не прогонялся.",
+    "deviations": [
+      "ci-gate тест task обновлён под scripts/lint.sh (красный после P3.2); хаб обходит все контракты aicore через load_contract"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T10:23:19Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T10:23:19Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T10:23:19Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T10:23:19Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T10:23:19Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T10:23:19Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T10:23:19Z"
 }

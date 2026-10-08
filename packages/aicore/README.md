@@ -8,6 +8,8 @@ The package holds:
 - `unit.json` — the manifest of this module, written against its own `unit/v1` schema.
 - `schemas/unit/v1` — the manifest every module ships as `packages/<id>/unit.json`.
 - `schemas/check-result/v1` — the common result of one diagnostic check.
+- `schemas/digest/v1` — the tagged SHA-256 digest of canonical JSON, with language-neutral test vectors;
+  `aicore.util.digest` is the one implementation and `aicore.util.schema` the closed-profile validator of all schemas.
 - `lib/aicore/{util,provider,artifacts,usage}` — the shared stdlib-only code moved from the root `core/` package
   (import the subpackages directly; there is no flat facade), and `configs/provider-*.json` — the provider data,
   found from the package file.

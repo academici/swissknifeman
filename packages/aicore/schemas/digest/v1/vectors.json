@@ -1,0 +1,82 @@
+{
+  "description": "Language-neutral test vectors of digest/v1: canonical is the UTF-8 text of the canonical bytes, digest is sha256 of those bytes.",
+  "vectors": [
+    {
+      "name": "empty-object",
+      "input": {},
+      "canonical": "{}",
+      "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "name": "nested-unsorted-keys",
+      "input": {
+        "b": {
+          "z": 1,
+          "a": [
+            1,
+            2
+          ]
+        },
+        "a": null
+      },
+      "canonical": "{\"a\":null,\"b\":{\"a\":[1,2],\"z\":1}}",
+      "digest": "sha256:f65a883ee7afb23bf88dd8987b5919f4a66897b8cbe16029d18ba6b9290e401d"
+    },
+    {
+      "name": "cyrillic-not-escaped",
+      "input": {
+        "имя": "значение"
+      },
+      "canonical": "{\"имя\":\"значение\"}",
+      "digest": "sha256:1e72da2d0665285d842cfe6a298ebe25512120acc27a5d8cd4909541eb2f0c26"
+    },
+    {
+      "name": "array-null-bool-int",
+      "input": [
+        null,
+        true,
+        false,
+        0,
+        -7,
+        "x"
+      ],
+      "canonical": "[null,true,false,0,-7,\"x\"]",
+      "digest": "sha256:877c04f0475010486e3dce7c28d5cc6a97ced3dd57f5c4bdf52334593971cb28"
+    },
+    {
+      "name": "empty-string",
+      "input": "",
+      "canonical": "\"\"",
+      "digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+    },
+    {
+      "name": "large-integer",
+      "input": {
+        "n": 12345678901234567890
+      },
+      "canonical": "{\"n\":12345678901234567890}",
+      "digest": "sha256:8716eed5e3ea73042324b69568de421fc67f1547923dcb85ab0d1e156d6e0588"
+    },
+    {
+      "name": "string-escapes",
+      "input": {
+        "c": "a\"b\\c\n\u001fé😀"
+      },
+      "canonical": "{\"c\":\"a\\\"b\\\\c\\n\\u001fé😀\"}",
+      "digest": "sha256:456ffde97516c6b3b5cc614da37e9f724defb90b8f28d9b5b96a34b6a66def02"
+    },
+    {
+      "name": "code-point-key-order",
+      "input": {
+        "é": 1,
+        "e": 2,
+        "Z": 3,
+        "a": 4,
+        "😀": 5,
+        "￿": 6
+      },
+      "canonical": "{\"Z\":3,\"a\":4,\"e\":2,\"é\":1,\"￿\":6,\"😀\":5}",
+      "digest": "sha256:e6caaab773a18a66a3b48ffc97adb76a765cf191b9b32c4aa59e70bec2bf98b0"
+    }
+  ]
+}

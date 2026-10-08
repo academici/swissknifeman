@@ -19,6 +19,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | --- | --- | --- | --- | --- |
 | Module manifest `unit/v1` | `urn:swissknifeman:aicore:unit:v1`, `packages/aicore/schemas/unit/v1` | aicore | development | manifest of external plugins and `permissions` enforcement: P6 |
 | Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | modules still print text in `doctor`; conversion P11, aggregation P12 |
+| Digest `digest/v1` | `urn:swissknifeman:aicore:digest:v1`, `packages/aicore/schemas/digest/v1` | aicore | development | `exec` and plan digests still use the bare-hex form and their own copies; they adopt it with their modules: P9, P10 |
 | Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
 | Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/task/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
 | Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
@@ -48,7 +49,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | PolicyDecision | refusals `CODE: message`, run-policy | orch | structured decision inside the launch plan: P10 |
 | EffectRequest / Receipt | `exec/v1` `effect-receipt` | orch | `effect_id` as idempotency key: P10 |
 | Error taxonomy | scattered codes; classes `quota`, `auth`, `timeout` in the engine port | aicore (provider) and modules | one registry of classes and codes: P3 |
-| Canonical digest | sha256 of canonical JSON in `exec` and in plan digests | aicore | one implementation: P3 |
+| Canonical digest | `digest/v1`; implementation `aicore.util.digest` (canonical JSON bytes, tagged sha256, test vectors) | aicore | development | `exec` and plan digests move onto it: P9, P10 |
 | Schema evolution | rule of `exec/v1` | aicore | policy per contract (below) |
 | Ecosystem event envelope | `{id, ts, source, type, project, subject, data}` | aicore (ext) | CloudEvents-style fields, envelope apart from data: P6 |
 | Check evidence | `exec/v1` `check-evidence`, plan evidence | orch and planner | none |
@@ -91,6 +92,21 @@ Fields: `$schema`, `id`, `title`, `kind` (`foundation`, `capability`, `bridge`),
 `doctor`, `config`, `events`, `overlay_slots`, `extension_points`, `ports`), and optional `permissions`, `protocol`,
 `dev`. Collections are lists of records, never maps with arbitrary keys, because the closed profile of the validator
 cannot express such maps ([ADR 0025](decisions/0025-unit-manifest-shape-and-aicore-skeleton.md)).
+
+### digest/v1
+
+| Aspect | Policy |
+| --- | --- |
+| Reads | tagged form `sha256:<64 lowercase hex>`; the bare hex of `exec/v1` is a legacy form named in `$defs.hex` |
+| Writes | tagged form only, over the canonical JSON bytes (rules in the schema description) |
+| Upcast | none |
+| Deprecation window | set with `v2` |
+| Unknown fields | not applicable (a string) |
+| Fixtures | `packages/aicore/schemas/digest/v1/examples/{valid,invalid}`; test vectors in `vectors.json` |
+
+Canonical JSON: keys sorted by code point, no whitespace, UTF-8 with only the JSON-mandatory escapes, floats
+rejected. A change of these rules is a breaking change and creates `digest/v2`. Closed-profile validation of every
+aicore schema is `aicore.util.schema`; the hub script `scripts/ecosystem-units.py` uses it.
 
 ### check-result/v1
 

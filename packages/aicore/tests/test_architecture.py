@@ -1,5 +1,6 @@
 """Architecture checks: aicore imports only itself and the standard library."""
 import ast
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -72,6 +73,24 @@ class TestImportBoundary(unittest.TestCase):
         for path in sorted((LIB / "provider").glob("*.py")):
             for target, line in aicore_targets(path):
                 self.assertIn(target, ("util", "artifacts"), f"{path.name}:{line}")
+
+    def test_one_canonical_json_and_one_digest_implementation(self):
+        """Canonical JSON and tagged SHA-256 of JSON live in util/digest.py only."""
+        definitions, hashing = [], []
+        for path in sorted(LIB.rglob("*.py")):
+            text = path.read_text(encoding="utf-8")
+            where = path.relative_to(LIB).as_posix()
+            if re.search(r"^\s*def canonical_json_bytes\b", text, re.M):
+                definitions.append(where)
+            if re.search(r"sha256\(\s*json\.dumps\(", text):
+                hashing.append(where)
+        self.assertEqual(definitions, ["util/digest.py"])
+        self.assertEqual(hashing, [])
+
+    def test_schema_validator_is_defined_once(self):
+        defining = [path.relative_to(ROOT).as_posix() for path in sorted(LIB.rglob("*.py"))
+                    if "def load_registry" in path.read_text(encoding="utf-8")]
+        self.assertEqual(defining, ["lib/aicore/util/schema.py"])
 
 
 if __name__ == "__main__":

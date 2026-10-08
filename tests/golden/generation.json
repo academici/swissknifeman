@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "7207ebac899d",
-  "reason": "runbook skill names the moved gitignore policy path (packages/aicore/configs); projections regenerated",
+  "captured_from": "09f447af7a95",
+  "reason": "swissknifeman config group in the help header",
   "generators": [
     {
       "id": "skiller-registry",

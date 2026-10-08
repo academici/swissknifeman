@@ -8,6 +8,7 @@
   "destination": "own-repo",
   "requires": [],
   "provides": {
+    "cli": ["bin/aicore"],
     "contracts": [
       {"id": "urn:swissknifeman:aicore:unit", "path": "schemas/unit/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:check-result", "path": "schemas/check-result/v1", "version": "v1", "stability": "development"},

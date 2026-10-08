@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.4",
   "title": "CLI aicore config и swissknifeman config: show, explain, set, unset, init, example, paths; проверка config.example.toml в ecosystem-units",
-  "status": "todo",
+  "status": "done",
   "summary": "packages/aicore/bin/aicore и python -m aicore (группа config); обнаружение модулей (SKM_UNITS_PATH или раскладка хаба); генерация config.example.toml из схемы и init слоя машины или проекта; маршрут config в bin/swissknifeman с перезахватом golden справки; проверка config-example (CONFIG_EXAMPLE_DRIFT) в scripts/ecosystem-units.py check и её тест.",
   "why": "Архитектура §4–§5, D14, R04: пользователь видит итог и происхождение значений и правит слой командой; пример конфига генерируется и проверяется на расхождение. Риски: (1) init или set, затирающий ручной файл, — отказ без --force и бэкап; (2) изменение вывода существующих команд хаба — golden check, перезахват только справки.",
   "scope": {
@@ -194,6 +194,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T11:40:28Z"
+  "result": {
+    "started_at": "2026-10-08T13:00:55Z",
+    "finished_at": "2026-10-08T13:08:37Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "7acf55b3-3f0e-4acc-8be8-74ea22941843"
+    },
+    "notes": "aicore config show/explain/set/unset/init/example/paths (bin/aicore, python -m aicore), aicore.config.units и example, маршрут swissknifeman config, проверка config-example (CONFIG_EXAMPLE_DRIFT) в ecosystem-units; 660 тестов aicore, 117 тестов ecosystem-units",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T13:08:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T13:08:37Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T13:08:37Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T13:08:37Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T13:08:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T13:08:37Z"
 }

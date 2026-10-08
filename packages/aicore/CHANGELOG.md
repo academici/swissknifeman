@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 ## [Unreleased]
 
 ### Added
+- **`aicore config` command line** (`bin/aicore`, `python3 -m aicore`): `show`, `explain` (text and the
+  `config-explain/v1` JSON), `set`, `unset`, `init`, `example` and `paths`. Writes go through the comment-keeping
+  editor with a backup and an atomic replace; `init` and `example --write` never touch an existing hand-made file
+  without `--force`. Exit codes: 0 success, 1 configuration error or refusal, 2 usage error.
+- **Module discovery and example generation** (`aicore.config.units`, `aicore.config.example`): modules with
+  `provides.config` are found through `SKM_UNITS_PATH` or the folder holding the foundation, and a deterministic
+  `config.example.toml` is rendered from each schema.
 - **Locator fragment** `scripts/aicore-locator.sh`: the one canonical way for a wrapper or test runner to find
   `aicore` (`AICORE_ROOT`, `_vendor/aicore`, sibling), with `AICORE_NOT_FOUND` and exit code 2 on a miss.
 - **README** with the layout, subsystems, locator, compatibility shim, contracts and tests.

@@ -26,7 +26,7 @@ packages/aicore/
 | `aicore.provider` | provider capability manifests, configuration layers, control plane, health, adapter registry, request lifecycle, `errors` (failure classes and classification by data), `models` (model catalog); data in `configs/` found from the package file (`provider.data.config_path`, `manifest.default_manifest_path()`) | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile | skiller, harness, maind |
 | `aicore.state` | standard machine and project places (`SKM_HOME`, XDG, `.swissknifeman/`), legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |
-| `aicore.config` | module settings from layers (`resolve`): schema defaults, machine file, project file, extra layers, environment, `--config` file, flags; `explain` (origin of every value), secret references (`Secret`, `register_secret_resolver`), `edit_layer_file` (comment-preserving write with backup); the one TOML entry (`toml`, `toml_edit`) | all modules |
+| `aicore.config` | module settings from layers (`resolve`): schema defaults, machine file, project file, extra layers, environment, `--config` file, flags; `explain` (origin of every value), secret references (`Secret`, `register_secret_resolver`), `edit_layer_file` (comment-preserving write with backup); module discovery and `config.example.toml` generation; the `aicore config` CLI; the one TOML entry (`toml`, `toml_edit`) | all modules |
 | `aicore.usage` | one accumulator of tokens parsed from provider logs; self-sufficient, so it can be vendored byte for byte | analyst, harness, skiller |
 
 ## Finding aicore

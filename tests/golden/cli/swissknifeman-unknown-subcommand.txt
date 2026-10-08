@@ -12,6 +12,7 @@ Groups (canonical):
   env <args>      → harness  (environment: permissions, mcp, hooks — full passthrough)
   maind <args>    → maind    (hub: memory, graph, onboard, deploy, sync, health, …)
   analyst <args>  → analyst  (training: digest, review, promote, deprecate, doctor)
+  config <args>   → aicore    (layered config: show, explain, set, unset, init, example, paths)
   setup <project> → maind onboard (full onboarding: skills+environment+memory+graph)
   setup --machine → scripts/bootstrap-machine.sh (deploying a machine with one command)
   doctor          → diagnostics of all packages (fan-out)

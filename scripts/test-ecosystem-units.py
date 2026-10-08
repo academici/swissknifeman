@@ -512,6 +512,54 @@ class SchemaCheckTests(unittest.TestCase):
         self.assertEqual(self.tree.check().returncode, 0)
 
 
+class ConfigExampleTests(unittest.TestCase):
+    SCHEMA = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:swissknifeman:alpha:config:v1",
+        "type": "object", "additionalProperties": False, "description": "Alpha settings.",
+        "properties": {"level": {"type": "integer", "minimum": 1, "default": 3, "description": "How deep."}}}
+
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.alpha["provides"]["config"] = "configs/config.schema.json"
+        self.tree.write_json("packages/alpha/configs/config.schema.json", self.SCHEMA)
+
+    def expected(self) -> str:
+        sys.path.insert(0, str(ROOT / "packages/aicore/lib"))
+        try:
+            from aicore.config import example, model
+        finally:
+            sys.path.pop(0)
+        schema = model.load_module_schema(self.tree.root / "packages/alpha/configs/config.schema.json", "alpha")
+        return example.render(schema, "configs/config.schema.json")
+
+    def test_missing_example_is_drift(self):
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("ECOSYSTEM_CONFIG_EXAMPLE_DRIFT", codes(result))
+        self.assertIn("aicore config example packages/alpha --write", result.stderr)
+
+    def test_matching_example_passes(self):
+        self.tree.write("packages/alpha/config.example.toml", self.expected())
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_edited_example_is_drift(self):
+        self.tree.write("packages/alpha/config.example.toml", self.expected().replace("= 3", "= 4"))
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("ECOSYSTEM_CONFIG_EXAMPLE_DRIFT", codes(result))
+
+    def test_invalid_schema_is_reported(self):
+        bad = dict(self.SCHEMA, required=["level"])
+        self.tree.write_json("packages/alpha/configs/config.schema.json", bad)
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("ECOSYSTEM_CONFIG_SCHEMA", codes(result))
+
+    def test_module_without_config_needs_no_example(self):
+        self.assertEqual(Tree(self).check().returncode, 0)
+
+
 class BoundaryTests(unittest.TestCase):
     def setUp(self):
         self.tree = Tree(self)

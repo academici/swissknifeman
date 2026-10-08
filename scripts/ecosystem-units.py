@@ -397,6 +397,40 @@ def check_aicore_schemas(ctx: Context) -> list:
     return issues
 
 
+def check_config_example(ctx: Context) -> list:
+    """Each module with ``provides.config`` ships the ``config.example.toml`` generated from its schema."""
+    issues: list = []
+    rendered = None
+    for folder, unit in sorted(load_units(ctx).items()):
+        provides = unit.doc.get("provides") if isinstance(unit.doc, dict) else None
+        relative = provides.get("config") if isinstance(provides, dict) else None
+        if not isinstance(relative, str) or not safe_relpath(relative):
+            continue  # a bad or missing path is reported by the manifest check
+        schema_file = ctx.root / "packages" / folder / relative
+        example = f"packages/{folder}/config.example.toml"
+        hint = f"run `aicore config example packages/{folder} --write`"
+        if not schema_file.is_file():
+            continue
+        if rendered is None:
+            schema_validator()  # puts the foundation lib on sys.path
+            from aicore.config import example as example_mod, model  # type: ignore
+            rendered = (example_mod, model)
+        example_mod, model = rendered
+        try:
+            expected = example_mod.render(model.load_module_schema(schema_file, folder), relative)
+        except Exception as exc:  # ConfigError and the like: the schema itself is wrong
+            issues.append(Issue("CONFIG_SCHEMA", f"packages/{folder}/{relative}", str(exc)))
+            continue
+        try:
+            actual = (ctx.root / example).read_text(encoding="utf-8")
+        except OSError:
+            issues.append(Issue("CONFIG_EXAMPLE_DRIFT", example, f"missing; {hint}"))
+            continue
+        if actual != expected:
+            issues.append(Issue("CONFIG_EXAMPLE_DRIFT", example, f"differs from the schema; {hint}"))
+    return issues
+
+
 def check_config(ctx: Context) -> list:
     """Shape of configs/ecosystem-units.json (only the keys the implemented checks rely on)."""
     config, issues = ctx.config, []
@@ -775,7 +809,7 @@ def render_ownership(ctx: Context) -> str:
 # ---------------------------------------------------------------------------------------------- commands
 
 CHECKS = (("config", check_config), ("manifests", check_manifests), ("aicore-schemas", check_aicore_schemas),
-          ("map", check_map), ("schemas", check_schemas))
+          ("config-example", check_config_example), ("map", check_map), ("schemas", check_schemas))
 
 
 def cmd_check(ctx: Context, args) -> int:

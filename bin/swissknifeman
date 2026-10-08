@@ -8,6 +8,7 @@
 #   env <args>      → harness  (environment: permissions, mcp, hooks — full passthrough)
 #   maind <args>    → maind    (hub: memory, graph, onboard, deploy, sync, health, …)
 #   analyst <args>  → analyst  (training: digest, review, promote, deprecate, doctor)
+#   config <args>   → aicore    (layered config: show, explain, set, unset, init, example, paths)
 #   setup <project> → maind onboard (full onboarding: skills+environment+memory+graph)
 #   setup --machine → scripts/bootstrap-machine.sh (deploying a machine with one command)
 #   doctor          → diagnostics of all packages (fan-out)
@@ -40,8 +41,9 @@ SKILLER="$ROOT/packages/skiller/bin/skiller"
 HARNESS="$ROOT/packages/harness/bin/harness"
 MAIND="$ROOT/packages/maind/bin/maind"
 ANALYST="$ROOT/packages/analyst/bin/analyst"
+AICORE="$ROOT/packages/aicore/bin/aicore"
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,20p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,21p'; }
 
 need() {  # $1 — path to package launcher
   [[ -x "$1" ]] || { echo "ERROR: package launcher not found: $1" >&2
@@ -60,6 +62,7 @@ case "$CMD" in
   release-fleet) shift; exec "$ROOT/scripts/release-fleet.sh" "$@" ;;
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
   analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
+  config)  shift; need "$AICORE"; exec "$AICORE" config "$@" ;;
   setup)
     shift
     if [[ "${1:-}" == "--machine" ]]; then

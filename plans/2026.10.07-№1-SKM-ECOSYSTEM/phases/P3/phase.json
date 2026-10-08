@@ -2,30 +2,77 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P3",
   "title": "aicore: основа — util, provider, artifacts, usage",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "packages/aicore — автономный модуль с util, provider (включая каталог моделей), artifacts, usage, перенесёнными из core с сохранением истории; core реэкспортирует aicore (shim), потребители не сломаны; bin-обёртки модулей находят aicore по правилу AICORE_ROOT → _vendor → соседняя папка.",
-  "context": "D2, D4; knowledge/architecture §3, §4. Детализируется после P2 по отчёту проверки границ. Внешнее ревью E1: тезисы E03, E13 (digest, ошибки, уровни capability), E21, E29 (knowledge/review-e1-*).",
+  "context": "D2, D4, D17, D20, D23, D28, D30; решения детализации D31 (раскладка и shim), D32 (локатор), D33 (общие контракты), D34 (каталог моделей); knowledge/aicore-p3 (факты кода, таблица переноса, контракты пунктов), knowledge/architecture §3, §4. Внешнее ревью E1: E03, E13, E21, E29, E10 (часть P3) — сопоставление в knowledge/aicore-p3 §e1. Начало фазы — sync-main и golden check в P3.1; конец — широкий прогон и push в P3.6. Ревью: requested для P3.2 и P3.3, self для P3.1 и P3.4.",
   "scope": {
     "include": [
-      "git mv core → packages/aicore",
-      "shim в core",
-      "автономные тесты aicore",
-      "packages/aicore/schemas: digest, таксономия ошибок, уровни поддержки capability"
+      "локатор aicore (AICORE_ROOT → _vendor → соседняя папка) в обёртках и раннерах",
+      "git mv core → packages/aicore: util, provider, artifacts, usage, тесты, данные провайдеров",
+      "shim core через sys.modules с прежним фасадом",
+      "автономность aicore (standalone pass)",
+      "контракты aicore/schemas: digest, error, capability-support, model-catalog",
+      "единые реализации digest и валидатора схем",
+      "первые потребители: хаб ecosystem-units, harness run worker, тест паритета task",
+      "README, ADR 0028–0031, инвентаризация контрактов"
     ],
     "exclude": [
-      "конфиг/состояние (P4)",
+      "конфиг/состояние, config_paths, gitignore_policy (P4)",
       "контент (P5)",
-      "расширения (P6)"
+      "расширения (P6)",
+      "перевод импортов потребителей на aicore (P8, P9, P11)",
+      "runs, pathology, codegraph_telemetry (P11)",
+      "принятие контрактов в orch и task (P9, P10)"
     ]
   },
   "depends_on": [
     "P2"
   ],
   "deliverables": [
-    "packages/aicore",
-    "shim core",
-    "aicore без зависимостей"
+    "packages/aicore с util, provider, artifacts, usage и данными провайдеров",
+    "shim core с тестом идентичности",
+    "aicore автономен; потребители не сломаны",
+    "контракты digest, error, capability-support, model-catalog с реализациями",
+    "локатор aicore в модулях"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P3.5",
+    "P3.6"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P3.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P3.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P3.3",
+        "P3.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P3.5",
+        "P3.6"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

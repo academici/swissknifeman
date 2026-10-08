@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D33",
+  "title": "Общие контракты P3: digest, error, capability-support, model-catalog и их реализации",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Какие общие контракты и реализации P3 кладёт в aicore (D17, D20; инвентаризация E13: digest, таксономия ошибок, уровни поддержки capability) и как их принимают модули, которые ещё не зависят от aicore (orch без requires; task-мост)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Четыре схемы в packages/aicore/schemas/<contract>/v1/ с examples/valid|invalid: digest (тегированный sha256:<64 hex>; правила канонического JSON: ключи отсортированы, разделители ',' ':', UTF-8 без экранирования, ключи — строки, float запрещён; файл vectors.json — языконезависимые тест-векторы вход → канонические байты → digest), error (классы D20: authentication, authorization, quota, rate_limit, invalid_request, model_unavailable, content_policy, transport, provider_internal, timeout, unknown; запись {class, code, retryable, retry_after_s, scope, safe_message, provider}), capability-support (уровни native|adapted|unsupported, источник declared|probed|inferred, измерение feature|resource|policy|health, запись с observed_at, fresh_until, remediation), model-catalog (по провайдеру class_selectors, effort_selectors, model_inventory). Реализации: aicore.util.digest (одна реализация; provider.artifact, control_plane, health переходят на неё), aicore.util.schema (закрытый профиль — обобщение копий orch.schema и task.plan.schema; хаб-скрипт ecosystem-units.py переходит на него сразу), aicore.provider.errors (реестр классов, классификация сбоя по данным configs/provider-errors.json, не по коду), aicore.provider.models, перечисления в aicore.provider.values. Реальные потребители в P3: внутренние модули aicore, ecosystem-units.py (валидатор), harness run worker (классификация квоты через aicore вместо локальных текстовых маркеров), task (тест паритета каталога моделей). Принятие в orch (digest exec/v1, валидатор, классы ошибок, capability-record) — P10; в task (валидатор плана, digest моста) — P9/P10.",
+      "pros": "Каждый контракт со схемой (E03) и хотя бы одним потребителем (§1.7); orch не получает зависимость раньше своей фазы"
+    },
+    {
+      "id": "B",
+      "text": "Только схемы, реализации — в фазах потребителей",
+      "cons": "Третья копия валидатора и digest появится раньше единой; E13 «одна реализация → P3» не выполнен"
+    },
+    {
+      "id": "C",
+      "text": "Сразу перевести orch и task-мост на aicore",
+      "cons": "orch получает requires на aicore и меняет exec/v1 вне P10; ломает порядок фаз"
+    }
+  ],
+  "decision": "A — Четыре схемы в packages/aicore/schemas/<contract>/v1/ с examples/valid|invalid: digest (тегированный sha256:<64 hex>; правила канонического JSON: ключи отсортированы, разделители ',' ':', UTF-8 без экранирования, ключи — строки, float запрещён; файл vectors.json — языконезависимые тест-векторы вход → канонические байты → digest), error (классы D20: authentication, authorization, quota, rate_limit, invalid_request, model_unavailable, content_policy, transport, provider_internal, timeout, unknown; запись {class, code, retryable, retry_after_s, scope, safe_message, provider}), capability-support (уровни native|adapted|unsupported, источник declared|probed|inferred, измерение feature|resource|policy|health, запись с observed_at, fresh_until, remediation), model-catalog (по провайдеру class_selectors, effort_selectors, model_inventory). Реализации: aicore.util.digest (одна реализация; provider.artifact, control_plane, health переходят на неё), aicore.util.schema (закрытый профиль — обобщение копий orch.schema и task.plan.schema; хаб-скрипт ecosystem-units.py переходит на него сразу), aicore.provider.errors (реестр классов, классификация сбоя по данным configs/provider-errors.json, не по коду), aicore.provider.models, перечисления в aicore.provider.values. Реальные потребители в P3: внутренние модули aicore, ecosystem-units.py (валидатор), harness run worker (классификация квоты через aicore вместо локальных текстовых маркеров), task (тест паритета каталога моделей). Принятие в orch (digest exec/v1, валидатор, классы ошибок, capability-record) — P10; в task (валидатор плана, digest моста) — P9/P10.",
+  "rationale": "Решение детализации P3 (dev-режим: архитектурные решения принимает агент); факты кода — knowledge/aicore-p3 §facts.",
+  "applies_to": [
+    "P3",
+    "P9",
+    "P10",
+    "P11"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

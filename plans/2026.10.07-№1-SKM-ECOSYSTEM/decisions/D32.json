@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D32",
+  "title": "Поиск aicore обёртками: канонический фрагмент-локатор",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Как обёртки bin/ и раннеры тестов модулей находят aicore (архитектура §3: AICORE_ROOT → _vendor → соседняя папка), если модуль не может ссылаться на пути другого модуля, а в копии standalone aicore лежит в vendor/aicore?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Один канонический bash-фрагмент packages/aicore/scripts/aicore-locator.sh, вставленный дословно между маркерами '# --- aicore locator ---' и '# --- end aicore locator ---' в bin/<cli> и scripts/test.sh модулей, которые требуют aicore (analyst, harness, maind, skiller; у task нет bin и core для него необязателен — его раннер получает локатор в P9). Порядок: $AICORE_ROOT (если задан и не подходит — ошибка, без перехода к следующему), <module>/_vendor/aicore, <module>/../aicore. Кандидат подходит, если в нём есть unit.json с \"id\": \"aicore\". Результат — переменная AICORE_ROOT (экспортируется) и AICORE_LIB=$AICORE_ROOT/lib, которую обёртка добавляет в PYTHONPATH. Не найден — stderr 'AICORE_NOT_FOUND: …; set AICORE_ROOT' и exit 2. Одинаковость копий и поведение проверяет scripts/test-aicore-locator.py (по образцу test-dev-guard.py). Переходно: shim core сам добавляет <repo>/packages/aicore/lib в sys.path, если aicore не импортируется (для тестов, которые кладут в sys.path только корень монорепозитория); строки MONOREPO_ROOT для core остаются до удаления core.",
+      "pros": "Правило §3 исполняется в каждом модуле без межмодульных путей; копия standalone проверяет вариант «соседняя папка»; один источник текста"
+    },
+    {
+      "id": "B",
+      "text": "Хаб-скрипт, который модули вызывают по пути",
+      "cons": "Межмодульный путь, нарушение границы; в отдельном репозитории скрипта нет"
+    },
+    {
+      "id": "C",
+      "text": "Python-резолвер в каждом lib/<id>",
+      "cons": "Нужен до импорта aicore — тот же дубль, но в Python и без проверки идентичности"
+    }
+  ],
+  "decision": "A — Один канонический bash-фрагмент packages/aicore/scripts/aicore-locator.sh, вставленный дословно между маркерами '# --- aicore locator ---' и '# --- end aicore locator ---' в bin/<cli> и scripts/test.sh модулей, которые требуют aicore (analyst, harness, maind, skiller; у task нет bin и core для него необязателен — его раннер получает локатор в P9). Порядок: $AICORE_ROOT (если задан и не подходит — ошибка, без перехода к следующему), <module>/_vendor/aicore, <module>/../aicore. Кандидат подходит, если в нём есть unit.json с \"id\": \"aicore\". Результат — переменная AICORE_ROOT (экспортируется) и AICORE_LIB=$AICORE_ROOT/lib, которую обёртка добавляет в PYTHONPATH. Не найден — stderr 'AICORE_NOT_FOUND: …; set AICORE_ROOT' и exit 2. Одинаковость копий и поведение проверяет scripts/test-aicore-locator.py (по образцу test-dev-guard.py). Переходно: shim core сам добавляет <repo>/packages/aicore/lib в sys.path, если aicore не импортируется (для тестов, которые кладут в sys.path только корень монорепозитория); строки MONOREPO_ROOT для core остаются до удаления core.",
+  "rationale": "Решение детализации P3 (dev-режим: архитектурные решения принимает агент); факты кода — knowledge/aicore-p3 §facts.",
+  "applies_to": [
+    "P3",
+    "P8",
+    "P11",
+    "P12"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

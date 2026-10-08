@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "440403f0a30adc82418586db43e13b42264efc5b97c9abf2c7c18471fbc97d93",
+    "source_sha256": "a0bae93eea83b61af807caab642fee2d218d2e05a54f21444a4eeddec5835de8",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 316
   },
@@ -523,7 +523,7 @@
     },
     {
       "semantic_id": "skiller.module-boundaries",
-      "literal": "keep token math in `budget.py` as the single source"
+      "literal": "keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection"
     },
     {
       "semantic_id": "skiller.engineering-invariants",

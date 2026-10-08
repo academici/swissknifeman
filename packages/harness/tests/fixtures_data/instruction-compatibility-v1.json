@@ -460,7 +460,7 @@
         "`config.resolve_selection`",
         "`skillset.do_sync`",
         "`harness`",
-        "keep token math in `budget.py` as the single source"
+        "keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection"
       ]
     },
     {

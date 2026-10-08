@@ -4,6 +4,15 @@
 
 ### Added
 
+- **aicore:** `aicore.content`, `aicore.delivery` and `aicore.release`. The skill model, the token budget, publication
+  mechanics, the shared part of command projection and skill evaluation moved into `content`; the Codex and Claude
+  delivery, distribution plans and managed skill copies into `delivery`; release attestation, version rules and the
+  changelog format into `release`. `skiller` keeps selection, the publication catalog and the commands, and re-exports
+  the moved names. Two contracts: `skill-descriptor/v1` and `eval-context/v1` (skill and system-bank benchmarks become
+  `skill-benchmark/v3` and `system-bank-benchmark/v2` with a `context` record).
+- **docs:** ADR 0037–0039 (the boundary by function, the skill descriptor, the evaluation context); `ecosystem.md`
+  says what moved and what stays with `skiller`, `task` and `harness`; `contracts.md` lists the two new contracts; the
+  `aicore` README describes the three subpackages.
 - **aicore:** layered configuration and standard state places. `aicore.config` resolves a module's settings from the
   schema defaults, the machine file, the project file, environment, `--config FILE` and flags, with `_unset` and
   `_append`, `x-skm-layers`, secret references and `explain`; `aicore.state` gives the XDG and `SKM_HOME` places,
@@ -187,6 +196,8 @@
 
 ### Changed
 
+- **skiller instructions:** the rule on token math now names `aicore.content.budget` as the single source (the
+  generated `packages/skiller/CLAUDE.md` and `AGENTS.md` follow from the harness instruction source).
 - **task:** review method is generated from `quality:code-review` / `quality:artifact-review`.
 - **core:** `shared_config_path` returns the owner path from one name → path table, without
   fallback; signature unchanged. `profile-catalog` now resolves to the harness canon.

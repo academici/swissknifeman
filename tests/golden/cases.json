@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "09f447af7a95",
-  "reason": "swissknifeman config group in the help header",
+  "captured_from": "3840267e1e9d",
+  "reason": "skiller token-math rule now points at aicore.content.budget",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

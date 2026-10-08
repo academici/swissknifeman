@@ -15,7 +15,7 @@ Deliver the curated `CORE_SKILLS` by default through the selected channel; `--no
 Keep skills under `skills/<bucket>/<name>/SKILL.md`; treat `skills.json`, `skills/_index.md`, marketplace manifests, graph, and budget documentation as registry-generated outputs. Also, presets expand before the selection formula `(presets ∪ buckets ∪ include) − exclude`.
 <!-- instruction:skiller.module-boundaries -->
 ## skiller.module-boundaries
-Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`. Also, keep token math in `budget.py` as the single source.
+Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`. Also, keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection.
 <!-- instruction:skiller.engineering-invariants -->
 ## skiller.engineering-invariants
 Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use English diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.

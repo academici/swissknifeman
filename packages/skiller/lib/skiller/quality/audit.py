@@ -3,8 +3,8 @@
 
 Why: solutions for ~205 skills without metrics - fortune telling. Collects into one report:
 
-  size - review `budget.skill_budget` (⊕tier0/↻tier1/⌥tier2); budget.py remains
-             THE ONLY source of token mathematics, this module only consumes it,
+  size - review `budget.skill_budget` (⊕tier0/↻tier1/⌥tier2); aicore.content.budget remains
+             THE ONLY source of token mathematics (budget.py re-exports it), this module only consumes it,
              does not expand.
   overlap  — Jaccard≥0.4 by description-triggers (normalized description words) AND/OR
              5-gram word-shingle≥0.3 by body (is more resistant to reformulations than

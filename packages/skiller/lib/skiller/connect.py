@@ -130,7 +130,7 @@ _prepare_connect_selection = prepare_connect_selection
 def _resident_tokens(env, plugins):
     """Rough estimate of resident ⊕ tier-0 (name+description) of the selected set of plugins -
     for «smart connection»: you can see the price BEFORE recording. core → CORE_SKILLS; bucket → all his skills;
-    generate-skill → his skill. Source of token mathematics ONE - budget.skill_budget (do not duplicate).
+    generate-skill → his skill. Source of token mathematics ONE - aicore.content.budget.skill_budget, re-exported by budget (do not duplicate).
     Return (tokens, n_skills)."""
     from .budget import skill_budget
     total = n = 0

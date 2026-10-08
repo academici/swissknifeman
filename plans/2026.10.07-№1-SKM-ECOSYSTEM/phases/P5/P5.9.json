@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.9",
   "title": "Документация контента и доставки: README aicore, ecosystem и contracts, ADR 0037–0039, правило бюджета в инструкциях skiller, CHANGELOG",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Описать aicore.content, aicore.delivery, aicore.release в packages/aicore/README.md; обновить docs/architecture/ecosystem.md (подсистемы, источники, потребители по D40) и contracts.md (skill-descriptor/v1, eval-context/v1); ADR 0037 (граница по функциям), 0038 (дескриптор skill по стандарту Agent Skills), 0039 (контекст eval) и индекс; правило «token math» в источнике инструкций harness и регенерация проекций с перезахватом golden только затронутых генераторов; CHANGELOG aicore и корневой [Unreleased]; docs-impact зелёный.",
   "why": "D24 (документация с решениями), правило фазы: решения и новые контракты отражены в docs/architecture и README до закрытия фазы. Жёсткие риски: (1) правка сгенерированных CLAUDE.md/AGENTS.md руками вместо источника (правило плана); (2) перезахват golden шире, чем изменённые генераторы инструкций; (3) устаревшие утверждения о «единственном источнике» в docs skiller.",
   "scope": {
@@ -214,6 +214,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:45:06Z"
+  "result": {
+    "started_at": "2026-10-08T18:00:11Z",
+    "finished_at": "2026-10-08T18:24:24Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "e2a7299f-d2b6-452e-a650-1b6f99383567"
+    },
+    "notes": "ADR 0037-0039, README/ecosystem/contracts, правило бюджета -> aicore.content.budget, golden только harness-provider-instructions",
+    "deviations": [
+      "перегенерация всех целей harness и lock-файла провайдерных артефактов, а не только skiller"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T18:24:24Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T18:24:24Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T18:24:24Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T18:24:24Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T18:24:24Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T18:24:24Z"
 }

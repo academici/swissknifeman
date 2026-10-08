@@ -11,10 +11,10 @@ packages/aicore/
   unit.json  README.md  CHANGELOG.md
   bin/aicore                           # command line: `aicore config ...`
   configs/       provider-{capabilities,distribution,projection,errors}.json  model-catalog.json  gitignore-policy.json
-  lib/aicore/    util/  provider/  artifacts/  state/  config/  usage.py  _vendor/tomli/
+  lib/aicore/    util/  provider/  artifacts/  state/  config/  content/  delivery/  release/  usage.py  _vendor/tomli/
   schemas/       <contract>/v1/  and README.md
   scripts/       test.sh  validate.sh  aicore-locator.sh
-  tests/         util, io, text, usage, contracts, architecture, vendor; provider/, artifacts/, state/ and config/
+  tests/         util, io, text, usage, contracts, architecture, vendor; provider/, artifacts/, state/, config/, content/, delivery/ and release/
 ```
 
 `lib/aicore/__init__.py` carries only the version; there is no flat facade. Import the subpackages directly.
@@ -28,7 +28,18 @@ packages/aicore/
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile | skiller, harness, maind |
 | `aicore.state` | standard machine and project places (`SKM_HOME`, XDG, `.swissknifeman/`), legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |
 | `aicore.config` | module settings from layers (`resolve`): schema defaults, machine file, project file, extra layers, environment, `--config` file, flags; `explain` (origin of every value), secret references (`Secret`, `register_secret_resolver`), `edit_layer_file` (comment-preserving write with backup); module discovery and `config.example.toml` generation; the `aicore config` CLI; the one TOML entry (`toml`, `toml_edit`) | all modules |
+| `aicore.content` | what a skill or command is and what it costs: `skill` (frontmatter, content hash and `skill_digest`, `describe_skill` for `skill-descriptor/v1`, transitive `requires`), `budget` (the one token estimate, skill, set and listing budgets, first-turn meters and verdict), `publication` (manifest bytes, whole-file artifacts, Codex plugin manifest and marketplace entry, publication lock, runtime-file walk), `commands` (the shared part of command projection), `eval` (grader, validators, benchmarks, `claude -p` runner, `eval-context/v1`) | skiller, harness, planner |
+| `aicore.delivery` | how skills and plugins reach a project: `codex` (explicit plugin selection in `.codex/config.toml`), `claude` (enabled marketplace plugins and their price, settings merge), `distribution` (vendor and marketplace plans per provider, Codex bundle, native install), `materialize` (managed skill copies, marker, manifest, `skills-lock.json`, `sync_skillset`) | skiller, hub |
+| `aicore.release` | `attestation` (tagged digests, release-unit policy, `build`, `check`, `check_transition`), `version` (last tag, semver bump, next free version, version files), `changelog` (the Unreleased section, `release_changelog`, `parse_released`) | skiller, hub scripts |
 | `aicore.usage` | one accumulator of tokens parsed from provider logs; self-sufficient, so it can be vendored byte for byte | analyst, harness, skiller |
+
+### Layers inside aicore
+
+`content` imports `util`, `provider`, `artifacts` and `config`; `release` imports `util` and `content`; `delivery`
+imports everything below it; the older subpackages import none of the three (`tests/test_architecture.py`). The three
+take their data from the caller as explicit parameters (the package that owns the publication versions, the identities
+in generated provenance, the host-owned MCP servers), so the foundation names no library and reads no host
+configuration.
 
 ## Configuration and state
 
@@ -160,6 +171,8 @@ source of truth and the code implements it. The layout rules and the full table 
 | `capability-support/v1` | `SupportLevel`, `SupportSource`, `AvailabilityDimension` in `aicore.provider.values` |
 | `model-catalog/v1` | `aicore.provider.models`; data in `configs/model-catalog.json` |
 | `config-explain/v1` | `aicore.config.ResolvedConfig.explain_json` |
+| `skill-descriptor/v1` | `aicore.content.skill.describe_skill`; fields of the Agent Skills standard plus digest and provenance |
+| `eval-context/v1` | `aicore.content.eval.eval_context`; skill digest, fixtures, grader and runner, compared with `compare_eval_context` |
 
 ## Tests
 

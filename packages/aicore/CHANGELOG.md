@@ -138,6 +138,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   version, `parse_released` with the heading grammar). The location of the package that owns the publication-version
   map is the `package_root` parameter of `build` and `check` (none means no prefix), so the foundation names no
   package. Digests and attested bytes are unchanged.
+- **Documentation:** the README describes `content`, `delivery` and `release` and the two new contracts; the
+  architecture documents carry ADR 0037 to 0039.
 
 ### Changed
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to

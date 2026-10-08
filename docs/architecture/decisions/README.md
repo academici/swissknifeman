@@ -62,3 +62,6 @@ by a new record.
 | [0034](0034-layered-config-semantics.md) | Layered config semantics: schema, file, layers, merge operators, environment, secrets, explain | Accepted |
 | [0035](0035-state-locations-legacy-reads-and-backups.md) | State locations, legacy reads and backups | Accepted |
 | [0036](0036-toml-vendored-tomli-and-minimal-editor.md) | TOML: vendored tomli and a minimal verified editor | Accepted |
+| [0037](0037-content-delivery-release-boundary-by-function.md) | Content, delivery and release: the aicore boundary is drawn by function | Accepted |
+| [0038](0038-skill-descriptor-agent-skills-standard.md) | Skill descriptor: the Agent Skills standard plus digest and provenance | Accepted |
+| [0039](0039-eval-result-context.md) | An evaluation result carries the context it was produced in | Accepted |

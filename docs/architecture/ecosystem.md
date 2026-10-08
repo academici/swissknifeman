@@ -155,9 +155,9 @@ named adapters: a new provider is an adapter plus a catalog entry; a new kind of
 | `aicore.state` | standard places for state, cache and backups; `SKM_HOME` for isolation | all |
 | `aicore.provider` | provider capability manifests, configuration, control plane, health, adapter registry, model catalog | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile, backups | skiller, harness, maind |
-| `aicore.content` | content model (skill, command, agent, hook, instruction): parsing, validation, catalog, context budget, provider projection, plugin and marketplace generation, skill eval and audit | skiller, planner, brain, harness, maind, hub |
-| `aicore.delivery` | connecting module plugins to a project (Claude marketplace, vendoring for Codex, Grok, Cursor), status, update | skiller, planner, brain, hub |
-| `aicore.release` | versions, tags `{name}--v{version}`, release attestation | all modules, hub |
+| `aicore.content` | skill model and `skill-descriptor/v1`, the one token estimate and context budgets, publication mechanics (manifest bytes, whole-file artifacts, Codex plugin manifest, publication lock), the shared part of command projection, skill and system-bank evaluation with `eval-context/v1`; later: agent, hook and instruction models | skiller (harness uses the token estimate; planner uses command projection from P9) |
+| `aicore.delivery` | mechanics of connecting plugins and skills to a project: Codex plugin selection, Claude marketplace settings merge, vendor and marketplace distribution plans, managed skill copies with manifest and `skills-lock.json` | skiller now; planner, brain, hub when they connect through it |
+| `aicore.release` | release attestation, version rules (semver bump, next free version) and the changelog format | skiller now; hub scripts (`verify-tag`, `version-guard`) and all modules at their release stage |
 | `aicore.ext` | events, subscriptions, overlays, external plugin commands | planner, orch, brain, analyst |
 | `aicore.unit` | `unit.json` schema, boundary and standalone checks, new-module template | all modules, CI |
 | `aicore.usage` | parsing usage from provider logs | analyst, skiller eval, orch |
@@ -168,6 +168,23 @@ with module CLIs and `swissknifeman`.
 **Generalisation boundary.** Only what two or more modules already use, or what every module needs by contract, moves
 into `aicore`. The assignment of `skiller` internals to `aicore` is a hypothesis until the owning stage reads the code;
 the ownership map marks each entry `fixed` or `hypothesis`.
+
+**Generalisation boundary in practice.** Reading the code of the skill library showed that most files mix general
+mechanics with the policy of that library (buckets, the core set, profiles, presets, `.swissknife.json`, the host
+configuration, the project registry, the hub). The line was therefore drawn by function, not by file
+([ADR 0037](decisions/0037-content-delivery-release-boundary-by-function.md)): what takes explicit parameters and
+knows no bucket or host moved into `aicore.content`, `aicore.delivery` and `aicore.release`; the old names in
+`skiller` are re-exports or thin wrappers. What stays, and where it is decided:
+
+- `skiller`: selection and composition (`resolve_active_set`, `first_turn_report`, profiles and presets), the
+  publication catalog and the rendering of unit kinds (bucket, curated, meta, management), `registry.py` and
+  `skills.json`, `connect`, `vendor`, `update`, `status`, `skillset` planning, `doctor`, `config`, `lock`, `resolve`
+  and the `skiller` commands over the moved functions. Delivery to the fleet, `host.py` and the root bootstrap are hub
+  work (P12); `lock.py` and `resolve.py` meet the orch bridge (P10); `topology`, `listing` and `state` go to `maind`
+  (P11), `brain_sync` to `brain` (P7); the skills move with their modules (P8).
+- `task`: the catalog of commands, routing and the wrapper texts of command projection (P9); only the shared part is in
+  `aicore.content.commands`.
+- `harness`: rendering of instruction projections (P11).
 
 ## 5. Configuration and service files
 

@@ -14,7 +14,7 @@ is always loaded, but what about conditionally:
 Token scoring is ROUGH and language dependent (Cyrillic is denser than Latin
 tokenizer Claude), stdlib-only, without third-party tokenizers. That's why
 EN-canon is cheaper RU with equal volume - this is a visible translation gain. Number
-is suitable for COMPARING sets and relative weights, not for accurate counting. Source of mathematics ONE (this module) — use it CLI
+is suitable for COMPARING sets and relative weights, not for accurate counting. Source of mathematics ONE (`aicore.content.budget`; this module composes it with skiller selection) — use it CLI
 (`skiller budget`), map generator (docs/guide/budget.md) and the line in
 `skiller status`."""
 import json

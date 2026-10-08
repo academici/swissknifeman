@@ -978,7 +978,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1007,7 +1007,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1038,7 +1038,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1068,7 +1068,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1099,7 +1099,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1117,7 +1117,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 6,
-          "intent": "Apply this source-derived instruction: Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`. Also, keep token math in `budget.py` as the single source.",
+          "intent": "Apply this source-derived instruction: Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`. Also, keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection.",
           "obligations": [
             {
               "modality": "must",
@@ -1131,7 +1131,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1139,7 +1139,7 @@
             "`config.resolve_selection`",
             "`skillset.do_sync`",
             "`harness`",
-            "keep token math in `budget.py` as the single source"
+            "keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection"
           ]
         },
         {
@@ -1162,7 +1162,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [
@@ -1193,7 +1193,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
+              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
             }
           ],
           "compatibility_assertions": [

@@ -1,0 +1,20 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "orch",
+  "title": "Engine-neutral orchestration of agent runs",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "alpha",
+  "destination": "own-repo",
+  "requires": [],
+  "provides": {
+    "cli": ["scripts/orch.py"],
+    "contracts": [
+      {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

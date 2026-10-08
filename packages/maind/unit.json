@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "maind",
+  "title": "Project memory and code graph hub",
+  "kind": "capability",
+  "version": "0.6.0",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
+  ],
+  "provides": {
+    "cli": ["bin/maind"],
+    "plugins": [{"name": "maind", "manifest": ".claude-plugin/plugin.json"}],
+    "doctor": [
+      {"id": "maind.environment", "category": "environment", "probe": ["bin/maind", "doctor"], "output": "text"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

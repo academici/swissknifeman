@@ -55,6 +55,15 @@
       "released": false
     },
     {
+      "path": "configs/ecosystem-units.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "module split map: targets, aliases, version sources"
+    },
+    {
       "path": "configs/gitignore-policy.json",
       "owner": "core",
       "consumers": [

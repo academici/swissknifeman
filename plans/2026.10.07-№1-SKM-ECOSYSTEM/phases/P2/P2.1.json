@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.1",
   "title": "Контракт модуля: схемы unit/v1 и check-result/v1 в aicore, unit.json модулей, проверка manifests",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "В начале фазы влить origin/main (scripts/dev-clone.sh sync-main). Создать packages/aicore (unit.json, README, схемы unit/v1 и check-result/v1 с фикстурами), unit.json у analyst, harness, maind, orch, skiller, task, конфиг configs/ecosystem-units.json (без ownership — P2.2) и scripts/ecosystem-units.py с проверкой manifests и командой list; тесты и шаг CI.",
   "why": "Контракт модуля должен существовать до переноса кода (E01, E49): все следующие фазы и проверки (границы, автономность, doctor, umbrella CLI) читают unit.json. Риск — дрейф версии между unit.json и существующими носителями: проверка требует равенства с источником из version_sources, а не ручной синхронизации.",
   "scope": {
@@ -234,6 +234,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T20:27:52Z"
+  "result": {
+    "started_at": "2026-10-08T02:27:12Z",
+    "finished_at": "2026-10-08T02:45:43Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "5a0feca4-7e79-4f72-a853-76100a174237"
+    },
+    "notes": "aicore skeleton with unit/v1 and check-result/v1 schemas and fixtures, unit.json for 7 modules, configs/ecosystem-units.json, scripts/ecosystem-units.py (check, list), 39 tests, hygiene.yml step. Also green: task validate.sh, root hygiene suites.",
+    "deviations": [
+      "dev-clone.sh sync-main denied by the permission classifier; origin/main delta is plans/-only (1 commit), merge left to the owner"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T02:45:43Z"
 }

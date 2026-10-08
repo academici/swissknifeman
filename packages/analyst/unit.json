@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "analyst",
+  "title": "Session and usage analysis",
+  "kind": "capability",
+  "version": "0.3.0",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
+  ],
+  "provides": {
+    "cli": ["bin/analyst"],
+    "plugins": [{"name": "analyst", "manifest": ".claude-plugin/plugin.json"}],
+    "doctor": [
+      {"id": "analyst.environment", "category": "environment", "probe": ["bin/analyst", "doctor"], "output": "text"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

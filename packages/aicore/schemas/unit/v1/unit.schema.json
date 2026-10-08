@@ -1,0 +1,343 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:unit:v1",
+  "title": "unit",
+  "type": "object",
+  "description": "Module manifest (unit.json): identity, version, dependencies and public surface of one module.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:unit:v1",
+      "description": "Schema identifier of the manifest version."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Module id: equals the folder name and the import package name lib/<id>/."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line purpose of the module."
+    },
+    "kind": {
+      "enum": ["foundation", "capability", "bridge"],
+      "description": "Role: foundation is the shared base, capability is a module, bridge connects two modules."
+    },
+    "version": {
+      "$ref": "#/$defs/semver",
+      "description": "Module version (SemVer over the public API)."
+    },
+    "stability": {
+      "enum": ["development", "alpha", "beta", "rc", "stable", "deprecated"],
+      "description": "Stability stage of the module."
+    },
+    "destination": {
+      "enum": ["own-repo", "hub"],
+      "description": "Where the module lives after the split: its own repository or the hub."
+    },
+    "requires": {
+      "type": "array",
+      "description": "Units this module depends on.",
+      "items": {
+        "type": "object",
+        "description": "One dependency.",
+        "properties": {
+          "unit": {
+            "$ref": "#/$defs/id",
+            "description": "Id of the required unit."
+          },
+          "range": {
+            "type": "string",
+            "pattern": "^\\^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+            "description": "Caret version range such as ^0.1 or ^1.2.3 (npm semantics)."
+          },
+          "description": {
+            "type": "string",
+            "description": "Why the unit is required."
+          }
+        },
+        "required": ["unit", "range"],
+        "additionalProperties": false
+      }
+    },
+    "provides": {
+      "type": "object",
+      "description": "What the module exposes. Empty collections are omitted.",
+      "properties": {
+        "cli": {
+          "type": "array",
+          "minItems": 1,
+          "description": "CLI entry points, paths relative to the module root.",
+          "items": {
+            "$ref": "#/$defs/relpath",
+            "description": "Entry point path."
+          }
+        },
+        "plugins": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Claude plugins shipped by the module.",
+          "items": {
+            "type": "object",
+            "description": "One plugin.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Plugin name as in its plugin.json."
+              },
+              "manifest": {
+                "$ref": "#/$defs/relpath",
+                "description": "Path of the plugin.json relative to the module root."
+              }
+            },
+            "required": ["name", "manifest"],
+            "additionalProperties": false
+          }
+        },
+        "contracts": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Public schemas of the module.",
+          "items": {
+            "type": "object",
+            "description": "One contract family.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^urn:[a-z0-9-]+(:[a-z0-9-]+)*$",
+                "description": "Common prefix of the schema $id values, without the kind and version."
+              },
+              "path": {
+                "$ref": "#/$defs/relpath",
+                "description": "Directory with the schemas, relative to the module root."
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^v[0-9]+$",
+                "description": "Contract major version such as v1."
+              },
+              "stability": {
+                "$ref": "#/$defs/stability",
+                "description": "Stability stage of the contract."
+              }
+            },
+            "required": ["id", "path", "version", "stability"],
+            "additionalProperties": false
+          }
+        },
+        "doctor": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Diagnostic checks of the module.",
+          "items": {
+            "type": "object",
+            "description": "One diagnostic check.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)*$",
+                "description": "Check id."
+              },
+              "category": {
+                "$ref": "#/$defs/category",
+                "description": "Check category."
+              },
+              "probe": {
+                "$ref": "#/$defs/argv",
+                "description": "Read-only command; the first element is a path relative to the module root."
+              },
+              "output": {
+                "enum": ["text", "check-result/v1"],
+                "description": "Output format of the probe."
+              }
+            },
+            "required": ["id", "category", "probe", "output"],
+            "additionalProperties": false
+          }
+        },
+        "config": {
+          "$ref": "#/$defs/relpath",
+          "description": "Schema of the module config section, relative to the module root."
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Events the module emits.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Event name."
+          }
+        },
+        "overlay_slots": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Overlay slots the module opens.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Slot name."
+          }
+        },
+        "extension_points": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Extension points the module opens.",
+          "items": {
+            "type": "object",
+            "description": "One extension point.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Extension point id."
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What can be plugged in."
+              }
+            },
+            "required": ["id", "description"],
+            "additionalProperties": false
+          }
+        },
+        "ports": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Ports implemented by bridges.",
+          "items": {
+            "type": "object",
+            "description": "One port.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Port id."
+              },
+              "bridge": {
+                "$ref": "#/$defs/id",
+                "description": "Id of the bridge unit that implements the port."
+              }
+            },
+            "required": ["id", "bridge"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "object",
+      "description": "Declared effects of the module.",
+      "properties": {
+        "filesystem": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Filesystem areas the module may write.",
+          "items": {
+            "enum": ["project", "state", "provider-surfaces", "home"],
+            "description": "Filesystem area."
+          }
+        },
+        "network": {
+          "type": "boolean",
+          "description": "Whether the module uses the network."
+        },
+        "secrets": {
+          "type": "array",
+          "description": "References to secrets the module reads.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Secret reference."
+          }
+        },
+        "shell": {
+          "type": "boolean",
+          "description": "Whether the module runs shell commands."
+        }
+      },
+      "additionalProperties": false
+    },
+    "protocol": {
+      "type": "object",
+      "description": "Supported protocol range for bridges and external plugins.",
+      "properties": {
+        "min": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Lowest supported protocol version."
+        },
+        "max": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Highest supported protocol version."
+        }
+      },
+      "required": ["min", "max"],
+      "additionalProperties": false
+    },
+    "dev": {
+      "type": "object",
+      "description": "Developer commands, run from the module root.",
+      "properties": {
+        "test": {
+          "$ref": "#/$defs/argv",
+          "description": "Test command."
+        },
+        "validate": {
+          "$ref": "#/$defs/argv",
+          "description": "Validation command."
+        },
+        "standalone_setup": {
+          "type": "array",
+          "description": "Commands run before the tests in a standalone copy.",
+          "items": {
+            "$ref": "#/$defs/argv",
+            "description": "One setup command."
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["$schema", "id", "title", "kind", "version", "stability", "destination", "requires", "provides"],
+  "additionalProperties": false,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unit id."
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$",
+      "description": "SemVer version."
+    },
+    "stability": {
+      "enum": ["development", "alpha", "beta", "rc", "stable", "deprecated"],
+      "description": "Stability stage."
+    },
+    "category": {
+      "enum": ["environment", "config", "state", "content", "integration"],
+      "description": "Diagnostic category."
+    },
+    "relpath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$",
+      "description": "Relative POSIX path without leading slash and without empty segments."
+    },
+    "argv": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Command as an argument vector.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One argument."
+      }
+    }
+  }
+}

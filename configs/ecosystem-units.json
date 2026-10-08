@@ -1,0 +1,49 @@
+{
+  "schema_version": "ecosystem-units/v1",
+  "_doc": "Hub map of the module split, read by scripts/ecosystem-units.py. targets: final module ids; module_aliases: current folder id -> target id; retired: folders without unit.json that are being removed; foundation: the shared base module and the names its code is imported under today; transitional_roots: root-level trees still being moved; version_sources: where the version of each module is read from (unit.json must equal it); ownership, path_patterns and path_suffixes are filled by the ownership-map and boundary checks.",
+  "targets": [
+    "aicore",
+    "skiller",
+    "planner",
+    "orch",
+    "maind",
+    "analyst",
+    "harness",
+    "brain",
+    "bridges/planner-orch",
+    "bridges/orch-skiller",
+    "bridges/orch-harness",
+    "hub",
+    "retired"
+  ],
+  "module_aliases": {
+    "task": "planner"
+  },
+  "retired": [
+    "artifex"
+  ],
+  "foundation": {
+    "id": "aicore",
+    "aliases": [
+      "core"
+    ]
+  },
+  "transitional_roots": [
+    "core/",
+    "orch/",
+    "packages/artifex/",
+    "packages/task/"
+  ],
+  "version_sources": {
+    "analyst": {"path": "packages/analyst/package.json", "read": "json:version"},
+    "harness": {"path": "packages/harness/package.json", "read": "json:version"},
+    "maind": {"path": "packages/maind/package.json", "read": "json:version"},
+    "orch": {"path": "packages/orch/lib/orch/__init__.py", "read": "python:__version__"},
+    "skiller": {"path": "packages/skiller/package.json", "read": "json:version"},
+    "task": {"path": "packages/task/.claude-plugin/plugin.json", "read": "json:version"}
+  },
+  "path_patterns": [],
+  "path_suffixes": [],
+  "standalone": {},
+  "ownership": []
+}

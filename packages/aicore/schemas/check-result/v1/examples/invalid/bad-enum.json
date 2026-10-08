@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:aicore:check-result:v1",
+  "check_id": "sample.environment",
+  "status": "passed",
+  "category": "environment",
+  "observed": "fine"
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "aicore",
+  "title": "Shared foundation: contracts and, later, utilities, providers and content delivery",
+  "kind": "foundation",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "own-repo",
+  "requires": [],
+  "provides": {
+    "contracts": [
+      {"id": "urn:swissknifeman:aicore:unit", "path": "schemas/unit/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:check-result", "path": "schemas/check-result/v1", "version": "v1", "stability": "development"}
+    ]
+  }
+}

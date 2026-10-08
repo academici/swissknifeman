@@ -8,7 +8,7 @@ invariants and data layout.
 | Module | Responsibility |
 |:--|:--|
 | `cli.py` | command manager (`COMMANDS` → `cmd_*(env, argv)`) |
-| `common.py` | `Env(BaseEnv)` (path-property: `state_dir` = `~/.swissknifeman/analyst`, `monorepo_root`) + re-export `core` |
+| `common.py` | `Env(BaseEnv)` (path-property: `state_dir` = `<state>/analyst`, see README Configuration, `monorepo_root`) + re-export `core` |
 | `lessons.py` | file store: lesson outline, state-directories, atomic write, append-only `audit`/`events`, Jaccard/similar, mem0-taxonomy |
 | `digest.py` | run-report → candidates for high-precision signals; **clean extractors** + IO in `cmd_` |
 | `scan.py` | cross-project aggregator (P2): clusters → patterns in ≥N projects (namespace-isolated) + reconcile |
@@ -51,7 +51,7 @@ publication surface.
   lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
   audit.ndjson · events.ndjson
 
-~/.swissknifeman/analyst/                   # cross-project layer (state_dir; general state umbrella)
+<state>/analyst/                           # cross-project layer (state_dir: the machine state directory)
   index/by_pattern/<id>.json               # scan: abstracted patterns
   suggestions/<id>.md                      # scan: human readable draft-MD
   drafts/<pattern_id>/                      # suggest (P4): skill draft

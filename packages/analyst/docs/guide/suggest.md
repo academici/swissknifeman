@@ -10,11 +10,11 @@ analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [
 
 ## What it does
 
-Reading **only** abstracted index `~/.swissknifeman/analyst/index/by_pattern/<id>.json` and
+Reading **only** abstracted index `<state>/analyst/index/by_pattern/<id>.json` and
 generates staged-directory:
 
 ```
-~/.swissknifeman/analyst/drafts/<pattern_id>/
+<state>/analyst/drafts/<pattern_id>/
   SKILL.ru.md      # RU-source-BLANK (frontmatter-skeleton + provenance stamp + body) — ruled by man
   draft.meta.json  # draft passport: provenance + seed_sha256 (detection of manual edits)
 ```
@@ -26,7 +26,7 @@ transfers with one command.
 
 | Doesn't | How to hold |
 |:--|:--|
-| Doesn't write to `skills/` | Only `~/.swissknifeman/analyst/drafts/`; promo - human hands |
+| Doesn't write to `skills/` | Only `<state>/analyst/drafts/`; promo - human hands |
 | Does not generate EN `SKILL.md` | Only RU-workpiece; EN — man promtom skiller after modification |
 | Does not auto-register | Doesn't call `skiller registry`/`integrate`; does not touch `skills.json` |
 | Does not disclose raw/secrets | Reading **only** index `by_pattern/` (is already abstracted) — privacy is structural |

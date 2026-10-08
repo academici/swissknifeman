@@ -6,6 +6,8 @@ PYTHONPATH). We re-export for `from .common import ...` in package modules."""
 import os
 from dataclasses import dataclass
 
+from aicore.state import resolve_with_legacy
+from aicore.state import state_dir as aicore_state_dir
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm,
     die, find_monorepo_root, find_run_report, now_iso, parse_args, parse_iso,
@@ -16,14 +18,16 @@ from core import (  # noqa: F401
 @dataclass(frozen=True)
 class Env(BaseEnv):
     """Launch context analyst: core (root/cmd/home) — from BaseEnv; here only
-    path-property. Cross-project layer (P2+) lives in ~/.swissknifeman/analyst; per-project
+    path-property. Cross-project layer (P2+) lives in the machine state directory (see state_dir); per-project
     lessons - in <project>/.claude/analyst (see lessons.project_dir)."""
 
     @property
     def state_dir(self):
-        """Single cross-project layer (clusters/suggestions). General state umbrella -
-        ~/.swissknifeman (owns it skiller); analyst puts its own subdirectory."""
-        return state_dir(self.home, "analyst")
+        """Single cross-project layer (clusters/suggestions): the analyst folder under the machine state
+        directory (``aicore.state``; under ``SKM_HOME`` when set). An existing legacy
+        ``~/.swissknifeman/analyst`` is used, with one warning, until it is moved."""
+        return resolve_with_legacy(aicore_state_dir("analyst", home=self.home),
+                                   [state_dir(self.home, "analyst")], home=self.home)
 
     @property
     def monorepo_root(self):

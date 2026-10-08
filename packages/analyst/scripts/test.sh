@@ -37,6 +37,13 @@ MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
 
+# Tests run against a throwaway HOME; the configuration and state locations must not come from the
+# developer machine.
+TEST_HOME="$(mktemp -d)"
+trap 'rm -rf "$TEST_HOME"' EXIT
+export HOME="$TEST_HOME"
+unset SKM_HOME XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UNITS_PATH
+
 verbose=""
 [[ "${1:-}" == "-v" ]] && verbose="-v"
 

@@ -22,7 +22,7 @@ analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [-
 
 Cross-project aggregator: bypasses the registry `config.json:projects[]`, reads per-project lessons,
 greedy-Jaccard-clusters and detects patterns that repeat in **≥N projects** (default 3),
-→ draft-sentences in `~/.swissknifeman/analyst/suggestions/` + index `index/by_pattern/`.
+→ draft-sentences in `<state>/analyst/suggestions/` + index `index/by_pattern/`.
 **Namespace-isolated**. Reconciliation: orphaned artifacts are removed **strictly in scope run**
 (`--no-prune` turns off, `--dry-run` shows). More details - [Life cycle](./lifecycle).
 
@@ -46,7 +46,7 @@ analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [
 ```
 
 Cross-project pattern (`index/by_pattern/`) → **DRAFT** skill `SKILL.ru.md` + `draft.meta.json`
-in `~/.swissknifeman/analyst/drafts/<pattern_id>/`. **NOT** writes in `skills/`, **NOT** generates EN-canon,
+in `<state>/analyst/drafts/<pattern_id>/`. **NOT** writes in `skills/`, **NOT** generates EN-canon,
 **NOT** registers - the promotion to the bucket is made by a person. Re-suggest protected from manual edits
 (`--force` overwrites); orphaned drafts - warning, not deletion. Details -
 [suggest →](./suggest).

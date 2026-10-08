@@ -1,6 +1,6 @@
 """Tests proposals (P4.3): deterministic id, edit-safe writer (like suggest.py),
 status via separate audit-line (history is not overwritten), handoff-print by type,
-and invariant «zero records out ~/.swissknifeman/analyst/»."""
+and invariant «zero records out the analyst state directory»."""
 import io
 import json
 import re
@@ -222,7 +222,7 @@ class TestProposals(unittest.TestCase):
 
     # ── invariant: zero records out ~/.swissknifeman/analyst/ ────────────────
     def test_zero_writes_outside_swissknifeman_analyst(self):
-        allowed_root = self.home / ".swissknifeman" / "analyst"
+        allowed_root = self.home / ".local" / "state" / "swissknifeman" / "analyst"
         before = {str(p) for p in self.base.rglob("*")}
 
         p1 = self._run_json(["create", "--type", "stack-pack", "--title", "General extension-point",
@@ -243,12 +243,12 @@ class TestProposals(unittest.TestCase):
         after = {str(p) for p in self.base.rglob("*")}
         new_paths = after - before
         self.assertTrue(new_paths, "test did not execute any records - does not check the invariant")
-        # the only valid marker path OUTSIDE the tree analyst/ — the parent directory itself
-        # `~/.swissknifeman` (creates it state_dir() on first call); everything else - strictly
-        # inside allowed_root.
-        allowed_marker = str(self.home / ".swissknifeman")
+        # the only valid marker paths OUTSIDE the tree analyst/ — its parent directories
+        # (`~/.local/state/swissknifeman` and above, created on the first call); everything
+        # else - strictly inside allowed_root.
+        allowed_markers = {str(parent) for parent in allowed_root.parents}
         offenders = [p for p in new_paths
-                    if p != allowed_marker and not p.startswith(str(allowed_root))]
+                     if p not in allowed_markers and not p.startswith(str(allowed_root))]
         self.assertEqual(offenders, [], f"records out {allowed_root}: {offenders}")
 
 

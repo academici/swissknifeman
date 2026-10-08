@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.5",
   "title": "Первый модуль: analyst на aicore.config (пороги recompute и digest) и aicore.state (наследный ~/.swissknifeman/analyst с предупреждением)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "configs/config.schema.json analyst с девятью порогами (default = прежние константы), unit.json provides.config, сгенерированный config.example.toml; analyst/settings.py (Thresholds, load_thresholds); проводка порогов в recompute, status, digest без смены поведения по умолчанию; Env.state_dir через aicore.state с чтением наследного каталога и предупреждением; раннер analyst снимает XDG_*/SKM_HOME; тесты; README и docs analyst.",
   "why": "Архитектура §12: «первый модуль переведён; старые файлы читаются с предупреждением»; D39 выбирает analyst. Риски: (1) смена поведения без конфигов — golden analyst-status и существующие тесты не меняются, тест паритета default и констант; (2) раздвоение состояния между старым и новым каталогом — resolve_with_legacy без копирования.",
   "scope": {
@@ -188,6 +188,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T11:40:06Z"
+  "result": {
+    "started_at": "2026-10-08T13:08:50Z",
+    "finished_at": "2026-10-08T13:14:41Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "7acf55b3-3f0e-4acc-8be8-74ea22941843"
+    },
+    "notes": "analyst переведён на aicore.config: схема с девятью порогами, settings.load_thresholds, проводка в recompute/status/digest, Env.state_dir через aicore.state с наследным каталогом; config.example.toml сгенерирован; 280 тестов analyst",
+    "deviations": [
+      "тесты test_cli/test_proposals обновлены под новое место состояния; docs analyst обновлены; HOME изолирован в test.sh"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T13:14:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T13:14:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T13:14:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T13:14:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T13:14:41Z"
 }

@@ -15,7 +15,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 - `$id` is `urn:swissknifeman:aicore:<contract>:v<N>` and carries the same `N` as the directory.
 - Schemas stay inside the closed profile of the validator `aicore.util.schema` (`lib/aicore/util/schema.py`):
   JSON Schema draft 2020-12 with the root `$schema`, `additionalProperties: false` on every object, and a
-  `description` on every property. Dictionaries with free-form keys are expressed as lists of records.
+  `description` on every property. Dictionaries with free-form keys are expressed as lists of records, except where a standard defines the map (`skill-descriptor` `metadata`, an open object).
 - Fixtures of every contract are exercised by `tests/test_contracts.py` through `aicore.util.schema.load_contract`;
   `scripts/ecosystem-units.py check` loads every contract under the closed profile.
 - `digest/v1` also ships `vectors.json`: language-neutral test vectors for the canonical JSON rules.
@@ -31,6 +31,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `model-catalog` | v1 | Models of each provider by class and effort; data in `configs/model-catalog.json`, API `aicore.provider.models` |
 | `config-explain` | v1 | Origin of every effective setting of a module: layers, winning layer, file and line, overridden values; implemented by `aicore.config` |
 | `digest` | v1 | Tagged SHA-256 digest (`sha256:<hex>`) of canonical JSON; rules and test vectors; implemented by `aicore.util.digest` |
+| `skill-descriptor` | v1 | What a skill is, read from its directory: identity, content digest, Agent Skills standard fields, provenance; implemented by `aicore.content.skill` |
 
 ## Module config schemas
 

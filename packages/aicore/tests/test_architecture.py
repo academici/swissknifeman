@@ -83,7 +83,9 @@ class TestImportBoundary(unittest.TestCase):
             self.assertNotEqual(name, "aicore", f"usage.py:{line} imports aicore")
 
     def test_subpackage_layering(self):
-        """Layering: util -> nothing; state -> util; config -> util, state; provider -> util, artifacts."""
+        """Layering: util -> nothing; state -> util; config -> util, state; provider -> util, artifacts;
+        content -> util, provider, artifacts, config; release -> util, content;
+        delivery -> everything below it."""
         def check(directory, allowed):
             for path in sorted((LIB / directory).glob("*.py")):
                 for target, line in _aicore_targets(path):
@@ -91,13 +93,23 @@ class TestImportBoundary(unittest.TestCase):
 
         for path in sorted((LIB / "util").glob("*.py")):
             for target, line in _aicore_targets(path):
-                self.assertNotIn(target, ("provider", "artifacts", "state", "config"), f"{path.name}:{line}")
+                self.assertNotIn(target, ("provider", "artifacts", "state", "config", "content", "delivery",
+                                          "release"), f"{path.name}:{line}")
         check("state", ("util",))
         check("config", ("util", "state", "_vendor"))
         check("provider", ("util", "artifacts"))
+        check("content", ("util", "provider", "artifacts", "config"))
+        check("release", ("util", "content"))
+        check("delivery", ("util", "state", "config", "provider", "artifacts", "content", "release"))
         for path in sorted((LIB / "artifacts").glob("*.py")) + [LIB / "usage.py"]:
             for target, line in _aicore_targets(path):
                 self.assertNotIn(target, ("state", "config"), f"{path.name}:{line}")
+        for directory in ("state", "config", "provider", "artifacts"):
+            for path in sorted((LIB / directory).glob("*.py")):
+                for target, line in _aicore_targets(path):
+                    self.assertNotIn(target, ("content", "delivery", "release"), f"{directory}/{path.name}:{line}")
+        for target, line in _aicore_targets(LIB / "usage.py"):
+            self.assertNotIn(target, ("content", "delivery", "release"), f"usage.py:{line}")
 
     def test_config_modules_do_not_depend_on_the_model(self):
         """toml, toml_edit and secrets are below the model and must not import it."""
@@ -156,6 +168,23 @@ class TestImportBoundary(unittest.TestCase):
                     if name == "sleep":
                         offenders.append(f"{path.name}:{node.lineno} calls sleep")
         self.assertEqual(offenders, [])
+
+    def test_content_primitives_are_defined_once(self):
+        """The shared content primitives are defined in aicore only, never again in a sibling module."""
+        owners = {
+            "skill_content_hash": "lib/aicore/content/skill.py",
+            "resolve_requires_bfs": "lib/aicore/content/skill.py",
+        }
+        roots = [ROOT / "lib"]
+        packages = ROOT.parent
+        if (packages / "skiller").is_dir():  # a standalone run has no sibling modules
+            roots = sorted(packages.glob("*/lib"))
+        for name, owner in owners.items():
+            pattern = re.compile(rf"^\s*def {name}\b", re.M)
+            found = sorted(
+                path.relative_to(packages).as_posix() for lib in roots for path in lib.rglob("*.py")
+                if pattern.search(path.read_text(encoding="utf-8")))
+            self.assertEqual(found, [f"aicore/{owner}"], name)
 
     def test_schema_validator_is_defined_once(self):
         defining = [path.relative_to(ROOT).as_posix() for path in sorted(LIB.rglob("*.py"))

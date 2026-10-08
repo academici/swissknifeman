@@ -26,6 +26,8 @@ from pathlib import Path
 
 from core import atomic_write_text
 
+from aicore.content.skill import split_frontmatter as _split_frontmatter  # noqa: F401 (re-export)
+
 from .common import die, parse_flags, parse_frontmatter
 from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
                      ProjectConfig, all_buckets, core_skill_tuples, default_command_plugins,
@@ -68,24 +70,6 @@ def estimate_tokens(text):
     # taken into account (under-counting of tokens for text with these letters).
     cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
     return math.ceil(cyr / CHARS_PER_TOKEN_CYR + (len(text) - cyr) / CHARS_PER_TOKEN_LAT)
-
-
-def _split_frontmatter(text):
-    """(frontmatter_text, body_text). Without frontmatter → ("", text).
-
-    B-4 (audit): looks like a double common.parse_frontmatter/core.text.parse_frontmatter,
-    but solves ANOTHER problem - so you need a disassembled YAML-dictionary (without body), this
-    function needs EXACTLY the body (frontmatter_text is not parsed here as YAML, only
-    is cut off). Merge would mean changing the signature core.parse_frontmatter (common for
-    every package — risk is wider than one package) for 8-line border finder
-    `---`...`---`. Left separately deliberately, not out of oversight."""
-    lines = text.replace("\r\n", "\n").split("\n")
-    if not lines or lines[0].strip() != "---":
-        return "", text
-    for i in range(1, len(lines)):
-        if lines[i].strip() == "---":
-            return "\n".join(lines[1:i]), "\n".join(lines[i + 1:])
-    return "", text
 
 
 def skill_budget(skill_dir):

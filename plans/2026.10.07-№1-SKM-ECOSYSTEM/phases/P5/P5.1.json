@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.1",
   "title": "Начало фазы, пакеты aicore.content/delivery/release и слои; модель skill и контракт skill-descriptor/v1 (E27)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Влить origin/main и сверить golden; создать пакеты aicore.content, aicore.delivery, aicore.release (docstring-заглушки) и закрепить их слои в test_architecture; перенести из skiller/common.py и budget.py модель skill (SKILL_IGNORE, чтение frontmatter, split_frontmatter, skill_content_hash, разрешение requires) в aicore/content/skill.py с реэкспортом в skiller; добавить skill_digest, SkillDescriptor/describe_skill и контракт skill-descriptor/v1 с примерами; тесты; убрать гипотезы карты для resolve.py и lock.py (остаются в skiller по D40).",
   "why": "D40, D41, E27: модель skill — основа всех следующих пунктов (budget, publication, eval, materialize импортируют её), поэтому идёт первой вместе с каркасом и правилом слоёв. Жёсткие риски: (1) тихое изменение content_sha256 в skills.json при переносе skill_content_hash — ловит golden skiller-registry; (2) циклический импорт aicore.content ↔ delivery — правило слоёв в test_architecture до появления кода; (3) дескриптор, который выдумывает значения, — поля только из frontmatter и upstream.json, неизвестное null.",
   "scope": {
@@ -214,6 +214,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:44:59Z"
+  "result": {
+    "started_at": "2026-10-08T15:18:58Z",
+    "finished_at": "2026-10-08T15:29:10Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "9cabcd9b-ae21-4337-855f-a57a4f98dc9f"
+    },
+    "notes": "aicore.content.skill (перенос из common.py/budget.py дословно, реэкспорт в skiller), skill_digest, SkillDescriptor/describe_skill, контракт skill-descriptor/v1, слои content/delivery/release, тесты, карта без resolve.py/lock.py; golden без перезахвата; describe_skill по 217 skills валиден, digest = content_sha256.",
+    "deviations": [
+      "metadata как открытый object, пустые поля справочных записей upstream, ValueError при отсутствии SKILL.md, 4 invalid-примера"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T15:29:10Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T15:29:10Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T15:29:10Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T15:29:10Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T15:29:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T15:29:10Z"
 }

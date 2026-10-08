@@ -3,7 +3,6 @@
 Verbatim common code (die/warn/now_iso/confirm/sanitize + core Env) moved to the
 general core; here - only specifics swissknifeman (path-property, parse_flags,
 frontmatter, delegation of the environment to host commands, registry constants)."""
-import hashlib
 import shutil
 import subprocess
 import sys
@@ -18,7 +17,15 @@ from core import (  # noqa: F401
     parse_inline_list, run_cmd, safe_load_json, sanitize,
     state_dir, warn,
 )
-from core import parse_frontmatter as _core_parse_frontmatter
+
+# Skill model: moved to aicore.content.skill, re-exported under the historical names
+# (after the first ``core`` import, which puts aicore on sys.path).
+from aicore.content.skill import (  # noqa: F401
+    DEPENDENCY_DIAGNOSTIC_CODES, SKILL_IGNORE, aggregate_dependency_diagnostics,
+    resolve_requires_bfs, skill_content_hash,
+)
+from aicore.content.skill import read_frontmatter as parse_frontmatter  # noqa: F401
+from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fields  # noqa: F401
 
 from .host import host_command, load_host
 
@@ -30,18 +37,6 @@ MANIFEST = ".swissknifeman-manifest.json"
 MANIFEST_VERSION = 1
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
-# Skill catalog files that are NOT sent to the consuming project by any channel
-# physical transfer (vendor/sync): upstream.json and .claude-plugin — service registry;
-# SKILL.*.md — non-canonical localized/reference alternates ("SKILL.*.md" not
-# matches itself EN-only "SKILL.md"); evals/ — behavioral tests
-# skill; __pycache__/*.pyc — bytecode cache, appears locally when launched manually
-# .py-snippets (e.g. snippets/check.py) — found while investigating unstable
-# content_sha256 for the skill with .py-snippets (registry --check turned green locally and
-# drifted in a clean checkout/CI). THE SINGLE source of truth: vendor.copy_skill and
-# skillset.sync copy through it (used to be duplicated and skillset lost
-# SKILL.*.md/evals → leak RU-source).
-SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
-                "__pycache__", "*.pyc", "*.provider-artifact.bak")
 # CONFIG_KEYS lives HERE named (it is taken by both gates synchronous with the circuit -
 # doctor.py and tests/test_schema.py — and documentation), but the value is from 2026-08-02
 # (P6.2) OUTPUT from fields skiller.config.ProjectConfig: list of keys
@@ -231,159 +226,3 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
 
 
 # parse_flags — from general core (re-export above); was previously duplicated here.
-
-
-# --- frontmatter --------------------------------------------------------------
-# Analysis moved to general core.text (single source for every package).
-# Here all that remains is to read the file: utf-8-sig cuts BOM, if available (otherwise
-# `﻿---` != `---` and all frontmatter would be silently ignored).
-def parse_frontmatter(path):
-    """Frontmatter skill along the way (core.parse_frontmatter on top utf-8-sig-read)."""
-    return _core_parse_frontmatter(Path(path).read_text(encoding="utf-8-sig"))
-
-
-def parse_frontmatter_fields(skill_md):
-    """name + requires from the first ----delimited block."""
-    fm = parse_frontmatter(skill_md)
-    return {"name": fm.get("name", ""),
-            "requires": parse_inline_list(fm.get("requires", ""))}
-
-
-# --- requires (transitive dependency BFS) --------------------------------------
-DEPENDENCY_DIAGNOSTIC_CODES = frozenset({
-    "SKILL_REQUIRED_EXCLUDED",
-    "SKILL_REQUIRED_UNKNOWN",
-})
-
-
-def aggregate_dependency_diagnostics(diagnostics):
-    """Collapse dependency failures into stable machine-readable diagnostics.
-
-    Human warnings remain owned by :func:`resolve_requires_bfs`; this projection is
-    deliberately message-free so localization cannot change diagnostic identity.
-    Repeated observations of the same ``code``/required skill are represented once,
-    with the complete sorted requester set in ``affected_identities``.
-    """
-    grouped = {}
-    for item in diagnostics:
-        code = item.get("code")
-        required = item.get("required_skill")
-        requester = item.get("requester")
-        if (code not in DEPENDENCY_DIAGNOSTIC_CODES
-                or not isinstance(required, str) or not required
-                or not isinstance(requester, str) or not requester):
-            continue
-        grouped.setdefault((code, required), set()).add(requester)
-    return [
-        {
-            "code": code,
-            "severity": "warning",
-            "required_skill": required,
-            "affected_identities": sorted(requesters),
-        }
-        for (code, required), requesters in sorted(grouped.items())
-    ]
-
-
-def resolve_requires_bfs(seed, lookup, selected_keys, exclude, *, diagnostics=None):
-    """Transitive BFS resolve frontmatter `requires` — SINGLE source for
-    vendor.resolve_requires (FS-tuples) and skillset._pull_requires (registry-entry):
-    before these were two independent, already diverged bodies (RU/EN texts warn,
-    audit V-1). The caller adapts its data model to the dictionary node via `lookup`.
-
-    seed: [(dep_name, requester_key), ...] — start queue (requires already
-        selected skills).
-    lookup(dep_name) -> {"key", "requires": [str], "exclude_tokens": set[str], ...} | None
-        — resolve dependency name to node; None — dependency not found in the registry.
-        The node can carry any additional. fields (e.g. "_payload") — the caller reads them himself
-        from return.
-    selected_keys: mutable set of already selected keys - MUTATES (here
-        keys of resolved nodes are added), to call again/recursion not
-        doubled what was already selected.
-    exclude: many tokens that BEAT addiction (safety-oriented) —
-        dependency with intersection exclude_tokens is skipped with warning, even if
-        another skill needs it.
-
-    diagnostics: optional mutable list populated with stable dependency records.
-        It does not suppress or change the existing human warning text.
-
-    Returns [(node, requester_key), ...] in resolution order - caller himself
-    decides how to put nodes in its structure (list of tuples / dict by name)."""
-    queue = list(seed)
-    resolved = []
-    observed_diagnostics = []
-    while queue:
-        dep, requester = queue.pop(0)
-        if dep in selected_keys:
-            continue
-        node = lookup(dep)
-        if node is None:
-            warn(f"'{requester}' requires unknown skill '{dep}' — pass")
-            observed_diagnostics.append({
-                "code": "SKILL_REQUIRED_UNKNOWN",
-                "required_skill": dep,
-                "requester": requester,
-            })
-            continue
-        if node["exclude_tokens"] & exclude:
-            warn(f"'{requester}' requires '{dep}', but he's in exclude — dependency missing")
-            observed_diagnostics.append({
-                "code": "SKILL_REQUIRED_EXCLUDED",
-                "required_skill": dep,
-                "requester": requester,
-            })
-            continue
-        selected_keys.add(node["key"])
-        resolved.append((node, requester))
-        queue.extend((d, node["key"]) for d in node["requires"])
-    if diagnostics is not None:
-        prior = [
-            {
-                "code": item.get("code"),
-                "required_skill": item.get("required_skill"),
-                "requester": requester,
-            }
-            for item in diagnostics
-            for requester in item.get("affected_identities", [])
-        ]
-        diagnostics[:] = aggregate_dependency_diagnostics(
-            prior + observed_diagnostics)
-    return resolved
-
-
-def skill_content_hash(skill_dir):
-    """SHA-256 based on the contents of ALL files in the skill catalog - drift detection sync wider,
-    than one at a time SKILL.md: catches edits in snippets/ and references/ (which SKILL.md
-    may not move). We ignore the same thing that is NOT vendored: upstream.json, language
-    alternatives SKILL.*.md (except SKILL.md), .claude-plugin/, __pycache__/*.pyc.
-    The relative path of the file is included in the hash (rename protection/movements).
-    The order is stable (sorted).
-
-    Full hexdigest, like the others sha256 in the registry/location. Complements, NOT replaces
-    field sha256 (by SKILL.md) — old locks without content_sha256 degrade correctly."""
-    h = hashlib.sha256()
-    skill_dir = Path(skill_dir)
-    for f in sorted(skill_dir.rglob("*")):
-        if not f.is_file():
-            continue
-        name = f.name
-        if name == "upstream.json":
-            continue
-        if name.startswith("SKILL.") and name.endswith(".md") and name != "SKILL.md":
-            continue
-        if ".claude-plugin" in f.parts:
-            continue
-        # __pycache__/*.pyc — bytecode cache when running locally.py-snippets (e.g.
-        # snippets/check.py); without exception content_sha256 is unstable between machines
-        # (found during drift investigation skills.json — on the developer disk was
-        # __pycache__, in a clean checkout/CI it’s not there, the hashes were different).
-        if "__pycache__" in f.parts or name.endswith(".pyc"):
-            continue
-        # evals/ — behavioral tests (eval-first), NOT vendored (see vendor.copy_skill);
-        # is excluded from the hash so that editing the test is not considered a drift of the vendor skill.
-        if "evals" in f.relative_to(skill_dir).parts:
-            continue
-        h.update(str(f.relative_to(skill_dir)).encode("utf-8"))
-        h.update(b"\0")
-        h.update(f.read_bytes())
-    return h.hexdigest()

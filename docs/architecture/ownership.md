@@ -26,7 +26,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | `packages/skiller/lib/skiller/common.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/connect.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/delivery.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/lock.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/native_codex.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/plugins.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/publication.py` | skiller | aicore | content | P5 | hypothesis | - |
@@ -34,7 +33,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | `packages/skiller/lib/skiller/registry.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/release.py` | skiller | aicore | release | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/release_attestation.py` | skiller | aicore | release | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/resolve.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/skillset.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/status.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/update.py` | skiller | aicore | delivery | P5 | hypothesis | - |

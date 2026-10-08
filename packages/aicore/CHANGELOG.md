@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 ## [Unreleased]
 
 ### Added
+- **`aicore.content.skill`**: the skill model moved in from the skill library — the files that never travel with a
+  skill (`SKILL_IGNORE`), frontmatter reading (`read_frontmatter`, `read_frontmatter_fields`, `split_frontmatter`),
+  the content hash (`skill_content_hash`, new `skill_digest`) and the transitive `requires` resolution
+  (`resolve_requires_bfs`, `aggregate_dependency_diagnostics`). Bodies are unchanged, so every `content_sha256`
+  stays the same.
+- **`skill-descriptor/v1` contract** with `SkillDescriptor` and `describe_skill`: identity, content digest, the
+  optional fields of the Agent Skills standard (`license`, `compatibility`, `allowed-tools`, `metadata`),
+  `adapters`, `requires`, `risk` and provenance from `upstream.json`; read-only, an absent value is null or empty.
+- **Subpackages `aicore.content`, `aicore.delivery`, `aicore.release`** with their layering rule in
+  `tests/test_architecture.py`: content imports util, provider, artifacts and config; release imports util and content;
+  delivery imports everything below it; the older subpackages import none of the three.
 - **`aicore config` command line** (`bin/aicore`, `python3 -m aicore`): `show`, `explain` (text and the
   `config-explain/v1` JSON), `set`, `unset`, `init`, `example` and `paths`. Writes go through the comment-keeping
   editor with a backup and an atomic replace; `init` and `example --write` never touch an existing hand-made file

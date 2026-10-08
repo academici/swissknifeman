@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:skill-descriptor:v1",
+  "title": "skill-descriptor",
+  "type": "object",
+  "description": "What a skill is, read from its directory: identity, content digest, the optional fields of the Agent Skills standard and where the skill came from. Produced by `aicore.content.skill.describe_skill`; values come from the SKILL.md frontmatter and the `upstream.json` next to it and are never rewritten, an absent value is null, an empty list or an empty map.",
+  "properties": {
+    "schema": {
+      "const": "skill-descriptor/v1",
+      "description": "Schema identifier."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Identity of the skill: `<bucket>/<name>` in the skiller library, `<module>/<name>` elsewhere."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Frontmatter `name`."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Frontmatter `description`."
+    },
+    "version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Frontmatter `version`, or null."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Tagged SHA-256 of the skill content: the `content_sha256` algorithm of the skill registry (all files except upstream.json, localized SKILL.*.md, .claude-plugin, evals and bytecode caches)."
+    },
+    "license": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Frontmatter `license`; otherwise the `license` of upstream.json; otherwise null."
+    },
+    "compatibility": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "description": "Frontmatter `compatibility`: free text on environment requirements, 1-500 characters by the standard (the length is checked by the producer). Never executed."
+    },
+    "allowed_tools": {
+      "type": "array",
+      "description": "Frontmatter `allowed-tools` as a list. Pre-approval of tools in Claude Code only; not a requirement and not a security boundary.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One tool name or pattern."
+      }
+    },
+    "adapters": {
+      "type": "array",
+      "description": "Frontmatter `adapters`: the agents the skill is written for.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One adapter name."
+      }
+    },
+    "requires": {
+      "type": "array",
+      "description": "Frontmatter `requires`: skills this skill depends on.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One skill name."
+      }
+    },
+    "risk": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Frontmatter `risk`, or null."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Frontmatter `metadata`: the free-form map of the standard, string keys to string values (an open object, the keys are the author's)."
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance",
+      "description": "Where the skill came from."
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "description",
+    "digest",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "description": "Origin of the skill: `{\"source\": \"local\"}` when it has no upstream.json, otherwise the recorded upstream data.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "`local` for a skill kept in this repository, else the upstream source such as `github`."
+        },
+        "repo": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Upstream repository."
+        },
+        "strategy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "How upstream changes are followed, as recorded by upstream.json."
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "description": "License recorded by upstream.json."
+        },
+        "files": {
+          "type": "array",
+          "description": "Upstream files the skill was fetched from.",
+          "items": {
+            "$ref": "#/$defs/file",
+            "description": "One fetched file."
+          }
+        },
+        "audit": {
+          "$ref": "#/$defs/audit",
+          "description": "Result of the last upstream audit."
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "file": {
+      "type": "object",
+      "description": "One upstream file and its fetch record, as recorded; a reference-only record has an empty path and sha256.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path inside the skill directory; empty for a reference-only record."
+        },
+        "url": {
+          "type": "string",
+          "description": "Where the file was fetched from, or the reference."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "SHA-256 of the fetched file, hex; empty for a reference-only record."
+        },
+        "fetched_at": {
+          "type": "string",
+          "description": "Date or time of the fetch as recorded."
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "description": "Result of an upstream audit.",
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Verdict of the audit."
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Date or time of the audit as recorded."
+        },
+        "upstream_sha": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Upstream commit the audit looked at."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -10,15 +10,18 @@ import re
 import shlex
 from typing import Mapping
 
-from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.provider.values import ProviderId
 from core.provider.manifest import (ProviderCapabilityManifest, default_manifest_path,
                                     load_provider_manifest, provider_support_projection)
 from core.provider.projection import ProjectionCatalog, load_projection_catalog, projection_spec
-from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
-                                    ArtifactRenderResult, ArtifactSource, ArtifactTarget,
-                                    plan_artifact_render)
+from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderResult,
+                                    ArtifactSource)
 from core.provider.lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
 from core.provider.runtime import codex_task_plugin_root_expression
+from aicore.content.commands import (frontmatter_description, runtime_provenance, split_command,
+                                     strict_frontmatter_fields)
+from aicore.content.publication import (capability_requirements, codex_plugin_manifest,
+                                        manifest_bytes, publication_lock, render_whole_file)
 from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_CLASSES,
                                   metadata_value)
 
@@ -620,7 +623,7 @@ def plan_codex_command_render(
         content = catalog.content_for(record.command_id)
         try:
             runtime = _codex_runtime_bytes(record, content, mapping)
-            description = _project_codex_runtime_tokens(_frontmatter_description(content))
+            description = _project_codex_runtime_tokens(frontmatter_description(content))
         except (UnicodeDecodeError, ValueError) as error:
             diagnostics.append(_diag(
                 "CMD_SOURCE_DRIFT", record, "/source/runtime-projection",
@@ -645,14 +648,13 @@ def plan_codex_command_render(
         return CodexCommandRenderPlan((), tuple(diagnostics))
 
     results: list[ArtifactRenderResult] = []
-    plugin = {
-        "name": "task", "version": catalog.plugin_version,
-        "description": "Provider-neutral task commands and executable plan protocol for Codex",
-        "skills": ["./adapters/codex/skills", "./skills"],
-    }
+    plugin = codex_plugin_manifest(
+        "task", catalog.plugin_version,
+        "Provider-neutral task commands and executable plan protocol for Codex",
+        ["./adapters/codex/skills", "./skills"])
     all_sources = tuple(_source(record) for record in catalog.records)
     results.append(_artifact("task.codex.plugin", "packages/task/.codex-plugin/plugin.json",
-                             _json_bytes(plugin), all_sources, ("skills.repository",),
+                             manifest_bytes(plugin, sort_keys=True), all_sources, ("skills.repository",),
                              catalog, mapping.capability_catalog_version,
                              {"publication_unit": "task", "kind": "plugin"}))
 
@@ -685,13 +687,10 @@ def plan_codex_command_render(
         "rendered_hash": result.provenance.rendered_hash,
         "artifact_id": result.provenance.artifact_id,
     } for result in sorted(results, key=lambda item: item.target.path)]
-    publication_lock = {
-        "contract_version": "1.0.0", "publication_unit": "task",
-        "version": catalog.plugin_version, "artifacts": records,
-    }
+    lock = publication_lock("task", catalog.plugin_version, records)
     results.append(_artifact("task.codex.publication-lock",
                              "packages/task/adapters/codex/publication-lock.json",
-                             _json_bytes(publication_lock), all_sources, ("skills.repository",),
+                             manifest_bytes(lock, sort_keys=True), all_sources, ("skills.repository",),
                              catalog, mapping.capability_catalog_version,
                              {"publication_unit": "task", "kind": "publication-lock"}))
     return CodexCommandRenderPlan(tuple(sorted(results, key=lambda item: item.target.path)),
@@ -836,33 +835,33 @@ def plan_cursor_command_render(
             continue
         name = record.command_id.removeprefix("task:")
         base = f"packages/task/adapters/cursor/skills/task-{name}"
-        description = _frontmatter_description(catalog.content_for(record.command_id))
+        description = frontmatter_description(catalog.content_for(record.command_id))
         wrapper = _cursor_wrapper_bytes(record, description, mapping)
         capabilities = tuple(item.capability_id for item in record.capability_requirements)
         runtime = _cursor_runtime_bytes(record, catalog.content_for(record.command_id), mapping)
-        results.append(_artifact_cursor(f"task.cursor.{name.replace('-', '.')}.skill",
-                                        f"{base}/SKILL.md", wrapper, (_source(record),),
-                                        capabilities, catalog, mapping.capability_catalog_version,
-                                        {"command_id": record.command_id, "kind": "skill-wrapper"}))
-        results.append(_artifact_cursor(f"task.cursor.{name.replace('-', '.')}.runtime",
-                                        f"{base}/command.md", runtime, (_source(record),),
-                                        capabilities, catalog, mapping.capability_catalog_version,
-                                        {"command_id": record.command_id, "kind": "runtime-projection"}))
+        results.append(_artifact(f"task.cursor.{name.replace('-', '.')}.skill",
+                                 f"{base}/SKILL.md", wrapper, (_source(record),),
+                                 capabilities, catalog, mapping.capability_catalog_version,
+                                 {"command_id": record.command_id, "kind": "skill-wrapper"},
+                                 provider_id=ProviderId.CURSOR, adapter_id="task.cursor-command"))
+        results.append(_artifact(f"task.cursor.{name.replace('-', '.')}.runtime",
+                                 f"{base}/command.md", runtime, (_source(record),),
+                                 capabilities, catalog, mapping.capability_catalog_version,
+                                 {"command_id": record.command_id, "kind": "runtime-projection"},
+                                 provider_id=ProviderId.CURSOR, adapter_id="task.cursor-command"))
     records = [{
         "path": result.target.path,
         "source_hash": result.provenance.source_hash,
         "rendered_hash": result.provenance.rendered_hash,
         "artifact_id": result.provenance.artifact_id,
     } for result in sorted(results, key=lambda item: item.target.path)]
-    publication_lock = {
-        "contract_version": "1.0.0", "publication_unit": "task",
-        "version": catalog.plugin_version, "artifacts": records,
-    }
-    results.append(_artifact_cursor("task.cursor.publication-lock",
-                                      "packages/task/adapters/cursor/publication-lock.json",
-                                      _json_bytes(publication_lock), all_sources, ("skills.repository",),
-                                      catalog, mapping.capability_catalog_version,
-                                      {"publication_unit": "task", "kind": "publication-lock"}))
+    lock = publication_lock("task", catalog.plugin_version, records)
+    results.append(_artifact("task.cursor.publication-lock",
+                             "packages/task/adapters/cursor/publication-lock.json",
+                             manifest_bytes(lock, sort_keys=True), all_sources, ("skills.repository",),
+                             catalog, mapping.capability_catalog_version,
+                             {"publication_unit": "task", "kind": "publication-lock"},
+                             provider_id=ProviderId.CURSOR, adapter_id="task.cursor-command"))
     return CursorCommandRenderPlan(tuple(sorted(results, key=lambda item: item.target.path)),
                                    tuple(diagnostics))
 
@@ -880,7 +879,7 @@ def plan_grok_command_render(
         return CursorCommandRenderPlan((), tuple(diagnostics))
     all_sources = tuple(_source(record) for record in catalog.records
                         if record.command_id not in blocked)
-    publication_lock = {
+    lock = {
         "contract_version": "1.0.0", "publication_unit": "task",
         "version": catalog.plugin_version,
         "discovery_surface": ".agents/skills",
@@ -890,7 +889,7 @@ def plan_grok_command_render(
     results = [_artifact(
         "task.grok.publication-lock",
         "packages/task/adapters/grok/publication-lock.json",
-        _json_bytes(publication_lock), all_sources, ("skills.repository",),
+        manifest_bytes(lock, sort_keys=True), all_sources, ("skills.repository",),
         catalog, mapping.capability_catalog_version,
         {"publication_unit": "task", "kind": "publication-lock",
          "discovery_surface": ".agents/skills"},
@@ -1369,18 +1368,13 @@ def _artifact(artifact_id: str, target: str, rendered: bytes,
               semantic_parameters: Mapping[str, object], *,
               provider_id: ProviderId = ProviderId.CODEX,
               adapter_id: str = "task.codex-command") -> ArtifactRenderResult:
-    requirements = tuple(CapabilityRequirement(CapabilityId(item),
-                                                (SupportLevel.ADAPTED, SupportLevel.NATIVE))
-                         for item in sorted(set(capabilities)))
     parameters = dict(semantic_parameters)
     parameters["plugin_version"] = catalog.plugin_version
-    request = ArtifactRenderRequest(
-        artifact_id, sources, ArtifactTarget(target, ("whole-file", ())),
-        ArtifactAdapterIdentity(adapter_id, ADAPTER_VERSION, provider_id,
-                                capability_catalog_version, requirements),
-        (), parameters, lambda _request: rendered,
-    )
-    return plan_artifact_render(request)
+    adapter = ArtifactAdapterIdentity(adapter_id, ADAPTER_VERSION, provider_id,
+                                      capability_catalog_version,
+                                      capability_requirements(capabilities))
+    return render_whole_file(artifact_id=artifact_id, target=target, sources=sources,
+                             adapter=adapter, parameters=parameters, rendered=rendered)
 
 
 def _source(record: CommandRecord) -> ArtifactSource:
@@ -1425,13 +1419,8 @@ def _cursor_runtime_bytes(record: CommandRecord, content: bytes,
     text = content.decode("utf-8")
     if record.kind == "plan-protocol":
         text = _cursor_native_launch_rule(mapping) + text
-    provenance = (
-        "<!-- Generated Cursor runtime projection; do not edit as source.\n"
-        f"Canonical source: {record.source.path}\n"
-        f"Canonical SHA-256: {record.source.content_hash}\n"
-        f"Adapter: task.cursor-command/{ADAPTER_VERSION}\n"
-        "-->\n"
-    )
+    provenance = runtime_provenance("Cursor", record.source.path, record.source.content_hash,
+                                    f"task.cursor-command/{ADAPTER_VERSION}")
     return (provenance + text).encode("utf-8")
 
 
@@ -1453,24 +1442,6 @@ agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled
 `auto` never substitutes a fixed frontier or implementation pin. Current Cursor mapping: {class_routes}.
 
 '''
-
-
-def _artifact_cursor(artifact_id: str, target: str, rendered: bytes,
-                     sources: tuple[ArtifactSource, ...], capabilities: tuple[str, ...],
-                     catalog: CommandCatalog, capability_catalog_version: str,
-                     semantic_parameters: Mapping[str, object]) -> ArtifactRenderResult:
-    requirements = tuple(CapabilityRequirement(CapabilityId(item),
-                                                (SupportLevel.ADAPTED, SupportLevel.NATIVE))
-                         for item in sorted(set(capabilities)))
-    parameters = dict(semantic_parameters)
-    parameters["plugin_version"] = catalog.plugin_version
-    request = ArtifactRenderRequest(
-        artifact_id, sources, ArtifactTarget(target, ("whole-file", ())),
-        ArtifactAdapterIdentity("task.cursor-command", ADAPTER_VERSION, ProviderId.CURSOR,
-                                capability_catalog_version, requirements),
-        (), parameters, lambda _request: rendered,
-    )
-    return plan_artifact_render(request)
 
 
 def _wrapper_bytes(record: CommandRecord, description: str,
@@ -1511,29 +1482,13 @@ Preserve the semantic command ID, gates, status literals, scope, and validation 
 def _codex_runtime_bytes(record: CommandRecord, content: bytes,
                          mapping: ProviderCommandMapping) -> bytes:
     """Project one canonical Claude command into a finite, provider-safe Codex runtime."""
-    text = content.decode("utf-8")
-    lines = text.splitlines(keepends=True)
-    if not lines or lines[0].rstrip("\r\n") != "---":
-        raise ValueError("canonical frontmatter opening fence is missing")
-    closing = next(
-        (index for index, line in enumerate(lines[1:], start=1)
-         if line.rstrip("\r\n") == "---"),
-        None,
-    )
-    if closing is None:
-        raise ValueError("canonical frontmatter closing fence is missing")
-    body = "".join(lines[closing + 1:])
+    _frontmatter, body = split_command(content)
     projected = _project_codex_runtime_tokens(body)
     if record.kind == "plan-protocol":
         provider_rule = _codex_current_route_rule(record)
         projected = _codex_native_launch_rule(mapping) + provider_rule + projected
-    provenance = (
-        "<!-- Generated Codex runtime projection; do not edit as source.\n"
-        f"Canonical source: {record.source.path}\n"
-        f"Canonical SHA-256: {record.source.content_hash}\n"
-        f"Adapter: task.codex-command/{ADAPTER_VERSION}\n"
-        "-->\n"
-    )
+    provenance = runtime_provenance("Codex", record.source.path, record.source.content_hash,
+                                    f"task.codex-command/{ADAPTER_VERSION}")
     return (provenance + projected).encode("utf-8")
 
 
@@ -1636,7 +1591,7 @@ def _claude_frontmatter_diagnostics(
         record: CommandRecord, content: bytes,
         mapping: ProviderCommandMapping) -> tuple[CommandDiagnostic, ...]:
     try:
-        fields = _frontmatter_fields(content)
+        fields = strict_frontmatter_fields(content)
     except ValueError as error:
         return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter", {"valid": True},
                       {"error": str(error)}, mapping,
@@ -1663,47 +1618,6 @@ def _claude_frontmatter_diagnostics(
         return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter/routing", expected, observed,
                       mapping, "Claude frontmatter does not match the frozen neutral route"),)
     return ()
-
-
-def _frontmatter_fields(content: bytes) -> dict[str, str]:
-    try:
-        lines = content.decode("utf-8").splitlines()
-    except UnicodeDecodeError as error:
-        raise ValueError("command source is not UTF-8") from error
-    if not lines or lines[0] != "---":
-        raise ValueError("opening delimiter is missing")
-    try:
-        end = lines.index("---", 1)
-    except ValueError as error:
-        raise ValueError("closing delimiter is missing") from error
-    fields: dict[str, str] = {}
-    for line in lines[1:end]:
-        if ":" not in line:
-            raise ValueError("frontmatter field is malformed")
-        key, value = line.split(":", 1)
-        key, value = key.strip(), value.strip()
-        if not key or key in fields:
-            raise ValueError("frontmatter field is empty or duplicated")
-        fields[key] = value
-    return fields
-
-
-def _frontmatter_description(content: bytes) -> str:
-    try:
-        text = content.decode("utf-8")
-    except UnicodeDecodeError as error:
-        raise ValueError("CMD_SOURCE_DRIFT: command source is not UTF-8") from error
-    match = re.search(r"^description:\s*(.+?)\s*$", text, re.MULTILINE)
-    if not match:
-        raise ValueError("CMD_SOURCE_DRIFT: command description is missing")
-    value = match.group(1)
-    if value.startswith('"'):
-        try:
-            parsed = json.loads(value)
-        except json.JSONDecodeError as error:
-            raise ValueError("CMD_SOURCE_DRIFT: command description is malformed") from error
-        return _required_string(parsed, "description")
-    return _required_string(value, "description")
 
 
 def _diag(code: str, record: CommandRecord, path: str, required: Mapping[str, object],
@@ -1775,7 +1689,3 @@ def _required_string(value: object, label: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} must be a non-empty string")
     return value
-
-
-def _json_bytes(value: object) -> bytes:
-    return (json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode("utf-8")

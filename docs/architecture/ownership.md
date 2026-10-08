@@ -35,7 +35,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | `packages/skiller/lib/skiller/status.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/update.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/vendor.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/task/lib/task/command_render.py` | task | aicore | content | P5 | hypothesis | shared rendering part; the rest of the folder is planner |
 | `packages/maind/scripts/cache-brain-docs.sh` | maind | brain | - | P7 | fixed | - |
 | `packages/skiller/lib/skiller/brain_sync.py` | skiller | brain | - | P7 | fixed | - |
 | `packages/skiller/skills/system/brain-locator/` | skiller | brain | skills | P7 | fixed | - |

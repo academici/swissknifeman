@@ -180,6 +180,8 @@ class TestImportBoundary(unittest.TestCase):
             "render_whole_file": "lib/aicore/content/publication.py",
             "codex_plugin_manifest": "lib/aicore/content/publication.py",
             "manifest_bytes": "lib/aicore/content/publication.py",
+            "strict_frontmatter_fields": "lib/aicore/content/commands.py",
+            "runtime_provenance": "lib/aicore/content/commands.py",
         }
         roots = [ROOT / "lib"]
         packages = ROOT.parent

@@ -18,6 +18,8 @@ export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 export HOME="$TEST_HOME"
+# The location tests must not see the developer's real XDG places or a sandbox override.
+unset SKM_HOME XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UNITS_PATH
 
 verbose=""
 [[ "${1:-}" == "-v" ]] && verbose="-v"

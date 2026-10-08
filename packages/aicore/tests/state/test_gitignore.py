@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import gitignore_policy as gp
+from aicore.state import gitignore as gp
 
 
 def git(root, *args):

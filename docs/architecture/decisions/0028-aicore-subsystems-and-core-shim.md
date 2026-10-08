@@ -18,8 +18,7 @@ paths, proc, project, repo, term, text, digest, schema), `provider` (the provide
 subpackages. Provider data ships in `packages/aicore/configs/` and is found from the package file, not from the
 repository root. `core/__init__.py` stays as a shim: it makes `aicore` importable and registers each old module
 name in `sys.modules` as the same object as the new one (`core.io is aicore.util.io`), and keeps the old flat
-`__all__`. Modules that are not moved yet (`config_paths`, `gitignore_policy`, `runs`, `pathology`,
-`codegraph_telemetry`) stay in `core/`. The window of the shim lasts until `core/` is removed with the hub modules'
+`__all__`. Modules that are not moved yet (`runs`, `pathology`, `codegraph_telemetry`) stay in `core/`. The window of the shim lasts until `core/` is removed with the hub modules'
 move onto `aicore`; a test checks module identity and the facade.
 
 ## Alternatives considered

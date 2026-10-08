@@ -66,13 +66,34 @@ class TestImportBoundary(unittest.TestCase):
             tree = ast.parse(path.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom) and node.level >= 2:
-                    yield (node.module or "").split(".")[0], node.lineno
+                    if node.module:
+                        yield node.module.split(".")[0], node.lineno
+                    else:  # ``from .. import util``
+                        for alias in node.names:
+                            yield alias.name, node.lineno
+                elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                    parts = node.module.split(".")  # ``from aicore.provider import x``
+                    if parts[0] == "aicore" and len(parts) > 1:
+                        yield parts[1], node.lineno
+                elif isinstance(node, ast.Import):
+                    for alias in node.names:  # ``import aicore.provider``
+                        parts = alias.name.split(".")
+                        if parts[0] == "aicore" and len(parts) > 1:
+                            yield parts[1], node.lineno
         for path in sorted((LIB / "util").glob("*.py")):
             for target, line in aicore_targets(path):
                 self.assertNotIn(target, ("provider", "artifacts"), f"{path.name}:{line}")
         for path in sorted((LIB / "provider").glob("*.py")):
             for target, line in aicore_targets(path):
                 self.assertIn(target, ("util", "artifacts"), f"{path.name}:{line}")
+        for path in sorted((LIB / "state").glob("*.py")):
+            for target, line in aicore_targets(path):
+                self.assertEqual(target, "util", f"state/{path.name}:{line}")
+        for name in ("provider", "artifacts"):
+            for path in sorted((LIB / name).glob("*.py")):
+                for target, line in aicore_targets(path):
+                    self.assertNotEqual(target, "state", f"{name}/{path.name}:{line}")
+        self.assertNotIn("state", [t for t, _ in aicore_targets(LIB / "usage.py")])
 
     def test_one_canonical_json_and_one_digest_implementation(self):
         """Canonical JSON and tagged SHA-256 of JSON live in util/digest.py only."""

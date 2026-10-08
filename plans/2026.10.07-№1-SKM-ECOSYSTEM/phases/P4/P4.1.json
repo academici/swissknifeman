@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.1",
   "title": "Начало фазы и aicore.state: места XDG и SKM_HOME, наследие, бэкапы с ротацией, политика gitignore; удаление config_paths",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Влить origin/main и сверить golden; пакет aicore.state (machine_locations с SKM_HOME и XDG, проектные места, find_project_root, resolve_with_legacy с одним предупреждением, backup/list_backups с ротацией по каталогам-штампам); git mv core/gitignore_policy.py → aicore/state/gitignore.py и configs/gitignore-policy.json → packages/aicore/configs с записями .swissknifeman/config.toml и .swissknifeman/state/; shim core.gitignore_policy; удаление core/config_paths.py и shared_config_path; aicore.MIN_PYTHON = (3, 9); тесты слоёв и синтаксиса 3.9; раннер aicore снимает XDG_*/SKM_HOME.",
   "why": "Архитектура §5.2 и D5: стандартные места состояния, SKM_HOME для изоляции, бэкапы с ротацией вместо *.bak; P3 оставил config_paths и gitignore_policy на P4 (D31). Риски: (1) раннер тестов, читающий реальные XDG_*-каталоги разработчика; (2) ротация, удаляющая чужие каталоги; (3) maind doctor ломается без alias core.gitignore_policy.",
   "scope": {
@@ -250,12 +250,44 @@
   },
   "result": {
     "started_at": "2026-10-08T12:07:07Z",
+    "finished_at": "2026-10-08T12:20:46Z",
     "executor": {
       "provider": "claude",
       "model": "sonnet-5.5",
       "effort": "high",
       "session": "2ffd486f-1d91-404e-8cf1-14c3ab7326d6"
-    }
+    },
+    "notes": "aicore.state (места XDG/SKM_HOME, наследие, бэкапы с ротацией), политика gitignore перенесена git mv, config_paths удалён, MIN_PYTHON=(3,9), тесты слоёв и синтаксиса 3.9; прогнаны также skiller/analyst/orch/harness и scripts/test-*.py",
+    "deviations": [
+      "shared_config_path использовал ещё maind/provider_deploy.py (факт плана неверен): заменён прямым путём; docs/reference*.md, harness grok.md поправлены; golden перезахвачен с причиной (проекции runbook)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T12:20:46Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T12:20:46Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T12:20:46Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T12:20:46Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T12:20:46Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-08T12:07:07Z"
+  "updated_at": "2026-10-08T12:20:46Z"
 }

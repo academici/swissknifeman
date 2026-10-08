@@ -163,6 +163,24 @@
       "why": "Select and lock vendor-skills are needed by disconnected consumers and CI (skiller CLAUDE.md: vendor-targets committed)."
     },
     {
+      "id": "project-config",
+      "policy": "commit",
+      "paths": [
+        ".swissknifeman/config.toml"
+      ],
+      "owner": "aicore.config (swissknifeman config)",
+      "why": "Project layer of the module configuration: shared settings of the team, no secrets (secrets are referenced by name, never stored)."
+    },
+    {
+      "id": "swissknifeman-state",
+      "policy": "ignore",
+      "paths": [
+        ".swissknifeman/state/"
+      ],
+      "owner": "aicore.state",
+      "why": "Per-project runtime state of the modules: local, regenerated, machine-specific."
+    },
+    {
       "id": "agent-pack-artifacts",
       "policy": "commit",
       "paths": [

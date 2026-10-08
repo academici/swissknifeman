@@ -23,7 +23,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   parse_lock, provider_config_catalog,
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
-                  support_for, shared_config_path)
+                  support_for)
 from core.provider.lock import artifact_doctor, rollback_chained_bootstrap_transfer
 from .common import atomic_write_text
 
@@ -435,8 +435,7 @@ def _d104_observer_fragment(harness_configs):
     from harness.profiles import load_catalog
 
     lifecycle = plan_lifecycle(
-        load_catalog(shared_config_path("profile-catalog",
-                                        repo_root=harness_configs.parents[2])),
+        load_catalog(harness_configs / "common" / "profile-catalog.json"),
         provider_id=ProviderId.CODEX,
         requests=(LifecycleRequest("context.observer", True),), trusted=True,
         codex_bindings_path=harness_configs / "codex/hooks/lifecycle-context-bindings.json")

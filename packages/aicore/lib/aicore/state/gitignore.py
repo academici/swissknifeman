@@ -1,6 +1,6 @@
 """Check a project's .gitignore/tracking state against the shared gitignore policy.
 
-The policy (`configs/gitignore-policy.json`) maps every service file that swissknifeman, maind,
+The policy (`packages/aicore/configs/gitignore-policy.json`) maps every service file that swissknifeman, maind,
 harness, skiller and task hand out to `ignore` / `commit` / `portable-or-ignore` / `project`.
 `check_project` is read-only: it asks git what is tracked, untracked-and-not-ignored or ignored and
 reports drift with a concrete fix. stdlib only.
@@ -14,8 +14,8 @@ from pathlib import Path
 import re
 import subprocess
 
-from .config_paths import shared_config_path
-
+# The shipped policy lives next to the package (packages/aicore/configs), not at the repository root.
+DEFAULT_POLICY = Path(__file__).resolve().parents[3] / "configs" / "gitignore-policy.json"
 POLICIES = ("ignore", "commit", "portable-or-ignore", "project")
 # Absolute home paths and Windows user dirs: the machine-specific marker used by the runbook.
 _MACHINE = re.compile(r"/home/[^/\s\"']+|/Users/[^/\s\"']+|[A-Za-z]:\\\\?Users\\\\?")
@@ -27,7 +27,7 @@ class PolicyError(ValueError):
 
 
 def load_policy(path: str | Path | None = None) -> dict:
-    target = Path(path) if path else shared_config_path("gitignore-policy")
+    target = Path(path) if path else DEFAULT_POLICY
     try:
         policy = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:

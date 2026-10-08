@@ -3,8 +3,7 @@
 The shared primitives moved to ``packages/aicore`` (:mod:`aicore`). This package keeps the old
 import names working: every moved module is registered in ``sys.modules`` under its old name
 (the very same module object), and the flat facade below keeps its previous ``__all__``.
-Modules that have not moved yet (``config_paths``, ``gitignore_policy``, ``runs``,
-``pathology``, ``codegraph_telemetry``) still live here. New code imports ``aicore``.
+Modules that have not moved yet (``runs``, ``pathology``, ``codegraph_telemetry``) still live here. New code imports ``aicore``.
 """
 import importlib
 import os
@@ -44,6 +43,7 @@ _ARTIFACTS = ("artifact", "lock", "reconcile")
 _ALIASES = {
     "core.provider": "aicore.provider",
     "core.usage": "aicore.usage",
+    "core.gitignore_policy": "aicore.state.gitignore",
     **{"core." + name: "aicore.util." + name for name in _UTIL},
     **{"core.provider." + name: "aicore.provider." + name for name in _PROVIDER},
     **{"core.provider." + name: "aicore.artifacts." + name for name in _ARTIFACTS},
@@ -98,7 +98,6 @@ from aicore.provider.manifest import (ManifestCapability, ManifestEvidence,
                                       provider_manifest_canonical_bytes,
                                       provider_manifest_sha256, provider_support_projection,
                                       support_for)
-from .config_paths import shared_config_path
 from aicore.provider.distribution import (ConnectChannelSpec, DistributionCatalog,
                                           VendorChannelSpec, connect_channel,
                                           load_distribution_catalog, provider_distribution,
@@ -163,7 +162,6 @@ __all__ = [
     "ProjectionCatalog", "ProviderProjectionSpec", "InstructionProjectionPolicy",
     "CommandInvocationPolicy", "load_projection_catalog",
     "projection_spec", "project_common_instructions",
-    "shared_config_path",
     "ArtifactSource", "ArtifactTarget", "ArtifactAdapterIdentity",
     "ArtifactRenderRequest", "ArtifactProvenance", "ArtifactRenderResult",
     "canonical_json_bytes", "sha256_digest", "validate_target_path",

@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "a274c7a7e1d5",
-  "reason": "provider data moved to packages/aicore/configs: the manifest path in the generated provider-support page changed",
+  "captured_from": "7207ebac899d",
+  "reason": "runbook skill names the moved gitignore policy path (packages/aicore/configs); projections regenerated",
   "generators": [
     {
       "id": "skiller-registry",
@@ -174,7 +174,7 @@
     ".agents/skills/harness-operations/SKILL.md": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f",
     ".agents/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
     ".agents/skills/package-architecture/SKILL.md": "067d62d2563dd2d4f9d6a4a484e0f7ae807ea7a477ad776db02d6480a2c6d213",
-    ".agents/skills/project-tooling-runbook/SKILL.md": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02",
+    ".agents/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
     ".agents/skills/release-discipline/SKILL.md": "09b2161b86fc527a97e694e8b9900c31ceff81c882d4c4af1be2b96093929efa",
     ".agents/skills/skill-authoring/SKILL.md": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874",
     ".agents/skills/task-development-philosophy/SKILL.md": "cc30252821edb8f0eb004cab7a6594f8f0848641c7b41a47166ee46c6c431b3e",
@@ -190,7 +190,7 @@
     ".claude/skills/harness-operations/SKILL.md": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f",
     ".claude/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
     ".claude/skills/package-architecture/SKILL.md": "067d62d2563dd2d4f9d6a4a484e0f7ae807ea7a477ad776db02d6480a2c6d213",
-    ".claude/skills/project-tooling-runbook/SKILL.md": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02",
+    ".claude/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
     ".claude/skills/release-discipline/SKILL.md": "09b2161b86fc527a97e694e8b9900c31ceff81c882d4c4af1be2b96093929efa",
     ".claude/skills/skill-authoring/SKILL.md": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874",
     ".claude/skills/task-development-philosophy/SKILL.md": "cc30252821edb8f0eb004cab7a6594f8f0848641c7b41a47166ee46c6c431b3e",
@@ -201,7 +201,7 @@
     ".cursor/rules/swissknifeman-packages.mdc": "e33abaca3f65746ecdb01e1b2948db955528aa9955f807d73158da955a2034da",
     ".cursor/rules/swissknifeman-router.mdc": "7a927516e865d2d2eaffb189f6c5f9f7e598dd5cf946c1e79ace01adb45f68a1",
     ".grok/rules/swissknifeman-instructions.md": "d7450cad926742183bf3557e8d574fd8bbae9b81e0b5742b167a6ebce2012354",
-    "bootstrap/publication-lock.json": "bf124c750a7c7c8ed1e5f71fdaf34f9aa6bb6313a45ff2a8126e93bf729ff682",
+    "bootstrap/publication-lock.json": "cd95f5ff1e402b4ad429ae08be8eb52c27063894e6825f689fb7fba4f3630d40",
     "docs/provider-support.md": "a502c02dd4cd841f29cee7f14de9576f9150abe5c072cc0c2e650260ae47a467",
     "packages/harness/docs/reference/provider-instructions.md": "b3c19918179a3dcca9570b4cbd9ba71de9e3a99804d0f78d33369d3fcdb2aabf",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "0f985b5f7e78f6505d76f3df82e98eef70ae16619a25f523b5395748d395dc75",

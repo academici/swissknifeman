@@ -168,16 +168,16 @@
       "provider": "claude",
       "target": ".claude/skills/project-tooling-runbook/SKILL.md",
       "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md",
-      "canonical_sha256": "be47994cdbd612448992ea4412e88d9481b69374148a1f028f7b5d4cc3b2a089",
-      "rendered_sha256": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02"
+      "canonical_sha256": "6147b695ebabd3fbfa20c68fd8a36267efc145ffba175f805789d13b16ddfcaf",
+      "rendered_sha256": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023"
     },
     {
       "identity": "project-tooling-runbook",
       "provider": "codex",
       "target": ".agents/skills/project-tooling-runbook/SKILL.md",
       "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md",
-      "canonical_sha256": "be47994cdbd612448992ea4412e88d9481b69374148a1f028f7b5d4cc3b2a089",
-      "rendered_sha256": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02"
+      "canonical_sha256": "6147b695ebabd3fbfa20c68fd8a36267efc145ffba175f805789d13b16ddfcaf",
+      "rendered_sha256": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023"
     },
     {
       "identity": "release-discipline",

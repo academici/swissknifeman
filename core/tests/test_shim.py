@@ -48,18 +48,18 @@ FACADE = [
     'read_ndjson_iter', 'render_artifact_projection', 'replace_owner_records',
     'resolve_desired_snapshot', 'resolve_provider_config',
     'rollback_chained_bootstrap_transfer', 'run_cmd', 'safe_load_json', 'sanitize',
-    'serialize_lock', 'sha256_digest', 'shared_config_path', 'sibling_bin', 'state_dir',
+    'serialize_lock', 'sha256_digest', 'sibling_bin', 'state_dir',
     'support_for', 'upsert_block', 'validate_target_path', 'vendor_channel', 'warn'
 ]
 
 MOVED_FILES = (
-    "block cli env http io paths proc project repo term text usage".split()
+    "block cli env http io paths proc project repo term text usage gitignore_policy".split()
 )
 
 
 class TestAliases(unittest.TestCase):
     def test_every_alias_is_the_same_module_object(self):
-        self.assertEqual(len(core._ALIASES), 31)
+        self.assertEqual(len(core._ALIASES), 32)
         for old, new in core._ALIASES.items():
             with self.subTest(old=old):
                 self.assertIs(importlib.import_module(old), importlib.import_module(new))
@@ -88,6 +88,22 @@ class TestAliases(unittest.TestCase):
         with mock.patch("core.provider.lock._bootstrap_write_state", sentinel):
             import aicore.artifacts.lock as lock
             self.assertIs(lock._bootstrap_write_state, sentinel)
+
+
+class TestGitignorePolicyAlias(unittest.TestCase):
+    def test_policy_module_is_the_state_module(self):
+        import aicore.state.gitignore
+        from core import gitignore_policy
+        import core.gitignore_policy as dotted
+        self.assertIs(gitignore_policy, aicore.state.gitignore)
+        self.assertIs(dotted, aicore.state.gitignore)
+        self.assertIs(core.gitignore_policy, aicore.state.gitignore)
+        self.assertIs(importlib.import_module("core.gitignore_policy"), aicore.state.gitignore)
+
+    def test_removed_config_paths_stay_removed(self):
+        self.assertFalse((REPO / "core" / "config_paths.py").exists())
+        with self.assertRaises(ImportError):
+            importlib.import_module("core.config_paths")
 
 
 class TestFacade(unittest.TestCase):

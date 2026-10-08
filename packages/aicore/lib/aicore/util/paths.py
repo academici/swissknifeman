@@ -16,7 +16,8 @@ def is_within(path, root):
 def state_dir(home, app=None):
     """Return the umbrella state root or its application subdirectory.
 
-    maind deliberately owns its separate ``~/.maind`` state directory.
+    Legacy location: new code uses :mod:`aicore.state` (XDG places, ``SKM_HOME``). Kept for the
+    modules that are not moved yet. maind deliberately owns its separate ``~/.maind`` directory.
     """
     base = Path(home) / ".swissknifeman"
     return base / app if app else base

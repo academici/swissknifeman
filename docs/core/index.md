@@ -15,6 +15,7 @@ modules move onto `aicore` ([ADR 0028](../architecture/decisions/0028-aicore-sub
 | `core.provider` and `core.provider.*` | `aicore.provider.*` |
 | `core.provider.{artifact,lock,reconcile}` | `aicore.artifacts.*` |
 | `core.usage` | `aicore.usage` |
+| `core.gitignore_policy` | `aicore.state.gitignore` |
 
 Every old name is registered in `sys.modules` as the same module object as the new one, so `mock.patch("core.io.os.replace")`
 acts on `aicore.util.io`. The flat facade `from core import …` keeps its previous `__all__`. If `aicore` is not
@@ -25,7 +26,6 @@ raises `ImportError("aicore not found: set AICORE_ROOT or run from the monorepo"
 
 | Module | Stays until | Then goes to |
 |:--|:--|:--|
-| `config_paths`, `gitignore_policy` | configuration stage | `aicore` |
 | `runs`, `pathology`, `codegraph_telemetry` | hub modules stage | `analyst` |
 
 ## Reference: run telemetry (SCHEMA=2)

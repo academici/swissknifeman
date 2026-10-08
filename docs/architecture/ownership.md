@@ -22,10 +22,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `core/config_paths.py` | core (hub root) | aicore | config | P4 | hypothesis | - |
-| `core/gitignore_policy.py` | core (hub root) | aicore | state | P4 | hypothesis | - |
-| `core/tests/test_config_paths.py` | core (hub root) | aicore | tests | P4 | hypothesis | - |
-| `core/tests/test_gitignore_policy.py` | core (hub root) | aicore | tests | P4 | hypothesis | - |
 | `packages/skiller/lib/skiller/budget.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/common.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/connect.py` | skiller | aicore | delivery | P5 | hypothesis | - |

@@ -87,7 +87,7 @@ does not get Grok until `providers.selection.grok.enabled` is set.
 
 `.grok/config.toml` from sync contains absolute launcher paths, so the same
 sync adds that path to `.gitignore` when the file matches
-`configs/gitignore-policy.json`. `.grok/hooks/` and `.grok/rules/` stay
+`packages/aicore/configs/gitignore-policy.json`. `.grok/hooks/` and `.grok/rules/` stay
 committed. Sync does not run `git rm --cached`. A file that is already tracked
 stays tracked until that command is run by hand.
 

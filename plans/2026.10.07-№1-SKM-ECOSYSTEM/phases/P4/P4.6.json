@@ -128,7 +128,8 @@
     "Примеры вывода в README — из реального запуска в scripts/dev-sandbox.sh",
     "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
     "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
-    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять",
+    "README aicore и ADR 0036 явно говорят: файлы конфига — TOML 1.0 (tomllib на Python ≥ 3.15 примет TOML 1.1, который не прочтут 3.9–3.14)"
   ],
   "guidance": "Исполнитель: implementation/medium.\n\nПорядок: ADR 0034 (слои, файл и schema_version, слияние _unset/_append, x-skm-layers, env, --config, extra-слои, ошибки, секреты, explain, конкурентность) → ADR 0035 (места, SKM_HOME, наследие, бэкапы, gitignore-политика, удаление config_paths) → ADR 0036 (tomli 2.3.1 и почему не 2.4+/tomlkit/tomli-w; редактор и сверка; процедура обновления пина) → индекс ADR → contracts.md (строка инвентаризации config-explain/v1, раздел контракта, конвенция urn:swissknifeman:<id>:config:v1 и аннотации профиля) → ecosystem.md (уточнение: умолчания — default схемы, D38) → README aicore → CHANGELOG aicore и корневой.\n\nПеред коммитом: `python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD` — если просит обновить ещё документ, обновить.",
   "validation": [
@@ -167,5 +168,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-08T11:40:06Z"
+  "updated_at": "2026-10-08T11:44:53Z"
 }

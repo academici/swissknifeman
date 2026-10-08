@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Tests of scripts/golden.py: normalization rules, fixture format, check/capture on a temporary tree.
 
-The command runner is injected (a fake), so no sandbox is created; only the last class runs the real
-tool on the real fixtures without executing a case (list).
+Most tests inject the command runner. The isolation regression uses a temporary repository and a
+real sandbox; CLI tests also inspect the real fixture inventory.
 """
 from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -249,6 +250,30 @@ class CommandTests(unittest.TestCase):
             return "one output"
         with self.assertRaises(golden.GoldenError):
             self.check(runner=FakeRunner({"tool-one": dirty, "tool-two": "two output"}))
+
+
+class SandboxIsolationTests(unittest.TestCase):
+    def test_case_cwd_isolated_from_checkout_state(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            (root / "scripts").mkdir(parents=True)
+            script = root / golden.SANDBOX_SCRIPT
+            shutil.copy2(ROOT / golden.SANDBOX_SCRIPT, script)
+            state = root / "checkout-state.txt"
+            state.write_text("checkout state", encoding="utf-8")
+            case = {"argv": [sys.executable, "-c",
+                             "from pathlib import Path; p = Path('checkout-state.txt'); "
+                             "print(p.read_text() if p.exists() else 'empty project')"]}
+            with golden.sandbox(root, []) as (runner, directory):
+                context = golden.build_context(root, directory)
+                inherited = golden.run_case(runner, case, [], context)
+                self.assertIn("checkout state", inherited)
+                case["cwd"] = "{SANDBOX}/projects"
+                isolated = golden.run_case(runner, case, [], context)
+                self.assertIn("empty project", isolated)
+                self.assertNotIn("checkout state", isolated)
+                self.assertEqual(state.read_text(), "checkout state")
+            self.assertFalse(Path(directory).exists())
 
 
 class CliTests(unittest.TestCase):

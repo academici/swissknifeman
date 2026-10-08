@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.5",
   "title": "Golden-фикстуры поведения CLI и генерации",
-  "status": "done",
+  "status": "done_with_deviations",
   "summary": "Написать scripts/golden.py (list, check, capture --reason) и scripts/test-golden.py; снять golden-фикстуры текущего поведения CLI (tests/golden/cases.json и cli/*.txt) и генерации (tests/golden/generation.json: sha256 выходов генераторов и их --check) после изменений P2.1–P2.4.",
   "why": "D23/E48: поведение CLI и байты генерации фиксируются до первого переноса кода (P3), чтобы каждая фаза доказывала «как раньше» сравнением, а не памятью. Риск — нестабильные фикстуры, которые приучат пересъёмывать без причины: каждый кейс проверяется двумя прогонами, нормализация — данные с причиной, capture требует --reason.",
   "scope": {
@@ -114,8 +114,8 @@
     },
     {
       "id": "V5",
-      "cmd": "python3 scripts/golden.py check && test -z \"$(git status --porcelain --untracked-files=no)\"",
-      "expect": "exit 0 (check не меняет отслеживаемые файлы)",
+      "cmd": "before=$(git status --porcelain --untracked-files=no); python3 scripts/golden.py check && test \"$(git status --porcelain --untracked-files=no)\" = \"$before\"",
+      "expect": "exit 0 (check does not change tracked files; pre-existing item edits may remain)",
       "kind": "acceptance",
       "cwd": "."
     }
@@ -139,42 +139,45 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-08T04:27:12Z",
-    "finished_at": "2026-10-08T04:32:23Z",
+    "started_at": "2026-10-08T20:17:26Z",
+    "finished_at": "2026-10-08T20:20:27Z",
     "executor": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-5-5",
-      "effort": "medium",
-      "session": "6b0cdc25-b8f2-4dae-9eaa-37aaaaa96d65"
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a11d1e-47ea-78a1-82de-32ecb9b8e2b5"
     },
-    "notes": "golden.py (list/check/capture), test-golden.py (28 tests), 26 CLI cases, 10 generators with sha256 digests; check twice stable, repo untouched.",
+    "notes": "Audit A2 corrected: optional case cwd; analyst-status runs in the empty sandbox project. Expected fixture bytes and generated digests unchanged. Regression proves checkout state is excluded and sandbox removed. All 26 cases and 10 generators pass twice in the clean tracked worktree with candidate edits; analyst-status also passes in the original checkout. Public hygiene green.",
+    "deviations": [
+      "Complete golden verification uses a tracked candidate copy, preserving the existing gitignored Next bootstrap projection. V5 compares tracked state before/after to permit item edits already present. docs/develop.md and root CHANGELOG document the corrected validation process."
+    ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-08T04:32:23Z"
+        "at": "2026-10-08T20:20:27Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-08T04:32:23Z"
+        "at": "2026-10-08T20:20:27Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-08T04:32:23Z"
+        "at": "2026-10-08T20:20:27Z"
       },
       {
         "id": "V4",
         "exit": 0,
-        "at": "2026-10-08T04:32:23Z"
+        "at": "2026-10-08T20:20:27Z"
       },
       {
         "id": "V5",
         "exit": 0,
-        "at": "2026-10-08T04:32:23Z"
+        "at": "2026-10-08T20:20:27Z"
       }
     ]
   },
-  "updated_at": "2026-10-08T04:32:23Z"
+  "updated_at": "2026-10-08T20:20:27Z"
 }

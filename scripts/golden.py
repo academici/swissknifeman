@@ -157,8 +157,9 @@ def tracked_files(root: Path) -> list:
 def run_case(runner, case: dict, rules: list, context: dict) -> str:
     argv = [expand(a, context) for a in case["argv"]]
     stdin = case.get("stdin")
+    cwd = Path(expand(case["cwd"], context)) if "cwd" in case else None
     rc, out, err = runner.run(argv, stdin=stdin, timeout=case.get("timeout_s", DEFAULT_TIMEOUT_S),
-                              env={"PYTHONDONTWRITEBYTECODE": "1"})
+                              cwd=cwd, env={"PYTHONDONTWRITEBYTECODE": "1"})
     return render_fixture(rc, normalize(out.rstrip("\n"), rules, context), normalize(err.rstrip("\n"), rules, context))
 
 

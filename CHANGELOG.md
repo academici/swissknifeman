@@ -253,6 +253,9 @@
 
 ### Fixed
 
+- **golden:** project-state cases can set an isolated `cwd`; `analyst status` reads an empty sandbox project,
+  so lessons in the development checkout no longer change its expected output.
+
 - **Task reads по ref:** `start` и `brief` отказывают с `READ_MISSING`, если
   обязательная секция knowledge отсутствует; `check` проверяет отдельный `section`,
   а `#section` разрешается по id. Неразрешимая ссылка теперь вызывает

@@ -471,6 +471,12 @@ describes how that work is isolated from a working machine. It is removed at cut
    (`tests/golden/generation.json`). It is migration scaffolding, not a CI step.
    - `golden.py list` shows the cases; `golden.py check [--only ID,...]` compares and prints a diff per differing case
      (exit 1).
+   - A case may set `cwd` using `{REPO}` or `{SANDBOX}`. Project-state readers such as `analyst status` run in
+     `{SANDBOX}/projects`, an empty project, with an absolute launcher path under `{REPO}`. An isolated `HOME`
+     alone does not isolate state stored in the checkout.
+   - Local bootstrap skills outside the generated catalog can make the registry completeness check fail in a
+     configured development checkout. Preserve them and verify the complete golden set in a clean tracked
+     worktree of the candidate; include any uncommitted candidate changes before checking it.
    - At the start of a stage, after `scripts/dev-clone.sh sync-main`, run `golden.py check`. If `main` changed generated
      output, run `golden.py capture --reason "sync main <sha>"` in a separate commit before moving any code.
    - A stage that moves code must pass `golden.py check` byte for byte. An intended change of behaviour is recorded with

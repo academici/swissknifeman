@@ -266,8 +266,10 @@
     },
     {
       "id": "analyst-status",
+      "cwd": "{SANDBOX}/projects",
+      "note": "Read an empty sandbox project; checkout lessons must not affect this fixture.",
       "argv": [
-        "packages/analyst/bin/analyst",
+        "{REPO}/packages/analyst/bin/analyst",
         "status"
       ]
     }

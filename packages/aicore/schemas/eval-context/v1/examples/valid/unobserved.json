@@ -1,0 +1,21 @@
+{
+  "schema": "eval-context/v1",
+  "skill": {
+    "id": "general/verify-claims",
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "fixtures": {
+    "id": "evals",
+    "version": null,
+    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "grader": {
+    "id": "skill-eval",
+    "version": "1"
+  },
+  "runner": {
+    "provider": "claude-code",
+    "cli_version": null,
+    "models": []
+  }
+}

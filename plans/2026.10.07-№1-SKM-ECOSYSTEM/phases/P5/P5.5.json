@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.5",
   "title": "aicore.content.eval: перенос eval skills и контекст результата eval-context/v1 (R12)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "git mv skiller/quality/eval.py → aicore/content/eval.py; cmd_eval и всё, что читает env, — обратно в тонкий skiller/quality/eval.py с реэкспортом; контракт eval-context/v1; eval_context, runner_context (claude --version, модели из modelUsage), compare_eval_context; GRADER_VERSION; benchmark skill → skill-benchmark/v3 с context, системный банк → system-bank-benchmark/v2 с context; render_markdown показывает контекст; тесты на фейковом claude; убрать гипотезу quality/ (audit.py и analyze.py остаются в skiller).",
   "why": "D42, R12: два результата eval сейчас нельзя сравнить — нет digest skill, модели, версии CLI и фикстур. Жёсткие риски: (1) выдуманные значения модели/версии — только наблюдаемые (modelUsage, claude --version), иначе null/[]; (2) eval-тесты skiller ломаются переносом (импорты из skiller.quality.eval) — реэкспорт; (3) реальный claude в тестах — только фейковый бинарь через SKM_CLAUDE_BIN во временном каталоге.",
   "scope": {
@@ -187,12 +187,39 @@
   },
   "result": {
     "started_at": "2026-10-08T16:18:09Z",
+    "finished_at": "2026-10-08T16:30:24Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "931c186c-e267-49f6-ad43-367e18ea99a0"
-    }
+    },
+    "notes": "aicore.content.eval перенесён (git mv отдельным коммитом f115e9cb); тонкий skiller/quality/eval.py с cmd_eval и реэкспортом; контракт eval-context/v1; skill-benchmark/v3 и system-bank-benchmark/v2 с context; строка Context в отчёте; тесты на фейковом claude; гипотеза quality/ удалена из карты.",
+    "deviations": [
+      "skill_eval_context добавлена сверх таблицы allocation; skill.id = bucket/name; _offline_report и resolve_skill остались в skiller"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T16:30:24Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T16:30:24Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T16:30:24Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T16:30:24Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-08T16:18:09Z"
+  "updated_at": "2026-10-08T16:30:24Z"
 }

@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 import unittest
+from fractions import Fraction
 from pathlib import Path
 from unittest import mock
 
@@ -15,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.quality import eval as ev
 import tests.fixtures as fx
+from aicore.content.skill import skill_digest
 
 FIXTURES_DATA = Path(__file__).resolve().parent / "fixtures_data"
 
@@ -440,7 +442,8 @@ class SystemBankAdapterCase(unittest.TestCase):
     def test_build_system_benchmark_shape_and_deferred_pair(self):
         bench = ev.build_system_benchmark(
             self.cases_doc, self.graders_doc, generated_at="2026-07-26T00:00:00Z")
-        self.assertEqual(bench["schema_version"], "system-bank-benchmark/v1")
+        self.assertEqual(bench["schema_version"], "system-bank-benchmark/v2")
+        self.assertEqual(bench["context"]["fixtures"]["id"], "system-bank")
         self.assertEqual(bench["counts"]["cases"], len(self.cases_doc["cases"]))
         self.assertEqual(bench["pair"]["status"], "deferred")
         self.assertIsNone(bench["candidate"])
@@ -463,20 +466,20 @@ class FractionRenderCase(unittest.TestCase):
 
     def test_fmt_frac_round_half_up_and_sign(self):
         self.assertEqual(ev._fmt_frac(None), None)
-        self.assertEqual(ev._fmt_frac(ev.Fraction(1, 2)), "0.500")
-        self.assertEqual(ev._fmt_frac(ev.Fraction(1, 3)), "0.333")
-        self.assertEqual(ev._fmt_frac(ev.Fraction(-1, 4)), "-0.250")
+        self.assertEqual(ev._fmt_frac(Fraction(1, 2)), "0.500")
+        self.assertEqual(ev._fmt_frac(Fraction(1, 3)), "0.333")
+        self.assertEqual(ev._fmt_frac(Fraction(-1, 4)), "-0.250")
         self.assertEqual(ev._fmt_frac(3), "3.000")
 
     def test_stringify_fractions_recursive_no_leftover(self):
-        obj = {"a": ev.Fraction(1, 2), "b": [ev.Fraction(3), None, "x"], "c": {"d": ev.Fraction(0)}}
+        obj = {"a": Fraction(1, 2), "b": [Fraction(3), None, "x"], "c": {"d": Fraction(0)}}
         out = ev._stringify_fractions(obj)
         self.assertEqual(out, {"a": "0.500", "b": ["3.000", None, "x"], "c": {"d": "0.000"}})
 
     def test_sqrt_fraction_integer_no_float(self):
         # √4 == 2 exactly; we check that the implementation does not touch float in general
-        self.assertEqual(ev._sqrt_fraction(ev.Fraction(4)), ev.Fraction(2))
-        self.assertGreater(ev._sqrt_fraction(ev.Fraction(2)), ev.Fraction(0))
+        self.assertEqual(ev._sqrt_fraction(Fraction(4)), Fraction(2))
+        self.assertGreater(ev._sqrt_fraction(Fraction(2)), Fraction(0))
 
 
 def _write_fake_claude(tmp_dir, *, output_tokens=5, input_tokens=10, result="ok output"):
@@ -557,7 +560,26 @@ class OnlineDeterminismCase(unittest.TestCase):
                 for v in node:
                     _walk(v)
         _walk(data)
-        self.assertEqual(data["schema_version"], "skill-benchmark/v2")
+        self.assertEqual(data["schema_version"], "skill-benchmark/v3")
+
+    def test_context_records_only_observed_values(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        ctx = json.loads(self._bench_path().read_text(encoding="utf-8"))["context"]
+        self.assertEqual(ctx["schema"], "eval-context/v1")
+        self.assertEqual(ctx["skill"]["id"], "quality/test-writer")
+        self.assertEqual(ctx["skill"]["digest"], skill_digest(self.skill_dir))
+        self.assertEqual(ctx["grader"], {"id": "skill-eval", "version": ev.GRADER_VERSION})
+        # the stub neither reports modelUsage nor answers `--version` with a version
+        self.assertEqual(ctx["runner"], {"provider": "claude-code", "cli_version": None, "models": []})
+
+    def test_report_prints_the_context_line(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        bench = json.loads(self._bench_path().read_text(encoding="utf-8"))
+        digest = bench["context"]["skill"]["digest"]
+        self.assertIn(f"Context: skill {digest[:19]}…, models unobserved, claude unknown",
+                      ev.render_markdown(bench))
 
     def test_provenance_llm_true_and_clock_injected(self):
         ev.cmd_eval(self.env, ["quality/test-writer"],
@@ -568,10 +590,11 @@ class OnlineDeterminismCase(unittest.TestCase):
         self.assertEqual(data["provenance"]["clock"], "injected")
 
     def test_offline_branch_writes_nothing(self):
-        with mock.patch.object(ev, "claude_bin", return_value=None):
+        with mock.patch.object(ev, "claude_bin", return_value=None) as lookup:
             before = sorted((self.skill_dir / "evals").iterdir())
             ev.cmd_eval(self.env, ["quality/test-writer"])
             after = sorted((self.skill_dir / "evals").iterdir())
+        lookup.assert_called()
         self.assertEqual(before, after)
         self.assertFalse(self._bench_path().exists())
 

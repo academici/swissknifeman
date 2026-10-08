@@ -182,6 +182,11 @@ class TestImportBoundary(unittest.TestCase):
             "manifest_bytes": "lib/aicore/content/publication.py",
             "strict_frontmatter_fields": "lib/aicore/content/commands.py",
             "runtime_provenance": "lib/aicore/content/commands.py",
+            "grade_assertion": "lib/aicore/content/eval.py",
+            "build_benchmark": "lib/aicore/content/eval.py",
+            "build_system_benchmark": "lib/aicore/content/eval.py",
+            "run_case": "lib/aicore/content/eval.py",
+            "compare_eval_context": "lib/aicore/content/eval.py",
         }
         roots = [ROOT / "lib"]
         packages = ROOT.parent

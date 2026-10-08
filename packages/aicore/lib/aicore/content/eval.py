@@ -19,8 +19,10 @@ The layer is spaced intentionally:
   • RUNNER (`run_case` via `claude -p`) — online, opt-in. No `claude` in PATH →
     command softly degrades (scaffold + offline validation), CI does not crash.
 
-Package conventions: stdlib-only, `Env` explicit, atomic record (`core.io`), messages
-in Russian. Token math is NOT here (single source `budget.py`)."""
+Conventions: stdlib-only, atomic record (`aicore.util.io`). Everything that needs the
+skill library (registry root, `skiller eval` CLI) stays with the caller; token math is NOT
+here (single source `budget.py`). A result carries an `eval-context/v1` block, so two results
+can be compared (:func:`compare_eval_context`)."""
 import hashlib
 import json
 import math
@@ -34,10 +36,10 @@ import time
 from fractions import Fraction
 from pathlib import Path
 
-from core import (atomic_write_json, atomic_write_text, die, parse_args,
-                  safe_load_json, warn)
-
-from ..common import is_within
+from ..util.digest import digest_json
+from ..util.io import atomic_write_json, safe_load_json
+from ..util.paths import is_within
+from .skill import skill_digest
 
 # --- constants ----------------------------------------------------------------
 # Assertion types - deterministic ONLY (without LLM-judge), to grade was
@@ -51,6 +53,11 @@ EVALS_SUBDIR = "evals"
 # Overridden command builder claude — skill injection flag verified by
 # `claude --help` local installation (see build_run_cmd / docs/guide/evals.md).
 CLAUDE_BIN_ENV = "SKM_CLAUDE_BIN"
+# Version of the rules of `grade_assertion`/`grade_case`; part of the result context
+# (`eval-context/v1`), bump it whenever the grading of an assertion changes.
+GRADER_VERSION = "1"
+EVAL_CONTEXT_SCHEMA = "eval-context/v1"
+VERSION_PROBE_TIMEOUT = 10     # sec for `claude --version`
 
 
 # ============================================================================ #
@@ -395,18 +402,23 @@ def build_run_cmd(claude, prompt, skill_text=None):
 
 
 def _parse_claude_json(stdout):
-    """(text, tokens) from JSON-output `claude -p`. Not parsed → (stdout, None)."""
+    """(text, tokens, models) from JSON-output `claude -p`. Not parsed → (stdout, None, []).
+    `models` — the sorted keys of `modelUsage` (the models the run really used)."""
     try:
         data = json.loads(stdout)
     except (json.JSONDecodeError, TypeError):
-        return stdout, None
+        return stdout, None, []
     text = data.get("result", "") if isinstance(data, dict) else stdout
     tokens = None
     usage = data.get("usage") if isinstance(data, dict) else None
     if isinstance(usage, dict):
         tokens = (usage.get("input_tokens", 0) or 0) + \
                  (usage.get("output_tokens", 0) or 0) or None
-    return text, tokens
+    models = []
+    model_usage = data.get("modelUsage") if isinstance(data, dict) else None
+    if isinstance(model_usage, dict):
+        models = sorted(str(name) for name in model_usage)
+    return text, tokens, models
 
 
 def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
@@ -418,7 +430,7 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
     before the run. `clock_ns` — injected clock (default `time.monotonic_ns`);
     tests substitute a deterministic counter ⇒ the report is reproduced byte by byte.
     duration_s — accurate `Fraction(ns, 10**9)`, not float. →
-    {id, output, returncode, duration_s, tokens, error?}."""
+    {id, output, returncode, duration_s, tokens, models, error?}."""
     claude = claude or claude_bin()
     if not claude:
         raise RuntimeError("CLI `claude` not found - runner unavailable (offline)")
@@ -440,10 +452,11 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
     except subprocess.TimeoutExpired:
         return {"id": case.get("id"), "output": "", "returncode": -1,
                 "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": None,
-                "error": f"timeout {timeout}s"}
-    text, tokens = _parse_claude_json(proc.stdout)
+                "models": [], "error": f"timeout {timeout}s"}
+    text, tokens, models = _parse_claude_json(proc.stdout)
     return {"id": case.get("id"), "output": text, "returncode": proc.returncode,
-            "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": tokens}
+            "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": tokens,
+            "models": models}
 
 
 def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
@@ -458,6 +471,121 @@ def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
             grade = grade_case(case, run.get("output", ""), ws)
         results.append({**run, **grade})
     return results
+
+
+# ============================================================================ #
+# RESULT CONTEXT (eval-context/v1)                                             #
+# ============================================================================ #
+# What makes two eval results comparable: the skill content, the fixtures that were run,
+# the grader rules and the runner. Only OBSERVED values are recorded: the models are the
+# `modelUsage` keys of the runs, the CLI version is the output of `<claude> --version`;
+# whatever was not observed is null / [] (a flag or a guess is never written as observed).
+_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$")
+_VERSION_RE = re.compile(r"^\d+(\.\d+)+[\w.+-]*$")
+_MISSING = object()
+
+
+def runner_context(claude, models):
+    """`runner` block of the context. `cli_version` — the first word of the first stdout
+    line of `<claude> --version` (10 s timeout) when it looks like a version; a missing binary,
+    a failed or timed-out probe, other output → None. `models` — sorted unique names (observed `modelUsage` keys; none → [])."""
+    cli_version = None
+    if claude:
+        try:
+            proc = subprocess.run([claude, "--version"], capture_output=True, text=True,
+                                  timeout=VERSION_PROBE_TIMEOUT, check=False)
+        except (OSError, subprocess.SubprocessError):
+            proc = None
+        if proc is not None and proc.returncode == 0:
+            words = (proc.stdout.strip().splitlines() or [""])[0].split()
+            if words and _VERSION_RE.match(words[0]):
+                cli_version = words[0]
+    return {"provider": "claude-code", "cli_version": cli_version,
+            "models": sorted({str(m) for m in (models or [])})}
+
+
+def _check_part(name, part, keys, errors):
+    if not isinstance(part, dict) or set(part) != set(keys):
+        errors.append(f"{name} must be an object with keys {sorted(keys)}")
+        return False
+    return True
+
+
+def eval_context(*, skill=None, fixtures, grader, runner):
+    """Build and validate an `eval-context/v1` block (a new dict; the arguments are copied).
+    skill — `{id: '<bucket>/<name>', digest}` or None (the system bank is not about one
+    skill); fixtures — `{id, version|None, digest}`; grader — `{id, version|None}`;
+    runner — `{provider, cli_version|None, models: [str]}`. ValueError names every problem."""
+    errors = []
+    if skill is not None and _check_part("skill", skill, ("id", "digest"), errors):
+        if not isinstance(skill["id"], str) or not _ID_RE.match(skill["id"]):
+            errors.append("skill.id must be '<bucket>/<name>'")
+        if not isinstance(skill["digest"], str) or not _DIGEST_RE.match(skill["digest"]):
+            errors.append("skill.digest must be 'sha256:<64 hex>'")
+    if _check_part("fixtures", fixtures, ("id", "version", "digest"), errors):
+        if not isinstance(fixtures["id"], str) or not fixtures["id"]:
+            errors.append("fixtures.id must be a non-empty string")
+        if fixtures["version"] is not None and not isinstance(fixtures["version"], str):
+            errors.append("fixtures.version must be a string or null")
+        if not isinstance(fixtures["digest"], str) or not _DIGEST_RE.match(fixtures["digest"]):
+            errors.append("fixtures.digest must be 'sha256:<64 hex>'")
+    if _check_part("grader", grader, ("id", "version"), errors):
+        if not isinstance(grader["id"], str) or not grader["id"]:
+            errors.append("grader.id must be a non-empty string")
+        if grader["version"] is not None and not isinstance(grader["version"], str):
+            errors.append("grader.version must be a string or null")
+    if _check_part("runner", runner, ("provider", "cli_version", "models"), errors):
+        if not isinstance(runner["provider"], str) or not runner["provider"]:
+            errors.append("runner.provider must be a non-empty string")
+        if runner["cli_version"] is not None and not isinstance(runner["cli_version"], str):
+            errors.append("runner.cli_version must be a string or null")
+        models = runner["models"]
+        if not isinstance(models, list) or not all(isinstance(m, str) and m for m in models):
+            errors.append("runner.models must be a list of non-empty strings")
+    if errors:
+        raise ValueError("invalid eval context: " + "; ".join(errors))
+    return {
+        "schema": EVAL_CONTEXT_SCHEMA,
+        "skill": None if skill is None else dict(skill),
+        "fixtures": dict(fixtures),
+        "grader": dict(grader),
+        "runner": {**runner, "models": list(runner["models"])},
+    }
+
+
+def skill_eval_context(skill_dir, skill_id, runner):
+    """Context of a skill eval: the skill digest (`aicore.content.skill.skill_digest`) and the
+    digest of the canonical JSON of `{evals, pressure}` (each None when the file is absent).
+    `runner` — the result of :func:`runner_context`."""
+    evals_dir = Path(skill_dir) / EVALS_SUBDIR
+    fixtures = {"evals": safe_load_json(evals_dir / "evals.json"),
+                "pressure": safe_load_json(evals_dir / "pressure.json")}
+    return eval_context(
+        skill={"id": skill_id, "digest": skill_digest(skill_dir)},
+        fixtures={"id": EVALS_SUBDIR, "version": None, "digest": digest_json(fixtures)},
+        grader={"id": "skill-eval", "version": GRADER_VERSION},
+        runner=runner)
+
+
+def compare_eval_context(a, b):
+    """Sorted paths where two contexts differ (`'skill.digest'`, `'runner.models'`, …); an
+    empty list means the results are comparable. A section that is an object in one context
+    and null in the other is reported as the section itself (`'skill'`)."""
+    out = []
+    _diff_context(a, b, "", out)
+    return sorted(out)
+
+
+def _diff_context(a, b, path, out):
+    if isinstance(a, dict) and isinstance(b, dict):
+        for key in set(a) | set(b):
+            _diff_context(a.get(key, _MISSING), b.get(key, _MISSING),
+                          f"{path}.{key}" if path else key, out)
+    elif a is _MISSING and b is _MISSING:
+        return
+    elif a is _MISSING or b is _MISSING or a != b:
+        out.append(path)
 
 
 # ============================================================================ #
@@ -791,13 +919,15 @@ def pair_system_metric(baseline, candidate):
 
 
 def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=5,
-                           candidate_runs=None, provider_matrix=None):
+                           candidate_runs=None, provider_matrix=None, runner=None):
     """Grade a system-bank case set against its own declared baseline transcripts
     (`case['baseline']['transcript'/'outcome']`) and, if `candidate_runs`
     (`{case_id: {transcript, outcome}}`) is supplied, pair the resulting
     `first_pass_success` metric against it; omitted → the pair is `deferred`
     (no live paired run yet exists — never fabricated, Execution Rules: "zero
-    and silent skip are prohibited"). → the benchmark artifact shape."""
+    and silent skip are prohibited"). `runner` — the `runner` block of the context
+    (:func:`runner_context`); omitted → nothing observed, because the bank recomputes
+    recorded transcripts and runs no model. → the benchmark artifact shape."""
     graders_by_id = {g["id"]: g for g in graders_doc.get("graders", [])}
     cases = cases_doc.get("cases", [])
     baseline_records = {c["case_id"]: c["baseline"] for c in cases}
@@ -828,8 +958,13 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
         cases_doc.get("sample_seed", "system-bank/default"),
         passing_ids, min(sample_size, len(passing_ids)))
     return {
-        "schema_version": "system-bank-benchmark/v1",
+        "schema_version": "system-bank-benchmark/v2",
         "generated_at": generated_at,
+        "context": eval_context(
+            fixtures={"id": "system-bank", "version": cases_doc.get("bank_version"),
+                      "digest": digest_json(cases_doc)},
+            grader={"id": "system-bank", "version": graders_doc.get("grader_version")},
+            runner=runner or {"provider": "claude-code", "cli_version": None, "models": []}),
         "bank_version": cases_doc.get("bank_version"),
         "grader_version": graders_doc.get("grader_version"),
         "counts": {"cases": len(cases)},
@@ -851,15 +986,26 @@ def _fmt_rate(r):
     return "—" if r is None else f"{float(r) * 100:.0f}%"
 
 
+def _context_line(context):
+    """One line of the report: the skill digest, the observed models and the CLI version."""
+    skill = (context.get("skill") or {}).get("digest")
+    runner = context.get("runner") or {}
+    return (f"Context: skill {skill[:19] + '…' if skill else 'none'}, "
+            f"models {', '.join(runner.get('models') or []) or 'unobserved'}, "
+            f"claude {runner.get('cli_version') or 'unknown'}")
+
+
 def render_markdown(benchmark):
     """Human readable markdown-report on benchmark. Metrics - Fraction (direct
     call build_benchmark) or string (real benchmark.json from disk, P8.9) —
     both are read via float()."""
     b = benchmark
     ws = b.get("with_skill", {})
-    out = [f"# Eval: {b.get('skill', '?')}", "",
-           "| Set | pass@ | cases | current (μ±σ) | sec (μ±σ) |",
-           "|---|--:|--:|--:|--:|"]
+    out = [f"# Eval: {b.get('skill', '?')}", ""]
+    if b.get("context"):
+        out += [_context_line(b["context"]), ""]
+    out += ["| Set | pass@ | cases | current (μ±σ) | sec (μ±σ) |",
+            "|---|--:|--:|--:|--:|"]
 
     def row(label, a):
         tok = "—" if a.get("tokens_mean") is None else \
@@ -947,24 +1093,6 @@ def scaffold_evals(skill_dir, skill_name=None):
     return created
 
 
-def resolve_skill(env, ref):
-    """Skill catalog by ref ('bucket/name' or 'name'). die, if not found/is ambiguous."""
-    skills_root = env.root / "skills"
-    ref = ref.strip().strip("/")
-    if "/" in ref:
-        cand = skills_root / ref
-        if (cand / "SKILL.md").is_file():
-            return cand
-        die(f"skill not found: skills/{ref}/SKILL.md")
-    matches = [p.parent for p in skills_root.glob(f"*/{ref}/SKILL.md")]
-    if not matches:
-        die(f"skill '{ref}' not found in the registry (indicate bucket/name)")
-    if len(matches) > 1:
-        rels = ", ".join(str(m.relative_to(skills_root)) for m in matches)
-        die(f"ambiguous '{ref}' — is in several buckets: {rels}")
-    return matches[0]
-
-
 def evals_coverage(root):
     """(skills_with_evals, local_skills) by registry - for summary in validate/status.
     Local = without upstream.json (eval-standard for author's skills)."""
@@ -978,150 +1106,3 @@ def evals_coverage(root):
         if (d / EVALS_SUBDIR / "evals.json").exists():
             with_evals += 1
     return with_evals, local
-
-
-# ============================================================================ #
-#  CLI                                                                          #
-# ============================================================================ #
-_USAGE = (
-    "skiller eval <bucket/skill | skill> [--baseline] [--triggers]\n"
-    "             [--scaffold] [--static] [--json] [--timeout N]\n"
-    "  Behavioral skill run: with-skill vs baseline, software assertions,\n"
-    "  pressure-tests, benchmark.json. --triggers — trigger accuracy optimization\n"
-    "  descriptions. --scaffold — create stubs evals/. Runner requires CLI `claude`\n"
-    "  (not in PATH → offline validation + scaffold, no fall).")
-
-
-def _offline_report(skill_dir):
-    """Offline branch (no `claude`): validate existing evals and give me a hint."""
-    evals_dir = skill_dir / EVALS_SUBDIR
-    problems = []
-    for fname, validator in (("evals.json", validate_evals),
-                             ("pressure.json", validate_pressure),
-                             ("triggers.json", validate_triggers)):
-        data = safe_load_json(evals_dir / fname)
-        if data is not None:
-            problems += validator(data, fname)
-    if problems:
-        for p in problems:
-            print(f"  SCHEMA ERROR: {p}")
-    else:
-        print("  diagram evals/ is valid")
-    warn("CLI `claude` not found - run skipped (offline). Put claude "
-         "or ask SKM_CLAUDE_BIN, to run with-skill vs baseline.")
-
-
-def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
-    """CLI entry point `skiller eval`. `clock_ns`/`now_iso` — injection point
-    injected clock for deterministic tests (byte reproducibility
-    benchmark.json); default `None` → real time, `provenance.clock: "wall"`.
-    Behavior CLI without flags does not change (backwards compatible)."""
-    opts, pos = parse_args(argv, {
-        "--baseline": "bool", "--triggers": "bool", "--scaffold": "bool",
-        "--static": "bool", "--json": "bool", "--timeout": "str",
-    }, max_pos=1)
-    if opts["help"] or not pos:
-        print(_USAGE)
-        return
-    skill_dir = resolve_skill(env, pos[0])
-    skill_name = skill_dir.name
-    evals_dir = skill_dir / EVALS_SUBDIR
-
-    if opts["scaffold"]:
-        created = scaffold_evals(skill_dir, skill_name)
-        if created:
-            print(f"Stubs created: {', '.join(p.name for p in created)} "
-                  f"in {evals_dir.relative_to(env.root)}")
-        else:
-            print("Stubs evals/ already exists - nothing created")
-        return
-
-    if not (evals_dir / "evals.json").exists():
-        created = scaffold_evals(skill_dir, skill_name)
-        print(f"No evals.json — created stubs ({', '.join(p.name for p in created)}). "
-              f"Fill out the cases and restart `skiller eval {pos[0]}`.")
-        return
-
-    claude = claude_bin()
-    timeout = int(opts["timeout"]) if opts.get("timeout") else DEFAULT_TIMEOUT
-
-    # --- optimization of trigger precision description --------------------------------
-    if opts["triggers"]:
-        triggers = safe_load_json(evals_dir / "triggers.json")
-        if triggers is None:
-            scaffold_evals(skill_dir, skill_name)
-            print("No triggers.json — created stab. Fill in should_trigger / "
-                  "should_not and restart with --triggers.")
-            return
-        errs = validate_triggers(triggers, "triggers.json")
-        if errs:
-            die("triggers.json is invalid:\n  " + "\n  ".join(errs))
-        if not claude:
-            warn("CLI `claude` not found - description optimization requires model "
-                 "(candidate generation + judge). Offline not available.")
-            return
-        # Online-candidate generation thread/judge moved out of the gate CI; implementation
-        # pulls `claude -p`. Here is the framework: scoring/selection below are clean and
-        # are covered with tests, the online runner is connected in the environment with the model.
-        warn("Online-description optimization (--triggers) runs in an environment with "
-             "model; scoring/selection available as API (score_description / "
-             "select_best_description). See The docs/guide/evals.md.")
-        return
-
-    # --- run eval + pressure -----------------------------------------------
-    if not claude:
-        print(f"━━━ EVAL {skill_name} (offline) ━━━")
-        _offline_report(skill_dir)
-        return
-
-    evals = safe_load_json(evals_dir / "evals.json") or {}
-    errs = validate_evals(evals, "evals.json")
-    pressure = safe_load_json(evals_dir / "pressure.json")
-    if pressure is not None:
-        errs += validate_pressure(pressure, "pressure.json")
-    if errs:
-        die("evals are invalid:\n  " + "\n  ".join(errs))
-
-    cases = list(evals.get("cases", []))
-    if pressure:
-        cases += list(pressure.get("scenarios", []))
-
-    _clock_ns = clock_ns if clock_ns is not None else time.monotonic_ns
-    with_runs = run_suite(skill_dir, cases, with_skill=True, timeout=timeout,
-                          claude=claude, clock_ns=_clock_ns)
-    base_runs = None
-    if opts["baseline"]:
-        base_runs = run_suite(skill_dir, cases, with_skill=False, timeout=timeout,
-                              claude=claude, clock_ns=_clock_ns)
-    bench = build_benchmark(skill_name, with_runs, base_runs)
-    # schema_version — spaced (not naked "2"): same benchmark.json-family
-    # holds and P3.3-artifact build_system_benchmark with his "system-bank-
-    # benchmark/v1" — two incomparable version dictionaries under the same short
-    # name would be a defect (reconsult 2026-07-26, D52/`plan.md` §1).
-    bench["schema_version"] = "skill-benchmark/v2"
-    bench["generated_at"] = now_iso if now_iso is not None else \
-        time.strftime("%Y-%m-%dT%H:%M:%S")
-    # provenance — ACTUAL, not constant: this branch is only reachable when
-    # `claude` is really resolved and `run_suite` really called him (gate `if not
-    # claude` above) — real OR fake (SKM_CLAUDE_BIN) binary is the same
-    # "lies" for llm/network (the very fact that the subprocess claude was started;
-    # distinguish «real» model from a local fake at this level there is nothing).
-    bench["provenance"] = {
-        "llm": True,
-        "network": True,
-        "clock": "injected" if clock_ns is not None else "wall",
-        "baseline": bool(opts["baseline"]),
-    }
-    bench["cases"] = [{"id": r.get("id"), "passed": r.get("passed"),
-                       "checks": r.get("checks", [])} for r in with_runs]
-    bench = _stringify_fractions(bench)
-    atomic_write_json(evals_dir / "benchmark.json", bench)
-
-    if opts["static"]:
-        out = evals_dir / "benchmark.html"
-        atomic_write_text(out, render_html(bench))
-        print(f"HTML-report: {out.relative_to(env.root)}")
-    if opts["json"]:
-        print(json.dumps(bench, indent=2, ensure_ascii=False))
-    else:
-        print(render_markdown(bench))

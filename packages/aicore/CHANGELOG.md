@@ -27,6 +27,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   as a parameter), the fence split of a canonical command (`split_command`) and the generated-runtime header
   (`runtime_provenance`). Error texts are unchanged. The command catalog, routing and wrapper texts stay with the
   projecting module.
+- **`aicore.content.eval`**: skill evaluation moved in from the skill library — the deterministic grader, the
+  evals/pressure/triggers validators, the benchmark builders, the `claude -p` runner, the system-bank adapter, the
+  report viewers and the scaffold. The `skiller eval` command and the registry lookup stay in the skill library.
+- **`eval-context/v1` contract** with `eval_context`, `skill_eval_context`, `runner_context` and
+  `compare_eval_context`: a result states the skill digest, the fixtures digest and version, the grader version
+  and the runner (CLI version from `--version`, models from `modelUsage`); values not observed are null or `[]`.
+  Two results are comparable when `compare_eval_context` returns no paths. Skill benchmarks are now
+  `skill-benchmark/v3` and the system bank `system-bank-benchmark/v2`; both add `context`, every other key is
+  unchanged, and the report prints a `Context:` line.
 - **`skill-descriptor/v1` contract** with `SkillDescriptor` and `describe_skill`: identity, content digest, the
   optional fields of the Agent Skills standard (`license`, `compatibility`, `allowed-tools`, `metadata`),
   `adapters`, `requires`, `risk` and provenance from `upstream.json`; read-only, an absent value is null or empty.

@@ -1,0 +1,18 @@
+{
+  "schema": "eval-context/v1",
+  "skill": null,
+  "fixtures": {
+    "id": "system-bank",
+    "version": "1.0.0",
+    "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "grader": {
+    "id": "system-bank",
+    "version": "1.0.0"
+  },
+  "runner": {
+    "provider": "claude-code",
+    "cli_version": null,
+    "models": []
+  }
+}

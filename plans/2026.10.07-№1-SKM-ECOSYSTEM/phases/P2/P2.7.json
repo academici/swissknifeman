@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.7",
   "title": "Закрытие фазы: широкий прогон, сверка E1, push",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Закрыть фазу: один широкий прогон всех наборов тестов и проверок, сверка тезисов E1 фазы P2 по колонке «Проверка при аудите», docs-impact по диапазону фазы, push ветки ecosystem-split в origin.",
   "why": "Правило плана: конец фазы — тесты и проверки автономности зелёные, push; широкая проверка фазы выполняется один раз здесь и переиспользуется (philosophy: broad checks run once). Сверка E1 обязательна по правилу плана. Риск — push неготового: push только после зелёного прогона, без force.",
   "scope": {
@@ -116,12 +116,44 @@
   },
   "result": {
     "started_at": "2026-10-08T05:01:31Z",
+    "finished_at": "2026-10-08T05:42:38Z",
     "executor": {
       "provider": "anthropic",
       "model": "sonnet-5.5",
       "effort": "medium",
       "session": "6c4f08e4-0002-4a64-ad90-d5d756be8037"
-    }
+    },
+    "notes": "Широкий прогон зелёный после правки теста; сверка E1 P2 в журнале фазы; push выполнен",
+    "deviations": [
+      "scripts/test-verify-tag.py выровнен по текущему сообщению verify-tag.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T05:42:38Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T05:42:38Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T05:42:38Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T05:42:38Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T05:42:38Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-08T05:01:31Z"
+  "updated_at": "2026-10-08T05:42:38Z"
 }

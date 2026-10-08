@@ -56,5 +56,13 @@
     "path|packages/skiller/tests/test_boundary.py|task": 1,
     "path|packages/task/tests/test_boundary.py|maind": 1
   },
-  "standalone": {}
+  "standalone": {
+    "aicore": "n/a",
+    "analyst": "fail",
+    "harness": "fail",
+    "maind": "fail",
+    "orch": "fail",
+    "skiller": "pass",
+    "task": "fail"
+  }
 }

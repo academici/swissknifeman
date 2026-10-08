@@ -113,7 +113,7 @@
         "packages/skiller/lib/skiller/doctor.py",
         "packages/skiller/lib/skiller/publication.py",
         "scripts/release-fleet.sh",
-        "scripts/skiller-standalone-check.sh"
+        "configs/ecosystem-units.json"
       ],
       "released": false
     },
@@ -122,7 +122,7 @@
       "owner": "core",
       "consumers": [
         "core/provider/projection.py",
-        "scripts/skiller-standalone-check.sh"
+        "configs/ecosystem-units.json"
       ],
       "released": false
     },

@@ -1,6 +1,6 @@
 {
   "schema_version": "ecosystem-units/v1",
-  "_doc": "Hub map of the module split, read by scripts/ecosystem-units.py. targets: final module ids; module_aliases: current folder id -> target id; retired: folders without unit.json that are being removed; foundation: the shared base module and the names its code is imported under today; transitional_roots: root-level trees still being moved; version_sources: where the version of each module is read from (unit.json must equal it); ownership: files that move to another module (longest path wins); path_patterns: regexes with a named group 'target' that find paths of other folders in module files (climb: count only ../ runs that leave the module); path_suffixes: file suffixes scanned for path patterns.",
+  "_doc": "Hub map of the module split, read by scripts/ecosystem-units.py. targets: final module ids; module_aliases: current folder id -> target id; retired: folders without unit.json that are being removed; foundation: the shared base module and the names its code is imported under today; transitional_roots: root-level trees still being moved; standalone: foundation_paths (tracked paths copied next to vendor/<id> as the foundation stand-in), unset_env, timeout_s per command; version_sources: where the version of each module is read from (unit.json must equal it); ownership: files that move to another module (longest path wins); path_patterns: regexes with a named group 'target' that find paths of other folders in module files (climb: count only ../ runs that leave the module); path_suffixes: file suffixes scanned for path patterns.",
   "targets": [
     "aicore",
     "skiller",
@@ -47,7 +47,11 @@
     {"id": "repo-escape", "regex": "\\.\\./(?:\\.\\./)*(?P<target>core|configs|scripts|bin|orch)\\b", "reason": "a module must not reach into hub-level folders through relative paths", "climb": true}
   ],
   "path_suffixes": [".py", ".sh", ".js", ".mjs", ".json", ".toml", ".yml", ".yaml"],
-  "standalone": {},
+  "standalone": {
+    "foundation_paths": ["core", "configs/provider-capabilities.json", "configs/provider-distribution.json", "configs/provider-projection.json"],
+    "unset_env": ["PYTHONPATH", "SKILLER_HOST_CONFIG"],
+    "timeout_s": 1800
+  },
   "ownership": [
     {"path": "core/__init__.py", "target": "aicore", "subsystem": "util", "phase": "P3", "confidence": "fixed"},
     {"path": "core/block.py", "target": "aicore", "subsystem": "util", "phase": "P3", "confidence": "fixed"},

@@ -10,6 +10,11 @@ Commands:
   baseline --update          recompute the boundary baseline and print what changed
   render [--check]           generate docs/architecture/ownership.md from the config and unit.json files
   list [--json]              modules with id, kind, version, destination, stability, requires
+  standalone <id>… | --all | --baseline [--update-baseline]
+                             run dev.test and dev.validate of a module in a copy of its tracked files plus the
+                             foundation stand-in, with HOME and XDG inside a temporary directory; result per
+                             module is pass, fail or n/a (no dev commands); --baseline runs the modules the
+                             baseline records as pass; --update-baseline records the results
 
 Diagnostics are lines ``ECOSYSTEM_<CODE>: <path>: <message>`` on stderr. Simple checks are registered in
 CHECKS; boundaries need the baseline and are run by the check command itself.
@@ -21,8 +26,11 @@ import ast
 import json
 import os
 import re
+import shutil
+import signal
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -47,6 +55,9 @@ SCHEMA_ID = re.compile(r"^urn:[a-z0-9-]+(?::[a-z0-9-]+)*:v([0-9]+)$")
 SCHEMA_DRAFTS = ("https://json-schema.org/draft/2020-12/schema", "http://json-schema.org/draft-07/schema#")
 SCHEMA_DRAFT_2020 = SCHEMA_DRAFTS[0]
 SCHEMA_SKIP_DIRS = ("tests", "fixtures", "examples")
+STANDALONE_STATES = ("pass", "fail", "n/a")
+STANDALONE_TIMEOUT_S = 1800
+STANDALONE_TAIL_LINES = 40
 VERSION_DIR = re.compile(r"^v([0-9]+)$")
 
 
@@ -832,6 +843,144 @@ def cmd_list(ctx: Context, args) -> int:
     return 0
 
 
+# ------------------------------------------------------------------------------------------- standalone
+
+def copy_tracked(ctx: Context, prefix: str, destination: Path, target_prefix: str = None) -> int:
+    """Copy the listed files under ``prefix`` (a file or a folder) to destination, without node_modules."""
+    count = 0
+    for rel in ctx.files:
+        if rel != prefix and not rel.startswith(prefix.rstrip("/") + "/"):
+            continue
+        if "node_modules" in rel.split("/"):
+            continue
+        out = rel if target_prefix is None else target_prefix + rel[len(prefix):]
+        target = destination / out
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ctx.root / rel, target, follow_symlinks=False)
+        count += 1
+    return count
+
+
+def standalone_env(home: Path, unset: list) -> dict:
+    env = {k: v for k, v in os.environ.items() if k not in unset}
+    for name in ("config", "data", "cache", "state"):
+        (home / ".xdg" / name).mkdir(parents=True, exist_ok=True)
+        env[f"XDG_{name.upper()}_HOME"] = str(home / ".xdg" / name)
+    (home / "tmp").mkdir(parents=True, exist_ok=True)
+    env.update({"HOME": str(home), "TMPDIR": str(home / "tmp"), "USERPROFILE": str(home)})
+    return env
+
+
+def run_limited(argv: list, cwd: Path, env: dict, timeout: int):
+    """(returncode, output); a timeout kills the whole process group and returns (None, output)."""
+    try:
+        proc = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, start_new_session=True)
+    except OSError as exc:
+        return 127, f"{exc}\n"
+    try:
+        out, _ = proc.communicate(timeout=timeout)
+        return proc.returncode, out.decode("utf-8", "replace")
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        out, _ = proc.communicate()
+        return None, out.decode("utf-8", "replace")
+
+
+def standalone_commands(doc: dict) -> list:
+    dev = doc.get("dev") if isinstance(doc, dict) else None
+    dev = dev if isinstance(dev, dict) else {}
+    if not (dev.get("test") or dev.get("validate")):
+        return []
+    return [("setup", argv) for argv in dev.get("standalone_setup") or ()] + \
+           [(name, dev[name]) for name in ("test", "validate") if dev.get(name)]
+
+
+def run_standalone(ctx: Context, folder: str) -> tuple:
+    """(state, tail): the module in a copy of its tracked files plus the foundation stand-in."""
+    unit = load_units(ctx).get(folder)
+    commands = standalone_commands(unit.doc if unit else {})
+    if not commands:
+        return "n/a", ""
+    settings = ctx.config.get("standalone") or {}
+    timeout = int(settings.get("timeout_s", STANDALONE_TIMEOUT_S))
+    unset = list(settings.get("unset_env") or ())
+    foundation = (ctx.config.get("foundation") or {}).get("id")
+    tmp = Path(tempfile.mkdtemp(prefix=f"skm-standalone-{folder}."))
+    try:
+        for path in settings.get("foundation_paths") or ():
+            copy_tracked(ctx, path, tmp)
+        if foundation and folder != foundation:
+            copy_tracked(ctx, f"packages/{foundation}", tmp, f"vendor/{foundation}")
+        copy_tracked(ctx, f"packages/{folder}", tmp, f"vendor/{folder}")
+        module = tmp / "vendor" / folder
+        env = standalone_env(tmp / "home", unset)
+        for name, argv in commands:
+            code, out = run_limited(argv, module, env, timeout)
+            if code != 0:
+                reason = f"timeout after {timeout}s" if code is None else f"exit {code}"
+                tail = "\n".join(out.splitlines()[-STANDALONE_TAIL_LINES:])
+                return "fail", f"{name} `{' '.join(argv)}`: {reason}\n{tail}"
+        return "pass", ""
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def recorded_standalone(root: Path) -> dict:
+    path = root / BASELINE_PATH
+    if not path.is_file():
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8")).get("standalone") or {}
+    except (OSError, ValueError, AttributeError) as exc:
+        raise EnvironmentProblem(f"{BASELINE_PATH}: cannot load: {exc}") from exc
+    return value
+
+
+def write_standalone(ctx: Context, results: dict) -> None:
+    path = ctx.root / BASELINE_PATH
+    violations = load_baseline(ctx.root)
+    merged = {**recorded_standalone(ctx.root), **results}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(baseline_text(violations, merged), encoding="utf-8")
+
+
+def cmd_standalone(ctx: Context, args) -> int:
+    folders = sorted(load_units(ctx))
+    recorded = recorded_standalone(ctx.root)
+    if args.baseline:
+        chosen = [f for f in folders if recorded.get(f) == "pass"]
+    elif args.all:
+        chosen = folders
+    else:
+        chosen = list(args.ids)
+        unknown = [i for i in chosen if i not in folders]
+        if unknown:
+            print(f"ecosystem-units: unknown module(s): {', '.join(unknown)}", file=sys.stderr)
+            return 2
+    if not chosen:
+        print("ecosystem-units: no module selected (give ids, --all or --baseline)", file=sys.stderr)
+        return 2
+    results, failed = {}, []
+    for folder in chosen:
+        state, tail = run_standalone(ctx, folder)
+        results[folder] = state
+        print(f"standalone {folder}: {state}", flush=True)
+        if state == "fail":
+            print(f"ECOSYSTEM_STANDALONE_FAIL: packages/{folder}: {tail}", file=sys.stderr)
+            if args.baseline or recorded.get(folder) == "pass":
+                failed.append(folder)
+    if args.update_baseline:
+        write_standalone(ctx, results)
+        print(f"{BASELINE_PATH}: standalone updated for {', '.join(chosen)}")
+        return 0
+    if args.json:
+        print(json.dumps({"results": results}, indent=2))
+    if args.ids and not (args.baseline or args.all):
+        return 1 if "fail" in results.values() else 0
+    return 1 if failed else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ecosystem-units.py", description=__doc__.split("\n\n")[0])
     shared = argparse.ArgumentParser(add_help=False)
@@ -845,10 +994,16 @@ def build_parser() -> argparse.ArgumentParser:
     render = sub.add_parser("render", parents=[shared], help="generate docs/architecture/ownership.md")
     render.add_argument("--check", action="store_true", help="compare with the file instead of writing it")
     sub.add_parser("list", parents=[shared], help="list modules")
+    standalone = sub.add_parser("standalone", parents=[shared], help="run a module's dev commands in an isolated copy")
+    standalone.add_argument("ids", nargs="*", help="module folders (ids)")
+    standalone.add_argument("--all", action="store_true", help="every module")
+    standalone.add_argument("--baseline", action="store_true", help="modules recorded as pass; fail if one is not")
+    standalone.add_argument("--update-baseline", action="store_true", help="record the results in the baseline")
     return parser
 
 
-COMMANDS = {"check": cmd_check, "baseline": cmd_baseline, "render": cmd_render, "list": cmd_list}
+COMMANDS = {"check": cmd_check, "baseline": cmd_baseline, "render": cmd_render, "list": cmd_list,
+            "standalone": cmd_standalone}
 
 
 def main(argv=None) -> int:

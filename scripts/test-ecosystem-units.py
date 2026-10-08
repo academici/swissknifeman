@@ -847,5 +847,114 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertFalse((ROOT / "packages/artifex/unit.json").exists())
 
 
+class StandaloneTests(unittest.TestCase):
+    """standalone runs dev commands in a copy of the module with HOME inside a temporary directory."""
+
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.config["standalone"] = {"foundation_paths": ["shared"], "unset_env": ["SKM_LEAK"],
+                                          "timeout_s": 5}
+        self.tree.write("shared/data.txt", "foundation\n")
+
+    def dev(self, **dev):
+        self.tree.alpha["dev"] = dev
+
+    def standalone(self, *args, env=None):
+        self.tree.flush()
+        merged = {**__import__("os").environ, **(env or {})}
+        return subprocess.run([sys.executable, str(SCRIPT), "standalone", *args, "--root", str(self.tree.root)],
+                              capture_output=True, text=True, env=merged)
+
+    def baseline(self) -> dict:
+        return json.loads((self.tree.root / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))
+
+    def test_pass(self):
+        self.dev(test=["python3", "-c", "import sys; sys.exit(0)"])
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("standalone alpha: pass", result.stdout)
+
+    def test_fail_prints_the_tail(self):
+        self.dev(test=["python3", "-c", "import sys; print('boom-marker'); sys.exit(1)"])
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("standalone alpha: fail", result.stdout)
+        self.assertIn("boom-marker", result.stderr)
+
+    def test_without_dev_is_not_applicable(self):
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("standalone alpha: n/a", result.stdout)
+
+    def test_setup_runs_before_tests_and_validate_after(self):
+        self.dev(standalone_setup=[["python3", "-c", "open('order','a').write('s')"]],
+                 test=["python3", "-c", "open('order','a').write('t')"],
+                 validate=["python3", "-c", "import sys; sys.exit(0 if open('order').read()=='st' else 1)"])
+        self.assertEqual(self.standalone("alpha").returncode, 0)
+
+    def test_layout_home_and_environment(self):
+        script = ("import os, pathlib, sys; home = pathlib.Path(os.environ['HOME']).resolve(); "
+                  "tmp = pathlib.Path.cwd().resolve().parents[1]; "
+                  "ok = tmp in home.parents and os.environ['XDG_CONFIG_HOME'].startswith(str(home)) "
+                  "and 'SKM_LEAK' not in os.environ and pathlib.Path('../../shared/data.txt').is_file() "
+                  "and pathlib.Path('../aicore/unit.json').is_file() and not pathlib.Path('../../packages').exists(); "
+                  "open('home.txt','w').write(str(home)); sys.exit(0 if ok else 1)")
+        self.dev(test=["python3", "-c", script])
+        result = self.standalone("alpha", env={"SKM_LEAK": "1"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_timeout_is_a_failure_and_temp_is_removed(self):
+        self.tree.config["standalone"]["timeout_s"] = 1
+        self.dev(test=["python3", "-c", "import time; time.sleep(30)"])
+        before = set(Path(tempfile.gettempdir()).glob("skm-standalone-alpha.*"))
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("timeout", result.stderr)
+        self.assertEqual(set(Path(tempfile.gettempdir()).glob("skm-standalone-alpha.*")), before)
+
+    def test_update_baseline_records_results_and_keeps_violations(self):
+        self.tree.set_baseline({"import|x.py|beta": 2})
+        self.dev(test=["python3", "-c", "import sys; sys.exit(0)"])
+        self.tree.add_module("beta")
+        self.tree.write_json("packages/beta/unit.json", {**json.loads(
+            (self.tree.root / "packages/beta/unit.json").read_text(encoding="utf-8")),
+            "dev": {"test": ["python3", "-c", "import sys; sys.exit(1)"]}})
+        self.tree.add_module("gamma")
+        result = self.standalone("--all", "--update-baseline")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        doc = self.baseline()
+        self.assertEqual(doc["standalone"], {"aicore": "n/a", "alpha": "pass", "beta": "fail", "gamma": "n/a"})
+        self.assertEqual(doc["violations"], {"import|x.py|beta": 2})
+
+    def test_baseline_runs_only_recorded_passes(self):
+        self.tree.add_module("beta")
+        self.tree.write_json("packages/beta/unit.json", {**json.loads(
+            (self.tree.root / "packages/beta/unit.json").read_text(encoding="utf-8")),
+            "dev": {"test": ["python3", "-c", "import sys; sys.exit(1)"]}})
+        self.dev(test=["python3", "-c", "import sys; sys.exit(0)"])
+        self.tree.set_baseline({}, {"alpha": "pass", "beta": "fail"})
+        result = self.standalone("--baseline")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("standalone alpha: pass", result.stdout)
+        self.assertNotIn("beta", result.stdout)
+
+    def test_baseline_fails_when_a_recorded_pass_regresses(self):
+        self.dev(test=["python3", "-c", "import sys; sys.exit(1)"])
+        self.tree.set_baseline({}, {"alpha": "pass"})
+        self.assertEqual(self.standalone("--baseline").returncode, 1)
+
+    def test_usage_errors(self):
+        self.assertEqual(self.standalone().returncode, 2)
+        self.assertEqual(self.standalone("nope").returncode, 2)
+
+
+class RepositoryStandaloneTests(unittest.TestCase):
+    def test_recorded_states(self):
+        doc = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["standalone"]
+        self.assertEqual(set(doc), {"aicore", "analyst", "harness", "maind", "orch", "skiller", "task"})
+        self.assertEqual(doc["skiller"], "pass")
+        self.assertTrue(set(doc.values()) <= set(eu.STANDALONE_STATES))
+
+
 if __name__ == "__main__":
     unittest.main()

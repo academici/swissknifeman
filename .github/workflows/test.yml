@@ -38,7 +38,7 @@ jobs:
       - name: Test core (stdlib foundation)
         run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
 
-  skiller-standalone:
+  standalone:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,8 +47,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Test and validate standalone Skiller
-        run: bash scripts/skiller-standalone-check.sh
+      - name: Test and validate every module in an isolated copy
+        run: python3 scripts/ecosystem-units.py standalone --baseline
 
   task:
     runs-on: ubuntu-latest

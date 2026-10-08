@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.3",
   "title": "aicore.config: схемы модулей, слои, слияние, env, --config, schema_version, secret_ref и explain (контракт config-explain/v1)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Расширение профиля util.schema (minimum, maximum, аннотации x-skm-secret, x-skm-layers); load_module_schema; resolve() со слоями defaults → machine → project → extra → env → invocation → flags, _unset/_append, x-skm-layers, разбор env SKM_<MODULE>_<PATH>, проверка schema_version; ResolvedConfig; ConfigError с файлом и строкой; secret_ref (env://, реестр резолверов, Secret без утечки); explain с перекрытыми значениями и JSON по новому контракту config-explain/v1; запись слоя (edit_layer_file: редактор + бэкап + атомарная запись); тесты на каждое правило и тест редактирования секретов.",
   "why": "D22, D38, E30–E33, E39, R04, R05: семантика конфига фиксируется до первого потребителя и покрывается тестом на каждое правило. Жёсткие риски: (1) утечка значения секрета в вывод, текст исключения или трейсбек — инвариант и тест §secrets; (2) тихое принятие неизвестного ключа или неверного слоя — ошибки CONFIG_UNKNOWN_KEY/CONFIG_LAYER_FORBIDDEN; (3) изменение поведения валидатора для существующих контрактов при расширении профиля — тесты контрактов и ecosystem-units.",
   "scope": {
@@ -167,6 +167,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T11:41:34Z"
+  "result": {
+    "started_at": "2026-10-08T12:37:46Z",
+    "finished_at": "2026-10-08T12:56:10Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "e8c4b6e7-d2aa-4735-92a6-3263153addf7"
+    },
+    "notes": "aicore.config: resolve со слоями defaults→machine→project→extra→env→invocation→flags, _unset/_append, x-skm-layers, env с __, schema_version, secret_ref/Secret/реестр резолверов, explain (текст и config-explain/v1), edit_layer_file; util.schema: minimum/maximum и x-skm-*; 621 тест aicore, ruff без замечаний",
+    "deviations": [
+      "scripts/test-ecosystem-units.py поправлен вне Scope: тест использовал minimum как неподдерживаемое ключевое слово профиля"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T12:56:10Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T12:56:10Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T12:56:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T12:56:10Z"
 }

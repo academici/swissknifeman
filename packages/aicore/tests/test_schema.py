@@ -33,8 +33,8 @@ class SchemaCase(unittest.TestCase):
 
 class TestProfile(SchemaCase):
     def test_unsupported_keyword_fails_closed(self):
-        write_schema(self.dir, "bad", {"type": "integer", "minimum": 0})
-        with self.assertRaisesRegex(schema.SchemaProfileError, "unsupported keyword 'minimum'"):
+        write_schema(self.dir, "bad", {"type": "integer", "multipleOf": 2})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unsupported keyword 'multipleOf'"):
             schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("bad",))
 
     def test_profile_rules(self):

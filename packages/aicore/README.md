@@ -25,6 +25,8 @@ packages/aicore/
 | `aicore.util` | atomic write, paths, text, terminal, CLI and processes, HTTP, repository root, managed blocks, project type, `digest` (canonical JSON and tagged SHA-256), `schema` (closed-profile JSON Schema validator) | all modules |
 | `aicore.provider` | provider capability manifests, configuration layers, control plane, health, adapter registry, request lifecycle, `errors` (failure classes and classification by data), `models` (model catalog); data in `configs/` found from the package file (`provider.data.config_path`, `manifest.default_manifest_path()`) | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile | skiller, harness, maind |
+| `aicore.state` | standard machine and project places (`SKM_HOME`, XDG, `.swissknifeman/`), legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |
+| `aicore.config` | module settings from layers (`resolve`): schema defaults, machine file, project file, extra layers, environment, `--config` file, flags; `explain` (origin of every value), secret references (`Secret`, `register_secret_resolver`), `edit_layer_file` (comment-preserving write with backup); the one TOML entry (`toml`, `toml_edit`) | all modules |
 | `aicore.usage` | one accumulator of tokens parsed from provider logs; self-sufficient, so it can be vendored byte for byte | analyst, harness, skiller |
 
 ## Finding aicore
@@ -63,6 +65,7 @@ source of truth and the code implements it. The layout rules and the full table 
 | `error/v1` | `aicore.provider.errors`; rules in `configs/provider-errors.json` |
 | `capability-support/v1` | `SupportLevel`, `SupportSource`, `AvailabilityDimension` in `aicore.provider.values` |
 | `model-catalog/v1` | `aicore.provider.models`; data in `configs/model-catalog.json` |
+| `config-explain/v1` | `aicore.config.ResolvedConfig.explain_json` |
 
 ## Tests
 

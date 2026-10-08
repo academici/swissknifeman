@@ -31,6 +31,27 @@ def _imports(path):
             yield (node.module or "").split(".")[0], node.level, node.lineno
 
 
+def _aicore_targets(path):
+    """Yield (sibling subpackage, line) for every import of another aicore subpackage in *path*."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.level >= 2:
+            if node.module:
+                yield node.module.split(".")[0], node.lineno
+            else:  # ``from .. import util``
+                for alias in node.names:
+                    yield alias.name, node.lineno
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            parts = node.module.split(".")  # ``from aicore.provider import x``
+            if parts[0] == "aicore" and len(parts) > 1:
+                yield parts[1], node.lineno
+        elif isinstance(node, ast.Import):
+            for alias in node.names:  # ``import aicore.provider``
+                parts = alias.name.split(".")
+                if parts[0] == "aicore" and len(parts) > 1:
+                    yield parts[1], node.lineno
+
+
 class TestImportBoundary(unittest.TestCase):
     def test_lib_imports_only_stdlib_and_aicore(self):
         bad = []
@@ -62,47 +83,29 @@ class TestImportBoundary(unittest.TestCase):
             self.assertNotEqual(name, "aicore", f"usage.py:{line} imports aicore")
 
     def test_subpackage_layering(self):
-        """Layering: util imports no sibling subpackage; provider reaches only util and artifacts."""
-        def aicore_targets(path):
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom) and node.level >= 2:
-                    if node.module:
-                        yield node.module.split(".")[0], node.lineno
-                    else:  # ``from .. import util``
-                        for alias in node.names:
-                            yield alias.name, node.lineno
-                elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-                    parts = node.module.split(".")  # ``from aicore.provider import x``
-                    if parts[0] == "aicore" and len(parts) > 1:
-                        yield parts[1], node.lineno
-                elif isinstance(node, ast.Import):
-                    for alias in node.names:  # ``import aicore.provider``
-                        parts = alias.name.split(".")
-                        if parts[0] == "aicore" and len(parts) > 1:
-                            yield parts[1], node.lineno
-        for path in sorted((LIB / "util").glob("*.py")):
-            for target, line in aicore_targets(path):
-                self.assertNotIn(target, ("provider", "artifacts"), f"{path.name}:{line}")
-        for path in sorted((LIB / "provider").glob("*.py")):
-            for target, line in aicore_targets(path):
-                self.assertIn(target, ("util", "artifacts"), f"{path.name}:{line}")
-        for path in sorted((LIB / "state").glob("*.py")):
-            for target, line in aicore_targets(path):
-                self.assertEqual(target, "util", f"state/{path.name}:{line}")
-        for name in ("provider", "artifacts"):
-            for path in sorted((LIB / name).glob("*.py")):
-                for target, line in aicore_targets(path):
-                    self.assertNotEqual(target, "state", f"{name}/{path.name}:{line}")
-        self.assertNotIn("state", [t for t, _ in aicore_targets(LIB / "usage.py")])
+        """Layering: util -> nothing; state -> util; config -> util, state; provider -> util, artifacts."""
+        def check(directory, allowed):
+            for path in sorted((LIB / directory).glob("*.py")):
+                for target, line in _aicore_targets(path):
+                    self.assertIn(target, allowed, f"{directory}/{path.name}:{line} imports {target}")
 
-    def test_config_layer_uses_only_util_and_state(self):
-        for path in sorted((LIB / "config").glob("*.py")):
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+        for path in sorted((LIB / "util").glob("*.py")):
+            for target, line in _aicore_targets(path):
+                self.assertNotIn(target, ("provider", "artifacts", "state", "config"), f"{path.name}:{line}")
+        check("state", ("util",))
+        check("config", ("util", "state", "_vendor"))
+        check("provider", ("util", "artifacts"))
+        for path in sorted((LIB / "artifacts").glob("*.py")) + [LIB / "usage.py"]:
+            for target, line in _aicore_targets(path):
+                self.assertNotIn(target, ("state", "config"), f"{path.name}:{line}")
+
+    def test_config_modules_do_not_depend_on_the_model(self):
+        """toml, toml_edit and secrets are below the model and must not import it."""
+        for name in ("toml.py", "toml_edit.py", "secrets.py"):
+            tree = ast.parse((LIB / "config" / name).read_text(encoding="utf-8"))
             for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom) and node.level >= 2 and node.module:
-                    self.assertIn(node.module.split(".")[0], ("util", "state", "_vendor"),
-                                  f"config/{path.name}:{node.lineno}")
+                if isinstance(node, ast.ImportFrom) and node.level == 1:
+                    self.assertNotEqual(node.module, "model", f"config/{name}:{node.lineno}")
 
     def test_toml_is_imported_in_one_place_only(self):
         """``tomllib`` and ``tomli`` are imported only by ``config/toml.py`` (and inside ``_vendor``)."""

@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:aicore:config-explain:v1",
+  "module": "demo",
+  "project": null,
+  "config_file_version": 1,
+  "layers": [{"name": "defaults", "file": null, "present": true}],
+  "entries": [],
+  "resolved_at": "2026-10-08"
+}

@@ -47,6 +47,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   dotted keys, inline tables, arrays of tables and multi-line values with a hint to edit by hand, and parses its
   own result and compares it with the expected document before returning it. Architecture tests keep the TOML
   import in `config/toml.py` only and the `config` layer on `util` and `state`.
+- **`aicore.config`: layered module settings.** `resolve(module, ...)` applies defaults (the `default` of the module's
+  `configs/config.schema.json`), the machine file, the project file `.swissknifeman/config.toml`, module-specific extra
+  layers, `SKM_<MODULE>_<PATH>` environment variables (`__` between path segments, parsed by the key's type; unknown
+  paths warn once), a `--config FILE` layer and flags, in that order. Files carry `schema_version = 1` and a `[module]`
+  table; a layer may reset keys with `_unset = ["a.b"]` and extend arrays with `_append = {"a.b" = [...]}`, tables
+  merge, arrays and scalars replace, and `x-skm-layers` forbids a key in other layers. Unknown keys, wrong types and
+  ranges, a missing, newer or invalid version and forbidden layers are errors (`ConfigError` with a code, layer, file
+  and line). `ResolvedConfig` gives `get`, `as_dict`, `secret` and `explain` (layer, file, line, source and the
+  overridden values of each key; text and the `config-explain/v1` JSON). `edit_layer_file` changes one key of a
+  layer file: it checks the result against the schema, backs the old file up and writes atomically, leaving the file
+  untouched on any error.
+- **Secret references.** A key marked `x-skm-secret` holds only a reference (`env://NAME` is built in;
+  `register_secret_resolver` adds schemes). `Secret` shows `***`, cannot be pickled and looks the value up on
+  `reveal()` without keeping it; errors on a secret key never contain the value, and a failed lookup is reported as
+  `SECRET_UNRESOLVED` with no chained cause. A test checks `explain` output, `repr`, error text and full
+  tracebacks for a marker value.
+- **`config-explain/v1` contract** with valid and invalid examples.
+- **`aicore.util.schema`** accepts `minimum` and `maximum` (issue codes `minimum`, `maximum`) and the annotations
+  `x-skm-secret` and `x-skm-layers` (ignored by validation); every other `x-*` keyword still fails the profile.
+  `load_schema_file` loads one schema file under the profile.
 
 ### Changed
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to

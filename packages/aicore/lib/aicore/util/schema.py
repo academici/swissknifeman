@@ -1,13 +1,14 @@
 """Closed-profile JSON Schema validator (stdlib only).
 
-The one validator of the shared contracts. It supports exactly the keywords in ``SUPPORTED_KEYWORDS``; any
-other keyword in a schema file fails closed with ``SchemaProfileError`` at load time. Validation collects
-every issue instead of stopping at the first one. ``load_contract`` loads one contract directory
-``<contract>/v<N>/`` of the foundation schemas.
+The one validator of the shared contracts. It supports exactly the keywords in ``SUPPORTED_KEYWORDS`` and the
+annotations in ``ANNOTATIONS`` (accepted, never evaluated); any other keyword in a schema file fails closed
+with ``SchemaProfileError`` at load time. Validation collects every issue instead of stopping at the first
+one. ``load_contract`` loads one contract directory ``<contract>/v<N>/`` of the foundation schemas.
 """
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any, NamedTuple
@@ -15,12 +16,15 @@ from typing import Any, NamedTuple
 DIALECT = "https://json-schema.org/draft/2020-12/schema"
 CONTRACT_URN_PREFIX = "urn:swissknifeman:aicore:"
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
-               "min_length", "one_of", "ref")
+               "min_length", "one_of", "ref", "minimum", "maximum")
 SUPPORTED_KEYWORDS = frozenset({
     "$schema", "$id", "$defs", "$ref", "title", "description", "type", "enum", "const", "properties",
     "required", "additionalProperties", "items", "minItems", "uniqueItems", "minLength", "pattern", "oneOf",
-    "default",
+    "default", "minimum", "maximum",
 })
+# Annotations of module configuration schemas: the validator accepts them and ignores them. Any other
+# ``x-*`` keyword is outside the profile.
+ANNOTATIONS = frozenset({"x-skm-secret", "x-skm-layers"})
 _VERSION_DIR = re.compile(r"v[1-9][0-9]*")
 _TYPE_NAMES = frozenset({"null", "boolean", "integer", "number", "string", "array", "object"})
 _cache: dict[tuple[Path, str, tuple[str, ...], str], "Registry"] = {}
@@ -101,6 +105,23 @@ def load_registry(schema_dir: Path, *, urn_prefix: str, kinds: tuple[str, ...], 
     return registry
 
 
+def load_schema_file(path: Path, *, urn_prefix: str, kind: str, version: str = "v1") -> Registry:
+    """Load and profile-check one schema file whose ``$id`` must be ``<urn_prefix><kind>:<version>``.
+
+    For schemas that live outside the foundation contracts (a module's config schema). Not cached.
+    """
+    path = Path(path)
+    try:
+        schema = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SchemaProfileError(f"{path.name}: cannot load schema: {exc}") from exc
+    _check_profile(schema, path.name, "", root=True)
+    schema_id = f"{urn_prefix}{kind}:{version}"
+    if schema.get("$id") != schema_id:
+        raise SchemaProfileError(f"{path.name}: $id must be {schema_id!r}, got {schema.get('$id')!r}")
+    return Registry({schema_id: schema}, urn_prefix=urn_prefix, kinds=(kind,), version=version)
+
+
 def load_contract(contract_dir: Path, *, urn_prefix: str = CONTRACT_URN_PREFIX) -> tuple[Registry, str]:
     """Load one contract directory ``<contract>/v<N>/``; return its registry and its kind.
 
@@ -132,7 +153,7 @@ def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -
     if not isinstance(node, dict):
         fail("schema node must be an object")
     for keyword, value in node.items():
-        if keyword not in SUPPORTED_KEYWORDS:
+        if keyword not in SUPPORTED_KEYWORDS and keyword not in ANNOTATIONS:
             fail(f"unsupported keyword {keyword!r}")
         if keyword == "$schema" and (not root or value != DIALECT):
             fail(f"$schema must be {DIALECT!r} on the root only")
@@ -151,6 +172,14 @@ def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -
             fail(f"{keyword} must be a non-negative integer")
         elif keyword == "uniqueItems" and not isinstance(value, bool):
             fail("uniqueItems must be a boolean")
+        elif keyword in ("minimum", "maximum") and not (
+                isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)):
+            fail(f"{keyword} must be a finite number")
+        elif keyword == "x-skm-secret" and not isinstance(value, bool):
+            fail("x-skm-secret must be a boolean")
+        elif keyword == "x-skm-layers" and not (
+                isinstance(value, list) and value and all(isinstance(n, str) and n for n in value)):
+            fail("x-skm-layers must be a non-empty list of layer names")
         elif keyword == "pattern":
             try:
                 _compile(value)
@@ -217,7 +246,12 @@ def _check(reg: Registry, schema: dict, base: str, value: Any, pointer: str, out
         add("enum", "must be one of " + ", ".join(json.dumps(o, ensure_ascii=False) for o in schema["enum"]))
     if "const" in schema and not _equal(value, schema["const"]):
         add("const", f"must equal {json.dumps(schema['const'], ensure_ascii=False)}")
-    if isinstance(value, str):
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            add("minimum", f"{value} is less than the minimum {schema['minimum']}")
+        if "maximum" in schema and value > schema["maximum"]:
+            add("maximum", f"{value} is greater than the maximum {schema['maximum']}")
+    elif isinstance(value, str):
         if len(value) < schema.get("minLength", 0):
             add("min_length", f"string is shorter than {schema['minLength']}")
         pattern = schema.get("pattern")

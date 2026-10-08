@@ -344,10 +344,10 @@ class ManifestCheckTests(unittest.TestCase):
     def test_broken_digest_contract_fails_profile(self):
         path = "packages/aicore/schemas/digest/v1/digest.schema.json"
         schema = json.loads((self.tree.root / path).read_text(encoding="utf-8"))
-        schema["minimum"] = 0
+        schema["multipleOf"] = 2
         self.tree.write_json(path, schema)
         result = self.assertFails("SCHEMA_PROFILE")
-        self.assertIn("unsupported keyword 'minimum'", result.stderr)
+        self.assertIn("unsupported keyword 'multipleOf'", result.stderr)
 
     def test_contract_id_must_match_its_directory(self):
         path = "packages/aicore/schemas/digest/v1/digest.schema.json"

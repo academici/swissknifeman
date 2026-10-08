@@ -12,8 +12,10 @@ where it should warn)."""
 import json
 import re
 import subprocess
+from dataclasses import dataclass
+from typing import Tuple
 
-from .quality.eval import CLAUDE_BIN_ENV, claude_bin
+from ..content.eval import CLAUDE_BIN_ENV, claude_bin
 
 PLUGIN_CALL_TIMEOUT = 15
 
@@ -22,7 +24,7 @@ _ALWAYS_ON_RE = re.compile(r"(?m)^\s*Always-on:\s*~([\d,]+)\s*tok\b")
 _details_cache = {}
 
 
-def _run_claude(argv, *, cwd=None, timeout=PLUGIN_CALL_TIMEOUT):
+def run_claude(argv, *, cwd=None, timeout=PLUGIN_CALL_TIMEOUT):
     """Call `claude <argv>`. (ok, stdout|None, detail|None) — detail is full
     only on failure and gives the reason (fail-loud, not a silent failure)."""
     claude = claude_bin()
@@ -49,7 +51,7 @@ def list_enabled_plugins(target):
     reason. Records carry a field `errors` listing as is - classification
     `broken` vs `unparsed` requires EXODUS `details` and is resolved later, in
     `plugins_summary`, not here."""
-    ok, stdout, detail = _run_claude(["plugin", "list", "--json"], cwd=str(target))
+    ok, stdout, detail = run_claude(["plugin", "list", "--json"], cwd=str(target))
     if not ok:
         return [], "n/a", [detail]
     try:
@@ -81,7 +83,7 @@ def plugin_always_on_tokens(plugin_id, cwd):
     regexp mismatch, the line goes to unparsed, multiplier is not guessed."""
     if plugin_id in _details_cache:
         return _details_cache[plugin_id]
-    ok, stdout, detail = _run_claude(["plugin", "details", plugin_id], cwd=str(cwd))
+    ok, stdout, detail = run_claude(["plugin", "details", plugin_id], cwd=str(cwd))
     if not ok:
         return None, detail
     m = _ALWAYS_ON_RE.search(stdout)
@@ -132,3 +134,88 @@ def plugins_summary(target):
     return {"status": "ok", "entries": entries, "total": total,
            "partial": bool(unparsed or broken), "unparsed": unparsed,
            "broken": broken, "warnings": warnings}
+
+
+_PREVIEW_SECRET_KEY = re.compile(r"(?:api[_-]?key|authorization|credential|password|secret|token|private[_-]?key)", re.I)
+
+
+def redacted_settings_preview(value, *, key="", redact=False):
+    """Return a dry-run-safe copy of consumer settings for terminal output.
+
+    A delivery dry-run may replay an existing ``settings.local.json``. Its
+    ``env`` table often contains provider credentials, so printing the merged
+    settings document would leak them into terminal logs and release receipts.
+    The writer still receives the original object; only this preview is redacted.
+    """
+    if isinstance(value, dict):
+        redact = redact or key == "env"
+        return {name: redacted_settings_preview(item, key=name, redact=redact)
+                for name, item in value.items()}
+    if isinstance(value, list):
+        return [redacted_settings_preview(item, key=key, redact=redact) for item in value]
+    if redact or _PREVIEW_SECRET_KEY.search(key):
+        return "[REDACTED]"
+    return value
+
+
+@dataclass(frozen=True)
+class MarketplaceEnableResult:
+    """What :func:`enable_marketplace_plugins` changed and what the caller should tell the user.
+
+    ``added`` are the plugins switched on, ``skipped_false`` those the owner switched off
+    explicitly (left alone), ``drift`` the keys of this marketplace that are on but outside
+    the requested set (left alone), ``notes`` the marketplace messages in print order.
+    """
+
+    added: Tuple[str, ...]
+    skipped_false: Tuple[str, ...]
+    drift: Tuple[str, ...]
+    notes: Tuple[str, ...]
+
+
+def enable_marketplace_plugins(settings, *, marketplace, marketplace_root, plugins, fix_path_drift):
+    """Merge the marketplace source and the plugin switches into a Claude Code ``settings`` mapping.
+
+    Mutates ``settings`` in place (``extraKnownMarketplaces``, ``enabledPlugins``) and does no
+    printing and no file access: the caller prints ``notes`` and writes the file. A declared
+    source of another kind (github, ...) is the owner's choice and stays; a ``directory`` source
+    with another path is replaced only with ``fix_path_drift``, otherwise a note says so.
+    """
+    notes = []
+    marketplaces = settings.setdefault("extraKnownMarketplaces", {})
+    mp_root = marketplace_root
+    our_source = {"source": "directory", "path": str(mp_root)}
+    if marketplace in marketplaces:
+        existing = marketplaces[marketplace].get("source", {})
+        if existing != our_source:
+            if fix_path_drift and existing.get("source") == "directory":
+                notes.append(f"NOTE: path marketplace is deprecated ({existing.get('path')}) — "
+                             f"updating to {mp_root}")
+                marketplaces[marketplace] = {"source": our_source}
+            elif existing.get("source") == "directory":
+                # directory-source with a DIFFERENT path - probably the repository has moved: plugins
+                # will not be picked up. Making the hint effective (rather than silently leaving the old path).
+                notes.append(f"⚠ marketplace '{marketplace}' points to ANOTHER directory: "
+                             f"{existing.get('path')}\n  registry is now here: {mp_root}. If "
+                             f"the repository has moved - the plugins will not load. Correct: "
+                             f"skiller connect --fix-path (or skiller update).")
+            else:
+                # Other source type (github/…) — conscious choice of the user, do not touch.
+                notes.append(f"NOTE: marketplace '{marketplace}' declared with a different origin "
+                             f"({json.dumps(existing)}) — I leave it as is.")
+    else:
+        marketplaces[marketplace] = {"source": our_source}
+
+    enabled = settings.setdefault("enabledPlugins", {})
+    added, skipped_false = [], []
+    for p in plugins:
+        key = f"{p}@{marketplace}"
+        if key not in enabled:
+            enabled[key] = True
+            added.append(p)
+        elif enabled[key] is False:
+            skipped_false.append(p)
+    drift = [k for k, v in enabled.items()
+             if k.endswith(f"@{marketplace}") and v
+             and k.split("@")[0] not in plugins]
+    return MarketplaceEnableResult(tuple(added), tuple(skipped_false), tuple(drift), tuple(notes))

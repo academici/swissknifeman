@@ -187,6 +187,9 @@ class TestImportBoundary(unittest.TestCase):
             "build_system_benchmark": "lib/aicore/content/eval.py",
             "run_case": "lib/aicore/content/eval.py",
             "compare_eval_context": "lib/aicore/content/eval.py",
+            "enable_marketplace_plugins": "lib/aicore/delivery/claude.py",
+            "connect_distribution_plan": "lib/aicore/delivery/distribution.py",
+            "plan_selection": "lib/aicore/delivery/codex.py",
         }
         roots = [ROOT / "lib"]
         packages = ROOT.parent

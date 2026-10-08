@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller import plugins as pl
 from skiller.budget import cmd_budget
+from aicore.delivery import claude as aicore_claude  # after skiller: the core shim puts aicore on sys.path
 import tests.fixtures as fx
 
 FIXTURES_DATA = Path(__file__).resolve().parent / "fixtures_data"
@@ -150,7 +151,7 @@ class PluginsAggregateCase(unittest.TestCase):
         # Implementation Rules §Code Guidance: suffix (~1.1k) NOT observed in
         # measured and not guessed - goes into unparsed (not broken — entry without
         # errors listing), and not multiplied.
-        with mock.patch.object(pl, "claude_bin", return_value=str(
+        with mock.patch.object(aicore_claude, "claude_bin", return_value=str(
                 _write_fake_plugin_cli(self.tmp, details={"x@y": (
                     "Always-on:   ~1.1k tok   added to every session\n", 0)}))):
             tokens, error = pl.plugin_always_on_tokens("x@y", self.proj)
@@ -162,7 +163,7 @@ class PluginsAggregateCase(unittest.TestCase):
         # (was unparsed until repaired) — fixture for verbatim live output.
         script = _write_fake_plugin_cli(self.tmp, details={
             "architect@swissknifeman": (ARCHITECT_DETAILS, 0)})
-        with mock.patch.object(pl, "claude_bin", return_value=str(script)):
+        with mock.patch.object(aicore_claude, "claude_bin", return_value=str(script)):
             tokens, error = pl.plugin_always_on_tokens("architect@swissknifeman", self.proj)
         self.assertEqual(tokens, 1275)
         self.assertIsNone(error)
@@ -176,7 +177,7 @@ class PluginsAggregateCase(unittest.TestCase):
             self.tmp, "architect@swissknifeman", target_cwd,
             "architect 0.1.0\n\nProjected token cost\n"
             "  Always-on:   ~1,275 tok   added to every session\n")
-        with mock.patch.object(pl, "claude_bin", return_value=str(script)):
+        with mock.patch.object(aicore_claude, "claude_bin", return_value=str(script)):
             tokens, error = pl.plugin_always_on_tokens("architect@swissknifeman", self.proj)
             self.assertEqual(tokens, 1275)
             self.assertIsNone(error)
@@ -187,7 +188,7 @@ class PluginsAggregateCase(unittest.TestCase):
         self.assertIn("code 1", wrong_cwd_error)
 
     def test_missing_claude_binary_gives_na_not_zero(self):
-        with mock.patch.object(pl, "claude_bin", return_value=None):
+        with mock.patch.object(aicore_claude, "claude_bin", return_value=None):
             summary = pl.plugins_summary(self.proj)
         self.assertEqual(summary["status"], "n/a")
         self.assertIsNone(summary["total"])
@@ -205,13 +206,13 @@ class PluginsAggregateCase(unittest.TestCase):
         # (P1.4 §2, fan-out savings for the fleet remain).
         self._use_fake()
         calls = []
-        real_run = pl._run_claude
+        real_run = pl._run_claude  # the skiller name re-exports aicore run_claude
 
         def _counting_run(argv, **kw):
             calls.append(tuple(argv))
             return real_run(argv, **kw)
 
-        with mock.patch.object(pl, "_run_claude", side_effect=_counting_run):
+        with mock.patch.object(aicore_claude, "run_claude", side_effect=_counting_run):
             pl.plugin_always_on_tokens("codex@openai-codex", self.proj)
             pl.plugin_always_on_tokens("codex@openai-codex", self.proj)
         self.assertEqual(len(calls), 1)
@@ -224,7 +225,7 @@ class PluginsAggregateCase(unittest.TestCase):
             self.tmp, "architect@swissknifeman", target_cwd,
             "architect 0.1.0\n\nProjected token cost\n"
             "  Always-on:   ~1,275 tok   added to every session\n")
-        with mock.patch.object(pl, "claude_bin", return_value=str(script)):
+        with mock.patch.object(aicore_claude, "claude_bin", return_value=str(script)):
             miss_tokens, miss_error = pl.plugin_always_on_tokens(
                 "architect@swissknifeman", self.tmp)
             self.assertIsNone(miss_tokens)

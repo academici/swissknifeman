@@ -113,12 +113,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 - **`aicore.util.schema`** accepts `minimum` and `maximum` (issue codes `minimum`, `maximum`) and the annotations
   `x-skm-secret` and `x-skm-layers` (ignored by validation); every other `x-*` keyword still fails the profile.
   `load_schema_file` loads one schema file under the profile.
+- **`aicore.delivery`**: how skills and plugins reach Codex, Claude Code and a project. `MARKETPLACE` names the
+  ecosystem marketplace. `codex` plans and applies the explicit Codex plugin selection in a project
+  `.codex/config.toml` (comments, foreign tables and line endings stay byte for byte) and reads what the installed
+  Codex discovers; `claude` lists the enabled marketplace plugins with their always-on price, redacts a settings
+  preview (`redacted_settings_preview`) and merges the marketplace source and the plugin switches into a settings
+  mapping (`enable_marketplace_plugins`, a pure function that returns the notes to print); `distribution` plans the
+  vendor path and the marketplace channel of each provider, including the self-contained Codex bundle checked
+  against the artifact lock, and runs the explicit native Codex install. The caller selects the providers and
+  passes the identities that appear in generated provenance (`DistributionIdentity`), so artifact ids, adapter
+  identities and bytes do not change.
 
 ### Changed
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to
   `configs/gitignore-policy.json` of this package, found from the package file. The policy gains `project-config`
   (`.swissknifeman/config.toml`, committed) and `swissknifeman-state` (`.swissknifeman/state/`, ignored).
   `core.gitignore_policy` stays as an alias of the same module object.
+- **Codex plugin selection reads the full TOML on every Python.** On Python before 3.11 it used a reduced parser that
+  refused any table other than the plugin and skill tables; it now uses `aicore.config.toml.loads` like Python 3.11+
+  and a project `.codex/config.toml` with other tables is accepted. A syntax error is a `ValueError` (`ConfigError`)
+  that names the file.
 - `scripts/test.sh` unsets `SKM_HOME`, `XDG_*_HOME` and `SKM_UNITS_PATH` before running the tests.
 - `aicore.util.paths.state_dir` is documented as a legacy location (new code uses `aicore.state`).
 

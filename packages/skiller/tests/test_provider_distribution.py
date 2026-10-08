@@ -231,7 +231,7 @@ class ProviderDistributionCase(unittest.TestCase):
     def test_dual_connect_external_target_gets_contained_bundle_with_claude_parity(self):
         self.write_provider_config(providers())
         materialize_codex_marketplace(self.root)
-        with mock.patch("skiller.publication.subprocess.run",
+        with mock.patch("aicore.delivery.distribution.subprocess.run",
                         side_effect=AssertionError("implicit native install")), \
                 contextlib.redirect_stdout(io.StringIO()):
             do_connect(self.env, self.project, {
@@ -480,11 +480,12 @@ class ProviderDistributionCase(unittest.TestCase):
 
     def test_native_install_reports_missing_codex_without_runner(self):
         calls = []
-        with mock.patch("skiller.publication.shutil.which", return_value=None):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value=None) as which:
             ok, message = run_codex_native_install(
                 repo_root=self.root, plugin="core", dry_run=False,
                 runner=lambda *args, **kwargs: calls.append((args, kwargs)))
         self.assertFalse(ok)
+        which.assert_called_with("codex")
         self.assertIn("SPUB_INSTALL_UNAVAILABLE", message)
         self.assertEqual(calls, [])
 
@@ -500,10 +501,11 @@ class ProviderDistributionCase(unittest.TestCase):
             commands.append((command, kwargs))
             return Result()
 
-        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value="/bin/codex") as which:
             ok, _ = run_codex_native_install(repo_root=self.root, plugin="core",
                                               dry_run=False, runner=runner)
         self.assertTrue(ok)
+        which.assert_called_with("codex")
         self.assertEqual(commands[0][0][:4], ["codex", "plugin", "marketplace", "add"])
         self.assertEqual(commands[1][0], ["codex", "plugin", "add", "core@swissknifeman"])
         self.assertTrue(all(item[1].get("shell") is None for item in commands))
@@ -523,9 +525,10 @@ class ProviderDistributionCase(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, "abcdef\n", "")
             return subprocess.CompletedProcess(command, 0, "", "")
 
-        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value="/bin/codex") as which:
             ok, _ = run_codex_native_install(repo_root=self.root, plugin="core", dry_run=False, runner=runner)
         self.assertTrue(ok)
+        which.assert_called_with("codex")
         self.assertIn(["codex", "plugin", "add", "core@swissknifeman"], commands)
         self.assertNotIn(["codex", "plugin", "marketplace", "upgrade", "swissknifeman"], commands)
         self.assertFalse(any("remove" in command for command in commands))
@@ -543,9 +546,10 @@ class ProviderDistributionCase(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, "https://example.test/repo.git\n", "")
             return subprocess.CompletedProcess(command, 0, "", "")
 
-        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value="/bin/codex") as which:
             ok, _ = run_codex_native_install(repo_root=self.root, plugin="core", dry_run=False, runner=runner)
         self.assertTrue(ok)
+        which.assert_called_with("codex")
         self.assertIn(["codex", "plugin", "marketplace", "upgrade", "swissknifeman"], commands)
         self.assertFalse(any("remove" in command for command in commands))
 

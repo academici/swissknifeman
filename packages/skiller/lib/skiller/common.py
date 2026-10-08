@@ -26,13 +26,13 @@ from aicore.content.skill import (  # noqa: F401
 )
 from aicore.content.skill import read_frontmatter as parse_frontmatter  # noqa: F401
 from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fields  # noqa: F401
+from aicore.delivery import MARKETPLACE  # noqa: F401
 
 from .host import host_command, load_host
 
 STATE_DIR = state_dir(HOME)
 DB_FILE = STATE_DIR / "projects.json"
 DB_VERSION = 1
-MARKETPLACE = "swissknifeman"
 MANIFEST = ".swissknifeman-manifest.json"
 MANIFEST_VERSION = 1
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",

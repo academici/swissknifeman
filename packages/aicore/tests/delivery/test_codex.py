@@ -4,16 +4,12 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
-try:
-    import tomllib
-except ImportError:
-    tomllib = None
 from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from skiller.native_codex import (_fallback_toml_loads, apply_selection, native_inventory,
-                                  plan_selection)
+from aicore.config.toml import loads as toml_loads
+from aicore.delivery.codex import SUFFIX, apply_selection, native_inventory, plan_selection
 
 
 class NativeCodexTests(unittest.TestCase):
@@ -30,23 +26,6 @@ class NativeCodexTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_python_310_fallback_reads_plugin_and_legacy_skill_selection(self):
-        data = _fallback_toml_loads(
-            '[plugins."quality@swissknifeman"]\n'
-            'enabled = true\n\n'
-            '[[skills.config]]\n'
-            'path = "/tmp/skill/SKILL.md"\n'
-            'enabled = false\n')
-        self.assertTrue(data["plugins"]["quality@swissknifeman"]["enabled"])
-        self.assertEqual(data["skills"]["config"], [{"path": "/tmp/skill/SKILL.md", "enabled": False}])
-
-    def test_python_310_fallback_rejects_invalid_or_inline_plugin_layout(self):
-        for text in ("[broken", 'plugins = { "php@swissknifeman" = {enabled = true} }\n'):
-            with self.subTest(text=text):
-                with self.assertRaises(ValueError):
-                    _fallback_toml_loads(text)
-
-    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
     def test_selection_preserves_foreign_bytes_and_user_defaults(self):
         user = '[plugins."system@swissknifeman"]\nenabled = true\n'
         (self.codex / "config.toml").write_text(user)
@@ -63,7 +42,7 @@ class NativeCodexTests(unittest.TestCase):
         after = config.read_text()
         self.assertIn('enabled = true # keep\ncustom = "x"', after)
         self.assertIn('[plugins."foreign@other"]\nenabled = true\n', after)
-        parsed = tomllib.loads(after)
+        parsed = toml_loads(after)
         self.assertFalse(parsed["plugins"]["system@swissknifeman"]["enabled"])
         self.assertFalse(parsed["plugins"]["quality@swissknifeman"]["enabled"])
         self.assertEqual((self.codex / "config.toml").read_text(), user)
@@ -75,7 +54,6 @@ class NativeCodexTests(unittest.TestCase):
         self.assertEqual(list(config.parent.glob("config.toml.*.bak")), backups)
         self.assertEqual(backups[0].read_text(), before)
 
-    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
     def test_existing_backup_survives_multiple_selection_changes(self):
         config = self.project / ".codex/config.toml"
         config.parent.mkdir()
@@ -89,6 +67,29 @@ class NativeCodexTests(unittest.TestCase):
         self.assertEqual(foreign.read_text(), "owner's existing backup\n")
         self.assertCountEqual([p.read_bytes() for p in config.parent.glob("config.toml.*.bak")], preimages)
 
+    def test_marketplace_suffix_follows_the_ecosystem_marketplace(self):
+        self.assertEqual(SUFFIX, "@swissknifeman")
+
+    def test_selection_reads_the_full_toml_on_every_python(self):
+        config = self.project / ".codex/config.toml"
+        config.parent.mkdir()
+        before = ('model = "x"\n\n[mcp_servers.docs]\ncommand = "docs"\nargs = ["--a", "--b"]\n\n'
+                  '[[skills.config]]\npath = "/tmp/s/SKILL.md"\nenabled = false\n')
+        config.write_text(before)
+        plan = plan_selection(self.env, self.project, {"php"}, {"php"})
+        apply_selection(self.project, plan)
+        after = config.read_text()
+        self.assertTrue(after.startswith(before))
+        self.assertTrue(toml_loads(after)["plugins"]["php@swissknifeman"]["enabled"])
+
+    def test_invalid_toml_is_a_value_error_naming_the_file(self):
+        config = self.project / ".codex/config.toml"
+        config.parent.mkdir()
+        config.write_text("[broken")
+        with self.assertRaises(ValueError) as caught:
+            plan_selection(self.env, self.project, {"php"}, {"php"})
+        self.assertIn(str(config), str(caught.exception))
+
     def test_invalid_or_inline_layout_fails_without_writes(self):
         config = self.project / ".codex/config.toml"
         config.parent.mkdir()
@@ -100,7 +101,6 @@ class NativeCodexTests(unittest.TestCase):
                 self.assertEqual(config.read_text(), before)
                 self.assertFalse(config.with_suffix(".toml.bak").exists())
 
-    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
     def test_preserves_crlf_and_foreign_multiline_string_bytes(self):
         config = self.project / ".codex/config.toml"
         config.parent.mkdir()
@@ -111,7 +111,6 @@ class NativeCodexTests(unittest.TestCase):
         apply_selection(self.project, plan)
         self.assertEqual(config.read_bytes(), before.replace(b'true # own', b'false # own'))
 
-    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
     def test_changed_preimage_and_symlink_are_rejected(self):
         plan = plan_selection(self.env, self.project, {"php"}, {"php"})
         config = plan["path"]

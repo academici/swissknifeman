@@ -7,55 +7,12 @@ import re
 import subprocess
 import tempfile
 
-from core import atomic_write_text
-from core.provider.lock import _contained_target, _writer_guard
+from ..artifacts.lock import _contained_target, _writer_guard
+from ..config.toml import loads as toml_loads
+from ..util.io import atomic_write_text
+from . import MARKETPLACE
 
-SUFFIX = "@swissknifeman"
-
-
-def _fallback_toml_loads(text):
-    """Read the two Codex selection tables on Python 3.10.
-
-    Skiller is stdlib-only and supports the CI's Python 3.10 runtime, where
-    ``tomllib`` is unavailable.  We only need the scalar forms Codex writes for
-    plugin activation and legacy skill opt-outs; unknown TOML remains untouched.
-    """
-    data, current = {}, None
-    plugin_header = re.compile(r'^\[plugins\.(?:"([^"]+)"|\'([^\']+)\')\]$')
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        match = plugin_header.fullmatch(line)
-        if match:
-            current = data.setdefault("plugins", {}).setdefault(match.group(1) or match.group(2), {})
-            continue
-        if line == "[[skills.config]]":
-            current = {}
-            data.setdefault("skills", {}).setdefault("config", []).append(current)
-            continue
-        if line.startswith("["):
-            raise ValueError("CODEX_SELECTION_LAYOUT: unsupported TOML table")
-        if current is None and line.startswith("plugins"):
-            raise ValueError("CODEX_SELECTION_LAYOUT: plugins must use dedicated tables")
-        if current is None or "=" not in line:
-            continue
-        key, value = (part.strip() for part in line.split("=", 1))
-        if value in ("true", "false"):
-            current[key] = value == "true"
-        elif len(value) >= 2 and value[0] == value[-1] == '"':
-            current[key] = json.loads(value)
-        elif len(value) >= 2 and value[0] == value[-1] == "'":
-            current[key] = value[1:-1]
-    return data
-
-
-def _toml_loads(text):
-    try:
-        import tomllib
-    except ImportError:
-        return _fallback_toml_loads(text)
-    return tomllib.loads(text)
+SUFFIX = "@" + MARKETPLACE
 
 
 def codex_home(env):
@@ -64,7 +21,7 @@ def codex_home(env):
 
 def _read(path):
     text = path.read_bytes().decode("utf-8") if path.exists() else ""
-    return text, _toml_loads(text)
+    return text, toml_loads(text, source=str(path))
 
 
 def plan_selection(env, target, selected, known):
@@ -89,7 +46,7 @@ def plan_selection(env, target, selected, known):
     for index, line in enumerate(lines):
         if not line.lstrip().startswith("["):
             continue
-        parsed = _toml_loads(line)
+        parsed = toml_loads(line, source=str(path))
         headers.append(index)
         plugins = parsed.get("plugins", {})
         if isinstance(plugins, dict) and len(plugins) == 1:
@@ -127,7 +84,7 @@ def plan_selection(env, target, selected, known):
     after = "".join(lines)
     if additions:
         after += (("\n" if after.endswith("\n") else "\n\n") if after else "") + "\n".join(additions)
-    parsed = _toml_loads(after)
+    parsed = toml_loads(after, source=str(path))
     expected = copy.deepcopy(data)
     for name in names:
         expected.setdefault("plugins", {}).setdefault(name + SUFFIX, {})["enabled"] = name in selected

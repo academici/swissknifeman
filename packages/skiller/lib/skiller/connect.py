@@ -1,6 +1,5 @@
 """connect — channel plugin marketplace Claude Code."""
 import json
-import re
 import shutil
 import tempfile
 from dataclasses import replace
@@ -11,6 +10,8 @@ from core import (apply_plan, atomic_write_text, find_repo_root, parse_lock,
 from core.provider.lock import ArtifactLock, LOCK_RELATIVE_PATH
 from core.provider.artifact import sha256_digest
 
+from aicore.delivery.claude import enable_marketplace_plugins, redacted_settings_preview
+
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, is_within, parse_flags, warn)
 from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
@@ -19,28 +20,6 @@ from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
 from .publication import build_connect_distribution_plan, selected_distribution_providers
-
-
-_PREVIEW_SECRET_KEY = re.compile(r"(?:api[_-]?key|authorization|credential|password|secret|token|private[_-]?key)", re.I)
-
-
-def _redacted_settings_preview(value, *, key="", redact=False):
-    """Return a dry-run-safe copy of consumer settings for terminal output.
-
-    A delivery dry-run may replay an existing ``settings.local.json``. Its
-    ``env`` table often contains provider credentials, so printing the merged
-    settings document would leak them into terminal logs and release receipts.
-    The writer still receives the original object; only this preview is redacted.
-    """
-    if isinstance(value, dict):
-        redact = redact or key == "env"
-        return {name: _redacted_settings_preview(item, key=name, redact=redact)
-                for name, item in value.items()}
-    if isinstance(value, list):
-        return [_redacted_settings_preview(item, key=key, redact=redact) for item in value]
-    if redact or _PREVIEW_SECRET_KEY.search(key):
-        return "[REDACTED]"
-    return value
 
 
 def _prune_codex_connect_artifacts(target, *, dry_run):
@@ -242,48 +221,19 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
         except json.JSONDecodeError as e:
             die(f"{dest}: invalid JSON: {e}")
 
-    marketplaces = settings.setdefault("extraKnownMarketplaces", {})
     # Marketplace source paths are relative to the host root where registry writes
     # its manifest, including sibling plugin entries declared by the host config.
     mp_root = find_repo_root(root) or root
-    our_source = {"source": "directory", "path": str(mp_root)}
-    if MARKETPLACE in marketplaces:
-        existing = marketplaces[MARKETPLACE].get("source", {})
-        if existing != our_source:
-            if fix_path_drift and existing.get("source") == "directory":
-                print(f"NOTE: path marketplace is deprecated ({existing.get('path')}) — "
-                      f"updating to {mp_root}")
-                marketplaces[MARKETPLACE] = {"source": our_source}
-            elif existing.get("source") == "directory":
-                # directory-source with a DIFFERENT path - probably the repository has moved: plugins
-                # will not be picked up. Making the hint effective (rather than silently leaving the old path).
-                print(f"⚠ marketplace '{MARKETPLACE}' points to ANOTHER directory: "
-                      f"{existing.get('path')}\n  registry is now here: {mp_root}. If "
-                      f"the repository has moved - the plugins will not load. Correct: "
-                      f"skiller connect --fix-path (or skiller update).")
-            else:
-                # Other source type (github/…) — conscious choice of the user, do not touch.
-                print(f"NOTE: marketplace '{MARKETPLACE}' declared with a different origin "
-                      f"({json.dumps(existing)}) — I leave it as is.")
-    else:
-        marketplaces[MARKETPLACE] = {"source": our_source}
-
-    enabled = settings.setdefault("enabledPlugins", {})
-    added, skipped_false = [], []
-    for p in plugins:
-        key = f"{p}@{MARKETPLACE}"
-        if key not in enabled:
-            enabled[key] = True
-            added.append(p)
-        elif enabled[key] is False:
-            skipped_false.append(p)
-    drift = [k for k, v in enabled.items()
-             if k.endswith(f"@{MARKETPLACE}") and v
-             and k.split("@")[0] not in plugins]
+    merged = enable_marketplace_plugins(settings, marketplace=MARKETPLACE, marketplace_root=mp_root,
+                                        plugins=plugins, fix_path_drift=fix_path_drift)
+    for note in merged.notes:
+        print(note)
+    enabled = settings["enabledPlugins"]
+    added, skipped_false, drift = merged.added, merged.skipped_false, merged.drift
 
     if dry_run:
         print(f"--- dry-run: {dest} ---")
-        print(json.dumps(_redacted_settings_preview(settings), ensure_ascii=False, indent=2))
+        print(json.dumps(redacted_settings_preview(settings), ensure_ascii=False, indent=2))
     else:
         if dest.exists():
             shutil.copy2(dest, f"{dest}.bak")

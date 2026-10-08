@@ -23,17 +23,10 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
 | `packages/skiller/lib/skiller/common.py` | skiller | aicore | content | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/connect.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/delivery.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/native_codex.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/plugins.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/publication.py` | skiller | aicore | content | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/release.py` | skiller | aicore | release | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/release_attestation.py` | skiller | aicore | release | P5 | hypothesis | - |
 | `packages/skiller/lib/skiller/skillset.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/status.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/update.py` | skiller | aicore | delivery | P5 | hypothesis | - |
-| `packages/skiller/lib/skiller/vendor.py` | skiller | aicore | delivery | P5 | hypothesis | - |
 | `packages/maind/scripts/cache-brain-docs.sh` | maind | brain | - | P7 | fixed | - |
 | `packages/skiller/lib/skiller/brain_sync.py` | skiller | brain | - | P7 | fixed | - |
 | `packages/skiller/skills/system/brain-locator/` | skiller | brain | skills | P7 | fixed | - |

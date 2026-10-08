@@ -642,6 +642,8 @@ def scan_boundaries(ctx: Context):
                     target = match.group("target")
                     if target == folder:
                         continue
+                    if target in foundation_names and requires_foundation.get(folder, False):
+                        continue  # a module that declares the foundation may locate it (wrapper locator)
                     if climb:
                         # ../ climbs that stay inside the module are not escapes; one level above the module
                         # root lands in packages/, so the target must be a sibling folder there

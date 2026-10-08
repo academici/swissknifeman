@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.1",
   "title": "Начало фазы и локатор aicore в обёртках и раннерах модулей",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Влить origin/main и сверить golden; завести канонический фрагмент packages/aicore/scripts/aicore-locator.sh (AICORE_ROOT → _vendor/aicore → ../aicore, иначе AICORE_NOT_FOUND и exit 2), вставить его дословно в bin/<cli> и scripts/test.sh модулей analyst, harness, maind, skiller и в harness sync-usage.sh/validate.sh, добавить $AICORE_LIB в PYTHONPATH; тест идентичности копий и поведения scripts/test-aicore-locator.py.",
   "why": "Правило §3 «поиск aicore обёрткой» — условие автономности модулей; без него перенос кода (P3.2) сломает копию standalone skiller, где aicore лежит в vendor/aicore, а core-shim не видит его от корня. Локатор ставится до переноса: он узнаёт aicore по unit.json, который уже есть. Риск — изменение вывода --help/ошибок CLI (golden) и дрейф копий фрагмента; держим порядком вставки после разбора подкоманд и тестом идентичности.",
   "scope": {
@@ -204,6 +204,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T06:02:03Z"
+  "result": {
+    "started_at": "2026-10-08T06:27:08Z",
+    "finished_at": "2026-10-08T06:49:25Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "538060d7-8690-4a5b-ab05-6c44366cbadf"
+    },
+    "notes": "Локатор aicore в 4 bin, 4 test.sh, sync-usage.sh, validate.sh; тест scripts/test-aicore-locator.py в hygiene; sync-main без продуктовых изменений, golden зелёный.",
+    "deviations": [
+      "правило path в ecosystem-units.py пропускает foundation при requires; тесты обновлены"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T06:49:25Z"
 }

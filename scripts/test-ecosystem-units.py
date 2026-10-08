@@ -620,14 +620,19 @@ class BoundaryTests(unittest.TestCase):
 
     def test_climb_leaving_the_module_is_an_escape(self):
         self.tree.write("packages/alpha/package.json", '{"scripts": {"s": "bash ../../scripts/x.sh"}}\n')
-        self.tree.write("packages/alpha/lib/alpha/p.py", "A = '../../../../core/x'\n")
+        self.tree.write("packages/alpha/lib/alpha/p.py", "A = '../../../../configs/x'\n")
         self.assertEqual(self.violations(), {"path|packages/alpha/package.json|scripts": 1,
-                                             "path|packages/alpha/lib/alpha/p.py|core": 1})
+                                             "path|packages/alpha/lib/alpha/p.py|configs": 1})
 
     def test_climb_inside_the_module_is_not_an_escape(self):
         self.tree.write("packages/alpha/scripts/run.sh", 'DIR="$HERE/../configs/x"\n')
         self.tree.write("packages/alpha/tests/t.py", "A = '../bin/x'\nB = '../../bin/x'\n")
         self.assertEqual(self.violations(), {})
+
+    def test_foundation_path_is_allowed_only_with_requires(self):
+        self.tree.write("packages/alpha/scripts/loc.sh", "# see packages/aicore/scripts/x.sh\n")
+        self.tree.write("packages/beta/scripts/loc.sh", "# see packages/aicore/scripts/x.sh\n")
+        self.assertEqual(self.violations(), {"path|packages/beta/scripts/loc.sh|aicore": 1})
 
     def test_climb_to_a_sibling_module(self):
         self.tree.write("packages/alpha/package.json", '{"p": "../orch/x"}\n')

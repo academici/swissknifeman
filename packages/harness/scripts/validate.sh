@@ -2,6 +2,26 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
@@ -9,13 +29,18 @@ echo "[1/12] python compile"
 python3 -m compileall -q lib tests || err "py_compile"
 
 echo "[2/12] vendoring _usage.py (SCHEMA=2 run-report)"
-MONOREPO_ROOT_USAGE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 USAGE_DST="configs/claude-code/hooks/run-report/_usage.py"
-if [[ -n "$MONOREPO_ROOT_USAGE" && -f "$MONOREPO_ROOT_USAGE/core/usage.py" ]]; then
-  cmp -s "$MONOREPO_ROOT_USAGE/core/usage.py" "$USAGE_DST" \
-    || err "vendor _usage.py separated from core/usage.py — run scripts/sync-usage.sh"
+# Until the code moves into aicore, fall back to the legacy core location.
+USAGE_SRC="$AICORE_LIB/aicore/usage.py"
+if [[ ! -f "$USAGE_SRC" ]]; then
+  MONOREPO_ROOT_USAGE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+  USAGE_SRC="$MONOREPO_ROOT_USAGE/core/usage.py"
+fi
+if [[ -f "$USAGE_SRC" ]]; then
+  cmp -s "$USAGE_SRC" "$USAGE_DST" \
+    || err "vendor _usage.py separated from the aicore usage module — run scripts/sync-usage.sh"
 else
-  [[ -f "$USAGE_DST" ]] || err "no $USAGE_DST (standalone-layout without core/ — expected vendor copy)"
+  [[ -f "$USAGE_DST" ]] || err "no $USAGE_DST (expected vendor copy)"
 fi
 
 echo "[3/12] bash syntax"

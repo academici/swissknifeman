@@ -222,8 +222,9 @@ class TestSync(unittest.TestCase):
             _materialize_registry(env)
             target = make_laravel_project(tmp)
             cfg = {"mode": "vendor", "buckets": ["php"]}
-            with mock.patch("skiller.skillset.safe_copy_skill", return_value=False):
+            with mock.patch("aicore.delivery.materialize.safe_copy_skill", return_value=False) as copy:
                 plan = sync_skillset(env, target, cfg)
+            self.assertEqual(copy.call_count, len(plan["add"]))
             self.assertEqual(plan["installed"], [])
             self.assertCountEqual(plan["skip_copy"], plan["add"])
             self.assertEqual(load_lock(target).get("skills", {}), {})

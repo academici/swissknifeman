@@ -563,9 +563,10 @@ class ProviderDistributionCase(unittest.TestCase):
             calls.append(1)
             return original_copy(*args, **kwargs) if len(calls) == 1 else False
 
-        with mock.patch("skiller.skillset.safe_copy_skill", side_effect=first_then_fail):
+        with mock.patch("aicore.delivery.materialize.safe_copy_skill", side_effect=first_then_fail):
             with self.assertRaises(SystemExit):
                 do_sync(self.env, self.project, {"no_core": True})
+        self.assertEqual(len(calls), 2)
         self.assertTrue((self.project / ".claude/skills/code-style/SKILL.md").is_file())
         self.assertFalse((self.project / ".agents/skills/code-style").exists())
         with contextlib.redirect_stdout(io.StringIO()):

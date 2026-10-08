@@ -123,6 +123,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   against the artifact lock, and runs the explicit native Codex install. The caller selects the providers and
   passes the identities that appear in generated provenance (`DistributionIdentity`), so artifact ids, adapter
   identities and bytes do not change.
+- **`aicore.delivery.materialize`**: the managed skill copies a project receives, moved in from the skill library —
+  the managed marker after a skill's frontmatter (`mark_skill_managed`, `strip_skill_managed_marker`), the
+  contained copy of a skill directory (`safe_copy_skill`: refuses a path outside the destination, never follows a
+  symlink, rechecks after removal), the manifest writer (`write_skill_manifest`), the `skills-lock.json` reader,
+  validator and writer (`load_lock`, `lock_problem`, `write_lock`) and `sync_skillset`, which applies a computed plan
+  (add, update, remove, keep, conflicts, drift repair) and writes the lock, the manifest and the optional
+  `.gitignore` of the managed copies. Choosing the skills and planning stay with the caller: `sync_skillset` takes
+  the plan, or a `planner` that makes it. Formats, marker and report counts are unchanged.
 
 ### Changed
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to

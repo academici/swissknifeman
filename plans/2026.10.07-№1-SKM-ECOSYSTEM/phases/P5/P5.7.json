@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.7",
   "title": "aicore.delivery.materialize: управляемые копии skills, маркер, манифест, skills-lock и синхронизация",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Перенести из skiller/common.py (MANIFEST, MANIFEST_VERSION, AGENT_DEFAULTS, SKILL_MANAGED_MARKER, маркер, safe_copy_skill, write_skill_manifest) и skiller/skillset.py (lock-функции, sync_skillset и его помощники) в aicore/delivery/materialize.py; skiller (skillset.plan_sync/do_sync, vendor, connect, status, update, delivery) — через реэкспорт; тесты aicore; удалить гипотезы common.py, skillset.py, delivery.py.",
   "why": "D40, E27 (materialize с манифестом и receipt): физическая доставка skill-копий с маркером, манифестом и lock — механика, которую получат модули со skills (P7, P8). Жёсткие риски: (1) потеря проверки containment при копировании (safe_copy_skill отказывает на путь вне корня); (2) изменение формата .swissknifeman-manifest.json или skills-lock.json — тесты test_skillset/test_lock и golden; (3) patch skiller.skillset.safe_copy_skill перестаёт действовать на sync_skillset.",
   "scope": {
@@ -157,6 +157,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T14:45:04Z"
+  "result": {
+    "started_at": "2026-10-08T16:57:35Z",
+    "finished_at": "2026-10-08T17:15:41Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "4e863c18-d28b-4fb2-b512-ab2408971b7f"
+    },
+    "notes": "aicore.delivery.materialize: маркер, safe_copy_skill, write_skill_manifest, lock (load/lock_problem/write), sync_skillset, gitignore, manifest, счётчики отчёта; skiller common/skillset — реэкспорт, plan_sync и выбор набора остались; гипотезы common.py, skillset.py, delivery.py удалены из карты; CHANGELOG aicore.",
+    "deviations": [
+      "sync_skillset: параметр planner, в skiller — functools.partial; перенесены константы lock и gitignore; цели patch на aicore"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T17:15:41Z"
 }

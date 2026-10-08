@@ -190,6 +190,9 @@ class TestImportBoundary(unittest.TestCase):
             "enable_marketplace_plugins": "lib/aicore/delivery/claude.py",
             "connect_distribution_plan": "lib/aicore/delivery/distribution.py",
             "plan_selection": "lib/aicore/delivery/codex.py",
+            "sync_skillset": "lib/aicore/delivery/materialize.py",
+            "safe_copy_skill": "lib/aicore/delivery/materialize.py",
+            "write_skill_manifest": "lib/aicore/delivery/materialize.py",
         }
         roots = [ROOT / "lib"]
         packages = ROOT.parent

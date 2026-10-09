@@ -173,6 +173,15 @@
       "note": "canonical model catalog; command-routing.json keeps a transitional copy"
     },
     {
+      "path": "packages/aicore/configs/telemetry-conventions.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/util/telemetry.py"
+      ],
+      "released": false,
+      "note": "names of spans, attributes and metric labels (telemetry-conventions/v1); data, not code"
+    },
+    {
       "path": "configs/release-units.json",
       "owner": "root",
       "consumers": [

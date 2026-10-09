@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **brain:** ручной `sync-brain.sh` сохраняет изменённые файлы хранилища при push и поддерживает явный `--force`;
+  добавлены метаданные версии пакета для аттестации выпуска; неверные секунды, смещения UTC и переполнение
+  даты отклоняются с `EVENT_DATA_INVALID` (exit 65).
+
 ### Added
 
 - **brain:** the new module `packages/brain` (Obsidian vault): `brain vault|project|docs|note|doctor|version`, the

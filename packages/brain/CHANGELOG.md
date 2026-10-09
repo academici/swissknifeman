@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 ## [Unreleased]
 
 ### Fixed
+- **Document sync:** the generated manual script preserves changed vault files on push (`DOCS_CONFLICT`, exit 1), leaves identical files untouched and supports explicit `push --force`.
+- **Release metadata:** `package.json` supplies the package-owned version for plugin and runtime attestation; validation checks it against the module, plugin and Python runtime.
+- **Event timestamps:** invalid seconds and UTC offsets are rejected as `EVENT_DATA_INVALID`; a UTC conversion outside the datetime range also exits 65 instead of raising a traceback.
 - **Notes:** a vault reached through a symbolic link no longer makes `brain note` fail with a traceback when the project comes from `.projects.json` (the ledger path is taken relative to the real vault); a short or failed write on a file system without hard links no longer leaves a truncated or empty note (the write is completed or the new file removed, and a retry keeps the same name); the temporary file gets a unique name, so an existing vault file with a temporary-looking name is never removed.
 
 ### Added

@@ -274,6 +274,19 @@ class TestNote(CliCase):
                 self.assertEqual((65, ""), (code, out))
                 self.assertIn("brain: EVENT_DATA_INVALID:", err)
 
+    def test_bad_time_exits_65_without_writing_a_note(self):
+        self.configure_vault()
+        for timestamp in ("2026-10-09T09:59:99Z", "2026-10-09T09:59:41+99:99",
+                          "0001-01-01T00:00:00+01:00"):
+            with self.subTest(timestamp=timestamp):
+                doc = json.loads(self.event("valid-full"))
+                doc["data"]["closed_at"] = timestamp
+                code, out, err = self.run_cli("note", "--event", "-", stdin=json.dumps(doc).encode())
+                self.assertEqual((65, ""), (code, out))
+                self.assertIn("EVENT_DATA_INVALID", err)
+                self.assertNotIn("Traceback", err)
+                self.assertFalse((self.vault / "Ecosystem").exists())
+
     def test_unreadable_input_exits_65(self):
         for stdin in (b"", b"{not json", b"\xff\xfe"):
             with self.subTest(stdin=stdin):

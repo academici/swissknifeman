@@ -70,15 +70,20 @@ def parse_time(text: str, field: str) -> datetime.datetime:
     fraction = (match.group(7) or "0")[:6].ljust(6, "0")
     zone = match.group(8)
     try:
+        if second > 60:  # RFC 3339 allows 60 for a leap second, but never a larger value.
+            raise ValueError("seconds out of range")
         offset = datetime.timedelta(0)
         if zone not in ("Z", "z"):
+            offset_hour, offset_minute = int(zone[1:3]), int(zone[4:6])
+            if offset_hour > 23 or offset_minute > 59:
+                raise ValueError("offset out of range")
             sign = 1 if zone[0] == "+" else -1
-            offset = sign * datetime.timedelta(hours=int(zone[1:3]), minutes=int(zone[4:6]))
+            offset = sign * datetime.timedelta(hours=offset_hour, minutes=offset_minute)
         moment = datetime.datetime(year, month, day, hour, minute, min(second, 59), int(fraction),
                                    tzinfo=datetime.timezone.utc)
+        return moment - offset
     except (ValueError, OverflowError):
         raise _invalid(f"{field} is not a valid timestamp: {text!r}") from None
-    return moment - offset
 
 
 def _text(data: Mapping[str, Any], key: str, *, required: bool = False) -> Optional[str]:

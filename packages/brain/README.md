@@ -61,7 +61,8 @@ Documents move between a project and the vault by glob patterns (`docs.patterns`
   content is not replaced and is reported as `DOCS_CONFLICT` (exit 1) unless you pass `--force`. Other files are
   still copied. Nothing is deleted.
 - `script` writes `.claude/sync-brain.sh`, a plain bash copy of the same patterns for use outside the tool
-  (`bash .claude/sync-brain.sh [pull|push|bidirectional]`).
+  (`bash .claude/sync-brain.sh [pull|push|bidirectional] [--force]`). Its `push` also preserves changed vault
+  files and exits 1 with `DOCS_CONFLICT`; pass `push --force` to replace them. Identical files are left alone.
 - `integrate` is what `skiller integrate` runs: when sync is on it pulls (for `pull` and `bidirectional`), then writes
   the script; otherwise it prints `doc-sync is off`. `--dry-run` prints what it would do and writes nothing.
 

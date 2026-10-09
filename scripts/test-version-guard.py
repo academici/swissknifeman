@@ -27,6 +27,19 @@ class ChangedUnits(unittest.TestCase):
         self.assertEqual(states, {"a": "NOT-BUMPED", "b": "bumped", "d": "new"})
 
 
+class ReleaseIntegration(unittest.TestCase):
+    def test_brain_plugin_and_runtime_have_package_owned_versions(self):
+        root = version_guard.ROOT
+        current = version_guard.attestation.build(root, None, package_root=root / "packages/skiller")
+        units = {u["id"]: u for u in current["units"]}
+        expected = json.loads((root / "packages/brain/unit.json").read_text())["version"]
+        for name in ("brain", "package.brain"):
+            with self.subTest(unit=name):
+                self.assertEqual(expected, units[name]["version"])
+                self.assertEqual(expected, units[name]["expected_version"])
+                self.assertEqual("packages/brain/package.json", units[name]["version_source"])
+
+
 class NextVersion(unittest.TestCase):
     def test_parts(self):
         self.assertEqual(version_guard.next_version("0.4.9", "patch"), "0.4.10")

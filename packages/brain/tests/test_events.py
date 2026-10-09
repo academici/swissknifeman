@@ -124,6 +124,14 @@ class TestRules(unittest.TestCase):
         self.assertEqual(datetime.datetime(2026, 1, 2, 3, 4, 5, tzinfo=utc),
                          events.parse_time("2026-01-02t03:04:05z", "t"))
 
+    def test_bad_timestamp_ranges_and_utc_overflow_are_event_errors(self):
+        for timestamp in ("2026-10-09T09:59:99Z", "2026-10-09T09:59:61Z",
+                          "2026-10-09T09:59:41+24:00", "2026-10-09T09:59:41-00:60",
+                          "2026-10-09T09:59:41+99:99", "0001-01-01T00:00:00+01:00",
+                          "9999-12-31T23:59:59-01:00"):
+            with self.subTest(timestamp=timestamp):
+                self.assertIn("closed_at", self.refused(self.with_data(closed_at=timestamp)))
+
 
 if __name__ == "__main__":
     unittest.main()

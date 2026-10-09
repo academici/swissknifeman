@@ -156,6 +156,41 @@ class TestScript(TempCase):
         result = subprocess.run(["bash", str(script), "sideways"], capture_output=True, text=True)
         self.assertEqual(2, result.returncode)
 
+    def test_script_push_preserves_conflicts_and_copies_other_files(self):
+        existing = write(self.vault, "docs/conflict.md", "user edit")
+        before = existing.stat().st_mtime_ns
+        write(self.project, "docs/conflict.md", "repository copy")
+        write(self.project, "docs/new.md", "new")
+        script = docs.DocsSync(self.project, self.vault, "push", ("docs/**/*.md",)).write_script()
+        result = subprocess.run(["bash", str(script)], capture_output=True, text=True)
+        self.assertEqual(1, result.returncode)
+        self.assertIn("DOCS_CONFLICT", result.stderr)
+        self.assertEqual("user edit", existing.read_text())
+        self.assertEqual(before, existing.stat().st_mtime_ns)
+        self.assertEqual("new", (self.vault / "docs/new.md").read_text())
+
+    def test_script_push_force_replaces_a_conflict(self):
+        write(self.vault, "README.md", "user edit")
+        write(self.project, "README.md", "repository copy")
+        script = docs.DocsSync(self.project, self.vault, patterns=("README.md",)).write_script()
+        result = subprocess.run(["bash", str(script), "push", "--force"], capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual("repository copy", (self.vault / "README.md").read_text())
+
+    def test_script_push_leaves_identical_files_untouched(self):
+        existing = write(self.vault, "README.md", "same")
+        before = existing.stat().st_mtime_ns
+        write(self.project, "README.md", "same")
+        script = docs.DocsSync(self.project, self.vault, patterns=("README.md",)).write_script()
+        result = subprocess.run(["bash", str(script), "push"], capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(before, existing.stat().st_mtime_ns)
+
+    def test_script_rejects_unknown_option(self):
+        script = docs.DocsSync(self.project, self.vault).write_script()
+        result = subprocess.run(["bash", str(script), "push", "--overwrite"], capture_output=True, text=True)
+        self.assertEqual(2, result.returncode)
+
 
 class TestFromSettings(TempCase):
     def settings_for(self):

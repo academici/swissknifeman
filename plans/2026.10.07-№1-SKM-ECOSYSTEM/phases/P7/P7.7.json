@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.7",
   "title": "Закрытие фазы: широкий прогон, заметка на копии реального хранилища в песочнице, сверка E1 и E2, push",
-  "status": "blocked",
+  "status": "in_progress",
   "summary": "Полный прогон тестов всех модулей и скриптов хаба, skiller и task в песочнице, ecosystem-units со standalone --baseline, golden без перезахвата, совместимость контрактов aicore против конца P6, docs-impact и hygiene; сквозная проверка e2e-plan-note.sh в песочнице на копии реального хранилища (git status копии — только новые заметки); сверка E22, E44, R06 записью plan.py log; коммит, push ветки ecosystem-split.",
   "why": "Готово, когда заметка о закрытом плане появилась в песочнице хранилища (architecture §12 P7). Риск: реальное хранилище — данные человека: проверка только на его копии внутри песочницы (dev-sandbox --copy), оригинал не меняется (V3 сверяет git status оригинала до и после).",
   "scope": {
@@ -108,7 +108,7 @@
     },
     {
       "id": "V3",
-      "cmd": "VAULT=\"$HOME/Vaults/Brain/brain\"; test -d \"$VAULT/.obsidian\" || exit 1; before=$(git -C \"$VAULT\" status --porcelain | sha256sum); SB=$(scripts/dev-sandbox.sh new --name p7-real-$$ --copy \"$VAULT\" | tail -1) || exit 1; scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'mkdir -p \"$HOME/project\" && bash packages/brain/scripts/e2e-plan-note.sh \"$(dirname \"$HOME\")/projects/brain\" \"$HOME/project\"'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; test \"$rc\" = 0 && test \"$before\" = \"$(git -C \"$VAULT\" status --porcelain | sha256sum)\"",
+      "cmd": "VAULT=\"$HOME/Vaults/Brain\"; test -d \"$VAULT/.obsidian\" || exit 1; before=$(git -C \"$VAULT\" status --porcelain | sha256sum); SB=$(scripts/dev-sandbox.sh new --name p7-real-$$ --copy \"$VAULT\" | tail -1) || exit 1; scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'mkdir -p \"$HOME/project\" && bash packages/brain/scripts/e2e-plan-note.sh \"$(dirname \"$HOME\")/projects/Brain\" \"$HOME/project\"'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; test \"$rc\" = 0 && test \"$before\" = \"$(git -C \"$VAULT\" status --porcelain | sha256sum)\"",
       "expect": "exit 0 (заметки созданы в копии; оригинал хранилища не изменён)",
       "kind": "acceptance",
       "cwd": "."
@@ -131,6 +131,13 @@
       "id": "V6",
       "cmd": "git fetch -q origin && test -z \"$(git status --porcelain --untracked-files=no)\" && test \"$(git rev-list --count origin/ecosystem-split..HEAD)\" = 0",
       "expect": "exit 0 (всё запушено, дерево чистое)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "bash packages/brain/scripts/validate.sh && python3 scripts/test-version-guard.py",
+      "expect": "exit 0 (brain regressions and host release attestation)",
       "kind": "acceptance",
       "cwd": "."
     }
@@ -156,43 +163,13 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-09T11:49:07Z",
-    "finished_at": "2026-10-09T12:03:17Z",
+    "started_at": "2026-10-09T13:08:06Z",
     "executor": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-5-5",
-      "effort": "medium",
-      "session": "8b5c3f1c-62dd-4179-adc0-723dc39f31ac"
-    },
-    "notes": "всё выполнено, кроме push",
-    "escalation": "Нужен push владельца: git push origin ecosystem-split, затем V6; V1–V5 зелёные",
-    "checks": [
-      {
-        "id": "V1",
-        "exit": 0,
-        "at": "2026-10-09T12:03:17Z"
-      },
-      {
-        "id": "V2",
-        "exit": 0,
-        "at": "2026-10-09T12:03:17Z"
-      },
-      {
-        "id": "V3",
-        "exit": 0,
-        "at": "2026-10-09T12:03:17Z"
-      },
-      {
-        "id": "V4",
-        "exit": 0,
-        "at": "2026-10-09T12:03:17Z"
-      },
-      {
-        "id": "V5",
-        "exit": 0,
-        "at": "2026-10-09T12:03:17Z"
-      }
-    ]
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a120c3-ecac-7b71-bf39-8edf762cfa86"
+    }
   },
-  "updated_at": "2026-10-09T12:03:17Z"
+  "updated_at": "2026-10-09T13:15:38Z"
 }

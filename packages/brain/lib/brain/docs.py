@@ -127,6 +127,11 @@ BRAIN={brain}
 PROJECT="$(cd "$(dirname "${{BASH_SOURCE[0]}}")/.." && pwd)"
 PATTERNS=({patterns})
 DIRECTION="${{1:-{default_dir}}}"
+FORCE="${{2:-}}"
+if [[ $# -gt 2 || ( -n "$FORCE" && "$FORCE" != --force ) ]]; then
+  echo "usage: sync-brain.sh [pull|push|bidirectional] [--force]" >&2
+  exit 2
+fi
 
 # find has no recursive wildcard: "docs/**/*.md" must also match a file directly below docs/.
 for pat in "${{PATTERNS[@]}}"; do
@@ -151,13 +156,22 @@ pull() {{  # vault → project
 }}
 
 push() {{  # project → vault
+  local conflict=0
   for pat in "${{PATTERNS[@]}}"; do
-    ( cd "$PROJECT" && find . -path "./$pat" -type f -print0 2>/dev/null ) \\
-      | while IFS= read -r -d '' rel; do
-          mkdir -p "$BRAIN/$(dirname "$rel")"
-          cp -p "$PROJECT/$rel" "$BRAIN/$rel"
-        done
+    while IFS= read -r -d '' rel; do
+      if [[ -e "$BRAIN/$rel" || -L "$BRAIN/$rel" ]]; then
+        if cmp -s "$PROJECT/$rel" "$BRAIN/$rel"; then continue; fi
+        if [[ "$FORCE" != --force ]]; then
+          echo "DOCS_CONFLICT: $rel differs in the vault; use --force to replace it" >&2
+          conflict=1
+          continue
+        fi
+      fi
+      mkdir -p "$BRAIN/$(dirname "$rel")"
+      cp -p "$PROJECT/$rel" "$BRAIN/$rel"
+    done < <( cd "$PROJECT" && find . -path "./$pat" -type f -print0 2>/dev/null )
   done
+  if [[ "$conflict" = 1 ]]; then return 1; fi
   echo "push done: project → vault"
 }}
 

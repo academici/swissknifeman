@@ -18,5 +18,8 @@
       "title": "Resolution",
       "text": "One owning correction (fix in the item commit), checks V1-V6 and the brain suite (80 tests) rerun green. Round 1 of at most 2; no second review launched: both fixes are local to doctor.py, each with its own reproduction turned into a test. The full stream (1.4 MB) was not copied into the repository; the session record is in the grok session store under the id above."
     }
+  ],
+  "applies_to": [
+    "P7.1"
   ]
 }

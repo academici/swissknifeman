@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.7",
   "title": "Закрытие фазы: широкий прогон, заметка на копии реального хранилища в песочнице, сверка E1 и E2, push",
-  "status": "in_progress",
+  "status": "blocked",
   "summary": "Полный прогон тестов всех модулей и скриптов хаба, skiller и task в песочнице, ecosystem-units со standalone --baseline, golden без перезахвата, совместимость контрактов aicore против конца P6, docs-impact и hygiene; сквозная проверка e2e-plan-note.sh в песочнице на копии реального хранилища (git status копии — только новые заметки); сверка E22, E44, R06 записью plan.py log; коммит, push ветки ecosystem-split.",
   "why": "Готово, когда заметка о закрытом плане появилась в песочнице хранилища (architecture §12 P7). Риск: реальное хранилище — данные человека: проверка только на его копии внутри песочницы (dev-sandbox --copy), оригинал не меняется (V3 сверяет git status оригинала до и после).",
   "scope": {
@@ -157,12 +157,42 @@
   },
   "result": {
     "started_at": "2026-10-09T11:49:07Z",
+    "finished_at": "2026-10-09T12:03:17Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "medium",
       "session": "8b5c3f1c-62dd-4179-adc0-723dc39f31ac"
-    }
+    },
+    "notes": "всё выполнено, кроме push",
+    "escalation": "Нужен push владельца: git push origin ecosystem-split, затем V6; V1–V5 зелёные",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T12:03:17Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T12:03:17Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T12:03:17Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T12:03:17Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T12:03:17Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T11:49:07Z"
+  "updated_at": "2026-10-09T12:03:17Z"
 }

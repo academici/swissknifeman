@@ -89,5 +89,10 @@
       ],
       "mode": "recommended"
     }
-  ]
+  ],
+  "closed": {
+    "at": "2026-10-09T12:03:17Z",
+    "result": "blocked",
+    "summary": "7 item(s): 1 done, 5 done_with_deviations, 1 blocked"
+  }
 }

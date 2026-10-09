@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D50",
+  "title": "Перенос brain_sync в brain: команда brain docs, вызов из skiller через команду хоста",
+  "date": "2026-10-09",
+  "status": "accepted",
+  "question": "Как перенести skiller/brain_sync в brain, если skiller не может импортировать другой модуль?",
+  "options": [
+    {
+      "id": "A",
+      "text": "lib/brain/docs.py — перенос BrainSync с паритетом поведения; brain docs integrate|pull|push|script; skiller integrate блок [9] вызывает команду хоста brain_docs (configs/skiller-host.json, SKM_BRAIN_BIN) по образцу environment; настройки — [brain.docs] конфига, наследный объект .swissknife.json::memory_brain читается brain с предупреждением до P13; push по явной команде не перезаписывает изменённый файл хранилища без --force",
+      "pros": "Граница модулей соблюдена тем же механизмом, что harness; поведение мастера прежнее",
+      "cons": "Мастер skiller без установленного brain пропускает блок с предупреждением"
+    },
+    {
+      "id": "B",
+      "text": "Оставить копию BrainSync в skiller до P8",
+      "pros": "Ноль риска для skiller",
+      "cons": "Два владельца одного кода; противоречит ownership P7 и D7"
+    }
+  ],
+  "context": "knowledge/brain-p7 §docs; configs/ecosystem-units.json ownership P7.",
+  "decision": "A — lib/brain/docs.py — перенос BrainSync с паритетом поведения; brain docs integrate|pull|push|script; skiller integrate блок [9] вызывает команду хоста brain_docs (configs/skiller-host.json, SKM_BRAIN_BIN) по образцу environment; настройки — [brain.docs] конфига, наследный объект .swissknife.json::memory_brain читается brain с предупреждением до P13; push по явной команде не перезаписывает изменённый файл хранилища без --force",
+  "rationale": "Граница модулей держится тем же механизмом команд хоста, что у harness; поведение мастера skiller сохраняется тестами паритета.",
+  "applies_to": [
+    "P7.2"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

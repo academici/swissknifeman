@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D52",
+  "title": "Доставка модульных skills: бакет, предоставляемый хостом, и псевдонимы бакетов в конфиге хоста; модуль — один плагин",
+  "date": "2026-10-09",
+  "status": "accepted",
+  "question": "Как доставлять проектам skills, переехавшие из бакета system skiller в модули (maind, harness, analyst, brain), обоими каналами (connect и vendor/sync), если профили и конфиги проектов называют бакет system, а skiller не может знать имён модулей? Куда относятся агент code-coordinator и general/*?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Бакет, предоставляемый хостом: buckets.json system → provided_by: host; хост (configs/skiller-host.json) задаёт bucket_aliases {system: [maind, harness, analyst, brain]}; skiller читает skills модулей из каталогов их плагинов (plugin_dirs хоста): connect разворачивает system в плагины модулей и убирает system@swissknifeman, vendor/sync копируют skills модулей тем же materialize, requires и exclude работают по именам; модуль = один плагин (skills + commands + agents), у модулей со skills — .codex-plugin (skills-only). Агент code-coordinator уходит с cross-project-coordinator в maind (уточнение карты P2: harness). general/workflow-craft привязан к planner — переносится в P9 (место по бюджету); остальные четыре general/* — общие, остаются. Механизм — P8.2 на фикстурах, перенос и активация — P8.3. Дизайн — knowledge/skiller-p8-modules.",
+      "pros": "Профили и конфиги проектов не меняются; skiller не знает имён модулей; паритет каналов (включая Codex); standalone skiller деградирует предупреждением",
+      "cons": "Плагины модулей включают и их команды (16 команд + агент) — рост первого хода проекта; замер в P8.3, отдельные skills-плагины — по триггеру"
+    },
+    {
+      "id": "B",
+      "text": "Модульные skills только через плагины модулей в маркетплейсе (connect); vendor/sync и Codex их не получают; профили правятся на имена плагинов",
+      "cons": "Потеря доставки для vendor-проектов и Codex; профили skiller называли бы модули — нарушение границы"
+    },
+    {
+      "id": "C",
+      "text": "registry индексирует skills модулей в skills.json библиотеки (пути в чужие папки)",
+      "cons": "Индекс библиотеки хранит пути других модулей; standalone-индекс расходится с хабовым; golden skills.json зависит от модулей"
+    }
+  ],
+  "context": "Факты — knowledge/skiller-p8#facts: 7 профилей начинаются с бакета system; vendor/sync читают только skills.json библиотеки; registry уже видит плагины модулей через plugin_dirs хоста; граница skiller запрещает имена модулей в profiles/configs/lib. Внешние предпосылки (research/P8-perplexity.md): плагин Claude Code несёт commands, agents и skills; skill плагина — в пространстве /<plugin>:<skill>; Codex поддерживает .codex-plugin со skills; рекомендация — плагин на модуль в одном маркетплейсе. Хвост P7: brain-locator без vendor- и Codex-доставки (brain-p7#upgrade).",
+  "decision": "A — Бакет, предоставляемый хостом: buckets.json system → provided_by: host; хост (configs/skiller-host.json) задаёт bucket_aliases {system: [maind, harness, analyst, brain]}; skiller читает skills модулей из каталогов их плагинов (plugin_dirs хоста): connect разворачивает system в плагины модулей и убирает system@swissknifeman, vendor/sync копируют skills модулей тем же materialize, requires и exclude работают по именам; модуль = один плагин (skills + commands + agents), у модулей со skills — .codex-plugin (skills-only). Агент code-coordinator уходит с cross-project-coordinator в maind (уточнение карты P2: harness). general/workflow-craft привязан к planner — переносится в P9 (место по бюджету); остальные четыре general/* — общие, остаются. Механизм — P8.2 на фикстурах, перенос и активация — P8.3. Дизайн — knowledge/skiller-p8-modules.",
+  "rationale": "Профили и конфиги проектов не меняются, skiller не знает имён модулей (граница), паритет connect, vendor/sync и Codex; модуль — один плагин по рекомендации первоисточников (research/P8-perplexity.md) и архитектуре §3. Агент code-coordinator — часть skill cross-project-coordinator (факт кода), поэтому maind, а не harness по гипотезе карты P2. workflow-craft — SSOT шаблонов wf-*.js и /task:make-workflow планера (архитектура §7), перенос с бюджетом — P9. Рост первого хода от команд модулей замеряется в P8.3; отдельные skills-плагины — по триггеру (skiller-p8#deferred).",
+  "applies_to": [
+    "P8.2",
+    "P8.3",
+    "P8.6",
+    "P9",
+    "P12"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

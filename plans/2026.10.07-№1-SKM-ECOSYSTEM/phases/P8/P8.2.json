@@ -1,0 +1,222 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.2",
+  "title": "Механизм бакета, предоставляемого хостом: модульные источники skills, bucket_aliases хоста; connect, vendor, sync, budget, status, doctor (на фикстурах)",
+  "status": "todo",
+  "summary": "Новый lib/skiller/module_skills.py (источники skills из плагинов модулей через plugin_dirs хоста, бакеты provided_by: host, expand_bucket, проверка коллизий), ключ bucket_aliases в конфиге хоста; all_buckets принимает бакеты хоста; connect разворачивает их в плагины модулей и убирает <bucket>@marketplace; vendor и sync копируют skills модулей с requires/exclude по именам; budget, status, doctor, registry и validate понимают бакет хоста. Тесты на синтетическом хосте; реальные buckets.json и skiller-host.json не меняются, golden — без перезахвата.",
+  "why": "D52: после переноса system/* (P8.3) проекты должны получать эти skills обоими каналами без правки профилей и конфигов, а skiller не может знать имён модулей. Механизм отделён от переноса, чтобы его можно было проверить на фикстурах и сохранить байт-в-байт. Жёсткие риски: (1) connect удаляет из enabledPlugins только ключ бакета хоста, которого маркетплейс не объявляет, — ничего больше (merge-only запись настроек); (2) standalone skiller без хоста не падает, а предупреждает; (3) проверка provenance skills-lock не ослабляется для записей библиотеки.",
+  "scope": {
+    "include": [
+      "packages/skiller/lib/skiller/module_skills.py (новый)",
+      "host.py: ключ bucket_aliases",
+      "config.py: all_buckets ∪ бакеты хоста, library_buckets",
+      "connect.py, vendor.py, skillset.py, budget.py, status.py, doctor.py, registry.py по knowledge/skiller-p8-modules#design",
+      "scripts/validate.sh skiller: бакет хоста без каталога, профили могут на него ссылаться",
+      "aicore.delivery.materialize — только если проверка provenance lock требует расширения для записей origin: host (с тестом aicore)",
+      "packages/skiller/tests/test_module_skills.py",
+      "CHANGELOG.md корня (строка skiller)"
+    ],
+    "exclude": [
+      "перенос skills и активация в buckets.json и configs/skiller-host.json (P8.3)",
+      "имена модулей хаба в коде, профилях и тестах skiller",
+      "служебные файлы и конфиг (P8.4)"
+    ]
+  },
+  "depends_on": [
+    "P8.1"
+  ],
+  "decisions": [
+    "D52"
+  ],
+  "reads": [
+    {
+      "why": "общие правила фазы",
+      "required": true,
+      "ref": "knowledge/skiller-p8#rules"
+    },
+    {
+      "why": "выбор и доставка skills, хост, маркетплейс",
+      "required": true,
+      "ref": "knowledge/skiller-p8#facts"
+    },
+    {
+      "why": "дизайн пункта",
+      "required": true,
+      "ref": "knowledge/skiller-p8-modules#design"
+    },
+    {
+      "why": "разбор конфига хоста (разрешённые ключи ~строка 30, датакласс ~93, host_plugin_dirs ~317)",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/host.py"
+    },
+    {
+      "why": "all_buckets (321), resolve_selection (346), core-политика (29–100)",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/config.py"
+    },
+    {
+      "why": "prepare_connect_selection (76–125), _do_connect_claude (162–350)",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/connect.py"
+    },
+    {
+      "why": "collect_skills, build_requires_index, resolve_requires (18–80)",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/vendor.py"
+    },
+    {
+      "why": "_registry_index (87–135), _match, resolve_skillset (252–325), plan_sync",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/skillset.py"
+    },
+    {
+      "why": "lock_problem, sync_skillset, write_manifest — проверка provenance",
+      "required": true,
+      "path": "packages/aicore/lib/aicore/delivery/materialize.py"
+    },
+    {
+      "why": "бакеты и marketplace (123, 217–340)",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/registry.py"
+    },
+    {
+      "why": "выбор бакетов (100–130)",
+      "required": false,
+      "path": "packages/skiller/lib/skiller/budget.py"
+    },
+    {
+      "why": "registry_skill_names, channel_overlap",
+      "required": false,
+      "path": "packages/skiller/lib/skiller/status.py"
+    },
+    {
+      "why": "как тесты строят синтетический хост (SKILLER_HOST_CONFIG)",
+      "required": false,
+      "path": "packages/skiller/tests/test_host_publication.py"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/lib/skiller/module_skills.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/host.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/config.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/connect.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/vendor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/skillset.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/status.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/doctor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/delivery/materialize.py",
+      "change": "modify",
+      "note": "только если требует проверка provenance lock"
+    },
+    {
+      "path": "packages/aicore/tests/delivery/**",
+      "change": "any",
+      "note": "только вместе с правкой materialize"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/skiller-p8 §rules (stdlib + aicore, Python 3.9, POSIX; граница модулей: skiller не называет модулей хаба; тесты только с временным HOME; CLI, validate и registry skiller — только в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды предупреждений, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Байт-в-байт: реальные packages/skiller/buckets.json и configs/skiller-host.json не меняются; python3 scripts/golden.py check без перезахвата",
+    "skiller не называет модули хаба: в тестах — нейтральные имена (mod-a, mod-b, env-skills); tests/test_boundary.py зелёный",
+    "Запись enabledPlugins остаётся merge-only: удаляется только ключ <бакет хоста>@<marketplace>, когда маркетплейс не объявляет такой плагин; в dry-run ничего не пишется",
+    "Нет хоста или псевдонима — предупреждение и пустой набор, не die; коллизия имени бакета библиотеки и плагина-источника — die"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: прочитать §design целиком → `host.py` (ключ, датакласс, ошибки формата) → `module_skills.py` (источники, бакеты хоста, expand_bucket, check_collisions) → `config.all_buckets`/`library_buckets` и проход по местам использования (`git grep -n \"all_buckets\" packages/skiller/lib` — для каждого решить, нужен ли реальный каталог) → connect (выбор, known_plugins, host_buckets, удаление ключа, dry-run) → vendor (collect, requires index) → skillset (_registry_index с origin: host, resolve_skillset, токены) → проверить provenance lock на записи модулей; если нужен — расширить materialize с тестом aicore → budget, status, doctor → registry (_index.md строка бакета хоста, без манифеста и записи marketplace), validate.sh → `tests/test_module_skills.py` по §design п.9 → V1–V4 → строка CHANGELOG (skiller — Added: host-provided buckets and module skill sources).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p8-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test -f packages/skiller/lib/skiller/module_skills.py && test -f packages/skiller/tests/test_module_skills.py && grep -q 'bucket_aliases' packages/skiller/lib/skiller/host.py && python3 -c 'import json; h = json.load(open(\"configs/skiller-host.json\")); assert \"bucket_aliases\" not in h; b = json.load(open(\"packages/skiller/buckets.json\")); assert \"provided_by\" not in b[\"system\"]' && ! grep -nE '\\b(maind|harness|analyst)\\b' packages/skiller/tests/test_module_skills.py packages/skiller/lib/skiller/module_skills.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/aicore/scripts/test.sh && python3 scripts/test-ecosystem-units.py && python3 scripts/test-config-inventory.py && python3 scripts/test-dev-guard.py && python3 scripts/test-aicore-locator.py && python3 scripts/test-golden.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "бакет, предоставляемый хостом, и модульные источники skills в skiller",
+    "connect, vendor, sync понимают skills модулей"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-09T12:49:26Z"
+}

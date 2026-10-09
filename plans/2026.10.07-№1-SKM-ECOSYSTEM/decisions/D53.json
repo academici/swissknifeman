@@ -1,0 +1,41 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D53",
+  "title": "Служебные файлы skiller: [skiller] и [skiller.sync] в config.toml, наследие по правилу «секция целиком», manifest и skills-lock на месте",
+  "date": "2026-10-09",
+  "status": "accepted",
+  "question": "Как перевести служебные файлы skiller на новые места (архитектура §5.3, D5, D39), если .swissknife.json общий с harness, maind и brain, а manifest и skills-lock сопровождают закоммиченные копии skills?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Секции [skiller] и [skiller.sync] в .swissknifeman/config.toml по схеме модуля (ключи выбора запрещены в machine-слое); наследные .swissknife.json (только ключи skiller) и .swissknifeman/config.json читаются через ExtraLayer по правилу «секция целиком»: секция в TOML есть → наследные ключи skiller игнорируются с предупреждением SKILLER_LEGACY_IGNORED, нет → читаются с предупреждением SKILLER_LEGACY_CONFIG; запись — туда, откуда читается (новые проекты — TOML); резервные копии skiller — aicore.state.backup вместо *.bak. Остаются на месте: .swissknifeman-manifest.json и skills-lock.json (контракт закоммиченных копий; уточняет таблицу §5.3), codex-links (только наследие). Отложены: provider-artifacts.lock.json → state/ одним резолвером aicore (P11, вместе с последними писателями), реестры ~/.swissknifeman (P11), квитанции delivery (P12), чужие ключи .swissknife.json (P11) и перенос значений (P13). Дизайн — knowledge/skiller-p8-config.",
+      "pros": "Никакого слияния двух источников с неочевидным приоритетом; живые проекты продолжают работать; чужие ключи не трогаются раньше их владельцев",
+      "cons": "До P13 у проекта может быть два файла конфига skiller (наследный побеждает только при отсутствии секции)"
+    },
+    {
+      "id": "B",
+      "text": "Наследный файл — дополнительный слой поверх проекта (ExtraLayer после project, D38) с поключевым слиянием",
+      "cons": "Наследный файл побеждал бы новый TOML поключево — неочевидно для человека, который начал переносить настройки"
+    },
+    {
+      "id": "C",
+      "text": "Перенести всё по таблице §5.3, включая manifest, skills-lock и общий provider lock",
+      "cons": "Ломает контракт закоммиченных копий и чужих писателей lock раньше их фаз"
+    }
+  ],
+  "context": "Факты — knowledge/skiller-p8#facts. Ключи .swissknife.json: skiller (project_type, buckets, plugins, exclude, presets, skills_path, agent), чужие (providers — aicore.provider/maind, memory_brain — brain/harness, policy_profile — harness). .swissknifeman/config.json — vendor-режим skiller. provider-artifacts.lock.json пишут skiller, harness и maind. skills-lock.json — конвенция CLI vercel-labs/skills, коммитится (research/P8-perplexity.md). aicore.config (ExtraLayer, edit_layer_file) и aicore.state (backup, resolve_with_legacy) готовы с P4.",
+  "decision": "A — Секции [skiller] и [skiller.sync] в .swissknifeman/config.toml по схеме модуля (ключи выбора запрещены в machine-слое); наследные .swissknife.json (только ключи skiller) и .swissknifeman/config.json читаются через ExtraLayer по правилу «секция целиком»: секция в TOML есть → наследные ключи skiller игнорируются с предупреждением SKILLER_LEGACY_IGNORED, нет → читаются с предупреждением SKILLER_LEGACY_CONFIG; запись — туда, откуда читается (новые проекты — TOML); резервные копии skiller — aicore.state.backup вместо *.bak. Остаются на месте: .swissknifeman-manifest.json и skills-lock.json (контракт закоммиченных копий; уточняет таблицу §5.3), codex-links (только наследие). Отложены: provider-artifacts.lock.json → state/ одним резолвером aicore (P11, вместе с последними писателями), реестры ~/.swissknifeman (P11), квитанции delivery (P12), чужие ключи .swissknife.json (P11) и перенос значений (P13). Дизайн — knowledge/skiller-p8-config.",
+  "rationale": "Правило «секция целиком» исключает поключевое слияние двух источников (вариант B) и сохраняет работу живых проектов до upgrade (P13); чужие ключи и общий provider lock переезжают с владельцами (P11), а manifest и skills-lock — часть контракта закоммиченных копий и конвенции vercel-labs/skills (уточняет таблицу архитектуры §5.3 решением, а не попутной правкой).",
+  "applies_to": [
+    "P8.4",
+    "P8.6",
+    "P11",
+    "P13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

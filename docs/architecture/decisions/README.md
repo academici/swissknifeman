@@ -65,3 +65,9 @@ by a new record.
 | [0037](0037-content-delivery-release-boundary-by-function.md) | Content, delivery and release: the aicore boundary is drawn by function | Accepted |
 | [0038](0038-skill-descriptor-agent-skills-standard.md) | Skill descriptor: the Agent Skills standard plus digest and provenance | Accepted |
 | [0039](0039-eval-result-context.md) | An evaluation result carries the context it was produced in | Accepted |
+| [0040](0040-extension-configuration-map-tables.md) | Extension configuration is a map table of the [aicore] section | Accepted |
+| [0041](0041-event-envelope-journal-and-delivery.md) | Event envelope, journal-first delivery, cursors and dead letters | Accepted |
+| [0042](0042-external-plugin-protocol-and-process-discipline.md) | External plugin protocol 1, describe before use, process discipline and trust | Accepted |
+| [0043](0043-validator-profile-and-schema-compatibility.md) | Validator profile with patternProperties and a schema compatibility check | Accepted |
+| [0044](0044-instruction-overlays-runtime-resolution.md) | Instruction overlays are resolved at run time | Accepted |
+| [0045](0045-telemetry-naming-conventions.md) | Telemetry naming conventions | Accepted |

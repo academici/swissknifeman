@@ -17,7 +17,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 
 | Contract | `$id` / carrier | Owner | Stability | Gap and closing stage |
 | --- | --- | --- | --- | --- |
-| Module manifest `unit/v1` | `urn:swissknifeman:aicore:unit:v1`, `packages/aicore/schemas/unit/v1` | aicore | development | manifest of external plugins and `permissions` enforcement: P6 |
+| Module manifest `unit/v1` | `urn:swissknifeman:aicore:unit:v1`, `packages/aicore/schemas/unit/v1` | aicore | development | `subscribes`, anchored `provides.events`, `overlay_slots` and `permissions` as a `$ref` added as minor changes (P6); `permissions` is declared, not enforced |
 | Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | modules still print text in `doctor`; conversion P11, aggregation P12 |
 | Digest `digest/v1` | `urn:swissknifeman:aicore:digest:v1`, `packages/aicore/schemas/digest/v1` | aicore | development | `exec` and plan digests still use the bare-hex form and their own copies; they adopt it with their modules: P9, P10 |
 | Error `error/v1` | `urn:swissknifeman:aicore:error:v1`, `packages/aicore/schemas/error/v1` | aicore (provider) | development | orch and the engines adopt the classes: P10 |
@@ -26,6 +26,15 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Config explain `config-explain/v1` | `urn:swissknifeman:aicore:config-explain:v1`, `packages/aicore/schemas/config-explain/v1` | aicore (config) | development | none yet; modules adopt `aicore.config.resolve` with their own section schemas: P8 to P11 |
 | Skill descriptor `skill-descriptor/v1` | `urn:swissknifeman:aicore:skill-descriptor:v1`, `packages/aicore/schemas/skill-descriptor/v1` | aicore (content) | development | none yet; the receipt of skill digests in a run is P10 ([ADR 0038](decisions/0038-skill-descriptor-agent-skills-standard.md)) |
 | Eval context `eval-context/v1` | `urn:swissknifeman:aicore:eval-context:v1`, `packages/aicore/schemas/eval-context/v1` | aicore (content) | development | none yet; benchmarks carry it as `context` in `skill-benchmark/v3` and `system-bank-benchmark/v2` ([ADR 0039](decisions/0039-eval-result-context.md)) |
+| Common definitions `common/v1` | `urn:swissknifeman:aicore:common:v1`, `packages/aicore/schemas/common/v1` | aicore (ext) | development | none yet; shared `$defs` that other contracts reference; modules adopt them as they add contracts |
+| Event `event/v1` | `urn:swissknifeman:aicore:event:v1`, `packages/aicore/schemas/event/v1` | aicore (ext) | development | none yet; journal and delivery are [ADR 0041](decisions/0041-event-envelope-journal-and-delivery.md); the catalog of types is `provides.events` of each `unit.json` |
+| Artifact reference `artifact-ref/v1` | `urn:swissknifeman:aicore:artifact-ref:v1`, `packages/aicore/schemas/artifact-ref/v1` | aicore (ext) | development | none yet; points at data stored by `aicore.state.blobs` |
+| Permissions `permissions/v1` | `urn:swissknifeman:aicore:permissions:v1`, `packages/aicore/schemas/permissions/v1` | aicore (ext) | development | declared only; enforcement of the profile `read-only` waits for third-party plugins ([ADR 0042](decisions/0042-external-plugin-protocol-and-process-discipline.md)); run-policy adopts it: P10 |
+| Extension manifest `extension/v1` | `urn:swissknifeman:aicore:extension:v1`, `packages/aicore/schemas/extension/v1` | aicore (ext) | development | kind `secret-resolver` waits for its first consumer |
+| Plugin request `plugin-request/v1` | `urn:swissknifeman:aicore:plugin-request:v1`, `packages/aicore/schemas/plugin-request/v1` | aicore (ext) | development | protocol `1`; no framing or long-lived mode |
+| Plugin response `plugin-response/v1` | `urn:swissknifeman:aicore:plugin-response:v1`, `packages/aicore/schemas/plugin-response/v1` | aicore (ext) | development | protocol `1` |
+| Plugin describe `plugin-describe/v1` | `urn:swissknifeman:aicore:plugin-describe:v1`, `packages/aicore/schemas/plugin-describe/v1` | aicore (ext) | development | protocol `1`; no cache |
+| Telemetry conventions `telemetry-conventions/v1` | `urn:swissknifeman:aicore:telemetry-conventions:v1`, `packages/aicore/schemas/telemetry-conventions/v1` | aicore (ext) | development | names only, no exporter; modules adopt them: P10, P11 ([ADR 0045](decisions/0045-telemetry-naming-conventions.md)) |
 | Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
 | Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/task/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
 | Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
@@ -48,7 +57,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | RunEvent | `exec/v1` `run-event` (`run_id`, `stage_id`, `attempt`, `seq`, `ts`, `kind`, `data`, `raw_ref`, `route_observed`) | orch | `event_id`, causation and correlation, `owner_epoch`: P10 |
 | StageResult / RunResult | `exec/v1` `stage-result` | orch | module versions and skill digest: P10 |
 | CapabilityManifest | `exec/v1` `capability-record`; support levels and dimensions in `capability-support/v1` | orch, with support levels in aicore | the record adopts source, freshness and remediation: P10 |
-| PluginManifest | `unit.json` | aicore | schema now; manifest of an external plugin: P6 |
+| PluginManifest | `unit.json`; `extension/v1` for an external plugin | aicore | none |
 | ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog is separate: `model-catalog/v1` |
 | SkillDescriptor | `skill-descriptor/v1` (`aicore.content.skill.describe_skill`) over skill frontmatter and `upstream.json`; `skills.json` and `skills-lock.json` keep their formats | aicore (content) | the receipt of skill digests in a run: P10 |
 | HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | modules' own `doctor` formats differ: P11, P12 |
@@ -57,7 +66,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Error taxonomy | `error/v1`, `aicore.provider.errors`, rules in `packages/aicore/configs/provider-errors.json` | aicore (provider) | the engine port and the modules adopt the classes: P10, P11 |
 | Canonical digest | `digest/v1`; implementation `aicore.util.digest` (canonical JSON bytes, tagged sha256, test vectors) | aicore | `exec` and plan digests move onto it: P9, P10 |
 | Schema evolution | rule of `exec/v1` | aicore | policy per contract (below) |
-| Ecosystem event envelope | `{id, ts, source, type, project, subject, data}` | aicore (ext) | CloudEvents-style fields, envelope apart from data: P6 |
+| Ecosystem event envelope | `event/v1`, a CloudEvents 1.0 subset (`aicore.ext.events`) | aicore (ext) | none |
 | Check evidence | `exec/v1` `check-evidence`, plan evidence | orch and planner | none |
 
 ## Evolution rules
@@ -95,8 +104,8 @@ that introduces its `v2`.
 
 Fields: `$schema`, `id`, `title`, `kind` (`foundation`, `capability`, `bridge`), `version`, `stability`,
 `destination` (`own-repo`, `hub`), `requires` (list of `{unit, range}`), `provides` (`cli`, `plugins`, `contracts`,
-`doctor`, `config`, `events`, `overlay_slots`, `extension_points`, `ports`), and optional `permissions`, `protocol`,
-`dev`. Collections are lists of records, never maps with arbitrary keys, because the closed profile of the validator
+`doctor`, `config`, `events`, `overlay_slots`, `extension_points`, `ports`), and optional `subscribes` (default event
+subscriptions, `<module>:<name>`), `permissions` (`permissions/v1`), `protocol`, `dev`. Collections are lists of records, never maps with arbitrary keys, because the closed profile of the validator
 cannot express such maps ([ADR 0025](decisions/0025-unit-manifest-shape-and-aicore-skeleton.md)).
 
 ### digest/v1
@@ -152,6 +161,21 @@ annotations `x-skm-secret` and `x-skm-layers` (a profile extension that older va
 Adding an optional key is a minor change; removing or retyping a key, or narrowing `x-skm-layers`, is a new major
 version with the old keys kept readable for the window recorded here. Rules of the layers are in
 [ADR 0034](decisions/0034-layered-config-semantics.md).
+
+### Extension contracts: event, artifact-ref, permissions, extension, plugin-*, telemetry-conventions
+
+| Aspect | Policy |
+| --- | --- |
+| Reads | `v1` only; a reader of `event/v1` ignores unknown scalar extension attributes matching `[a-z0-9]{1,20}` |
+| Writes | `$schema: urn:swissknifeman:aicore:<contract>:v1`; plugin documents carry `protocol: "1"` |
+| Upcast | none |
+| Deprecation window | set with `v2` |
+| Unknown fields | rejected, except the extension attributes of `event/v1` |
+| Fixtures | `packages/aicore/schemas/<contract>/v1/examples/{valid,invalid}`; journal round trip in `tests/ext/test_event_contract.py` |
+
+All are `development`. Compatibility inside `v1` is checked mechanically by `aicore schema compat`; a breaking change
+is an error from `beta` on ([ADR 0043](decisions/0043-validator-profile-and-schema-compatibility.md)). `common/v1` holds
+`$defs` only and is referenced from other contracts.
 
 ### check-result/v1
 

@@ -158,7 +158,7 @@ named adapters: a new provider is an adapter plus a catalog entry; a new kind of
 | `aicore.content` | skill model and `skill-descriptor/v1`, the one token estimate and context budgets, publication mechanics (manifest bytes, whole-file artifacts, Codex plugin manifest, publication lock), the shared part of command projection, skill and system-bank evaluation with `eval-context/v1`; later: agent, hook and instruction models | skiller (harness uses the token estimate; planner uses command projection from P9) |
 | `aicore.delivery` | mechanics of connecting plugins and skills to a project: Codex plugin selection, Claude marketplace settings merge, vendor and marketplace distribution plans, managed skill copies with manifest and `skills-lock.json` | skiller now; planner, brain, hub when they connect through it |
 | `aicore.release` | release attestation, version rules (semver bump, next free version) and the changelog format | skiller now; hub scripts (`verify-tag`, `version-guard`) and all modules at their release stage |
-| `aicore.ext` | events, subscriptions, overlays, external plugin commands | planner, orch, brain, analyst |
+| `aicore.ext` | events with a journal and delivery, subscriptions, overlays, external plugins and their conformance; telemetry names | planner, orch, brain, analyst, harness |
 | `aicore.unit` | `unit.json` schema, boundary and standalone checks, new-module template | all modules, CI |
 | `aicore.usage` | parsing usage from provider logs | analyst, skiller eval, orch |
 
@@ -259,38 +259,74 @@ What each service file is today, who writes it and where it ends up:
 
 ## 6. Extensibility
 
+The subsystem is `aicore.ext` (its README section is `packages/aicore/README.md#extensions-aicoreext`). Sources of
+extensions are the modules that emit events or declare slots and points in `unit.json`, the machine configuration that
+registers what runs, and third parties that supply plugins. Consumers are planner, orch, brain and analyst (events,
+overlays, points) and harness (translating provider hooks into events); their phases adopt it.
+
+```mermaid
+flowchart LR
+  src[module] -->|emit| ev[event/v1]
+  ev -->|append, fsync| j[(events.jsonl)]
+  j --> del[deliverer: one per journal]
+  cfg[[aicore.subscriptions + unit.json subscribes]] --> del
+  del -->|stdin JSON, cursor per subscription| sub[subscriber command]
+  del -->|op event| pl[plugin: describe first]
+  del -->|after max_attempts| dl[(dead-letter.jsonl)]
+```
+
 ### 6.1 Events
 
-- Envelope: `{id, ts, source: "<module>", type: "<module>.<subject>.<verb>", project, subject, data}`; the schema is in
-  `aicore`, the catalog of types is the `provides.events` list of each `unit.json`.
-- A source calls `aicore.ext.emit(...)`: the event is appended to `<project>/.swissknifeman/state/events.jsonl` and
-  delivered to subscribers.
-- Guarantees: best effort, a timeout per subscriber, a subscriber failure is journaled and never breaks the source;
-  redelivery by `id` is idempotent for the subscriber.
+- Envelope `event/v1`, a CloudEvents 1.0 subset: `specversion`, `id`, `source` (`urn:swissknifeman:module:<id>`), `type`
+  (`<module>.<subject>.<verb>`), `time`, optional `subject` and `data` (at most 64 KiB; larger data is an
+  `artifact-ref/v1` into `aicore.state.blobs`), and the extension attributes `traceparent`, `causationid`,
+  `correlationid`. There is no `project` field. The catalog of types is the `provides.events` list of each `unit.json`.
+- A source calls `aicore.ext.emit(...)`: the event is appended to `<project>/.swissknifeman/state/events.jsonl` first,
+  then delivered. The path is emit, journal, deliver (`background` by default, `sync` or `off`).
+- Guarantees: at-least-once from the journal, a cursor per subscription, journal order, one attempt per event and pass, a
+  dead letter after `events.max_attempts`, replay on request; subscribers are idempotent by `id`; a subscriber failure
+  never breaks the source ([ADR 0041](decisions/0041-event-envelope-journal-and-delivery.md)).
 
 ### 6.2 Subscriptions
 
-- In configuration (machine or project): `subscriptions: [{"on": "planner.plan.closed", "run": ["brain", "note", "--event", "-"]}]`;
-  the event arrives on stdin as JSON.
-- A module may declare default subscriptions in `unit.json`; they are enabled with the module and can be disabled in
-  configuration.
+- In the machine configuration: `[aicore.subscriptions.<id>]` with `on` and `run` (or `plugin`); the event arrives on
+  stdin as JSON. A project file may only switch an entry off (`enabled = false`)
+  ([ADR 0040](decisions/0040-extension-configuration-map-tables.md)).
+- A module declares default subscriptions in `unit.json` (`subscribes`, id `<module>:<name>`); they are enabled with the
+  module and can be switched off or retimed in configuration, never replaced.
 - Provider hooks (for example `SessionStart`, `Stop` of Claude Code) stay with `harness`, which may translate them into
   `aicore` events so they can be subscribed to the same way.
 
 ### 6.3 Instruction overlays
 
 - Module commands declare slots (`overlay_slots`), for example `planner:plan-design`.
-- Configuration at machine or project level maps a slot to files:
-  `overlays: {"planner:plan-design": ["~/.config/swissknifeman/overlays/my-rules.md"]}`.
-- Overlays are woven in when command projections are generated (`aicore.content`); for dynamic use there is the
-  command `<cli> overlays <slot>`.
+- Configuration maps a slot to files: `[aicore.overlays."planner:plan-design"]` holds the paths. A project may add overlays.
+- Overlays are resolved at run time: a command calls `<cli> overlays <slot>` or `aicore ext overlays <slot>`. Static
+  embedding is allowed only in projections generated into a project or onto a machine
+  ([ADR 0044](decisions/0044-instruction-overlays-runtime-resolution.md)).
 
 ### 6.4 External plugin commands
 
-- Extension points of a module are listed in `unit.json` (`extension_points`), for example external plan checks.
-- Contract: a process receives JSON on stdin and writes JSON to stdout; the language does not matter. Registration is
-  in configuration. The model is the one of bridges and needs no pip. Levels, handshake and trust are in
-  [ADR 0016](decisions/0016-extension-model-levels-and-trust.md).
+- Extension points of a module are listed in `unit.json` (`extension_points`), for example external plan checks. A
+  plugin is an `extension.json` (`extension/v1`) registered in `[aicore.plugins.<id>]`.
+- Contract: protocol `1`, one JSON request on stdin and one JSON object on stdout; the language does not matter. The
+  manifest is checked before launch and `describe` runs before every use. The model is the one of bridges and needs no pip.
+  Levels, handshake and trust are in [ADR 0016](decisions/0016-extension-model-levels-and-trust.md); the protocol and
+  process discipline in [ADR 0042](decisions/0042-external-plugin-protocol-and-process-discipline.md).
+
+### 6.5 Trust model
+
+| Question | Answer |
+| --- | --- |
+| Who can make something run | the machine configuration, the invocation file and flags; never the project file |
+| What does a plugin receive | an allowlisted environment; a `trusted` plugin also gets the environment names and `env://` secrets its manifest declares |
+| What is contained | the process group: new session, shared deadline, SIGTERM then SIGKILL to the group, output limits, secret redaction |
+| What is not contained | a descendant that calls `setsid()`; no cgroup or Landlock enforcement, so `trusted-local` is reported `enforced: false` and `read-only` is unavailable |
+| How is it checked | `aicore ext status` (doctor probe) and `aicore ext conformance MANIFEST` (nine scenarios) |
+
+Enforcement and the other deferred items (journal rotation, timer retries, describe cache, `secret-resolver`, OpenTelemetry
+export, in-process and remote extensions) are listed with their triggers in the aicore README. Names of spans and metric
+labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
 
 ## 7. Module functional maps
 

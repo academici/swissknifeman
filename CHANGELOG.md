@@ -4,6 +4,21 @@
 
 ### Added
 
+- **aicore:** extensions, `aicore.ext`. Events (`event/v1`, a CloudEvents 1.0 subset) go to an append-only project
+  journal and are delivered from it to subscribers: a cursor per subscription, at-least-once, one deliverer per
+  journal, dead letters, replay, modes `background`, `sync` and `off`. Subscriptions come from the `subscribes` field
+  of `unit.json` and from the new `[aicore]` config section; external plugins (`extension/v1`, protocol `1`) are
+  checked before launch, described before every call and run with a disciplined process and a cleaned environment;
+  instruction overlays are resolved at run time; `aicore ext conformance` checks a plugin in nine scenarios. New
+  commands: `aicore events emit|list|deliver|replay|status`, `aicore ext plugins|overlays|status|conformance` and
+  `aicore schema compat`. Contracts: `common`, `event`, `artifact-ref`, `permissions`, `extension`, `plugin-request`,
+  `plugin-response`, `plugin-describe`, `telemetry-conventions` (all `development`). The config model got dictionary
+  tables and the validator `patternProperties` and `propertyNames`. Limits: a descendant that leaves the process group
+  through `setsid()` is not contained, `flock` is required, the journal is not rotated.
+- **docs:** ADR 0040–0045 (map tables in configuration, the event journal and delivery, the plugin protocol and process
+  discipline, the validator profile and `schema compat`, runtime overlays, telemetry names); `ecosystem.md` describes
+  `aicore.ext`, the event flow and the trust model; `contracts.md` lists the new contracts; the `aicore` README
+  describes extensions, the `[aicore]` section, `schema compat` and the telemetry conventions.
 - **aicore:** `aicore.content`, `aicore.delivery` and `aicore.release`. The skill model, the token budget, publication
   mechanics, the shared part of command projection and skill evaluation moved into `content`; the Codex and Claude
   delivery, distribution plans and managed skill copies into `delivery`; release attestation, version rules and the

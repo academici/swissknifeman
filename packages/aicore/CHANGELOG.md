@@ -16,6 +16,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- `scripts/aicore_locator.py`: the canonical Python aicore locator (`# --- aicore locator (python) ---` block) copied into module launchers.
 - **Plugin conformance:** `aicore ext conformance MANIFEST [--input-file FILE] [--json]` and `aicore.ext.conformance.run_conformance`
   start a plugin (any plugin, not only those of the machine configuration) through nine scenarios and report
   `check-result/v1` documents `ext.conformance.<scenario>`: `manifest`, `describe`, `protocol-unsupported` (protocol `999` must be
@@ -289,4 +290,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 - `aicore.util.paths.state_dir` is documented as a legacy location (new code uses `aicore.state`).
 
 ### Removed
+- The Codex planner-root locator of generated projections moved to the planner renderer.
 - `core.config_paths` and `shared_config_path` (the gitignore policy was the only user).

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.3",
   "title": "planner на aicore: planner.integration и Python-локатор, рендер на aicore, генерируемый снимок каталога моделей, runtime-выражение Codex, standalone без core",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Канонический Python-локатор aicore (packages/aicore/scripts/aicore_locator.py) в plan.py и render-provider-commands.py, bash-локатор в validate.sh; пакет planner.integration (available, status, require, models); command_render и тесты на aicore.* вместо core.*; codex_task_plugin_root_expression перенесена из aicore.provider.runtime в рендер planner, path_allow снята; снимок каталога моделей в command-routing.json пишет рендер из aicore model-catalog (тест паритета → проверка генерации); тест паритета валидатора; validate.sh определяет хаб по тождеству пути вместо MONOREPO_ROOT; standalone planner pass (foundation_free); архитектурные тесты «ядро без aicore» и «движок работает без aicore».",
   "why": "D2, D57: planner зависит только от aicore, но движок обязан работать и из кеша плагина без соседнего aicore; standalone task сегодня fail (knowledge/planner-p9#facts: [5b] читает CHANGELOG хаба, [6] не находит aicore через core). Жёсткие риски: (1) случайный импорт aicore в ядре сломает установки из кеша — страхует тест копии без aicore; (2) снимок каталога моделей изменит байты command-routing.json или выбор маршрута при start — страхуют --check рендера и golden без перезахвата; (3) удаление функции из aicore оставит потребителя — git grep пусто.",
   "scope": {
@@ -217,6 +217,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:31Z"
+  "result": {
+    "started_at": "2026-10-09T19:51:37Z",
+    "finished_at": "2026-10-09T21:05:34Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "68c415fc-1553-4be4-b4dc-da469953ca70"
+    },
+    "notes": "Python-локатор aicore в plan.py и рендере, bash-локатор в validate.sh, planner.integration (available/status/require, models.routing_snapshot/routing_text), рендер на aicore.*, локальная _codex_plugin_root_expression, функция удалена из aicore, снимок каталога моделей пишет и проверяет рендер (sha256 command-routing.json не изменился), тест снимка и паритета валидатора, архитектурные тесты и тест движка без aicore, validate.sh с HUB_ROOT по тождеству, standalone planner pass, foundation_free += planner.",
+    "deviations": [
+      "Сериализация command-routing.json собственным routing_text() (argv в одну строку); hub_only-пропуск тестов в standalone-копии; AICORE_REQUIRED пока вне реестра ERROR_CODES (P9.4); digests golden алиасного плагина P9.2 добавлены capture --only planner-provider-commands; consumer в config-inventory.json заменён."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T21:05:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T21:05:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T21:05:34Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T21:05:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T21:05:34Z"
 }

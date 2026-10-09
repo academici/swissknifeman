@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from planner.command_catalog import CommandCatalogError, build_command_catalog, package_command_path
+import fixtures  # layout guard: hub-only tests are skipped in a standalone copy
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -17,6 +18,7 @@ ROUTING_PATH = REPO_ROOT / "packages/planner/configs/command-routing.json"
 FIXTURE = REPO_ROOT / "packages/planner/tests/fixtures_data/codex-command-cases.json"
 
 
+@fixtures.hub_only
 class CommandCatalogTests(unittest.TestCase):
     def setUp(self):
         self.expected = json.loads(FIXTURE.read_text(encoding="utf-8"))

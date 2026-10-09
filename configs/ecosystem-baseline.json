@@ -64,7 +64,7 @@
     "harness": "fail",
     "maind": "fail",
     "orch": "fail",
-    "planner": "fail",
+    "planner": "pass",
     "skiller": "pass"
   }
 }

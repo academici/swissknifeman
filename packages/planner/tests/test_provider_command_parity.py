@@ -22,8 +22,7 @@ from planner.command_render import (build_provider_command_parity_report,
                                  render_provider_commands_reference,
                                  render_provider_model_roles_reference,
                                  validate_route)
-from core import ProviderManifestError
-from core.provider.manifest import default_manifest_path
+from aicore.provider.manifest import ProviderManifestError, default_manifest_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -60,6 +59,7 @@ def _write_routing(root, mutation):
     return path
 
 
+@fixtures.hub_only
 class ProviderCommandParityTests(unittest.TestCase):
     def test_canonical_and_both_provider_projections_carry_the_same_plan_verbs(self):
         for command in ("plan-audit", "plan-run", "plan-design", "plan-close"):

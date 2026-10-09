@@ -5,12 +5,14 @@ import re
 import shutil
 import tempfile
 import unittest
+import fixtures  # layout guard: hub-only tests are skipped in a standalone copy
 
 
 ROOT = Path(__file__).resolve().parents[3]
 RUNTIME = ROOT / "packages/planner/skills/plan-protocol"
 
 
+@fixtures.hub_only
 class PlanProtocolRuntimeTests(unittest.TestCase):
     def test_relocated_runtime_resolves_references_in_planner_only_checkout(self):
         with tempfile.TemporaryDirectory() as directory:

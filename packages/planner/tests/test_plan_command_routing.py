@@ -23,6 +23,7 @@ FIXTURE = REPO_ROOT / "packages/planner/tests/fixtures_data/provider-plan-cases.
 PARITY_FIXTURE = REPO_ROOT / "packages/planner/tests/fixtures_data/provider-command-parity.json"
 
 
+@fixtures.hub_only
 class ProviderPlanRoutingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

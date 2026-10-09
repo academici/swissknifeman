@@ -1,4 +1,4 @@
-"""Provider-specific runtime locators used by generated projections."""
+"""Provider-specific runtime artifacts used by generated projections."""
 from __future__ import annotations
 
 import json
@@ -33,21 +33,3 @@ def codex_migrated_command_skill(source: Path, relative_path: str) -> bytes | No
     return (f'---\nname: {json.dumps(name)}\ndescription: {description}\n---\n\n'
             f'# {name}\n\nUse this skill when the user asks to run the migrated source '
             f'command `{command}`.\n\n## Command Template\n\n{body}\n').encode("utf-8")
-
-
-def codex_task_plugin_root_expression() -> str:
-    """Return the shared planner runtime from the configured SKM marketplace.
-
-    Codex's marketplace cache deliberately contains only declared skills, not
-    the planner Python runtime.  Project-selected skills therefore link to the
-    canonical marketplace checkout; this locator discovers that single shared
-    checkout and never falls back to a consumer-local `packages/planner` copy.
-    """
-    return (
-        "$(codex plugin marketplace list --json | python3 -c "
-        "'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item[\"root\"] "
-        "for item in data.get(\"marketplaces\", []) if item.get(\"name\")==\"swissknifeman\" "
-        "and (pathlib.Path(item[\"root\"])/\"packages/planner/lib/planner\").is_dir()]; "
-        "len(roots)==1 or sys.exit(\"planner runtime unavailable: expected one marketplace "
-        "root with packages/planner/lib/planner\"); print(roots[0]+\"/packages/planner\")')"
-    )

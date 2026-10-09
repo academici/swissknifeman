@@ -264,6 +264,11 @@
 
 ### Changed
 
+- **planner:** projection rendering on aicore, engine runs without aicore, standalone without core: `plan.py` and
+  `render-provider-commands.py` find aicore through the canonical locator (`AICORE_ROOT`, `_vendor/aicore`, the sibling
+  `aicore`), `planner.integration` is the only runtime place that imports it, the model selectors and inventory of
+  `command-routing.json` are a snapshot written by the renderer from the aicore model catalog, and `validate.sh`
+  detects the hub layout by path identity.
 - **planner:** the `task` module is renamed to `planner` (commands `/planner:*`, `PLANNER_ROOT`, import `planner`, the dev skill `planner-development-philosophy`); the harness, orch, aicore, analyst, maind, skiller and brain consumers, the host configuration, the instruction scope, the generated projections and the docs follow the new name; the plan URNs `urn:swissknifeman:task:plan:*` and the item field `task_files` are unchanged.
 - **skiller:** backups of `connect` (`settings.local.json`), `update --adopt-codex` (`.swissknife.json`), the retired
   Codex skill links and `release` (`CHANGELOG.md`) go through `aicore.state`: `.swissknifeman/backups/<stamp>/<path>` with

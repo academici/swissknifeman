@@ -7,12 +7,14 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import fixtures  # layout guard: hub-only tests are skipped in a standalone copy
 
 
 ROOT = Path(__file__).resolve().parents[3]
 CODEX = shutil.which("codex")
 
 
+@fixtures.hub_only
 @unittest.skipUnless(CODEX, "native Codex discovery requires the installed CLI")
 class NativeCommandDiscoveryTests(unittest.TestCase):
     def test_fresh_native_install_keeps_planner_out_of_idle_prompt(self):

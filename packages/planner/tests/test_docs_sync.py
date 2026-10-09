@@ -6,8 +6,10 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+import fixtures  # layout guard: hub-only tests are skipped in a standalone copy
 
 
+@fixtures.hub_only
 class DocsSyncTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()

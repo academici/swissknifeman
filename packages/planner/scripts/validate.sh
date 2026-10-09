@@ -19,6 +19,30 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 cd "$REPO_ROOT"
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+# Hub layout: this folder is packages/planner of a repository root; a vendored or standalone copy is not.
+HUB_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+if [ -z "$HUB_ROOT" ] || [ "$(cd "$HUB_ROOT/packages/planner" 2>/dev/null && pwd -P)" != "$(cd "$REPO_ROOT" && pwd -P)" ]; then
+  HUB_ROOT=""
+fi
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
@@ -75,15 +99,16 @@ sys.exit(1 if bad else 0)
 PY
 
 echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
-# lib/ — package planner; MONOREPO_ROOT (two levels above the package) — to optional
-# was imported core (command_render / session_context use it with a fallback).
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+# lib/ — package planner; the aicore lib serves the projection renderer and its tests.
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s tests -p "test_*.py" || err "unittest"
 
-if $fleet && [[ -n "$MONOREPO_ROOT" && -d "$MONOREPO_ROOT/plans" ]]; then
-  plan_targets+=("$MONOREPO_ROOT/plans")
+if $fleet; then
+  if [[ -n "$HUB_ROOT" && -d "$HUB_ROOT/plans" ]]; then
+    plan_targets+=("$HUB_ROOT/plans")
+  else
+    echo "  hub layout not found — gate skipped (--fleet)"
+  fi
 fi
 PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s tests/engine -p "test_*.py" || err "engine unittest"
@@ -119,19 +144,20 @@ fi
 # of the generator also covers claude-golden and publication-lock.
 
 echo "[5b/6] publication version ↔ umbrella ↔ manifests"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  python3 "$REPO_ROOT/scripts/check-publication-version.py" "$MONOREPO_ROOT" \
+if [[ -n "$HUB_ROOT" ]]; then
+  python3 "$REPO_ROOT/scripts/check-publication-version.py" "$HUB_ROOT" \
     || err "publication version drift — bump plugin_version + render-provider-commands"
+else
+  echo "  hub layout not found — gate skipped"
 fi
 
 echo "[6/6] provider command projections (render-provider-commands --check)"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  python3 scripts/render-provider-commands.py --check --root "$MONOREPO_ROOT" \
+if [[ -n "$HUB_ROOT" ]]; then
+  python3 scripts/render-provider-commands.py --check --root "$HUB_ROOT" \
     || err "team projections diverged from canon - python3 packages/planner/scripts/render-provider-commands.py --write --root ."
 else
-  echo "  command projections: monorepo root not found (standalone-layout) — gate skipped"
+  echo "  hub layout not found — gate skipped"
 fi
-
 
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: FAILURE" >&2; exit 1; fi

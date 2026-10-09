@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKAGE = ROOT / "packages/planner"
 
 
+@fixtures.hub_only
 class IntentOptInTests(unittest.TestCase):
     def test_ordinary_requests_do_not_activate_any_task_route(self):
         contract = (PACKAGE / "references/intent-routing.md").read_text()

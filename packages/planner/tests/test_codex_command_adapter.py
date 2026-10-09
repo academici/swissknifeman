@@ -10,7 +10,7 @@ try:
     from . import fixtures  # noqa: F401,E402 — package invocation
 except ImportError:
     import fixtures  # noqa: F401,E402 — direct discovery
-from core.provider.lock import ArtifactActionKind
+from aicore.artifacts.lock import ArtifactActionKind
 from planner.command_catalog import build_command_catalog
 from planner.command_render import (PROVIDER_LOCK_PATH, apply_codex_command_plan,
                                  mapping_from_catalog, plan_codex_command_apply,
@@ -23,6 +23,7 @@ ROUTING_PATH = REPO_ROOT / "packages/planner/configs/command-routing.json"
 FIXTURE = REPO_ROOT / "packages/planner/tests/fixtures_data/codex-command-cases.json"
 
 
+@fixtures.hub_only
 class CodexCommandAdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

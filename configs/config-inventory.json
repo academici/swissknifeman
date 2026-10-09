@@ -192,10 +192,10 @@
       "owner": "aicore",
       "consumers": [
         "packages/aicore/lib/aicore/provider/models.py",
-        "packages/planner/tests/test_model_catalog_parity.py"
+        "packages/planner/lib/planner/integration/models.py"
       ],
       "released": false,
-      "note": "canonical model catalog; command-routing.json keeps a transitional copy"
+      "note": "canonical model catalog; the planner renderer writes a snapshot of it into command-routing.json"
     },
     {
       "path": "packages/aicore/configs/telemetry-conventions.json",

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import unittest
 
-import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
+import fixtures  # noqa: F401,E402 — restores the lib and aicore fallbacks
 from planner import review_selection
 from planner.command_catalog import build_command_catalog
 from planner.command_render import parse_next_carrier, plan_claude_alias_render
@@ -30,6 +30,7 @@ def stderr_of(function, *args):
     return result, buffer.getvalue()
 
 
+@fixtures.hub_only
 class AliasPluginTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

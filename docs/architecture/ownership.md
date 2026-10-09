@@ -23,7 +23,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `packages/planner/configs/command-routing.json` | planner | planner | - | P9 | fixed | mappings.<provider>.{class_selectors,effort_selectors,model_inventory} are a transitional copy of packages/aicore/configs/model-catalog.json (parity test); replaced by a catalog snapshot in P9.3 (D57), the row is removed there |
 | `packages/skiller/skills/general/workflow-craft/` | skiller | planner | skills | P9 | fixed | - |
 | `orch/` | orch (hub root) | orch | docs/research | P10 | fixed | root research documents of the orchestration module |
 | `packages/orch/bridges/harness/` | orch | bridges/orch-harness | - | P10 | hypothesis | not described by the architecture; refine in P10 |

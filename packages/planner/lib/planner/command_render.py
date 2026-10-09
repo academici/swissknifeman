@@ -10,14 +10,13 @@ import re
 import shlex
 from typing import Mapping
 
-from core.provider.values import ProviderId
-from core.provider.manifest import (ProviderCapabilityManifest, default_manifest_path,
-                                    load_provider_manifest, provider_support_projection)
-from core.provider.projection import ProjectionCatalog, load_projection_catalog, projection_spec
-from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderResult,
-                                    ArtifactSource)
-from core.provider.lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
-from core.provider.runtime import codex_task_plugin_root_expression
+from aicore.provider.values import ProviderId
+from aicore.provider.manifest import (ProviderCapabilityManifest, default_manifest_path,
+                                      load_provider_manifest, provider_support_projection)
+from aicore.provider.projection import ProjectionCatalog, load_projection_catalog, projection_spec
+from aicore.artifacts.artifact import (ArtifactAdapterIdentity, ArtifactRenderResult,
+                                       ArtifactSource)
+from aicore.artifacts.lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
 from aicore.content.commands import (frontmatter_description, runtime_provenance, split_command,
                                      strict_frontmatter_fields)
 from aicore.content.publication import (capability_requirements, codex_plugin_manifest,
@@ -1578,9 +1577,26 @@ Current Codex mapping: {class_routes}; {effort_routes}.
 '''
 
 
+def _codex_plugin_root_expression() -> str:
+    """Return the shell expression that finds the shared planner runtime of the SKM marketplace.
+
+    Codex's marketplace cache deliberately contains only declared skills, not the planner Python
+    runtime. Project-selected skills therefore link to the canonical marketplace checkout; this
+    expression discovers that single shared checkout and never falls back to a consumer-local copy.
+    """
+    return (
+        "$(codex plugin marketplace list --json | python3 -c "
+        "'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item[\"root\"] "
+        "for item in data.get(\"marketplaces\", []) if item.get(\"name\")==\"swissknifeman\" "
+        f"and (pathlib.Path(item[\"root\"])/\"{_MODULE_DIR}/lib/{MODULE_ID}\").is_dir()]; "
+        f"len(roots)==1 or sys.exit(\"{MODULE_ID} runtime unavailable: expected one marketplace "
+        f"root with {_MODULE_DIR}/lib/{MODULE_ID}\"); print(roots[0]+\"/{_MODULE_DIR}\")')"
+    )
+
+
 def _codex_current_route_rule(record: CommandRecord) -> str:
     """Tell Codex where the planner package root (and so ``plan.py``) lives."""
-    planner_root = codex_task_plugin_root_expression()
+    planner_root = _codex_plugin_root_expression()
     return f'''## Codex planner root — provider-specific
 
 The planner package root is the installed Codex plugin:

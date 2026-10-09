@@ -2,6 +2,7 @@ import ast
 import re
 import unittest
 from pathlib import Path
+import fixtures  # layout guard: hub-only tests are skipped in a standalone copy
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -34,6 +35,7 @@ def _jobs(text):
     return result
 
 
+@fixtures.hub_only
 class PlannerCiGateTests(unittest.TestCase):
     def setUp(self):
         self.jobs = _jobs(WORKFLOW.read_text(encoding="utf-8"))

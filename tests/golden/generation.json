@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "44581a450772",
-  "reason": "task compatibility alias",
+  "captured_from": "ce743e9b4fdd",
+  "reason": "digests of the generated task compatibility plugin golden files, left out when the alias plugin was added",
   "generators": [
     {
       "id": "skiller-registry",
@@ -207,6 +207,17 @@
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "0ca8bf2d4254dae9fd64b290afc34b46c25bad883088f051d6324914f8a45e8c",
     "packages/planner/docs/reference/provider-commands.md": "43000039fc22a6add59c2b9b25aede187e893d069c2a0574106b730b9b2ee164",
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "fd0b05fa5f4b6fb788582b23b1705ea82f67fd69071f59c1b3c4d034080d0780",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/design.md": "713265faea4339b4e97d79bf64987a5f9c7dd0ca3ef40a292ab8349f22a5f3d9",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/dev.md": "b531cb4eae77e61a457555f25bdcc9d04338104dbdffaf70b128b5f16ce3b717",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/fix.md": "8e730de4d61b22c142744a56620b0637a086c9924aec5c33b8c9149fcf003d4f",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/make-workflow.md": "1080655f5e44bdd8947ad9f7652fd373b44e4a78f96f5ef2ea41b538b99afe8c",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/plan-audit.md": "772e5ad48a8ce34fc8e5773e3a2b1b0e64d6d74b072bbb238fa97c412b98bc5a",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/plan-close.md": "e710f5d568d84e3e48e50e4e3d7b07c549f5f04984eb6bcc1dfc8abbcdba94b6",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/plan-design.md": "b0d4d6feee4a89ea6e33466c5c5395e73e0ad83bf1fd234fc4e4e21ea2f00ee4",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/plan-run.md": "804380e71ecc6a8e6691f333d0748c17c29f72db630a9c1e02b953668e39a857",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/research.md": "c00663c7e5ad5a5346a9131453c2f9a3fc6d07c2cd38f9f2bd2f0c78f80f0b3c",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/review.md": "be6cd5bf773367a9582c705ec6e16d8c8641256bdd991bca14a22382527a2473",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "a328f090de7954840729242431aa8a7c807cc2a9b901030cf876df971740b72d",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/dev.md": "4d4ed13a9dbb9320314fc7bc6538c409932ee583c67216a76be4be7de5ce4224",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/fix.md": "14c2a0f7942755a6c949edc91a59431080ca8111d4d73f6bfcc5c736b047b716",

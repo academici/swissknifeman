@@ -5,7 +5,8 @@ No custom rendering logic: only loading the canonical directory
 (`command_catalog.build_command_catalog`), building both provider-plans
 (`plan_claude_command_render`/`plan_codex_command_render`) and their read-only/write
 application (`apply_claude_command_plan`/`plan_codex_command_apply` +
-`apply_codex_command_plan`) explicitly `--root`.
+`apply_codex_command_plan`) explicitly `--root`. It also writes (`--write`) or checks (`--check`) the snapshot of the aicore
+model catalog inside `configs/command-routing.json`. Needs aicore: AICORE_ROOT, `_vendor/aicore` or the sibling `aicore`.
 
     python3 packages/planner/scripts/render-provider-commands.py --check --root .
     python3 packages/planner/scripts/render-provider-commands.py --write --repair-owned --root .
@@ -14,18 +15,48 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
+# --- aicore locator (python) ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore_locator.py; copies must stay identical.
+def _aicore_lib(module_root):
+    import json
+    import os
+    from pathlib import Path
+
+    def _ok(root):
+        try:
+            return json.loads((root / "unit.json").read_text(encoding="utf-8")).get("id") == "aicore"
+        except (OSError, ValueError):
+            return False
+
+    explicit = os.environ.get("AICORE_ROOT")
+    if explicit:
+        if not _ok(Path(explicit)):
+            raise SystemExit(f"AICORE_NOT_FOUND: AICORE_ROOT={explicit} is not an aicore checkout")
+        return Path(explicit).resolve() / "lib"
+    for root in (Path(module_root) / "_vendor" / "aicore", Path(module_root).parent / "aicore"):
+        if _ok(root):
+            return root.resolve() / "lib"
+    return None
+# --- end aicore locator (python) ---
+
 _PKG_ROOT = Path(__file__).resolve().parent.parent       # packages/planner
-_MONOREPO_ROOT = _PKG_ROOT.parent.parent                 # root monorepo
 sys.path.insert(0, str(_PKG_ROOT / "lib"))
-if (_MONOREPO_ROOT / "core").is_dir():
-    sys.path.insert(0, str(_MONOREPO_ROOT))
+_lib = _aicore_lib(_PKG_ROOT)
+if _lib is None:
+    print("AICORE_NOT_FOUND: rendering provider projections needs aicore; set AICORE_ROOT", file=sys.stderr)
+    raise SystemExit(2)
+sys.path.insert(1, str(_lib))
+os.environ.setdefault("AICORE_ROOT", str(_lib.parent))
 
 from planner import MODULE_ID  # noqa: E402
 from planner.command_catalog import build_command_catalog  # noqa: E402
+from planner.integration.models import routing_snapshot, routing_text  # noqa: E402
 from planner.command_render import (  # noqa: E402
     PROVIDER_LOCK_PATH, apply_claude_command_plan, apply_codex_command_plan,
     build_provider_command_parity_report, mapping_from_catalog, parse_next_carrier,
@@ -39,7 +70,14 @@ _PARITY_FIXTURE = Path("packages/planner/tests/fixtures_data/provider-command-pa
 _OPERATOR_REFERENCE = Path("packages/planner/docs/reference/provider-commands.md")
 _MODEL_ROLES_REFERENCE = Path("packages/planner/docs/reference/provider-model-roles.md")
 _CLAUDE_GOLDEN_ROOT = Path("packages/planner/tests/fixtures_data/claude-command-golden")
+_ROUTING = Path("packages/planner/configs/command-routing.json")
 _ALIAS_PREFIX = "packages/planner/aliases/task/"  # Compatibility alias: remove in the next minor release.
+
+
+def _routing_snapshot_bytes(root: Path) -> bytes:
+    """Routing config with the model selectors and inventory taken from the aicore catalog."""
+    routing = json.loads((root / _ROUTING).read_text(encoding="utf-8"))
+    return routing_text(routing_snapshot(routing)).encode("utf-8")
 
 
 def _build_plans(root: Path, *, allow_managed_drift: bool = False):
@@ -165,7 +203,8 @@ def _repair_version_transition(root: Path, claude_plan, codex_plan, cursor_plan,
 
 
 def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes: bytes,
-              model_roles_bytes: bytes, alias_plan) -> int:
+              model_roles_bytes: bytes, alias_plan, routing_bytes: bytes) -> int:
+    routing_drift = (root / _ROUTING).read_bytes() != routing_bytes
     claude_drift = (apply_claude_command_plan(root, claude_plan, check=True)
                     + apply_claude_command_plan(root, alias_plan, check=True))
     lock_path = root / PROVIDER_LOCK_PATH
@@ -187,7 +226,7 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
     cursor_drift = _adapter_drift(root, cursor_plan)
     grok_drift = _adapter_drift(root, grok_plan)
     if (not claude_drift and not codex_drift and not cursor_drift and not grok_drift
-            and not reference_drift
+            and not reference_drift and not routing_drift
             and not model_roles_drift and not golden_drift):
         print("render-provider-commands: check OK (no-op)")
         return 0
@@ -195,6 +234,8 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
         print(f"drift: claude-code {path}", file=sys.stderr)
     for action in codex_drift:
         print(f"drift: codex {action.artifact_id} {action.action.value}", file=sys.stderr)
+    if routing_drift:
+        print(f"drift: model-catalog-snapshot {_ROUTING}", file=sys.stderr)
     if reference_drift:
         print(f"drift: operator-reference {_OPERATOR_REFERENCE}", file=sys.stderr)
     if model_roles_drift:
@@ -262,6 +303,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--repair-owned requires --write")
     root = Path(args.root).resolve()
 
+    routing_bytes = _routing_snapshot_bytes(root)
+    if args.write and (root / _ROUTING).read_bytes() != routing_bytes:
+        (root / _ROUTING).write_bytes(routing_bytes)
     try:
         (claude_plan, codex_plan, cursor_plan, grok_plan,
          reference_bytes, model_roles_bytes) = _build_plans(root)
@@ -288,7 +332,7 @@ def main(argv: list[str] | None = None) -> int:
     alias_plan = _build_alias_plan(root)
     if args.check:
         return cmd_check(root, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes,
-                          model_roles_bytes, alias_plan)
+                          model_roles_bytes, alias_plan, routing_bytes)
     return cmd_write(root, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes,
                      model_roles_bytes, alias_plan, repair_owned=args.repair_owned)
 

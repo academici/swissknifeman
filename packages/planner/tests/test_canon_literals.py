@@ -2,6 +2,7 @@
 from pathlib import Path
 import re
 import unittest
+import fixtures  # layout guard: hub-only tests are skipped in a standalone copy
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -9,6 +10,7 @@ COMMANDS = ROOT / "packages/planner/commands"
 PROTOCOL = ROOT / "packages/planner/skills/plan-protocol/SKILL.md"
 
 
+@fixtures.hub_only
 class CompactCanonTests(unittest.TestCase):
     def test_plan_commands_delegate_to_the_plan_cli(self):
         for name in ("plan-run.md", "plan-audit.md", "plan-design.md", "plan-close.md"):

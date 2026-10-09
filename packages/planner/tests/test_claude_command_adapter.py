@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import unittest
 
-import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
+import fixtures  # noqa: F401,E402 — restores the lib and aicore fallbacks
 from planner.command_catalog import build_command_catalog
 from planner.command_render import (apply_claude_command_plan, mapping_from_catalog,
                                  plan_claude_command_render,
@@ -20,6 +20,7 @@ PLUGIN_PATH = REPO_ROOT / "packages/planner/.claude-plugin/plugin.json"
 GOLDEN_ROOT = REPO_ROOT / "packages/planner/tests/fixtures_data/claude-command-golden"
 
 
+@fixtures.hub_only
 class ClaudeCommandAdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

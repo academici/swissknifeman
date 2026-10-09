@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import unittest
 
-from core.provider.manifest import default_manifest_path
+from aicore.provider.manifest import default_manifest_path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ROUTING = REPO_ROOT / "packages/planner/configs/command-routing.json"

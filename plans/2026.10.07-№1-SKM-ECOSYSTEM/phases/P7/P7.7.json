@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.7",
   "title": "Закрытие фазы: широкий прогон, заметка на копии реального хранилища в песочнице, сверка E1 и E2, push",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Полный прогон тестов всех модулей и скриптов хаба, skiller и task в песочнице, ecosystem-units со standalone --baseline, golden без перезахвата, совместимость контрактов aicore против конца P6, docs-impact и hygiene; сквозная проверка e2e-plan-note.sh в песочнице на копии реального хранилища (git status копии — только новые заметки); сверка E22, E44, R06 записью plan.py log; коммит, push ветки ecosystem-split.",
   "why": "Готово, когда заметка о закрытом плане появилась в песочнице хранилища (architecture §12 P7). Риск: реальное хранилище — данные человека: проверка только на его копии внутри песочницы (dev-sandbox --copy), оригинал не меняется (V3 сверяет git status оригинала до и после).",
   "scope": {
@@ -164,12 +164,54 @@
   },
   "result": {
     "started_at": "2026-10-09T13:08:06Z",
+    "finished_at": "2026-10-09T13:17:52Z",
     "executor": {
       "provider": "codex",
       "model": "gpt-6.1-sol",
       "effort": "high",
       "session": "01a120c3-ecac-7b71-bf39-8edf762cfa86"
-    }
+    },
+    "notes": "F1–F4 исправлены и проверены, docs-impact зелёный; commit 686319c8 отправлен в origin/ecosystem-split; V6 зелёный. 213 brain tests, 6 attestation tests, V3 на копии реального Vaults/Brain. Широкие проверки переиспользованы с проверкой изменённых входов; независимый RED аудит и подтверждение исправлений исполнителем в knowledge/audit-p7-2026-10-09.",
+    "deviations": [
+      "Неизменённые части V1/V2 и standalone baseline переиспользованы из 1de6f832; golden проверен на чистой копии исходников из-за ignored локального bootstrap; V3 использует фактический корень Vaults/Brain; F1–F4 исправлены у владельца красных проверок P7.7. Version increases накопленной dev-ветки — на P13 release boundary."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-09T13:17:52Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T13:15:38Z"
+  "updated_at": "2026-10-09T13:17:52Z"
 }

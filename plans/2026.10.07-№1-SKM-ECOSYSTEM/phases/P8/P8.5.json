@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.5",
   "title": "Метаданные skills (E27): license, compatibility, allowed_tools в skills.json; skiller describe (skill-descriptor/v1); проверки validate",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "registry пишет license (frontmatter → upstream.json → лицензия пакета) и compatibility/allowed_tools при наличии через aicore describe_skill; команда skiller describe <skill> [--json] для skills библиотеки и модулей; шаг metadata в validate (дескриптор строится, лицензия upstream-skills, ограничения стандарта); схема skills.json (если есть) — новые необязательные свойства; golden skiller-registry и skiller-help перезахвачены с причиной.",
   "why": "D54 и E27: закрыть пробелы license, совместимость, инструменты, provenance без правки SKILL.md. Риск: смена байтов skills.json для потребителей индекса (orch-мост, maind skilldoc) — изменение аддитивное, потребители игнорируют неизвестные поля; проверяется их тестами в широком прогоне P8.7.",
   "scope": {
@@ -203,6 +203,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T12:49:28Z"
+  "result": {
+    "started_at": "2026-10-09T15:34:04Z",
+    "finished_at": "2026-10-09T15:43:34Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "b408b805-1583-41e2-aec3-148b773ecec3"
+    },
+    "notes": "skills.json carries license/compatibility/allowed_tools; skiller describe; metadata gate in tests/test_metadata.py",
+    "deviations": [
+      "extra golden recapture skiller-unknown-subcommand (command list gained describe)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T15:43:34Z"
 }

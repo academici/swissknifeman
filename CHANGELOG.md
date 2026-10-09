@@ -12,6 +12,10 @@
 
 ### Added
 
+- **skiller:** `skills.json` entries carry `license` (frontmatter, then `upstream.json`, then the package license),
+  and `compatibility` and `allowed_tools` when a skill declares them; `skiller describe <skill> [--json]` prints the
+  `skill-descriptor/v1` of a library or host-module skill; a metadata test in `scripts/test.sh` (run by `validate.sh`)
+  checks licenses of upstream skills and the standard's field limits.
 - **skiller:** `[skiller]` and `[skiller.sync]` in `.swissknifeman/config.toml` hold the skill selection (`project_type`,
   `buckets`, `plugins`, `exclude`, `presets`, `agent`, `skills_path`) and the vendor mode of `skiller sync` (`agent`,
   `skills_path`, `presets`, `include`, `buckets`, `exclude`, `gitignore_managed`); the schema is

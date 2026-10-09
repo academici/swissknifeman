@@ -13,6 +13,7 @@ Commands (are run from the consuming project, the root is looked up from CWD):
   sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
   lock      update skills-lock.json project (external skill map: skm + boost)
   resolve   resolve skill IDs and transitive requirements (read-only; --json)
+  describe  skill descriptor: license, version, digest, provenance (read-only; --json)
   status    report on the current project (read-only)
   budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
   eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)

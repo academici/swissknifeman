@@ -15,6 +15,7 @@
 #   sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
 #   lock      update skills-lock.json project (external skill map: skm + boost)
 #   resolve   resolve skill IDs and transitive requirements (read-only; --json)
+#   describe  skill descriptor: license, version, digest, provenance (read-only; --json)
 #   status    report on the current project (read-only)
 #   budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
 #   eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
@@ -59,7 +60,7 @@ if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/skiller" ]]; then
 fi
 
 usage() {
-  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,32p'
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,33p'
 }
 
 CMD="${1:-help}"
@@ -68,7 +69,7 @@ CMD="${1:-help}"
 case "$CMD" in
   -h|--help|help) usage; exit 0 ;;
   validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
-  connect|vendor|integrate|update|init|sync|lock|resolve|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release|attest|version|deliver) ;;
+  connect|vendor|integrate|update|init|sync|lock|resolve|describe|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release|attest|version|deliver) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

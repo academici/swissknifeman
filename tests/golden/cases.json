@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "7e9ead1e622c",
-  "reason": "system skills moved to the maind, harness, analyst and brain plugins",
+  "captured_from": "cfd74a412485",
+  "reason": "skiller describe in the command list",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

@@ -7,7 +7,8 @@ from pathlib import Path
 from aicore.util.io import atomic_write_text, safe_load_json
 from aicore.util.repo import find_repo_root
 
-from aicore.content.skill import read_frontmatter as parse_frontmatter, skill_content_hash
+from aicore.content.skill import (
+    describe_skill, read_frontmatter as parse_frontmatter, skill_content_hash)
 from aicore.delivery import MARKETPLACE
 from aicore.util.cli import parse_flags
 from aicore.util.term import die
@@ -29,6 +30,7 @@ def build_registry(env):
     Returns (registry_dict, bucket_meta, bucket_dirs)."""
     root = env.root
     check_collisions(env)
+    package_license = _package_license(root)
     skills = []
     references = []
 
@@ -62,6 +64,19 @@ def build_registry(env):
             # only SKILL.md). Complements sha256, see common.skill_content_hash.
             "content_sha256": skill_content_hash(skill_md.parent),
         }
+        # E27: one reader of frontmatter and upstream.json (aicore describe_skill); the package
+        # license is the default. A skill that cannot be described keeps the old entry shape
+        # (validate reports it), so a broken fixture does not crash generation.
+        try:
+            described = describe_skill(skill_md.parent, skill_id=name)
+        except ValueError:
+            described = None
+        entry["license"] = (described.license if described else None) or package_license
+        if described and described.compatibility:
+            entry["compatibility"] = described.compatibility
+        allowed = (fm.get("allowed-tools") or fm.get("allowed_tools") or "")
+        if isinstance(allowed, str) and allowed.strip():
+            entry["allowed_tools"] = allowed.strip()
         # Graph/meta fields: optional, omitted when empty (same as upstream fields)
         for list_key in ("tags", "requires", "produces_for"):
             vals = parse_inline_list(fm.get(list_key, ""))
@@ -346,6 +361,13 @@ def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
         "plugins": sorted(marketplace_plugins, key=lambda p: p["name"]),
     })
     return manifests
+
+
+def _package_license(root):
+    """The library license from package.json: the default for skills that declare none."""
+    package = safe_load_json(root / "package.json", on_error=lambda e: die(f"package.json: {e}"))
+    value = package.get("license")
+    return value if isinstance(value, str) and value else "MIT"
 
 
 def _package_version(root):

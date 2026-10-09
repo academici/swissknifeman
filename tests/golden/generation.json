@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "7e9ead1e622c",
-  "reason": "system skills moved to the maind, harness, analyst and brain plugins",
+  "captured_from": "cfd74a412485",
+  "reason": "skiller describe in the command list",
   "generators": [
     {
       "id": "skiller-registry",
@@ -231,7 +231,7 @@
     "packages/skiller/generate-skill/.claude-plugin/plugin.json": "2052fdc81213dd0c50c220ea9753118f76f30ff66ef95ecda7f2593596e2e10f",
     "packages/skiller/generate-skill/.codex-plugin/plugin.json": "05157f8990810f67f7c0f0c28fef6fd40580da029ae1285b2b04a2b783877073",
     "packages/skiller/generate-skill/generate-skill/snippets/SKILL_TEMPLATE.md": "90aff9e0d25cdb0dd933c51b7b2150c3ffd29b5fa9bde91e6946a9694c86118d",
-    "packages/skiller/skills.json": "37cdbbc1b42292d3d671673fccc7d76a328623332fe603127b7456a3386b1775",
+    "packages/skiller/skills.json": "36ccdae6cf448ed802c0dccb5eaa0d6327a892516f56cbd31a6f8904b7c481d1",
     "packages/skiller/skills/_index.md": "1be990d5b36ff9e53575d23140ae87654e5a99255d5b231ddc3c91ff083415ae",
     "packages/skiller/skills/ai/.claude-plugin/plugin.json": "b92d6476f4838ac09cecd5049a6befc8b3f28284cfb3714fe336ccf6c75572e9",
     "packages/skiller/skills/ai/.codex-plugin/plugin.json": "aed390ab0e91a292c8daf4f872711b1135088bab0c3b3990720fbede19488cdb",

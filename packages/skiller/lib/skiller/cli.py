@@ -7,6 +7,7 @@ from aicore.util.term import die
 from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
+from .describe import cmd_describe
 from .doctor import cmd_doctor
 from .quality.analyze import cmd_analyze_run
 from .quality.audit import cmd_bucket_audit
@@ -41,6 +42,7 @@ COMMANDS = {
     "list": cmd_list,
     "registry": cmd_registry,
     "resolve": cmd_resolve,
+    "describe": cmd_describe,
     "doctor": cmd_doctor,
     "topology": cmd_topology,
     "release": cmd_release,

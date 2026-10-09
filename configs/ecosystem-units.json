@@ -78,7 +78,6 @@
     {"path": "packages/skiller/lib/skiller/topology.py", "target": "maind", "phase": "P11", "confidence": "fixed"},
     {"path": "packages/skiller/lib/skiller/listing.py", "target": "maind", "phase": "P11", "confidence": "fixed"},
     {"path": "packages/skiller/lib/skiller/state.py", "target": "maind", "phase": "P11", "confidence": "fixed"},
-    {"path": "packages/skiller/lib/skiller/brain_sync.py", "target": "brain", "phase": "P7", "confidence": "fixed"},
     {"path": "packages/skiller/skills/system/agent-packs/", "target": "harness", "subsystem": "skills", "phase": "P8", "confidence": "fixed"},
     {"path": "packages/skiller/skills/system/agents/", "target": "harness", "subsystem": "skills", "phase": "P8", "confidence": "fixed"},
     {"path": "packages/skiller/skills/system/brain-locator/", "target": "brain", "subsystem": "skills", "phase": "P7", "confidence": "fixed"},

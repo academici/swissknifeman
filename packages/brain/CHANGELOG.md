@@ -17,3 +17,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   `docs`, `docs-public` or `plans` is refused (`CONFIG_NOTES_FOLDER`).
 - **Doctor:** `brain doctor [--json]` reports `brain.vault`, `brain.config` and `brain.notes-folder` as
   `check-result/v1`; a machine without a vault is a warning, not a failure.
+- **Document sync:** `brain docs integrate|pull|push|script --project DIR`, moved from `skiller`. `pull` copies vault
+  files matching `docs.patterns` into the project and only adds or updates; `push` copies project files into the
+  vault and leaves a vault file with different content alone (`DOCS_CONFLICT`, exit 1) unless `--force`; `integrate`
+  is the `skiller integrate` block (pull for `pull` and `bidirectional`, then `.claude/sync-brain.sh`), and
+  `--dry-run` writes nothing. A `memory_brain` object in `.swissknife.json` still turns sync on (with a deprecation
+  warning); a plain string does not. Nothing is ever deleted. The generated `sync-brain.sh` also matches a file
+  directly below the folder for patterns such as `docs/**/*.md`, like the Python copy.

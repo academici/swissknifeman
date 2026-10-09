@@ -4,8 +4,8 @@ The Obsidian vault module of the ecosystem. It finds the vault of the machine, f
 project inside it, and checks that both are healthy. It is a small command-line tool built on the `aicore`
 foundation (Python 3.9+, standard library only).
 
-This is the first version of the module: it covers vault lookup, the project catalog and `doctor`.
-Document sync and notes written from ecosystem events are separate commands that arrive later.
+This is the first version of the module: it covers vault lookup, the project catalog, document sync and `doctor`.
+Notes written from ecosystem events are a separate command that arrives later.
 
 ## Commands
 
@@ -13,6 +13,10 @@ Document sync and notes written from ecosystem events are separate commands that
 | --- | --- |
 | `brain vault [--json] [--project DIR]` | Print the vault path and where it was found (exit 1 when there is none). |
 | `brain project [--project DIR] [--json]` | Print the vault folder of a project (exit 1 when the project has none). |
+| `brain docs integrate --project DIR [--dry-run]` | Apply the document sync settings of a project: pull, then write the manual script. |
+| `brain docs pull --project DIR [--dry-run]` | Copy vault documents into the project. |
+| `brain docs push --project DIR [--dry-run] [--force]` | Copy project documents into the vault. |
+| `brain docs script --project DIR` | Write `.claude/sync-brain.sh` (mode 0755). |
 | `brain doctor [--json]` | Check the vault, the configuration and the notes folder; `--json` prints `check-result/v1` documents. |
 | `brain version` | Print the version and the library path. |
 
@@ -44,6 +48,25 @@ aicore config set brain.vault_path ~/Documents/MyVault --machine
    frontmatter has `repo: <path to the project>`.
 
 The result says which source matched (`via`: `catalog` or `control-note`).
+
+## Document sync
+
+Documents move between a project and the vault by glob patterns (`docs.patterns`, relative to both roots; by default
+`docs/**/*.md` and `README.md`):
+
+- `pull` copies vault files into the project. It only adds or updates files and never deletes.
+- `push` copies project files into the vault. A vault file with the same content is left alone; one with different
+  content is not replaced and is reported as `DOCS_CONFLICT` (exit 1) unless you pass `--force`. Other files are
+  still copied. Nothing is deleted.
+- `script` writes `.claude/sync-brain.sh`, a plain bash copy of the same patterns for use outside the tool
+  (`bash .claude/sync-brain.sh [pull|push|bidirectional]`).
+- `integrate` is what `skiller integrate` runs: when sync is on it pulls (for `pull` and `bidirectional`), then writes
+  the script; otherwise it prints `doc-sync is off`. `--dry-run` prints what it would do and writes nothing.
+
+Sync is on with `docs.enabled = true`, or, for existing projects, when `.swissknife.json` has a `memory_brain`
+object (a deprecation warning is printed; the object's `path` and `sync.direction` / `sync.patterns` apply). A key
+set in the configuration always wins over the legacy object. A string `memory_brain` names a memory brain and does
+not enable sync. `pull`, `push` and `script` work whether or not sync is enabled.
 
 ## Configuration
 

@@ -211,6 +211,9 @@
 
 ### Changed
 
+- **skiller:** the `integrate` wizard block `[9] Brain docs-sync` calls the host command `brain_docs`
+  (`brain docs integrate`, overridable with `SKM_BRAIN_BIN`) instead of its own code; without the command it prints
+  a warning and the wizard goes on.
 - **skiller instructions:** the rule on token math now names `aicore.content.budget` as the single source (the
   generated `packages/skiller/CLAUDE.md` and `AGENTS.md` follow from the harness instruction source).
 - **task:** review method is generated from `quality:code-review` / `quality:artifact-review`.
@@ -261,6 +264,7 @@
 
 ### Removed
 
+- **skiller:** `brain_sync.py` (document sync between a project and the vault); it lives in `brain docs`.
 - `scripts/skiller-standalone-check.sh`: replaced by `ecosystem-units.py standalone`, which runs the same check for every
   module and compares it with the recorded baseline; the CI job `skiller-standalone` became `standalone`.
 - Duplicate `configs/profile-catalog.json` (never released); the canon is

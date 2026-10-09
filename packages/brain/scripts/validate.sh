@@ -24,7 +24,7 @@ done
 echo "[4/6] required files"
 for f in bin/brain lib/brain/__init__.py lib/brain/__main__.py lib/brain/cli.py lib/brain/errors.py \
          lib/brain/settings.py lib/brain/frontmatter.py lib/brain/vault.py lib/brain/catalog.py \
-         lib/brain/doctor.py configs/config.schema.json config.example.toml unit.json README.md \
+         lib/brain/doctor.py lib/brain/docs.py configs/config.schema.json config.example.toml unit.json README.md \
          CHANGELOG.md LICENSE; do
   [[ -e "$f" ]] || err "no file: $f"
 done

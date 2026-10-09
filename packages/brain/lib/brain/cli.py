@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from aicore.config import ConfigError
 from aicore.state import find_project_root
 
-from . import __version__, catalog, doctor, errors, settings, vault
+from . import __version__, catalog, docs, doctor, errors, settings, vault
 from .errors import BrainError
 
 USAGE = """usage: brain <command> [options]
@@ -18,6 +18,13 @@ USAGE = """usage: brain <command> [options]
 commands:
   vault [--json] [--project DIR]    print the vault path and where it was found
   project [--project DIR] [--json]  print the vault folder of a project
+  docs integrate --project DIR [--dry-run]
+                                    apply the project's document sync settings (pull and script)
+  docs pull --project DIR [--dry-run]
+                                    copy vault documents into the project
+  docs push --project DIR [--dry-run] [--force]
+                                    copy project documents into the vault (--force replaces changed files)
+  docs script --project DIR         write .claude/sync-brain.sh
   doctor [--json]                   check the vault, the configuration and the notes folder
   version                           print the version and the library path
   help                              show this text
@@ -43,6 +50,16 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--project", metavar="DIR", default=None)
     p.add_argument("--json", action="store_true")
     sub.add_parser("version")
+    p = sub.add_parser("docs")
+    docs_sub = p.add_subparsers(dest="docs_command", parser_class=_Parser)
+    docs_sub.required = True
+    for name in ("integrate", "pull", "push", "script"):
+        q = docs_sub.add_parser(name)
+        q.add_argument("--project", metavar="DIR", required=True)
+        if name != "script":
+            q.add_argument("--dry-run", action="store_true")
+        if name == "push":
+            q.add_argument("--force", action="store_true")
     return parser
 
 
@@ -117,7 +134,82 @@ def _cmd_version(args: argparse.Namespace) -> int:
     return 0
 
 
-_COMMANDS = {"vault": _cmd_vault, "project": _cmd_project, "doctor": _cmd_doctor, "version": _cmd_version}
+def _docs_context(args: argparse.Namespace):
+    root = _project_root(args.project)
+    config = settings.load(root)
+    info = vault.resolve_vault(config)
+    _emit_warnings(config.warnings, info.warnings)
+    return root, config, info, docs.DocsSync.from_settings(root, config, info)
+
+
+def _relative(paths: Sequence[Path], base: Optional[Path]) -> List[str]:
+    return [str(p.relative_to(base)) if base is not None else str(p) for p in paths]
+
+
+def _docs_integrate(args: argparse.Namespace) -> int:
+    root, config, info, sync = _docs_context(args)
+    if not config.docs_enabled or sync.vault is None:
+        if config.docs_enabled and info.path is not None:
+            print(f"brain: warning: {errors.VAULT_MISSING}: vault directory {info.path} does not exist", file=sys.stderr)
+        print("  doc-sync is off")
+        return 0
+    prefix = "[dry-run] would " if args.dry_run else ""
+    script = root / docs.SCRIPT_RELATIVE
+    if config.docs_direction in ("pull", "bidirectional"):
+        copied = sync.pull(dry_run=args.dry_run)
+        if args.dry_run:
+            print(f"  [dry-run] would pull files from the vault by patterns ({', '.join(sync.patterns)}): {len(copied)}")
+        else:
+            print(f"  pull: copied files from the vault to the project: {len(copied)}")
+    if args.dry_run:
+        print(f"  {prefix}generate {docs.SCRIPT_RELATIVE} (vault={sync.vault}, direction={sync.direction})")
+        return 0
+    written = sync.write_script()
+    print(f"  generated {written} (manual sync: bash {written.name} [pull|push])")
+    return 0
+
+
+def _docs_pull(args: argparse.Namespace) -> int:
+    root, config, info, sync = _docs_context(args)
+    vault.require(info)
+    copied = sync.pull(dry_run=args.dry_run)
+    if args.dry_run:
+        for name in _relative(copied, root):
+            print(f"[dry-run] would copy {name}")
+    print(f"{'would copy' if args.dry_run else 'copied'} {len(copied)} files from the vault to the project")
+    return 0
+
+
+def _docs_push(args: argparse.Namespace) -> int:
+    root, config, info, sync = _docs_context(args)
+    vault_root = vault.require(info)
+    copied = sync.push(dry_run=args.dry_run, force=args.force)
+    for name in _relative(copied, vault_root):
+        print(f"{'[dry-run] would copy' if args.dry_run else 'copied'} {name}")
+    print(f"{'would copy' if args.dry_run else 'copied'} {len(copied)} files from the project to the vault")
+    if sync.conflicts:
+        names = ", ".join(_relative(sync.conflicts, vault_root))
+        raise BrainError(errors.DOCS_CONFLICT,
+                         f"{len(sync.conflicts)} files differ in the vault and were left alone: {names} "
+                         "(use --force to replace them)")
+    return 0
+
+
+def _docs_script(args: argparse.Namespace) -> int:
+    root, config, info, sync = _docs_context(args)
+    print(sync.write_script())
+    return 0
+
+
+_DOCS_COMMANDS = {"integrate": _docs_integrate, "pull": _docs_pull, "push": _docs_push, "script": _docs_script}
+
+
+def _cmd_docs(args: argparse.Namespace) -> int:
+    return _DOCS_COMMANDS[args.docs_command](args)
+
+
+_COMMANDS = {"vault": _cmd_vault, "project": _cmd_project, "doctor": _cmd_doctor, "version": _cmd_version,
+             "docs": _cmd_docs}
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

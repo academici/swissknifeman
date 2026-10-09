@@ -19,7 +19,6 @@ from .common import (apply_permissions, die, host_command_text, host_install_suf
 from .host import host_command
 from .config import (autodetect, load_config, load_profile, resolve_profile_name,
                      resolve_target)
-from .brain_sync import BrainSync
 from .connect import do_connect
 from .vendor import do_vendor
 from .skillset import do_sync
@@ -299,32 +298,23 @@ def _block_brain(env, target, choices, dry):
     print(f"      repo: {target}")
     print("  Then: brain status <project> / brain sync <project>")
 
-    # Doc-sync project: config .swissknife.json::memory_brain. String = path without
-    # rules synka (only memory-hook, back-compat) → doc-sync is disabled. Object
-    # {path, sync?} → generate .claude/sync-brain.sh (always) and if direction
-    # pull|bidirectional, pull files from BRAIN to the project.
-    from .config import load_config
-    brain_config = (load_config(env, target) or {}).get("memory_brain")
-    if not brain_config:
+    # Doc-sync belongs to the host's brain tool (host command `brain_docs`); it reads the project's
+    # configuration itself, so the wizard only hands over the project and the dry-run flag.
+    argv = host_command(env, "brain_docs")
+    if argv is None:
+        warn("  brain command not configured or not installed - skip"
+             + host_install_suffix(env, "brain_docs"))
         return
-    bs = BrainSync(target, brain_config)
-    if bs.brain_path is None:
+    sys.stdout.flush()
+    try:
+        r = subprocess.run([*argv, "--project", str(target), *(["--dry-run"] if dry else [])],
+                           check=False, timeout=60, stderr=subprocess.PIPE, text=True)
+    except subprocess.TimeoutExpired:
+        warn("  brain command: timeout exceeded 60s — doc-sync may not have been applied")
         return
-    if dry:
-        print(f"  [dry-run] would generate .claude/sync-brain.sh (BRAIN={bs.brain_path},"
-              f" direction={bs.direction})")
-        if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
-            print("  [dry-run] and would pull files from BRAIN by patterns "
-                  f"({', '.join(bs.patterns)})")
-        return
-    # Doc-sync-object → active sync; we leave the string config only for
-    # memory-hook (doc-sync is not included so as not to change the behavior of old projects).
-    if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
-        copied = bs.sync_pull()
-        print(f"  pull: copied files from BRAIN → project: {len(copied)}")
-    script = bs.generate_sync_script()
-    script.chmod(0o755)
-    print(f"  generated {script} (manual sync: bash {script.name} [pull|push])")
+    if r.returncode != 0:
+        detail = f": {r.stderr.strip()}" if r.stderr else ""
+        warn(f"  brain command returned the code {r.returncode} — doc-sync may not have been applied{detail}")
 
 
 # --- choices assembly ---------------------------------------------------------

@@ -52,10 +52,10 @@ def _roots(env: Mapping[str, str]) -> list:
     return [foundation_root().parent]
 
 
-def discover(env: Optional[Mapping[str, str]] = None) -> Dict[str, UnitInfo]:
-    """Modules with ``provides.config`` by id; the first root wins when an id repeats."""
+def unit_dirs(env: Optional[Mapping[str, str]] = None) -> list:
+    """Every module folder (one that holds a ``unit.json``) under the roots, in root order, without repeats."""
     environment = os.environ if env is None else env
-    found: Dict[str, UnitInfo] = {}
+    found: list = []
     for root in _roots(environment):
         if (root / "unit.json").is_file():
             candidates = [root]
@@ -64,8 +64,15 @@ def discover(env: Optional[Mapping[str, str]] = None) -> Dict[str, UnitInfo]:
                 candidates = sorted(entry for entry in root.iterdir() if (entry / "unit.json").is_file())
             except OSError:
                 continue
-        for candidate in candidates:
-            info = load_unit(candidate)
-            if info is not None and info.id not in found:
-                found[info.id] = info
+        found.extend(candidate for candidate in candidates if candidate not in found)
+    return found
+
+
+def discover(env: Optional[Mapping[str, str]] = None) -> Dict[str, UnitInfo]:
+    """Modules with ``provides.config`` by id; the first root wins when an id repeats."""
+    found: Dict[str, UnitInfo] = {}
+    for candidate in unit_dirs(env):
+        info = load_unit(candidate)
+        if info is not None and info.id not in found:
+            found[info.id] = info
     return found

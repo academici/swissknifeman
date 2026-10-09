@@ -40,11 +40,14 @@ RULES: Dict[str, bool] = {
     "bound-relaxed": False,
     "additional-closed": True,
     "pattern-property-removed": True,
+    # non-breaking only when the old object was closed and no existing name can meet the new pattern;
+    # otherwise the change is reported as breaking (see _Comparer._objects)
     "pattern-property-added": False,
     "property-names-changed": True,
     "unique-added": True,
     "oneof-changed": True,
     "ref-changed": False,
+    "ref-sibling-conflict": True,
 }
 
 # Stabilities whose breaking changes are refused; the others (development, alpha) only warn.
@@ -82,17 +85,21 @@ class _Comparer:
         self._walk(old_root, old_owner, new_root, new_owner, "")
         return self.changes
 
-    def _add(self, path: str, rule: str, message: str) -> None:
-        self.changes.append(Change(path, rule, RULES[rule], message))
+    def _add(self, path: str, rule: str, message: str, breaking: Optional[bool] = None) -> None:
+        self.changes.append(Change(path, rule, RULES[rule] if breaking is None else breaking, message))
 
     def _walk(self, old: dict, old_base: str, new: dict, new_base: str, path: str) -> None:
-        old, old_base, old_target = _expand(self.old, old, old_base)
-        new, new_base, new_target = _expand(self.new, new, new_base)
+        old, old_base, old_target, old_extra, old_conflicts = _expand(self.old, old, old_base)
+        new, new_base, new_target, new_extra, new_conflicts = _expand(self.new, new, new_base)
         if old_target is not None or new_target is not None:
-            pair = (old_target or id(old), new_target or id(new))
+            # a target is compared once per distinct set of keywords written next to its $ref
+            pair = (old_target or id(old), new_target or id(new), old_extra, new_extra)
             if pair in self._visited:
                 return
             self._visited.add(pair)
+        for keyword, _target, _sibling in sorted(set(new_conflicts) - set(old_conflicts)):
+            self._add(path, "ref-sibling-conflict",
+                      f"{keyword} is set both by a $ref target and next to it, and it changed: they cannot be merged")
         if old_target is not None and new_target is not None and old_target[0] != new_target[0]:
             self._add(path, "ref-changed", f"$ref target moved from {old_target[0]} to {new_target[0]}")
         self._type(old, new, path)
@@ -153,19 +160,29 @@ class _Comparer:
 
     def _objects(self, old: dict, old_base: str, new: dict, new_base: str, path: str) -> None:
         old_props, new_props = old.get("properties", {}), new.get("properties", {})
-        new_patterns = new.get("patternProperties", {})
+        old_patterns, new_patterns = old.get("patternProperties", {}), new.get("patternProperties", {})
         closed = new.get("additionalProperties") is False
         if closed and old.get("additionalProperties") is not False:
             self._add(path, "additional-closed", "additionalProperties is now false")
         for name in old_props:
-            if name not in new_props and closed and not any(_compile(p).search(name) for p in new_patterns):
-                self._add(f"{path}/properties/{_escape(name)}", "property-removed",
-                          f"property {name!r} removed from a closed object")
+            if name in new_props:
+                continue
+            here = f"{path}/properties/{_escape(name)}"
+            covering = [pattern for pattern in new_patterns if _compile(pattern).search(name)]
+            for pattern in covering:  # the pattern's value schema now governs the old property
+                self._walk(old_props[name], old_base, new_patterns[pattern], new_base, here)
+            if not covering and closed:
+                self._add(here, "property-removed", f"property {name!r} removed from a closed object")
         for name, child in new_props.items():
+            here = f"{path}/properties/{_escape(name)}"
             if name in old_props:
-                self._walk(old_props[name], old_base, child, new_base, f"{path}/properties/{_escape(name)}")
-            else:
-                self._add(f"{path}/properties/{_escape(name)}", "property-added", f"property {name!r} added")
+                self._walk(old_props[name], old_base, child, new_base, here)
+                continue
+            earlier = [pattern for pattern in old_patterns if _compile(pattern).search(name)]
+            for pattern in earlier:  # the name was already governed by an old pattern
+                self._walk(old_patterns[pattern], old_base, child, new_base, here)
+            if not earlier:
+                self._add(here, "property-added", f"property {name!r} added")
         old_required, new_required = old.get("required", ()), new.get("required", ())
         for name in new_required:
             if name not in old_required:
@@ -173,18 +190,22 @@ class _Comparer:
         for name in old_required:
             if name not in new_required:
                 self._add(path, "required-removed", f"property {name!r} is no longer required")
-        old_patterns = old.get("patternProperties", {})
         for pattern in old_patterns:
             if pattern not in new_patterns:
                 self._add(f"{path}/patternProperties/{_escape(pattern)}", "pattern-property-removed",
                           f"patternProperties key {pattern!r} removed")
         for pattern, child in new_patterns.items():
+            here = f"{path}/patternProperties/{_escape(pattern)}"
             if pattern in old_patterns:
-                self._walk(old_patterns[pattern], old_base, child, new_base,
-                           f"{path}/patternProperties/{_escape(pattern)}")
-            else:
-                self._add(f"{path}/patternProperties/{_escape(pattern)}", "pattern-property-added",
-                          f"patternProperties key {pattern!r} added")
+                self._walk(old_patterns[pattern], old_base, child, new_base, here)
+                continue
+            meets = _compile(pattern)
+            safe = (old.get("additionalProperties") is False and not old_patterns
+                    and not any(meets.search(name) and name in new_props for name in old_props))
+            self._add(here, "pattern-property-added",
+                      f"patternProperties key {pattern!r} added" + ("" if safe else
+                                                                     " (it can apply to names the old schema accepted)"),
+                      breaking=not safe)
         if "propertyNames" in new and ("propertyNames" not in old
                                        or not _equal(old["propertyNames"], new["propertyNames"])):
             self._add(path, "property-names-changed", "propertyNames is now " + _show(new["propertyNames"]))
@@ -207,26 +228,64 @@ class _Comparer:
                 self._add(f"{path}/oneOf/{index}", "oneof-changed", f"oneOf branch {index} changed ({rules})")
 
 
-def _expand(registry: Registry, node: dict, base: str,
-            seen: Optional[Set[Tuple[str, str]]] = None) -> Tuple[dict, str, Optional[Tuple[str, str]]]:
-    """Resolve ``$ref`` chains: the merged body, the owner of its children and the final target ``(owner, ref)``.
+_ANNOTATIONS = frozenset({"title", "description", "default", "examples", "$comment", "deprecated", "$id", "$schema",
+                          "$defs", "$anchor"})
+_LOWER_BOUNDS = frozenset({"minLength", "minItems", "minimum"})
+_UPPER_BOUNDS = frozenset({"maximum", "maxLength", "maxItems"})
 
-    Keywords next to a ``$ref`` win over the target's: no contract of the repository combines them with
-    anything but annotations.
+
+def _is_annotation(keyword: str) -> bool:
+    return keyword in _ANNOTATIONS or keyword.startswith("x-")
+
+
+def _merge_types(first: Any, second: Any) -> List[str]:
+    a = {first} if isinstance(first, str) else set(first)
+    b = {second} if isinstance(second, str) else set(second)
+    return sorted({t for t in a if _covered(t, b)} | {t for t in b if _covered(t, a)})
+
+
+def _expand(registry: Registry, node: dict, base: str, seen: Optional[Set[Tuple[str, str]]] = None
+            ) -> Tuple[dict, str, Optional[Tuple[str, str]], str, List[Tuple[str, str, str]]]:
+    """Resolve ``$ref`` chains: the merged body, the owner of its children, the final target ``(owner, ref)``,
+    a fingerprint of the keywords written next to the references and the keywords that could not be merged.
+
+    A validator applies the target and the keywords next to the ``$ref`` together, so the merge keeps the
+    stricter bound, joins ``required``, intersects ``type`` and ``enum``; any other keyword set on both sides
+    with different values is returned as a conflict.
     """
     ref = node.get("$ref")
     if ref is None:
-        return node, base, None
+        return node, base, None, "", []
     target, owner = registry.resolve(ref, base)
     key = (owner, ref.partition("#")[2])
     seen = set() if seen is None else seen
     if key in seen:
         raise RefError(f"$ref {ref!r} refers to itself")
     seen.add(key)
-    body, owner, final = _expand(registry, target, owner, seen)
+    body, owner, final, extra, conflicts = _expand(registry, target, owner, seen)
     merged = dict(body)
-    merged.update((k, v) for k, v in node.items() if k != "$ref")
-    return merged, owner, final or key
+    siblings = {k: v for k, v in node.items() if k != "$ref"}
+    for keyword, value in siblings.items():
+        if keyword not in body or _is_annotation(keyword) or _equal(body[keyword], value):
+            merged[keyword] = value
+        elif keyword in _LOWER_BOUNDS:
+            merged[keyword] = max(body[keyword], value)
+        elif keyword in _UPPER_BOUNDS:
+            merged[keyword] = min(body[keyword], value)
+        elif keyword == "required":
+            merged[keyword] = list(dict.fromkeys(list(body[keyword]) + list(value)))
+        elif keyword == "uniqueItems":
+            merged[keyword] = bool(body[keyword] or value)
+        elif keyword == "type" and _merge_types(body[keyword], value):
+            merged[keyword] = _merge_types(body[keyword], value)
+        elif keyword == "enum":
+            merged[keyword] = [item for item in body[keyword] if _contains(value, item)]
+        else:  # not mergeable (or an empty type intersection): remember both values, the sibling is kept
+            conflicts = conflicts + [(keyword, _show(body[keyword]), _show(value))]
+            merged[keyword] = value
+    fingerprint = extra + json.dumps({k: v for k, v in siblings.items() if not _is_annotation(k)},
+                                     sort_keys=True, default=str)
+    return merged, owner, final or key, fingerprint, conflicts
 
 
 def _types(node: dict) -> Optional[Set[str]]:

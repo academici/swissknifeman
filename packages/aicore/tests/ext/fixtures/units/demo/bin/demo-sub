@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""Append stdin to the file named by DEMO_SUB_OUT (when set) and print nothing."""
+import os
+import sys
+
+data = sys.stdin.read()
+target = os.environ.get("DEMO_SUB_OUT")
+if target:
+    with open(target, "a", encoding="utf-8") as handle:
+        handle.write(data if data.endswith("\n") else data + "\n")

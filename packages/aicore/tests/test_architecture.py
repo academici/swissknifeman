@@ -246,6 +246,17 @@ class TestImportBoundary(unittest.TestCase):
         self.assertEqual(offenders, [])
         self.assertTrue(seen, "ext/process.py no longer spawns with subprocess.Popen")
 
+    def test_only_journal_writes_the_journal(self):
+        """The name of the project event journal appears in ``ext/journal.py`` only (it is the one writer).
+        ``provider/request_lifecycle.py`` keeps its own per-request ``events.jsonl`` in another directory."""
+        own_file = {"provider/request_lifecycle.py"}
+        offenders = [path.relative_to(LIB).as_posix() for path in sorted(LIB.rglob("*.py"))
+                     if "events.jsonl" in path.read_text(encoding="utf-8")
+                     and path.relative_to(LIB).as_posix() not in own_file | {"ext/journal.py"}]
+        self.assertEqual(offenders, [])
+        self.assertIn("events.jsonl", (LIB / "ext" / "journal.py").read_text(encoding="utf-8"))
+        self.assertIn("events.jsonl", (LIB / "provider" / "request_lifecycle.py").read_text(encoding="utf-8"))
+
     def test_schema_validator_is_defined_once(self):
         defining = [path.relative_to(ROOT).as_posix() for path in sorted(LIB.rglob("*.py"))
                     if "def load_registry" in path.read_text(encoding="utf-8")]

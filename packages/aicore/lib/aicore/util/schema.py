@@ -268,6 +268,8 @@ def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -
             outside = sorted(set(value) - _PROPERTY_NAME_KEYWORDS)
             if outside:
                 fail(f"propertyNames may only use {sorted(_PROPERTY_NAME_KEYWORDS)}, got {outside}")
+            if value.get("type", "string") != "string":
+                fail("propertyNames type must be \"string\": names are strings")
         elif keyword == "items":
             _check_profile(value, where, f"{pointer}/items")
         elif keyword == "oneOf":

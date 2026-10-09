@@ -33,7 +33,8 @@ def changes(old_body, new_body):
     new, new_id = registry(doc(new_body))
     found = compare(old, old_id, new, new_id)
     for change in found:
-        assert change.breaking is RULES[change.rule], change
+        if change.rule != "pattern-property-added":  # its grade depends on the schemas (see the tests)
+            assert change.breaking is RULES[change.rule], change
     return found
 
 
@@ -72,21 +73,21 @@ class TestRules(unittest.TestCase):
         "bound-relaxed": ({"minLength": 2}, {"minLength": 1}),
         "additional-closed": (OPEN, CLOSED),
         "pattern-property-removed": ({"patternProperties": {"^a": STR}}, {}),
-        "pattern-property-added": ({}, {"patternProperties": {"^a": STR}}),
+        "pattern-property-added": (CLOSED, {"type": "object", "patternProperties": {"^a": STR}}),
         "property-names-changed": ({}, {"propertyNames": {"pattern": "^[a-z]+$"}}),
         "unique-added": ({"type": "array"}, {"type": "array", "uniqueItems": True}),
         "oneof-changed": ({"oneOf": [STR, INT]}, {"oneOf": [STR]}),
     }
 
     def test_every_rule_has_a_case(self):
-        self.assertEqual(set(RULES), set(self.CASES) | {"ref-changed"})
+        self.assertEqual(set(RULES), set(self.CASES) | {"ref-changed", "ref-sibling-conflict"})
 
     def test_each_rule_fires_alone_with_its_breaking_flag(self):
         for rule, (old, new) in self.CASES.items():
             with self.subTest(rule=rule):
                 found = changes(old, new)
                 self.assertEqual([rule], [change.rule for change in found], found)
-                self.assertIs(RULES[rule], found[0].breaking)
+                self.assertIs(RULES[rule], found[0].breaking)  # a harmless pattern-property-added is False
 
     def test_identical_schemas_and_annotations_are_not_changes(self):
         base = obj({"a": dict(STR, minLength=1)}, ["a"])
@@ -149,6 +150,8 @@ class TestRules(unittest.TestCase):
         self.assertEqual(["type-changed"], rules(old, new))
         self.assertEqual(["pattern-property-added", "pattern-property-removed"],
                          rules(old, {"patternProperties": {"^b": STR}}))
+        graded = {c.rule: c.breaking for c in changes(old, {"patternProperties": {"^b": STR}})}
+        self.assertTrue(graded["pattern-property-added"])  # the old object was open: ^b could meet any name
 
     def test_property_names_removed_or_equal_is_not_reported(self):
         names = {"propertyNames": {"pattern": "^a"}}
@@ -183,6 +186,98 @@ class TestRules(unittest.TestCase):
         found = changes(old, new)
         self.assertEqual([("/properties/a/properties/b/items", "required-removed")],
                          [(c.path, c.rule) for c in found])
+
+
+class TestPatternPropertySoundness(unittest.TestCase):
+    """A document valid by the old schema must stay valid when no breaking change is reported."""
+
+    def breaking(self, old, new):
+        return [c.rule for c in changes(old, new) if c.breaking]
+
+    def test_a_pattern_that_also_matches_a_kept_property_is_breaking(self):
+        old = obj({"id": STR})
+        new = obj({"id": STR}, patternProperties={"^[a-z]+$": INT})
+        self.assertEqual(["pattern-property-added"], self.breaking(old, new))
+
+    def test_a_removed_property_covered_by_a_narrower_pattern_is_breaking(self):
+        old = obj({"a": STR})
+        new = obj({}, patternProperties={"^a$": INT})
+        self.assertIn("type-changed", self.breaking(old, new))
+
+    def test_a_removed_property_covered_by_an_equal_pattern_is_compatible(self):
+        old = obj({"a": STR})
+        new = obj({}, patternProperties={"^a": STR})
+        self.assertEqual([], self.breaking(old, new))
+
+    def test_a_pattern_added_to_an_open_object_is_breaking(self):
+        self.assertEqual(["pattern-property-added"],
+                         self.breaking(OPEN, {"type": "object", "patternProperties": {"^ab": {"minLength": 5}}}))
+
+    def test_a_pattern_added_to_a_closed_object_with_other_names_is_compatible(self):
+        self.assertEqual([], self.breaking(obj({"a": STR}), obj({"a": STR}, patternProperties={"^z": STR})))
+
+    def test_a_pattern_added_next_to_an_old_pattern_is_breaking(self):
+        old = obj({}, patternProperties={"^a": STR})
+        self.assertEqual(["pattern-property-added"],
+                         self.breaking(old, obj({}, patternProperties={"^a": STR, "^ab": INT})))
+
+    def test_a_property_added_under_an_old_pattern_is_compared_with_it(self):
+        old = obj({}, patternProperties={"^a": STR})
+        self.assertEqual(["type-changed"], self.breaking(old, obj({"ab": INT}, patternProperties={"^a": STR})))
+        self.assertEqual([], self.breaking(old, obj({"ab": STR}, patternProperties={"^a": STR})))
+
+
+class TestRefSiblings(unittest.TestCase):
+    def compare(self, old_defs, old_root, new_defs, new_root):
+        old, old_id = registry(doc(dict(old_root, **{"$defs": old_defs})))
+        new, new_id = registry(doc(dict(new_root, **{"$defs": new_defs})))
+        return compare(old, old_id, new, new_id)
+
+    def test_a_tightened_sibling_on_a_later_use_of_the_same_target_is_found(self):
+        defs = {"s": STR}
+        old_root = obj({"x": {"$ref": "#/$defs/s"}, "y": {"$ref": "#/$defs/s", "minLength": 1}})
+        new_root = obj({"x": {"$ref": "#/$defs/s"}, "y": {"$ref": "#/$defs/s", "minLength": 5}})
+        found = self.compare(defs, old_root, defs, new_root)
+        self.assertEqual([("/properties/y", "bound-tightened", True)], [(c.path, c.rule, c.breaking) for c in found])
+
+    def test_a_looser_sibling_does_not_relax_a_stricter_target(self):
+        old = {"s": dict(STR, minLength=5)}
+        new = {"s": dict(STR, minLength=100)}
+        root = {"$ref": "#/$defs/s"}
+        sibling = {"$ref": "#/$defs/s", "minLength": 0}
+        found = self.compare(old, root, new, sibling)
+        self.assertEqual(["bound-tightened"], [c.rule for c in found])
+        self.assertTrue(found[0].breaking)
+
+    def test_siblings_that_cannot_be_merged_are_reported(self):
+        old = {"s": {"type": "string", "pattern": "^a"}}
+        new = {"s": {"type": "string", "pattern": "^a"}}
+        found = self.compare(old, {"$ref": "#/$defs/s"}, new, {"$ref": "#/$defs/s", "pattern": "^b"})
+        rules_found = sorted(c.rule for c in found)
+        self.assertIn("ref-sibling-conflict", rules_found)
+        self.assertTrue(all(c.breaking for c in found if c.rule == "ref-sibling-conflict"))
+
+    def test_a_conflict_present_in_both_versions_still_reports_a_changed_target(self):
+        """The sibling keyword replaces nothing: target and sibling both apply, so a tighter target breaks."""
+        sibling = {"$ref": "#/$defs/s", "properties": {"a": STR}}
+        old = {"s": {"type": "object", "properties": {"a": dict(STR, minLength=1)}}}
+        new = {"s": {"type": "object", "properties": {"a": dict(STR, minLength=5)}}}
+        found = self.compare(old, sibling, new, sibling)
+        self.assertEqual(["ref-sibling-conflict"], [c.rule for c in found])
+        self.assertTrue(found[0].breaking)
+        self.assertEqual([], self.compare(old, sibling, old, sibling))
+
+    def test_an_empty_type_intersection_is_a_conflict_not_a_fallback(self):
+        sibling = {"$ref": "#/$defs/s", "type": "integer"}
+        old = {"s": {"type": ["string", "integer"]}}
+        new = {"s": {"type": "string"}}
+        found = self.compare(old, sibling, new, sibling)
+        self.assertIn("ref-sibling-conflict", [c.rule for c in found if c.breaking])
+
+    def test_required_and_type_next_to_a_ref_are_merged(self):
+        defs = {"s": obj({"a": STR, "b": STR}, ["a"])}
+        found = self.compare(defs, {"$ref": "#/$defs/s"}, defs, {"$ref": "#/$defs/s", "required": ["b"]})
+        self.assertEqual(["required-added"], [c.rule for c in found])
 
 
 class TestRefs(unittest.TestCase):

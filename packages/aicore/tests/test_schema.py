@@ -163,7 +163,8 @@ class TestPatternProperties(SchemaCase):
                 ({"patternProperties": []}, "patternProperties must be an object"),
                 ({"patternProperties": {"^a$": 1}}, "schema node must be an object"),
                 ({"propertyNames": {"format": "email"}}, "unsupported keyword 'format'"),
-                ({"propertyNames": {"properties": {}}}, "propertyNames may only use")):
+                ({"propertyNames": {"properties": {}}}, "propertyNames may only use"),
+                ({"propertyNames": {"type": "integer"}}, "propertyNames type must be")):
             with self.subTest(body=body):
                 schema.clear_registry_cache()
                 write_schema(self.dir, "bad", body)

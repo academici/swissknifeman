@@ -5,10 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 ## [Unreleased]
 
 ### Fixed
+- **`aicore schema compat` soundness:** a new `patternProperties` entry is graded breaking unless the old object was closed,
+  had no patterns and no kept property can meet the pattern; properties covered by a pattern are compared with the pattern's
+  schema; a `$ref` target used again with different sibling keywords is compared again; keywords next to a `$ref` are
+  merged with the target as a validator applies them, and a changed overlap that cannot be merged is the breaking rule
+  `ref-sibling-conflict`.
+- **Config maps:** a map pattern that can consume a `.` (an escaped dot, a class with a dot, `\S`, a conditional) is refused,
+  because such an entry name cannot be reached through dotted keys; a `propertyNames` schema must have `type` `string`.
 - **Managed skill copies:** normalize a final `..` before checking containment, reject replacing the destination
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **Events:** `aicore.ext.events` (`Event`, `build_event`, `emit`, `read_events`; `data` is limited to 65536 bytes of canonical
+  JSON, a `Secret` in `data` is refused without printing it; `emit` raises only for a wrong call and otherwise warns and
+  returns `None` unless `strict=True`) over `aicore.ext.journal`, the only writer of the append-only project journal
+  (one `os.write` per event under an `flock`, `fsync`, a torn tail becomes a broken line of its own, readers see only
+  complete lines of a size snapshot). Delivery to subscribers comes later: until then `emit` only journals.
+- **`aicore.ext.settings`** (the `[aicore]` config section: delivery, subscriptions, plugins, overlays with the layer of each
+  file) and **`aicore.ext.units`** (events, subscriptions, overlay slots and extension points declared in `unit.json`).
+- **`aicore events emit|list`** (`--json`, `--project`, `--strict-type`): emulate and read events.
 - **`aicore.ext.process.run_json`**: runs a one-shot child with one JSON object on stdin and exactly one on stdout. A
   new session per child, one read/write deadline shared by all pipes (no `communicate()`), SIGTERM, a grace period and
   SIGKILL to the whole process group on timeout, a final SIGKILL to the group after the child exits, a 1 MiB stdout

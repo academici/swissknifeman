@@ -245,6 +245,80 @@ def _is_object(node: Dict[str, Any]) -> bool:
     return node.get("type") == "object" or "properties" in node or "patternProperties" in node
 
 
+def _can_match_dot(pattern: str) -> bool:
+    """True when ``pattern`` can consume a ``.``: a dotted entry name would be unreachable through dotted keys.
+
+    The pattern is parsed and its consuming parts are checked (a literal dot, ``.``, a class that holds a dot,
+    a negated class or ``\\W``-like category); look-around assertions consume nothing and are skipped.
+    """
+    try:
+        from re import _parser as sre_parse  # Python 3.11+
+        from re import _constants as sre_constants
+    except ImportError:  # Python 3.9, 3.10
+        import sre_constants  # type: ignore[no-redef]
+        import sre_parse  # type: ignore[no-redef]
+    dot = ord(".")
+    repeats = tuple(getattr(sre_constants, name) for name in ("MAX_REPEAT", "MIN_REPEAT", "POSSESSIVE_REPEAT")
+                    if hasattr(sre_constants, name))
+
+    def class_has_dot(items) -> bool:
+        negated = bool(items) and items[0][0] == sre_constants.NEGATE
+        found = False
+        for op, arg in items:
+            if op == sre_constants.LITERAL and arg == dot:
+                found = True
+            elif op == sre_constants.RANGE and arg[0] <= dot <= arg[1]:
+                found = True
+            elif op == sre_constants.CATEGORY and arg in (sre_constants.CATEGORY_NOT_DIGIT,
+                                                          sre_constants.CATEGORY_NOT_WORD,
+                                                          sre_constants.CATEGORY_NOT_SPACE):
+                found = True
+        return found != negated
+
+    def walk(items) -> bool:
+        for op, arg in items:
+            if op in (sre_constants.ASSERT, sre_constants.ASSERT_NOT):
+                continue
+            if op == sre_constants.LITERAL:
+                if arg == dot:
+                    return True
+            elif op == sre_constants.NOT_LITERAL:
+                if arg != dot:
+                    return True
+            elif op == sre_constants.ANY:
+                return True
+            elif op == sre_constants.IN:
+                if class_has_dot(arg):
+                    return True
+            elif op == sre_constants.CATEGORY:
+                if arg in (sre_constants.CATEGORY_NOT_DIGIT, sre_constants.CATEGORY_NOT_WORD,
+                           sre_constants.CATEGORY_NOT_SPACE):
+                    return True
+            elif op == sre_constants.SUBPATTERN:
+                if walk(arg[-1]):
+                    return True
+            elif op in repeats:
+                if walk(arg[2]):
+                    return True
+            elif op == sre_constants.BRANCH:
+                if any(walk(branch) for branch in arg[1]):
+                    return True
+            elif op == getattr(sre_constants, "ATOMIC_GROUP", None):
+                if walk(arg):
+                    return True
+            elif op == sre_constants.GROUPREF_EXISTS:  # (?(1)yes|no)
+                if walk(arg[1]) or (arg[2] is not None and walk(arg[2])):
+                    return True
+            elif op not in (sre_constants.AT, sre_constants.GROUPREF):
+                return True  # an operation this walk does not know: assume it can consume a dot
+        return False
+
+    try:
+        return walk(sre_parse.parse(pattern))
+    except Exception:  # noqa: BLE001  (an unparsable pattern is refused by the validator profile anyway)
+        return True
+
+
 def _make_map(node: Dict[str, Any], key: Key, source: str) -> MapSpec:
     """Check a dictionary table: one anchored pattern, entries that are a leaf or a table of leaves."""
     extra = set(node) - _MAP_KEYWORDS
@@ -262,7 +336,7 @@ def _make_map(node: Dict[str, Any], key: Key, source: str) -> MapSpec:
     if not (pattern.startswith("^") and pattern.endswith("$") and not pattern.endswith("\\$")):
         raise _invalid(source, f"the pattern {pattern!r} of a map must be anchored with ^ and $", key)
     regex = _schema._compile(pattern)  # noqa: SLF001  (the validator's own dialect)
-    if regex.search("a.b") is not None:
+    if regex.search("a.b") is not None or _can_match_dot(pattern):
         raise _invalid(source, f"map keys cannot contain dots, but the pattern {pattern!r} allows them", key)
     entry_key = key + (ENTRY,)
     if not _is_object(value):

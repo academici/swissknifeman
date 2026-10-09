@@ -119,6 +119,17 @@ class TestSchema(unittest.TestCase):
             with self.assertRaisesRegex(config.ConfigError, "map keys cannot contain dots"):
                 config.load_module_schema(schema_with({"things": a_map("^[a-z.]+$")}, Path(tmp)), "maps")
 
+    def test_patterns_that_can_consume_a_dot_are_refused(self):
+        """Not only a pattern that matches 'a.b': an escaped dot or a class with a dot are unreachable by dotted keys."""
+        for pattern in (r"^x\.y$", r"^(?!a\.b$)[a-z.]+$", r"^.+$", r"^[^a]+$", r"^\S+$", r"^\W+$", r"^(a|b\.)c$",
+                        r"^(a)?(?(1)\.|x)$"):
+            with self.subTest(pattern=pattern), tempfile.TemporaryDirectory() as tmp:
+                with self.assertRaisesRegex(config.ConfigError, "map keys cannot contain dots"):
+                    config.load_module_schema(schema_with({"things": a_map(pattern)}, Path(tmp)), "maps")
+        for pattern in (r"^(?!a\.b$)[a-z]+$", r"^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)?$", r"^[a-z]{1,3}$"):
+            with self.subTest(pattern=pattern), tempfile.TemporaryDirectory() as tmp:
+                config.load_module_schema(schema_with({"things": a_map(pattern)}, Path(tmp)), "maps")
+
     def test_template_defaults_are_checked(self):
         leaf = {"type": "integer", "minimum": 1, "default": 0, "description": "n"}
         with tempfile.TemporaryDirectory() as tmp:

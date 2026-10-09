@@ -10,6 +10,12 @@
 
 ### Added
 
+- **skiller:** host-provided buckets and module skill sources. A bucket marked `"provided_by": "host"` in
+  `buckets.json` has no catalog; the host config key `bucket_aliases` maps it to host plugins, and skiller reads their
+  skills from the plugin directories the host names (`plugin_dirs`). `connect` expands the bucket into those plugins and
+  replaces the old `<bucket>@<marketplace>` key (merge-only, an explicit `false` is respected); `vendor` and `sync` copy
+  the module skills with `requires` and `exclude` by name; `budget`, `status`, `doctor`, `registry` and `validate`
+  understand the bucket. Without a host the bucket is empty and skiller only warns.
 - **brain:** the new module `packages/brain` (Obsidian vault): `brain vault|project|docs|note|doctor|version`, the
   `[brain]` configuration table, document sync moved from `skiller` (called by `skiller integrate` through a host
   command), the plugin `brain` with the skill `brain-locator`, module instructions, and the subscriber

@@ -15,7 +15,8 @@ from aicore.util.cli import parse_flags
 from aicore.util.io import atomic_write_json
 from aicore.util.paths import is_within
 from aicore.util.term import warn
-from .host import host_command
+from .host import host_command, load_host
+from .module_skills import check_collisions, host_bucket_plugins
 from .state import registry_git_state
 
 
@@ -1019,6 +1020,23 @@ def cmd_doctor(env, argv):
             bad.append(p.name)
     check(profiles and not bad, f"profiles are loading ({len(profiles)})",
           f"broken: {', '.join(bad)}")
+
+    # Buckets the library leaves to the host (`provided_by: host`): which plugins stand behind
+    # them here, and that no library catalog or plugin takes the same name.
+    host_buckets = host_bucket_plugins(env)
+    if host_buckets:
+        aliases = load_host(root).bucket_aliases
+        for bucket, plugins in host_buckets.items():
+            behind = ", ".join(plugins) if plugins else "(no host modules here)"
+            print(f"  [ok ] host buckets: {bucket} -> {behind}")
+            for plugin in aliases.get(bucket, ()):
+                if plugin not in plugins:
+                    print(f"  [warn] host bucket '{bucket}': plugin '{plugin}' not found")
+    try:
+        check_collisions(env)
+    except SystemExit:
+        check(False, "bucket names do not clash with host module plugins",
+              "rename the library bucket or the plugin")
 
     # Host environment command (environment Claude Code — permissions/MCP/hooks) —
     # OPTIONAL dependency: apply_permissions/_run_environment graceful-skip if it's not

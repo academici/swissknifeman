@@ -19,6 +19,7 @@ from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fi
 from aicore.delivery.materialize import AGENT_DEFAULTS
 from aicore.util.term import confirm, die, warn
 from .host import load_host
+from .module_skills import host_provided_buckets, module_skill_sources
 
 # CORE-distribution policy: token-saving skills that swissknifeman puts in
 # EVERY project by default (see deep_analysis §5–§6). Channels of different granularities:
@@ -321,8 +322,20 @@ def load_profile(env, name):
     return json.loads(f.read_text(encoding="utf-8"))
 
 
-def all_buckets(env):
+def library_buckets(env):
+    """Buckets that have a catalog under `skills/` (not the ones the host provides)."""
     return sorted(d.name for d in (env.root / "skills").iterdir() if d.is_dir())
+
+
+def all_buckets(env):
+    """Selectable bucket names: library catalogs plus the buckets the host provides."""
+    return sorted({*library_buckets(env), *host_provided_buckets(env)})
+
+
+def selectable_buckets(env):
+    """Names accepted as a bucket by vendor, sync and budget: every bucket plus the host
+    module plugins (a plugin name selects exactly that plugin's skills)."""
+    return sorted({*all_buckets(env), *module_skill_sources(env)})
 
 
 def _expand_presets_buckets(env, config):

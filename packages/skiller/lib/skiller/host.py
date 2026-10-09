@@ -28,8 +28,8 @@ SCHEMA_VERSION = 1
 # Closed key sets per object; "" is the document root. test_host keeps them equal to
 # the published schema (properties / required) — change both together.
 OBJECT_KEYS = {
-    "": ("schema_version", "plugin_dirs", "default_command_plugins", "version_files",
-         "machine_plugins", "runtime_projection_plugins", "codex_link_roots",
+    "": ("schema_version", "plugin_dirs", "bucket_aliases", "default_command_plugins",
+         "version_files", "machine_plugins", "runtime_projection_plugins", "codex_link_roots",
          "legacy_runtime_links", "commands", "mcp_servers", "bootstrap"),
     "version_files": ("path", "key"),
     "machine_plugins": ("name", "path", "holds"),
@@ -92,6 +92,7 @@ class Host:
     root: Path | None = None
     source: Path | None = None
     plugin_dirs: tuple[str, ...] = ()
+    bucket_aliases: MappingProxyType = field(default_factory=_empty_mapping)
     default_command_plugins: tuple[str, ...] = ()
     version_files: tuple[VersionFile, ...] = ()
     machine_plugins: MappingProxyType = field(default_factory=_empty_mapping)
@@ -206,6 +207,16 @@ def parse_host(data, root, source=None):
     for key in ("default_command_plugins", "runtime_projection_plugins"):
         if key in data:
             fields[key] = _names(data, key)
+    if "bucket_aliases" in data:
+        aliases = {}
+        for bucket, plugins in _mapping(data["bucket_aliases"], "bucket_aliases").items():
+            where = f"bucket_aliases.{bucket}"
+            names = tuple(_name(item, f"{where}[{i}]")
+                          for i, item in enumerate(_list(plugins, where)))
+            if not names or len(set(names)) != len(names):
+                _invalid(where)
+            aliases[bucket] = names
+        fields["bucket_aliases"] = MappingProxyType(aliases)
     if "version_files" in data:
         rows = []
         for i, item in enumerate(_list(data["version_files"], "version_files")):

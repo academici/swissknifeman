@@ -648,6 +648,17 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                           f"without its own anchor, the verdict cannot go rotten "
                           f"(update-upstreams.sh: AUDIT_STALE)")
 
+# Buckets the library leaves to the host (`"provided_by": "host"` in buckets.json): no catalog
+# under skills/, profiles and presets may still name them.
+HOST_BUCKETS = set()
+try:
+    _bucket_json = json.loads((root / "buckets.json").read_text(encoding="utf-8"))
+    if isinstance(_bucket_json, dict):
+        HOST_BUCKETS = {name for name, meta in _bucket_json.items()
+                        if isinstance(meta, dict) and meta.get("provided_by") == "host"}
+except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+    pass  # reported by the buckets.json section below
+
 # --- 3. profiles/*.json ---------------------------------------------------
 # Taxonomy Canon - aicore.util.project.PROJECT_TYPES; here is a self-contained take
 # (the heredoc does not import the package on purpose; hold in sync with
@@ -692,7 +703,7 @@ if profiles_dir.is_dir():
             errors.append(f"{rel}: buckets must be a non-empty array")
         elif buckets != ["*"]:
             for b in buckets:
-                if not (root / "skills" / b).is_dir():
+                if not (root / "skills" / b).is_dir() and b not in HOST_BUCKETS:
                     errors.append(f"{rel}: unknown bucket: {b}")
         # --- extended options keys: agent_pack/presets/mcp/hooks/model_tiers ---
         pack = data.get("agent_pack")
@@ -888,7 +899,12 @@ else:
         # Alias-bucket (P7.5, merging buckets - mechanism without application, D14): metadata-
         # entry WITHOUT skills/<bucket>, `alias_of` points to the target bucket. Not orphan.
         is_alias = isinstance(meta, dict) and meta.get("alias_of")
-        if b not in bucket_dirs and not is_alias:
+        provided_by = meta.get("provided_by") if isinstance(meta, dict) else None
+        if provided_by is not None and provided_by != "host":
+            errors.append(f"buckets.json: {b}: provided_by must be \"host\"")
+        if provided_by == "host" and b in bucket_dirs:
+            errors.append(f"buckets.json: {b}: provided by the host, but skills/{b}/ exists")
+        if b not in bucket_dirs and not is_alias and provided_by != "host":
             errors.append(f"buckets.json: entry without skills/ dir: {b}")
         if is_alias and meta["alias_of"] not in bucket_dirs:
             errors.append(f"buckets.json: {b}: alias_of points to a non-existent "
@@ -937,7 +953,7 @@ if presets_dir.is_dir():
                 errors.append(f"{rel}: extends unknown preset '{parent}'")
         preset_extends[pf.stem] = [e for e in ext if e in preset_names]
         for b in data.get("buckets", []) or []:
-            if b not in bucket_dirs:
+            if b not in bucket_dirs and b not in HOST_BUCKETS:
                 errors.append(f"{rel}: unknown bucket '{b}'")
         for tok in data.get("include", []) or []:
             if tok not in skill_names and tok not in skill_paths:

@@ -14,20 +14,40 @@ from aicore.util.cli import parse_flags
 from aicore.util.paths import is_within, is_within_lexical
 from aicore.util.term import die, warn
 from aicore.util.text import sanitize
-from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples, known_command_plugins,
-                     load_config, resolve_selection, resolve_target)
+from .config import (DEFAULT_EXCLUDE, core_skill_tuples, known_command_plugins,
+                     library_buckets, load_config, resolve_selection, resolve_target,
+                     selectable_buckets)
 from .hub import generate_hub, hub_artifacts_exist
+from .module_skills import (expand_bucket, host_bucket_owners, host_provided_buckets,
+                            module_skills, source_relpath)
 from .state import upsert_project
 
 
 def collect_skills(env, buckets, exclude):
     """List (bucket, rel, dir, fm_name) skills of the selected buckets minus
     exclude, plus map all_skill_rels (bucket -> [rel-paths of all skills]).
-    Skill - a directory directly containing SKILL.md."""
+    Skill - a directory directly containing SKILL.md. A host-provided bucket (or a host
+    module plugin) contributes the skills of its plugins, with the plugin name as bucket."""
     root = env.root
     skills = []
     all_skill_rels = {}
+    provided = host_provided_buckets(env)
+    owners = host_bucket_owners(env)
+    seen_module = set()
     for bucket in buckets:
+        plugins = expand_bucket(env, bucket)
+        if plugins or bucket in provided:
+            for item in module_skills(env, plugins):
+                if item.key in seen_module:
+                    continue
+                seen_module.add(item.key)
+                all_skill_rels.setdefault(item.plugin, []).append(item.rel)
+                ids = {item.name, item.skill_dir.name, item.key, f"{bucket}/{item.rel}"}
+                ids.update(f"{owner}/{item.rel}" for owner in owners.get(item.plugin, ()))
+                if ids & exclude:
+                    continue
+                skills.append((item.plugin, item.rel, item.skill_dir, item.name))
+            continue
         bucket_dir = root / "skills" / bucket
         for skill_md in sorted(bucket_dir.rglob("SKILL.md")):
             d = skill_md.parent
@@ -42,10 +62,11 @@ def collect_skills(env, buckets, exclude):
 
 
 def build_requires_index(env):
-    """fm_name (or directory name) -> (bucket, rel, dir, requires) for all buckets."""
+    """fm_name (or directory name) -> (bucket, rel, dir, requires) for all buckets, then the
+    skills of every host module plugin (the library wins a name clash, with a warning)."""
     root = env.root
     index = {}
-    for bucket in all_buckets(env):
+    for bucket in library_buckets(env):
         bucket_dir = root / "skills" / bucket
         for skill_md in sorted(bucket_dir.rglob("SKILL.md")):
             d = skill_md.parent
@@ -53,10 +74,18 @@ def build_requires_index(env):
             index.setdefault(fields["name"] or d.name,
                              (bucket, str(d.relative_to(bucket_dir)), d,
                               fields["requires"]))
+    library_names = set(index)
+    for item in module_skills(env):
+        if item.name in library_names:
+            warn(f"skill name '{item.name}' exists in the library and in host plugin "
+                 f"'{item.plugin}'; the library copy is used")
+            continue
+        index.setdefault(item.name, (item.plugin, item.rel, item.skill_dir,
+                                     list(item.requires)))
     return index
 
 
-def resolve_requires(skills, index, exclude, *, diagnostics=None):
+def resolve_requires(skills, index, exclude, *, diagnostics=None, owners=None):
     """Transitively hold out `requires`. Mutates skills, returns pulled
     (dep -> requester). --exclude beats addiction (with warning). BFS — shared with
     skillset._pull_requires via common.resolve_requires_bfs (V-1: before two
@@ -70,6 +99,8 @@ def resolve_requires(skills, index, exclude, *, diagnostics=None):
             return None
         bucket, rel, d, dep_requires = index[dep]
         tokens = {dep, d.name, f"{bucket}/{rel}".replace("\\", "/")}
+        for host_bucket in (owners or {}).get(bucket, ()):
+            tokens.update({host_bucket, f"{host_bucket}/{rel}"})
         return {"key": dep, "requires": dep_requires, "exclude_tokens": tokens,
                 "_payload": (bucket, rel, d, dep)}
 
@@ -127,7 +158,7 @@ def do_vendor(env, target, opts, register=True):
     if profile_source == "items":
         profile_source = "buckets"
 
-    known = all_buckets(env)
+    known = selectable_buckets(env)
     for b in buckets:
         if b not in known and b not in known_command_plugins():
             die(f"unknown bucket: {b}")
@@ -178,7 +209,7 @@ def do_vendor(env, target, opts, register=True):
     # skill keeps its own bucket path in bucket layout. --exclude wins over a
     # dependency (exclude is safety-oriented) — skipped with a warning.
     index = build_requires_index(env)
-    pulled = resolve_requires(skills, index, exclude)
+    pulled = resolve_requires(skills, index, exclude, owners=host_bucket_owners(env))
 
     # --- report / list -------------------------------------------------------------
     print(f"Target:      {target}")
@@ -214,7 +245,7 @@ def do_vendor(env, target, opts, register=True):
         (containment-stop/TOCTOU-race, already warn'is located inside safe_copy_skill) —
         the caller should NOT put it in installed/manifest (V-2)."""
         if dry_run:
-            print(f"[dry-run] {src.relative_to(root)} -> {dst}")
+            print(f"[dry-run] {source_relpath(env, src)} -> {dst}")
             return True
         # Unified secure copy (containment + removal symlink/file/directory + TOCTOU-
         # recheck + SKILL_IGNORE) — shared with skillset.sync, so that security details are not
@@ -279,7 +310,7 @@ def do_vendor(env, target, opts, register=True):
         for i, (_bucket, _rel, d, _fm_name) in enumerate(skills):
             if copy_skill(d, dest_root / flats[i]):
                 installed.append({"flat_name": flats[i],
-                                  "source_path": str(d.relative_to(root))})
+                                  "source_path": source_relpath(env, d)})
             else:
                 skip_copy.append(flats[i])
         if not dry_run:
@@ -338,7 +369,7 @@ def do_vendor(env, target, opts, register=True):
         installed = []
         for _bucket, _rel, d, path in planned:
             if copy_skill(d, dest_root / path):
-                installed.append({"path": path, "source_path": str(d.relative_to(root))})
+                installed.append({"path": path, "source_path": source_relpath(env, d)})
             else:
                 skip_copy.append(path)
         support_rels = []

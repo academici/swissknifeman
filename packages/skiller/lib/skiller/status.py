@@ -15,6 +15,8 @@ from aicore.util.cli import parse_flags
 from aicore.util.io import atomic_write_json
 from aicore.util.term import die
 from .config import ProjectConfig, find_project_root, load_config, resolve_selection
+from .module_skills import (expand_bucket, host_provided_buckets, module_skills,
+                            source_exists, source_plugin_of)
 from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
@@ -30,10 +32,16 @@ def _bucket_of(source_path):
     return parts[1] if len(parts) >= 2 and parts[0] == "skills" else None
 
 
-def channel_overlap(enabled, vendored_buckets):
+def channel_overlap(enabled, vendored_buckets, env=None):
     """Buckets active AT THE SAME TIME as a plugin (connect) and vendor (vendor) —
-    skills of such a bucket are distributed twice. Returns a sorted list."""
-    return sorted(set(enabled) & set(vendored_buckets))
+    skills of such a bucket are distributed twice. Returns a sorted list. With `env`, a host
+    bucket on either side stands for the module plugins behind it."""
+    enabled, vendored_buckets = set(enabled), set(vendored_buckets)
+    if env is not None and host_provided_buckets(env):
+        for names in (enabled, vendored_buckets):
+            for name in sorted(names & host_provided_buckets(env)):
+                names.update(expand_bucket(env, name))
+    return sorted(enabled & vendored_buckets)
 
 
 def detect_raw_vendor_path(target, config):
@@ -91,15 +99,17 @@ def registry_skill_names(env):
     today donor bucket (P3.5 delta b)."""
     names = {}
     skills_root = env.root / "skills"
-    if not skills_root.is_dir():
-        return names
-    for bucket_dir in sorted(skills_root.iterdir()):
-        if not bucket_dir.is_dir():
-            continue
-        for md in sorted(bucket_dir.rglob("SKILL.md")):
-            fm = parse_frontmatter(md)
-            name = fm.get("name") or md.parent.name
-            names.setdefault(name, []).append(bucket_dir.name)
+    if skills_root.is_dir():
+        for bucket_dir in sorted(skills_root.iterdir()):
+            if not bucket_dir.is_dir():
+                continue
+            for md in sorted(bucket_dir.rglob("SKILL.md")):
+                fm = parse_frontmatter(md)
+                name = fm.get("name") or md.parent.name
+                names.setdefault(name, []).append(bucket_dir.name)
+    # Skills of host module plugins count as registry skills too (their bucket is the plugin).
+    for item in module_skills(env):
+        names.setdefault(item.name, []).append(item.plugin)
     return names
 
 
@@ -249,6 +259,10 @@ def cmd_status(env, argv):
             resolve_selection(env, target, config, "", [])
         if include_meta and "generate-skill" not in plugins:
             plugins = list(plugins) + ["generate-skill"]
+        provided = host_provided_buckets(env)
+        if provided:
+            plugins = list(dict.fromkeys(
+                q for p in plugins for q in (expand_bucket(env, p) if p in provided else (p,))))
         missing = sorted(set(plugins) - set(enabled) - set(disabled))
         extra = sorted(set(enabled) - set(plugins))
         out(f"  Included: {' '.join(sorted(enabled)) or '-'}")
@@ -278,9 +292,11 @@ def cmd_status(env, argv):
         manifest = json.loads(mf.read_text(encoding="utf-8"))
         skills = manifest.get("skills", [])
         gone = [e.get("source_path", "") for e in skills
-                if e.get("source_path") and not (env.root / e["source_path"]).exists()]
+                if e.get("source_path") and not source_exists(env, e["source_path"])]
         vendored_buckets = {b for e in skills
-                            if (b := _bucket_of(e.get("source_path", "")))}
+                            if (b := (_bucket_of(e.get("source_path", ""))
+                                      or (source_plugin_of(env, e["source_path"])
+                                          if e.get("source_path") else None)))}
         out(f"\nChannel vendor ({vendor_path}, layout {manifest.get('layout')}):")
         out(f"  Skills: {len(skills)}, installed {manifest.get('installed_at')}"
             f", agent {manifest.get('agent')}, profile {manifest.get('profile') or '-'}")
@@ -361,7 +377,7 @@ def cmd_status(env, argv):
     # Channel hygiene: one bucket should not be distributed by BOTH the plugin AND the vendor -
     # otherwise the skills are duplicated. Check lives ONLY here (skiller — owner
     # skills); umbrella pulls her through `swissknifeman skills status`, without duplicating.
-    overlap = channel_overlap(enabled, vendored_buckets)
+    overlap = channel_overlap(enabled, vendored_buckets, env)
     report["channel_overlap"] = overlap
     if overlap:
         out(f"\n⚠ DOUBLE CHANNELS: buckets [{' '.join(overlap)}] are active AT THE SAME TIME as "

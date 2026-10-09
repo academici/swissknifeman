@@ -37,11 +37,12 @@ from aicore.content.skill import read_frontmatter as parse_frontmatter
 from aicore.util.cli import parse_flags
 from aicore.util.term import die
 from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
-                     ProjectConfig, all_buckets, core_skill_tuples, default_command_plugins,
+                     ProjectConfig, core_skill_tuples, default_command_plugins,
                      known_command_plugins,
                      find_project_root, load_config, resolve_selection,
-                     validate_config)
+                     selectable_buckets, validate_config)
 from .host import load_host
+from .module_skills import host_bucket_owners
 from aicore.delivery.claude import plugins_summary
 from aicore.delivery.codex import native_inventory
 from .vendor import build_requires_index, collect_skills, resolve_requires
@@ -59,7 +60,7 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
     flag_exclude = flag_exclude or []
     buckets, profile_name, _profile_source, source, _include_meta = \
         resolve_selection(env, target, config, profile, flag_buckets)
-    known = all_buckets(env)
+    known = selectable_buckets(env)
     for b in buckets:
         if b not in known and b not in known_command_plugins():
             die(f"unknown bucket: {b}")
@@ -78,7 +79,8 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
     index = build_requires_index(env)
     dependency_diagnostics = []
     pulled = resolve_requires(
-        skills, index, exclude, diagnostics=dependency_diagnostics)
+        skills, index, exclude, diagnostics=dependency_diagnostics,
+        owners=host_bucket_owners(env))
     meta = {"buckets": list(buckets), "profile": profile_name, "source": source,
             "exclude": sorted(exclude), "pulled": pulled, "core_added": core_added,
             "dependency_diagnostics": dependency_diagnostics}

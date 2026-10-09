@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.2",
   "title": "Механизм бакета, предоставляемого хостом: модульные источники skills, bucket_aliases хоста; connect, vendor, sync, budget, status, doctor (на фикстурах)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Новый lib/skiller/module_skills.py (источники skills из плагинов модулей через plugin_dirs хоста, бакеты provided_by: host, expand_bucket, проверка коллизий), ключ bucket_aliases в конфиге хоста; all_buckets принимает бакеты хоста; connect разворачивает их в плагины модулей и убирает <bucket>@marketplace; vendor и sync копируют skills модулей с requires/exclude по именам; budget, status, doctor, registry и validate понимают бакет хоста. Тесты на синтетическом хосте; реальные buckets.json и skiller-host.json не меняются, golden — без перезахвата.",
   "why": "D52: после переноса system/* (P8.3) проекты должны получать эти skills обоими каналами без правки профилей и конфигов, а skiller не может знать имён модулей. Механизм отделён от переноса, чтобы его можно было проверить на фикстурах и сохранить байт-в-байт. Жёсткие риски: (1) connect удаляет из enabledPlugins только ключ бакета хоста, которого маркетплейс не объявляет, — ничего больше (merge-only запись настроек); (2) standalone skiller без хоста не падает, а предупреждает; (3) проверка provenance skills-lock не ослабляется для записей библиотеки.",
   "scope": {
@@ -219,12 +219,39 @@
   },
   "result": {
     "started_at": "2026-10-09T13:24:37Z",
+    "finished_at": "2026-10-09T14:40:05Z",
     "executor": {
       "provider": "claude-code",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "cdd9ed60-0962-4d0a-ad8d-b61338d21225"
-    }
+    },
+    "notes": "Host-provided buckets: module_skills.py (sources, expand_bucket, collisions), host key bucket_aliases, connect expands and replaces the old key (merge-only), vendor/sync/budget/status/doctor/registry/validate understand the bucket; 49 tests on a synthetic host; materialize unchanged; golden not recaptured; grok-4.7 review of P8.1+P8.2: round 1 RED (3 findings reproduced and fixed), round 2 GREEN",
+    "deviations": [
+      "host.schema.json, tests/test_host.py and docs/guide/installation.md changed beyond the item file list (schema gate for the new host key); explicit false on the old host bucket key is respected in connect; review corrections shipped in the executor commit (items uncommitted at review time)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T14:40:05Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T14:40:05Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T14:40:05Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T14:40:05Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T13:24:37Z"
+  "updated_at": "2026-10-09T14:40:05Z"
 }

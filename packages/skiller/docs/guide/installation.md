@@ -80,6 +80,7 @@ The following example uses the host's integration fields with an illustrative
 | Field | Meaning |
 |---|---|
 | `plugin_dirs` | Repository-relative globs for sibling plugins containing `.claude-plugin/plugin.json`; Skiller itself is excluded. |
+| `bucket_aliases` | Skill buckets the library leaves to the host (`"provided_by": "host"` in `buckets.json`): bucket name mapped to the host plugins whose skills it expands to on connect, vendor and sync. |
 | `default_command_plugins` | Command plugins added to the default install and delivery selection. |
 | `version_files` | JSON files and top-level keys updated to the umbrella release version. |
 | `machine_plugins` | Provider-keyed arrays of plugin `name`, source `path`, and optional `holds` paths for machine installation. |

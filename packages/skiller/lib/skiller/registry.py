@@ -14,6 +14,7 @@ from aicore.util.term import die
 from aicore.util.text import parse_inline_list
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .host import host_plugin_dirs, load_host
+from .module_skills import check_collisions, host_bucket_plugins
 from aicore.content.publication import manifest_bytes, package_rel
 
 from .publication import (
@@ -27,6 +28,7 @@ def build_registry(env):
     """Assemble structure skills.json from skills/**/SKILL.md and references.
     Returns (registry_dict, bucket_meta, bucket_dirs)."""
     root = env.root
+    check_collisions(env)
     skills = []
     references = []
 
@@ -131,9 +133,12 @@ def build_registry(env):
     # Not «orphan» (forgotten directory), is an explicit migration record.
     alias_entries = {b: m for b, m in bucket_meta.items()
                      if isinstance(m, dict) and m.get("alias_of")}
+    # Host-provided buckets: metadata only, the skills live in the host's module plugins.
+    host_entries = {b for b, m in bucket_meta.items()
+                    if isinstance(m, dict) and m.get("provided_by") == "host"}
     missing = [b for b in bucket_dirs if b not in bucket_meta]
     orphans = [b for b in bucket_meta
-              if b not in bucket_dirs and b not in alias_entries]
+              if b not in bucket_dirs and b not in alias_entries and b not in host_entries]
     if missing:
         die(f"buckets.json: missing entries for: {', '.join(missing)}")
     if orphans:
@@ -526,7 +531,8 @@ def check_drift(env):
             drift.append(rel)
 
     _cmp(root / "skills.json", json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
-    _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
+    _cmp(root / "skills" / "_index.md",
+         render_index(registry, bucket_meta, host_bucket_plugins(env)))
     for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs, registry):
         _cmp(path, manifest_bytes(data).decode("utf-8"))
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
@@ -551,10 +557,15 @@ def check_drift(env):
     return drift
 
 
-def render_index(registry, bucket_meta):
+def render_index(registry, bucket_meta, host_buckets=None):
     """Markdown-registry for discovery (skills/_index.md): skills on buckets + tag matrix.
-    Entirely generated from skills.json — human-readable face of the machine registry."""
+    Entirely generated from skills.json — human-readable face of the machine registry.
+    `host_buckets` ({bucket: plugins}) adds one line per bucket the host provides."""
     skills = registry["skills"]
+    host_buckets = dict(host_buckets or {})
+    for name, meta in bucket_meta.items():
+        if isinstance(meta, dict) and meta.get("provided_by") == "host":
+            host_buckets.setdefault(name, ())
     by_bucket = {}
     for s in skills:
         by_bucket.setdefault(s["bucket"], []).append(s)
@@ -577,7 +588,12 @@ def render_index(registry, bucket_meta):
         "",
         "## Skills for buckets",
     ]
-    for bucket in sorted(by_bucket):
+    for bucket in sorted(set(by_bucket) | set(host_buckets)):
+        if bucket not in by_bucket:
+            plugins = host_buckets[bucket]
+            lines += ["", f"### {bucket} — provided by host modules: {', '.join(plugins)}"
+                      if plugins else f"### {bucket} — provided by the host"]
+            continue
         desc = bucket_meta.get(bucket, {}).get("description", "")
         items = sorted(by_bucket[bucket], key=lambda s: s["name"])
         lines += ["", f"### {bucket} — {desc} ({len(items)})", "",
@@ -735,7 +751,7 @@ def cmd_registry(env, argv):
         print(f"  levels (level): {', '.join(parts)}; without level: {untagged}")
 
     atomic_write_text(root / "skills" / "_index.md",
-                      render_index(registry, bucket_meta))
+                      render_index(registry, bucket_meta, host_bucket_plugins(env)))
     print("Updated skills/_index.md (tag matrix)")
 
     n_plugins = write_plugin_manifests(env, bucket_meta, bucket_dirs)

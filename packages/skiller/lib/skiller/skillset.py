@@ -35,9 +35,11 @@ from .common import apply_permissions
 from aicore.content.skill import resolve_requires_bfs
 from aicore.util.cli import parse_flags
 from aicore.util.term import die, warn
-from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
-                     load_config, resolve_selection, resolve_target)
+from .config import (DEFAULT_EXCLUDE, core_skill_tuples,
+                     load_config, resolve_selection, resolve_target, selectable_buckets)
 from .hub import generate_hub, hub_artifacts_exist
+from .module_skills import (expand_bucket, host_bucket_owners, host_provided_buckets,
+                            registry_entries)
 from .state import upsert_project
 
 # Where do we add the default skills? (Claude finds automatically).
@@ -130,6 +132,20 @@ def _registry_index(env):
                  f"available first; use full path 'bucket/rel'")
         else:
             by_name[name] = entry
+    # Skills of host module plugins, read from the plugins themselves (`origin: host`).
+    for entry in registry_entries(env):
+        full = f"{entry['bucket']}/{entry['rel']}" if entry["rel"] else entry["bucket"]
+        by_key.setdefault(full, entry)
+        prior = by_name.get(entry["name"])
+        if prior is None:
+            by_name[entry["name"]] = entry
+        elif prior.get("origin") == "host":
+            warn(f"host plugins '{prior['bucket']}' and '{entry['bucket']}' both carry skill "
+                 f"'{entry['name']}' — by name the first is available; use the full path "
+                 f"'plugin/rel'")
+        else:
+            warn(f"skill name '{entry['name']}' exists in the library and in host plugin "
+                 f"'{entry['bucket']}'; the library copy is used")
     return by_key, by_name
 
 
@@ -223,7 +239,28 @@ def load_skillset_config(target):
     return cfg
 
 
-def _pull_requires(selected, by_name, exclude, *, diagnostics=None):
+def _select(selected, entry):
+    """Add `entry` by name; a library skill is never displaced by a host module skill of the
+    same name, whatever the order of the selected buckets (the index warns about the clash)."""
+    prior = selected.get(entry["name"])
+    if prior is not None and prior.get("origin") != "host" and entry.get("origin") == "host":
+        return
+    selected[entry["name"]] = entry
+
+
+def _exclude_tokens(entry, owners):
+    """Everything an `exclude` token may call this entry: name, `bucket/rel`, bucket, rel and,
+    for a host module skill, the host bucket spellings (`<host bucket>`, `<host bucket>/<rel>`)."""
+    full = f"{entry['bucket']}/{entry['rel']}" if entry["rel"] else entry["bucket"]
+    tokens = {entry["name"], full, entry["bucket"], entry["rel"]}
+    for host_bucket in owners.get(entry["bucket"], ()):
+        tokens.add(host_bucket)
+        if entry["rel"]:
+            tokens.add(f"{host_bucket}/{entry['rel']}")
+    return tokens
+
+
+def _pull_requires(selected, by_name, exclude, *, diagnostics=None, owners=None):
     """Transitively hold out `requires` selected skills in `selected` (name->entry).
     exclude CONQUERS addiction (with warning), unknown dependency - warning and
     pass. Without this skill-granular include was silently losing dependencies (64/195
@@ -237,9 +274,8 @@ def _pull_requires(selected, by_name, exclude, *, diagnostics=None):
         entry = by_name.get(dep)
         if entry is None:
             return None
-        full = (f"{entry['bucket']}/{entry['rel']}".rstrip("/")
-                if entry["rel"] else entry["bucket"])
-        tokens = {dep, entry["name"], full, entry["bucket"]}
+        tokens = {dep} | _exclude_tokens(entry, owners or {})
+        tokens.discard("")
         return {"key": entry["name"], "requires": entry.get("requires", []),
                 "exclude_tokens": tokens, "_payload": entry}
 
@@ -258,7 +294,8 @@ def resolve_skillset(env, cfg, include_core=False, *, diagnostics=None):
     Returns (entries, skipped): entries sorted by 'bucket/name';
     skipped — tokens not found in the registry (with warning)."""
     by_key, by_name = _registry_index(env)
-    known = set(all_buckets(env))
+    known = set(selectable_buckets(env))
+    owners = host_bucket_owners(env)
     selected = {}  # name -> entry (name is unique in the layout.claude/skills)
     skipped = []
 
@@ -277,9 +314,10 @@ def resolve_skillset(env, cfg, include_core=False, *, diagnostics=None):
                 f"his entries are not vendor'/connect'are added to consumer projects")
         if bucket not in known:
             die(f"unknown bucket: {bucket}")
+        targets = set(expand_bucket(env, bucket)) or {bucket}
         for entry in by_key.values():
-            if entry["bucket"] == bucket:
-                selected[entry["name"]] = entry
+            if entry["bucket"] in targets:
+                _select(selected, entry)
 
     # specific skills
     for token in req_include:
@@ -290,10 +328,11 @@ def resolve_skillset(env, cfg, include_core=False, *, diagnostics=None):
             continue
         full = (f"{entry['bucket']}/{entry['rel']}".rstrip("/")
                 if entry["rel"] else entry["bucket"])
-        if "/" in token and token != full:
+        if ("/" in token and token != full
+                and token.split("/", 1)[0] not in host_provided_buckets(env)):
             warn(f"include: '{token}' moved → '{full}' (split buckets) — "
                  f"update .swissknifeman/config.json")
-        selected[entry["name"]] = entry
+        _select(selected, entry)
 
     # CORE-policy: default token skills + DEFAULT_EXCLUDE hub duplicates
     exclude = set(cfg.get("exclude", []))
@@ -307,14 +346,12 @@ def resolve_skillset(env, cfg, include_core=False, *, diagnostics=None):
     # subtraction
     if exclude:
         for name, entry in list(selected.items()):
-            full = f"{entry['bucket']}/{entry['rel']}".rstrip("/") \
-                if entry["rel"] else entry["bucket"]
-            if {name, full, entry["bucket"], entry["rel"]} & exclude:
+            if _exclude_tokens(entry, owners) & exclude:
                 del selected[name]
 
     # transitive requires selected skills (after subtraction: pulling dependencies
     # only those that will actually remain). exclude still beats addiction.
-    _pull_requires(selected, by_name, exclude, diagnostics=diagnostics)
+    _pull_requires(selected, by_name, exclude, diagnostics=diagnostics, owners=owners)
 
     entries = sorted(selected.values(),
                      key=lambda e: (e["bucket"], e["name"]))

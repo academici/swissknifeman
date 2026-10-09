@@ -23,6 +23,8 @@ from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
                      all_buckets, default_command_plugins,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
+from .module_skills import (expand_bucket, host_provided_buckets, module_skill_sources,
+                            module_skills)
 from .state import upsert_project
 from .publication import build_connect_distribution_plan, selected_distribution_providers
 
@@ -78,6 +80,36 @@ def _prune_codex_connect_artifacts(target, *, dry_run):
             pass
 
 
+def _expand_host_buckets(env, plugins, command_plugins):
+    """Replace each host-provided bucket in `plugins` with the host plugins behind it.
+
+    Only plugins the marketplace declares are kept (an undeclared one is skipped with a
+    warning, like a command plugin). Returns `(plugins, host_buckets, expansion)`:
+    `expansion` maps a bucket to `(all plugins, plugins that exist only because of it)`; the
+    second part lets connect drop them when the project explicitly disabled the old key."""
+    provided = host_provided_buckets(env)
+    host_buckets = tuple(dict.fromkeys(p for p in plugins if p in provided))
+    if not host_buckets:
+        return list(plugins), (), {}
+    direct = {p for p in plugins if p not in provided} | set(command_plugins) | {CORE_PLUGIN}
+    expanded, expansion = [], {}
+    for plugin in plugins:
+        if plugin not in provided:
+            expanded.append(plugin)
+            continue
+        names = []
+        for name in expand_bucket(env, plugin):
+            if _marketplace_declares(env, name):
+                names.append(name)
+            else:
+                warn(f"marketplace '{MARKETPLACE}' does not declare the plugin '{name}' "
+                     f"(bucket '{plugin}') — skipped. Run `skiller registry` in the registry, "
+                     f"then repeat connect.")
+        expanded.extend(names)
+        expansion[plugin] = (tuple(names), tuple(n for n in names if n not in direct))
+    return list(dict.fromkeys(expanded)), host_buckets, expansion
+
+
 def prepare_connect_selection(env, target, opts, config):
     """Resolve the one semantic plugin set used by every selected provider."""
     flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
@@ -89,7 +121,8 @@ def prepare_connect_selection(env, target, opts, config):
     buckets = all_buckets(env)
     command_plugins = default_command_plugins()
     known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
-                     | set(command_plugins))
+                     | set(command_plugins) | set(module_skill_sources(env)))
+    plugins, host_buckets, host_expansion = _expand_host_buckets(env, plugins, command_plugins)
     core_added = []
     if not opts.get("no_core") and CORE_PLUGIN not in plugins:
         if _marketplace_declares(env, CORE_PLUGIN):
@@ -124,6 +157,8 @@ def prepare_connect_selection(env, target, opts, config):
         "include_meta": include_meta,
         "core_added": tuple(core_added),
         "cmd_added": tuple(cmd_added),
+        "host_buckets": host_buckets,
+        "host_expansion": host_expansion,
     }
 
 
@@ -132,10 +167,10 @@ def prepare_connect_selection(env, target, opts, config):
 _prepare_connect_selection = prepare_connect_selection
 
 
-def _resident_tokens(env, plugins):
+def _resident_tokens(env, plugins, module_plugins=()):
     """Rough estimate of resident ⊕ tier-0 (name+description) of the selected set of plugins -
     for «smart connection»: you can see the price BEFORE recording. core → CORE_SKILLS; bucket → all his skills;
-    generate-skill → his skill. Source of token mathematics ONE - aicore.content.budget.skill_budget (do not duplicate).
+    generate-skill → his skill; a host module plugin (`module_plugins`) → its skills. Source of token mathematics ONE - aicore.content.budget.skill_budget (do not duplicate).
     Return (tokens, n_skills)."""
     from aicore.content.budget import skill_budget
     total = n = 0
@@ -144,6 +179,8 @@ def _resident_tokens(env, plugins):
             dirs = [env.root / "skills" / cs for cs in CORE_SKILLS]
         elif p == "generate-skill":
             dirs = [env.root / "generate-skill" / "generate-skill"]
+        elif p in module_plugins:
+            dirs = [item.skill_dir for item in module_skills(env, [p])]
         else:
             base = env.root / "skills" / p
             dirs = [d for d in base.iterdir() if d.is_dir()] if base.is_dir() else []
@@ -195,7 +232,9 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     print(f"Profile:  {profile_name or '-'} (via {source})")
     print(f"Source:   {root}")
     print(f"Plugins:  {' '.join(plugins)}")
-    resident, n_res = _resident_tokens(env, plugins)
+    from_host = {m for members, _only in prepared.get("host_expansion", {}).values()
+                 for m in members}
+    resident, n_res = _resident_tokens(env, plugins, from_host)
     print(f"Resident: ~{resident} current ⊕ tier-0 ({n_res} skills, name+description in EACH "
           f"request; body - by trigger). Less = cheaper: already a profile or --no-core.")
     if source == "autodetect-fallback":
@@ -226,6 +265,27 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
         except json.JSONDecodeError as e:
             die(f"{dest}: invalid JSON: {e}")
 
+    # A host-provided bucket used to be one marketplace plugin of the same name; its key is
+    # replaced by the module plugins (merge-only: only that key, only when the marketplace
+    # no longer declares such a plugin; an explicit `false` is respected).
+    expansion = prepared.get("host_expansion", {})
+    existing = settings.get("enabledPlugins")
+    replaced = []
+    if isinstance(existing, dict):
+        for bucket in prepared.get("host_buckets", ()):
+            key = f"{bucket}@{MARKETPLACE}"
+            if key not in existing or _marketplace_declares(env, bucket):
+                continue
+            members, exclusive = expansion.get(bucket, ((), ()))
+            if existing[key] is False:
+                plugins = [p for p in plugins if p not in exclusive]
+                print(f"Skipped (explicit false): {key} — its host modules "
+                      f"({' '.join(members) or '-'}) are not enabled")
+                continue
+            del existing[key]
+            replaced.append(f"Replaced:  {key} -> "
+                            + ", ".join(f"{m}@{MARKETPLACE}" for m in members))
+
     # Marketplace source paths are relative to the host root where registry writes
     # its manifest, including sibling plugin entries declared by the host config.
     mp_root = find_repo_root(root) or root
@@ -233,6 +293,8 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
                                         plugins=plugins, fix_path_drift=fix_path_drift)
     for note in merged.notes:
         print(note)
+    for line in replaced:
+        print(("[dry-run] " if dry_run else "") + line)
     enabled = settings["enabledPlugins"]
     added, skipped_false, drift = merged.added, merged.skipped_false, merged.drift
 

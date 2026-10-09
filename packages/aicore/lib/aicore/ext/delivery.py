@@ -43,6 +43,7 @@ from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Set, 
 from ..state import ensure_dir
 from ..util.io import atomic_write_json
 from . import journal
+from . import plugins as _plugins
 from . import settings as _settings
 from . import units as _units
 from .environment import clean_environment
@@ -429,6 +430,9 @@ class _Run:
     now: Any
     report: DeliveryReport = field(default_factory=DeliveryReport)
     stalled: Set[str] = field(default_factory=set)
+    loaded: Optional["_settings.ExtSettings"] = None
+    units: Optional[Mapping[str, "_units.UnitDoc"]] = None
+    _registrations: Optional[List["_plugins.Registration"]] = None
 
     def time(self) -> str:
         return _now_text(self.now)
@@ -443,15 +447,31 @@ class _Run:
         except ExtError as exc:
             record_config_error(self.jdir, exc, now=self.now)
             raise
-        subscriptions, problems = resolve_subscriptions(loaded, _units.discover_units(self.env), self.project)
+        self.loaded, self.units, self._registrations = loaded, _units.discover_units(self.env), None
+        subscriptions, problems = resolve_subscriptions(loaded, self.units, self.project)
         for problem in problems:
             self.report.problem(problem["code"], problem["message"], problem["subscription"])
         return subscriptions, loaded.max_attempts
 
+    def plugin_registrations(self) -> List["_plugins.Registration"]:
+        """The plugins of this pass (read once per pass, after :meth:`subscriptions`)."""
+        if self._registrations is None:
+            assert self.loaded is not None
+            self._registrations, _problems = _plugins.registered_plugins(self.loaded, units=self.units, env=self.env)
+        return self._registrations
+
+    def plugin_problem(self, subscription: "Subscription") -> Optional[Tuple[str, str]]:
+        assert subscription.plugin is not None
+        return _plugins.subscriber_problem(self.plugin_registrations(), subscription.plugin, subscription.on)
+
 
 def _attempt(run: _Run, subscription: Subscription, event: Event, attempt: int) -> Tuple[str, Optional[str],
                                                                                            ProcessResult]:
-    """One run of the subscriber command: ``(outcome, code, result)``, outcome ``ok``/``skipped``/``failed``."""
+    """One run of the subscriber command or plugin: ``(outcome, code, result)``, outcome ok, skipped or failed."""
+    if subscription.plugin is not None:
+        registration = {item.id: item for item in run.plugin_registrations()}[subscription.plugin]
+        return _plugins.deliver_event(registration, event.to_json(), attempt=attempt,
+                                      deadline_s=subscription.timeout_seconds, env=run.env, project=run.project)
     assert subscription.run is not None
     extra = {"SKM_EVENT_JOURNAL": str(run.jdir), "SKM_EVENT_SUBSCRIPTION": subscription.id,
              "SKM_EVENT_ATTEMPT": str(attempt)}
@@ -578,10 +598,10 @@ def _pass(lock: DeliverLock, run: _Run) -> int:
         if not subscription.enabled or not is_active(subscription, run.project) or subscription.id in run.stalled:
             continue
         if subscription.plugin is not None:
-            run.report.problem("PLUGIN_UNAVAILABLE", f"subscription {subscription.id} calls plugin "
-                               f"{subscription.plugin}, but plugin subscribers are not available yet",
-                               subscription.id)
-            continue
+            refusal = run.plugin_problem(subscription)
+            if refusal is not None:
+                run.report.problem(refusal[0], refusal[1], subscription.id)
+                continue
         covered = max(covered, _deliver_subscription(lock, run, subscription, cursors, snapshot, max_attempts,
                                                      cache))
     run.report.passes += 1
@@ -653,8 +673,9 @@ def replay(jdir: PathLike, subscription_id: str, *, from_event: Optional[str] = 
             raise ExtError("SUBSCRIPTION_INACTIVE", f"subscription {subscription_id} is switched off for this "
                            "journal")
         if subscription.plugin is not None:
-            raise ExtError("PLUGIN_UNAVAILABLE", f"subscription {subscription_id} calls a plugin; plugin "
-                           "subscribers are not available yet")
+            refusal = run.plugin_problem(subscription)
+            if refusal is not None:
+                raise ExtError(refusal[0], refusal[1])
         if event_id is not None:
             _offset, _end, event = _find_event(root, event_id)
             outcome, code, result = _attempt(run, subscription, event, 1)
@@ -681,19 +702,23 @@ def delivery_status(jdir: PathLike, *, project: Optional[PathLike] = None,
                     config_file: Optional[PathLike] = None) -> Dict[str, Any]:
     """Read-only state: ``{"subscriptions": [...], "malformed": n, "resets": n, "problems": [...]}``.
 
-    Each subscription has ``id, origin, enabled, active, on, offset, lag`` (matching events after the
-    cursor), ``pending`` and ``dead_letters`` (entries not yet delivered by a replay).
+    Each subscription has ``id, origin, enabled, active, plugin, on, offset, lag`` (matching events after the
+    cursor), ``pending`` and ``dead_letters`` (entries not yet delivered by a replay). A plugin subscription
+    whose plugin cannot receive it is reported in ``problems``.
     """
     root = Path(jdir)
     project_root = _root(project)
     problems: List[Problem] = []
+    registrations: List[_plugins.Registration] = []
     try:
         loaded = _settings.load(project_root, env=env, home=home, config_file=config_file)
     except ExtError as exc:
         subscriptions: List[Subscription] = []
         problems.append(_problem(exc.code, exc.message))
     else:
-        subscriptions, problems = resolve_subscriptions(loaded, _units.discover_units(env), project_root)
+        units = _units.discover_units(env)
+        subscriptions, problems = resolve_subscriptions(loaded, units, project_root)
+        registrations, _plugin_problems = _plugins.registered_plugins(loaded, units=units, env=env)
     index: List[Tuple[int, str]] = []
     malformed = 0
     for offset, _end, event, _found in _entries(root, 0, journal.size(root), {}):
@@ -717,11 +742,12 @@ def delivery_status(jdir: PathLike, *, project: Optional[PathLike] = None,
         lag = 0 if offset is None else sum(1 for at, kind in index if at >= offset and match(subscription, kind))
         active = is_active(subscription, project_root)
         if subscription.plugin is not None and subscription.enabled and active:
-            problems.append(_problem("PLUGIN_UNAVAILABLE", f"subscription {subscription.id} calls plugin "
-                                     f"{subscription.plugin}, but plugin subscribers are not available yet",
-                                     subscription.id))
+            refusal = _plugins.subscriber_problem(registrations, subscription.plugin, subscription.on)
+            if refusal is not None:
+                problems.append(_problem(refusal[0], refusal[1], subscription.id))
         rows.append({"id": subscription.id, "origin": subscription.origin, "enabled": subscription.enabled,
-                     "active": active, "on": list(subscription.on), "offset": offset, "lag": lag,
+                     "active": active, "plugin": subscription.plugin, "on": list(subscription.on),
+                     "offset": offset, "lag": lag,
                      "pending": cursor.get("pending") if cursor else None,
                      "dead_letters": dead.get(subscription.id, 0)})
     resets = sum(1 for item in records if item.get("code") == "JOURNAL_RESET")

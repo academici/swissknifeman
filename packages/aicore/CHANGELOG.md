@@ -34,7 +34,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   cursor that no longer fits a journal changed by hand starts again with a `JOURNAL_RESET` record. Subscriber commands
   run through `run_json` in the cleaned environment with `SKM_PROJECT_ROOT`, `SKM_EVENT_JOURNAL`, `SKM_EVENT_SUBSCRIPTION`
   and `SKM_EVENT_ATTEMPT`; success is exit 0 with an empty stdout or `{"status": "ok"|"skipped"}`. Plugin subscribers
-  report `PLUGIN_UNAVAILABLE` for now. Locks need `flock` (POSIX); network file systems without it are not supported.
+  report `PLUGIN_UNAVAILABLE` until plugins are available (see below). Locks need `flock` (POSIX); network file systems without
+  it are not supported.
+- **External plugins:** `aicore.ext.plugins` (`load_manifest`, `registered_plugins`, `describe_plugin`, `invoke_point`,
+  `deliver_event`, `list_plugins`). A plugin is an `extension.json` (`extension/v1`) registered by the machine in
+  `[aicore.plugins.<id>]`. The manifest is checked before anything runs (schema, a command lists `provides.points` and a
+  subscriber `provides.events`, the entrypoint stays inside the manifest folder and exists, the protocol range meets
+  the host's `1`, every required contract major is provided, the permission profile is available), then the plugin is
+  started with `op: describe` and its id, version, kind, protocol, `capabilities_digest` (the digest of `provides`) and
+  transport are compared with the manifest; only then `invoke` or `event` is sent. There is no cache: every use describes
+  again. `invoke_point` calls the enabled command plugins of a point a module declared in `extension_points`, one failing
+  plugin does not stop the others. A trusted plugin receives the environment names and `env://` secrets its manifest asks
+  for, an untrusted one neither; answers are validated as `plugin-response/v1` and plugin texts are escaped before they reach
+  a message. A subscription with `plugin = "<id>"` now delivers through the same path (`on` must be covered by the plugin's
+  `provides.events`); a missing, disabled, broken or non-subscriber plugin is reported as `PLUGIN_UNAVAILABLE` or
+  `SUBSCRIPTION_INVALID` and keeps the cursor. A plugin's own `timeout_seconds` is the default deadline unless the
+  configuration sets one (`ExtSettings.plugin_timeouts_set`).
+- **`aicore ext plugins list|describe|invoke`** and **`aicore ext status`** (`--json`, `--project`): list the registered plugins
+  without starting them, run the handshake of one, emulate an extension point, and show plugins (trusted, profile and
+  `enforced: false`, ignored requests) and subscriptions with their problems; `status` always exits 0. The `aicore.ext`
+  doctor probe runs `aicore ext status`.
 - **`aicore.ext.settings`** (the `[aicore]` config section: delivery, subscriptions, plugins, overlays with the layer of each
   file) and **`aicore.ext.units`** (events, subscriptions, overlay slots and extension points declared in `unit.json`).
 - **`aicore events emit|list`** (`--json`, `--project`, `--strict-type`): emulate and read events.

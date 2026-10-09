@@ -6,8 +6,12 @@ from .environment import clean_environment, effective_profile, ignored_requests
 from .errors import ExtError
 from .events import Event, build_event, emit, read_events
 from .journal import journal_dir
+from .plugins import (Describe, Manifest, PluginResult, Registration, deliver_event, describe_plugin, invoke_point,
+                      list_plugins, load_manifest, registered_plugins)
 from .process import ProcessResult, run_json
 
-__all__ = ["DeliveryReport", "Event", "ExtError", "ProcessResult", "Subscription", "build_event",
-           "clean_environment", "deliver", "delivery_status", "effective_profile", "emit", "ignored_requests",
-           "journal_dir", "read_events", "replay", "run_json", "spawn_background"]
+__all__ = ["DeliveryReport", "Describe", "Event", "ExtError", "Manifest", "PluginResult", "ProcessResult",
+           "Registration", "Subscription", "build_event", "clean_environment", "deliver", "deliver_event",
+           "delivery_status", "describe_plugin", "effective_profile", "emit", "ignored_requests", "invoke_point",
+           "journal_dir", "list_plugins", "load_manifest", "read_events", "registered_plugins", "replay", "run_json",
+           "spawn_background"]

@@ -58,6 +58,14 @@ class TestSubscriptionsAndPlugins(SettingsCase):
         self.assertEqual(plugin["manifest"], str(self.home / "plugins" / "tool" / "extension.json"))
         self.assertEqual((plugin["trusted"], plugin["timeout_seconds"], plugin["enabled"]), (True, 60, True))
 
+    def test_plugin_timeouts_set_names_the_plugins_with_an_explicit_timeout(self):
+        self.machine('[aicore.plugins.plain]\nmanifest = "/p/extension.json"\n'
+                     '[aicore.plugins.timed]\nmanifest = "/t/extension.json"\ntimeout_seconds = 5\n'
+                     '[aicore.plugins.same]\nmanifest = "/s/extension.json"\ntimeout_seconds = 60\n')
+        loaded = self.load()
+        self.assertEqual(sorted(loaded.plugin_timeouts_set), ["same", "timed"])
+        self.assertEqual(loaded.plugins["plain"]["timeout_seconds"], 60)
+
     def test_project_cannot_define_a_command_but_can_disable(self):
         self.project_file('[aicore.subscriptions.evil]\nrun = ["/bin/sh", "-c", "boom"]\n')
         with self.assertRaises(ExtError) as caught:

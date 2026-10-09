@@ -1,4 +1,4 @@
-"""``aicore events``: emit, list, deliver, replay and status.
+"""``aicore events`` (emit, list, deliver, replay, status) and ``aicore ext`` (plugins, status).
 
 ``emit`` is for people and tests: it journals an event as if a module had emitted it, strictly (every
 failure is an error). ``list`` prints the journal. ``deliver`` runs a deliverer (it is also the background
@@ -6,6 +6,10 @@ deliverer started by ``emit``, through the hidden ``--journal`` and ``--trigger-
 delivers again and ``status`` shows the subscriptions. Exit codes: 0 success, 1 refusal or failure (for
 ``deliver`` and ``replay``: a delivery failed), 2 usage. ``--json`` prints one JSON document on stdout;
 errors go to stderr as ``<CODE>: <message>``.
+
+``aicore ext plugins list|describe|invoke`` and ``aicore ext status`` work on the plugins of the machine
+configuration: ``describe`` and ``invoke`` start plugins (after the manifest check and the handshake),
+``list`` and ``status`` never do; ``status`` always exits 0, it is a diagnosis.
 """
 from __future__ import annotations
 
@@ -20,6 +24,7 @@ from typing import Any, List, Mapping, Optional, Sequence, TextIO
 from ..state import find_project_root
 from . import delivery as _delivery
 from . import journal
+from . import plugins as _plugins
 from . import units as _units
 from .errors import ExtError
 from .events import DELIVERY_MODES, emit, read_events
@@ -207,25 +212,191 @@ _COMMANDS = {"emit": _run_emit, "list": _run_list, "deliver": _run_deliver, "rep
              "status": _run_status}
 
 
-def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str]] = None,
-         cwd: Optional[Path] = None, out: Optional[TextIO] = None, err: Optional[TextIO] = None) -> int:
+# --- aicore ext ----------------------------------------------------------------------------------------------
+
+
+def build_ext_parser() -> argparse.ArgumentParser:
+    parser = _Parser(prog="aicore ext", description="Extensions: external plugins.")
+    commands = parser.add_subparsers(dest="command", required=True, parser_class=_Parser, metavar="COMMAND")
+
+    plugins_cmd = commands.add_parser("plugins", help="list, describe and call the registered plugins")
+    plugin_commands = plugins_cmd.add_subparsers(dest="plugins_command", required=True, parser_class=_Parser,
+                                                 metavar="COMMAND")
+    list_cmd = plugin_commands.add_parser("list", help="list the plugins of [aicore.plugins] (starts nothing)")
+    list_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
+    list_cmd.add_argument("--json", action="store_true", help="print the list as JSON")
+
+    describe_cmd = plugin_commands.add_parser("describe", help="start a plugin with op describe and compare the "
+                                              "answer with its manifest")
+    describe_cmd.add_argument("plugin", metavar="ID", help="plugin id")
+    describe_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
+    describe_cmd.add_argument("--json", action="store_true", help="print the description as JSON")
+
+    invoke_cmd = plugin_commands.add_parser("invoke", help="call an extension point as a module would")
+    invoke_cmd.add_argument("point", metavar="POINT", help="<module>:<id> declared in provides.extension_points")
+    source = invoke_cmd.add_mutually_exclusive_group()
+    source.add_argument("--input", metavar="JSON", help="the input, a JSON object (default: {})")
+    source.add_argument("--input-file", metavar="FILE", help="read the input (a JSON object) from FILE")
+    invoke_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
+    invoke_cmd.add_argument("--json", action="store_true", help='print {"point": ..., "results": [...]}')
+
+    status_cmd = commands.add_parser("status", help="show the plugins and the subscriptions (always exits 0)")
+    status_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
+    status_cmd.add_argument("--json", action="store_true", help="print the status as JSON")
+    return parser
+
+
+def _input(args: argparse.Namespace) -> dict:
+    if args.input is None and args.input_file is None:
+        return {}
+    try:
+        text = args.input if args.input is not None else Path(args.input_file).read_text(encoding="utf-8")
+        value = json.loads(text)
+    except (OSError, ValueError) as exc:
+        raise ExtError("EVENT_INVALID", f"the input is not readable JSON: {exc.__class__.__name__}") from None
+    if not isinstance(value, dict):
+        raise ExtError("EVENT_INVALID", "the input must be a JSON object")
+    return value
+
+
+def _flag(value: bool, yes: str, no: str) -> str:
+    return yes if value else no
+
+
+def _plugin_lines(row: dict) -> List[str]:
+    state = f"{_flag(row['trusted'], 'trusted', 'untrusted')} {_flag(row['enabled'], 'enabled', 'disabled')}"
+    lines = [f"{row['id']} {row['kind'] or '-'} {row['version'] or '-'} {state}",
+             f"  manifest: {row['manifest'] or '-'}",
+             f"  profile: {row['profile']['profile']}, enforced: {_flag(row['profile']['enforced'], 'true', 'false')}"]
+    if row["points"]:
+        lines.append(f"  points: {', '.join(row['points'])}")
+    if row["events"]:
+        lines.append(f"  events: {', '.join(row['events'])}")
+    lines.extend(f"  note: {_plugins.safe_text(item)}" for item in row["ignored"])
+    lines.extend(f"  problem: PLUGIN_POINT_UNKNOWN: no module declares point {point}"
+                 for point in row["unknown_points"])
+    if row["problem"]:
+        lines.append(f"  problem: {row['problem']['code']}: {_plugins.safe_text(row['problem']['message'])}")
+    return lines
+
+
+def _run_plugins_list(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO) -> int:
+    listing = _plugins.list_plugins(_project(args, env, cwd), env=env)
+    if args.json:
+        print(json.dumps(listing, ensure_ascii=False, sort_keys=True), file=out)
+        return 0
+    for row in listing["plugins"]:
+        print("\n".join(_plugin_lines(row)), file=out)
+    if not listing["plugins"]:
+        print("no plugins registered", file=out)
+    return 0
+
+
+def _run_plugins_describe(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO) -> int:
+    project = _project(args, env, cwd)
+    registration = _plugins.find_registration(args.plugin, project, env=env)
+    described = _plugins.describe_plugin(registration, env=env, project=project)
+    if args.json:
+        print(json.dumps(described.to_json(), ensure_ascii=False, sort_keys=True), file=out)
+    else:
+        print(f"{described.id} {described.kind} {described.version} protocol {described.protocol} "
+              f"{described.transport} {described.capabilities_digest} ({described.duration_ms} ms)", file=out)
+    return 0
+
+
+def _run_plugins_invoke(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO) -> int:
+    results = _plugins.invoke_point(args.point, _input(args), project=_project(args, env, cwd), env=env)
+    if args.json:
+        print(json.dumps({"point": args.point, "results": [item.to_json() for item in results]},
+                         ensure_ascii=False, sort_keys=True), file=out)
+    else:
+        for item in results:
+            detail = f" {item.code}: {item.error}" if item.status == "error" else ""
+            print(f"{item.plugin} {item.status}{detail} ({item.duration_ms} ms)", file=out)
+            if item.output is not None:
+                print(json.dumps(item.output, ensure_ascii=False, sort_keys=True), file=out)
+        if not results:
+            print(f"no plugin handles {args.point}", file=out)
+    return 1 if any(item.status == "error" for item in results) else 0
+
+
+_PLUGIN_COMMANDS = {"list": _run_plugins_list, "describe": _run_plugins_describe, "invoke": _run_plugins_invoke}
+
+
+def _run_ext_plugins(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    return _PLUGIN_COMMANDS[args.plugins_command](args, env, cwd, out)
+
+
+def _run_ext_status(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    project = _project(args, env, cwd)
+    document: dict = {"plugins": [], "subscriptions": [], "problems": []}
+    try:
+        listing = _plugins.list_plugins(project, env=env)
+        document["plugins"], document["problems"] = listing["plugins"], list(listing["problems"])
+    except ExtError as exc:
+        document["problems"].append({"code": exc.code, "plugin": None, "message": exc.message})
+    status = _delivery.delivery_status(journal.journal_dir(project, env=env), project=project, env=env)
+    document["subscriptions"] = status["subscriptions"]
+    reported = any(item["code"] == "CONFIG_INVALID" for item in document["problems"])
+    for problem in status["problems"]:
+        if problem["code"] == "CONFIG_INVALID" and reported:
+            continue
+        document["problems"].append({"code": problem["code"], "plugin": None,
+                                     "subscription": problem.get("subscription"), "message": problem["message"]})
+    if args.json:
+        print(json.dumps(document, ensure_ascii=False, sort_keys=True), file=out)
+        return 0
+    print("plugins:" if document["plugins"] else "plugins: none", file=out)
+    for row in document["plugins"]:
+        print("\n".join(_plugin_lines(row)), file=out)
+    print("subscriptions:" if document["subscriptions"] else "subscriptions: none", file=out)
+    for row in document["subscriptions"]:
+        state = "on" if row["enabled"] and row["active"] else ("off" if not row["enabled"] else "inactive")
+        via = f" plugin {row['plugin']}" if row["plugin"] else ""
+        print(f"  {row['id']} {row['origin']}{via} {state} lag {row['lag']} dead-letters {row['dead_letters']}",
+              file=out)
+    for problem in document["problems"]:
+        subject = problem.get("subscription") or problem.get("plugin")
+        where = f" [{subject}]" if subject else ""
+        print(f"problem: {problem['code']}: {_plugins.safe_text(problem['message'])}{where}", file=out)
+    return 0
+
+
+_EXT_COMMANDS = {"plugins": _run_ext_plugins, "status": _run_ext_status}
+
+
+def _dispatch(prog: str, parser: argparse.ArgumentParser, commands: Mapping[str, Any],
+              argv: Optional[Sequence[str]], env: Optional[Mapping[str, str]], cwd: Optional[Path],
+              out: Optional[TextIO], err: Optional[TextIO]) -> int:
     args_list = list(sys.argv[1:] if argv is None else argv)
     out = out or sys.stdout
     err = err or sys.stderr
     try:
         with contextlib.redirect_stderr(err):  # argparse writes its usage text to sys.stderr
-            args = build_parser().parse_args(args_list)
+            args = parser.parse_args(args_list)
     except SystemExit as exc:
         return exc.code if isinstance(exc.code, int) else 2
     environment = os.environ if env is None else env
     try:
-        return _COMMANDS[args.command](args, environment, cwd or Path.cwd(), out, err)
+        return commands[args.command](args, environment, cwd or Path.cwd(), out, err)
     except ExtError as exc:
-        print(f"aicore events {args.command}: {exc}", file=err)
+        print(f"aicore {prog} {args.command}: {exc}", file=err)
         return 1
     except (OSError, ValueError) as exc:
-        print(f"aicore events {args.command}: {exc}", file=err)
+        print(f"aicore {prog} {args.command}: {exc}", file=err)
         return 1
+
+
+def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str]] = None,
+         cwd: Optional[Path] = None, out: Optional[TextIO] = None, err: Optional[TextIO] = None) -> int:
+    """``aicore events``."""
+    return _dispatch("events", build_parser(), _COMMANDS, argv, env, cwd, out, err)
+
+
+def ext_main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str]] = None,
+             cwd: Optional[Path] = None, out: Optional[TextIO] = None, err: Optional[TextIO] = None) -> int:
+    """``aicore ext``."""
+    return _dispatch("ext", build_ext_parser(), _EXT_COMMANDS, argv, env, cwd, out, err)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -23,7 +23,11 @@ Overlay = Tuple[str, str, Optional[str]]  # (absolute path, layer name, file of 
 
 @dataclass(frozen=True)
 class ExtSettings:
-    """Effective extension settings. ``overlays`` maps ``<module>:<slot>`` to ``(path, layer, layer file)``."""
+    """Effective extension settings. ``overlays`` maps ``<module>:<slot>`` to ``(path, layer, layer file)``.
+
+    Every plugin entry carries the schema default ``timeout_seconds``; ``plugin_timeouts_set`` names the plugins
+    whose value was set by a layer, so that a manifest default is not hidden by the schema default.
+    """
 
     delivery: str
     timeout_seconds: int
@@ -32,6 +36,7 @@ class ExtSettings:
     plugins: Dict[str, Dict[str, Any]]
     overlays: Dict[str, List[Overlay]]
     warnings: Tuple[str, ...] = field(default_factory=tuple)
+    plugin_timeouts_set: Tuple[str, ...] = field(default_factory=tuple)  # plugins whose timeout is not the default
 
 
 def _expand(path: str, env: Mapping[str, str], home: Optional[PathLike]) -> str:
@@ -80,6 +85,8 @@ def load(project_root: Optional[PathLike], *, env: Optional[Mapping[str, str]] =
     for body in plugins.values():
         if isinstance(body.get("manifest"), str):
             body["manifest"] = _expand(body["manifest"], environment, home)
+    timeouts_set = tuple(name for name in plugins
+                         if resolved.explain(("plugins", name, "timeout_seconds"))[0].layer != "defaults")
     overlays: Dict[str, List[Overlay]] = {}
     for slot in tree.get("overlays", {}):
         resolved_files: List[Overlay] = []
@@ -93,4 +100,4 @@ def load(project_root: Optional[PathLike], *, env: Optional[Mapping[str, str]] =
         overlays[slot] = resolved_files
     return ExtSettings(delivery=events["delivery"], timeout_seconds=events["timeout_seconds"],
                        max_attempts=events["max_attempts"], subscriptions=subscriptions, plugins=plugins,
-                       overlays=overlays, warnings=tuple(resolved.warnings))
+                       overlays=overlays, warnings=tuple(resolved.warnings), plugin_timeouts_set=timeouts_set)

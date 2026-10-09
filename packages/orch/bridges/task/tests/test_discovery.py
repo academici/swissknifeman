@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import io
 import os
 import sys
 import tempfile
@@ -27,10 +28,14 @@ class PlannerRoot(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name).resolve()
         self.addCleanup(self._tmp.cleanup)
-        env = {k: v for k, v in os.environ.items() if k != discovery.PLANNER_ROOT_ENV}
+        env = {k: v for k, v in os.environ.items()
+               if k not in (discovery.PLANNER_ROOT_ENV, discovery.LEGACY_ROOT_ENV)}
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)
+        warned = mock.patch.object(discovery, "_LEGACY_ROOT_WARNED", False)
+        warned.start()
+        self.addCleanup(warned.stop)
 
     def no_neighbour(self):
         return mock.patch.object(discovery, "orch_root", return_value=self.tmp / "nowhere" / "orch")
@@ -69,6 +74,34 @@ class PlannerRoot(unittest.TestCase):
             discovery.planner_root(self.tmp)
         self.assertIn("PLANNER_UNAVAILABLE", str(caught.exception))
         self.assertIn(discovery.PLANNER_ROOT_ENV, str(caught.exception))
+
+    def test_legacy_env_after_planner_root_warns_once(self):
+        legacy = make_planner(self.tmp / "legacy")
+        with mock.patch.dict(os.environ, {discovery.LEGACY_ROOT_ENV: str(legacy)}), \
+                mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(discovery.planner_root(), legacy)
+            self.assertEqual(discovery.planner_root(), legacy)
+        self.assertEqual(stderr.getvalue().count("SKM_TASK_ROOT_DEPRECATED"), 1)
+        self.assertIn("set PLANNER_ROOT", stderr.getvalue())
+
+    def test_planner_root_wins_over_legacy_env_silently(self):
+        planner = make_planner(self.tmp / "new")
+        legacy = make_planner(self.tmp / "legacy")
+        with mock.patch.dict(os.environ, {discovery.PLANNER_ROOT_ENV: str(planner),
+                                          discovery.LEGACY_ROOT_ENV: str(legacy)}), \
+                mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(discovery.planner_root(), planner)
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_legacy_env_wins_over_neighbour(self):
+        orch = self.tmp / "pkgs" / "orch"
+        orch.mkdir(parents=True)
+        make_planner(self.tmp / "pkgs" / "planner")
+        legacy = make_planner(self.tmp / "legacy")
+        with mock.patch.dict(os.environ, {discovery.LEGACY_ROOT_ENV: str(legacy)}), \
+                mock.patch.object(discovery, "orch_root", return_value=orch), \
+                mock.patch("sys.stderr", new_callable=io.StringIO):
+            self.assertEqual(discovery.planner_root(), legacy)
 
     def test_orch_root_is_the_orch_package(self):
         self.assertTrue((discovery.orch_root() / "bridges" / "task" / "bridge.json").is_file())

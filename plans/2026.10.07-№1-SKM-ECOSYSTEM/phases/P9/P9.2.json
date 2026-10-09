@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.2",
   "title": "Переходные алиасы: плагин совместимости task (/task:*), SKM_TASK_ROOT и TASK_* с предупреждением, разбор task:<id>",
-  "status": "todo",
+  "status": "done",
   "summary": "Плагин совместимости task (packages/planner/aliases/task): сгенерированные рендером копии 10 команд planner с предупреждением в первой строке, своя запись маркетплейса через plugin_dirs хоста; SKM_TASK_ROOT после PLANNER_ROOT у harness и orch с предупреждением SKM_TASK_ROOT_DEPRECATED; диспетчер мостов экспортирует TASK_ROOT/TASK_PLAN_PY на окно; planner.commands_compat.normalize_command_id принимает task:<id> с предупреждением TASK_COMMAND_DEPRECATED (parse_next_carrier, review_selection), harness принимает оба префикса; места окна помечены комментарием об удалении.",
   "why": "D9 и D56: /task:* и SKM_TASK_ROOT работают один minor с предупреждением. Внешние предпосылки (research/P9-perplexity.md): пространство имён — имя манифеста, вызов /planner:* моделью из команды-алиаса заблокирован disable-model-invocation, renames маркетплейса убирает старые команды сразу — поэтому копии команд и две записи на окно. Жёсткий риск: копия алиаса разойдётся с командой planner — страхует генерация рендером и --check.",
   "scope": {
@@ -214,6 +214,38 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:29Z"
+  "result": {
+    "started_at": "2026-10-09T19:19:17Z",
+    "finished_at": "2026-10-09T19:49:58Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "d0b5ff0f-2113-420d-b697-2fce36fc33ad"
+    },
+    "notes": "Плагин совместимости task (10 команд, генерация рендером + golden), SKM_TASK_ROOT у harness и orch с предупреждением один раз, TASK_ROOT/TASK_PLAN_PY у диспетчера, task:<id> в parse_next_carrier и review_selection, префиксы task в harness router и agent-router; запись task в маркетплейсе через plugin_dirs; golden skiller-registry перезахвачен.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T19:49:58Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T19:49:58Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T19:49:58Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T19:49:58Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T19:49:58Z"
 }

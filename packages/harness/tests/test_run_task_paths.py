@@ -1,4 +1,5 @@
 """Discovery of the planner package for `harness run`: env → neighbour → monorepo → PLANNER_UNAVAILABLE."""
+import io
 import os
 import tempfile
 import unittest
@@ -21,10 +22,14 @@ class PlannerRootTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.tmp = Path(self._tmp.name).resolve()
-        env = {k: v for k, v in os.environ.items() if k != task_paths.PLANNER_ROOT_ENV}
+        env = {k: v for k, v in os.environ.items()
+               if k not in (task_paths.PLANNER_ROOT_ENV, task_paths.LEGACY_ROOT_ENV)}
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)
+        warned = mock.patch.object(task_paths, "_LEGACY_ROOT_WARNED", False)
+        warned.start()
+        self.addCleanup(warned.stop)
 
     def _no_neighbour(self):
         # `parents[4]` of the module file decides the neighbour; point it at an empty tree.
@@ -63,6 +68,30 @@ class PlannerRootTest(unittest.TestCase):
         with mock.patch.dict(os.environ, {task_paths.PLANNER_ROOT_ENV: str(make_planner(self.tmp / "e"))}):
             self.assertEqual(task_paths.planner_root(monorepo_root="/no/such/root"),
                              Path("/no/such/root") / "packages" / "planner")
+
+    def test_legacy_env_after_planner_root_warns_once(self):
+        legacy = make_planner(self.tmp / "legacy")
+        with mock.patch.dict(os.environ, {task_paths.LEGACY_ROOT_ENV: str(legacy)}), \
+                mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(task_paths.planner_root(), legacy)
+            self.assertEqual(task_paths.planner_root(), legacy)
+        self.assertEqual(stderr.getvalue().count("SKM_TASK_ROOT_DEPRECATED"), 1)
+        self.assertIn("set PLANNER_ROOT", stderr.getvalue())
+
+    def test_planner_root_wins_over_legacy_env_silently(self):
+        planner = make_planner(self.tmp / "new")
+        legacy = make_planner(self.tmp / "legacy")
+        with mock.patch.dict(os.environ, {task_paths.PLANNER_ROOT_ENV: str(planner),
+                                          task_paths.LEGACY_ROOT_ENV: str(legacy)}), \
+                mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(task_paths.planner_root(), planner)
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_invalid_legacy_env_is_ignored_without_warning(self):
+        with mock.patch.dict(os.environ, {task_paths.LEGACY_ROOT_ENV: str(self.tmp / "missing")}), \
+                mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(task_paths.planner_root(self.tmp), REPO_ROOT / "packages" / "planner")
+        self.assertEqual(stderr.getvalue(), "")
 
     def test_legacy_exception_name_is_an_alias(self):
         self.assertIs(task_paths.TaskUnavailable, task_paths.PlannerUnavailable)

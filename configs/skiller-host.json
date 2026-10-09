@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "plugin_dirs": ["packages/*"],
+  "plugin_dirs": ["packages/*", "packages/planner/aliases/*"],
   "bucket_aliases": {"system": ["maind", "harness", "analyst", "brain"]},
   "default_command_plugins": ["planner"],
   "version_files": [{"path": "packages/planner/configs/command-routing.json", "key": "plugin_version"}],

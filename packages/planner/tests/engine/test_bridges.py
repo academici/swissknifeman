@@ -18,7 +18,7 @@ except ImportError:
 PROBE = """import json, os, sys
 with open(os.environ["BRIDGE_PROBE"], "w", encoding="utf-8") as handle:
     json.dump({"args": sys.argv[1:], "env": {k: os.environ.get(k) for k in
-               ("PLANNER_ROOT", "PLANNER_PLAN_PY", "PYTHONPATH", "BRIDGE_PROBE")}}, handle)
+               ("PLANNER_ROOT", "PLANNER_PLAN_PY", "TASK_ROOT", "TASK_PLAN_PY", "PYTHONPATH", "BRIDGE_PROBE")}}, handle)
 sys.exit(int(sys.argv[1]) if sys.argv[1:] and sys.argv[1].isdigit() else 0)
 """
 
@@ -124,6 +124,9 @@ class RunTests(BridgeCase):
         root = bridges.PLANNER_ROOT
         self.assertEqual(result["env"]["PLANNER_ROOT"], str(root))
         self.assertEqual(result["env"]["PLANNER_PLAN_PY"], str(root / "scripts" / "plan.py"))
+        # Compatibility alias: remove in the next minor release.
+        self.assertEqual(result["env"]["TASK_ROOT"], str(root))
+        self.assertEqual(result["env"]["TASK_PLAN_PY"], str(root / "scripts" / "plan.py"))
         self.assertEqual(result["env"]["PYTHONPATH"], f"{root / 'lib'}{os.pathsep}/earlier")
         self.assertEqual(result["env"]["BRIDGE_PROBE"], str(self.probe_out))
 

@@ -1,17 +1,20 @@
 """Where the planner package lives for the legacy `harness run` driver.
 
-Order: `PLANNER_ROOT` → the `planner` package next to this installation → the monorepo
+Order: `PLANNER_ROOT` → `SKM_TASK_ROOT` (deprecated) → the `planner` package next to this installation → the monorepo
 (`find_monorepo_root`) → `PlannerUnavailable`. The same order is used by the orch `task` bridge.
 An explicit `monorepo_root` argument is a caller-supplied root and wins without fallthrough.
 """
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 from core import find_monorepo_root
 
 PLANNER_ROOT_ENV = "PLANNER_ROOT"
+LEGACY_ROOT_ENV = "SKM_TASK_ROOT"  # Compatibility alias: remove in the next minor release.
+_LEGACY_ROOT_WARNED = False  # Compatibility alias: remove in the next minor release.
 _PLAN_SCRIPT = Path("scripts") / "plan.py"
 _ROUTING = Path("configs") / "command-routing.json"
 
@@ -27,6 +30,19 @@ def _valid(root):
     return (root / _PLAN_SCRIPT).is_file()
 
 
+def _legacy_root():
+    """`SKM_TASK_ROOT` when it holds scripts/plan.py; warns once per process. Compatibility alias: remove in the next minor release."""
+    global _LEGACY_ROOT_WARNED
+    env = os.environ.get(LEGACY_ROOT_ENV)
+    if not (env and _valid(Path(env))):
+        return None
+    if not _LEGACY_ROOT_WARNED:
+        _LEGACY_ROOT_WARNED = True
+        print(f"SKM_TASK_ROOT_DEPRECATED: {LEGACY_ROOT_ENV} is deprecated; set {PLANNER_ROOT_ENV}",
+              file=sys.stderr)
+    return Path(env).resolve()
+
+
 def planner_root(start=None, *, monorepo_root=None):
     """Planner package root; `start` (default: cwd) seeds the monorepo fallback."""
     if monorepo_root is not None:
@@ -34,6 +50,9 @@ def planner_root(start=None, *, monorepo_root=None):
     env = os.environ.get(PLANNER_ROOT_ENV)
     if env and _valid(Path(env)):
         return Path(env).resolve()
+    legacy = _legacy_root()  # Compatibility alias: remove in the next minor release.
+    if legacy is not None:
+        return legacy
     neighbour = Path(__file__).resolve().parents[4] / "planner"
     if _valid(neighbour):
         return neighbour

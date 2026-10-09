@@ -11,6 +11,13 @@
         "grok"
       ]
     },
+    "task": {
+      "_doc": "Compatibility alias: remove in the next minor release.",
+      "version_owner": "umbrella",
+      "required_providers": [
+        "claude-code"
+      ]
+    },
     "maind": {
       "version_owner": "package",
       "package": "maind",

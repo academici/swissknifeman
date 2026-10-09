@@ -78,6 +78,8 @@ def environment() -> dict[str, str]:
     lib = str(PLANNER_ROOT / "lib")
     env["PLANNER_ROOT"] = str(PLANNER_ROOT)
     env["PLANNER_PLAN_PY"] = str(PLANNER_ROOT / "scripts" / "plan.py")
+    env["TASK_ROOT"] = env["PLANNER_ROOT"]  # Compatibility alias: remove in the next minor release.
+    env["TASK_PLAN_PY"] = env["PLANNER_PLAN_PY"]  # Compatibility alias: remove in the next minor release.
     env["PYTHONPATH"] = lib + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     return env
 

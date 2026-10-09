@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "998da721a468",
-  "reason": "task renamed to planner",
+  "captured_from": "44581a450772",
+  "reason": "task compatibility alias",
   "generators": [
     {
       "id": "skiller-registry",
@@ -179,7 +179,7 @@
     ".agents/skills/release-discipline/SKILL.md": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9",
     ".agents/skills/skill-authoring/SKILL.md": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874",
     ".agents/skills/workflow-craft/SKILL.md": "9444d5bd250fb45e6af65ba82ad0af463565daba6e34d2e83568922cdf0779f1",
-    ".claude-plugin/marketplace.json": "d35594c80f389d3c77df81f3a69a3db59425ba2c853955b3df7fdeb05a8e1bf8",
+    ".claude-plugin/marketplace.json": "496d2771139005ce4c0cac25258e3d01cb206b0a673b014b93907a3eb304891f",
     ".claude/skills/cross-project-optimizer/SKILL.md": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6",
     ".claude/skills/decision-verification/SKILL.md": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a",
     ".claude/skills/docs-maintenance/SKILL.md": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10",

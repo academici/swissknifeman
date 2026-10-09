@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 PLANNER_ROOT_ENV = "PLANNER_ROOT"
+LEGACY_ROOT_ENV = "SKM_TASK_ROOT"  # Compatibility alias: remove in the next minor release.
+_LEGACY_ROOT_WARNED = False  # Compatibility alias: remove in the next minor release.
 UNAVAILABLE = (f"PLANNER_UNAVAILABLE: planner package not found; set {PLANNER_ROOT_ENV} to a directory "
                "holding scripts/plan.py")
 _PLAN_SCRIPT = Path("scripts") / "plan.py"
@@ -25,11 +28,27 @@ def _valid(root: Path) -> bool:
     return (root / _PLAN_SCRIPT).is_file()
 
 
+def _legacy_root() -> Path | None:
+    """``SKM_TASK_ROOT`` when it holds scripts/plan.py; warns once per process. Compatibility alias: remove in the next minor release."""
+    global _LEGACY_ROOT_WARNED
+    env = os.environ.get(LEGACY_ROOT_ENV)
+    if not (env and _valid(Path(env))):
+        return None
+    if not _LEGACY_ROOT_WARNED:
+        _LEGACY_ROOT_WARNED = True
+        print(f"SKM_TASK_ROOT_DEPRECATED: {LEGACY_ROOT_ENV} is deprecated; set {PLANNER_ROOT_ENV}",
+              file=sys.stderr)
+    return Path(env).resolve()
+
+
 def planner_root(start: Path | str | None = None) -> Path:
-    """``PLANNER_ROOT`` → the ``planner`` package next to orch → the monorepo ancestor of ``start`` (default cwd)."""
+    """``PLANNER_ROOT`` → ``SKM_TASK_ROOT`` (deprecated) → the ``planner`` package next to orch → the monorepo ancestor of ``start`` (default cwd)."""
     env = os.environ.get(PLANNER_ROOT_ENV)
     if env and _valid(Path(env)):
         return Path(env).resolve()
+    legacy = _legacy_root()  # Compatibility alias: remove in the next minor release.
+    if legacy is not None:
+        return legacy
     neighbour = orch_root().parent / "planner"
     if _valid(neighbour):
         return neighbour

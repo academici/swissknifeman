@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "banner-before-json",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "Prints a banner before its JSON answer.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["python3", "plugin.py"],
+  "provides": {"points": ["demo:check"]}
+}

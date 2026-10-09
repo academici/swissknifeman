@@ -11,6 +11,8 @@ errors go to stderr as ``<CODE>: <message>``.
 configuration: ``describe`` and ``invoke`` start plugins (after the manifest check and the handshake),
 ``list`` and ``status`` never do; ``status`` always exits 0, it is a diagnosis. ``aicore ext overlays SLOT``
 prints the overlay block of a module slot; warnings go to stderr and ``--strict`` makes them exit 1.
+``aicore ext conformance MANIFEST`` starts a plugin through the conformance scenarios, prints one
+``<status> <check_id>: <observed>`` line each (``--json``: a list of check-result documents) and exits 1 on a ``fail``.
 """
 from __future__ import annotations
 
@@ -23,6 +25,7 @@ from pathlib import Path
 from typing import Any, List, Mapping, Optional, Sequence, TextIO
 
 from ..state import find_project_root
+from . import conformance as _conformance
 from . import delivery as _delivery
 from . import journal
 from . import overlays as _overlays
@@ -248,17 +251,27 @@ def build_ext_parser() -> argparse.ArgumentParser:
     overlays_cmd.add_argument("--json", action="store_true", help='print {"slot", "overlays", "warnings"} instead')
     overlays_cmd.add_argument("--strict", action="store_true", help="exit 1 when there is a warning")
 
+    conformance_cmd = commands.add_parser("conformance", help="check a plugin against the protocol (starts it "
+                                          "several times)")
+    conformance_cmd.add_argument("manifest", metavar="MANIFEST", help="path of the extension.json of the plugin")
+    conformance_cmd.add_argument("--input-file", metavar="FILE", help="the input of the invoke call, a JSON object "
+                                 "(default: example_input of the manifest)")
+    conformance_cmd.add_argument("--json", action="store_true", help="print the results as a JSON list of "
+                                 "check-result documents")
+
     status_cmd = commands.add_parser("status", help="show the plugins and the subscriptions (always exits 0)")
     status_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
     status_cmd.add_argument("--json", action="store_true", help="print the status as JSON")
     return parser
 
 
-def _input(args: argparse.Namespace) -> dict:
-    if args.input is None and args.input_file is None:
-        return {}
+def _input(args: argparse.Namespace) -> Optional[dict]:
+    """The JSON object of ``--input`` or ``--input-file``; None when neither was given."""
+    inline = getattr(args, "input", None)
+    if inline is None and args.input_file is None:
+        return None
     try:
-        text = args.input if args.input is not None else Path(args.input_file).read_text(encoding="utf-8")
+        text = inline if inline is not None else Path(args.input_file).read_text(encoding="utf-8")
         value = json.loads(text)
     except (OSError, ValueError) as exc:
         raise ExtError("EVENT_INVALID", f"the input is not readable JSON: {exc.__class__.__name__}") from None
@@ -313,7 +326,7 @@ def _run_plugins_describe(args: argparse.Namespace, env: Mapping[str, str], cwd:
 
 
 def _run_plugins_invoke(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO) -> int:
-    results = _plugins.invoke_point(args.point, _input(args), project=_project(args, env, cwd), env=env)
+    results = _plugins.invoke_point(args.point, _input(args) or {}, project=_project(args, env, cwd), env=env)
     if args.json:
         print(json.dumps({"point": args.point, "results": [item.to_json() for item in results]},
                          ensure_ascii=False, sort_keys=True), file=out)
@@ -381,7 +394,19 @@ def _run_ext_overlays(args: argparse.Namespace, env: Mapping[str, str], cwd: Pat
     return 1 if args.strict and found.warnings else 0
 
 
-_EXT_COMMANDS = {"plugins": _run_ext_plugins, "overlays": _run_ext_overlays, "status": _run_ext_status}
+def _run_ext_conformance(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO,
+                         err: TextIO) -> int:
+    results = _conformance.run_conformance(cwd / args.manifest, input_doc=_input(args), env=env)
+    if args.json:
+        print(json.dumps(results, ensure_ascii=False, sort_keys=True), file=out)
+    else:
+        for item in results:
+            print(f"{item['status']} {item['check_id']}: {item['observed']}", file=out)
+    return 1 if any(item["status"] == "fail" for item in results) else 0
+
+
+_EXT_COMMANDS = {"plugins": _run_ext_plugins, "overlays": _run_ext_overlays, "status": _run_ext_status,
+                 "conformance": _run_ext_conformance}
 
 
 def _dispatch(prog: str, parser: argparse.ArgumentParser, commands: Mapping[str, Any],

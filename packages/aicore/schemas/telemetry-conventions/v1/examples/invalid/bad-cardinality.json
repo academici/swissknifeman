@@ -1,0 +1,141 @@
+{
+  "$schema": "urn:swissknifeman:aicore:telemetry-conventions:v1",
+  "namespace": "skm",
+  "spans": [
+    {
+      "name": "skm.run",
+      "parent": null,
+      "description": "One run of a plan or a workflow, from start to its outcome.",
+      "genai": null
+    },
+    {
+      "name": "skm.plan.compile",
+      "parent": "skm.run",
+      "description": "Turning a plan into stages that can be executed.",
+      "genai": null
+    },
+    {
+      "name": "skm.stage",
+      "parent": "skm.run",
+      "description": "One stage of a run.",
+      "genai": null
+    },
+    {
+      "name": "skm.agent.execute",
+      "parent": "skm.stage",
+      "description": "One agent working on a stage.",
+      "genai": "invoke_agent {agent}"
+    },
+    {
+      "name": "skm.tool.execute",
+      "parent": "skm.agent.execute",
+      "description": "One tool call made by an agent.",
+      "genai": "execute_tool {tool}"
+    },
+    {
+      "name": "skm.effect.apply",
+      "parent": "skm.agent.execute",
+      "description": "Applying one effect of an agent to the outside world, such as a file change.",
+      "genai": null
+    },
+    {
+      "name": "skm.event.deliver",
+      "parent": null,
+      "description": "Delivery of one event to one subscriber; it continues the trace of the event that caused it through its traceparent.",
+      "genai": null
+    },
+    {
+      "name": "skm.plugin.invoke",
+      "parent": null,
+      "description": "One call of an external plugin.",
+      "genai": null
+    }
+  ],
+  "attributes": [
+    {
+      "name": "skm.module",
+      "type": "string",
+      "cardinality": "medium",
+      "description": "Id of the module that produced the signal."
+    },
+    {
+      "name": "skm.provider",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Id of the model provider."
+    },
+    {
+      "name": "skm.model.class",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Model class: economy, implementation or frontier."
+    },
+    {
+      "name": "skm.stage.kind",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Kind of a stage, from a fixed list of the workflow."
+    },
+    {
+      "name": "skm.outcome",
+      "type": "string",
+      "cardinality": "low",
+      "description": "How the operation ended: ok, failed, skipped or cancelled."
+    },
+    {
+      "name": "skm.event.type",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Type of an event, <module>.<subject>.<verb>."
+    },
+    {
+      "name": "skm.plugin.id",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Id of an external plugin."
+    },
+    {
+      "name": "skm.error.class",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Class of a failure, from a fixed list."
+    },
+    {
+      "name": "skm.run.id",
+      "type": "string",
+      "cardinality": "high",
+      "description": "Id of one run."
+    },
+    {
+      "name": "skm.stage.id",
+      "type": "string",
+      "cardinality": "high",
+      "description": "Id of one stage of a run."
+    },
+    {
+      "name": "skm.attempt.id",
+      "type": "string",
+      "cardinality": "high",
+      "description": "Id of one attempt at a stage."
+    },
+    {
+      "name": "skm.request.id",
+      "type": "string",
+      "cardinality": "high",
+      "description": "Id of one request to a provider or a plugin."
+    },
+    {
+      "name": "skm.event.id",
+      "type": "string",
+      "cardinality": "high",
+      "description": "Id of one event."
+    },
+    {
+      "name": "skm.plan.item",
+      "type": "string",
+      "cardinality": "high",
+      "description": "Reference of a plan item."
+    }
+  ],
+  "metric_label_rule": "low-cardinality-only"
+}

@@ -22,7 +22,7 @@ def load(path: Path):
 class TestContractExamples(unittest.TestCase):
     def test_contracts_are_found(self):
         self.assertTrue({"unit", "check-result", "digest", "common", "event", "artifact-ref", "permissions",
-                         "extension", "plugin-request", "plugin-response", "plugin-describe"}
+                         "extension", "plugin-request", "plugin-response", "plugin-describe", "telemetry-conventions"}
                         <= {path.parent.name for path in CONTRACTS})
 
     def test_every_contract_loads_under_the_closed_profile(self):
@@ -40,7 +40,7 @@ class TestContractExamples(unittest.TestCase):
 
     def test_extension_contracts_have_two_valid_and_three_invalid_examples(self):
         for name in ("event", "artifact-ref", "permissions", "extension", "plugin-request", "plugin-response",
-                     "plugin-describe"):
+                     "plugin-describe", "telemetry-conventions"):
             with self.subTest(contract=name):
                 self.assertGreaterEqual(len(examples(SCHEMAS / name / "v1", "valid")), 2)
                 self.assertGreaterEqual(len(examples(SCHEMAS / name / "v1", "invalid")), 3)

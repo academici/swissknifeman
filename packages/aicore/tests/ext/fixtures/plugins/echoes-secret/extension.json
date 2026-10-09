@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "echoes-secret",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "Writes the value of its secret into its answer.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["python3", "plugin.py"],
+  "provides": {"points": ["demo:check"]},
+  "permissions": {"secrets": ["env://FIXTURE_SECRET"]}
+}

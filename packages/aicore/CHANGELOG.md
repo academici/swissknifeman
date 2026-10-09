@@ -16,6 +16,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **Plugin conformance:** `aicore ext conformance MANIFEST [--input-file FILE] [--json]` and `aicore.ext.conformance.run_conformance`
+  start a plugin (any plugin, not only those of the machine configuration) through nine scenarios and report
+  `check-result/v1` documents `ext.conformance.<scenario>`: `manifest`, `describe`, `protocol-unsupported` (protocol `999` must be
+  refused with `PROTOCOL_UNSUPPORTED`), `invoke`, `redelivery` (subscribers), `stdout-discipline`, `deadline`, `no-descendants`
+  and `secrets` (a trusted run with a made-up secret value that must not reach stdout). `no-descendants` runs in a child process
+  (`python3 -m aicore.ext.conformance --supervise`) that adopts orphans with `PR_SET_CHILD_SUBREAPER` and reaps them with
+  `waitpid(-1)`, so it also finds a process that left the group through `setsid()` and never takes a child of the caller; it is a
+  `skip` on other systems than Linux. Exit code 1 when any scenario fails. Contract tests for the event journal
+  (`tests/ext/test_event_contract.py`): round trip, additive attributes ignored, malformed lines reported without losing events.
+- **Telemetry conventions:** contract `telemetry-conventions/v1`, data `configs/telemetry-conventions.json` (span names and their
+  nesting `skm.run` -> `skm.stage` -> `skm.agent.execute` -> `skm.tool.execute`, attributes with low or high cardinality, the
+  rule that only low-cardinality attributes label metrics) and `aicore.util.telemetry` (`load_conventions`,
+  `metric_label_problems`, `span_name`). No OpenTelemetry export.
+- **Architecture test:** `aicore.ext` neither imports nor mentions `mcp`.
 - **Events:** `aicore.ext.events` (`Event`, `build_event`, `emit`, `read_events`; `data` is limited to 65536 bytes of canonical
   JSON, a `Secret` in `data` is refused without printing it; `emit` raises only for a wrong call and otherwise warns and
   returns `None` unless `strict=True`) over `aicore.ext.journal`, the only writer of the append-only project journal

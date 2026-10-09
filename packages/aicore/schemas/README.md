@@ -42,6 +42,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `plugin-request` | v1 | What the host writes to a plugin: one JSON object with the operation `describe`, `invoke` or `event` |
 | `plugin-response` | v1 | What a plugin writes back: one JSON object with a status, an output or an error |
 | `plugin-describe` | v1 | The output of a `describe` call: plugin identity and the digest of what it provides |
+| `telemetry-conventions` | v1 | Names of spans and attributes for traces and metrics, with the cardinality of each attribute and the rule that only low-cardinality attributes label metrics; data in `configs/telemetry-conventions.json`, API `aicore.util.telemetry` |
 
 ## Module config schemas
 

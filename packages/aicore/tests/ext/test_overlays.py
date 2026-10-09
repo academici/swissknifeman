@@ -296,7 +296,7 @@ class TestCli(OverlayCase):
 
     def test_the_group_lists_overlays(self):
         code, out, _err = run_cli("--help")
-        self.assertIn("plugins, overlays, status", out)
+        self.assertIn("plugins, overlays, conformance, status", out)
         self.assertEqual(run_cli("ext", "--help", env=self.env)[0], 0)
 
 

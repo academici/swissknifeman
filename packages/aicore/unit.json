@@ -27,7 +27,8 @@
       {"id": "urn:swissknifeman:aicore:extension", "path": "schemas/extension/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:plugin-request", "path": "schemas/plugin-request/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:plugin-response", "path": "schemas/plugin-response/v1", "version": "v1", "stability": "development"},
-      {"id": "urn:swissknifeman:aicore:plugin-describe", "path": "schemas/plugin-describe/v1", "version": "v1", "stability": "development"}
+      {"id": "urn:swissknifeman:aicore:plugin-describe", "path": "schemas/plugin-describe/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:telemetry-conventions", "path": "schemas/telemetry-conventions/v1", "version": "v1", "stability": "development"}
     ],
     "doctor": [
       {"id": "aicore.ext", "category": "integration", "probe": ["bin/aicore", "ext", "status"], "output": "text"}

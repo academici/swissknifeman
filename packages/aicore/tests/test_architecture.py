@@ -261,6 +261,25 @@ class TestImportBoundary(unittest.TestCase):
         self.assertTrue(seen, "ext/process.py no longer spawns with subprocess.Popen")
         self.assertEqual(background, 1, "delivery.spawn_background starts the deliverer with one subprocess.Popen")
 
+    def test_ext_has_no_mcp(self):
+        """``aicore.ext`` is not an MCP bus (R24): no file of ``ext`` imports a module with ``mcp`` in its name
+        or mentions ``mcp`` at all (checked on the whole text, case-insensitively)."""
+        offenders = []
+        for path in sorted((LIB / "ext").rglob("*.py")):
+            text = path.read_text(encoding="utf-8")
+            for node in ast.walk(ast.parse(text, filename=str(path))):
+                names = []
+                if isinstance(node, ast.Import):
+                    names = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    names = [node.module or ""] + [alias.name for alias in node.names]
+                if any("mcp" in name.lower() for name in names):
+                    offenders.append(f"ext/{path.name}:{node.lineno} imports {names}")
+            for number, line in enumerate(text.splitlines(), 1):
+                if "mcp" in line.lower():
+                    offenders.append(f"ext/{path.name}:{number} mentions mcp")
+        self.assertEqual(offenders, [])
+
     def test_only_journal_writes_the_journal(self):
         """The name of the project event journal appears in ``ext/journal.py`` only (it is the one writer).
         ``provider/request_lifecycle.py`` keeps its own per-request ``events.jsonl`` in another directory."""

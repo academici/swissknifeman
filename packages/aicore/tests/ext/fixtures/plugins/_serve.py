@@ -35,15 +35,17 @@ def reply(request_id, status="ok", **fields):
     sys.stdout.write(json.dumps(document))
 
 
-def serve(here, *, describe_patch=None, invoke=None, event=None, local_marks=False):
-    """Answer the one request on stdin. ``invoke(request) -> output dict``; ``event(request) -> status``."""
+def serve(here, *, describe_patch=None, invoke=None, event=None, local_marks=False, strict_protocol=True):
+    """Answer the one request on stdin. ``invoke(request) -> output dict``; ``event(request) -> status``.
+
+    ``strict_protocol=False`` answers any protocol number as if it were 1 (a plugin that skips the check)."""
     here = Path(here)
     marked = lambda entry: mark(here, entry, local_marks)  # noqa: E731
     marked({"op": "start"})
     manifest = json.loads((here / "extension.json").read_text(encoding="utf-8"))
     request = json.load(sys.stdin)
     request_id = request.get("request_id", "0" * 32)
-    if request.get("protocol") != "1":
+    if strict_protocol and request.get("protocol") != "1":
         reply(request_id, "error", error={"code": "PROTOCOL_UNSUPPORTED", "message": "protocol 1 only"})
         return
     op = request.get("op")

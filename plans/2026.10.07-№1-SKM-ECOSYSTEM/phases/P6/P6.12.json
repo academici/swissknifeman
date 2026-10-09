@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.12",
   "title": "Закрытие фазы: широкий прогон, совместимость контрактов против конца P5, сверка E1 и E2, push",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Полный прогон тестов всех модулей и скриптов хаба, skiller в песочнице, ecosystem-units со standalone --baseline, golden без перезахвата, `aicore schema compat --base origin/ecosystem-split` (конец P5 против конца P6), docs-impact и hygiene; сверка тезисов E1/E2 фазы записью plan.py log; коммит, push ветки ecosystem-split.",
   "why": "Правило плана: конец фазы — проверки зелёные и push; каждый ПРИНЯТ/АДАПТИРОВАН-тезис фазы реализован либо перенесён решением. Риск: красная проверка в модуле-потребителе после изменений валидатора и конфига (P6.1, P6.3) — чинится в фазе, не переводится в «известное».",
   "scope": {
@@ -157,12 +157,49 @@
   },
   "result": {
     "started_at": "2026-10-09T06:51:12Z",
+    "finished_at": "2026-10-09T07:10:31Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "medium",
       "session": "f41870e0-cfd6-4595-a758-55705c4d0416"
-    }
+    },
+    "notes": "V1 rerun in full green after inventory fix; compat vs origin/ecosystem-split: 0 errors, 4 warnings (development contracts), 7 notes; E1/E2 reconciliation logged on P6",
+    "deviations": [
+      "V6 tree-clean part fails only on the owner's uncommitted edits of six knowledge/*.json files (left untouched per rules); branch pushed, ahead=0 at check time. Also fixed red V1: config-inventory entry for telemetry-conventions.json."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T07:10:31Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T07:10:31Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T07:10:31Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T07:10:31Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T07:10:31Z"
+      },
+      {
+        "id": "V6",
+        "exit": 1,
+        "at": "2026-10-09T07:10:31Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T06:51:12Z"
+  "updated_at": "2026-10-09T07:10:31Z"
 }

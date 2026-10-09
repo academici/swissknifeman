@@ -71,3 +71,6 @@ by a new record.
 | [0043](0043-validator-profile-and-schema-compatibility.md) | Validator profile with patternProperties and a schema compatibility check | Accepted |
 | [0044](0044-instruction-overlays-runtime-resolution.md) | Instruction overlays are resolved at run time | Accepted |
 | [0045](0045-telemetry-naming-conventions.md) | Telemetry naming conventions | Accepted |
+| [0046](0046-brain-surface-and-vault-lookup.md) | The surface of brain and the vault lookup | Accepted |
+| [0047](0047-document-sync-through-a-host-command.md) | Document sync moves to brain and is called through a host command | Accepted |
+| [0048](0048-plan-closed-subscriber-and-idempotent-notes.md) | The plan-closed subscriber and idempotent notes | Accepted |

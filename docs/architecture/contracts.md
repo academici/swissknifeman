@@ -177,6 +177,16 @@ All are `development`. Compatibility inside `v1` is checked mechanically by `aic
 is an error from `beta` on ([ADR 0043](decisions/0043-validator-profile-and-schema-compatibility.md)). `common/v1` holds
 `$defs` only and is referenced from other contracts.
 
+### Event types: planner.plan.closed and brain.note.created
+
+Event types are not schemas of their own: the envelope is `event/v1` and the catalog of types is `provides.events` of
+each `unit.json`. Two types matter for `brain`:
+
+| Event | Producer | Consumer | Data |
+| --- | --- | --- | --- |
+| `planner.plan.closed` | planner (emitted from P9) | `brain:plan-notes` | The consumer's expectation, recorded as fixtures in `packages/brain/tests/fixtures/events/planner.plan.closed/`: `plan_id` and `title` are required; `short_id`, `status`, `goal`, `closed_at` (RFC 3339), `repository`, `phases` (`{id, title, status}`) and `counts` (`items`, `done`, `done_with_deviations`, `cancelled`) are optional; unknown fields are ignored. The schema is made at the source and checked against the fixtures ([ADR 0048](decisions/0048-plan-closed-subscriber-and-idempotent-notes.md)). |
+| `brain.note.created` | brain (`provides.events`) | none yet | `{"note": "<path from the vault root>", "plan_id": "...", "event_id": "..."}`, caused by the closing event. |
+
 ### check-result/v1
 
 | Aspect | Policy |

@@ -368,8 +368,15 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
 - **Owns:** vault lookup (`brain.vault_path` in machine configuration), project-to-vault document synchronisation (from
   `skiller`), note writing, subscriptions to ecosystem events and its own skills (`brain-locator`; later `/vault:*`
   commands).
-- **Foundation now:** module skeleton, `brain_sync` and `brain-locator`, the events contract and the first subscriber
-  (`planner.plan.closed` produces a note in the vault). Moving the external vault code comes later
+- **Built (P7):** the commands `vault`, `project`, `docs`, `note`, `doctor` and `version`; the `[brain]` configuration
+  table; document sync moved from `skiller` and called through a host command; the plugin `brain` with the skill
+  `brain-locator`; module instructions; and the subscription `brain:plan-notes`, which writes one idempotent note per
+  `planner.plan.closed` event and emits `brain.note.created`
+  ([ADR 0046](decisions/0046-brain-surface-and-vault-lookup.md),
+  [ADR 0047](decisions/0047-document-sync-through-a-host-command.md),
+  [ADR 0048](decisions/0048-plan-closed-subscriber-and-idempotent-notes.md)).
+- **Still to come:** the emitter of `planner.plan.closed` (P9), the move of `maind` onto `brain vault` (P11), `brain`
+  on `PATH` (P12), the migration of `.swissknife.json::memory_brain` (P13). Moving the external vault code comes later
   ([ADR 0007](decisions/0007-brain-module-scope.md)).
 
 ### maind
@@ -404,7 +411,7 @@ A shared skill stays in `skiller`; a skill about a particular module lives in th
 | Skill today | Goes to |
 | --- | --- |
 | `system/agent-packs`, `system/agents` | harness |
-| `system/brain-locator` | brain |
+| `system/brain-locator` | brain (plugin `brain`, done in P7) |
 | `system/local-topology`, `system/swissknifeman-locator`, `system/cross-project-coordinator`, `system/shared-memory` | maind |
 | `system/session-observer` | analyst |
 | bootstrap skills (`bootstrap/skills`, `*/dev-skills`) | unchanged |
@@ -439,7 +446,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
 | P4 | `aicore` configuration and state: layers, standard places, `SKM_HOME`, backups, `swissknifeman config` |
 | P5 | `aicore` content and delivery: catalog, budget, projection, publication, delivery, release |
 | P6 | `aicore` extensions: events, subscriptions, overlays, external plugin commands |
-| P7 | `brain` skeleton, `brain_sync` and `brain-locator`, first subscriber |
+| P7 | `brain` skeleton, document sync and `brain-locator`, first subscriber (done) |
 | P8 | `skiller` reduced to shared skills; code on `aicore`; new service files |
 | P9 | `planner` rename with aliases, configuration, overlays, events, commands on `aicore` |
 | P10 | `orch` and bridges: work-source port, engine choice in configuration, events |

@@ -24,6 +24,7 @@ export default withMermaid(defineConfig({
       { text: 'Skills', link: '/skiller/guide/', activeMatch: '/skiller/' },
       { text: 'Memory and graph', link: '/maind/', activeMatch: '/maind/' },
       { text: 'Learning', link: '/analyst/', activeMatch: '/analyst/' },
+      { text: 'Vault', link: '/brain/', activeMatch: '/brain/' },
       { text: 'References', link: '/reference', activeMatch: '/reference' },
       { text: 'core', link: '/core/', activeMatch: '/core/' },
       { text: 'task', link: '/task/', activeMatch: '/task/' },
@@ -214,6 +215,20 @@ export default withMermaid(defineConfig({
         },
       ],
 
+      '/brain/': [
+        {
+          text: 'Vault (brain)',
+          items: [
+            { text: 'Brain overview', link: '/brain/' },
+            { text: 'Guide', link: '/brain/guide/' },
+          ],
+        },
+        {
+          text: 'Reference',
+          items: [{ text: 'Command reference', link: '/brain/reference/cli' }],
+        },
+      ],
+
       '/orch/': [
         {
           text: 'Orchestration contracts (orch)',
@@ -310,6 +325,7 @@ export default withMermaid(defineConfig({
             { text: 'Environment — harness', link: '/harness/' },
             { text: 'Memory and graph — maind', link: '/maind/' },
             { text: 'Learning — analyst', link: '/analyst/' },
+            { text: 'Vault — brain', link: '/brain/' },
             { text: 'Foundation — core', link: '/core/' },
             { text: 'Intent commands — task', link: '/task/' },
           ],

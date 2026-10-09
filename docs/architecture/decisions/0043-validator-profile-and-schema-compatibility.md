@@ -17,7 +17,7 @@ within a major version were reviewed by eye.
 - **References.** `load_contract` loads neighbouring aicore contracts named by `$ref`
   (`urn:swissknifeman:aicore:<contract>:v<N>`); `common/v1` holds the shared `$defs`.
 - **Compatibility.** `aicore schema compat [--base REF] [--json]` (`aicore.util.schemacompat`) compares the working tree
-  with a git reference inside one major version by backward-compatibility rules (21 kinds of change). What cannot be
+  with a git reference inside one major version by backward-compatibility rules (22 kinds of change). What cannot be
   proven (`pattern`, `oneOf`) counts as breaking. A breaking change is an error for contracts at `beta` or above and a
   warning below; a bad reference exits with 2.
 

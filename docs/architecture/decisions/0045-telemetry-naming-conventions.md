@@ -13,8 +13,8 @@ would not line up, and a label with unbounded values breaks a metric backend.
 
 - **Contract `telemetry-conventions/v1`** with the data `packages/aicore/configs/telemetry-conventions.json`.
 - **Namespace `skm.*`.** Every attribute has a cardinality, `low` or `high`.
-- **Spans.** `skm.run` > `skm.plan.compile` > `skm.stage` > `skm.agent.execute` (GenAI `invoke_agent`) >
-  `skm.tool.execute` (`execute_tool`), plus `skm.effect.apply`, and the roots `skm.event.deliver` and
+- **Spans.** `skm.run` has the children `skm.plan.compile` and `skm.stage`; `skm.stage` > `skm.agent.execute` (GenAI
+  `invoke_agent`) > `skm.tool.execute` (`execute_tool`) and `skm.effect.apply`; the roots are `skm.event.deliver` and
   `skm.plugin.invoke`.
 - **Metric labels** may only be `low` attributes and the allowed `gen_ai.*` ones (`operation.name`, `provider.name`,
   `request.model`); `aicore.util.telemetry.metric_label_problems` reports violations.

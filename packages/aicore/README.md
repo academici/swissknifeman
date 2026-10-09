@@ -201,7 +201,8 @@ process: a subscriber or a plugin is a command that gets one JSON object on stdi
 bytes of canonical JSON (larger data goes to `aicore.state.blobs` and is referenced by `artifact-ref/v1`); a `Secret` in
 `data` is refused. The journal has one writer (`aicore.ext.journal`): one `os.write` per event under an `flock`, then
 `fsync`; readers see only complete lines. `emit` raises only for a wrong call (type, `data`, size, `Secret`); a failed
-write or configuration is a warning and `None` (`strict=True` raises). `aicore events emit|list` emulates and reads events.
+journal write is a warning and `None`, a failing configuration or delivery start still returns the stored event with a
+warning (`strict=True` raises both). `aicore events emit|list` emulates and reads events.
 
 ### Delivery and its guarantees
 
@@ -220,12 +221,12 @@ its own session), `sync` or `off`. Guarantees:
 ```text
 aicore events emit --source MODULE --type TYPE [--subject TEXT] [--data JSON | --data-file FILE] [--delivery MODE] [--strict-type] [--json]
 aicore events list [--type PATTERN] [--since ID] [--limit N] [--json]
-aicore events deliver | replay (--from-start | --from-event ID | --event ID) | status
+aicore events deliver | replay SUBSCRIPTION (--from-start | --from-event ID | --event ID) | status
 ```
 
 ### Subscriptions
 
-A subscription is `on` (an event type) and `run` (an argv) or `plugin` (a registered plugin id). It comes from the
+A subscription is `on` (a list of event type patterns, shell-style wildcards) and `run` (an argv) or `plugin` (a registered plugin id). It comes from the
 `subscribes` field of a `unit.json` (id `<module>:<name>`) or from `[aicore.subscriptions.<id>]` in the machine
 config. Configuration may switch a module subscription off (`enabled = false`) or retime it, never replace its command.
 The command runs in the cleaned environment with `SKM_PROJECT_ROOT`, `SKM_EVENT_JOURNAL`, `SKM_EVENT_SUBSCRIPTION` and
@@ -236,8 +237,9 @@ The command runs in the cleaned environment with `SKM_PROJECT_ROOT`, `SKM_EVENT_
 A plugin is a folder with an `extension.json` (`extension/v1`; kinds `command` and `subscriber`), registered in the machine
 config under `[aicore.plugins.<id>]`. `aicore.ext.plugins.load_manifest` checks the manifest before anything runs
 (schema, entrypoint inside the folder, protocol range against the host's `1`, required contracts, permission profile).
-Then the plugin is started with `{"op": "describe"}` and its `id`, `version`, `kind`, `protocol` and
-`capabilities_digest` (digest of `provides`) must equal the manifest; only then `invoke` (a point a module declared in
+Then the plugin is started with a `plugin-request/v1` of `op` `describe` (the host adds `protocol`, `request_id`, `deadline_ms` and `context`).
+Its `id`, `version`, `kind` and `capabilities_digest` (digest of `provides`) must equal the manifest and its `protocol`
+must lie in the range shared by the manifest and the host; only then `invoke` (a point a module declared in
 `extension_points`, through `invoke_point`) or `event` is sent. There is no cache: every use describes again. Protocol
 `1` is stdio JSON: one request in, exactly one JSON object out, logs on stderr only. Answers are validated as
 `plugin-response/v1`. Failures carry a code such as `PLUGIN_UNAVAILABLE`, `PROTOCOL_UNSUPPORTED`, `PROCESS_TIMEOUT` or
@@ -254,8 +256,8 @@ aicore ext status [--json] [--project DIR]        # always exits 0; the doctor p
 grace, SIGKILL to the group, and a final SIGKILL to the group after the child exits; stdout is limited to 1 MiB, the
 stderr tail to 2 KiB, with declared secrets replaced by `***`. The environment is cleaned to an allowlist. A plugin the
 machine config marks `trusted` receives the environment names and `env://` secrets its manifest declares; an untrusted
-one receives neither, and `aicore ext status` lists what it did not get. Only the machine config can define what runs
-(`run`, `plugin`, `manifest`, `trusted`, `on`, `projects`, timeouts); a project file in git may only switch an entry off and
+one receives neither, and `aicore ext status` lists what it did not get. Only the machine config, the `--config` invocation file and flags can define what
+runs (`run`, `plugin`, `manifest`, `trusted`, `on`, `projects`, timeouts); a project file in git may only switch an entry off and
 add overlays.
 
 Known limits, each with the trigger that ends it:
@@ -322,8 +324,8 @@ or no git exits 2. The validator profile also knows `patternProperties` and `pro
 ## Telemetry conventions
 
 `configs/telemetry-conventions.json` (contract `telemetry-conventions/v1`) fixes the names, not an exporter: attributes
-live in the `skm.*` namespace with `low` or `high` cardinality; spans nest as `skm.run` > `skm.plan.compile` >
-`skm.stage` > `skm.agent.execute` > `skm.tool.execute`, with `skm.effect.apply` and the roots `skm.event.deliver` and
+live in the `skm.*` namespace with `low` or `high` cardinality; spans nest as `skm.run` with the children `skm.plan.compile` and
+`skm.stage` > `skm.agent.execute` > (`skm.tool.execute` and `skm.effect.apply`), plus the roots `skm.event.deliver` and
 `skm.plugin.invoke`. Only low-cardinality attributes (and the allowed `gen_ai.*` ones) may label a metric;
 `aicore.util.telemetry` offers `load_conventions`, `span_name` and `metric_label_problems`. OpenTelemetry export is not
 implemented ([ADR 0045](../../docs/architecture/decisions/0045-telemetry-naming-conventions.md)).

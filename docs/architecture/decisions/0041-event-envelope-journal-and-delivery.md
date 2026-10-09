@@ -21,8 +21,8 @@ journal that survives a crash, and a delivery that never breaks the source.
   `ext/deliver.lock`; one deliverer per journal; at-least-once, so a subscriber is idempotent by `id`; one attempt per
   event and pass; after `max_attempts` (3) the event goes to `ext/dead-letter.jsonl`; `replay` delivers again.
 - **Modes:** `background` (default), `sync`, `off`.
-- **The source is never broken:** `emit` raises only for a wrong call (type, data, size, `Secret`); I/O and configuration
-  failures are a warning and `None`.
+- **The source is never broken:** `emit` raises only for a wrong call (type, data, size, `Secret`); a journal failure is a
+  warning and `None`, a configuration or delivery-start failure a warning with the stored event returned.
 
 ## Alternatives considered
 

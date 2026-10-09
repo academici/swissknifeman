@@ -121,7 +121,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   `enabled = false` and add overlays. `config.example.toml` is generated from the schema.
 - **`aicore schema compat`**: mechanical backward-compatibility check of the contract schemas
   (`aicore.util.schemacompat`: `compare`, `Change`, `RULES`). It compares the contracts of the working tree with the
-  same contracts at a git reference (`--base`, default `HEAD`) inside one major version and reports 21 kinds of
+  same contracts at a git reference (`--base`, default `HEAD`) inside one major version and reports 22 kinds of
   change; a change whose compatibility is not provable (`pattern`, `oneOf`) counts as breaking. A breaking change
   is an error (exit 1) for contracts that are `beta`, `rc`, `stable` or `deprecated` in `unit.json`, and a warning
   for `development` and `alpha`. `--json` prints one document; a missing git or a bad reference exits with 2.

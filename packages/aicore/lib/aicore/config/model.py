@@ -21,7 +21,7 @@ import os
 import re
 import stat
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence,
                     Set, Tuple, Union)
@@ -57,6 +57,8 @@ _COMMON_LEAF = {"type", "description", "title", "default", "x-skm-secret", "x-sk
 _ITEM_KEYWORDS = {"type", "description", "title", "enum", "minimum", "maximum", "minLength", "pattern"}
 _ROOT_KEYWORDS = {"$schema", "$id", "type", "title", "description", "properties", "additionalProperties"}
 _TABLE_KEYWORDS = {"type", "title", "description", "properties", "additionalProperties"}
+_MAP_KEYWORDS = {"type", "title", "description", "patternProperties", "additionalProperties"}
+ENTRY = "*"  # stands for the name of an entry in the keys of a map's template leaves
 _OPERATORS = ("_unset", "_append")
 
 # Variables already reported as unknown in this process: one warning per variable and module.
@@ -90,11 +92,38 @@ class Leaf:
     description: str
 
 
+@dataclass(frozen=True)
+class MapSpec:
+    """A dictionary table: entries named by ``pattern``, each entry one leaf or one table of leaves.
+
+    The template leaves hold the placeholder :data:`ENTRY` where the entry name goes in their ``key``
+    (``("subscriptions", "*", "on")``); :meth:`ModuleSchema.leaf` rewrites them to a real entry.
+    """
+
+    key: Key
+    pattern: str
+    regex: Any
+    description: str
+    value_leaf: Optional[Leaf]
+    value_table: Optional[Dict[str, Leaf]]
+
+    def matches(self, name: str) -> bool:
+        return self.regex.search(name) is not None
+
+    def templates(self) -> List[Leaf]:
+        return [self.value_leaf] if self.value_leaf is not None else list((self.value_table or {}).values())
+
+
 class ModuleSchema:
-    """The checked schema of a module's config section, with its leaves in schema order."""
+    """The checked schema of a module's config section, with its leaves in schema order.
+
+    ``leaves`` and ``tables`` hold the fixed part of the schema; ``maps`` the dictionary tables, whose
+    entries exist only in configuration files (see :class:`MapSpec`).
+    """
 
     def __init__(self, module_id: str, registry: _schema.Registry, root: Dict[str, Any],
-                 leaves: Dict[Key, Leaf], tables: Set[Key], source: str) -> None:
+                 leaves: Dict[Key, Leaf], tables: Set[Key], source: str,
+                 maps: Optional[Dict[Key, MapSpec]] = None) -> None:
         self.module_id = module_id
         self.source = source
         self._registry = registry
@@ -102,9 +131,48 @@ class ModuleSchema:
         self._id = registry.for_kind("config")[1]
         self.leaves = leaves
         self.tables = tables
+        self.maps: Dict[Key, MapSpec] = maps or {}
+
+    def entry_of(self, key: Key) -> Optional[Tuple[MapSpec, str, Key]]:
+        """``(map, entry name, rest of the key)`` when ``key`` lies in an entry of a map, else ``None``."""
+        for spec in self.maps.values():
+            size = len(spec.key)
+            if len(key) > size and key[:size] == spec.key and spec.matches(key[size]):
+                return spec, key[size], key[size + 1:]
+        return None
+
+    def find_leaf(self, key: Union[str, Iterable[str]]) -> Optional[Leaf]:
+        """The leaf of ``key`` (a leaf of an entry is the template leaf with the real key), or ``None``."""
+        parts = _split_key(key)
+        found = self.leaves.get(parts)
+        if found is not None:
+            return found
+        hit = self.entry_of(parts)
+        if hit is None:
+            return None
+        spec, _name, rest = hit
+        if spec.value_leaf is not None and not rest:
+            template = spec.value_leaf
+        elif spec.value_table is not None and len(rest) == 1 and rest[0] in spec.value_table:
+            template = spec.value_table[rest[0]]
+        else:
+            return None
+        return replace(template, key=parts)
+
+    def classify(self, key: Union[str, Iterable[str]]) -> Optional[str]:
+        """``leaf``, ``table``, ``map`` or ``entry`` (a table-valued entry of a map); ``None`` if unknown."""
+        parts = _split_key(key)
+        if parts in self.tables:
+            return "table"
+        if parts in self.maps:
+            return "map"
+        if self.find_leaf(parts) is not None:
+            return "leaf"
+        hit = self.entry_of(parts)
+        return "entry" if hit is not None and not hit[2] and hit[0].value_table is not None else None
 
     def leaf(self, key: Union[str, Iterable[str]]) -> Leaf:
-        found = self.leaves.get(_split_key(key))
+        found = self.find_leaf(key)
         if found is None:
             raise ConfigError("CONFIG_UNKNOWN_KEY", f"unknown key for module {self.module_id!r}",
                               key=_dotted(_split_key(key)))
@@ -133,9 +201,10 @@ def load_module_schema(path: PathLike, module_id: str) -> ModuleSchema:
         raise _invalid(source, "the root of a config schema must have type object")
     leaves: Dict[Key, Leaf] = {}
     tables: Set[Key] = {()}
-    _walk_table(root, (), source, leaves, tables, root=True)
-    schema = ModuleSchema(module_id, registry, root, leaves, tables, source)
-    for leaf in leaves.values():
+    maps: Dict[Key, MapSpec] = {}
+    _walk_table(root, (), source, leaves, tables, maps, root=True)
+    schema = ModuleSchema(module_id, registry, root, leaves, tables, source, maps)
+    for leaf in [*leaves.values(), *(t for spec in maps.values() for t in spec.templates())]:
         if leaf.has_default:
             if leaf.secret:
                 if not is_secret_ref(leaf.default):
@@ -146,7 +215,7 @@ def load_module_schema(path: PathLike, module_id: str) -> ModuleSchema:
 
 
 def _walk_table(node: Dict[str, Any], key: Key, source: str, leaves: Dict[Key, Leaf],
-                tables: Set[Key], *, root: bool = False) -> None:
+                tables: Set[Key], maps: Dict[Key, MapSpec], *, root: bool = False) -> None:
     extra = set(node) - (_ROOT_KEYWORDS if root else _TABLE_KEYWORDS)
     if extra:
         raise _invalid(source, f"keyword {sorted(extra)[0]!r} is not allowed on a table", key)
@@ -160,13 +229,62 @@ def _walk_table(node: Dict[str, Any], key: Key, source: str, leaves: Dict[Key, L
         if not _PROPERTY.match(name):
             raise _invalid(source, f"invalid key name {name!r}: use lowercase words joined by single "
                                    "underscores", child_key)
-        if child.get("type") == "object" or "properties" in child:
+        if _is_object(child):
             if child.get("type") != "object":
                 raise _invalid(source, "a table must have type object", child_key)
-            tables.add(child_key)
-            _walk_table(child, child_key, source, leaves, tables)
+            if "patternProperties" in child:
+                maps[child_key] = _make_map(child, child_key, source)
+            else:
+                tables.add(child_key)
+                _walk_table(child, child_key, source, leaves, tables, maps)
         else:
             leaves[child_key] = _make_leaf(child, child_key, source)
+
+
+def _is_object(node: Dict[str, Any]) -> bool:
+    return node.get("type") == "object" or "properties" in node or "patternProperties" in node
+
+
+def _make_map(node: Dict[str, Any], key: Key, source: str) -> MapSpec:
+    """Check a dictionary table: one anchored pattern, entries that are a leaf or a table of leaves."""
+    extra = set(node) - _MAP_KEYWORDS
+    if extra:
+        raise _invalid(source, f"keyword {sorted(extra)[0]!r} is not allowed on a map", key)
+    if node.get("additionalProperties") is not False:
+        raise _invalid(source, "every map must set additionalProperties to false", key)
+    description = node.get("description")
+    if not isinstance(description, str) or not description.strip():
+        raise _invalid(source, "every map needs a description", key)
+    patterns = node["patternProperties"]
+    if len(patterns) != 1:
+        raise _invalid(source, "a map takes exactly one pattern", key)
+    pattern, value = next(iter(patterns.items()))
+    if not (pattern.startswith("^") and pattern.endswith("$") and not pattern.endswith("\\$")):
+        raise _invalid(source, f"the pattern {pattern!r} of a map must be anchored with ^ and $", key)
+    regex = _schema._compile(pattern)  # noqa: SLF001  (the validator's own dialect)
+    if regex.search("a.b") is not None:
+        raise _invalid(source, f"map keys cannot contain dots, but the pattern {pattern!r} allows them", key)
+    entry_key = key + (ENTRY,)
+    if not _is_object(value):
+        return MapSpec(key, pattern, regex, description, _make_leaf(value, entry_key, source), None)
+    if value.get("type") != "object" or "patternProperties" in value:
+        raise _invalid(source, "an entry is a leaf or a table of leaves, not a nested map", key)
+    extra = set(value) - _TABLE_KEYWORDS
+    if extra:
+        raise _invalid(source, f"keyword {sorted(extra)[0]!r} is not allowed on an entry", key)
+    properties = value.get("properties")
+    if value.get("additionalProperties") is not False or not isinstance(properties, dict) or not properties:
+        raise _invalid(source, "an entry table must list its properties and set additionalProperties to false",
+                       key)
+    template: Dict[str, Leaf] = {}
+    for name, child in properties.items():
+        if not _PROPERTY.match(name):
+            raise _invalid(source, f"invalid key name {name!r}: use lowercase words joined by single "
+                                   "underscores", entry_key + (name,))
+        if _is_object(child):
+            raise _invalid(source, "an entry holds leaves only", entry_key + (name,))
+        template[name] = _make_leaf(child, entry_key + (name,), source)
+    return MapSpec(key, pattern, regex, description, None, template)
 
 
 def _leaf_type(node: Dict[str, Any], key: Key, source: str) -> str:
@@ -335,14 +453,15 @@ _MISSING = object()
 class ResolvedConfig:
     """The effective configuration of one module. Immutable; secrets appear as references only."""
 
-    __slots__ = ("module", "project", "layers", "warnings", "_schema", "_values", "_history", "_env")
+    __slots__ = ("module", "project", "layers", "warnings", "_schema", "_values", "_history", "_env",
+                 "_entries")
 
     def __init__(self, schema: ModuleSchema, values: Dict[Key, Any], history: Dict[Key, List[Setting]],
                  layers: Sequence[LayerInfo], project: Optional[str], warnings: Sequence[str],
-                 env: Optional[Mapping[str, str]]) -> None:
+                 env: Optional[Mapping[str, str]], entries: Optional[Dict[Key, List[str]]] = None) -> None:
         for name, value in (("module", schema.module_id), ("project", project), ("layers", tuple(layers)),
                             ("warnings", tuple(warnings)), ("_schema", schema), ("_values", values),
-                            ("_history", history), ("_env", env)):
+                            ("_history", history), ("_env", env), ("_entries", entries or {})):
             object.__setattr__(self, name, value)
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -352,17 +471,31 @@ class ResolvedConfig:
         return f"ResolvedConfig(module={self.module!r}, keys={len(self._values)})"
 
     def get(self, key: Union[str, Iterable[str]], default: Any = None) -> Any:
-        """Value of a leaf (a table gives a nested dict of its set values); ``default`` if it is unset."""
+        """Value of a leaf, or a nested dict for a table or a map (``{}`` while it has no entries).
+
+        ``default`` is returned for an unset leaf and for an entry that does not exist. A leaf of an existing
+        entry that no layer set has the default of its schema.
+        """
         parts = _split_key(key)
-        if parts in self._schema.leaves:
+        kind = self._schema.classify(parts)
+        if kind == "leaf":
             value = self._values.get(parts, _MISSING)
             return default if value is _MISSING else copy.deepcopy(value)
-        if parts in self._schema.tables:
+        if kind in ("table", "map"):
             return self._nested(parts)
+        if kind == "entry":
+            hit = self._schema.entry_of(parts)
+            assert hit is not None
+            return self._nested(parts) if hit[1] in self._entries.get(hit[0].key, ()) else default
         raise ConfigError("CONFIG_UNKNOWN_KEY", f"unknown key for module {self.module!r}", key=_dotted(parts))
 
     def _nested(self, prefix: Key) -> Dict[str, Any]:
         out: Dict[str, Any] = {}
+        for map_key in self._schema.maps:  # a map without entries is an empty dictionary
+            if map_key[:len(prefix)] == prefix:
+                cursor = out
+                for part in map_key[len(prefix):]:
+                    cursor = cursor.setdefault(part, {})
         for key, value in self._values.items():
             if key[:len(prefix)] != prefix:
                 continue
@@ -391,14 +524,25 @@ class ResolvedConfig:
     def explain(self, key: Union[str, Iterable[str], None] = None) -> List[ExplainEntry]:
         """Entries of one key, of the keys under a table, or (no ``key``) of every set key."""
         prefix: Key = () if key is None else _split_key(key)
-        if prefix not in self._schema.tables and prefix not in self._schema.leaves:
+        if self._schema.classify(prefix) is None:
             raise ConfigError("CONFIG_UNKNOWN_KEY", f"unknown key for module {self.module!r}",
                               key=_dotted(prefix))
-        return [self._entry(leaf_key) for leaf_key in self._schema.leaves
+        return [self._entry(leaf_key) for leaf_key in self._ordered_keys()
                 if leaf_key[:len(prefix)] == prefix and leaf_key in self._values]
 
+    def _ordered_keys(self) -> Iterable[Key]:
+        """The schema's leaves in schema order, then the entries of each map (first seen first, leaves in order)."""
+        yield from self._schema.leaves
+        for spec in self._schema.maps.values():
+            for name in self._entries.get(spec.key, ()):
+                if spec.value_leaf is not None:
+                    yield spec.key + (name,)
+                else:
+                    for prop in spec.value_table or ():
+                        yield spec.key + (name, prop)
+
     def _entry(self, key: Key) -> ExplainEntry:
-        leaf = self._schema.leaves[key]
+        leaf = self._schema.leaf(key)
         records = self._history[key]
         if records[-1].source == "_unset":  # reset to the default: the schema is the effective source
             winner, older = records[0], records[1:]
@@ -473,6 +617,7 @@ class _State:
         self.schema = schema
         self.values: Dict[Key, Any] = {}
         self.history: Dict[Key, List[Setting]] = {}
+        self.entries: Dict[Key, List[str]] = {key: [] for key in schema.maps}
         for key, leaf in schema.leaves.items():
             if leaf.has_default:
                 self.values[key] = copy.deepcopy(leaf.default)
@@ -511,12 +656,35 @@ class _State:
     def _record(self, key: Key, value: Any, layer: str, file: Optional[str], line: Optional[int],
                 source: Optional[str]) -> None:
         self.values[key] = value
-        self.history[key].append(Setting(layer, file, line, source, copy.deepcopy(value)))
+        self.history.setdefault(key, []).append(Setting(layer, file, line, source, copy.deepcopy(value)))
+
+    def _touch(self, leaf: Leaf) -> None:
+        """Create the entry of a map that ``leaf`` belongs to, with the defaults of its leaves."""
+        hit = self.schema.entry_of(leaf.key)
+        if hit is None:
+            return
+        spec, name, _rest = hit
+        if name in self.entries[spec.key]:
+            return
+        self.entries[spec.key].append(name)
+        for template in spec.templates():
+            if template.has_default:
+                key = spec.key + (name,) + (() if spec.value_leaf is not None else (template.key[-1],))
+                self.values[key] = copy.deepcopy(template.default)
+                self.history[key] = [Setting("defaults", None, None, None, copy.deepcopy(template.default))]
+
+    def _drop_entry(self, spec: MapSpec, name: str) -> None:
+        for key in [k for k in self.values if k[:len(spec.key) + 1] == spec.key + (name,)]:
+            del self.values[key]
+            self.history.pop(key, None)
+        if name in self.entries[spec.key]:
+            self.entries[spec.key].remove(name)
 
     def set_value(self, leaf: Leaf, value: Any, layer: str, file: Optional[str], line: Optional[int],
                   source: Optional[str]) -> None:
         self._allowed(leaf, layer, file, line)
         self._check_value(leaf, value, layer, file, line)
+        self._touch(leaf)
         self._record(leaf.key, copy.deepcopy(value), layer, file, line, source)
 
     def _flatten(self, body: Mapping[str, Any], base: Key, layer: str, file: Optional[str],
@@ -524,9 +692,10 @@ class _State:
         found: List[Tuple[Leaf, Any, Optional[int]]] = []
         for name, value in body.items():
             key = base + (name,)
-            if key in self.schema.leaves:
-                found.append((self.schema.leaves[key], value, line_of(key)))
-            elif key in self.schema.tables:
+            kind = self.schema.classify(key)
+            if kind == "leaf":
+                found.append((self.schema.leaf(key), value, line_of(key)))
+            elif kind is not None:  # table, map or entry
                 if not isinstance(value, Mapping):
                     raise self._fail("CONFIG_TYPE", "expected a table", layer, file, line_of(key), key)
                 found.extend(self._flatten(value, key, layer, file, line_of))
@@ -535,14 +704,36 @@ class _State:
                                  layer, file, line_of(key), key)
         return found
 
-    def _targets(self, name: str, layer: str, file: Optional[str], line: Optional[int]) -> List[Leaf]:
+    def _unset(self, name: str, layer: str, file: Optional[str], line: Optional[int]) -> None:
+        """``_unset`` of a leaf (back to its default), a table (every leaf), an entry or a map (removed)."""
         key = _split_key(name)
-        if key in self.schema.leaves:
-            return [self.schema.leaves[key]]
-        if key in self.schema.tables and key:
-            return [leaf for leaf_key, leaf in self.schema.leaves.items() if leaf_key[:len(key)] == key]
-        raise self._fail("CONFIG_UNKNOWN_KEY", f"unknown key for module {self.schema.module_id!r}",
-                         layer, file, line, key)
+        kind = self.schema.classify(key)
+        if kind is None or (kind == "table" and not key):
+            raise self._fail("CONFIG_UNKNOWN_KEY", f"unknown key for module {self.schema.module_id!r}",
+                             layer, file, line, key)
+        if kind == "leaf":
+            leaf = self.schema.leaf(key)
+            hit = self.schema.entry_of(key)
+            if hit is not None and hit[1] not in self.entries[hit[0].key]:
+                return  # nothing to reset: the entry does not exist
+            self._allowed(leaf, layer, file, line)
+            self._reset(leaf, layer, file, line)
+            return
+        for leaf_key, leaf in self.schema.leaves.items():
+            if kind == "table" and leaf_key[:len(key)] == key:
+                self._allowed(leaf, layer, file, line)
+                self._reset(leaf, layer, file, line)
+        for spec in self.schema.maps.values():
+            if kind == "entry":
+                hit = self.schema.entry_of(key)
+                names = [hit[1]] if hit is not None and hit[0] is spec else []
+            else:  # a table or a map: the entries of the maps at or below it
+                names = list(self.entries[spec.key]) if spec.key[:len(key)] == key else []
+            for entry in names:
+                owned = [k for k in self.values if k[:len(spec.key) + 1] == spec.key + (entry,)]
+                for owned_key in owned:  # a layer may remove only what it may define
+                    self._allowed(self.schema.leaf(owned_key), layer, file, line)
+                self._drop_entry(spec, entry)
 
     def apply_section(self, layer: str, section: Mapping[str, Any], *, file: Optional[str],
                       index: Optional[toml.LineIndex], prefix: Key, source: Optional[str] = None) -> None:
@@ -567,12 +758,10 @@ class _State:
                 raise self._fail("CONFIG_CONFLICT", "is set and appended to in the same layer", layer, file,
                                  line, leaf.key)
         for name in unset or ():
-            line = line_of(("_unset",))
-            for leaf in self._targets(name, layer, file, line):
-                self._allowed(leaf, layer, file, line)
-                self._reset(leaf, layer, file, line)
+            self._unset(name, layer, file, line_of(("_unset",)))
         for leaf, items, line in appended:
             self._allowed(leaf, layer, file, line)
+            self._touch(leaf)
             current = self.values.get(leaf.key, [])
             self._record(leaf.key, copy.deepcopy(current) + copy.deepcopy(items), layer, file, line, "_append")
         for leaf, value, line in plain:
@@ -589,7 +778,7 @@ class _State:
                 if isinstance(value, Mapping):
                     walk(value, key)
                     continue
-                leaf = self.schema.leaves.get(key)
+                leaf = self.schema.find_leaf(key)
                 if leaf is None:
                     raise self._fail("CONFIG_UNKNOWN_KEY", f"unknown key for module {self.schema.module_id!r}",
                                      layer, file, line, key)
@@ -612,12 +801,16 @@ class _State:
             self.values[leaf.key] = copy.deepcopy(leaf.default)
         else:
             self.values.pop(leaf.key, None)
-        self.history[leaf.key].append(Setting(layer, file, line, "_unset", None))
+            hit = self.schema.entry_of(leaf.key)
+            if hit is not None and hit[0].value_leaf is not None:  # an entry that is one leaf is its value
+                self._drop_entry(hit[0], hit[1])
+                return
+        self.history.setdefault(leaf.key, []).append(Setting(layer, file, line, "_unset", None))
 
     def finish(self) -> None:
         """Validate the merged tree once more (array bounds after appends, for example)."""
         for key, value in self.values.items():
-            leaf = self.schema.leaves[key]
+            leaf = self.schema.leaf(key)
             if leaf.secret:
                 continue
             issues = self.schema.issues(leaf.node, value)
@@ -700,8 +893,12 @@ def _apply_env(state: _State, env: Mapping[str, str], warn: Callable[[str], None
             continue
         leaf = names.get(name[len(prefix):])
         if leaf is None:
-            message = (f"[CONFIG_ENV_UNKNOWN] environment variable {name} matches no {module_id} "
-                       "configuration key; ignoring it")
+            if any(name[len(prefix):].startswith("__".join(map_key).upper() + "__") for map_key in state.schema.maps):
+                message = (f"[CONFIG_ENV_UNKNOWN] environment variable {name} names an entry of a {module_id} "
+                           "map, which the environment cannot set (use a config file or --config); ignoring it")
+            else:
+                message = (f"[CONFIG_ENV_UNKNOWN] environment variable {name} matches no {module_id} "
+                           "configuration key; ignoring it")
             notices.append(message)
             if (module_id, name) not in _warned_env:
                 _warned_env.add((module_id, name))
@@ -730,7 +927,7 @@ def _apply_flags(state: _State, flags: Mapping[str, Any]) -> bool:
         if raw is None:
             continue
         key = _split_key(name)
-        leaf = state.schema.leaves.get(key)
+        leaf = state.schema.find_leaf(key)
         if leaf is None:
             raise ConfigError("CONFIG_UNKNOWN_KEY", f"unknown key for module {state.schema.module_id!r}",
                               layer="flags", key=_dotted(key))
@@ -809,7 +1006,7 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
 
     state.finish()
     return ResolvedConfig(module, state.values, state.history, layers,
-                          None if project is None else str(project), notices, environment)
+                          None if project is None else str(project), notices, environment, state.entries)
 
 
 # ---------------------------------------------------------------------------------------------

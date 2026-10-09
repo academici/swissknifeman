@@ -6,15 +6,17 @@ The text is deterministic: tables are active headers, leaves are commented lines
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from typing import Any, Dict, List, Tuple
 
-from . import toml_edit
-from .model import Leaf, ModuleSchema, load_module_schema
+from . import ConfigError, toml_edit
+from .model import Leaf, MapSpec, ModuleSchema, load_module_schema
 from .units import UnitInfo
 
 Key = Tuple[str, ...]
 
 _SPACE = re.compile(r"\s+")
+_EXAMPLE_NAMES = ("example", "module:example")
 
 
 def _sentence(text: str) -> str:
@@ -61,9 +63,40 @@ def _leaf_lines(leaf: Leaf) -> List[str]:
     return lines
 
 
+def _header(schema: ModuleSchema, key: Key) -> str:
+    return ".".join([schema.module_id] + [toml_edit.render_key(part) for part in key])
+
+
+def _example_name(spec: MapSpec, source: str) -> str:
+    """The entry name shown in the example: the first of ``example``, ``module:example`` the pattern accepts."""
+    for name in _EXAMPLE_NAMES:
+        if spec.matches(name):
+            return name
+    raise ConfigError("CONFIG_SCHEMA_INVALID", f"cannot render an example key: the pattern {spec.pattern!r} "
+                      f"accepts neither {' nor '.join(repr(n) for n in _EXAMPLE_NAMES)}",
+                      file=source, key=".".join(spec.key))
+
+
+def _map_block(schema: ModuleSchema, spec: MapSpec) -> List[str]:
+    """An empty table for the map, then a commented sample entry (its leaves with their defaults)."""
+    name = _example_name(spec, schema.source)
+    block = [f"[{_header(schema, spec.key)}]", f"# {_sentence(spec.description)}"]
+    if spec.value_leaf is not None:
+        template = spec.value_leaf
+        lines = _leaf_lines(replace(template, key=spec.key + (name,)))
+        block.extend(lines[:-1])  # the sample line below is written with the entry name as the key
+        shown = toml_edit.render_value(template.default) if template.has_default else "[]"
+        block.append(f"# {toml_edit.render_key(name)} = {shown}")
+        return block
+    block.append(f"# [{_header(schema, spec.key + (name,))}]")
+    for template in (spec.value_table or {}).values():
+        block.append("")
+        block.extend(_leaf_lines(template))
+    return block
+
+
 def _tables(schema: ModuleSchema, node: Dict[str, Any], key: Key, out: List[List[str]]) -> None:
-    header = ".".join([schema.module_id] + [toml_edit.render_key(part) for part in key])
-    block = [f"[{header}]"]
+    block = [f"[{_header(schema, key)}]"]
     children: List[Tuple[Key, Dict[str, Any]]] = []
     for name, child in node.get("properties", {}).items():
         child_key = key + (name,)
@@ -76,7 +109,10 @@ def _tables(schema: ModuleSchema, node: Dict[str, Any], key: Key, out: List[List
             children.append((child_key, child))
     out.append(block)
     for child_key, child in children:
-        _tables(schema, child, child_key, out)
+        if child_key in schema.maps:
+            out.append(_map_block(schema, schema.maps[child_key]))
+        else:
+            _tables(schema, child, child_key, out)
 
 
 def render_sections(schema: ModuleSchema) -> str:

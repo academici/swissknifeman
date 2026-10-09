@@ -27,6 +27,17 @@
       "note": "analyst thresholds, schema defaults and generated config.example.toml"
     },
     {
+      "path": "packages/aicore/configs/config.schema.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "aicore extension settings: events, subscriptions, plugins, overlays"
+    },
+    {
       "path": ".codex/config.toml.example",
       "owner": "root",
       "consumers": [

@@ -9,6 +9,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **Dictionary tables in module configuration.** A config schema may declare a *map*: an object with one anchored
+  `patternProperties` key (no dots in names) whose entries are a single leaf or a table of leaves. Entries are
+  created in config files (`[mod.map.name]`), merge by key across layers, take the leaf defaults when they appear,
+  obey `x-skm-layers` per leaf, and work with `_unset` (a whole entry or one leaf), `_append`, flags,
+  `aicore config set|unset`, `explain` and `config.example.toml` (a commented sample entry). Environment
+  variables cannot address entries (one `CONFIG_ENV_UNKNOWN` warning). Schemas without maps behave as before.
+- **`[aicore]` configuration section** (`configs/config.schema.json`, `provides.config`): `events.*` (delivery
+  mode, subscriber deadline, attempts) and the maps `subscriptions`, `plugins` and `overlays`. What a machine
+  runs (`run`, `plugin`, `on`, `projects`, manifests, `trusted`, timeouts) can be set only in the machine
+  config, the invocation file and flags, never in a project file; a project may switch an entry off with
+  `enabled = false` and add overlays. `config.example.toml` is generated from the schema.
 - **`aicore schema compat`**: mechanical backward-compatibility check of the contract schemas
   (`aicore.util.schemacompat`: `compare`, `Change`, `RULES`). It compares the contracts of the working tree with the
   same contracts at a git reference (`--base`, default `HEAD`) inside one major version and reports 21 kinds of

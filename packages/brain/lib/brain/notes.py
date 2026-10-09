@@ -101,6 +101,17 @@ def vault_relative(path: Path, vault: Path) -> Optional[str]:
     return relative.replace(os.sep, "/")
 
 
+def _ledger_name(path: Path, vault: Path) -> Optional[str]:
+    """The note name below the vault for the ledger and the answer: links resolved, else the path as written."""
+    relative = vault_relative(path, vault)
+    if relative is None:  # an entry in the vault that links to a file elsewhere
+        try:
+            relative = path.relative_to(vault).as_posix()
+        except ValueError:
+            return None
+    return relative
+
+
 def _one_line(text: str) -> str:
     return " ".join(text.split())
 
@@ -225,25 +236,46 @@ def _append_ledger(lock: LedgerLock, record: Mapping[str, Any]) -> None:
 
 # --- the write ---------------------------------------------------------------------------------------------
 
+def _write_all(fd: int, data: bytes) -> None:
+    """Write every byte of ``data`` (``os.write`` may store less) and flush it."""
+    view = memoryview(data)
+    while view:
+        view = view[os.write(fd, view):]
+    os.fsync(fd)
+
+
+def _open_temporary(folder: Path, name: str) -> Tuple[int, Path]:
+    """Open a new temporary file next to the note; an existing file of any name is never touched."""
+    flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
+    for _ in range(100):
+        tmp = folder / f"{name}.tmp-{os.getpid()}-{os.urandom(4).hex()}"
+        try:
+            return os.open(tmp, flags, 0o644), tmp
+        except FileExistsError:
+            continue
+    raise OSError(errno.EEXIST, "no free temporary name")
+
+
+def _unlink_if_ours(path: Path, fd: int) -> None:
+    """Remove ``path`` only while it is still the file ``fd`` opened (never a file put there by someone else)."""
+    try:
+        opened, current = os.fstat(fd), os.lstat(path)
+        if (opened.st_dev, opened.st_ino) == (current.st_dev, current.st_ino):
+            os.unlink(path)
+    except OSError:
+        pass
+
+
 def _create_new(lock: LedgerLock, path: Path, text: str) -> bool:
     """Create ``path`` with ``text`` unless it exists; True when this call created it (I4, I5)."""
     lock.require()
     folder = path.parent
     os.makedirs(folder, exist_ok=True)
-    tmp = folder / f"{path.name}.tmp-{os.getpid()}"
+    data = text.encode("utf-8")
+    fd, tmp = _open_temporary(folder, path.name)
     try:
-        flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
         try:
-            fd = os.open(tmp, flags, 0o644)
-        except FileExistsError:  # left by an earlier crash of a process with this id; the name is ours
-            os.unlink(tmp)
-            fd = os.open(tmp, flags, 0o644)
-        try:
-            data = text.encode("utf-8")
-            view = memoryview(data)
-            while view:
-                view = view[os.write(fd, view):]
-            os.fsync(fd)
+            _write_all(fd, data)
         finally:
             os.close(fd)
         try:
@@ -259,8 +291,10 @@ def _create_new(lock: LedgerLock, path: Path, text: str) -> bool:
             except FileExistsError:
                 return False
             try:
-                os.write(target, data)
-                os.fsync(target)
+                _write_all(target, data)
+            except BaseException:
+                _unlink_if_ours(path, target)  # a retry must find the name free
+                raise
             finally:
                 os.close(target)
         return True
@@ -284,22 +318,24 @@ def _write_once(lock: LedgerLock, path: Path, text: str, event_id: str, *, vault
     if known is not None:
         return "duplicate", vault / known["note"]
 
-    def record(note: Path) -> Dict[str, str]:
-        return {"event_id": event_id, "note": note.relative_to(vault).as_posix(), "vault": str(vault),
-                "time": now.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+    def record(note: Path) -> None:
+        name = _ledger_name(note, vault)
+        if name is not None:  # without a name the frontmatter scan below still finds the note
+            _append_ledger(lock, {"event_id": event_id, "note": name, "vault": str(vault),
+                                  "time": now.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
 
     for number in range(1, MAX_SUFFIX + 1):
         candidate = _suffixed(path, number)
         if os.path.lexists(candidate):
             if frontmatter.read(candidate).get("event_id") == event_id:
-                _append_ledger(lock, record(candidate))  # repairs a ledger that lost this event
+                record(candidate)  # repairs a ledger that lost this event
                 return "duplicate", candidate
             continue
         if _create_new(lock, candidate, text):
-            _append_ledger(lock, record(candidate))
+            record(candidate)
             return "created", candidate
         if frontmatter.read(candidate).get("event_id") == event_id:  # created by someone else meanwhile
-            _append_ledger(lock, record(candidate))
+            record(candidate)
             return "duplicate", candidate
     raise BrainError(errors.NOTE_IO, f"no free name for {path.name} after {MAX_SUFFIX} tries")
 
@@ -364,7 +400,7 @@ def handle(event_doc: Any, *, project_root: Optional[PathLike], settings: _setti
             result.warnings.extend(lock.warnings)
     except OSError as exc:
         raise BrainError(errors.NOTE_IO, f"the note cannot be written: {exc.strerror or exc}") from None
-    result.note = vault_relative(written, vault_root)
+    result.note = _ledger_name(written, vault_root)
     if outcome == "duplicate":
         result.status, result.reason = "skipped", "DUPLICATE_EVENT"
         return result

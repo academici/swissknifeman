@@ -17,7 +17,7 @@ from tests.support import MODULE_ROOT, TempCase, load_event
 
 AICORE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(aicore.__file__))))
 SUBSCRIPTION = "brain:plan-notes"
-PLAN = "2026.10.07-№1-SKM-ECOSYSTEM"
+PLAN = "2026.01.15-DEMO-PLAN"
 
 
 class SubscriptionCase(TempCase):
@@ -97,7 +97,7 @@ class TestDelivery(SubscriptionCase):
         self.assertEqual(0, self.row()["lag"])
 
     def test_two_plans_give_two_notes(self):
-        first, second = self.closed("2026.10.01-№1-FIRST"), self.closed("2026.10.02-№1-SECOND")
+        first, second = self.closed("demo-first"), self.closed("demo-second")
         self.assertEqual(sorted([first.id, second.id]), self.note_event_ids())
         self.assertEqual(2, len(self.created()))
 
@@ -138,9 +138,9 @@ class TestFailureAndRetry(SubscriptionCase):
 
     def test_a_failure_keeps_the_cursor_and_the_next_delivery_writes_the_note(self):
         """R06: the event is not lost when the vault cannot be written; the same event is delivered again."""
-        first = self.closed("2026.10.01-№1-FIRST")
+        first = self.closed("demo-first")
         folder = self.lock_notes_folder()
-        second = self.closed("2026.10.02-№1-SECOND")
+        second = self.closed("demo-second")
         row = self.row()
         self.assertEqual(second.id, row["pending"]["event_id"])
         self.assertEqual(1, row["pending"]["attempts"])

@@ -7,7 +7,7 @@ from brain import errors, events
 from brain.errors import BrainError
 from tests.support import EVENTS, load_event
 
-PLAN = "2026.10.07-№1-SKM-ECOSYSTEM"
+PLAN = "2026.01.15-DEMO-PLAN"
 
 
 class TestFixtures(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestFixtures(unittest.TestCase):
     def test_valid_additive_ignores_unknown_fields_on_every_level(self):
         plan, reason = events.parse_plan_closed(load_event("valid-additive"))
         self.assertIsNone(reason)
-        self.assertEqual("2026.10.09-№2-ADDITIVE", plan.plan_id)
+        self.assertEqual("demo-additive", plan.plan_id)
         self.assertEqual((("items", 1), ("done", 1)), plan.counts)
         self.assertEqual(1, len(plan.phases))
         self.assertEqual(datetime.datetime(2026, 10, 9, 11, 30, tzinfo=datetime.timezone.utc), plan.closed_utc())

@@ -19,7 +19,7 @@ from tests.support import FIXTURE, TempCase, load_event
 NOW = datetime.datetime(2026, 10, 9, 10, 2, 15, tzinfo=datetime.timezone.utc)
 FULL_NOTE = """---
 type: plan-closed
-plan: 2026.10.07-№1-SKM-ECOSYSTEM
+plan: 2026.01.15-DEMO-PLAN
 short_id: PLAN3
 status: done_with_deviations
 closed: "2026-10-09T09:59:41Z"
@@ -46,7 +46,7 @@ Closed 2026-10-09T09:59:41Z.
 """
 MINIMAL_NOTE = """---
 type: plan-closed
-plan: 2026.10.07-№1-SKM-ECOSYSTEM
+plan: 2026.01.15-DEMO-PLAN
 closed: "2026-10-09T09:15:30.250Z"
 event_id: a1b2c3d4e5f60718293a4b5c6d7e8f90
 event_source: "urn:swissknifeman:module:planner"
@@ -57,7 +57,7 @@ tags: [plan, closed]
 
 Closed 2026-10-09T09:15:30.250Z.
 """
-FULL_NAME = "2026-10-09 2026.10.07-№1-SKM-ECOSYSTEM closed 0f1e2d3c.md"
+FULL_NAME = "2026-10-09 2026.01.15-DEMO-PLAN closed 0f1e2d3c.md"
 
 
 def plan_of(name):
@@ -67,7 +67,7 @@ def plan_of(name):
 
 
 def numbered_event(index):
-    return build_event("planner.plan.closed", {"plan_id": f"2026.10.09-№{index}-CONC", "title": f"Plan {index}"},
+    return build_event("planner.plan.closed", {"plan_id": f"demo-conc-{index}", "title": f"Plan {index}"},
                        source="planner", subject=f"plan-{index}", id=f"{index:032x}").to_json()
 
 
@@ -257,6 +257,20 @@ class TestHandle(NotesCase):
         self.assertEqual([], self.written())
 
 
+    def test_a_symlinked_vault_with_a_catalog_entry_writes_and_records_the_note(self):
+        link = self.root / "vault-link"
+        link.symlink_to(self.vault, target_is_directory=True)
+        self.configure(vault=link)
+        (self.vault / ".projects.json").write_text(json.dumps(
+            {"projects": [{"repo": str(self.project), "vault_path": "05-Projects/03-Packages/Demo"}]}),
+            encoding="utf-8")
+        result = self.handle(load_event("valid-full"), project=True)
+        relative = f"05-Projects/03-Packages/Demo/Ecosystem/Plans/{FULL_NAME}"
+        self.assertEqual({"status": "ok", "note": relative}, result.to_dict())
+        self.assertEqual("DUPLICATE_EVENT", self.handle(load_event("valid-full"), project=True).reason)
+        self.assertEqual(1, len(self.ledger_lines()))
+
+
 class TestIdempotence(NotesCase):
     def test_repeat_gives_one_file_and_duplicate_event(self):
         first = self.handle(load_event("valid-full"))
@@ -349,12 +363,79 @@ class TestIdempotence(NotesCase):
         self.assertNoTemporaryFiles()
         self.assertEqual("ok", self.handle(load_event("valid-full")).status)  # the retry succeeds
 
-    def test_a_stale_temporary_file_of_the_same_process_is_replaced(self):
+    def test_a_file_at_the_old_temporary_name_is_never_removed(self):
         folder = self.vault / "Ecosystem" / "Plans"
         folder.mkdir(parents=True)
-        (folder / f"{FULL_NAME}.tmp-{os.getpid()}").write_text("half", encoding="utf-8")
+        foreign = folder / f"{FULL_NAME}.tmp-{os.getpid()}"
+        foreign.write_text("USER-VAULT-FILE do not delete", encoding="utf-8")
         self.assertEqual("ok", self.handle(load_event("valid-full")).status)
+        self.assertEqual("USER-VAULT-FILE do not delete", foreign.read_text(encoding="utf-8"))
+        self.assertEqual([self.vault / "Ecosystem" / "Plans" / FULL_NAME], self.written())
+
+    def test_the_fallback_write_completes_after_short_writes(self):
+        real_write = os.write
+
+        def short_write(fd, data):
+            return real_write(fd, bytes(data)[:100])
+
+        with mock.patch("brain.notes.os.link", side_effect=OSError(errno.EPERM, "not permitted")), \
+                mock.patch("brain.notes.os.write", side_effect=short_write):
+            result = self.handle(load_event("valid-full"))
+        self.assertEqual(FULL_NOTE.replace("project: Demo\n", ""), (self.vault / result.note).read_text(encoding="utf-8"))
+        self.assertEqual("DUPLICATE_EVENT", self.handle(load_event("valid-full")).reason)
+
+    def test_a_failed_fallback_write_leaves_no_file_and_the_retry_keeps_the_name(self):
+        real_write = os.write
+        calls = []
+
+        def failing_write(fd, data):
+            calls.append(fd)
+            if len(calls) >= 2:  # the first call fills the temporary file, the second is the in-place write
+                raise OSError(errno.ENOSPC, "no space left on device")
+            return real_write(fd, data)
+
+        with mock.patch("brain.notes.os.link", side_effect=OSError(errno.EPERM, "not permitted")), \
+                mock.patch("brain.notes.os.write", side_effect=failing_write):
+            with self.assertRaises(BrainError) as caught:
+                self.handle(load_event("valid-full"))
+        self.assertEqual(errors.NOTE_IO, caught.exception.code)
+        self.assertEqual([], self.written())
         self.assertNoTemporaryFiles()
+        self.assertEqual(f"Ecosystem/Plans/{FULL_NAME}", self.handle(load_event("valid-full")).note)
+
+
+    def test_a_failed_fallback_write_never_removes_a_file_put_at_the_name_meanwhile(self):
+        real_write = os.write
+        calls = []
+        target = self.vault / "Ecosystem" / "Plans" / FULL_NAME
+
+        def swapping_write(fd, data):
+            calls.append(fd)
+            if len(calls) >= 2:
+                target.rename(target.with_name(FULL_NAME + ".ours"))
+                target.write_text("USER-REPLACEMENT do not delete", encoding="utf-8")
+                raise OSError(errno.ENOSPC, "no space left on device")
+            return real_write(fd, data)
+
+        with mock.patch("brain.notes.os.link", side_effect=OSError(errno.EPERM, "not permitted")), \
+                mock.patch("brain.notes.os.write", side_effect=swapping_write):
+            with self.assertRaises(BrainError):
+                self.handle(load_event("valid-full"))
+        self.assertEqual("USER-REPLACEMENT do not delete", target.read_text(encoding="utf-8"))
+
+    def test_a_note_that_links_outside_the_vault_is_recorded_once_under_its_name_in_the_vault(self):
+        folder = self.vault / "Ecosystem" / "Plans"
+        folder.mkdir(parents=True)
+        (folder / FULL_NAME).write_text("a file of the user\n", encoding="utf-8")
+        outside = self.root / "outside.md"
+        outside.write_text("---\nevent_id: 0f1e2d3c4b5a69788796a5b4c3d2e1f0\n---\nbody\n", encoding="utf-8")
+        (folder / FULL_NAME.replace(".md", " (2).md")).symlink_to(outside)
+        for _ in range(2):
+            result = self.handle(load_event("valid-full"))
+            self.assertEqual(("skipped", "DUPLICATE_EVENT"), (result.status, result.reason))
+        lines = self.ledger_lines()
+        self.assertEqual(1, len(lines))
+        self.assertEqual("Ecosystem/Plans/" + FULL_NAME.replace(".md", " (2).md"), json.loads(lines[0])["note"])
 
 
 class TestLedger(NotesCase):
@@ -457,9 +538,9 @@ class TestAnnouncement(NotesCase):
         result = self.handle(load_event("valid-full"), root=self.project)
         (event,) = self.created_events()
         self.assertEqual("urn:swissknifeman:module:brain", event.source)
-        self.assertEqual("2026.10.07-№1-SKM-ECOSYSTEM", event.subject)
+        self.assertEqual("2026.01.15-DEMO-PLAN", event.subject)
         self.assertEqual("0f1e2d3c4b5a69788796a5b4c3d2e1f0", event.causationid)
-        self.assertEqual({"note": result.note, "plan_id": "2026.10.07-№1-SKM-ECOSYSTEM",
+        self.assertEqual({"note": result.note, "plan_id": "2026.01.15-DEMO-PLAN",
                           "event_id": "0f1e2d3c4b5a69788796a5b4c3d2e1f0"}, event.data)
 
     def test_nothing_is_emitted_for_a_repeat_a_skip_or_a_dry_run(self):

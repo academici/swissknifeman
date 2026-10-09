@@ -4,7 +4,7 @@
   "source": "urn:swissknifeman:module:planner",
   "type": "planner.plan.closed",
   "time": "2026-10-09T11:30:00.000Z",
-  "subject": "2026.10.09-№2-ADDITIVE",
+  "subject": "demo-additive",
   "datacontenttype": "application/json",
   "data": {
     "closed_at": "2026-10-09T13:30:00+02:00",
@@ -29,7 +29,7 @@
         "title": "First"
       }
     ],
-    "plan_id": "2026.10.09-№2-ADDITIVE",
+    "plan_id": "demo-additive",
     "title": "Additive data"
   }
 }

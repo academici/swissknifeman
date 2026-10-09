@@ -13,11 +13,16 @@
     "cli": ["bin/brain"],
     "config": "configs/config.schema.json",
     "plugins": [{"name": "brain", "manifest": ".claude-plugin/plugin.json"}],
+    "events": ["brain.note.created"],
     "doctor": [
       {"id": "brain.vault", "category": "config", "probe": ["bin/brain", "doctor", "--json"], "output": "check-result/v1"}
     ]
   },
   "permissions": {"filesystem": ["project", "state", "home"], "network": false, "shell": true},
+  "subscribes": [
+    {"id": "plan-notes", "on": ["planner.plan.closed"], "run": ["bin/brain", "note", "--event", "-"],
+     "timeout_seconds": 30, "description": "Write a vault note when a plan is closed."}
+  ],
   "dev": {
     "test": ["bash", "scripts/test.sh"],
     "validate": ["bash", "scripts/validate.sh"]

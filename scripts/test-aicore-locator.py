@@ -31,6 +31,7 @@ CARRIERS = [
     "packages/harness/scripts/sync-usage.sh",
     "packages/harness/scripts/validate.sh",
     "packages/skiller/scripts/validate.sh",
+    "packages/brain/scripts/e2e-plan-note.sh",
 ]
 
 

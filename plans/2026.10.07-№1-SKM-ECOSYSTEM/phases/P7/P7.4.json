@@ -1,0 +1,274 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.4",
+  "title": "Первый подписчик: brain note для planner.plan.closed, идемпотентность по event_id, контрактные фикстуры, событие brain.note.created, сквозная проверка в песочнице",
+  "status": "done_with_deviations",
+  "summary": "lib/brain/events.py (разбор planner.plan.closed по ожиданию потребителя data/v1), lib/brain/notes.py (путь, текст, запись без дублей по модели I1–I7, реестр state_dir(brain)/notes.jsonl под flock, emit brain.note.created), команда brain note --event FILE|-; unit.json provides.events и subscribes brain:plan-notes; контрактные фикстуры E44; тесты идемпотентности, конкурентности и доставки через aicore (R06); scripts/e2e-plan-note.sh и его прогон в песочнице на синтетическом хранилище.",
+  "why": "Цель фазы — заметка о закрытом плане (architecture §12 P7; D51). Жёсткие риски: (1) at-least-once доставка aicore (I9 ext-p6-events) и replay дают повторы — без модели идемпотентности появятся дубли заметок в хранилище человека; (2) конкурентные доставщики разных журналов пишут в одно хранилище — flock реестра; (3) запись в хранилище не должна перезаписывать файлы человека и попадать в синхронизируемые папки; (4) источник (planner) ещё не испускает событие — контракт фиксируется фикстурами потребителя, проверка с источником — P9.",
+  "scope": {
+    "include": [
+      "packages/brain/lib/brain/{events,notes}.py; cli.py: note; errors.py: EVENT_DATA_INVALID, VAULT_UNAVAILABLE, NOTE_IO, LEDGER_LOCKED",
+      "packages/brain/unit.json: provides.events [brain.note.created], subscribes [plan-notes]",
+      "packages/brain/tests/fixtures/events/planner.plan.closed/*.json и README.md (§subscriber)",
+      "packages/brain/tests/{test_events,test_notes,test_subscription}.py",
+      "packages/brain/scripts/e2e-plan-note.sh (§checks)",
+      "doctor: проверка brain.subscription (подписка объявлена и не выключена конфигом — warn, если выключена)",
+      "README и CHANGELOG brain"
+    ],
+    "exclude": [
+      "испускание planner.plan.closed planner-ом и схема у источника (P9)",
+      "заметки о других событиях",
+      "изменения aicore.ext (если найден дефект aicore — чинится у владельца в этом пункте с тестом и записью plan.py log)"
+    ]
+  },
+  "depends_on": [
+    "P7.3"
+  ],
+  "decisions": [
+    "D51",
+    "D44"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/brain-p7#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-notes#subscriber",
+      "why": "данные data/v1, правила разбора, алгоритм brain note, имя и текст заметки, brain.note.created",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-notes#model",
+      "why": "модель инвариантов записи заметок: читать целиком",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7#checks",
+      "why": "e2e-plan-note.sh: шаги и проверки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7#e1e2",
+      "why": "E22, E44, R06 — что должно быть видно в тестах",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-surface#catalog",
+      "why": "папка проекта в хранилище",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-surface#config",
+      "why": "notes.*, лестница хранилища",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#model",
+      "why": "гарантии журнала и доставки aicore (I8–I13): at-least-once, курсор, dead-letter",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#delivery",
+      "why": "контракт подписчика-команды: stdin, окружение, ответ, коды неудачи",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "why": "module_subscriptions (строки 91–120): как читается subscribes",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/events.py",
+      "why": "validate_document, Event.from_json, emit (строки 82–213)",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/delivery.py",
+      "why": "_run_command_subscriber (строки ~470–490): ответ подписчика",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/brain/lib/brain/events.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/lib/brain/notes.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/lib/brain/cli.py",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/lib/brain/errors.py",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/lib/brain/doctor.py",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/unit.json",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/scripts/e2e-plan-note.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/scripts/validate.sh",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/brain/README.md",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/CHANGELOG.md",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "scripts/test-aicore-locator.py",
+      "change": "modify",
+      "note": "только если e2e-plan-note.sh несёт копию блока locator"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/brain-p7 §rules (stdlib + aicore, Python 3.9, POSIX; тесты только с временным HOME и копией фикстуры хранилища; граница модулей; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge/brain-p7, указанные в reads; имена функций, коды ошибок, ключи конфига, пути и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "lib/brain импортирует только stdlib, brain.* и aicore.*; skiller и maind обращаются к brain только через CLI (python3 scripts/ecosystem-units.py check без новых нарушений базовой линии)",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Модель §model обязательна: путь — чистая функция события; вся проверка-и-запись под flock(notes.lock) с дедлайном; создание файла — O_EXCL во временный файл + os.link; существующий файл хранилища никогда не перезаписывается и не удаляется; реестр — дописывание одной строкой под блокировкой; функции записи принимают объект блокировки",
+    "Ответ подписчика: stdout — ровно один JSON-объект со status ok|skipped при exit 0; exit 65 только для неверных данных события, exit 75 для временных сбоев (хранилище недоступно, ввод-вывод, блокировка, конфиг); хранилище не настроено → skipped VAULT_NOT_CONFIGURED",
+    "Лишние поля данных события игнорируются (E44); specversion ≠ 1.0, нет plan_id или title, неверный тип известного поля → EVENT_DATA_INVALID",
+    "emit brain.note.created — только после новой заметки, best-effort (ошибка не меняет ответ), с causationid исходного события",
+    "Тесты доставки через aicore — с временным HOME и SKM_UNITS_PATH на каталог с brain (копия unit.json и симлинк или путь к модулю — как в тестах aicore.ext), без фоновых процессов (delivery sync или off + явный deliver)"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: фикстуры событий (§subscriber; конверты собирать через `aicore.ext.events.build_event(...).to_json()` один раз и сохранять JSON, id фиксированные UUID) → `events.py` (`PlanClosed` frozen dataclass; `parse_plan_closed(doc) -> Tuple[Optional[PlanClosed], Optional[str]]`: None+reason для чужого типа; BrainError для неверных данных) → `notes.py`: `note_path(settings, vault, project, plan, event) -> Path` (без записи), `render(plan, event, project_name) -> str`, `_ledger_lock(path, deadline_s=10.0)` (contextmanager: flock LOCK_EX|LOCK_NB, опрос 50 мс), `_write_once(lock, path, text, event_id, ledger) -> (status, path)` по I3–I6, `handle(...)` по алгоритму §subscriber 1–8 → `cli.py note` (`--event -` читает stdin целиком; `--project`; `--dry-run`; `--json` — то же, stdout всегда JSON; коды 65/75 → пустой stdout, `brain: CODE: message` в stderr) → unit.json: `provides.events`, `subscribes` (§layout дословно) → doctor `brain.subscription` (через `aicore.ext.settings` / explain ключа `aicore.subscriptions.brain:plan-notes.enabled`) → тесты: `test_events.py` (каждая фикстура: ожидаемый итог), `test_notes.py` (§model, все случаи; точный текст `test_render_exact`; имя файла: дата из closed_at, очистка plan_id), `test_subscription.py` (образец — `packages/aicore/tests/ext/test_delivery.py`, читать по месту; временный HOME; SKM_UNITS_PATH на корень с brain и aicore; `aicore.config` машинный файл с `brain.vault_path` на копию фикстуры; `aicore.ext.emit(\"planner.plan.closed\", data, source=\"planner\", subject=…, project=tmp_project, delivery=\"sync\")` → заметка есть, `delivery_status` лаг 0; повтор `replay(from_start=True)` → одна заметка; R06: папка заметок без прав записи → emit → deliver неуспешен, курсор стоит (`delivery_status` pending attempts 1) → права вернуть → `deliver` → заметка; после 3 неудач — dead-letter и `replay(event_id=…)` доставляет; журнал содержит `brain.note.created` с `causationid`; без хранилища → skipped, курсор продвинулся) → `scripts/e2e-plan-note.sh` (§checks; `set -euo pipefail`; отказ при реальном HOME тем же способом, что guard; aicore через locator) → validate.sh: `bash -n` для нового скрипта → README (раздел Notes from events: что пишется, куда, как выключить подписку, идемпотентность и что делать при перемещении заметок) → CHANGELOG → V1–V6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/brain/scripts/test.sh && bash packages/brain/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone brain && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/test-ecosystem-units.py && python3 scripts/test-config-inventory.py && python3 scripts/test-dev-guard.py && python3 scripts/test-aicore-locator.py && python3 scripts/test-golden.py && bash packages/aicore/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p7-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'cp -r packages/brain/tests/fixtures/vault \"$HOME/vault\" && mkdir -p \"$HOME/project\" && bash packages/brain/scripts/e2e-plan-note.sh \"$HOME/vault\" \"$HOME/project\"'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 -c 'import json; u = json.load(open(\"packages/brain/unit.json\")); s = u[\"subscribes\"]; assert s == [{\"id\": \"plan-notes\", \"on\": [\"planner.plan.closed\"], \"run\": [\"bin/brain\", \"note\", \"--event\", \"-\"], \"timeout_seconds\": 30, \"description\": \"Write a vault note when a plan is closed.\"}], s; assert u[\"provides\"][\"events\"] == [\"brain.note.created\"], u[\"provides\"]' && unset SKM_HOME XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UNITS_PATH MAIND_BRAIN_VAULT AICORE_ROOT SKM_BRAIN_BIN; export HOME=\"$(mktemp -d)\"; PYTHONPATH=packages/aicore/lib python3 -c 'from aicore.ext import units; s = units.module_subscriptions(units.discover_units()); assert \"brain:plan-notes\" in s and s[\"brain:plan-notes\"][\"run\"][0].endswith(\"packages/brain/bin/brain\"), s'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "unset SKM_HOME XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UNITS_PATH MAIND_BRAIN_VAULT AICORE_ROOT SKM_BRAIN_BIN; export HOME=\"$(mktemp -d)\"; f=packages/brain/tests/fixtures/events/planner.plan.closed; for x in valid-minimal valid-full valid-additive other-type invalid-no-plan-id invalid-data-not-object invalid-specversion; do test -f \"$f/$x.json\" || exit 1; done && out=$(packages/brain/bin/brain note --event - < \"$f/valid-minimal.json\") && printf '%s' \"$out\" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"status\"] == \"skipped\" and d[\"reason\"] == \"VAULT_NOT_CONFIGURED\", d' && { packages/brain/bin/brain note --event - < \"$f/invalid-no-plan-id.json\" >/dev/null 2>&1; test $? = 65; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "brain note — подписчик planner.plan.closed",
+    "подписка модуля brain:plan-notes и событие brain.note.created",
+    "контрактные фикстуры потребителя",
+    "scripts/e2e-plan-note.sh"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T09:56:49Z",
+    "finished_at": "2026-10-09T10:12:48Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "26ea2a8c-5969-4148-b515-dbaae78d2787"
+    },
+    "notes": "brain note (подписчик brain:plan-notes): events.py, notes.py по модели I1–I7, cli note, doctor brain.subscription, unit.json subscribes/provides.events, фикстуры E44, тесты events/notes/subscription (R06), e2e-plan-note.sh в песочнице; brain 202 теста, aicore 1398",
+    "deviations": [
+      "note_path/render без аргумента event (его несёт PlanClosed); fallback без жёстких ссылок; каталог вне хранилища → fallback_folder с предупреждением; exit_status 65/75; e2e-plan-note.sh добавлен в носители locator (scripts/test-aicore-locator.py); окружение тестов выключает фоновую доставку"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T10:12:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T10:12:48Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T10:12:48Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T10:12:48Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T10:12:48Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-09T10:12:48Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T10:12:48Z"
+}

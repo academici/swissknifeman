@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -10,7 +11,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from aicore.config import ConfigError
 from aicore.state import find_project_root
 
-from . import __version__, catalog, docs, doctor, errors, settings, vault
+from . import __version__, catalog, docs, doctor, errors, notes, settings, vault
 from .errors import BrainError
 
 USAGE = """usage: brain <command> [options]
@@ -25,11 +26,14 @@ commands:
   docs push --project DIR [--dry-run] [--force]
                                     copy project documents into the vault (--force replaces changed files)
   docs script --project DIR         write .claude/sync-brain.sh
-  doctor [--json]                   check the vault, the configuration and the notes folder
+  note --event FILE|- [--project DIR] [--dry-run] [--json]
+                                    subscriber: write a vault note for a planner.plan.closed event
+  doctor [--json]                   check the vault, the configuration, the notes folder and the subscription
   version                           print the version and the library path
   help                              show this text
 
-exit codes: 0 ok, 1 failure (code on stderr), 2 usage error
+exit codes: 0 ok, 1 failure (code on stderr), 2 usage error;
+`note` also exits 65 (bad event data, do not retry) and 75 (temporary failure, retried by the next delivery)
 """
 
 
@@ -50,6 +54,11 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--project", metavar="DIR", default=None)
     p.add_argument("--json", action="store_true")
     sub.add_parser("version")
+    p = sub.add_parser("note")
+    p.add_argument("--event", metavar="FILE", required=True)
+    p.add_argument("--project", metavar="DIR", default=None)
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--json", action="store_true")
     p = sub.add_parser("docs")
     docs_sub = p.add_subparsers(dest="docs_command", parser_class=_Parser)
     docs_sub.required = True
@@ -127,6 +136,42 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             if "remediation" in item:
                 print(f"    fix: {item['remediation']}")
     return 1 if any(item["status"] == "fail" for item in results) else 0
+
+
+MAX_EVENT_BYTES = 1 << 20
+
+
+def _read_event(source: str) -> Any:
+    try:
+        if source == "-":
+            raw = sys.stdin.buffer.read(MAX_EVENT_BYTES + 1)
+        else:
+            with open(source, "rb") as handle:
+                raw = handle.read(MAX_EVENT_BYTES + 1)
+    except OSError as exc:
+        raise BrainError(errors.EVENT_DATA_INVALID, f"the event cannot be read from {source}: {exc.strerror or exc}")
+    if len(raw) > MAX_EVENT_BYTES:
+        raise BrainError(errors.EVENT_DATA_INVALID, f"the event is larger than {MAX_EVENT_BYTES} bytes")
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (ValueError, RecursionError):
+        raise BrainError(errors.EVENT_DATA_INVALID, "the event is not JSON") from None
+
+
+def _cmd_note(args: argparse.Namespace) -> int:
+    """The subscriber: one JSON object on standard output for 0; nothing there for 65 and 75."""
+    document = _read_event(args.event)
+    value = os.environ.get("SKM_PROJECT_ROOT") or args.project
+    root = Path(value).expanduser().resolve() if value else None
+    try:
+        config = settings.load(root)
+        result = notes.handle(document, project_root=root, settings=config, dry_run=args.dry_run)
+    except ConfigError as exc:
+        raise BrainError(errors.CONFIG_NOTES_FOLDER if exc.code == errors.CONFIG_NOTES_FOLDER else errors.CONFIG_INVALID,
+                         str(exc)) from None
+    notes.warn(result.warnings)
+    print(json.dumps(result.to_dict(), ensure_ascii=False))
+    return 0
 
 
 def _cmd_version(args: argparse.Namespace) -> int:
@@ -209,7 +254,7 @@ def _cmd_docs(args: argparse.Namespace) -> int:
 
 
 _COMMANDS = {"vault": _cmd_vault, "project": _cmd_project, "doctor": _cmd_doctor, "version": _cmd_version,
-             "docs": _cmd_docs}
+             "docs": _cmd_docs, "note": _cmd_note}
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -228,7 +273,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return _COMMANDS[namespace.command](namespace)
     except BrainError as exc:
         print(f"brain: {exc.code}: {exc.message}", file=sys.stderr)
-        return 1
+        return errors.exit_status(exc.code)
     except ConfigError as exc:
         print(f"brain: {exc}", file=sys.stderr)
         return 1

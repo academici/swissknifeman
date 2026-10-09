@@ -6,7 +6,8 @@
 # Commands:
 #   vault     print the vault path and where it was found (--json, --project DIR)
 #   project   print the vault folder of a project (--json, --project DIR)
-#   doctor    check the vault, the configuration and the notes folder (--json)
+#   note      subscriber: write a vault note for a planner.plan.closed event (--event FILE|-, --dry-run)
+#   doctor    check the vault, the configuration, the notes folder and the subscription (--json)
 #   version   print the version and the library path
 set -euo pipefail
 # --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---

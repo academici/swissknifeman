@@ -1,0 +1,13 @@
+{
+  "specversion": "1.0",
+  "id": "ffeeddccbbaa00998877665544332211",
+  "source": "urn:swissknifeman:module:planner",
+  "type": "planner.plan.closed",
+  "time": "2026-10-09T12:20:00.000Z",
+  "subject": "2026.10.07-№1-SKM-ECOSYSTEM",
+  "datacontenttype": "application/json",
+  "data": [
+    "plan_id",
+    "title"
+  ]
+}

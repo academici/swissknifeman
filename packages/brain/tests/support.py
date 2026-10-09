@@ -10,6 +10,15 @@ from pathlib import Path
 from aicore.state import machine_config_file
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "vault"
+EVENTS = Path(__file__).resolve().parent / "fixtures" / "events" / "planner.plan.closed"
+MODULE_ROOT = Path(__file__).resolve().parents[1]
+# Tests never start the background deliverer: emit would otherwise follow the configured default.
+DELIVERY_OFF = {"SKM_AICORE_EVENTS__DELIVERY": "off"}
+
+
+def load_event(name: str) -> dict:
+    """A contract fixture of ``planner.plan.closed`` by file name without the suffix."""
+    return json.loads((EVENTS / f"{name}.json").read_text(encoding="utf-8"))
 
 
 class TempCase(unittest.TestCase):
@@ -21,7 +30,7 @@ class TempCase(unittest.TestCase):
         self.root = Path(tmp.name).resolve()
         self.home = self.root / "home"
         self.home.mkdir()
-        self.env = {"HOME": str(self.home), "SKM_HOME": str(self.root / "skm")}
+        self.env = {"HOME": str(self.home), "SKM_HOME": str(self.root / "skm"), **DELIVERY_OFF}
         self.vault = self.root / "vault"
         shutil.copytree(FIXTURE, self.vault)
         self.project = self.root / "demo"

@@ -17,15 +17,17 @@ for f in bin/brain scripts/*.sh; do
 done
 
 echo "[3/6] JSON files"
-for f in unit.json .claude-plugin/plugin.json configs/config.schema.json tests/fixtures/vault/.obsidian/app.json; do
+for f in unit.json .claude-plugin/plugin.json configs/config.schema.json tests/fixtures/vault/.obsidian/app.json \
+         tests/fixtures/events/planner.plan.closed/*.json; do
   python3 -m json.tool "$f" >/dev/null || err "broken JSON: $f"
 done
 
 echo "[4/6] required files"
 for f in bin/brain lib/brain/__init__.py lib/brain/__main__.py lib/brain/cli.py lib/brain/errors.py \
          lib/brain/settings.py lib/brain/frontmatter.py lib/brain/vault.py lib/brain/catalog.py \
-         lib/brain/doctor.py lib/brain/docs.py configs/config.schema.json config.example.toml unit.json README.md \
-         CHANGELOG.md LICENSE .claude-plugin/plugin.json skills/brain-locator/SKILL.md scripts/cache-brain-docs.sh; do
+         lib/brain/doctor.py lib/brain/docs.py lib/brain/events.py lib/brain/notes.py configs/config.schema.json config.example.toml unit.json README.md \
+         CHANGELOG.md LICENSE .claude-plugin/plugin.json skills/brain-locator/SKILL.md scripts/cache-brain-docs.sh scripts/e2e-plan-note.sh \
+         tests/fixtures/events/README.md tests/fixtures/events/planner.plan.closed/valid-full.json; do
   [[ -e "$f" ]] || err "no file: $f"
 done
 

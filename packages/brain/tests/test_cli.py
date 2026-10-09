@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import sys
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -11,17 +12,19 @@ import aicore
 from aicore.util import schema
 
 from brain import cli, doctor, settings
-from tests.support import TempCase
+from tests.support import EVENTS, MODULE_ROOT, TempCase
 
 CHECK_RESULT = Path(aicore.__file__).resolve().parents[2] / "schemas" / "check-result" / "v1"
 
 
 class CliCase(TempCase):
-    def run_cli(self, *args):
+    def run_cli(self, *args, stdin=None, extra_env=None):
         out, err = io.StringIO(), io.StringIO()
-        environment = {"HOME": str(self.home), "SKM_HOME": str(self.root / "skm"), "PATH": os.environ.get("PATH", "")}
+        environment = {**self.env, "PATH": os.environ.get("PATH", ""), "SKM_UNITS_PATH": str(MODULE_ROOT),
+                       **(extra_env or {})}
         with mock.patch.dict(os.environ, environment, clear=True), \
-                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+                mock.patch.object(sys, "stdin", io.TextIOWrapper(io.BytesIO(stdin or b""))):
             code = cli.main(list(args))
         return code, out.getvalue(), err.getvalue()
 
@@ -157,7 +160,7 @@ class TestDoctor(CliCase):
         self.assertEqual(0, code)
         self.assertEqual("warn", by_id["brain.vault"]["status"])
         self.assertIn("aicore config set brain.vault_path <dir> --machine", by_id["brain.vault"]["remediation"])
-        self.assertEqual({"brain.vault", "brain.config", "brain.notes-folder"}, set(by_id))
+        self.assertEqual({"brain.vault", "brain.config", "brain.notes-folder", "brain.subscription"}, set(by_id))
 
     def test_healthy(self):
         self.configure_vault()
@@ -215,6 +218,120 @@ class TestDoctor(CliCase):
         self.assertEqual(0, code)
         self.assertIn("[warn] brain.vault", out)
         self.assertIn("[ok] brain.config", out)
+
+
+class TestNote(CliCase):
+    def event(self, name):
+        return (EVENTS / f"{name}.json").read_bytes()
+
+    def test_writes_a_note_and_answers_with_one_json_object(self):
+        self.configure_vault()
+        self.claim_project(self.project)
+        code, out, err = self.run_cli("note", "--event", "-", "--project", str(self.project),
+                                      stdin=self.event("valid-full"))
+        self.assertEqual((0, ""), (code, err))
+        answer = json.loads(out)
+        self.assertEqual(1, len(out.splitlines()))
+        self.assertEqual("ok", answer["status"])
+        self.assertTrue((self.vault / answer["note"]).is_file())
+        code, out, _ = self.run_cli("note", "--event", "-", "--project", str(self.project),
+                                    stdin=self.event("valid-full"))
+        self.assertEqual((0, "DUPLICATE_EVENT"), (code, json.loads(out)["reason"]))
+
+    def test_event_from_a_file_and_json_flag(self):
+        self.configure_vault()
+        code, out, _ = self.run_cli("note", "--event", str(EVENTS / "valid-minimal.json"), "--json")
+        self.assertEqual((0, "ok"), (code, json.loads(out)["status"]))
+
+    def test_project_from_the_environment_wins(self):
+        self.configure_vault()
+        self.claim_project(self.project)
+        code, out, _ = self.run_cli("note", "--event", "-", stdin=self.event("valid-minimal"),
+                                    extra_env={"SKM_PROJECT_ROOT": str(self.project)})
+        self.assertEqual(0, code)
+        self.assertIn("05-Projects/03-Packages/Demo/Ecosystem/Plans/", json.loads(out)["note"])
+
+    def test_dry_run(self):
+        self.configure_vault()
+        code, out, _ = self.run_cli("note", "--event", "-", "--dry-run", stdin=self.event("valid-minimal"))
+        self.assertEqual((0, "DRY_RUN"), (code, json.loads(out)["reason"]))
+        self.assertFalse((self.vault / "Ecosystem").exists())
+
+    def test_without_a_vault_the_event_is_skipped(self):
+        code, out, _ = self.run_cli("note", "--event", "-", stdin=self.event("valid-minimal"))
+        self.assertEqual((0, {"status": "skipped", "reason": "VAULT_NOT_CONFIGURED"}), (code, json.loads(out)))
+
+    def test_other_events_are_skipped(self):
+        self.configure_vault()
+        code, out, _ = self.run_cli("note", "--event", "-", stdin=self.event("other-type"))
+        self.assertEqual((0, "EVENT_TYPE_IGNORED"), (code, json.loads(out)["reason"]))
+
+    def test_bad_data_exits_65_with_an_empty_stdout(self):
+        self.configure_vault()
+        for name in ("invalid-no-plan-id", "invalid-data-not-object", "invalid-specversion"):
+            with self.subTest(fixture=name):
+                code, out, err = self.run_cli("note", "--event", "-", stdin=self.event(name))
+                self.assertEqual((65, ""), (code, out))
+                self.assertIn("brain: EVENT_DATA_INVALID:", err)
+
+    def test_unreadable_input_exits_65(self):
+        for stdin in (b"", b"{not json", b"\xff\xfe"):
+            with self.subTest(stdin=stdin):
+                code, out, err = self.run_cli("note", "--event", "-", stdin=stdin)
+                self.assertEqual((65, ""), (code, out))
+                self.assertIn("EVENT_DATA_INVALID", err)
+        code, out, err = self.run_cli("note", "--event", str(self.root / "missing.json"))
+        self.assertEqual((65, ""), (code, out))
+
+    def test_temporary_failures_exit_75(self):
+        self.machine_config(f'[brain]\nvault_path = "{self.root / "gone"}"\n')
+        code, out, err = self.run_cli("note", "--event", "-", stdin=self.event("valid-minimal"))
+        self.assertEqual((75, ""), (code, out))
+        self.assertIn("brain: VAULT_UNAVAILABLE:", err)
+
+    def test_an_invalid_configuration_exits_75(self):
+        self.project_config('[brain.notes]\nfolder = "docs/notes"\n')
+        code, out, err = self.run_cli("note", "--event", "-", "--project", str(self.project),
+                                      stdin=self.event("valid-minimal"))
+        self.assertEqual((75, ""), (code, out))
+        self.assertIn("CONFIG_NOTES_FOLDER", err)
+
+    def test_the_event_option_is_required(self):
+        with self.assertRaises(SystemExit) as caught:
+            self.run_cli("note")
+        self.assertEqual(2, caught.exception.code)
+
+
+class TestSubscriptionCheck(CliCase):
+    def check(self, env=None):
+        documents = doctor.run_checks(self.project, env={**self.env, "SKM_UNITS_PATH": str(MODULE_ROOT), **(env or {})},
+                                      home=self.home)
+        return {d["check_id"]: d for d in documents}["brain.subscription"]
+
+    def test_declared_and_enabled(self):
+        self.assertEqual("ok", self.check()["status"])
+
+    def test_switched_off_by_the_configuration_warns(self):
+        self.machine_config('[aicore.subscriptions."brain:plan-notes"]\nenabled = false\n')
+        result = self.check()
+        self.assertEqual("warn", result["status"])
+        self.assertIn("switched off", result["observed"])
+
+    def test_not_visible_to_aicore_warns(self):
+        empty = self.root / "no-units"
+        empty.mkdir()
+        result = self.check({"SKM_UNITS_PATH": str(empty)})
+        self.assertEqual("warn", result["status"])
+        self.assertIn("SKM_UNITS_PATH", result["remediation"])
+
+    def test_notes_disabled_warns(self):
+        self.machine_config('[brain.notes]\nenabled = false\n')
+        self.assertEqual("warn", self.check()["status"])
+
+    def test_listed_even_when_the_configuration_is_invalid(self):
+        self.project_config('[brain.docs]\ndirection = "sideways"\n')
+        documents = doctor.run_checks(self.project, env={**self.env, "SKM_UNITS_PATH": str(MODULE_ROOT)}, home=self.home)
+        self.assertIn("brain.subscription", {d["check_id"] for d in documents})
 
 
 if __name__ == "__main__":

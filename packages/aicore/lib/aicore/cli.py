@@ -10,6 +10,7 @@ from typing import Mapping, Optional, Sequence, TextIO
 GROUPS = {
     "config": ("aicore.config.cli", "main",
                "layered module configuration: show, explain, set, unset, init, example, paths"),
+    "schema": ("aicore.util.schemacompat", "main", "contract tools: compat"),
 }
 
 _HELP = ("-h", "--help", "help")

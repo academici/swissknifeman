@@ -9,6 +9,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **`aicore schema compat`**: mechanical backward-compatibility check of the contract schemas
+  (`aicore.util.schemacompat`: `compare`, `Change`, `RULES`). It compares the contracts of the working tree with the
+  same contracts at a git reference (`--base`, default `HEAD`) inside one major version and reports 21 kinds of
+  change; a change whose compatibility is not provable (`pattern`, `oneOf`) counts as breaking. A breaking change
+  is an error (exit 1) for contracts that are `beta`, `rc`, `stable` or `deprecated` in `unit.json`, and a warning
+  for `development` and `alpha`. `--json` prints one document; a missing git or a bad reference exits with 2.
 - **Validator profile: `patternProperties` and `propertyNames`.** A dictionary keyed by identifiers is now a
   schema (`patternProperties` with anchored patterns and `additionalProperties: false`): a property is covered
   when it is listed or matches a pattern, and its value meets every schema that applies. `propertyNames`

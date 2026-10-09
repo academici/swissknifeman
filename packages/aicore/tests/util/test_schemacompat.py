@@ -1,0 +1,469 @@
+"""Compatibility rules of aicore.util.schemacompat and the ``aicore schema compat`` command."""
+import io
+import json
+import os
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+from aicore import cli
+from aicore.util.schema import RefError, Registry
+from aicore.util.schemacompat import RULES, Change, compare
+
+URN = "urn:swissknifeman:aicore:"
+OPEN = {"type": "object"}
+CLOSED = {"type": "object", "additionalProperties": False}
+
+
+def registry(*documents):
+    """A registry of schema documents; the first one is the root. Returns ``(registry, root id)``."""
+    schemas = {}
+    for body in documents:
+        schemas[body["$id"]] = body
+    return Registry(schemas, urn_prefix=URN, kinds=()), documents[0]["$id"]
+
+
+def doc(body, name="t"):
+    return {"$id": f"{URN}{name}:v1", **body}
+
+
+def changes(old_body, new_body):
+    old, old_id = registry(doc(old_body))
+    new, new_id = registry(doc(new_body))
+    found = compare(old, old_id, new, new_id)
+    for change in found:
+        assert change.breaking is RULES[change.rule], change
+    return found
+
+
+def rules(old_body, new_body):
+    return sorted(change.rule for change in changes(old_body, new_body))
+
+
+def obj(properties=None, required=None, **extra):
+    body = dict(CLOSED, **extra)
+    body["properties"] = properties or {}
+    if required is not None:
+        body["required"] = required
+    return body
+
+
+STR = {"type": "string"}
+INT = {"type": "integer"}
+
+
+class TestRules(unittest.TestCase):
+    # rule -> (old schema, new schema) in which exactly that rule fires
+    CASES = {
+        "property-removed": (obj({"a": STR}), obj({})),
+        "property-added": (obj({"a": STR}), obj({"a": STR, "b": STR})),
+        "required-added": (obj({"a": STR, "b": STR}, ["a"]), obj({"a": STR, "b": STR}, ["a", "b"])),
+        "required-removed": (obj({"a": STR}, ["a"]), obj({"a": STR}, [])),
+        "enum-narrowed": ({"enum": ["a", "b"]}, {"enum": ["a"]}),
+        "enum-widened": ({"enum": ["a"]}, {"enum": ["a", "b"]}),
+        "enum-added": (STR, {"type": "string", "enum": ["a"]}),
+        "type-changed": (STR, INT),
+        "type-widened": (INT, {"type": "number"}),
+        "const-changed": ({"const": 1}, {"const": 2}),
+        "pattern-changed": ({"pattern": "^a$"}, {"pattern": "^b$"}),
+        "pattern-removed": ({"pattern": "^a$"}, {}),
+        "bound-tightened": ({"minLength": 1}, {"minLength": 2}),
+        "bound-relaxed": ({"minLength": 2}, {"minLength": 1}),
+        "additional-closed": (OPEN, CLOSED),
+        "pattern-property-removed": ({"patternProperties": {"^a": STR}}, {}),
+        "pattern-property-added": ({}, {"patternProperties": {"^a": STR}}),
+        "property-names-changed": ({}, {"propertyNames": {"pattern": "^[a-z]+$"}}),
+        "unique-added": ({"type": "array"}, {"type": "array", "uniqueItems": True}),
+        "oneof-changed": ({"oneOf": [STR, INT]}, {"oneOf": [STR]}),
+    }
+
+    def test_every_rule_has_a_case(self):
+        self.assertEqual(set(RULES), set(self.CASES) | {"ref-changed"})
+
+    def test_each_rule_fires_alone_with_its_breaking_flag(self):
+        for rule, (old, new) in self.CASES.items():
+            with self.subTest(rule=rule):
+                found = changes(old, new)
+                self.assertEqual([rule], [change.rule for change in found], found)
+                self.assertIs(RULES[rule], found[0].breaking)
+
+    def test_identical_schemas_and_annotations_are_not_changes(self):
+        base = obj({"a": dict(STR, minLength=1)}, ["a"])
+        edited = json.loads(json.dumps(base))
+        edited["title"] = "x"
+        edited["description"] = "changed"
+        edited["properties"]["a"]["description"] = "text"
+        edited["properties"]["a"]["default"] = "d"
+        edited["x-skm-layers"] = ["machine"]
+        self.assertEqual([], rules(base, base))
+        self.assertEqual([], rules(base, edited))
+
+    def test_change_carries_path_and_message(self):
+        found = changes(obj({"a": {"type": "array", "items": STR}}), obj({"a": {"type": "array", "items": INT}}))
+        self.assertEqual([Change("/properties/a/items", "type-changed", True, "type string is now integer")],
+                         found)
+
+    def test_paths_escape_pointer_characters(self):
+        found = changes(obj({"a/b": STR}), obj({"a/b": INT}))
+        self.assertEqual("/properties/a~1b", found[0].path)
+
+    def test_property_removal_is_breaking_only_when_the_new_object_is_closed_and_does_not_cover_it(self):
+        self.assertEqual([], rules(obj({"a": STR}), dict(OPEN, properties={})))
+        covered = obj({}, patternProperties={"^a": STR})
+        self.assertEqual(["pattern-property-added"], rules(obj({"a": STR}), covered))
+
+    def test_type_rules(self):
+        self.assertEqual(["type-changed"], rules({"type": "number"}, INT))
+        self.assertEqual([], rules(INT, {"type": ["integer"]}))
+        self.assertEqual(["type-widened"], rules(INT, {"type": ["integer", "null"]}))
+        self.assertEqual(["type-widened"], rules(STR, {}))
+        self.assertEqual(["type-changed"], rules({}, STR))
+        self.assertEqual(["type-changed"], rules({"type": ["string", "null"]}, STR))
+
+    def test_enum_values_compare_by_json_equality(self):
+        self.assertEqual([], rules({"enum": [1, "a"]}, {"enum": ["a", 1.0]}))
+        self.assertEqual(["enum-narrowed", "enum-widened"], rules({"enum": [1]}, {"enum": [True]}))
+        self.assertEqual(["enum-widened"], rules({"enum": ["a"]}, {}))
+        self.assertEqual(["enum-narrowed", "enum-widened"], rules({"enum": ["a", "b"]}, {"enum": ["b", "c"]}))
+
+    def test_bound_rules_for_every_keyword(self):
+        for keyword, tight, loose in (("minLength", 3, 1), ("minItems", 3, 1), ("minimum", 3, 1), ("maximum", 1, 3)):
+            with self.subTest(keyword=keyword):
+                self.assertEqual(["bound-tightened"], rules({keyword: loose}, {keyword: tight}))
+                self.assertEqual(["bound-relaxed"], rules({keyword: tight}, {keyword: loose}))
+                self.assertEqual(["bound-tightened"], rules({}, {keyword: tight}))
+                self.assertEqual(["bound-relaxed"], rules({keyword: tight}, {}))
+
+    def test_a_zero_minimum_length_or_item_count_is_no_bound(self):
+        self.assertEqual([], rules({}, {"minLength": 0, "minItems": 0}))
+
+    def test_closing_an_object_and_opening_it(self):
+        self.assertEqual([], rules(CLOSED, OPEN))
+        self.assertEqual([], rules(CLOSED, CLOSED))
+        self.assertEqual(["additional-closed"], rules(OPEN, CLOSED))
+
+    def test_pattern_property_values_are_compared(self):
+        old = {"patternProperties": {"^a": STR}}
+        new = {"patternProperties": {"^a": INT}}
+        self.assertEqual(["type-changed"], rules(old, new))
+        self.assertEqual(["pattern-property-added", "pattern-property-removed"],
+                         rules(old, {"patternProperties": {"^b": STR}}))
+
+    def test_property_names_removed_or_equal_is_not_reported(self):
+        names = {"propertyNames": {"pattern": "^a"}}
+        self.assertEqual([], rules(names, names))
+        self.assertEqual([], rules(names, {}))
+        self.assertEqual(["property-names-changed"], rules(names, {"propertyNames": {"pattern": "^b"}}))
+
+    def test_unique_items_dropped_is_not_reported(self):
+        self.assertEqual([], rules({"uniqueItems": True}, {"uniqueItems": False}))
+
+    def test_added_const_and_changed_const(self):
+        self.assertEqual(["const-changed"], rules({}, {"const": "x"}))
+        self.assertEqual([], rules({"const": "x"}, {"const": "x"}))
+        self.assertEqual([], rules({"const": "x"}, {}))
+
+    def test_items_added_or_removed(self):
+        self.assertEqual(["type-changed"], rules({"type": "array"}, {"type": "array", "items": STR}))
+        self.assertEqual(["type-widened"], rules({"type": "array", "items": STR}, {"type": "array"}))
+
+    def test_oneof_marks_a_changed_branch_once_and_hides_its_detail(self):
+        old = {"oneOf": [obj({"a": STR}), obj({"b": STR})]}
+        new = {"oneOf": [obj({"a": STR}), obj({"b": INT})]}
+        found = changes(old, new)
+        self.assertEqual([("/oneOf/1", "oneof-changed")], [(c.path, c.rule) for c in found])
+        self.assertIn("type-changed", found[0].message)
+        self.assertEqual([], rules(old, old))
+        self.assertEqual(["oneof-changed"], rules({}, {"oneOf": [STR]}))
+
+    def test_nested_changes_are_found_at_depth(self):
+        old = obj({"a": obj({"b": {"type": "array", "items": obj({"c": STR}, ["c"])}})})
+        new = obj({"a": obj({"b": {"type": "array", "items": obj({"c": STR}, [])}})})
+        found = changes(old, new)
+        self.assertEqual([("/properties/a/properties/b/items", "required-removed")],
+                         [(c.path, c.rule) for c in found])
+
+
+class TestRefs(unittest.TestCase):
+    def test_refs_resolve_in_both_registries(self):
+        old, old_id = registry(doc({"$ref": "#/$defs/x", "$defs": {"x": obj({"a": STR}, ["a"])}}))
+        new, new_id = registry(doc({"$ref": "#/$defs/x", "$defs": {"x": obj({"a": STR}, [])}}))
+        self.assertEqual(["required-removed"], [c.rule for c in compare(old, old_id, new, new_id)])
+
+    def test_a_recursive_schema_terminates_and_reports_the_change_once(self):
+        def tree(child_type):
+            return doc({"$ref": "#/$defs/node", "$defs": {"node": obj({
+                "value": {"type": child_type},
+                "left": {"$ref": "#/$defs/node"},
+                "right": {"$ref": "#/$defs/node"}})}})
+
+        old, old_id = registry(tree("string"))
+        new, new_id = registry(tree("integer"))
+        found = compare(old, old_id, new, new_id)
+        self.assertEqual(["type-changed"], [c.rule for c in found])
+        self.assertEqual([], compare(old, old_id, old, old_id))
+
+    def test_a_ref_that_points_at_itself_is_an_error(self):
+        loop = doc({"$ref": "#/$defs/a", "$defs": {"a": {"$ref": "#/$defs/a"}}})
+        old, old_id = registry(loop)
+        with self.assertRaisesRegex(RefError, "refers to itself"):
+            compare(old, old_id, old, old_id)
+
+    def test_an_unresolvable_ref_is_an_error(self):
+        old, old_id = registry(doc({"$ref": "urn:other:x:v1"}))
+        with self.assertRaises(RefError):
+            compare(old, old_id, old, old_id)
+
+    def test_a_ref_to_another_document_is_followed_and_a_moved_target_is_informational(self):
+        shared_a = doc({"$defs": {"x": STR}}, "a")
+        shared_b = doc({"$defs": {"x": STR}}, "b")
+        old, old_id = registry(doc({"$ref": f"{URN}a:v1#/$defs/x"}), shared_a)
+        new, new_id = registry(doc({"$ref": f"{URN}b:v1#/$defs/x"}), shared_b)
+        found = compare(old, old_id, new, new_id)
+        self.assertEqual([("", "ref-changed", False)], [(c.path, c.rule, c.breaking) for c in found])
+        changed, changed_id = registry(doc({"$ref": f"{URN}b:v1#/$defs/x"}), doc({"$defs": {"x": INT}}, "b"))
+        self.assertEqual(["ref-changed", "type-changed"],
+                         sorted(c.rule for c in compare(old, old_id, changed, changed_id)))
+
+    def test_a_ref_on_one_side_only_compares_the_resolved_body(self):
+        old, old_id = registry(doc(obj({"a": STR})))
+        new, new_id = registry(doc({"$ref": "#/$defs/x", "$defs": {"x": obj({"a": INT})}}))
+        self.assertEqual(["type-changed"], [c.rule for c in compare(old, old_id, new, new_id)])
+
+    def test_keywords_next_to_a_ref_win(self):
+        old, old_id = registry(doc({"$ref": "#/$defs/x", "$defs": {"x": {"minLength": 1}}}))
+        new, new_id = registry(doc({"$ref": "#/$defs/x", "minLength": 4, "$defs": {"x": {"minLength": 1}}}))
+        self.assertEqual(["bound-tightened"], [c.rule for c in compare(old, old_id, new, new_id)])
+
+
+def git(repo, *arguments):
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false",
+                    "-C", str(repo)] + list(arguments), check=True, capture_output=True)
+
+
+def schema_body(kind, version, extra=None):
+    body = {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": f"{URN}{kind}:{version}",
+            "type": "object", "additionalProperties": False, "properties": {"a": {"type": "string"}}}
+    body.update(extra or {})
+    return body
+
+
+class TestCommand(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.repo = Path(self._tmp.name).resolve() / "repo"
+        self.schemas = self.repo / "packages" / "mod" / "schemas"
+        self.unit = self.repo / "packages" / "mod" / "unit.json"
+        self.env = {"PATH": os.environ["PATH"], "HOME": self._tmp.name, "GIT_CONFIG_NOSYSTEM": "1"}
+        self.repo.mkdir()
+        git(self.repo, "init", "-q")
+
+    def write_schema(self, kind, version, extra=None):
+        directory = self.schemas / kind / version
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / f"{kind}.schema.json").write_text(json.dumps(schema_body(kind, version, extra)), encoding="utf-8")
+
+    def write_unit(self, **stability):
+        contracts = [{"id": f"{URN}{kind}", "path": f"schemas/{kind}/v1", "version": "v1", "stability": value}
+                     for kind, value in stability.items()]
+        self.unit.write_text(json.dumps({"stability": "development", "provides": {"contracts": contracts}}),
+                             encoding="utf-8")
+
+    def commit(self):
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "state")
+
+    def run_cli(self, *argv, cwd=None):
+        out, err = io.StringIO(), io.StringIO()
+        code = cli.main(["schema", *argv], env=self.env, cwd=cwd or self.repo, out=out, err=err)
+        return code, out.getvalue(), err.getvalue()
+
+    def compat(self, *argv):
+        return self.run_cli("compat", "--root", str(self.schemas), "--unit", str(self.unit), *argv)
+
+    def breaking_edit(self):
+        self.write_schema("thing", "v1", {"required": ["a"]})
+
+    def test_development_contract_warns_and_exits_zero(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="development")
+        self.commit()
+        self.breaking_edit()
+        code, out, err = self.compat("--base", "HEAD")
+        self.assertEqual((0, ""), (code, err))
+        self.assertIn("thing/v1 /: required-added (warning) property 'a' is now required", out)
+        self.assertIn("0 errors, 1 warnings", out)
+
+    def test_graded_stabilities_fail_with_an_error(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        self.breaking_edit()
+        for stability in ("beta", "rc", "stable", "deprecated"):
+            with self.subTest(stability=stability):
+                self.write_unit(thing=stability)  # the grade is read from the working tree
+                code, out, _ = self.compat()
+                self.assertEqual(1, code)
+                self.assertIn("required-added (error)", out)
+
+    def test_alpha_only_warns(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="alpha")
+        self.commit()
+        self.breaking_edit()
+        self.assertEqual(0, self.compat()[0])
+
+    def test_non_breaking_changes_are_notes_for_any_stability(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        self.write_schema("thing", "v1", {"properties": {"a": {"type": "string"}, "b": {"type": "string"}}})
+        code, out, _ = self.compat()
+        self.assertEqual(0, code)
+        self.assertIn("property-added (info)", out)
+
+    def test_json_output(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        self.breaking_edit()
+        code, out, _ = self.compat("--json", "--base", "HEAD")
+        report = json.loads(out)
+        self.assertEqual(1, code)
+        self.assertEqual("HEAD", report["base"])
+        entry = report["contracts"][0]
+        self.assertEqual(("thing", "v1", "stable", "compared"),
+                         (entry["contract"], entry["version"], entry["stability"], entry["status"]))
+        self.assertEqual([{"path": "", "rule": "required-added", "breaking": True, "severity": "error",
+                           "message": "property 'a' is now required"}], entry["changes"])
+
+    def test_unchanged_tree_is_clean(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        code, out, err = self.compat()
+        self.assertEqual((0, ""), (code, err))
+        self.assertEqual("compat: 1 contracts against HEAD: 0 errors, 0 warnings, 0 notes\n", out)
+
+    def test_new_contract_and_new_major_are_not_compared(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        self.write_schema("fresh", "v1")
+        self.write_schema("thing", "v2", {"required": ["a"]})
+        code, out, _ = self.compat("--json")
+        self.assertEqual(0, code)
+        status = {(e["contract"], e["version"]): (e["status"], e["changes"]) for e in json.loads(out)["contracts"]}
+        self.assertEqual({("fresh", "v1"): ("new", []), ("thing", "v1"): ("compared", []),
+                          ("thing", "v2"): ("major", [])}, status)
+        self.assertIn("thing/v2: major (not compared)", self.compat()[1])
+
+    def test_base_may_be_any_commit(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        self.breaking_edit()
+        self.commit()
+        self.assertEqual(0, self.compat("--base", "HEAD")[0])
+        code, out, _ = self.compat("--base", "HEAD~1")
+        self.assertEqual(1, code)
+        self.assertIn("required-added (error)", out)
+
+    def test_referenced_contracts_come_from_the_base_too(self):
+        self.write_schema("shared", "v1", {"$defs": {"x": {"type": "string"}}, "properties": {}})
+        self.write_schema("thing", "v1", {"properties": {"a": {"$ref": f"{URN}shared:v1#/$defs/x"}}})
+        self.write_unit(thing="stable", shared="stable")
+        self.commit()
+        self.write_schema("shared", "v1", {"$defs": {"x": {"type": "integer"}}, "properties": {}})
+        code, out, _ = self.compat("--json")
+        report = {e["contract"]: e["changes"] for e in json.loads(out)["contracts"]}
+        self.assertEqual(1, code)
+        self.assertEqual([], report["shared"])  # $defs are compared where they are used
+        self.assertEqual(["type-changed"], [c["rule"] for c in report["thing"]])
+        self.assertEqual("/properties/a", report["thing"][0]["path"])
+
+    def test_contract_filter(self):
+        self.write_schema("thing", "v1")
+        self.write_schema("other", "v1")
+        self.write_unit(thing="stable", other="stable")
+        self.commit()
+        code, out, _ = self.compat("--contract", "other", "--json")
+        self.assertEqual([("other", "v1")], [(e["contract"], e["version"]) for e in json.loads(out)["contracts"]])
+        code, _, err = self.compat("--contract", "nosuch")
+        self.assertEqual(2, code)
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_UNKNOWN_CONTRACT: "), err)
+
+    def test_unlisted_contract_follows_the_module_stability(self):
+        self.write_schema("thing", "v1")
+        self.write_unit()
+        self.commit()
+        self.breaking_edit()
+        code, out, _ = self.compat()
+        self.assertEqual(0, code)
+        self.assertIn("(warning)", out)
+
+    def test_default_root_is_found_from_the_repository(self):
+        self.write_schema("thing", "v1")
+        (self.repo / "packages" / "aicore").mkdir(parents=True)
+        (self.repo / "packages" / "aicore" / "schemas").symlink_to(self.schemas)
+        self.write_unit(thing="stable")
+        (self.repo / "packages" / "aicore" / "unit.json").write_text(self.unit.read_text(), encoding="utf-8")
+        self.commit()
+        self.breaking_edit()
+        code, out, err = self.run_cli("compat", cwd=self.repo / "packages" / "mod")
+        self.assertIn(code, (0, 1), err)
+        self.assertIn("thing/v1", out)
+
+    def test_refusals(self):
+        self.write_schema("thing", "v1")
+        self.write_unit(thing="stable")
+        self.commit()
+        code, _, err = self.compat("--base", "nosuch-ref")
+        self.assertEqual(2, code)
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_BAD_REF: "), err)
+        code, _, err = self.compat("--base", "--oops")
+        self.assertEqual(2, code)
+        code, _, err = self.run_cli("compat", "--root", str(self.schemas), "--unit", str(self.repo / "none.json"))
+        self.assertEqual((2, True), (code, err.startswith("SCHEMA_COMPAT_UNIT: ")))
+        outside = Path(self._tmp.name) / "outside"
+        outside.mkdir()
+        code, _, err = self.run_cli("compat", "--root", str(outside), "--unit", str(self.unit))
+        self.assertEqual((2, True), (code, err.startswith("SCHEMA_COMPAT_ROOT: ")))
+
+    def test_not_a_repository_is_exit_two(self):
+        plain = Path(self._tmp.name) / "plain"
+        plain.mkdir()
+        code, out, err = self.run_cli("compat", cwd=plain)
+        self.assertEqual((2, ""), (code, out))
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_NO_GIT: "), err)
+
+    def test_a_missing_git_is_exit_two(self):
+        self.env["PATH"] = str(Path(self._tmp.name) / "empty")
+        code, _, err = self.run_cli("compat")
+        self.assertEqual(2, code)
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_NO_GIT: "), err)
+
+    def test_usage(self):
+        code, out, err = self.run_cli("--help")
+        self.assertEqual((0, ""), (code, err))
+        self.assertTrue(out.startswith("usage: aicore schema <command>"))
+        self.assertEqual(2, self.run_cli()[0])
+        code, _, err = self.run_cli("nosuch")
+        self.assertEqual(2, code)
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_USAGE: "), err)
+        code, out, err = self.run_cli("compat", "--help")
+        self.assertEqual((0, ""), (code, err))
+        self.assertIn("--base REF", out)
+        code, _, err = self.run_cli("compat", "--bogus")
+        self.assertEqual(2, code)
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_USAGE: "), err)
+
+    def test_the_group_is_listed_by_the_dispatcher(self):
+        self.assertIn("\n  schema   contract tools: compat\n", cli.usage())
+        self.assertEqual(("aicore.util.schemacompat", "main"), cli.GROUPS["schema"][:2])
+
+
+if __name__ == "__main__":
+    unittest.main()

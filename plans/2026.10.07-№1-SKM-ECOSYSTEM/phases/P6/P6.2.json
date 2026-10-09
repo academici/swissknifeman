@@ -1,0 +1,172 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.2",
+  "title": "aicore schema compat: механическая проверка обратной совместимости схем (R10)",
+  "status": "done",
+  "summary": "Модуль aicore.util.schemacompat (compare двух схем по правилам таблицы ext-p6-schema §compat, константа RULES) и группа CLI `aicore schema compat` со сравнением с git-базой в пределах мажора и важностью по stability контракта из unit.json; тесты на каждое правило и на CLI во временном git-репозитории.",
+  "why": "R10: политика эволюции D18 сейчас не проверяется; P10 доказывает minor-совместимость exec/v1, P12 вносит проверку в CI, P6.4 и P6.12 используют её для своих изменений контрактов. Жёсткие риски: ложное «совместимо» для изменённого pattern или oneOf (правила консервативны — breaking), циклы $ref, git-база без контракта.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/util/schemacompat.py (compare, Change, RULES, main)",
+      "aicore/cli.py: группа schema",
+      "tests: util/test_schemacompat.py (правила, $ref-цикл, CLI на временном git)",
+      "CHANGELOG aicore"
+    ],
+    "exclude": [
+      "шаг CI (P12)",
+      "проверка exec/v1 (P10)",
+      "прямая совместимость (новый документ старым читателем) — не цель D18 minor"
+    ]
+  },
+  "depends_on": [
+    "P6.1"
+  ],
+  "decisions": [
+    "D46",
+    "D18"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/ext-p6#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6#cli",
+      "why": "регистрация группы и общие правила вывода",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-schema#compat",
+      "why": "правила, CLI, важность, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6#sources",
+      "why": "правила совместимости по первоисточникам",
+      "required": false
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schema.py",
+      "why": "Registry, load_contract, resolve — разрешение $ref",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "why": "provides.contracts[].stability",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/util/schemacompat.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/cli.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/ext-p6 §rules (stdlib, Python 3.9, POSIX, контракты, тесты без реального HOME, секреты, английский в продукте, CHANGELOG aicore, красное чинится в пункте)",
+    "Дизайн — разделы knowledge ext-p6-*, указанные в reads; имена функций, коды ошибок, пути файлов и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "Слои aicore: ext → util, state, config; util/state/config/provider/artifacts/content/delivery/release/usage не импортируют ext; верхний aicore/cli.py импортирует группы лениво (test_subpackage_layering)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии, тексты ошибок) — на английском; без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "RULES: Dict[str, bool] — ровно правила таблицы ext-p6-schema §compat с их breaking; compare возвращает только эти rule",
+    "Сравнение консервативно: изменение, совместимость которого не доказывается (pattern, oneOf), — breaking",
+    "util/schemacompat.py импортирует только stdlib и aicore.util.*; git — subprocess.run с timeout=30, без shell",
+    "Важность: stability beta, rc, stable, deprecated → error (exit 1); development, alpha → warning (exit 0)"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: `Change` и `RULES` → `compare` (рекурсивный обход двух узлов с путём; разрешение $ref в обоих реестрах; множество посещённых пар) — правила по таблице, по одной функции-проверке на группу (properties/required, enum, type, const, pattern, bounds, additional/patternProperties/propertyNames, uniqueItems, oneOf, ref) → тесты на каждое правило (пары словарей-схем в одном Registry через `load_registry` по временным каталогам или `Registry({...})`) → `main`: разбор аргументов, корень git (`git rev-parse --show-toplevel` от cwd), базовые файлы через `git show REF:path` во временный каталог (с контрактами, на которые ссылаются), сравнение, вывод текста и `--json` → регистрация группы `schema` в aicore/cli.py и строка USAGE → тест CLI во временном git-репозитории (development → exit 0 с warning; stable → exit 1) → CHANGELOG.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base HEAD && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base HEAD --json | python3 -c 'import json, sys; d = json.load(sys.stdin); assert d[\"base\"] == \"HEAD\" and d[\"contracts\"]'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=packages/aicore/lib python3 -c 'from aicore.util.schemacompat import RULES; expected = {\"property-removed\": True, \"property-added\": False, \"required-added\": True, \"required-removed\": False, \"enum-narrowed\": True, \"enum-widened\": False, \"enum-added\": True, \"type-changed\": True, \"type-widened\": False, \"const-changed\": True, \"pattern-changed\": True, \"pattern-removed\": False, \"bound-tightened\": True, \"bound-relaxed\": False, \"additional-closed\": True, \"pattern-property-removed\": True, \"pattern-property-added\": False, \"property-names-changed\": True, \"unique-added\": True, \"oneof-changed\": True, \"ref-changed\": False}; assert dict(RULES) == expected, set(RULES) ^ set(expected)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.util.schemacompat",
+    "команда `aicore schema compat`"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T02:38:51Z",
+    "finished_at": "2026-10-09T02:44:56Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "486e743e-e07a-493e-aedc-226b5b3c6c90"
+    },
+    "notes": "aicore.util.schemacompat (compare, Change, RULES, main) and the aicore schema compat group; 42 new tests incl. temporary git repository; aicore 995 tests, units/golden/hygiene green, repo compat run clean",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T02:44:56Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T02:44:56Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T02:44:56Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T02:44:56Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T02:44:56Z"
+}

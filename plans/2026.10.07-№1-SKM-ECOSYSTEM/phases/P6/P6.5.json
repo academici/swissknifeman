@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.5",
   "title": "aicore.ext.process и environment: дисциплина процесса плагина (R08), очищенное окружение, секреты по ссылкам, профиль",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "run_json — запуск одноразового процесса с JSON в stdin и ровно одним JSON-объектом в stdout: новая сессия, общий дедлайн чтения (selectors), SIGTERM→2 с→SIGKILL группе, SIGKILL группе после выхода, лимит stdout 1 MiB, хвост stderr 2 KiB с редактированием секретов; clean_environment — allowlist, permissions.env и секреты env:// только для trusted, служебные SKM_EXT_*; effective_profile; тест архитектуры «Popen только в process.py».",
   "why": "R08 и D19/D45: плагины и подписчики не должны ломать хост, зависать, мусорить в протоколе, оставлять потомков и утекать секретами (E30, E40). Жёсткие риски: (1) зависание на pipe, удерживаемом ушедшим потомком, — дедлайн на чтение, не communicate(); (2) убийство чужой группы — pgid = pid ребёнка (start_new_session), ошибки ProcessLookupError/PermissionError игнорируются; (3) утечка секрета в stderr-хвосте и текстах ошибок — тесты SENTINEL.",
   "scope": {
@@ -157,12 +157,35 @@
   },
   "result": {
     "started_at": "2026-10-09T03:09:38Z",
+    "finished_at": "2026-10-09T04:28:46Z",
     "executor": {
       "provider": "claude",
       "model": "sonnet-5-5",
       "effort": "high",
       "session": "f86187b8-6915-48fb-a486-0a3905f620c6"
-    }
+    },
+    "notes": "run_json (new session, shared selectors deadline, SIGTERM->grace->SIGKILL to the group, group SIGKILL after exit, 1 MiB stdout, 2 KiB redacted stderr tail), clean_environment/ignored_requests/effective_profile, errors.CODES, architecture test for single spawn place; grok-4.7 review: 8 findings fixed (secret escapes, numeric secrets, deep documents, NaN limits, surrogates, regex backtracking); aicore 1140+ tests green",
+    "deviations": [
+      "role=reviewer commit not used (would sweep owner knowledge edits); review verdict artifact committed with the fix commit",
+      "review budget (2 rounds) spent; the last correction (linear redaction scans) is verified by regression tests only"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T04:28:46Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T04:28:46Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T04:28:46Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T04:28:23Z"
+  "updated_at": "2026-10-09T04:28:46Z"
 }

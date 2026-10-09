@@ -20,10 +20,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   JSON, a `Secret` in `data` is refused without printing it; `emit` raises only for a wrong call and otherwise warns and
   returns `None` unless `strict=True`) over `aicore.ext.journal`, the only writer of the append-only project journal
   (one `os.write` per event under an `flock`, `fsync`, a torn tail becomes a broken line of its own, readers see only
-  complete lines of a size snapshot). Delivery to subscribers comes later: until then `emit` only journals.
+  complete lines of a size snapshot). After journaling, `emit` starts delivery in the mode of the call or of
+  `events.delivery`: `background` (default), `sync` or `off`; a failing configuration or deliverer start is a warning.
+- **Event delivery:** `aicore.ext.delivery` (`deliver`, `replay`, `delivery_status`, `spawn_background`,
+  `resolve_subscriptions`). Subscriptions come from `unit.json` (`<module>:<id>`) and from `[aicore.subscriptions]` (a
+  config entry may switch off or retime a module subscription, never replace its command; `projects` limits one to
+  given roots). One deliverer per journal (`flock` on `ext/deliver.lock`, the automatic one gives way at once, the
+  command waits up to 30 s) that re-checks the journal size after releasing the lock, so no wake-up is lost; per
+  subscription a cursor in `ext/cursors.json` (atomic replace under the lock, at-least-once: subscribers are idempotent by
+  event `id`), journal order, one attempt per event and pass, a failure stops the subscription until the next run, after
+  `events.max_attempts` failures the event goes to `ext/dead-letter.jsonl` and the cursor moves on. Every attempt is a
+  line of `ext/deliveries.jsonl`. A new subscription starts at the triggering event (else at the end of the journal); a
+  cursor that no longer fits a journal changed by hand starts again with a `JOURNAL_RESET` record. Subscriber commands
+  run through `run_json` in the cleaned environment with `SKM_PROJECT_ROOT`, `SKM_EVENT_JOURNAL`, `SKM_EVENT_SUBSCRIPTION`
+  and `SKM_EVENT_ATTEMPT`; success is exit 0 with an empty stdout or `{"status": "ok"|"skipped"}`. Plugin subscribers
+  report `PLUGIN_UNAVAILABLE` for now. Locks need `flock` (POSIX); network file systems without it are not supported.
 - **`aicore.ext.settings`** (the `[aicore]` config section: delivery, subscriptions, plugins, overlays with the layer of each
   file) and **`aicore.ext.units`** (events, subscriptions, overlay slots and extension points declared in `unit.json`).
 - **`aicore events emit|list`** (`--json`, `--project`, `--strict-type`): emulate and read events.
+- **`aicore events deliver|replay|status`**: run a deliverer (exit 1 when a delivery failed), deliver again (`--from-start`,
+  `--from-event ID`, `--event ID` for a dead letter) and show lag, pending attempts and dead letters per subscription.
 - **`aicore.ext.process.run_json`**: runs a one-shot child with one JSON object on stdin and exactly one on stdout. A
   new session per child, one read/write deadline shared by all pipes (no `communicate()`), SIGTERM, a grace period and
   SIGKILL to the whole process group on timeout, a final SIGKILL to the group after the child exits, a 1 MiB stdout

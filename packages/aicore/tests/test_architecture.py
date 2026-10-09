@@ -222,13 +222,25 @@ class TestImportBoundary(unittest.TestCase):
 
     def test_process_spawn_is_in_one_place(self):
         """Processes are started in ``ext/process.py`` only (the discipline of R08 lives there): no other
-        module of ``ext`` calls ``subprocess.Popen|run|call|check_call|check_output`` or ``os.fork|posix_spawn``."""
+        module of ``ext`` calls ``subprocess.Popen|run|call|check_call|check_output`` or ``os.fork|posix_spawn``.
+        The one exception is the detached background deliverer: ``subprocess.Popen`` inside
+        ``delivery.spawn_background``."""
         spawning = {"Popen", "run", "call", "check_call", "check_output", "getoutput", "getstatusoutput"}
         forking = {"fork", "forkpty", "posix_spawn", "posix_spawnp", "system", "popen", "execv", "execve"}
         allowed = {"process.py"}
-        offenders, seen = [], False
+        exception = ("delivery.py", "spawn_background", "Popen")
+        offenders, seen, background = [], False, 0
         for path in sorted((LIB / "ext").rglob("*.py")):
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
+
+            def function_of(node):
+                while node in parents:
+                    node = parents[node]
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        return node.name
+                return None
+
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom) and node.module in ("subprocess", "os"):
                     names = {alias.name for alias in node.names}
@@ -241,10 +253,13 @@ class TestImportBoundary(unittest.TestCase):
                     if (owner == "subprocess" and name in spawning) or (owner == "os" and name in forking):
                         if path.name in allowed:
                             seen = seen or (owner == "subprocess" and name == "Popen")
+                        elif (path.name, function_of(node), name) == exception and owner == "subprocess":
+                            background += 1
                         else:
                             offenders.append(f"ext/{path.name}:{node.lineno} calls {owner}.{name}")
         self.assertEqual(offenders, [])
         self.assertTrue(seen, "ext/process.py no longer spawns with subprocess.Popen")
+        self.assertEqual(background, 1, "delivery.spawn_background starts the deliverer with one subprocess.Popen")
 
     def test_only_journal_writes_the_journal(self):
         """The name of the project event journal appears in ``ext/journal.py`` only (it is the one writer).

@@ -8,9 +8,10 @@ import traceback
 import unittest
 import uuid
 from contextlib import redirect_stderr
+from unittest import mock
 
 from aicore.config import Secret
-from aicore.ext import events, journal
+from aicore.ext import delivery, events, journal
 from aicore.ext.errors import CODES, ExtError, reset_warnings
 
 from tests.ext.support import TempCase
@@ -162,9 +163,12 @@ class TestEmit(TempCase):
         self.assertEqual([item.id for item in found], [event.id])
 
     def test_delivery_argument_is_checked(self):
-        for mode in events.DELIVERY_MODES:
-            self.assertIsNotNone(events.emit("demo.thing.happened", source="demo", project=self.project,
-                                             delivery=mode))
+        started = []
+        with mock.patch.object(delivery, "spawn_background", lambda *args, **kwargs: started.append(kwargs)):
+            for mode in events.DELIVERY_MODES:
+                self.assertIsNotNone(events.emit("demo.thing.happened", source="demo", project=self.project,
+                                                 delivery=mode))
+        self.assertEqual(len(started), 1)  # background starts a deliverer (not in this test), sync and off do not
         with self.assertRaises(ExtError):
             events.emit("demo.thing.happened", source="demo", project=self.project, delivery="later")
         with self.assertRaises(TypeError):

@@ -3,8 +3,9 @@
 An event follows ``event/v1`` (a CloudEvents 1.0 subset). ``emit`` is for the *source* of an event: it
 raises :class:`~aicore.ext.errors.ExtError` only when the call itself is wrong (type, source, data, size,
 a ``Secret``) and otherwise never breaks the caller: a failing journal gives a warning and ``None``
-(``strict=True`` raises instead). Delivery to subscribers is not part of this module yet, so ``emit`` only
-journals, as with ``delivery="off"``. stdlib and ``aicore`` only.
+(``strict=True`` raises instead). After journaling, ``emit`` starts delivery to the subscribers
+(:mod:`aicore.ext.delivery`) in the mode of the call or of the configuration: ``background`` (a detached
+deliverer process), ``sync`` (before ``emit`` returns) or ``off``. stdlib and ``aicore`` only.
 """
 from __future__ import annotations
 
@@ -12,11 +13,12 @@ import dataclasses
 import datetime
 import fnmatch
 import json
+import os
 import re
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 
 from ..config import Secret
 from ..util import schema as _schema
@@ -178,19 +180,21 @@ def build_event(type: str, data: Optional[Mapping[str, Any]] = None, *, source: 
 def emit(type: str, data: Optional[Mapping[str, Any]] = None, *, source: str, subject: Optional[str] = None,
          project: Optional[PathLike] = None, delivery: Optional[str] = None, strict: bool = False,
          env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
-         **attrs: Any) -> Optional[Event]:
-    """Journal an event of module ``source``; return it with its ``offset``, or None when it was not stored.
+         config_file: Optional[PathLike] = None, **attrs: Any) -> Optional[Event]:
+    """Journal an event of module ``source``, start its delivery and return it with its ``offset``.
 
-    ``project`` is a project root (its journal) or None (the machine journal). A failing journal is a
-    warning and ``None`` unless ``strict``. ``delivery`` is checked (``background``, ``sync``, ``off``) but
-    delivery itself is not available yet. Other keyword arguments go to :func:`build_event`.
+    ``project`` is a project root (its journal) or None (the machine journal). ``delivery`` is
+    ``background``, ``sync`` or ``off``; None takes ``events.delivery`` of the configuration. A failing
+    journal returns ``None``; a failing configuration or delivery start still returns the stored event.
+    Both are warnings unless ``strict``, which raises them. Other keyword arguments go to :func:`build_event`.
     """
     if delivery is not None and delivery not in DELIVERY_MODES:
         raise ExtError("EVENT_INVALID", f"delivery must be one of {', '.join(DELIVERY_MODES)}")
     event = build_event(type, data, source=source, subject=subject, **attrs)
     line = canonical_json_bytes(event.to_json())
+    root = os.path.abspath(project) if project is not None else None
     try:
-        jdir = journal.journal_dir(project, env=env, home=home)
+        jdir = journal.journal_dir(root, env=env, home=home)
         offset = journal.append(jdir, line)
     except ExtError as exc:
         if strict:
@@ -202,11 +206,68 @@ def emit(type: str, data: Optional[Mapping[str, Any]] = None, *, source: str, su
             raise ExtError("JOURNAL_IO", f"the journal cannot be written: {exc}") from None
         warn_once("JOURNAL_IO", f"event {event.type} was not stored: {exc}", key=str(project))
         return None
-    return dataclasses.replace(event, offset=offset)
+    stored = dataclasses.replace(event, offset=offset)
+    _start_delivery(jdir, offset, root, delivery, strict=strict, env=env, home=home, config_file=config_file)
+    return stored
+
+
+def _start_delivery(jdir: Path, offset: int, root: Optional[str], mode: Optional[str], *, strict: bool,
+                    env: Optional[Mapping[str, str]], home: Optional[PathLike],
+                    config_file: Optional[PathLike]) -> None:
+    """The delivery step of :func:`emit`: never raises unless ``strict`` (the source must not break)."""
+    from . import delivery as _delivery  # delivery reads events: imported late to avoid a cycle
+    from . import settings as _settings
+    try:
+        if mode is None:
+            try:
+                mode = _settings.load(root, env=env, home=home, config_file=config_file).delivery
+            except ExtError as exc:
+                _delivery.record_config_error(jdir, exc)
+                raise
+        if mode == "sync":
+            _delivery.deliver(jdir, trigger_offset=offset, project=root, env=env, home=home,
+                              config_file=config_file)
+        elif mode == "background":
+            _delivery.spawn_background(jdir, trigger_offset=offset, project=root, env=env,
+                                       config_file=config_file, strict=strict)
+    except ExtError as exc:
+        if strict:
+            raise
+        warn_once(exc.code, f"events were not delivered: {exc.message}", key=str(jdir))
+    except (OSError, ValueError) as exc:
+        if strict:
+            raise ExtError("DELIVERY_IO", f"events were not delivered: {exc}") from None
+        warn_once("DELIVERY_IO", f"events were not delivered: {exc}", key=str(jdir))
 
 
 def _problem(offset: int, code: str, message: str) -> Problem:
     return {"offset": offset, "code": code, "message": message}
+
+
+def parse_line(offset: int, line: Optional[bytes], problem: Optional[str]) -> Tuple[Optional[Event], Optional[Problem]]:
+    """One entry of :func:`aicore.ext.journal.iter_lines` as ``(event, None)`` or ``(None, problem)``."""
+    if problem is not None or line is None:
+        if problem == "too-long":
+            return None, _problem(offset, "EVENT_LINE_TOO_LONG", f"line is longer than {journal.MAX_LINE} bytes")
+        return None, _problem(offset, "EVENT_MALFORMED", "empty line")
+    try:
+        doc = json.loads(line.decode("utf-8"))
+    except (ValueError, RecursionError):
+        return None, _problem(offset, "EVENT_MALFORMED", "line is not JSON")
+    if isinstance(doc, dict) and isinstance(doc.get("specversion"), str) and doc["specversion"] != SPECVERSION:
+        return None, _problem(offset, "EVENT_VERSION_UNSUPPORTED",
+                              f"specversion {doc['specversion']!r} is not supported")
+    issues = validate_document(doc)
+    if issues:
+        return None, _problem(offset, "EVENT_MALFORMED", issues[0])
+    return Event.from_json(doc, offset), None
+
+
+def iter_events(jdir: PathLike, start: int = 0) -> Iterator[Tuple[int, Optional[Event], Optional[Problem]]]:
+    """``(offset, event, problem)`` for each complete line of the journal in ``jdir`` from byte ``start``."""
+    for offset, line, problem in journal.iter_lines(jdir, start):
+        event, found = parse_line(offset, line, problem)
+        yield offset, event, found
 
 
 def read_events(project: Optional[PathLike] = None, *, types: Optional[Sequence[str]] = None,
@@ -224,29 +285,11 @@ def read_events(project: Optional[PathLike] = None, *, types: Optional[Sequence[
     jdir = journal.journal_dir(project, env=env, home=home)
     events: List[Event] = []
     problems: List[Problem] = []
-    for offset, line, problem in journal.iter_lines(jdir):
+    for _offset, event, problem in iter_events(jdir):
         if problem is not None:
-            if problem == "too-long":
-                problems.append(_problem(offset, "EVENT_LINE_TOO_LONG",
-                                         f"line is longer than {journal.MAX_LINE} bytes"))
-            else:
-                problems.append(_problem(offset, "EVENT_MALFORMED", "empty line"))
-            continue
-        try:
-            doc = json.loads(line.decode("utf-8"))
-        except (ValueError, RecursionError):
-            problems.append(_problem(offset, "EVENT_MALFORMED", "line is not JSON"))
-            continue
-        if isinstance(doc, dict) and doc.get("specversion") not in (None, SPECVERSION) \
-                and isinstance(doc.get("specversion"), str):
-            problems.append(_problem(offset, "EVENT_VERSION_UNSUPPORTED",
-                                     f"specversion {doc['specversion']!r} is not supported"))
-            continue
-        issues = validate_document(doc)
-        if issues:
-            problems.append(_problem(offset, "EVENT_MALFORMED", issues[0]))
-            continue
-        events.append(Event.from_json(doc, offset))
+            problems.append(problem)
+        else:
+            events.append(event)
     if since_id is not None:
         for index, event in enumerate(events):
             if event.id == since_id:

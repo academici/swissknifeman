@@ -1,8 +1,11 @@
-"""``aicore events``: emit and list.
+"""``aicore events``: emit, list, deliver, replay and status.
 
 ``emit`` is for people and tests: it journals an event as if a module had emitted it, strictly (every
-failure is an error). ``list`` prints the journal. Exit codes: 0 success, 1 refusal or failure, 2 usage.
-``--json`` prints one JSON document on stdout; errors go to stderr as ``<CODE>: <message>``.
+failure is an error). ``list`` prints the journal. ``deliver`` runs a deliverer (it is also the background
+deliverer started by ``emit``, through the hidden ``--journal`` and ``--trigger-offset``), ``replay``
+delivers again and ``status`` shows the subscriptions. Exit codes: 0 success, 1 refusal or failure (for
+``deliver`` and ``replay``: a delivery failed), 2 usage. ``--json`` prints one JSON document on stdout;
+errors go to stderr as ``<CODE>: <message>``.
 """
 from __future__ import annotations
 
@@ -15,6 +18,8 @@ from pathlib import Path
 from typing import Any, List, Mapping, Optional, Sequence, TextIO
 
 from ..state import find_project_root
+from . import delivery as _delivery
+from . import journal
 from . import units as _units
 from .errors import ExtError
 from .events import DELIVERY_MODES, emit, read_events
@@ -41,7 +46,8 @@ def build_parser() -> argparse.ArgumentParser:
     payload.add_argument("--data-file", metavar="FILE", help="read the payload (a JSON object) from FILE")
     emit_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project, "
                           "else the machine journal)")
-    emit_cmd.add_argument("--delivery", choices=DELIVERY_MODES, help="delivery mode (journal only for now)")
+    emit_cmd.add_argument("--delivery", choices=DELIVERY_MODES, help="delivery mode (default: events.delivery "
+                          "of the configuration)")
     emit_cmd.add_argument("--strict-type", action="store_true",
                           help="refuse a type that no module declares in provides.events")
     emit_cmd.add_argument("--json", action="store_true", help="print the event as JSON")
@@ -54,6 +60,29 @@ def build_parser() -> argparse.ArgumentParser:
     list_cmd.add_argument("--since", metavar="ID", help="only events after the event with this id")
     list_cmd.add_argument("--limit", type=int, metavar="N", help="only the last N events")
     list_cmd.add_argument("--json", action="store_true", help='print {"events": [...], "problems": [...]}')
+
+    deliver_cmd = commands.add_parser("deliver", help="deliver pending events to the subscribers")
+    deliver_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project, "
+                             "else the machine journal)")
+    deliver_cmd.add_argument("--journal", metavar="DIR", help=argparse.SUPPRESS)
+    deliver_cmd.add_argument("--trigger-offset", type=int, metavar="N", help=argparse.SUPPRESS)
+    deliver_cmd.add_argument("--config-file", metavar="FILE", help=argparse.SUPPRESS)
+    deliver_cmd.add_argument("--json", action="store_true", help="print the delivery report as JSON")
+
+    replay_cmd = commands.add_parser("replay", help="deliver events to one subscription again")
+    replay_cmd.add_argument("subscription", metavar="SUBSCRIPTION", help="subscription id")
+    start = replay_cmd.add_mutually_exclusive_group(required=True)
+    start.add_argument("--from-start", action="store_true", help="rewind the cursor to the first event")
+    start.add_argument("--from-event", metavar="ID", help="rewind the cursor to the event with this id")
+    start.add_argument("--event", metavar="ID", help="deliver this one event (for example a dead letter)")
+    replay_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project, "
+                            "else the machine journal)")
+    replay_cmd.add_argument("--json", action="store_true", help="print the delivery report as JSON")
+
+    status_cmd = commands.add_parser("status", help="show the subscriptions and their delivery state")
+    status_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project, "
+                            "else the machine journal)")
+    status_cmd.add_argument("--json", action="store_true", help="print the status as JSON")
     return parser
 
 
@@ -118,7 +147,64 @@ def _run_list(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: 
     return 0
 
 
-_COMMANDS = {"emit": _run_emit, "list": _run_list}
+def _report(command: str, report: "_delivery.DeliveryReport", args: argparse.Namespace, out: TextIO,
+            err: TextIO) -> int:
+    if args.json:
+        print(json.dumps(report.to_json(), ensure_ascii=False, sort_keys=True), file=out)
+    else:
+        busy = " (another deliverer is running)" if report.busy else ""
+        print(f"delivered {report.delivered}, failed {report.failed}, dead-lettered {report.dead_lettered}"
+              f"{busy}", file=out)
+    for problem in report.problems:
+        print(f"aicore events {command}: {problem['code']}: {problem['message']}", file=err)
+    for attempt in report.attempts:
+        if attempt["outcome"] not in ("ok", "skipped"):
+            print(f"aicore events {command}: {attempt['code']}: {attempt['subscription']} {attempt['event_id']} "
+                  f"attempt {attempt['attempt']}: {attempt['outcome']}", file=err)
+    return 0 if report.ok else 1
+
+
+def _run_deliver(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    if args.journal:  # an explicit journal: the project is only what the caller names, never guessed from cwd
+        project = Path(args.project) if args.project else None
+        jdir = Path(args.journal)
+    else:
+        project = _project(args, env, cwd)
+        jdir = journal.journal_dir(project, env=env)
+    automatic = args.trigger_offset is not None  # the deliverer started by emit gives way to a running one
+    report = _delivery.deliver(jdir, trigger_offset=args.trigger_offset, project=project, env=env,
+                               config_file=args.config_file, wait=not automatic)
+    return _report("deliver", report, args, out, err)
+
+
+def _run_replay(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    project = _project(args, env, cwd)
+    report = _delivery.replay(journal.journal_dir(project, env=env), args.subscription,
+                              from_start=args.from_start, from_event=args.from_event, event_id=args.event,
+                              project=project, env=env)
+    return _report("replay", report, args, out, err)
+
+
+def _run_status(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    project = _project(args, env, cwd)
+    status = _delivery.delivery_status(journal.journal_dir(project, env=env), project=project, env=env)
+    if args.json:
+        print(json.dumps(status, ensure_ascii=False, sort_keys=True), file=out)
+        return 0
+    for row in status["subscriptions"]:
+        state = "on" if row["enabled"] and row["active"] else ("off" if not row["enabled"] else "inactive")
+        pending = f" pending {row['pending']['attempts']}x {row['pending']['last_error']}" if row["pending"] else ""
+        print(f"{row['id']} {row['origin']} {state} lag {row['lag']} dead-letters {row['dead_letters']}{pending}",
+              file=out)
+    if status["malformed"] or status["resets"]:
+        print(f"journal: {status['malformed']} broken line(s), {status['resets']} cursor reset(s)", file=out)
+    for problem in status["problems"]:
+        print(f"aicore events status: {problem['code']}: {problem['message']}", file=err)
+    return 0
+
+
+_COMMANDS = {"emit": _run_emit, "list": _run_list, "deliver": _run_deliver, "replay": _run_replay,
+             "status": _run_status}
 
 
 def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str]] = None,

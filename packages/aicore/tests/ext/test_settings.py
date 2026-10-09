@@ -8,6 +8,10 @@ from tests.ext.support import TempCase
 
 
 class SettingsCase(TempCase):
+    def setUp(self):
+        super().setUp()
+        self.env.pop("SKM_AICORE_EVENTS__DELIVERY")  # these tests read the configured delivery mode
+
     def machine(self, text):
         path = self.tmp / "skm" / "config" / "config.toml"
         path.parent.mkdir(parents=True, exist_ok=True)

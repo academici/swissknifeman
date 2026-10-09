@@ -4,17 +4,28 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from aicore.ext import errors
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 UNITS = FIXTURES / "units"
+SUBSCRIBERS = FIXTURES / "subscribers"
+# Tests never start the background deliverer unless they ask for it: emit falls back to the configuration,
+# whose default is "background", so the default is turned off here (for env=None calls too).
+DELIVERY_OFF = {"SKM_AICORE_EVENTS__DELIVERY": "off"}
 
 
 class TempCase(unittest.TestCase):
-    """A temporary project root and machine home; the process environment is never read."""
+    """A temporary project root and machine home; the process environment is never read.
+
+    Delivery is off by default, in ``self.env`` and in ``os.environ``.
+    """
 
     def setUp(self):
+        patcher = mock.patch.dict(os.environ, DELIVERY_OFF)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.tmp = Path(self._tmp.name)
@@ -22,7 +33,8 @@ class TempCase(unittest.TestCase):
         self.home.mkdir()
         self.project = self.tmp / "project"
         (self.project / ".swissknifeman").mkdir(parents=True)
-        self.env = {"HOME": str(self.home), "SKM_HOME": str(self.tmp / "skm"), "SKM_UNITS_PATH": str(UNITS)}
+        self.env = {"HOME": str(self.home), "SKM_HOME": str(self.tmp / "skm"), "SKM_UNITS_PATH": str(UNITS),
+                    **DELIVERY_OFF}
         errors.reset_warnings()
         self.addCleanup(errors.reset_warnings)
 

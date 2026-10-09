@@ -11,7 +11,7 @@ GROUPS = {
     "config": ("aicore.config.cli", "main",
                "layered module configuration: show, explain, set, unset, init, example, paths"),
     "schema": ("aicore.util.schemacompat", "main", "contract tools: compat"),
-    "events": ("aicore.ext.cli", "main", "project event journal: emit, list"),
+    "events": ("aicore.ext.cli", "main", "project event journal: emit, list, deliver, replay, status"),
 }
 
 _HELP = ("-h", "--help", "help")

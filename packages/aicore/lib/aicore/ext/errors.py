@@ -12,3 +12,15 @@ class ExtError(Exception):
 
     def __str__(self) -> str:
         return f"{self.code}: {self.message}"
+
+
+# Codes raised as ``ExtError`` or reported in results by the extension layer; a code is never renamed.
+CODES = frozenset({
+    "PROCESS_SPAWN",
+    "PROCESS_TIMEOUT",
+    "PROCESS_EXIT",
+    "PROTOCOL_STDOUT",
+    "PROTOCOL_STDOUT_TOO_LARGE",
+    "PLUGIN_SECRET_UNSUPPORTED",
+    "PLUGIN_PROFILE_UNAVAILABLE",
+})

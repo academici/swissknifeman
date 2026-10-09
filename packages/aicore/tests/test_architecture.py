@@ -12,7 +12,7 @@ LIB = ROOT / "lib" / "aicore"
 _STDLIB_FALLBACK = frozenset({
     "__future__", "ast", "collections", "concurrent", "contextlib", "copy", "dataclasses",
     "datetime", "enum", "fcntl", "functools", "hashlib", "http", "inspect", "io",
-    "itertools", "json", "math", "os", "pathlib", "re", "select", "shutil", "signal",
+    "itertools", "json", "math", "os", "pathlib", "re", "select", "selectors", "shutil", "signal",
     "subprocess", "sys", "tempfile", "textwrap", "threading", "time", "tomllib", "types",
     "typing",
     "unittest", "urllib", "uuid",
@@ -219,6 +219,32 @@ class TestImportBoundary(unittest.TestCase):
                 path.relative_to(packages).as_posix() for lib in roots for path in lib.rglob("*.py")
                 if pattern.search(path.read_text(encoding="utf-8")))
             self.assertEqual(found, [f"aicore/{owner}"], name)
+
+    def test_process_spawn_is_in_one_place(self):
+        """Processes are started in ``ext/process.py`` only (the discipline of R08 lives there): no other
+        module of ``ext`` calls ``subprocess.Popen|run|call|check_call|check_output`` or ``os.fork|posix_spawn``."""
+        spawning = {"Popen", "run", "call", "check_call", "check_output", "getoutput", "getstatusoutput"}
+        forking = {"fork", "forkpty", "posix_spawn", "posix_spawnp", "system", "popen", "execv", "execve"}
+        allowed = {"process.py"}
+        offenders, seen = [], False
+        for path in sorted((LIB / "ext").rglob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module in ("subprocess", "os"):
+                    names = {alias.name for alias in node.names}
+                    bad = names & (spawning if node.module == "subprocess" else forking)
+                    if bad and path.name not in allowed:
+                        offenders.append(f"ext/{path.name}:{node.lineno} imports {sorted(bad)}")
+                elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
+                        and isinstance(node.func.value, ast.Name):
+                    owner, name = node.func.value.id, node.func.attr
+                    if (owner == "subprocess" and name in spawning) or (owner == "os" and name in forking):
+                        if path.name in allowed:
+                            seen = seen or (owner == "subprocess" and name == "Popen")
+                        else:
+                            offenders.append(f"ext/{path.name}:{node.lineno} calls {owner}.{name}")
+        self.assertEqual(offenders, [])
+        self.assertTrue(seen, "ext/process.py no longer spawns with subprocess.Popen")
 
     def test_schema_validator_is_defined_once(self):
         defining = [path.relative_to(ROOT).as_posix() for path in sorted(LIB.rglob("*.py"))

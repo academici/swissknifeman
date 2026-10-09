@@ -9,6 +9,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **`aicore.ext.process.run_json`**: runs a one-shot child with one JSON object on stdin and exactly one on stdout. A
+  new session per child, one read/write deadline shared by all pipes (no `communicate()`), SIGTERM, a grace period and
+  SIGKILL to the whole process group on timeout, a final SIGKILL to the group after the child exits, a 1 MiB stdout
+  limit, a 2 KiB stderr tail and redaction of declared secrets in the tail (also JSON-escaped and percent-encoded
+  spellings) and in the document. Every outcome is a
+  `ProcessResult` with a `code` (`PROCESS_SPAWN`, `PROCESS_TIMEOUT`, `PROCESS_EXIT`, `PROTOCOL_STDOUT`,
+  `PROTOCOL_STDOUT_TOO_LARGE`); only invalid arguments raise. A descendant that calls `setsid()` leaves the group and is
+  not reached.
+- **`aicore.ext.environment`**: `clean_environment` passes an allowlist (plus `LC_*`) and the `SKM_EXT_PROTOCOL` /
+  `SKM_EXT_TRUSTED` markers; `permissions.env` and `env://` secrets from `permissions.secrets` only for trusted
+  plugins (other schemes: `PLUGIN_SECRET_UNSUPPORTED`); `ignored_requests` lists what an untrusted plugin did not get;
+  `effective_profile` reports `trusted-local` as not enforced and refuses `read-only` (`PLUGIN_PROFILE_UNAVAILABLE`).
 - **Contracts of the extension layer**, all `development`: `event/v1` (a CloudEvents 1.0 subset; readers ignore unknown
   scalar extension attributes; no `project` field), `artifact-ref/v1`, `permissions/v1` (filesystem areas, network,
   secrets, shell, environment pass-through, sandbox profile), `extension/v1` (plugin manifest) and the plugin

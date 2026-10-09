@@ -42,3 +42,10 @@ exception. Installed copies and checkouts without the marker are unaffected. See
 `bin/analyst` finds the `aicore` foundation through the canonical locator fragment: `$AICORE_ROOT`, then
 `_vendor/aicore`, then the sibling `../aicore`; a miss ends with `AICORE_NOT_FOUND` and exit code 2. See
 `packages/aicore/README.md`.
+
+## Skills
+
+The module plugin ships `session-observer`. The sources live in `packages/analyst/skills/` and are released with the module.
+A project receives them through the host-provided `system` bucket of `skiller`: `skiller connect` enables the plugin
+`analyst`, and `skiller sync` copies the skills into the project. The `skiller` guide
+"Configuration, host buckets and metadata" describes the bucket.

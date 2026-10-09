@@ -35,6 +35,7 @@ export default withMermaid(defineConfig({
             { text: 'Skill architecture (reality)', link: '/guide/skills-architecture' },
             { text: 'Installing skills', link: '/guide/installation' },
             { text: 'Vendor-mode (sync)', link: '/guide/vendor-mode' },
+            { text: 'Configuration and metadata', link: '/guide/configuration' },
             { text: 'Integration checklist', link: '/guide/integration-checklist' },
             { text: 'CLI swissknifeman', link: '/guide/cli' },
             { text: 'Profiles and auto detection', link: '/guide/profiles' },

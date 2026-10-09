@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.6",
   "title": "Документация skiller и модулей, инструкции skiller через каталог harness, ecosystem и contracts, ADR 0049–0051, CHANGELOG",
-  "status": "todo",
+  "status": "done",
   "summary": "README и docs skiller (CLI: describe; конфиг [skiller]/[skiller.sync] и наследие; бакет хоста и skills модулей; метаданные), docs maind, harness, analyst, brain (раздел Skills), правило skiller.configuration-ownership и др. в каталоге инструкций harness с регенерацией CLAUDE.md/AGENTS.md/.cursor/.grok, docs/architecture/ecosystem.md (раздел skiller, таблица skills, P8) и contracts.md (skills.json поля, bucket_aliases хоста, skill-descriptor через skiller describe), ADR 0049–0051 по D52–D54, корневой CHANGELOG; docs-impact и hygiene зелёные.",
   "why": "Документация и инструкции агентов должны описывать новую модель: старое правило «.swissknife.json отдельно от .swissknifeman/config.json» в CLAUDE.md skiller после P8.4 неверно и вводит агентов в заблуждение.",
   "scope": {
@@ -229,6 +229,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T12:49:57Z"
+  "result": {
+    "started_at": "2026-10-09T15:46:32Z",
+    "finished_at": "2026-10-09T15:54:57Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "b408b805-1583-41e2-aec3-148b773ecec3"
+    },
+    "notes": "Docs: skiller configuration page, describe in CLI, module Skills sections, ecosystem/contracts, ADR 0049-0051, CHANGELOG; skiller configuration-ownership rule regenerated via harness catalog; golden recaptured",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T15:54:57Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T15:54:57Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T15:54:57Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T15:54:57Z"
 }

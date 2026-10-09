@@ -26,6 +26,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Config explain `config-explain/v1` | `urn:swissknifeman:aicore:config-explain:v1`, `packages/aicore/schemas/config-explain/v1` | aicore (config) | development | none yet; modules adopt `aicore.config.resolve` with their own section schemas: P8 to P11 |
 | Skill descriptor `skill-descriptor/v1` | `urn:swissknifeman:aicore:skill-descriptor:v1`, `packages/aicore/schemas/skill-descriptor/v1` | aicore (content) | development | none yet; the receipt of skill digests in a run is P10 ([ADR 0038](decisions/0038-skill-descriptor-agent-skills-standard.md)) |
 | Eval context `eval-context/v1` | `urn:swissknifeman:aicore:eval-context:v1`, `packages/aicore/schemas/eval-context/v1` | aicore (content) | development | none yet; benchmarks carry it as `context` in `skill-benchmark/v3` and `system-bank-benchmark/v2` ([ADR 0039](decisions/0039-eval-result-context.md)) |
+| Skiller config `skiller` section | `urn:swissknifeman:skiller:config:v1`, `packages/skiller/configs/config.schema.json` | skiller | development | tables `[skiller]` and `[skiller.sync]` of `.swissknifeman/config.toml`; the legacy files are read with a warning until `swissknifeman upgrade` ([ADR 0050](decisions/0050-skiller-settings-in-the-layered-config.md)) |
 | Common definitions `common/v1` | `urn:swissknifeman:aicore:common:v1`, `packages/aicore/schemas/common/v1` | aicore (ext) | development | none yet; shared `$defs` that other contracts reference; modules adopt them as they add contracts |
 | Event `event/v1` | `urn:swissknifeman:aicore:event:v1`, `packages/aicore/schemas/event/v1` | aicore (ext) | development | none yet; journal and delivery are [ADR 0041](decisions/0041-event-envelope-journal-and-delivery.md); the catalog of types is `provides.events` of each `unit.json` |
 | Artifact reference `artifact-ref/v1` | `urn:swissknifeman:aicore:artifact-ref:v1`, `packages/aicore/schemas/artifact-ref/v1` | aicore (ext) | development | none yet; points at data stored by `aicore.state.blobs` |
@@ -240,6 +241,14 @@ are additive in the same way.
 
 The descriptor names the partner, the direction, the contract (`exec/v1`, `skiller.resolve/v1`, and so on), the
 entrypoints and the required CLI and environment variable. The `protocol` range of `unit.json` is meant for bridges.
+
+### Skills index fields, host buckets and skiller describe
+
+| Aspect | Policy |
+| --- | --- |
+| `skills.json` entry | registry-generated; besides `name`, `bucket`, `path` and `requires` it carries `license` (frontmatter, then `upstream.json`, then the package license) and, when the skill declares them, `compatibility` and `allowed_tools`. The new fields are optional, so older readers keep working |
+| Host config `bucket_aliases` | object in `configs/skiller-host.json`: bucket name mapped to the list of host plugins whose skills it expands to; applies to buckets marked `"provided_by": "host"` in `buckets.json`. Plugin directories come from `plugin_dirs`; without a host the bucket stays empty and skiller only warns ([ADR 0049](decisions/0049-module-skills-through-host-provided-buckets.md)) |
+| `skiller describe SKILL [--json]` | prints `skill-descriptor/v1` ([ADR 0038](decisions/0038-skill-descriptor-agent-skills-standard.md)) of a library or host-module skill; the schema stays with aicore, skiller adds no copy ([ADR 0051](decisions/0051-skill-metadata-in-the-index.md)) |
 
 ### Skiller schemas (`urn:skiller:*`)
 

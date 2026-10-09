@@ -130,6 +130,13 @@ for every key (generated from [`configs/config.schema.json`](configs/config.sche
 
 `notes.folder` must be a relative path without `..` and outside `docs`, `docs-public` and `plans`.
 
+## Skills
+
+The plugin ships the skill `brain-locator` (finding the vault and the project folder). It lives in
+`packages/brain/skills/` and is released with the module.
+A project gets them through the `system` bucket of `skiller`: `skiller connect` enables the plugin `brain` and
+`skiller sync` copies the skills into the project; the plugin can also be installed on its own.
+
 ## Development
 
 ```bash

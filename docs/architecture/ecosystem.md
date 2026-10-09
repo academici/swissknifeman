@@ -60,7 +60,7 @@ compatibility shim and the modules of later stages, see [ADR 0028](decisions/002
 | Module | Purpose | Depends on | Built from (current paths) |
 | --- | --- | --- | --- |
 | `aicore` | foundation | none | exists: `core/*` except analytics, `core/provider/*`, `core/usage.py` and `configs/provider-*.json` moved in; still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `task` command rendering |
-| `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
+| `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/task` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch`, root `orch/` |
 | `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus `topology`, `listing`, `state` from `skiller` |
@@ -243,8 +243,8 @@ What each service file is today, who writes it and where it ends up:
 
 | Today | Written by | Becomes |
 | --- | --- | --- |
-| `<project>/.swissknife.json` (plugins, providers) | skiller | `.swissknifeman/config.toml`, sections `delivery` and `skiller` |
-| `<project>/.swissknifeman/config.json` (vendor skillset) | skiller | the same `skiller` section |
+| `<project>/.swissknife.json` (plugins, providers) | skiller | `.swissknifeman/config.toml`, table `[skiller]` (done in P8; the legacy file is read with a warning until upgrade); providers move with `delivery` |
+| `<project>/.swissknifeman/config.json` (vendor skillset) | skiller | table `[skiller.sync]` of the same file (done in P8; the legacy file is read with a warning until upgrade) |
 | `<project>/.swissknifeman/provider-artifacts.lock.json`, `rogue-lock.json`, `receipts/` | core.provider, skiller | `.swissknifeman/state/` |
 | `<project>/.swissknifeman-manifest.json`, `.swissknifeman-codex-links.json` | skiller | `.swissknifeman/state/` |
 | `<project>/.claude/{auto-approve,memory,review-gate}.env.ini` | harness, maind | sections `hooks.auto_approve`, `memory.mode`, `hooks.review_gate` of the project config; shell hooks read the generated `.swissknifeman/state/hooks.env`, which is not edited by hand |
@@ -362,6 +362,12 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
 - **Owns:** the shared skills (buckets), its own plugin of commands `skm`, profiles and presets (which buckets for which
   kind of project), the new-skill template and upstream synchronisation.
 - **Code:** a thin CLI over `aicore.content` and `aicore.delivery` plus whatever concerns only its library.
+- **After P8:** `skiller` depends only on `aicore` and holds the shared skills. Its settings are the tables `[skiller]`
+  and `[skiller.sync]` of `.swissknifeman/config.toml` ([ADR 0050](decisions/0050-skiller-settings-in-the-layered-config.md)).
+  The `system` bucket is host-provided: the host config maps it through `bucket_aliases` to the module plugins that own
+  the skills ([ADR 0049](decisions/0049-module-skills-through-host-provided-buckets.md)). `skills.json` carries
+  `license`, `compatibility` and `allowed_tools`, and `skiller describe` prints the `skill-descriptor/v1`
+  ([ADR 0051](decisions/0051-skill-metadata-in-the-index.md)).
 
 ### brain
 
@@ -410,10 +416,11 @@ A shared skill stays in `skiller`; a skill about a particular module lives in th
 
 | Skill today | Goes to |
 | --- | --- |
-| `system/agent-packs`, `system/agents` | harness |
+| `system/agent-packs` | harness (plugin `harness`, done in P8) |
+| `system/agents` (agent `code-coordinator`) | maind (plugin `maind`, done in P8) |
 | `system/brain-locator` | brain (plugin `brain`, done in P7) |
-| `system/local-topology`, `system/swissknifeman-locator`, `system/cross-project-coordinator`, `system/shared-memory` | maind |
-| `system/session-observer` | analyst |
+| `system/local-topology`, `system/swissknifeman-locator`, `system/cross-project-coordinator`, `system/shared-memory` | maind (plugin `maind`, done in P8) |
+| `system/session-observer` | analyst (plugin `analyst`, done in P8) |
 | bootstrap skills (`bootstrap/skills`, `*/dev-skills`) | unchanged |
 | `general/complex-task-orchestrator`, `general/task-brief-template`, `general/skills-ssot`, `general/project-map`, `general/workflow-craft` | stay in `skiller`; module binding reviewed when `skiller` is reduced to shared skills |
 | all other `general/*` and other buckets | stay in `skiller` |
@@ -447,7 +454,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
 | P5 | `aicore` content and delivery: catalog, budget, projection, publication, delivery, release |
 | P6 | `aicore` extensions: events, subscriptions, overlays, external plugin commands |
 | P7 | `brain` skeleton, document sync and `brain-locator`, first subscriber (done) |
-| P8 | `skiller` reduced to shared skills; code on `aicore`; new service files |
+| P8 | `skiller` reduced to shared skills; code on `aicore`; module skills through the host-provided `system` bucket; settings in the layered config; skill metadata and `skiller describe` (done) |
 | P9 | `planner` rename with aliases, configuration, overlays, events, commands on `aicore` |
 | P10 | `orch` and bridges: work-source port, engine choice in configuration, events |
 | P11 | hub modules (`maind`, `analyst`, `harness`) on `aicore` and new state places; `core/` and `artifex` removed |

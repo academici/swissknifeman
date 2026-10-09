@@ -414,7 +414,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync.",
+        "Keep skiller settings in `[skiller]` (connect and legacy vendor selection) and `[skiller.sync]` (skill-granular vendor sync) of `.swissknifeman/config.toml`",
         "`.swissknife.json`",
         "`.swissknifeman/config.json`",
         "runtime validation stays manual and does not read them as a live contract"

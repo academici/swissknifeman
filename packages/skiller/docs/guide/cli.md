@@ -8,10 +8,10 @@ diagnostics and registry maintenance. Installed by symlink in `~/.local/bin`
 ## Commands for projects
 
 All commands find the project root automatically - by moving up from the current one
-directories to the nearest marker: `.swissknife.json` → `.claude/` → `.git`
+directories to the nearest marker: `.swissknifeman/config.toml` → `.swissknife.json` → `.claude/` → `.git`
 (directory or file - worktree and submodule are considered). Nearest marker
 wins: submodule — is its own project; to move the root, put
-`.swissknife.json` to the desired directory. Inside the registry itself project-commands
+`.swissknifeman/config.toml` to the desired directory. Inside the registry itself project-commands
 refuse to work.
 
 ### `skiller connect`
@@ -21,7 +21,8 @@ Connects the project to the native one plugin marketplace Claude Code: writes
 in `.claude/settings.local.json`. Merge-only: explicit `false` does not fray,
 enabled above the profile is not disabled, backup in `*.bak`.
 
-Provider selection is taken from `.swissknife.json::providers`: in the absence
+The skill selection comes from `[skiller]` in `.swissknifeman/config.toml` (the legacy `.swissknife.json` is read
+with a warning). Provider selection is taken from `.swissknife.json::providers`: in the absence
 layer is saved legacy-mode only for Claude Code. Self-host checkout
 uses thin Codex marketplace, and external connect-project receives
 repo-contained marketplace and self-contained bundles only selected plugins,
@@ -54,6 +55,20 @@ for discovery and field definitions.
 
 `connect`, `sync`, `update`, `doctor` and `--dry-run` user-global Codex state not
 are changing. Profile plugins are not automatically installed globally.
+
+A bucket the library leaves to the host (`system`) expands into the host plugins named by `bucket_aliases`; see
+[Configuration](./configuration#host-provided-buckets).
+
+### `skiller describe`
+
+Prints the `skill-descriptor/v1` of one skill of the library or of a host module: name, version, license, digest,
+provenance, `requires`, adapters, and `compatibility` and `allowed_tools` when the skill declares them.
+
+```bash
+skiller describe SKILL [--json]
+```
+
+`SKILL` is a name or `bucket/rel`. An unknown skill exits 1. See [Skill metadata](./configuration#skill-metadata).
 
 ### `skiller resolve`
 

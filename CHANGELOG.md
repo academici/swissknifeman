@@ -12,6 +12,11 @@
 
 ### Added
 
+- **docs:** skiller guide page "Configuration, host buckets and metadata" and `skiller describe` in the CLI reference; a
+  Skills section in the README and docs of `maind`, `harness`, `analyst` and `brain`; `ecosystem.md` (skiller after the
+  split, the skills table, stage P8) and `contracts.md` (skiller config, `skills.json` fields, `bucket_aliases`,
+  `skiller describe`); ADR 0049–0051; the `skiller` rule `configuration-ownership` now names the TOML tables, and the
+  instructions are regenerated through the harness catalog.
 - **skiller:** `skills.json` entries carry `license` (frontmatter, then `upstream.json`, then the package license),
   and `compatibility` and `allowed_tools` when a skill declares them; `skiller describe <skill> [--json]` prints the
   `skill-descriptor/v1` of a library or host-module skill; a metadata test in `scripts/test.sh` (run by `validate.sh`)

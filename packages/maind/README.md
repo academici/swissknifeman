@@ -132,6 +132,14 @@ the same CLI. Plugin **MCP-does not support the server**: hub tools gives per-pr
 
 ---
 
+## Skills
+
+The plugin ships the skills `cross-project-coordinator`, `local-topology`, `shared-memory` and
+`swissknifeman-locator`, and the agent `code-coordinator` (`maind:code-coordinator`). They live in
+`packages/maind/skills/` and are released with the module.
+A project gets them through the `system` bucket of `skiller`: `skiller connect` enables the plugin `maind` and
+`skiller sync` copies the skills into the project; the plugin can also be installed on its own.
+
 ## Development
 
 ```bash

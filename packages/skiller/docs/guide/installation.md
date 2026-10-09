@@ -36,8 +36,9 @@ Check the installation with `skiller doctor`.
 ## Host configuration and standalone installs
 
 Skiller reads optional host-repository integration data from `configs/skiller-host.json`.
-This is separate from a consumer project's `.swissknife.json` and
-`.swissknifeman/config.json`: those select skills and providers for that project.
+This is separate from a consumer project's `[skiller]` and `[skiller.sync]` settings in
+`.swissknifeman/config.toml` (see [Configuration](./configuration)): those select skills
+and providers for that project.
 The host config describes the repository containing the **Skiller installation**.
 
 Discovery starts at the installed package root and finds its enclosing repository.

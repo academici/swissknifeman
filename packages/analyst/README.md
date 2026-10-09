@@ -77,6 +77,13 @@ lives in the `analyst` folder of the machine state directory (`~/.local/state/sw
 `SKM_HOME`); a folder left at `~/.swissknifeman/analyst` is still read, with one warning, until it is moved.
 Documentation that says `<state>` means that directory.
 
+## Skills
+
+The plugin ships the skill `session-observer` (analysis of a finished session). It lives in
+`packages/analyst/skills/` and is released with the module.
+A project gets them through the `system` bucket of `skiller`: `skiller connect` enables the plugin `analyst` and
+`skiller sync` copies the skills into the project; the plugin can also be installed on its own.
+
 ## Development
 
 ```bash

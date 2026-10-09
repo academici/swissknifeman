@@ -438,6 +438,8 @@ describes how that work is isolated from a working machine. It is removed at cut
    interactive shell, `list` to see sandboxes and `remove DIR` to delete one. `remove` deletes only a directory
    named `skm-sandbox-*` that sits directly in `TMPDIR` and holds the `.skm-sandbox` marker. Provider CLIs
    (`claude`, `codex`, `grok`) are not logged in inside a sandbox.
+   `scripts/e2e-module-skills.sh` uses a sandbox to check that the skills of the modules reach a project through
+   `skiller connect` and `skiller sync`.
 5. **Plan execution.** The plan lives in `plans/<PLAN-ID>` of the clone; its architecture is in the plan's
    `knowledge/architecture.json`. It is executed by the stable `plan.py` of the live checkout, not by the
    `plan.py` in the clone, so the engine keeps working while the layout changes:

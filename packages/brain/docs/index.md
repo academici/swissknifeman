@@ -37,3 +37,10 @@ plugin `brain` with the skill `brain-locator`, and one subscription (`brain:plan
   and notes appear when the planner starts to emit the event.
 - `maind` keeps its own vault lookup for now; the two will be merged in a later phase.
 - The legacy `memory_brain` object of `.swissknife.json` is still read, with a deprecation warning.
+
+## Skills
+
+The module plugin ships `brain-locator`. The sources live in `packages/brain/skills/` and are released with the module.
+A project receives them through the host-provided `system` bucket of `skiller`: `skiller connect` enables the plugin
+`brain`, and `skiller sync` copies the skills into the project. The `skiller` guide
+"Configuration, host buckets and metadata" describes the bucket.

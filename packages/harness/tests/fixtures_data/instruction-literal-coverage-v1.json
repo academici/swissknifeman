@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "1d5520a52470a75b14e1a93c63a6cf98b6775aa5031cfffc57ce4ed0c058ee96",
+    "source_sha256": "966bf0c24ed703954179dbd31714464bca05a37a8417554cb108cf1309855ed3",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 340
   },
@@ -447,7 +447,7 @@
     },
     {
       "semantic_id": "skiller.configuration-ownership",
-      "literal": "Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync."
+      "literal": "Keep skiller settings in `[skiller]` (connect and legacy vendor selection) and `[skiller.sync]` (skill-granular vendor sync) of `.swissknifeman/config.toml`"
     },
     {
       "semantic_id": "skiller.configuration-ownership",

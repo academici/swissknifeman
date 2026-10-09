@@ -74,3 +74,6 @@ by a new record.
 | [0046](0046-brain-surface-and-vault-lookup.md) | The surface of brain and the vault lookup | Accepted |
 | [0047](0047-document-sync-through-a-host-command.md) | Document sync moves to brain and is called through a host command | Accepted |
 | [0048](0048-plan-closed-subscriber-and-idempotent-notes.md) | The plan-closed subscriber and idempotent notes | Accepted |
+| [0049](0049-module-skills-through-host-provided-buckets.md) | Module skills reach projects through host-provided buckets | Accepted |
+| [0050](0050-skiller-settings-in-the-layered-config.md) | Skiller settings live in the layered project config | Accepted |
+| [0051](0051-skill-metadata-in-the-index.md) | Skill metadata in the index and `skiller describe` | Accepted |

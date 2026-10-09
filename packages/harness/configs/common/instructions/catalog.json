@@ -978,7 +978,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
@@ -1007,7 +1007,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
@@ -1024,7 +1024,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 3,
-          "intent": "Apply this source-derived instruction: Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync. JSON files under `schema/` document these configs for editor DX only; runtime validation stays manual and does not read them as a live contract.",
+          "intent": "Apply this source-derived instruction: Keep skiller settings in `[skiller]` (connect and legacy vendor selection) and `[skiller.sync]` (skill-granular vendor sync) of `.swissknifeman/config.toml`; legacy `.swissknife.json` and `.swissknifeman/config.json` are read with a warning until upgrade. JSON files under `schema/` document the legacy configs for editor DX only; runtime validation stays manual and does not read them as a live contract.",
           "obligations": [
             {
               "modality": "must",
@@ -1038,11 +1038,11 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
-            "Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync.",
+            "Keep skiller settings in `[skiller]` (connect and legacy vendor selection) and `[skiller.sync]` (skill-granular vendor sync) of `.swissknifeman/config.toml`",
             "`.swissknife.json`",
             "`.swissknifeman/config.json`",
             "runtime validation stays manual and does not read them as a live contract"
@@ -1068,7 +1068,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
@@ -1085,7 +1085,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 5,
-          "intent": "Apply this source-derived instruction: Keep skills under `skills/<bucket>/<name>/SKILL.md`; treat `skills.json`, `skills/_index.md`, marketplace manifests, graph, and budget documentation as registry-generated outputs. Also, presets expand before the selection formula `(presets ∪ buckets ∪ include) − exclude`.",
+          "intent": "Apply this source-derived instruction: Keep skills under `skills/<bucket>/<name>/SKILL.md`; treat `skills.json`, `skills/_index.md`, marketplace manifests, graph, and budget documentation as registry-generated outputs. Also, presets expand before the selection formula `(presets ∪ buckets ∪ include) − exclude`. The `system` bucket is host-provided: it has no catalog in `skills/` and resolves to the skills of the modules named by the host `bucket_aliases`.",
           "obligations": [
             {
               "modality": "must",
@@ -1099,7 +1099,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
@@ -1131,7 +1131,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
@@ -1162,7 +1162,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [
@@ -1193,7 +1193,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "bf8adcdfeb2f74628bef5899911aabc1025737995ed21b2647c38d14ff8c1803"
+              "sha256": "050fd7bdb35401cd7cb3ccd1c1edeec788eddb7c23b7b74eb5556bbf84692589"
             }
           ],
           "compatibility_assertions": [

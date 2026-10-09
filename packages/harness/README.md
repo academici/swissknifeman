@@ -51,6 +51,13 @@ Source of truth - `configs/claude-code/`:
 
 Details on auto-approve and unified memory - `configs/claude-code/README.md`.
 
+## Skills
+
+The plugin ships the skill `agent-packs` (agent packs and their sub-agent workflows). It lives in
+`packages/harness/skills/` and is released with the module.
+A project gets them through the `system` bucket of `skiller`: `skiller connect` enables the plugin `harness` and
+`skiller sync` copies the skills into the project; the plugin can also be installed on its own.
+
 ## Development
 
 ```bash

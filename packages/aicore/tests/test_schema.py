@@ -120,6 +120,66 @@ class TestValidation(SchemaCase):
         self.assertTrue(schema.validate_node(registry, {"$ref": "#/$defs/n"}, base, "s"))
 
 
+class TestPatternProperties(SchemaCase):
+    BODY = {"type": "object", "additionalProperties": False,
+            "properties": {"fixed": {"type": "string"}},
+            "patternProperties": {"^x-[a-z]+$": {"type": "integer"}}}
+
+    def issues(self, body: dict, doc: object) -> list:
+        return [(issue.path, issue.code) for issue in schema.validate(doc, "thing", self.registry(body))]
+
+    def test_name_matching_a_pattern_is_checked_by_its_schema(self):
+        self.assertEqual(self.issues(self.BODY, {"x-one": 1}), [])
+        self.assertEqual(self.issues(self.BODY, {"x-one": "s"}), [("/x-one", "type")])
+
+    def test_unmatched_name_is_additional(self):
+        self.assertEqual(self.issues(self.BODY, {"other": 1, "x-ok": 2}), [("/other", "additional")])
+
+    def test_property_that_matches_a_pattern_meets_both_schemas(self):
+        body = {"type": "object", "additionalProperties": False,
+                "properties": {"x-fixed": {"type": "string"}},
+                "patternProperties": {"^x-": {"minLength": 3}}}
+        self.assertEqual(self.issues(body, {"x-fixed": "abc"}), [])
+        self.assertEqual(self.issues(body, {"x-fixed": "ab"}), [("/x-fixed", "min_length")])
+        self.assertEqual(self.issues(body, {"x-fixed": 5}), [("/x-fixed", "type")])
+
+    def test_property_names_rejects_a_name(self):
+        body = {"type": "object", "additionalProperties": False,
+                "propertyNames": {"pattern": "^[a-z]+$", "minLength": 2},
+                "properties": {"ab": {}, "A": {}}}
+        self.assertEqual(self.issues(body, {"ab": 1}), [])
+        self.assertEqual(self.issues(body, {"A": 1}), [("/A", "property_name")])
+        self.assertEqual(sorted(self.issues(body, {"a": 1})),
+                         [("/a", "additional"), ("/a", "property_name")])
+
+    def test_property_names_does_not_extend_coverage(self):
+        body = {"type": "object", "additionalProperties": False, "properties": {},
+                "propertyNames": {"pattern": "^[a-z]+$"}}
+        self.assertEqual(self.issues(body, {"abc": 1}), [("/abc", "additional")])
+
+    def test_profile_rejects_bad_regex_and_property_names_keywords(self):
+        for body, message in (
+                ({"patternProperties": {"(": {}}}, "invalid pattern"),
+                ({"patternProperties": []}, "patternProperties must be an object"),
+                ({"patternProperties": {"^a$": 1}}, "schema node must be an object"),
+                ({"propertyNames": {"format": "email"}}, "unsupported keyword 'format'"),
+                ({"propertyNames": {"properties": {}}}, "propertyNames may only use")):
+            with self.subTest(body=body):
+                schema.clear_registry_cache()
+                write_schema(self.dir, "bad", body)
+                with self.assertRaisesRegex(schema.SchemaProfileError, message):
+                    schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("bad",))
+
+    def test_unanchored_pattern_matches_a_substring(self):
+        body = {"type": "object", "additionalProperties": False, "patternProperties": {"ab": {"type": "integer"}}}
+        self.assertEqual(self.issues(body, {"xabx": 1}), [])
+        self.assertEqual(self.issues(body, {"xbx": 1}), [("/xbx", "additional")])
+
+    def test_property_name_is_an_error_code(self):
+        self.assertIn("property_name", schema.ERROR_CODES)
+        self.assertLessEqual({"patternProperties", "propertyNames"}, schema.SUPPORTED_KEYWORDS)
+
+
 class TestLoadContract(SchemaCase):
     def contract(self, name: str = "thing", version: str = "v1") -> Path:
         directory = self.dir / name / version
@@ -149,6 +209,41 @@ class TestLoadContract(SchemaCase):
         write_schema(directory, "thing", {}, version="v1")
         with self.assertRaises(schema.SchemaProfileError):
             schema.load_contract(directory, urn_prefix=PREFIX)
+
+    def test_ref_to_a_neighbouring_contract(self):
+        base = self.contract("base", "v1")
+        write_schema(base, "base", {"$defs": {"name": {"type": "string", "pattern": "^[a-z]+$"}}})
+        user = self.contract("user", "v1")
+        write_schema(user, "user", {"type": "object", "additionalProperties": False,
+                                    "properties": {"n": {"$ref": f"{PREFIX}base:v1#/$defs/name"}}})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX)
+        self.assertEqual(registry.kinds, ("user",))
+        self.assertEqual(schema.validate({"n": "abc"}, kind, registry), [])
+        self.assertEqual([i.code for i in schema.validate({"n": "AB"}, kind, registry)], ["pattern"])
+        with self.assertRaises(schema.SchemaProfileError):
+            registry.for_kind("base")
+
+    def test_refs_are_followed_transitively_and_cycles_terminate(self):
+        for name, target in (("a", "b"), ("b", "c"), ("c", "a")):
+            write_schema(self.contract(name), name, {"$defs": {"x": {"$ref": f"{PREFIX}{target}:v1#/$defs/x"}}})
+        registry, _ = schema.load_contract(self.dir / "a" / "v1", urn_prefix=PREFIX)
+        self.assertEqual({f"{PREFIX}{n}:v1" for n in "abc"}, set(registry._schemas))
+
+    def test_ref_to_a_whole_schema_and_into_nested_nodes(self):
+        write_schema(self.contract("base"), "base", {"type": "integer"})
+        user = self.contract("user")
+        write_schema(user, "user", {"type": "object", "additionalProperties": False,
+                                    "patternProperties": {"^k$": {"items": {"$ref": f"{PREFIX}base:v1"}}},
+                                    "properties": {"o": {"oneOf": [{"$ref": f"{PREFIX}base:v1"}]}}})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX)
+        self.assertEqual(schema.validate({"o": 1, "k": [2]}, kind, registry), [])
+        self.assertTrue(schema.validate({"o": 1, "k": ["s"]}, kind, registry))
+
+    def test_missing_neighbour_is_a_profile_error(self):
+        user = self.contract("user")
+        write_schema(user, "user", {"properties": {"n": {"$ref": f"{PREFIX}absent:v1#/$defs/name"}}})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved contract reference"):
+            schema.load_contract(user, urn_prefix=PREFIX)
 
 
 if __name__ == "__main__":

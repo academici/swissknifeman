@@ -20,15 +20,6 @@ from .example import render_sections, render_unit
 from .model import CONFIG_FILE_VERSION, _where
 from .units import UnitInfo, discover, load_unit
 
-USAGE = """usage: aicore <group> [args]
-
-groups:
-  config   layered module configuration: show, explain, set, unset, init, example, paths
-
-Run `aicore config --help` for the commands.
-"""
-
-
 class _Parser(argparse.ArgumentParser):
     """argparse with the documented exit code 2 and messages on the stream given to ``main``."""
 
@@ -269,17 +260,8 @@ def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str
     args_list = list(sys.argv[1:] if argv is None else argv)
     out = out or sys.stdout
     err = err or sys.stderr
-    if not args_list:
-        err.write(USAGE)
-        return 2
-    if args_list[0] in ("-h", "--help", "help"):
-        out.write(USAGE)
-        return 0
-    if args_list[0] != "config":
-        err.write(f"aicore: unknown group {args_list[0]!r}\n{USAGE}")
-        return 2
     try:
-        args = build_parser().parse_args(args_list[1:])
+        args = build_parser().parse_args(args_list)
     except SystemExit as exc:
         return exc.code if isinstance(exc.code, int) else 2
     ctx = _Context(args, os.environ if env is None else env, cwd or Path.cwd(), out, err)

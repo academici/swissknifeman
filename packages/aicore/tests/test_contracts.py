@@ -1,5 +1,7 @@
 """Every schema of aicore: closed, described, and exercised by its valid and invalid examples."""
 import json
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -48,7 +50,7 @@ class TestContractExamples(unittest.TestCase):
         def walk(node, where):
             if not isinstance(node, dict):
                 return
-            if node.get("type") == "object" and "properties" in node:
+            if node.get("type") == "object" and ("properties" in node or "patternProperties" in node):
                 self.assertIs(node.get("additionalProperties"), False, where)
             for name, child in node.get("properties", {}).items():
                 self.assertIn("description", child, f"{where}/{name}")
@@ -56,11 +58,95 @@ class TestContractExamples(unittest.TestCase):
             for name, child in node.get("$defs", {}).items():
                 self.assertIn("description", child, f"{where}/$defs/{name}")
                 walk(child, f"{where}/$defs/{name}")
+            for pattern, child in node.get("patternProperties", {}).items():
+                self.assertIn("description", child, f"{where}/patternProperties/{pattern}")
+                walk(child, f"{where}/patternProperties/{pattern}")
             walk(node.get("items"), f"{where}/items")
+            walk(node.get("propertyNames"), f"{where}/propertyNames")
 
         for contract in CONTRACTS:
             kind = contract.parent.name
             walk(load(contract / f"{kind}.schema.json"), kind)
+
+
+def pattern_keys(node):
+    """Every key of every ``patternProperties`` below ``node``."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "patternProperties":
+                yield from value
+                for child in value.values():
+                    yield from pattern_keys(child)
+            elif key in ("properties", "$defs"):
+                for child in value.values():
+                    yield from pattern_keys(child)
+            elif key in ("items", "propertyNames"):
+                yield from pattern_keys(value)
+            elif key == "oneOf":
+                for child in value:
+                    yield from pattern_keys(child)
+
+
+class TestPatternPropertiesInContracts(unittest.TestCase):
+    def test_pattern_keys_are_anchored(self):
+        for contract in CONTRACTS:
+            kind = contract.parent.name
+            for pattern in pattern_keys(load(contract / f"{kind}.schema.json")):
+                with self.subTest(contract=kind, pattern=pattern):
+                    self.assertTrue(pattern.startswith("^") and pattern.endswith("$"), pattern)
+
+
+class TestCommonContract(unittest.TestCase):
+    """The shared definitions, and the R02 rule for namespaced extension keys."""
+
+    FIXTURE = {
+        "$schema": schema.DIALECT, "$id": "urn:swissknifeman:aicore:fixture:v1", "title": "fixture",
+        "description": "Test fixture that references the shared definitions.", "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "extensions": {"$ref": "urn:swissknifeman:aicore:common:v1#/$defs/extensions",
+                           "description": "Namespaced extension values."},
+            "at": {"$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+                   "description": "A timestamp."},
+        },
+    }
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        root = Path(self._tmp.name)
+        shutil.copytree(SCHEMAS / "common", root / "common")
+        contract = root / "fixture" / "v1"
+        contract.mkdir(parents=True)
+        (contract / "fixture.schema.json").write_text(json.dumps(self.FIXTURE), encoding="utf-8")
+        schema.clear_registry_cache()
+        self.addCleanup(schema.clear_registry_cache)
+        self.registry, self.kind = schema.load_contract(contract)
+
+    def codes(self, doc):
+        return sorted((issue.path, issue.code) for issue in schema.validate(doc, self.kind, self.registry))
+
+    def test_namespaced_key_passes_with_any_value(self):
+        for value in (1, "s", None, [1], {"a": {"b": 2}}):
+            with self.subTest(value=value):
+                self.assertEqual(self.codes({"extensions": {"acme.flag": value}}), [])
+        self.assertEqual(self.codes({"extensions": {"acme.sub.flag-1": True}}), [])
+
+    def test_key_without_namespace_is_additional(self):
+        self.assertEqual(self.codes({"extensions": {"flag": 1}}), [("/extensions/flag", "additional")])
+        self.assertEqual(self.codes({"extensions": {"Acme.flag": 1}}), [("/extensions/Acme.flag", "additional")])
+        self.assertEqual(self.codes({"extensions": {"acme.flag\n": 1}}), [("/extensions/acme.flag\n", "additional")])
+
+    def test_shared_formats(self):
+        self.assertEqual(self.codes({"at": "2026-10-09T02:15:31Z"}), [])
+        self.assertEqual(self.codes({"at": "2026-10-09T02:15:31.5Z"}), [])
+        self.assertEqual(self.codes({"at": "2026-10-09 02:15:31"}), [("/at", "pattern")])
+
+    def test_shared_definitions_match_unit(self):
+        unit = load(SCHEMAS / "unit" / "v1" / "unit.schema.json")["$defs"]
+        common = load(SCHEMAS / "common" / "v1" / "common.schema.json")["$defs"]
+        for name in ("semver", "relpath", "argv", "stability"):
+            self.assertEqual(unit[name], common[name], name)
 
 
 class TestDigestContract(unittest.TestCase):

@@ -15,7 +15,8 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 - `$id` is `urn:swissknifeman:aicore:<contract>:v<N>` and carries the same `N` as the directory.
 - Schemas stay inside the closed profile of the validator `aicore.util.schema` (`lib/aicore/util/schema.py`):
   JSON Schema draft 2020-12 with the root `$schema`, `additionalProperties: false` on every object, and a
-  `description` on every property. Dictionaries with free-form keys are expressed as lists of records, except where a standard defines the map (`skill-descriptor` `metadata`, an open object).
+  `description` on every property. A dictionary whose keys are identifiers is expressed with `patternProperties` (an anchored pattern such as `^[a-z][a-z0-9-]*$`) and `additionalProperties: false`; `propertyNames` only checks key names and does not make a key allowed. Lists of records stay for ordered collections, and a standard that defines an open map (`skill-descriptor` `metadata`) keeps its open object.
+- A contract can reference another contract of this directory with `$ref: "urn:swissknifeman:aicore:<contract>:v<N>#/$defs/<name>"`; `load_contract` loads the neighbouring `<contract>/v<N>/` directory for the reference (its schemas serve `$ref` only). A missing directory is an error.
 - Fixtures of every contract are exercised by `tests/test_contracts.py` through `aicore.util.schema.load_contract`;
   `scripts/ecosystem-units.py check` loads every contract under the closed profile.
 - `digest/v1` also ships `vectors.json`: language-neutral test vectors for the canonical JSON rules.
@@ -24,6 +25,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 
 | Contract | Version | Purpose |
 | --- | --- | --- |
+| `common` | v1 | Shared `$defs` for other contracts to reference: `semver`, `module_id`, `relpath`, `argv`, `stability`, `extensions` (namespaced `<owner>.<name>` keys), `media_type`, `rfc3339_utc` |
 | `unit` | v1 | Module manifest (`packages/<id>/unit.json`): identity, version, dependencies, public surface |
 | `check-result` | v1 | Result of one diagnostic check (`ok`, `warn`, `fail`, `skip`) |
 | `error` | v1 | Normalized provider failure: class, code, retryable, safe message; implemented by `aicore.provider.errors` |

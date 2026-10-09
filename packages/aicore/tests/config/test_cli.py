@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from aicore.config import cli
+from aicore import cli
 
 from .support import FIXTURES
 

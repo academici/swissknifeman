@@ -9,6 +9,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **Validator profile: `patternProperties` and `propertyNames`.** A dictionary keyed by identifiers is now a
+  schema (`patternProperties` with anchored patterns and `additionalProperties: false`): a property is covered
+  when it is listed or matches a pattern, and its value meets every schema that applies. `propertyNames`
+  (`type`, `pattern`, `minLength`, `enum`, `description`) checks key names only (new issue code `property_name`)
+  and does not make a key allowed. `load_contract` also loads the contracts that `$ref` names
+  (`urn:swissknifeman:aicore:<contract>:v<N>`) from the neighbouring directories; existing contracts and module
+  config schemas are unchanged.
+- **`common/v1` contract**: shared `$defs` for other contracts to reference — `semver`, `module_id`, `relpath`,
+  `argv`, `stability`, `extensions` (namespaced `<owner>.<name>` keys), `media_type`, `rfc3339_utc`.
+- **`aicore.ext`** package (first piece: `ExtError(code, message)`, printed as `<code>: <message>`) and its layer
+  in the architecture test: `ext` may use `util`, `state` and `config`; nothing below imports it.
+- **`aicore <group>` dispatcher** (`aicore.cli`): `python3 -m aicore` picks the command group and imports it on
+  demand; `aicore.config.cli.main` takes the arguments after `config`. Output and exit codes of
+  `aicore config …` are unchanged.
 - **`aicore.content.skill`**: the skill model moved in from the skill library — the files that never travel with a
   skill (`SKILL_IGNORE`), frontmatter reading (`read_frontmatter`, `read_frontmatter_fields`, `split_frontmatter`),
   the content hash (`skill_content_hash`, new `skill_digest`) and the transitive `requires` resolution

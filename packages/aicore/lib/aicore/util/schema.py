@@ -11,23 +11,26 @@ import json
 import math
 from pathlib import Path
 import re
-from typing import Any, NamedTuple
+from typing import Any, Iterator, NamedTuple
 
 DIALECT = "https://json-schema.org/draft/2020-12/schema"
 CONTRACT_URN_PREFIX = "urn:swissknifeman:aicore:"
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
-               "min_length", "one_of", "ref", "minimum", "maximum")
+               "min_length", "one_of", "ref", "minimum", "maximum", "property_name")
 SUPPORTED_KEYWORDS = frozenset({
     "$schema", "$id", "$defs", "$ref", "title", "description", "type", "enum", "const", "properties",
     "required", "additionalProperties", "items", "minItems", "uniqueItems", "minLength", "pattern", "oneOf",
-    "default", "minimum", "maximum",
+    "default", "minimum", "maximum", "patternProperties", "propertyNames",
 })
+# Keywords a ``propertyNames`` schema may use: a name is a string, so only string checks apply.
+_PROPERTY_NAME_KEYWORDS = frozenset({"type", "pattern", "minLength", "description", "enum"})
 # Annotations of module configuration schemas: the validator accepts them and ignores them. Any other
 # ``x-*`` keyword is outside the profile.
 ANNOTATIONS = frozenset({"x-skm-secret", "x-skm-layers"})
 _VERSION_DIR = re.compile(r"v[1-9][0-9]*")
 _TYPE_NAMES = frozenset({"null", "boolean", "integer", "number", "string", "array", "object"})
-_cache: dict[tuple[Path, str, tuple[str, ...], str], "Registry"] = {}
+_cache: dict[tuple[Path, str, tuple[str, ...], str, tuple[Path, ...]], "Registry"] = {}
+_CONTRACT_REF = re.compile(r"([a-z][a-z0-9-]*):(v[1-9][0-9]*)")
 
 
 class SchemaProfileError(ValueError):
@@ -75,16 +78,31 @@ class Registry:
         return node, owner
 
 
-def load_registry(schema_dir: Path, *, urn_prefix: str, kinds: tuple[str, ...], version: str = "v1") -> Registry:
+def load_registry(schema_dir: Path, *, urn_prefix: str, kinds: tuple[str, ...], version: str = "v1",
+                  extra_dirs: tuple[Path, ...] = ()) -> Registry:
     """Load and profile-check schemas; cache by directory and registry parameters.
 
-    ``version`` is the suffix of the ``$id`` of every kind (``<urn_prefix><kind>:<version>``).
+    ``version`` is the suffix of the ``$id`` of every kind (``<urn_prefix><kind>:<version>``). The schemas of
+    ``extra_dirs`` join the registry for ``$ref`` resolution only; ``kinds`` names the schemas to validate.
     """
     directory = Path(schema_dir).resolve()
-    key = (directory, urn_prefix, tuple(kinds), version)
+    extras = tuple(Path(extra).resolve() for extra in extra_dirs)
+    key = (directory, urn_prefix, tuple(kinds), version, extras)
     cached = _cache.get(key)
     if cached is not None:
         return cached
+    schemas = _read_schemas(directory)
+    for extra in extras:
+        for schema_id, schema in _read_schemas(extra).items():
+            if schema_id in schemas:
+                raise SchemaProfileError(f"{extra}: duplicate $id {schema_id!r}")
+            schemas[schema_id] = schema
+    registry = Registry(schemas, urn_prefix=urn_prefix, kinds=tuple(kinds), version=version)
+    _cache[key] = registry
+    return registry
+
+
+def _read_schemas(directory: Path) -> dict[str, dict]:
     schemas: dict[str, dict] = {}
     for path in sorted(directory.glob("*.schema.json")):
         try:
@@ -100,9 +118,7 @@ def load_registry(schema_dir: Path, *, urn_prefix: str, kinds: tuple[str, ...], 
         schemas[schema_id] = schema
     if not schemas:
         raise SchemaProfileError(f"no *.schema.json files in {directory}")
-    registry = Registry(schemas, urn_prefix=urn_prefix, kinds=tuple(kinds), version=version)
-    _cache[key] = registry
-    return registry
+    return schemas
 
 
 def load_schema_file(path: Path, *, urn_prefix: str, kind: str, version: str = "v1") -> Registry:
@@ -136,9 +152,59 @@ def load_contract(contract_dir: Path, *, urn_prefix: str = CONTRACT_URN_PREFIX) 
     if [path.name for path in files] != [f"{kind}.schema.json"]:
         raise SchemaProfileError(f"{directory}: expected exactly {kind}.schema.json, found "
                                  f"{[path.name for path in files]}")
-    registry = load_registry(directory, urn_prefix=urn_prefix, kinds=(kind,), version=version)
+    extras = _referenced_contract_dirs(directory, urn_prefix)
+    registry = load_registry(directory, urn_prefix=urn_prefix, kinds=(kind,), version=version, extra_dirs=extras)
     registry.for_kind(kind)  # raises when the $id does not match the directory
     return registry, kind
+
+
+def _referenced_contract_dirs(directory: Path, urn_prefix: str) -> tuple[Path, ...]:
+    """Sibling contract directories that ``$ref`` values reach from ``directory``, transitively.
+
+    A ``$ref`` to ``<urn_prefix><contract>:v<N>`` (with or without a fragment) names the directory
+    ``<schemas>/<contract>/v<N>`` next to the one being loaded.
+    """
+    schemas_root = directory.parent.parent
+    found: list[Path] = []
+    pending = [directory]
+    seen = {directory}
+    while pending:
+        current = pending.pop(0)
+        current_schemas = _read_schemas(current)
+        own_ids = set(current_schemas)
+        for schema in current_schemas.values():
+            for ref in _refs(schema):
+                document = ref.partition("#")[0]
+                if not document.startswith(urn_prefix) or document in own_ids:
+                    continue
+                match = _CONTRACT_REF.fullmatch(document[len(urn_prefix):])
+                target = schemas_root / match.group(1) / match.group(2) if match else None
+                if target is None or not target.is_dir() or not any(target.glob("*.schema.json")):
+                    raise SchemaProfileError(f"{current.parent.name}/{current.name}: unresolved contract "
+                                             f"reference {ref!r}")
+                target = target.resolve()
+                if target not in seen:
+                    seen.add(target)
+                    found.append(target)
+                    pending.append(target)
+    return tuple(found)
+
+
+def _refs(node: Any) -> Iterator[str]:
+    """Every ``$ref`` string in the schema nodes below ``node`` (keyword values that hold schemas only)."""
+    if not isinstance(node, dict):
+        return
+    if isinstance(node.get("$ref"), str):
+        yield node["$ref"]
+    for keyword in ("properties", "$defs", "patternProperties"):
+        for child in (node.get(keyword) or {}).values():
+            yield from _refs(child)
+    for keyword in ("items", "propertyNames"):
+        yield from _refs(node.get(keyword))
+    for child in node.get("oneOf") or ():
+        yield from _refs(child)
+
+
 
 
 def clear_registry_cache() -> None:
@@ -187,11 +253,21 @@ def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -
                 fail(f"invalid pattern {value!r}: {exc}")
         elif keyword == "$ref" and not isinstance(value, str):
             fail("$ref must be a string")
-        elif keyword in ("properties", "$defs"):
+        elif keyword in ("properties", "$defs", "patternProperties"):
             if not isinstance(value, dict):
                 fail(f"{keyword} must be an object")
             for name, child in value.items():
+                if keyword == "patternProperties":
+                    try:
+                        _compile(name)
+                    except re.error as exc:
+                        fail(f"invalid pattern {name!r}: {exc}")
                 _check_profile(child, where, f"{pointer}/{keyword}/{name}")
+        elif keyword == "propertyNames":
+            _check_profile(value, where, f"{pointer}/propertyNames")
+            outside = sorted(set(value) - _PROPERTY_NAME_KEYWORDS)
+            if outside:
+                fail(f"propertyNames may only use {sorted(_PROPERTY_NAME_KEYWORDS)}, got {outside}")
         elif keyword == "items":
             _check_profile(value, where, f"{pointer}/items")
         elif keyword == "oneOf":
@@ -295,10 +371,22 @@ def _check_object(reg, schema, base, value, pointer, out, add) -> None:
     for name, child in properties.items():
         if name in value:
             _check(reg, child, base, value[name], f"{pointer}/{_escape(name)}", out)
-    if schema.get("additionalProperties") is False:
-        for name in value:
-            if name not in properties:
-                add("additional", f"unexpected property {name!r}", f"{pointer}/{_escape(name)}")
+    patterns = [(_compile(pattern), child) for pattern, child in schema.get("patternProperties", {}).items()]
+    names_schema = schema.get("propertyNames")
+    closed = schema.get("additionalProperties") is False
+    for name, item in value.items():
+        at = f"{pointer}/{_escape(name)}"
+        if names_schema is not None:
+            name_issues = validate_node(reg, names_schema, base, name)
+            if name_issues:  # one issue per name: the first failed check says why
+                add("property_name", f"property name {_short(name)} is not allowed: {name_issues[0].message[3:]}", at)
+        covered = name in properties
+        for regex, child in patterns:
+            if regex.search(name) is not None:
+                covered = True
+                _check(reg, child, base, item, at, out)
+        if closed and not covered:
+            add("additional", f"unexpected property {name!r}", at)
 
 
 def _escape(key: str) -> str:

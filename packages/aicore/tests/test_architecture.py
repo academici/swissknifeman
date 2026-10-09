@@ -85,7 +85,7 @@ class TestImportBoundary(unittest.TestCase):
     def test_subpackage_layering(self):
         """Layering: util -> nothing; state -> util; config -> util, state; provider -> util, artifacts;
         content -> util, provider, artifacts, config; release -> util, content;
-        delivery -> everything below it."""
+        delivery -> everything below it; ext -> util, state, config, and nothing imports ext."""
         def check(directory, allowed):
             for path in sorted((LIB / directory).glob("*.py")):
                 for target, line in _aicore_targets(path):
@@ -101,6 +101,13 @@ class TestImportBoundary(unittest.TestCase):
         check("content", ("util", "provider", "artifacts", "config"))
         check("release", ("util", "content"))
         check("delivery", ("util", "state", "config", "provider", "artifacts", "content", "release"))
+        check("ext", ("util", "state", "config"))
+        for directory in ("util", "state", "config", "provider", "artifacts", "content", "release", "delivery"):
+            for path in sorted((LIB / directory).glob("*.py")):
+                for target, line in _aicore_targets(path):
+                    self.assertNotEqual(target, "ext", f"{directory}/{path.name}:{line}")
+        for target, line in _aicore_targets(LIB / "usage.py"):
+            self.assertNotEqual(target, "ext", f"usage.py:{line}")
         for path in sorted((LIB / "artifacts").glob("*.py")) + [LIB / "usage.py"]:
             for target, line in _aicore_targets(path):
                 self.assertNotIn(target, ("state", "config"), f"{path.name}:{line}")
@@ -110,6 +117,14 @@ class TestImportBoundary(unittest.TestCase):
                     self.assertNotIn(target, ("content", "delivery", "release"), f"{directory}/{path.name}:{line}")
         for target, line in _aicore_targets(LIB / "usage.py"):
             self.assertNotIn(target, ("content", "delivery", "release"), f"usage.py:{line}")
+
+    def test_top_level_cli_imports_groups_lazily(self):
+        """``aicore/cli.py`` names its group modules as strings and imports no subpackage statically."""
+        self.assertEqual(list(_aicore_targets(LIB / "cli.py")), [])
+        tree = ast.parse((LIB / "cli.py").read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom):
+                self.assertEqual(node.level, 0, f"cli.py:{node.lineno}")
 
     def test_config_modules_do_not_depend_on_the_model(self):
         """toml, toml_edit and secrets are below the model and must not import it."""

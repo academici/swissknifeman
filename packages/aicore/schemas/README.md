@@ -26,7 +26,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | Contract | Version | Purpose |
 | --- | --- | --- |
 | `common` | v1 | Shared `$defs` for other contracts to reference: `semver`, `module_id`, `relpath`, `argv`, `stability`, `extensions` (namespaced `<owner>.<name>` keys), `media_type`, `rfc3339_utc` |
-| `unit` | v1 | Module manifest (`packages/<id>/unit.json`): identity, version, dependencies, public surface |
+| `unit` | v1 | Module manifest (`packages/<id>/unit.json`): identity, version, dependencies, public surface, default event subscriptions |
 | `check-result` | v1 | Result of one diagnostic check (`ok`, `warn`, `fail`, `skip`) |
 | `error` | v1 | Normalized provider failure: class, code, retryable, safe message; implemented by `aicore.provider.errors` |
 | `capability-support` | v1 | One observation of provider support for a capability, by dimension (feature, resource, policy, health) |
@@ -35,6 +35,13 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `digest` | v1 | Tagged SHA-256 digest (`sha256:<hex>`) of canonical JSON; rules and test vectors; implemented by `aicore.util.digest` |
 | `skill-descriptor` | v1 | What a skill is, read from its directory: identity, content digest, Agent Skills standard fields, provenance; implemented by `aicore.content.skill` |
 | `eval-context` | v1 | What an evaluation result was produced from: skill digest, fixtures, grader and runner, observed values only; implemented by `aicore.content.eval` |
+| `event` | v1 | One event of the project journal, a subset of CloudEvents 1.0: id, source, type `<module>.<subject>.<verb>`, time, optional data; unknown extension attributes are ignored by readers |
+| `artifact-ref` | v1 | Reference to data kept outside an event or a document: tagged digest, size, media type, sensitivity; implemented by `aicore.state.blobs` |
+| `permissions` | v1 | Declared effects (filesystem areas, network, secrets, shell, environment pass-through, sandbox profile); embedded by `unit` and `extension` through `$ref` |
+| `extension` | v1 | Manifest (`extension.json`) of an external plugin: kind `command` or `subscriber`, protocol range, entrypoint, provided points and events, permissions |
+| `plugin-request` | v1 | What the host writes to a plugin: one JSON object with the operation `describe`, `invoke` or `event` |
+| `plugin-response` | v1 | What a plugin writes back: one JSON object with a status, an output or an error |
+| `plugin-describe` | v1 | The output of a `describe` call: plugin identity and the digest of what it provides |
 
 ## Module config schemas
 
@@ -44,5 +51,5 @@ profile, extended for configuration with `minimum` and `maximum` and two annotat
 `x-skm-secret: true` (a string key that holds a secret reference such as `env://NAME`) and `x-skm-layers` (the layers
 that may set the key). Any other `x-*` keyword is rejected. A config schema also needs `additionalProperties: false`
 on every table, no `required`, a `description` on every key, and keys that are scalars or arrays of scalars; values
-that apply when nothing sets a key are its `default`. The examples of these contracts do not apply to module schemas;
+that apply when nothing sets a key are its `default`. A *map* — an object with one anchored `patternProperties` pattern (no dots in names) whose value is a leaf or a table of leaves — lets a configuration file add named entries (`[aicore.subscriptions.notes]`); `x-skm-layers` applies to the leaves of every entry. The examples of these contracts do not apply to module schemas;
 the tests of `aicore.config` use a fixture schema.

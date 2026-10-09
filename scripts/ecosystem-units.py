@@ -231,8 +231,9 @@ def load_units(ctx: Context) -> dict:
 
 
 def unit_registry(ctx: Context, schema):
-    return schema.load_registry(ctx.root / AICORE_SCHEMAS[0][1], urn_prefix=AICORE_SCHEMA_URN_PREFIX,
-                                kinds=(AICORE_SCHEMAS[0][0],))
+    """The registry of unit/v1 together with the contracts it references (permissions/v1)."""
+    registry, _kind = schema.load_contract(ctx.root / AICORE_SCHEMAS[0][1], urn_prefix=AICORE_SCHEMA_URN_PREFIX)
+    return registry
 
 
 def lib_packages(ctx: Context, folder: str) -> list:
@@ -343,17 +344,17 @@ def _check_paths(ctx, folder, manifest, doc) -> list:
     base = ctx.root / "packages" / folder
     provides = doc["provides"]
 
-    def probe(kind, rel, label, executable=False, directory=False):
+    def probe(kind, rel, label, executable=False, directory=False, code="UNIT_PATH"):
         if not safe_relpath(rel):
-            issues.append(Issue("UNIT_PATH", manifest, f"{label}: {rel!r} must stay inside the module"))
+            issues.append(Issue(code, manifest, f"{label}: {rel!r} must stay inside the module"))
             return None
         target = base / rel
         exists = target.is_dir() if directory else target.is_file()
         if not exists:
-            issues.append(Issue("UNIT_PATH", manifest, f"{label}: {rel!r} does not exist"))
+            issues.append(Issue(code, manifest, f"{label}: {rel!r} does not exist"))
             return None
         if executable and not (rel.endswith(".py") or os.access(target, os.X_OK)):
-            issues.append(Issue("UNIT_PATH", manifest, f"{label}: {rel!r} is not executable"))
+            issues.append(Issue(code, manifest, f"{label}: {rel!r} is not executable"))
             return None
         return target
 
@@ -375,6 +376,13 @@ def _check_paths(ctx, folder, manifest, doc) -> list:
         probe("doctor", check["probe"][0], f"provides.doctor[{check['id']}]")
     if "config" in provides:
         probe("config", provides["config"], "provides.config")
+    for event in provides.get("events", ()):  # events-prefix: a module emits only events named after itself
+        if event.split(".")[0] != doc["id"]:
+            issues.append(Issue("UNIT_EVENTS_PREFIX", manifest, f"provides.events: {event!r} must start with the "
+                                                               f"module id {doc['id']!r}"))
+    for subscription in doc.get("subscribes", ()):  # subscribes-run: the subscriber program is part of the module
+        probe("subscribes", subscription["run"][0], f"subscribes[{subscription['id']}].run", executable=True,
+              code="UNIT_SUBSCRIBES_RUN")
     return issues
 
 

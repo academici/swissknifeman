@@ -9,6 +9,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   root, and fail closed on symlink loops. Rejected copies preserve sibling skills and files outside the root.
 
 ### Added
+- **Contracts of the extension layer**, all `development`: `event/v1` (a CloudEvents 1.0 subset; readers ignore unknown
+  scalar extension attributes; no `project` field), `artifact-ref/v1`, `permissions/v1` (filesystem areas, network,
+  secrets, shell, environment pass-through, sandbox profile), `extension/v1` (plugin manifest) and the plugin
+  protocol `plugin-request/v1`, `plugin-response/v1`, `plugin-describe/v1`. Each ships valid and invalid examples;
+  `common/v1` is now listed in `provides.contracts` too.
+- **`unit/v1` additions** (minor): `subscribes` (default event subscriptions of a module, `<module>:<id>`),
+  anchored patterns for `provides.events` (`<module>.<subject>.<verb>`), `overlay_slots` and `extension_points[].id`,
+  and `permissions` as a `$ref` to `permissions/v1` (adds optional `env` and `profile`; `secrets` items must be
+  `<scheme>://<name>`). `aicore schema compat --base HEAD` lists these as warnings and notes; every
+  `packages/*/unit.json` stays valid.
+- **`aicore.state.blobs`** (`put_bytes`, `put_json`, `read_bytes`, `blob_path`): a content-addressed store for the
+  data an `artifact-ref/v1` points at, under the project state folder or the machine state folder; atomic writes, mode
+  `0600`, digest and size checked on read (`BLOB_CORRUPT`).
 - **Dictionary tables in module configuration.** A config schema may declare a *map*: an object with one anchored
   `patternProperties` key (no dots in names) whose entries are a single leaf or a table of leaves. Entries are
   created in config files (`[mod.map.name]`), merge by key across layers, take the leaf defaults when they appear,

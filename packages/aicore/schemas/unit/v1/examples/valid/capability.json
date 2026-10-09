@@ -18,10 +18,14 @@
     "doctor": [
       {"id": "sample.environment", "category": "environment", "probe": ["bin/sample", "doctor"], "output": "text"}
     ],
-    "events": ["sample.done"],
-    "extension_points": [{"id": "sample.hook", "description": "Extra step before completion."}]
+    "events": ["sample.item.done"],
+    "overlay_slots": ["intro"],
+    "extension_points": [{"id": "hook", "description": "Extra step before completion."}]
   },
-  "permissions": {"filesystem": ["project", "state"], "network": false, "secrets": [], "shell": true},
+  "subscribes": [
+    {"id": "notify", "on": ["sample.item.*"], "run": ["bin/notify"], "timeout_seconds": 20, "description": "Tell a person."}
+  ],
+  "permissions": {"filesystem": ["project", "state"], "network": false, "secrets": ["env://TOKEN"], "shell": true, "env": ["PATH"], "profile": "trusted-local"},
   "dev": {
     "test": ["bash", "scripts/test.sh"],
     "validate": ["bash", "scripts/validate.sh"],

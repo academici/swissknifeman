@@ -201,6 +201,12 @@ knows no bucket or host moved into `aicore.content`, `aicore.delivery` and `aico
 
 A module may add its own layers between 3 and 4 (a legacy file of the module, plan settings of the planner).
 
+A schema may also declare a *dictionary table* (`patternProperties` with one anchored pattern): entries named by
+the person, such as `[aicore.subscriptions.notes]`, merge by key across layers and take the leaf defaults of the
+schema. `x-skm-layers` applies to the leaves of every entry, so executable definitions (`run`, `plugin`, plugin
+manifests) are accepted from the machine file, `--config` and flags but never from the project file, which is in
+git; a project may only switch an entry off or add overlays. Environment variables cannot address entries.
+
 Each section is validated by the schema of its module. `swissknifeman config explain <module>` shows the
 resulting value, the layer, file and line it came from and the values it overrides. Machine configuration (project paths, pools, MCP) lives in `~/.config`, not
 in the repository working copy, so different computers and a development clone do not compete for one file. Layers

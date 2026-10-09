@@ -19,7 +19,15 @@
       {"id": "urn:swissknifeman:aicore:model-catalog", "path": "schemas/model-catalog/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:config-explain", "path": "schemas/config-explain/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:skill-descriptor", "path": "schemas/skill-descriptor/v1", "version": "v1", "stability": "development"},
-      {"id": "urn:swissknifeman:aicore:eval-context", "path": "schemas/eval-context/v1", "version": "v1", "stability": "development"}
+      {"id": "urn:swissknifeman:aicore:eval-context", "path": "schemas/eval-context/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:common", "path": "schemas/common/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:event", "path": "schemas/event/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:artifact-ref", "path": "schemas/artifact-ref/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:permissions", "path": "schemas/permissions/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:extension", "path": "schemas/extension/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-request", "path": "schemas/plugin-request/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-response", "path": "schemas/plugin-response/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-describe", "path": "schemas/plugin-describe/v1", "version": "v1", "stability": "development"}
     ]
   },
   "dev": {

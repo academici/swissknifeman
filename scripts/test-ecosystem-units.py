@@ -45,8 +45,7 @@ class SchemaFixtureTests(unittest.TestCase):
         self.assertEqual(self.schema.__name__, "aicore.util.schema")
 
     def registry(self, kind: str):
-        return self.schema.load_registry(AICORE_SCHEMAS / kind / "v1", urn_prefix=eu.AICORE_SCHEMA_URN_PREFIX,
-                                         kinds=(kind,))
+        return self.schema.load_contract(AICORE_SCHEMAS / kind / "v1")[0]  # with the contracts it references
 
     def fixtures(self, kind: str, group: str) -> list:
         return sorted((AICORE_SCHEMAS / kind / "v1" / "examples" / group).glob("*.json"))
@@ -328,6 +327,41 @@ class ManifestCheckTests(unittest.TestCase):
     def test_doctor_probe_missing(self):
         self.tree.alpha["provides"]["doctor"][0]["probe"] = ["bin/missing", "doctor"]
         self.assertFails("UNIT_PATH")
+
+    def test_events_must_start_with_the_module_id(self):
+        self.tree.alpha["provides"]["events"] = ["alpha.item.done", "alpha.plan.closed"]
+        self.assertEqual(self.tree.check().returncode, 0)
+        self.tree.alpha["provides"]["events"] = ["alpha.item.done", "beta.item.done"]
+        result = self.assertFails("UNIT_EVENTS_PREFIX")
+        self.assertIn("'beta.item.done' must start with the module id 'alpha'", result.stderr)
+        self.assertNotIn("alpha.item.done'", result.stderr)
+
+    def test_event_names_have_three_segments(self):
+        self.tree.alpha["provides"]["events"] = ["alpha.done"]
+        result = self.assertFails("UNIT_INVALID")
+        self.assertIn("pattern", result.stderr)
+
+    def test_a_subscription_needs_its_program_in_the_module(self):
+        self.tree.alpha["subscribes"] = [{"id": "notify", "on": ["alpha.item.*"], "run": ["bin/alpha", "--event"]}]
+        self.assertEqual(self.tree.check().returncode, 0)
+        self.tree.alpha["subscribes"][0]["run"] = ["bin/missing"]
+        result = self.assertFails("UNIT_SUBSCRIBES_RUN")
+        self.assertIn("subscribes[notify].run: 'bin/missing' does not exist", result.stderr)
+        self.tree.alpha["subscribes"][0]["run"] = ["../aicore/unit.json"]
+        self.assertIn("must stay inside the module", self.assertFails("UNIT_SUBSCRIBES_RUN").stderr)
+        (self.tree.root / "packages/alpha/bin/alpha").chmod(0o644)
+        self.tree.alpha["subscribes"][0]["run"] = ["bin/alpha"]
+        self.assertIn("is not executable", self.assertFails("UNIT_SUBSCRIBES_RUN").stderr)
+
+    def test_a_subscription_without_run_is_invalid(self):
+        self.tree.alpha["subscribes"] = [{"id": "notify", "on": ["alpha.item.*"]}]
+        self.assertFails("UNIT_INVALID")
+
+    def test_permissions_follow_the_shared_contract(self):
+        self.tree.alpha["permissions"] = {"filesystem": ["project"], "env": ["PATH"], "profile": "read-only"}
+        self.assertEqual(self.tree.check().returncode, 0)
+        self.tree.alpha["permissions"]["env"] = ["path"]
+        self.assertFails("UNIT_INVALID")
 
     def test_path_escaping_module_is_rejected(self):
         self.tree.alpha["provides"]["cli"] = ["../aicore/unit.json"]

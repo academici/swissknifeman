@@ -166,8 +166,8 @@
           "description": "Events the module emits.",
           "items": {
             "type": "string",
-            "minLength": 1,
-            "description": "Event name."
+            "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){2,}$",
+            "description": "Event type <module>.<subject>.<verb>; the first segment is the id of the module."
           }
         },
         "overlay_slots": {
@@ -176,8 +176,8 @@
           "description": "Overlay slots the module opens.",
           "items": {
             "type": "string",
-            "minLength": 1,
-            "description": "Slot name."
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Slot name without the module prefix; the full slot is <module>:<slot>."
           }
         },
         "extension_points": {
@@ -190,8 +190,8 @@
             "properties": {
               "id": {
                 "type": "string",
-                "minLength": 1,
-                "description": "Extension point id."
+                "pattern": "^[a-z][a-z0-9-]*$",
+                "description": "Extension point id without the module prefix; the full point is <module>:<id>."
               },
               "description": {
                 "type": "string",
@@ -229,37 +229,50 @@
       "additionalProperties": false
     },
     "permissions": {
-      "type": "object",
-      "description": "Declared effects of the module.",
-      "properties": {
-        "filesystem": {
-          "type": "array",
-          "uniqueItems": true,
-          "description": "Filesystem areas the module may write.",
-          "items": {
-            "enum": ["project", "state", "provider-surfaces", "home"],
-            "description": "Filesystem area."
-          }
-        },
-        "network": {
-          "type": "boolean",
-          "description": "Whether the module uses the network."
-        },
-        "secrets": {
-          "type": "array",
-          "description": "References to secrets the module reads.",
-          "items": {
+      "$ref": "urn:swissknifeman:aicore:permissions:v1#/$defs/permissions",
+      "description": "Declared effects of the module."
+    },
+    "subscribes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Event subscriptions of the module by default; the full id is <module>:<id>, and a person switches one off with the aicore.subscriptions config map.",
+      "items": {
+        "type": "object",
+        "description": "One subscription.",
+        "properties": {
+          "id": {
             "type": "string",
-            "minLength": 1,
-            "description": "Secret reference."
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Subscription id inside the module."
+          },
+          "on": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Event type patterns (shell-style wildcards, case-sensitive).",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Event type pattern."
+            }
+          },
+          "run": {
+            "$ref": "#/$defs/argv",
+            "description": "Subscriber command; the first element is a path relative to the module root."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600,
+            "description": "Deadline of one run, in seconds."
+          },
+          "description": {
+            "type": "string",
+            "description": "What the subscription does."
           }
         },
-        "shell": {
-          "type": "boolean",
-          "description": "Whether the module runs shell commands."
-        }
-      },
-      "additionalProperties": false
+        "required": ["id", "on", "run"],
+        "additionalProperties": false
+      }
     },
     "protocol": {
       "type": "object",

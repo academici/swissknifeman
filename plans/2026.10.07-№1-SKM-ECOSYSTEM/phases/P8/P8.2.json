@@ -179,7 +179,7 @@
     },
     {
       "id": "V2",
-      "cmd": "test -f packages/skiller/lib/skiller/module_skills.py && test -f packages/skiller/tests/test_module_skills.py && grep -q 'bucket_aliases' packages/skiller/lib/skiller/host.py && python3 -c 'import json; h = json.load(open(\"configs/skiller-host.json\")); assert \"bucket_aliases\" not in h; b = json.load(open(\"packages/skiller/buckets.json\")); assert \"provided_by\" not in b[\"system\"]' && ! grep -nE '\\b(maind|harness|analyst)\\b' packages/skiller/tests/test_module_skills.py packages/skiller/lib/skiller/module_skills.py",
+      "cmd": "test -f packages/skiller/lib/skiller/module_skills.py && test -f packages/skiller/tests/test_module_skills.py && grep -q 'bucket_aliases' packages/skiller/lib/skiller/host.py && python3 -c 'import json; h = json.load(open(\"configs/skiller-host.json\")); assert h.get(\"bucket_aliases\"); b = json.load(open(\"packages/skiller/buckets.json\")); assert b[\"system\"][\"provided_by\"] == \"host\"' && ! grep -nE '\\b(maind|harness|analyst)\\b' packages/skiller/tests/test_module_skills.py packages/skiller/lib/skiller/module_skills.py",
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "."
@@ -218,40 +218,40 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-09T13:24:37Z",
-    "finished_at": "2026-10-09T14:40:05Z",
+    "started_at": "2026-10-09T17:44:33Z",
+    "finished_at": "2026-10-09T17:48:43Z",
     "executor": {
-      "provider": "claude-code",
-      "model": "claude-sonnet-5-5",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
       "effort": "high",
-      "session": "cdd9ed60-0962-4d0a-ad8d-b61338d21225"
+      "session": "01a121b0-c363-7512-810b-b306ad30fd59"
     },
-    "notes": "Host-provided buckets: module_skills.py (sources, expand_bucket, collisions), host key bucket_aliases, connect expands and replaces the old key (merge-only), vendor/sync/budget/status/doctor/registry/validate understand the bucket; 49 tests on a synthetic host; materialize unchanged; golden not recaptured; grok-4.7 review of P8.1+P8.2: round 1 RED (3 findings reproduced and fixed), round 2 GREEN",
+    "notes": "Executed audit-p8-2026-10-09 F1: direct module selections now contribute to connect Resident; four selection paths covered. Current skiller validate 857 tests GREEN; standalone, structural/golden/hygiene and JSON/TOML e2e GREEN. Unchanged foundation/script V4 reused from P8.7 baseline ba372832.",
     "deviations": [
-      "host.schema.json, tests/test_host.py and docs/guide/installation.md changed beyond the item file list (schema gate for the new host key); explicit false on the old host bucket key is respected in connect; review corrections shipped in the executor commit (items uncommitted at review time)"
+      "V2 updated for the host bucket already activated by P8.3. Full validation and golden use a tracked-candidate sandbox snapshot to exclude unrelated local-only next-base-tooling without altering its registration. Historical P8.2 deviations remain in the journal."
     ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-09T14:40:05Z"
+        "at": "2026-10-09T17:48:43Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-09T14:40:05Z"
+        "at": "2026-10-09T17:48:43Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-09T14:40:05Z"
+        "at": "2026-10-09T17:48:43Z"
       },
       {
         "id": "V4",
         "exit": 0,
-        "at": "2026-10-09T14:40:05Z"
+        "at": "2026-10-09T17:48:43Z"
       }
     ]
   },
-  "updated_at": "2026-10-09T14:40:05Z"
+  "updated_at": "2026-10-09T17:48:43Z"
 }

@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from aicore.content.budget import skill_budget
 from skiller.budget import resolve_active_set
 from skiller.common import Env
 from skiller.config import all_buckets, library_buckets, selectable_buckets
@@ -200,6 +201,29 @@ class BucketTests(HostCase):
 
 class ConnectTests(HostCase):
     OPTS = {"profile": "p1", "no_core": True, "no_permissions": True}
+
+    def test_resident_estimate_counts_direct_and_host_bucket_module_selections(self):
+        for source in ("flag", "legacy", "toml", "host-bucket"):
+            with self.subTest(source=source):
+                proj = self.project(source)
+                opts = {"no_core": True, "no_permissions": True, "list": True}
+                if source == "legacy":
+                    _json(proj / ".swissknife.json", {"plugins": ["mod-a"]})
+                elif source == "toml":
+                    path = proj / ".swissknifeman" / "config.toml"
+                    path.parent.mkdir()
+                    path.write_text('schema_version = 1\n[skiller]\nplugins = ["mod-a"]\n',
+                                    encoding="utf-8")
+                else:
+                    opts["plugins"] = "env-skills" if source == "host-bucket" else "mod-a"
+                selected = [("mod-a", "sk-a")]
+                if source == "host-bucket":
+                    selected.append(("mod-b", "sk-b"))
+                tokens = sum(skill_budget(self.repo / "packages" / plugin / "skills" / skill)["tier0"]
+                             for plugin, skill in selected)
+                _, out, _ = self.run_quiet(do_connect, self.env, proj, opts, register=False)
+                self.assertIn(f"Resident: ~{tokens} current ⊕ tier-0 ({len(selected)} skills,", out)
+                self.assertFalse((proj / ".claude" / "settings.local.json").exists())
 
     def test_selection_expands_the_host_bucket_into_module_plugins(self):
         prepared = prepare_connect_selection(self.env, self.project(), self.OPTS, {})

@@ -168,12 +168,13 @@ def prepare_connect_selection(env, target, opts, config):
 _prepare_connect_selection = prepare_connect_selection
 
 
-def _resident_tokens(env, plugins, module_plugins=()):
+def _resident_tokens(env, plugins):
     """Rough estimate of resident ⊕ tier-0 (name+description) of the selected set of plugins -
     for «smart connection»: you can see the price BEFORE recording. core → CORE_SKILLS; bucket → all his skills;
-    generate-skill → his skill; a host module plugin (`module_plugins`) → its skills. Source of token mathematics ONE - aicore.content.budget.skill_budget (do not duplicate).
+    generate-skill → his skill; a host module plugin → its skills. Source of token mathematics ONE - aicore.content.budget.skill_budget (do not duplicate).
     Return (tokens, n_skills)."""
     from aicore.content.budget import skill_budget
+    module_plugins = module_skill_sources(env)
     total = n = 0
     for p in plugins:
         if p == CORE_PLUGIN:
@@ -233,9 +234,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     print(f"Profile:  {profile_name or '-'} (via {source})")
     print(f"Source:   {root}")
     print(f"Plugins:  {' '.join(plugins)}")
-    from_host = {m for members, _only in prepared.get("host_expansion", {}).values()
-                 for m in members}
-    resident, n_res = _resident_tokens(env, plugins, from_host)
+    resident, n_res = _resident_tokens(env, plugins)
     print(f"Resident: ~{resident} current ⊕ tier-0 ({n_res} skills, name+description in EACH "
           f"request; body - by trigger). Less = cheaper: already a profile or --no-core.")
     if source == "autodetect-fallback":

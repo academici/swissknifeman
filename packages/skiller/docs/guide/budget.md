@@ -316,7 +316,6 @@ flowchart LR
   end
   subgraph system["system"]
     agent_packs["agent-packs<br/>⊕120 ↻2305"]:::hot
-    brain_locator["brain-locator<br/>⊕47 ↻1310"]:::warm
     cross_project_coordinator["cross-project-coordinator<br/>⊕83 ↻1402"]:::warm
     local_topology["local-topology<br/>⊕62 ↻1362"]:::warm
     session_observer["session-observer<br/>⊕117 ↻1622"]:::hot
@@ -331,7 +330,6 @@ flowchart LR
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
-  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -420,7 +418,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 217 skills · ⊕ always **11513** current (is always resident if you include the entire registry) · ↻ bodies 270562 current · ⌥ on-demand 824510 current (snippets + references).
+**Total:** 216 skills · ⊕ always **11466** current (is always resident if you include the entire registry) · ↻ bodies 269252 current · ⌥ on-demand 824510 current (snippets + references).
 
 ## By buckets
 
@@ -431,8 +429,8 @@ flowchart LR
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
 | `devops` | 11 | 553 | 8909 | 16736 |
-| `system` | 7 | 545 | 10787 | 816 |
 | `php` | 17 | 531 | 18231 | 54365 |
+| `system` | 6 | 498 | 9477 | 816 |
 | `pm` | 10 | 462 | 10775 | 23510 |
 | `founder` | 10 | 430 | 14976 | 577 |
 | `axioma` | 4 | 352 | 4496 | 0 |

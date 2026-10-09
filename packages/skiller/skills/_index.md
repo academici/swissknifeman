@@ -4,7 +4,7 @@
 
 Source of truth for ported skills (machine registry - `skills.json`). Distribution to projects: `skiller connect` (plugin buckets) / `vendor` (physical. transfer). CORE-set of token skills (`general`/`oss-dev`) is heard by default - see `connect`/`vendor`.
 
-Total: 217 skills in 48 buckets.
+Total: 216 skills in 48 buckets.
 
 ## Skills for buckets
 
@@ -447,12 +447,11 @@ Total: 217 skills in 48 buckets.
 |:--|:--|:--|
 | `agent-security-super-skill` | AI agent security: prompt injection defense, skill/plugin validation, memory poisoning pr… |  |
 
-### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (7)
+### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (6)
 
 | Skill | Description | Tags |
 |:--|:--|:--|
 | `agent-packs` | Install and VERSIONED upgrade of agent-packs (Claude Code agents/workflows/hooks) from ha… | `agent-packs`, `templates`, `versioning`, `upgrade`, `install`, `claude-code`, `harness`, `lock` |
-| `brain-locator` | Reach the Brain vault (ecosystem Obsidian docs) from a project — non-hardcoded path resol… | `brain`, `vault`, `docs`, `navigation`, `locator`, `obsidian` |
 | `cross-project-coordinator` | Orchestrate cross-project code analysis: walk linked projects (via topology), find dups/d… | `cross-project`, `coordination`, `refactoring`, `duplication`, `topology`, `orchestration`, `agents`, `tokens` |
 | `local-topology` | Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, proj… | `topology`, `architecture`, `navigation`, `meta`, `cross-project` |
 | `session-observer` | EXPERIMENTAL (enable per-project). Post-hoc Claude Code session analysis from JSONL logs … | `observer`, `session-analysis`, `learning`, `jsonl`, `drift`, `self-improvement`, `post-mortem` |
@@ -506,7 +505,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `bots` | `botkit` |
 | `boundary` | `package-contribution-protocol` |
 | `bpy` | `build-loop`, `config-conventions`, `mcp-blender`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
-| `brain` | `brain-locator` |
 | `broadcasting` | `laravel-broadcasting`, `laravel-echo-client` |
 | `browser` | `playwright-e2e` |
 | `browser-testing` | `laravel-dusk` |
@@ -574,7 +572,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `artifact-review`, `brain-locator`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
+| `docs` | `artifact-review`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
 | `doctrine` | `axioma-doctrine` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
@@ -650,7 +648,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `livewire` | `filament`, `livewire-blade-attributes` |
 | `llm` | `eval-design` |
 | `localstorage` | `dark-mode` |
-| `locator` | `brain-locator`, `swissknifeman-locator` |
+| `locator` | `swissknifeman-locator` |
 | `lock` | `agent-packs` |
 | `logging` | `observability-design` |
 | `lucide` | `vue-dynamic-icons` |
@@ -679,7 +677,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `naive-ui` | `naive-ui-theming` |
 | `namespace` | `namespace-refactor-safety` |
 | `naming` | `naming-conventions`, `php-naming-conventions`, `scene-conventions` |
-| `navigation` | `brain-locator`, `ecosystem-map`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
+| `navigation` | `ecosystem-map`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `null-safety` | `dart-package-development` |
@@ -687,7 +685,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `observer` | `session-observer` |
-| `obsidian` | `brain-locator` |
 | `onboarding` | `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead`, `workflow-craft` |
@@ -830,7 +827,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `vad` | `voice-ai` |
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
-| `vault` | `brain-locator` |
 | `vendor-vs-build` | `ecosystem-reuse-gate` |
 | `venv` | `venv-dependencies` |
 | `verification` | `model-verification`, `testing-safety-report`, `verify-claims` |

@@ -12,6 +12,7 @@
   "provides": {
     "cli": ["bin/brain"],
     "config": "configs/config.schema.json",
+    "plugins": [{"name": "brain", "manifest": ".claude-plugin/plugin.json"}],
     "doctor": [
       {"id": "brain.vault", "category": "config", "probe": ["bin/brain", "doctor", "--json"], "output": "check-result/v1"}
     ]

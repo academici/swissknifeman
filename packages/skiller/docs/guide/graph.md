@@ -192,7 +192,6 @@ flowchart LR
     query_craft["query-craft"]
   end
   subgraph system["system"]
-    brain_locator["brain-locator"]
     cross_project_coordinator["cross-project-coordinator"]
     local_topology["local-topology"]
     session_observer["session-observer"]
@@ -204,7 +203,6 @@ flowchart LR
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
-  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -381,7 +379,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**In the column:** 129 skills, 88 ribs requires, 92 ribs produces_for.
+**In the column:** 128 skills, 87 ribs requires, 92 ribs produces_for.
 
 ## Isolated skills (88)
 

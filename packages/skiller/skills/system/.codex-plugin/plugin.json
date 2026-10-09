@@ -4,7 +4,6 @@
   "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
   "skills": [
     "./agent-packs",
-    "./brain-locator",
     "./cross-project-coordinator",
     "./local-topology",
     "./session-observer",

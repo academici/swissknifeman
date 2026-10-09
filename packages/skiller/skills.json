@@ -236,7 +236,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 7,
+      "count": 6,
       "status": "active"
     },
     "voice-ai": {
@@ -4294,27 +4294,6 @@
       "source": "local"
     },
     {
-      "name": "brain-locator",
-      "bucket": "system",
-      "path": "skills/system/brain-locator/SKILL.md",
-      "version": "0.1.0",
-      "description": "Reach the Brain vault (ecosystem Obsidian docs) from a project — non-hardcoded path resolution (maind/$HOME), own and linked-project docs, sync",
-      "sha256": "b994eca1a96fe31b12a0b0fc0f9f4d62b917c3633b257dd4c8577a8cabf22cf7",
-      "content_sha256": "bca83c1d13f3e6b4e93f6e6df5dbbfc979f0f805e5ff9f160f66f9bbaa4aa8a5",
-      "tags": [
-        "brain",
-        "vault",
-        "docs",
-        "navigation",
-        "locator",
-        "obsidian"
-      ],
-      "requires": [
-        "local-topology"
-      ],
-      "source": "local"
-    },
-    {
       "name": "cross-project-coordinator",
       "bucket": "system",
       "path": "skills/system/cross-project-coordinator/SKILL.md",
@@ -4346,8 +4325,8 @@
       "path": "skills/system/local-topology/SKILL.md",
       "version": "0.1.0",
       "description": "Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, projects base) and navigation between projects, their code and docs. Read from ~/.swissknifeman/topology.json",
-      "sha256": "a334e9bb3a69c17db64e26301668739b82927e800ede4b2c1dd492f270e48218",
-      "content_sha256": "70e87519eb63a2d3e40dd848aa679f2b8b92c8c349d0fb787ea9c153d2888c17",
+      "sha256": "d43cfebeae5167dbb7547ee85238ea31b85837f8f98a28f3d6f4d190e03755a7",
+      "content_sha256": "654f2657e3b1fa466518ec67c5def90ac9c225756b52be1144f76d4d00b9bf43",
       "tags": [
         "topology",
         "architecture",
@@ -4358,7 +4337,6 @@
       "produces_for": [
         "cross-project-coordinator",
         "shared-memory",
-        "brain-locator",
         "swissknifeman-locator"
       ],
       "source": "local"

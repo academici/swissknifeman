@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Cache project BRAIN documents in maind memory for `maind memory recall`.
+# maind is taken from $MAIND_BIN or PATH.
 #
 # `maind memory store` and --key/--file do not exist. The write command is
 # `maind memory remember`; it accepts --project|--scope, --share, --type, and --json.
 # Pass the document topic (for example docs:brd) through --type.
 #
 # Usage:
-#   scripts/cache-brain-docs.sh --scope project:<ns> <topic>=<path/to/file.md> [<topic>=<path> ...]
+#   cache-brain-docs.sh --scope project:<ns> <topic>=<path/to/file.md> [<topic>=<path> ...]
 #
 # Example:
-#   scripts/cache-brain-docs.sh --scope project:loqum \
+#   cache-brain-docs.sh --scope project:loqum \
 #     docs:brd=docs-private/dev/BRD.md \
 #     docs:architecture=docs-private/dev/Architecture_Loqum.md
 #
@@ -17,8 +18,11 @@
 #   maind memory recall --scope project:loqum "docs:brd"
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MAIND_BIN="$REPO_ROOT/bin/maind"
+MAIND_BIN="${MAIND_BIN:-maind}"
+if ! command -v "$MAIND_BIN" >/dev/null 2>&1; then
+  echo "ERROR: maind not found; set MAIND_BIN" >&2
+  exit 1
+fi
 
 usage() {
   echo "Usage: $0 --scope <scope> <topic>=<path> [<topic>=<path> ...]" >&2

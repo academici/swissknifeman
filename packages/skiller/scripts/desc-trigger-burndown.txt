@@ -76,7 +76,6 @@ quality/testing-safety-report
 repository-bootstrap/docs-maintenance
 repository-bootstrap/ecosystem-mcp
 repository-bootstrap/field-feedback-loop
-system/brain-locator
 system/cross-project-coordinator
 system/local-topology
 system/swissknifeman-locator

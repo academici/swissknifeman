@@ -7,7 +7,7 @@ risk: read
 persona: architect
 tags: [topology, architecture, navigation, meta, cross-project]
 requires: []
-produces_for: [cross-project-coordinator, shared-memory, brain-locator, swissknifeman-locator]
+produces_for: [cross-project-coordinator, shared-memory, swissknifeman-locator]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 ## [Unreleased]
 
 ### Added
+- **Plugin and skill:** the Claude Code plugin `brain` (`.claude-plugin/plugin.json`, `provides.plugins`) delivers the skill `brain-locator` 0.2.0, moved from the `system` bucket of `skiller`; its path ladder starts with `brain vault --json`.
+- **`scripts/cache-brain-docs.sh`**, moved from `maind`; `maind` is taken from `$MAIND_BIN` or `PATH`.
 - **Module skeleton:** `unit.json` (version 0.1.0), `bin/brain` launcher with the development-clone guard and the
   `aicore` locator, `lib/brain` package, `scripts/test.sh` and `scripts/validate.sh`.
 - **Vault lookup:** `brain vault [--json] [--project DIR]` walks the ladder `brain.vault_path` of the configuration,

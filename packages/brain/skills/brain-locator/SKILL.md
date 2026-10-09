@@ -1,7 +1,7 @@
 ---
 name: brain-locator
 bucket: system
-version: 0.1.0
+version: 0.2.0
 description: Reach the Brain vault (ecosystem Obsidian docs) from a project — non-hardcoded path resolution (maind/$HOME), own and linked-project docs, sync
 risk: read
 persona: architect
@@ -22,13 +22,18 @@ Use when: an agent in **any project** wants to find the ecosystem docs store (**
 
 ## Brain path resolution (non-hardcoded)
 
-Vault path is machine-specific — **resolve, don't hardcode**. Priority ladder (mirrors the `maind` canon: `integrations.brain.path` → project `id==brain` → `$MAIND_BRAIN_VAULT` → `~/Vaults/Brain`):
+Vault path is machine-specific — **resolve, don't hardcode**. Priority ladder (mirrors `brain vault`: configuration `brain.vault_path` → `$MAIND_BRAIN_VAULT` → `~/Vaults/Brain`):
 
 ```bash
-# A. Explicit env override (if the ecosystem sets it)
-BRAIN="$MAIND_BRAIN_VAULT"
+# A. The brain module resolver (if installed): configuration -> env -> default
+if command -v brain >/dev/null 2>&1; then
+  BRAIN="$(brain vault --json 2>/dev/null | jq -r '.path // empty')"
+fi
 
-# B. Authoritative maind resolver (if installed): brain record in the project registry
+# B. Explicit env override (if the ecosystem sets it)
+if [ -z "$BRAIN" ]; then BRAIN="$MAIND_BRAIN_VAULT"; fi
+
+# B2. maind resolver (if installed): brain record in the project registry
 if [ -z "$BRAIN" ] && command -v maind >/dev/null 2>&1; then
   BRAIN="$(maind projects list --json 2>/dev/null \
             | jq -r '.projects[]|select(.id=="brain").vault_path // empty')"

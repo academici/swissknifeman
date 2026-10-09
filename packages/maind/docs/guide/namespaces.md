@@ -76,7 +76,7 @@ maind memory remember --scope project:loqum --type docs:brd "$content"
 maind memory recall --scope project:loqum "docs:brd"
 ```
 
-Wrapper over several documents at once - `packages/maind/scripts/cache-brain-docs.sh`:
+Wrapper over several documents at once - `scripts/cache-brain-docs.sh` of the brain module (maind is taken from `$MAIND_BIN` or `PATH`):
 
 ```bash
 scripts/cache-brain-docs.sh --scope project:loqum \

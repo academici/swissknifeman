@@ -34,6 +34,14 @@
       "required_providers": [
         "claude-code"
       ]
+    },
+    "brain": {
+      "version_owner": "package",
+      "package": "brain",
+      "path": "packages/brain",
+      "required_providers": [
+        "claude-code"
+      ]
     }
   },
   "default_plugin_version_owner": "skiller-publication-map",
@@ -41,7 +49,8 @@
     "skiller": "packages/skiller",
     "harness": "packages/harness",
     "maind": "packages/maind",
-    "analyst": "packages/analyst"
+    "analyst": "packages/analyst",
+    "brain": "packages/brain"
   },
   "legacy_policy": {
     "schema_version": "release-unit-policy/v1",

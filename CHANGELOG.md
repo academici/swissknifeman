@@ -211,6 +211,8 @@
 
 ### Changed
 
+- **skiller:** the skill `brain-locator` moved from the `system` bucket to the `brain` module plugin (version 0.2.0, the path ladder starts with `brain vault --json`); the `system` bucket and the registry no longer list it, and the marketplace gains the plugin `brain`.
+
 - **skiller:** the `integrate` wizard block `[9] Brain docs-sync` calls the host command `brain_docs`
   (`brain docs integrate`, overridable with `SKM_BRAIN_BIN`) instead of its own code; without the command it prints
   a warning and the wizard goes on.

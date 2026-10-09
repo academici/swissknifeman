@@ -23,8 +23,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `packages/maind/scripts/cache-brain-docs.sh` | maind | brain | - | P7 | fixed | - |
-| `packages/skiller/skills/system/brain-locator/` | skiller | brain | skills | P7 | fixed | - |
 | `packages/skiller/skills/system/agent-packs/` | skiller | harness | skills | P8 | fixed | - |
 | `packages/skiller/skills/system/agents/` | skiller | harness | skills | P8 | fixed | - |
 | `packages/skiller/skills/system/cross-project-coordinator/` | skiller | maind | skills | P8 | fixed | - |

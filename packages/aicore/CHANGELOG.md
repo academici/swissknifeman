@@ -50,6 +50,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   `provides.events`); a missing, disabled, broken or non-subscriber plugin is reported as `PLUGIN_UNAVAILABLE` or
   `SUBSCRIPTION_INVALID` and keeps the cursor. A plugin's own `timeout_seconds` is the default deadline unless the
   configuration sets one (`ExtSettings.plugin_timeouts_set`).
+- **Instruction overlays:** `aicore.ext.overlays` (`resolve_overlays`, `render_overlays`, `describe_overlays`). A module
+  declares a slot `<module>:<name>` in `provides.overlay_slots`; the files of the slot are listed under
+  `[aicore.overlays."<module>:<name>"]` and read in layer order (a layer replaces the array, `_append` extends it; relative
+  paths are taken from the file of the layer). An unknown module or slot is `OVERLAY_SLOT_UNKNOWN`, the texts are limited to
+  32768 bytes of UTF-8 (`OVERLAY_TOO_LARGE`), a missing file is skipped with an `OVERLAY_MISSING` warning and one that is not
+  UTF-8 text, cannot be read or (named by the project layer) lies outside the project is skipped with `OVERLAY_INVALID`.
+  `render_overlays` writes one marked block (`<!-- overlays: SLOT -->` ... `<!-- end overlays: SLOT -->`) that a command
+  appends to its own text; the home directory is printed as `~`.
+- **`aicore ext overlays SLOT`** (`--project`, `--json`, `--strict`): print the block; warnings go to stderr and `--strict`
+  makes them exit 1.
 - **`aicore ext plugins list|describe|invoke`** and **`aicore ext status`** (`--json`, `--project`): list the registered plugins
   without starting them, run the handshake of one, emulate an extension point, and show plugins (trusted, profile and
   `enforced: false`, ignored requests) and subscriptions with their problems; `status` always exits 0. The `aicore.ext`

@@ -1,4 +1,4 @@
-"""``aicore events`` (emit, list, deliver, replay, status) and ``aicore ext`` (plugins, status).
+"""``aicore events`` (emit, list, deliver, replay, status) and ``aicore ext`` (plugins, overlays, status).
 
 ``emit`` is for people and tests: it journals an event as if a module had emitted it, strictly (every
 failure is an error). ``list`` prints the journal. ``deliver`` runs a deliverer (it is also the background
@@ -9,7 +9,8 @@ errors go to stderr as ``<CODE>: <message>``.
 
 ``aicore ext plugins list|describe|invoke`` and ``aicore ext status`` work on the plugins of the machine
 configuration: ``describe`` and ``invoke`` start plugins (after the manifest check and the handshake),
-``list`` and ``status`` never do; ``status`` always exits 0, it is a diagnosis.
+``list`` and ``status`` never do; ``status`` always exits 0, it is a diagnosis. ``aicore ext overlays SLOT``
+prints the overlay block of a module slot; warnings go to stderr and ``--strict`` makes them exit 1.
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ from typing import Any, List, Mapping, Optional, Sequence, TextIO
 from ..state import find_project_root
 from . import delivery as _delivery
 from . import journal
+from . import overlays as _overlays
 from . import plugins as _plugins
 from . import units as _units
 from .errors import ExtError
@@ -216,7 +218,7 @@ _COMMANDS = {"emit": _run_emit, "list": _run_list, "deliver": _run_deliver, "rep
 
 
 def build_ext_parser() -> argparse.ArgumentParser:
-    parser = _Parser(prog="aicore ext", description="Extensions: external plugins.")
+    parser = _Parser(prog="aicore ext", description="Extensions: external plugins and instruction overlays.")
     commands = parser.add_subparsers(dest="command", required=True, parser_class=_Parser, metavar="COMMAND")
 
     plugins_cmd = commands.add_parser("plugins", help="list, describe and call the registered plugins")
@@ -239,6 +241,12 @@ def build_ext_parser() -> argparse.ArgumentParser:
     source.add_argument("--input-file", metavar="FILE", help="read the input (a JSON object) from FILE")
     invoke_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
     invoke_cmd.add_argument("--json", action="store_true", help='print {"point": ..., "results": [...]}')
+
+    overlays_cmd = commands.add_parser("overlays", help="print the instruction overlays of a module slot")
+    overlays_cmd.add_argument("slot", metavar="SLOT", help="<module>:<slot> declared in provides.overlay_slots")
+    overlays_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
+    overlays_cmd.add_argument("--json", action="store_true", help='print {"slot", "overlays", "warnings"} instead')
+    overlays_cmd.add_argument("--strict", action="store_true", help="exit 1 when there is a warning")
 
     status_cmd = commands.add_parser("status", help="show the plugins and the subscriptions (always exits 0)")
     status_cmd.add_argument("--project", metavar="DIR", help="project root (default: the nearest project)")
@@ -362,7 +370,18 @@ def _run_ext_status(args: argparse.Namespace, env: Mapping[str, str], cwd: Path,
     return 0
 
 
-_EXT_COMMANDS = {"plugins": _run_ext_plugins, "status": _run_ext_status}
+def _run_ext_overlays(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    found = _overlays.resolve_overlays(args.slot, project=_project(args, env, cwd), env=env)
+    if args.json:
+        print(json.dumps(_overlays.describe_overlays(found), ensure_ascii=False, sort_keys=True), file=out)
+    else:
+        out.write(_overlays.render_overlays(found))
+        for warning in found.warnings:
+            print(f"aicore ext overlays: {warning['code']}: {warning['message']}", file=err)
+    return 1 if args.strict and found.warnings else 0
+
+
+_EXT_COMMANDS = {"plugins": _run_ext_plugins, "overlays": _run_ext_overlays, "status": _run_ext_status}
 
 
 def _dispatch(prog: str, parser: argparse.ArgumentParser, commands: Mapping[str, Any],

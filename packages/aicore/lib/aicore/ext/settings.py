@@ -46,6 +46,14 @@ def _expand(path: str, env: Mapping[str, str], home: Optional[PathLike]) -> str:
     return path
 
 
+def collapse_home(path: str, env: Mapping[str, str], home: Optional[PathLike] = None) -> str:
+    """``path`` with the home directory written as ``~`` (the inverse of the expansion of ``~`` above)."""
+    base = (str(home) if home is not None else env.get("HOME") or str(Path.home())).rstrip("/")
+    if base and (path == base or path.startswith(base + "/")):
+        return "~" + path[len(base):]
+    return path
+
+
 def _origins(resolved: "_config.ResolvedConfig", key: Tuple[str, ...]) -> List[Tuple[str, str, Optional[str]]]:
     """``(element, layer, file)`` for each element of an array key, replaying the layers that set it."""
     entry = resolved.explain(key)[0]

@@ -530,14 +530,6 @@ def deliver_event(registration: Registration, event: Mapping[str, Any], *, attem
 # --- status --------------------------------------------------------------------------------------------------
 
 
-def _collapse_home(path: str, env: Mapping[str, str], home: Optional[PathLike]) -> str:
-    base = str(home) if home is not None else env.get("HOME") or str(Path.home())
-    base = base.rstrip("/")
-    if base and (path == base or path.startswith(base + "/")):
-        return "~" + path[len(base):]
-    return path
-
-
 def list_plugins(project: Optional[PathLike] = None, *, env: Optional[Mapping[str, str]] = None,
                  home: Optional[PathLike] = None, config_file: Optional[PathLike] = None) -> Dict[str, Any]:
     """``{"plugins": [row, ...], "problems": [...]}``; nothing is started.
@@ -556,7 +548,7 @@ def list_plugins(project: Optional[PathLike] = None, *, env: Optional[Mapping[st
         rows.append({
             "id": registration.id, "kind": manifest.kind if manifest else None,
             "version": manifest.version if manifest else None,
-            "manifest": _collapse_home(registration.manifest_path, environment, home),
+            "manifest": _settings.collapse_home(registration.manifest_path, environment, home),
             "trusted": registration.trusted, "enabled": registration.enabled,
             "profile": {"profile": (permissions or {}).get("profile", "trusted-local"), "enforced": False},
             "points": manifest.points if manifest else [], "events": manifest.events if manifest else [],

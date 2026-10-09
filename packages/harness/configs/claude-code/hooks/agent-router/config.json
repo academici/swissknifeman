@@ -1,5 +1,5 @@
 {
-  "$comment": "Opt-in non-Task capability hints. Task requires explicit native invocation; SessionStart adds no policy.",
+  "$comment": "Opt-in non-planner capability hints. Planner requires explicit native invocation; SessionStart adds no policy.",
   "version": 3,
   "policy": "",
   "policy_auto_suffix": "",

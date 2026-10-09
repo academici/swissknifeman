@@ -16,7 +16,7 @@ PATHS=(core/ core/tests
   packages/skiller/lib packages/skiller/tests
   packages/harness/lib packages/harness/tests
   packages/maind/lib packages/maind/tests
-  packages/task/lib packages/task/tests)
+  packages/planner/lib packages/planner/tests)
 
 cd "$ROOT"
 if command -v ruff >/dev/null 2>&1 && [ "$(ruff --version | awk '{print $2}')" = "$RUFF_VERSION" ]; then

@@ -48,7 +48,7 @@ A free-form phrasing doesn't match any existing trigger — this skill's
   statuses, DoR/DoD). A master plan MAY spawn a workflow script for its
   execution phase (see "File location and name" below) — but the plan itself
   isn't about subagent orchestration, it's about framing the work.
-- `/task:make-workflow` (gate command, if present) — interview + generation +
+- `/planner:make-workflow` (gate command, if present) — interview + generation +
   requested output reviewer around this same discipline. If the command is
   available, prefer it over manually following the skill: it guarantees a red
   reviewer verdict blocks the script from shipping unfixed.
@@ -79,7 +79,7 @@ enabled only by explicit owner request).
 | **Design** (design-only) | `wf-research-fanout.js`, `wf-audit-adversarial.js` | RAG research → design (expensive-model main loop) → self-check/DoR gate → optional requested read-only audit → one owning correction; re-audit only after changed evidence | code, tests, semver |
 | **Development** (dev) | `wf-dev-slice.js`, `wf-author-by-spec.js` | slice → impl → tests-to-green → optional requested review → inter-slice gates → commit | design decisions on the cheap model (escalate to main loop, don't decide inline) |
 
-This table is the skill's SSOT — the `/task:make-workflow` command and its
+This table is the skill's SSOT — the `/planner:make-workflow` command and its
 output reviewer cite THIS table, not their own copy; fix drift here only.
 
 Review and audit are opt-in: hard risks widen self-checks, not review admission. An explicit review
@@ -221,7 +221,7 @@ unavailable — don't pass off unverified orchestration as verified.
   artifact of the plan's execution phase, "two homes" sets its canonical
   location.
 - `general/spec-interview` — the "one question at a time" mechanic used by
-  the `/task:make-workflow` gate command when clarifying template slots.
+  the `/planner:make-workflow` gate command when clarifying template slots.
 - `research/query-craft` — how to phrase a RAG query for non-standard
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.

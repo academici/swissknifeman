@@ -108,7 +108,7 @@ def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True)
     lines += ['encoding: "utf-8"',
               f"ignore_all_files_in_gitignore: {'true' if gitignore else 'false'}",
               "ignored_paths:"]
-    # Human Task projections are never code-graph input, even when gitignored files are indexed.
+    # Human planner projections are never code-graph input, even when gitignored files are indexed.
     lines += [f'  - "{p}"' for p in dict.fromkeys([*ignores, "plans/**/views/**", "plans/**/context/**", "plans/**/*.md"])]
     lines += ["read_only: false",
               # required for the current Serena — defaults from her project.template.yml:

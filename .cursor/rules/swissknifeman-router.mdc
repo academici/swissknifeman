@@ -2,14 +2,14 @@
 alwaysApply: false
 ---
 <!-- semantic:cursor.lifecycle.router.session-scoped-static -->
-## Cursor Task routing (explicit invocation only)
+## Cursor planner routing (explicit invocation only)
 
-This managed rule is generated from `packages/task/configs/command-routing.json`.
-Apply only when the owner explicitly invokes Task or attaches this manual rule.
-Ordinary requests and existing plan files do not activate Task.
+This managed rule is generated from `packages/planner/configs/command-routing.json`.
+Apply only when the owner explicitly invokes planner or attaches this manual rule.
+Ordinary requests and existing plan files do not activate planner.
 
 - Fixed economy commands: none.
-- Fixed implementation commands: `task:dev`, `task:fix`, `task:make-workflow`, `task:plan-close`, `task:review`.
-- Fixed frontier commands: `task:design`, `task:plan-audit`, `task:plan-design`, `task:research`.
+- Fixed implementation commands: `planner:dev`, `planner:fix`, `planner:make-workflow`, `planner:plan-close`, `planner:review`.
+- Fixed frontier commands: `planner:design`, `planner:plan-audit`, `planner:plan-design`, `planner:research`.
 - Model selectors: economy=composer-2.5-fast, implementation=composer-2.5, frontier=claude-opus-5-thinking-high.
 - Never replace fixed frontier or fixed implementation routes with `auto`.

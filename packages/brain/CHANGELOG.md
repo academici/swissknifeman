@@ -47,3 +47,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   `--dry-run` writes nothing. A `memory_brain` object in `.swissknife.json` still turns sync on (with a deprecation
   warning); a plain string does not. Nothing is ever deleted. The generated `sync-brain.sh` also matches a file
   directly below the folder for patterns such as `docs/**/*.md`, like the Python copy.
+
+### Changed
+- **Follow the task → planner rename:** the architecture test forbids the module `planner` instead of `task`.

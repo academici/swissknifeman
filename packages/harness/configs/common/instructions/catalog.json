@@ -22,7 +22,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 1,
-          "intent": "Apply this source-derived instruction: `swissknifeman` is the umbrella repository and control layer; `skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages. In this repository, names are not roles: the umbrella brand, marketplace, and `~/.swissknifeman/` state are never renamed to match an internal package.",
+          "intent": "Apply this source-derived instruction: `swissknifeman` is the umbrella repository and control layer; `skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages. In this repository, names are not roles: the umbrella brand, marketplace, and `~/.swissknifeman/` state are never renamed to match an internal package.",
           "obligations": [
             {
               "modality": "must",
@@ -36,18 +36,18 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
             "`swissknifeman` is the umbrella repository and control layer",
-            "`skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages.",
+            "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages.",
             "`swissknifeman`",
             "`skiller`",
             "`harness`",
             "`maind`",
             "`analyst`",
-            "`task`",
+            "`planner`",
             "names are not roles"
           ]
         },
@@ -71,7 +71,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -87,7 +87,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 3,
-          "intent": "Apply this source-derived instruction: Read the relevant package guide before changing `packages/<name>/`; `task` remains plugin-only and has no standalone CLI. This is one monorepo: maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`.",
+          "intent": "Apply this source-derived instruction: Read the relevant package guide before changing `packages/<name>/`; `planner` remains plugin-only and has no standalone CLI. This is one monorepo: maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`.",
           "obligations": [
             {
               "modality": "must",
@@ -101,14 +101,14 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
             "Read the relevant package guide before changing `packages/<name>/`",
-            "`task` remains plugin-only and has no standalone CLI.",
+            "`planner` remains plugin-only and has no standalone CLI.",
             "`packages/<name>/`",
-            "`task`",
+            "`planner`",
             "maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`"
           ]
         },
@@ -118,7 +118,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`. Installation delegates to package installers, and the umbrella owns the `swissknifeman` launcher alias.",
+          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`. Installation delegates to package installers, and the umbrella owns the `swissknifeman` launcher alias.",
           "obligations": [
             {
               "modality": "must",
@@ -132,18 +132,18 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
             "Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router",
-            "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group.",
+            "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group.",
             "`swissknifeman skills|env|maind|analyst|setup|doctor`",
             "`skiller`",
             "`harness`",
             "`maind`",
             "`analyst`",
-            "`task`",
+            "`planner`",
             "cross-package onboarding lives once in `maind/onboard.py`",
             "the umbrella owns the `swissknifeman` launcher alias"
           ]
@@ -168,7 +168,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -201,7 +201,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -232,7 +232,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -249,7 +249,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 8,
-          "intent": "Apply this source-derived instruction: Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task.",
+          "intent": "Apply this source-derived instruction: Planner commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate planner.",
           "obligations": [
             {
               "modality": "must",
@@ -263,11 +263,11 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
-            "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
+            "Planner commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate planner."
           ]
         },
         {
@@ -290,7 +290,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -317,7 +317,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -349,7 +349,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -376,7 +376,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -403,7 +403,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -430,7 +430,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -457,7 +457,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -484,7 +484,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -511,7 +511,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -538,7 +538,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -565,7 +565,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "12b84e17b283b16e70533900de414dbf9b5804c220c90fd3571c71dcdde4b897"
+              "sha256": "6a2d0f42f99891b912403d02cd5552f72cb3b313bd55691944d91deca71cfa21"
             }
           ],
           "compatibility_assertions": [
@@ -668,7 +668,7 @@
           "kind": "provider-extension",
           "provider_id": "codex",
           "order": 1,
-          "intent": "Apply this source-derived instruction: Treat `.agents/skills/*` as thin generated Codex bootstrap projections that are never the source of truth: canonical skill and command content stays under `packages/skiller/skills/` and `packages/task/commands/`.",
+          "intent": "Apply this source-derived instruction: Treat `.agents/skills/*` as thin generated Codex bootstrap projections that are never the source of truth: canonical skill and command content stays under `packages/skiller/skills/` and `packages/planner/commands/`.",
           "obligations": [
             {
               "modality": "must",
@@ -682,7 +682,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
+              "sha256": "000cc7f4b2a12cd20e3835a158dff7b7431a0e011b8120c8bdced16147440f34"
             }
           ],
           "compatibility_assertions": [
@@ -690,7 +690,7 @@
             "canonical skill and command content stays under `packages/skiller/skills/`",
             "`.agents/skills/*`",
             "`packages/skiller/skills/`",
-            "`packages/task/commands/`"
+            "`packages/planner/commands/`"
           ]
         },
         {
@@ -713,7 +713,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
+              "sha256": "000cc7f4b2a12cd20e3835a158dff7b7431a0e011b8120c8bdced16147440f34"
             }
           ],
           "compatibility_assertions": [
@@ -726,7 +726,7 @@
           "kind": "provider-extension",
           "provider_id": "codex",
           "order": 3,
-          "intent": "Apply this source-derived instruction: Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them.",
+          "intent": "Apply this source-derived instruction: Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Planner workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them.",
           "obligations": [
             {
               "modality": "must",
@@ -740,11 +740,11 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
+              "sha256": "000cc7f4b2a12cd20e3835a158dff7b7431a0e011b8120c8bdced16147440f34"
             }
           ],
           "compatibility_assertions": [
-            "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
+            "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Planner workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
           ]
         },
         {
@@ -767,7 +767,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
+              "sha256": "000cc7f4b2a12cd20e3835a158dff7b7431a0e011b8120c8bdced16147440f34"
             }
           ],
           "compatibility_assertions": [
@@ -2245,43 +2245,43 @@
       "grok_target": "packages/analyst/.grok-instructions.md"
     },
     {
-      "id": "task",
-      "claude_target": "packages/task/CLAUDE.md",
-      "codex_target": "packages/task/AGENTS.md",
+      "id": "planner",
+      "claude_target": "packages/planner/CLAUDE.md",
+      "codex_target": "packages/planner/AGENTS.md",
       "sections": [
         {
-          "id": "task.identity",
-          "scope_id": "task",
+          "id": "planner.identity",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 1,
-          "intent": "Apply this source-derived instruction: `task` is the plugin-only package for task-intent commands and executable plan protocol; it has no `bin/`, standalone CLI, or installer.",
+          "intent": "Apply this source-derived instruction: `planner` is the plugin-only package for task-intent commands and executable plan protocol; it has no `bin/`, standalone CLI, or installer.",
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "preserve",
-              "object": "task.identity.requirements",
-              "boundary": "task.all"
+              "object": "planner.identity.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
-            "`task` is the plugin-only package for task-intent commands and executable plan protocol",
+            "`planner` is the plugin-only package for task-intent commands and executable plan protocol",
             "it has no `bin/`, standalone CLI, or installer.",
-            "`task`",
+            "`planner`",
             "`bin/`"
           ]
         },
         {
-          "id": "task.command-catalog",
-          "scope_id": "task",
+          "id": "planner.command-catalog",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 2,
@@ -2289,17 +2289,17 @@
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "publish",
-              "object": "task.command-catalog.requirements",
-              "boundary": "task.all"
+              "object": "planner.command-catalog.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
@@ -2309,8 +2309,8 @@
           ]
         },
         {
-          "id": "task.plan-protocol",
-          "scope_id": "task",
+          "id": "planner.plan-protocol",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 3,
@@ -2318,17 +2318,17 @@
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "maintain",
-              "object": "task.plan-protocol.requirements",
-              "boundary": "task.all"
+              "object": "planner.plan-protocol.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
@@ -2338,69 +2338,69 @@
           ]
         },
         {
-          "id": "task.plan-files",
-          "scope_id": "task",
+          "id": "planner.plan-files",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
+          "intent": "Apply this source-derived instruction: Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "maintain",
-              "object": "task.plan-files.requirements",
-              "boundary": "task.all"
+              "object": "planner.plan-files.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
-            "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
+            "Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
             "`plan.json`",
-            "`python3 <task>/scripts/plan.py`",
+            "`python3 <planner>/scripts/plan.py`",
             "`plan.py next|show|context`"
           ]
         },
         {
-          "id": "task.layout",
-          "scope_id": "task",
+          "id": "planner.layout",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 5,
-          "intent": "Apply this source-derived instruction: Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
+          "intent": "Apply this source-derived instruction: Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "maintain",
-              "object": "task.layout.requirements",
-              "boundary": "task.all"
+              "object": "planner.layout.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
-            "Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
+            "Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
             "`commands/`",
-            "`lib/task/plan/`",
+            "`lib/planner/plan/`",
             "`scripts/plan.py`",
             "`tests/`"
           ]
         },
         {
-          "id": "task.schema-ownership",
-          "scope_id": "task",
+          "id": "planner.schema-ownership",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 6,
@@ -2408,17 +2408,17 @@
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "maintain",
-              "object": "task.schema-ownership.requirements",
-              "boundary": "task.all"
+              "object": "planner.schema-ownership.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
@@ -2429,92 +2429,92 @@
           ]
         },
         {
-          "id": "task.engineering-invariants",
-          "scope_id": "task",
+          "id": "planner.engineering-invariants",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
+          "intent": "Apply this source-derived instruction: Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "enforce",
-              "object": "task.engineering-invariants.requirements",
-              "boundary": "task.all"
+              "object": "planner.engineering-invariants.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
-            "`lib/task/`"
+            "Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
+            "`lib/planner/`"
           ]
         },
         {
-          "id": "task.validation-release",
-          "scope_id": "task",
+          "id": "planner.validation-release",
+          "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
           "order": 8,
-          "intent": "Apply this source-derived instruction: Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.",
+          "intent": "Apply this source-derived instruction: Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.",
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.maintainer",
+              "subject": "planner.maintainer",
               "action": "validate",
-              "object": "task.validation-release.requirements",
-              "boundary": "task.all"
+              "object": "planner.validation-release.requirements",
+              "boundary": "planner.all"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.common",
-              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "bde30713ad06b4af7af878c522cd2bd24c44db8c1792f199b2830d99abc685c2"
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
             }
           ],
           "compatibility_assertions": [
-            "Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.",
-            "`bash packages/task/scripts/validate.sh`"
+            "Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.",
+            "`bash packages/planner/scripts/validate.sh`"
           ]
         },
         {
-          "id": "task.claude-code.slash-projection",
-          "scope_id": "task",
+          "id": "planner.claude-code.slash-projection",
+          "scope_id": "planner",
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 1,
-          "intent": "Apply this source-derived instruction: Claude Code projects the Task command catalog as `/task:*` commands.",
+          "intent": "Apply this source-derived instruction: Claude Code projects the planner command catalog as `/planner:*` commands.",
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.claude-code.maintainer",
+              "subject": "planner.claude-code.maintainer",
               "action": "maintain",
-              "object": "task.claude-code.slash-projection.requirements",
-              "boundary": "task.provider.claude-code"
+              "object": "planner.claude-code.slash-projection.requirements",
+              "boundary": "planner.provider.claude-code"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.claude-code",
-              "path": "packages/harness/configs/common/instructions/packages/task/claude-code.md",
-              "sha256": "cb168e9ab163b4732ca1cce91e6973ac57fab30ae88607a01af4774c8190b3b4"
+              "source_id": "instruction.fragment.planner.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/planner/claude-code.md",
+              "sha256": "8c50a73c77e685fc957080de32789cd52f2d624b2788592bdf41c9683ea2edf1"
             }
           ],
           "compatibility_assertions": [
-            "Claude Code projects the Task command catalog as `/task:*` commands.",
-            "`/task:*`"
+            "Claude Code projects the planner command catalog as `/planner:*` commands.",
+            "`/planner:*`"
           ]
         },
         {
-          "id": "task.claude-code.model-pins",
-          "scope_id": "task",
+          "id": "planner.claude-code.model-pins",
+          "scope_id": "planner",
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 2,
@@ -2522,17 +2522,17 @@
           "obligations": [
             {
               "modality": "must",
-              "subject": "task.claude-code.maintainer",
+              "subject": "planner.claude-code.maintainer",
               "action": "pin",
-              "object": "task.claude-code.model-pins.requirements",
-              "boundary": "task.provider.claude-code"
+              "object": "planner.claude-code.model-pins.requirements",
+              "boundary": "planner.provider.claude-code"
             }
           ],
           "sources": [
             {
-              "source_id": "instruction.fragment.task.claude-code",
-              "path": "packages/harness/configs/common/instructions/packages/task/claude-code.md",
-              "sha256": "cb168e9ab163b4732ca1cce91e6973ac57fab30ae88607a01af4774c8190b3b4"
+              "source_id": "instruction.fragment.planner.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/planner/claude-code.md",
+              "sha256": "8c50a73c77e685fc957080de32789cd52f2d624b2788592bdf41c9683ea2edf1"
             }
           ],
           "compatibility_assertions": [
@@ -2542,8 +2542,8 @@
           ]
         }
       ],
-      "cursor_target": "packages/task/.cursor-instructions.mdc",
-      "grok_target": "packages/task/.grok-instructions.md"
+      "cursor_target": "packages/planner/.cursor-instructions.mdc",
+      "grok_target": "packages/planner/.grok-instructions.md"
     },
     {
       "id": "artifex",

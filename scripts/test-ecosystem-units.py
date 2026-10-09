@@ -964,7 +964,7 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertEqual(self.run_script("check", "--strict").returncode, 1)
         baseline = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["violations"]
         self.assertTrue(any(k.startswith("import|packages/maind/") and k.endswith("|harness") for k in baseline))
-        self.assertTrue(any(k.startswith("import|packages/analyst/") and k.endswith("|task") for k in baseline))
+        self.assertTrue(any(k.startswith("import|packages/analyst/") and k.endswith("|planner") for k in baseline))
 
     def test_ownership_doc_is_current(self):
         self.assertEqual(self.run_script("render", "--check").returncode, 0)
@@ -977,7 +977,7 @@ class RealRepositoryTests(unittest.TestCase):
         data = json.loads(subprocess.run([sys.executable, str(SCRIPT), "list", "--json"], capture_output=True,
                                          text=True, cwd=ROOT).stdout)
         self.assertEqual(sorted(m["id"] for m in data["modules"]),
-                         ["aicore", "analyst", "brain", "harness", "maind", "orch", "skiller", "task"])
+                         ["aicore", "analyst", "brain", "harness", "maind", "orch", "planner", "skiller"])
         self.assertFalse((ROOT / "packages/artifex/unit.json").exists())
 
 
@@ -1095,7 +1095,7 @@ class StandaloneTests(unittest.TestCase):
 class RepositoryStandaloneTests(unittest.TestCase):
     def test_recorded_states(self):
         doc = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["standalone"]
-        self.assertEqual(set(doc), {"aicore", "analyst", "brain", "harness", "maind", "orch", "skiller", "task"})
+        self.assertEqual(set(doc), {"aicore", "analyst", "brain", "harness", "maind", "orch", "planner", "skiller"})
         self.assertEqual(doc["skiller"], "pass")
         self.assertTrue(set(doc.values()) <= set(eu.STANDALONE_STATES))
 

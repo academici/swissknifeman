@@ -11,7 +11,7 @@ from analyst.doctor import cmd_doctor
 from analyst.events import append_event, events_path, read_events
 from analyst.runs import migrate_legacy, neutral_run_report, normalize
 
-_TASK_LIB = Path(__file__).resolve().parents[2] / "task" / "lib"
+_PLANNER_LIB = Path(__file__).resolve().parents[2] / "planner" / "lib"
 
 
 class ProviderReaderTests(unittest.TestCase):
@@ -200,7 +200,7 @@ class ProviderReaderTests(unittest.TestCase):
 
 class DoctorPlanApiTests(unittest.TestCase):
     """P2.4: `analyst doctor` optionally reports
-    whether `task.plan` is importable — analyst does not depend on `task`
+    whether `planner.plan` is importable — analyst does not depend on `planner`
     hard, mirroring the existing optional `maind` check."""
 
     def _run_doctor(self):
@@ -212,21 +212,21 @@ class DoctorPlanApiTests(unittest.TestCase):
         return out.getvalue()
 
     def test_reports_available_when_task_lib_is_on_sys_path(self):
-        sys.path.insert(0, str(_TASK_LIB))
-        sys.modules.pop("task.plan", None)
-        sys.modules.pop("task", None)
+        sys.path.insert(0, str(_PLANNER_LIB))
+        sys.modules.pop("planner.plan", None)
+        sys.modules.pop("planner", None)
         try:
             text = self._run_doctor()
         finally:
-            sys.path.remove(str(_TASK_LIB))
-            sys.modules.pop("task.plan", None)
-            sys.modules.pop("task", None)
-        self.assertIn("✓ task.plan", text)
+            sys.path.remove(str(_PLANNER_LIB))
+            sys.modules.pop("planner.plan", None)
+            sys.modules.pop("planner", None)
+        self.assertIn("✓ planner.plan", text)
 
     def test_reports_optional_and_does_not_fail_the_verdict_when_absent(self):
-        sys.modules.pop("task.plan", None)
-        sys.modules.pop("task", None)
-        blocked = [p for p in sys.path if p.endswith("task/lib") or p == str(_TASK_LIB)]
+        sys.modules.pop("planner.plan", None)
+        sys.modules.pop("planner", None)
+        blocked = [p for p in sys.path if p.endswith("planner/lib") or p == str(_PLANNER_LIB)]
         for p in blocked:
             sys.path.remove(p)
         try:
@@ -234,7 +234,7 @@ class DoctorPlanApiTests(unittest.TestCase):
         finally:
             for p in blocked:
                 sys.path.insert(0, p)
-        self.assertIn("· task.plan", text)
+        self.assertIn("· planner.plan", text)
         self.assertIn("The environment is ready.", text)
 
 

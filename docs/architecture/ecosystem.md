@@ -51,23 +51,23 @@ swissknifeman/                      # the hub repository
 
 `core/` dissolves into `aicore` and `analyst` (the shared code is already in `packages/aicore`; `core/` keeps a
 compatibility shim and the modules of later stages, see [ADR 0028](decisions/0028-aicore-subsystems-and-core-shim.md)); `packages/artifex` is retired and stays in history by tag;
-`packages/task` becomes `packages/planner`; the root research folder of orchestration moves into
+`packages/planner` becomes `packages/planner`; the root research folder of orchestration moves into
 `packages/orch/docs/research/`. Until a module is moved, the transitional roots (`core/`, `orch/`, `packages/artifex/`,
-`packages/task/`) are covered by the ownership map. The legacy driver `harness/run` stays until `orch` reaches parity.
+`packages/planner/`) are covered by the ownership map. The legacy driver `harness/run` stays until `orch` reaches parity.
 
 ### Modules
 
 | Module | Purpose | Depends on | Built from (current paths) |
 | --- | --- | --- | --- |
-| `aicore` | foundation | none | exists: `core/*` except analytics, `core/provider/*`, `core/usage.py` and `configs/provider-*.json` moved in; still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `task` command rendering |
+| `aicore` | foundation | none | exists: `core/*` except analytics, `core/provider/*`, `core/usage.py` and `configs/provider-*.json` moved in; still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `planner` command rendering |
 | `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
-| `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/task` |
+| `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/planner` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch`, root `orch/` |
 | `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus `topology`, `listing`, `state` from `skiller` |
 | `analyst` | analytics, lessons, traces | `aicore` | `packages/analyst` plus `runs`, `pathology`, `codegraph_telemetry` from `core` |
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
-| `bridges/*` | glue between modules | both sides through their CLI | the bridges now inside `task` and `orch` |
+| `bridges/*` | glue between modules | both sides through their CLI | the bridges now inside `planner` and `orch` |
 | hub root | assembly, install, update, docs, CI | all modules | `bin/`, `scripts/`, `configs/`, `bootstrap/`, `docs/` |
 
 The file-level map, with the stage that moves each entry and a confidence mark, is generated into
@@ -182,7 +182,7 @@ knows no bucket or host moved into `aicore.content`, `aicore.delivery` and `aico
   and the `skiller` commands over the moved functions. Delivery to the fleet, `host.py` and the root bootstrap are hub
   work (P12); `lock.py` and `resolve.py` meet the orch bridge (P10); `topology`, `listing` and `state` go to `maind`
   (P11), `brain_sync` to `brain` (P7); the skills move with their modules (P8).
-- `task`: the catalog of commands, routing and the wrapper texts of command projection (P9); only the shared part is in
+- `planner`: the catalog of commands, routing and the wrapper texts of command projection (P9); only the shared part is in
   `aicore.content.commands`.
 - `harness`: rendering of instruction projections (P11).
 
@@ -343,7 +343,7 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   `planner.decision.accepted`.
 - **Does not own:** model names (`aicore.provider`), launch argv (`orch`), delivery into projects (`aicore.delivery`),
   projection of commands to Codex, Grok and Cursor (`aicore.content`).
-- **Rename:** `/task:*` becomes `/planner:*` and `SKM_TASK_ROOT` becomes `PLANNER_ROOT`, with transitional aliases
+- **Rename:** `/planner:*` becomes `/planner:*` and `PLANNER_ROOT` becomes `PLANNER_ROOT`, with transitional aliases
   ([ADR 0009](decisions/0009-task-renamed-to-planner.md)).
 
 ### orch
@@ -472,7 +472,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
   backup, hook and MCP paths rewritten;
 - everything changed is backed up and can be rolled back.
 
-Compatibility: plan schemas and URNs do not change; aliases of `/task:*` and the old environment variables work for one
+Compatibility: plan schemas and URNs do not change; aliases of `/planner:*` and the old environment variables work for one
 minor release with a warning. The guide `docs/upgrade/<version>.md` lists requirements, backup, dry-run, apply, the
 `doctor` check, rollback and the steps for the second computer. The upgrade is rehearsed on copies of projects in a
 sandbox and on the second computer; only then is the branch merged and a major version tagged.

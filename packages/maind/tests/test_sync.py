@@ -210,7 +210,7 @@ class TestProviderContexts(unittest.TestCase):
             for package in ("skiller", "harness", "maind"):
                 self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
                 self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
-            for package in ("analyst", "task"):
+            for package in ("analyst", "planner"):
                 self.assertFalse((project / "packages" / package / "CLAUDE.md").exists())
                 self.assertFalse((project / "packages" / package / "AGENTS.md").exists())
             second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
@@ -223,18 +223,18 @@ class TestProviderContexts(unittest.TestCase):
             context = sync.contexts(env, config, config["projects"])[0]
             self.assertEqual(sync._instruction_scope_ids(context), ("root",))
 
-            for package in ("skiller", "harness", "maind", "task"):
+            for package in ("skiller", "harness", "maind", "planner"):
                 (project / "packages" / package).mkdir(parents=True)
             linked = Path(tmp) / "linked-analyst"
             linked.mkdir()
             (project / "packages" / "analyst").symlink_to(linked, target_is_directory=True)
             self.assertEqual(sync._instruction_scope_ids(context),
-                             ("root", "skiller", "harness", "maind", "task"))
+                             ("root", "skiller", "harness", "maind", "planner"))
 
             (project / "packages" / "analyst").unlink()
             (project / "packages" / "analyst").mkdir()
             self.assertEqual(sync._instruction_scope_ids(context),
-                             ("root", "skiller", "harness", "maind", "analyst", "task"))
+                             ("root", "skiller", "harness", "maind", "analyst", "planner"))
 
     def test_instruction_provisioner_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as tmp:

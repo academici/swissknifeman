@@ -31,7 +31,7 @@ CAPABILITIES = {
     "env:mcp":       ("harness", ["mcp", "--target", "{path}"], True),
     "env:hooks":     ("harness", ["hooks", "--target", "{path}"], True),
     # features catalog intent-router (.claude/agent-router.config.json) from
-    # delivered agents + local skills + /task:*; provider router-config in sync.
+    # delivered agents + local skills + /planner:*; provider router-config in sync.
     "env:router":    ("harness", ["router", "--generate", "--target", "{path}"], True),
     # deterministic delivery of a pack of subagents (--pack comes to extra):
     # render --auto resolves interviews without an agent; upgrade — version upgrade.

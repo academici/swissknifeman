@@ -41,9 +41,9 @@ Distributing registry skills to the project.
   `composer.json` → php-package, otherwise standalone), is overridden by flags.
 - **By default in EVERY project** (connect) are added, in addition to the profile:
   - curated plugin `core` (lightweight token-saving core CORE-skills; `--no-core` disables);
-  - command plugin **`task`** — intent commands `/task:design|dev|review|research|fix` (kick
+  - command plugin **`planner`** — intent commands `/planner:design|dev|review|research|fix` (kick
     model/effort for the task; offers them intent-router). Disable point by point -
-    `enabledPlugins["task@swissknifeman"]=false`. Availability checks `maind audit` (dimension `core`).
+    `enabledPlugins["planner@swissknifeman"]=false`. Availability checks `maind audit` (dimension `core`).
 - Handles: `skiller connect` / `skiller vendor --agent cursor`.
 
 ### 2. Permissions-presets

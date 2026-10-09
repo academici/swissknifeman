@@ -27,7 +27,7 @@ layer is saved legacy-mode only for Claude Code. Self-host checkout
 uses thin Codex marketplace, and external connect-project receives
 repo-contained marketplace and self-contained bundles only selected plugins,
 including runtime-skill files (`snippets/`, `references/`, scripts/assets).
-Project publication does not change user-level plugin state: basic `core` + `task`
+Project publication does not change user-level plugin state: basic `core` + `planner`
 sets machine `install.sh`, and profile Codex plugins are added only
 explicitly. Native manifest each bucket lists skill-directories explicitly, so Codex
 reveals them after installation. Dual-selection passes preflight all provider-targets
@@ -45,7 +45,7 @@ Machine installation registers the current checkout's marketplace in Codex.
 Its default plugin selection combines CORE policy with the host's
 `default_command_plugins`. Grok installs the sources and optional holds declared
 in `machine_plugins.grok` with `--trust`; standalone has no host machine plugins.
-The ecosystem host supplies Task (`/task:*`) and `prefix-hold`.
+The ecosystem host supplies planner (`/planner:*`) and `prefix-hold`.
 If a provider CLI is missing, its step is skipped.
 `--no-codex-plugins` and `--no-grok-plugins` opt out. Add a global Codex plugin
 with repeatable `./install.sh --codex-plugin NAME`.

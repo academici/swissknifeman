@@ -31,7 +31,7 @@ from core.provider.lock import (
 CONTRACT_VERSION = "1.0.0"
 CATALOG_VERSION = "1.5.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
-SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex", "brain")
+SCOPES = ("root", "skiller", "harness", "maind", "analyst", "planner", "artifex", "brain")
 _SCOPE_TARGET_KEYS = {
     "claude-code": "claude_target",
     "codex": "codex_target",
@@ -64,10 +64,10 @@ TARGETS = {
         "cursor": "packages/analyst/.cursor-instructions.mdc",
         "grok": "packages/analyst/.grok-instructions.md",
     },
-    "task": {
-        "claude-code": "packages/task/CLAUDE.md", "codex": "packages/task/AGENTS.md",
-        "cursor": "packages/task/.cursor-instructions.mdc",
-        "grok": "packages/task/.grok-instructions.md",
+    "planner": {
+        "claude-code": "packages/planner/CLAUDE.md", "codex": "packages/planner/AGENTS.md",
+        "cursor": "packages/planner/.cursor-instructions.mdc",
+        "grok": "packages/planner/.grok-instructions.md",
     },
     "artifex": {
         "claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md",
@@ -102,9 +102,9 @@ COMMON_IDS = {
     "analyst": ("analyst.identity-human-gate", "analyst.layer-boundary", "analyst.layout",
                 "analyst.module-boundaries", "analyst.data-lifecycle", "analyst.privacy",
                 "analyst.engineering-invariants", "analyst.validation-release"),
-    "task": ("task.identity", "task.command-catalog", "task.plan-protocol", "task.plan-files",
-             "task.layout", "task.schema-ownership", "task.engineering-invariants",
-             "task.validation-release"),
+    "planner": ("planner.identity", "planner.command-catalog", "planner.plan-protocol", "planner.plan-files",
+                "planner.layout", "planner.schema-ownership", "planner.engineering-invariants",
+                "planner.validation-release"),
     "artifex": ("artifex.identity", "artifex.layout", "artifex.runtime-boundaries",
                  "artifex.provenance", "artifex.engineering-invariants",
                  "artifex.validation-release"),
@@ -139,8 +139,8 @@ EXTENSION_IDS = {
                                "maind.claude-code.workspace-trust"),
     ("analyst", "claude-code"): ("analyst.claude-code.capture-surfaces",
                                  "analyst.claude-code.plugin"),
-    ("task", "claude-code"): ("task.claude-code.slash-projection",
-                              "task.claude-code.model-pins"),
+    ("planner", "claude-code"): ("planner.claude-code.slash-projection",
+                                 "planner.claude-code.model-pins"),
     ("artifex", "claude-code"): ("artifex.claude-code.package-scope",),
     ("artifex", "codex"): ("artifex.codex.package-scope",),
 }

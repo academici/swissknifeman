@@ -91,9 +91,9 @@ class GenerateCatalogCase(unittest.TestCase):
         (claude / "skills" / "sales-report" / "SKILL.md").write_text(
             '---\nname: sales-report\ndescription: "Local sales reporting skill"\n'
             "---\nbodysuit\n")
-        (claude / "skills" / "task-dev").mkdir()
-        (claude / "skills" / "task-dev" / "SKILL.md").write_text(
-            "---\nname: task-dev\ndescription: Implement features\n---\n")
+        (claude / "skills" / "planner-dev").mkdir()
+        (claude / "skills" / "planner-dev" / "SKILL.md").write_text(
+            "---\nname: planner-dev\ndescription: Implement features\n---\n")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -148,9 +148,9 @@ class HookBehaviorCase(unittest.TestCase):
             claude = root / ".claude"
             claude.mkdir()
             (claude / "agent-router.config.json").write_text(json.dumps({
-                "policy": "STOP-GATE: always use /task:dev",
-                "commands": [{"name": "/task:dev", "keywords": ["implement", "feature"]}],
-                "skills": [{"name": "skill:task-fix", "keywords": ["implement", "feature"]}],
+                "policy": "STOP-GATE: always use /planner:dev",
+                "commands": [{"name": "/planner:dev", "keywords": ["implement", "feature"]}],
+                "skills": [{"name": "skill:planner-fix", "keywords": ["implement", "feature"]}],
             }))
             for mode in ("propose", "auto_dispatch"):
                 (claude / "agent-router.env.ini").write_text(f"POLICY={mode}\n")

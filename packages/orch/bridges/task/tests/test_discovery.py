@@ -1,4 +1,4 @@
-"""Discovery order of the Task package: env → neighbour → monorepo ancestor → TASK_UNAVAILABLE."""
+"""Discovery order of the planner package: env → neighbour → monorepo ancestor → PLANNER_UNAVAILABLE."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,19 +15,19 @@ if str(BRIDGE) not in sys.path:
 import discovery  # noqa: E402
 
 
-def make_task(root: Path) -> Path:
+def make_planner(root: Path) -> Path:
     (root / "scripts").mkdir(parents=True)
     (root / "scripts" / "plan.py").write_text("", encoding="utf-8")
     (root / "configs").mkdir()
     return root
 
 
-class TaskRoot(unittest.TestCase):
+class PlannerRoot(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name).resolve()
         self.addCleanup(self._tmp.cleanup)
-        env = {k: v for k, v in os.environ.items() if k != discovery.TASK_ROOT_ENV}
+        env = {k: v for k, v in os.environ.items() if k != discovery.PLANNER_ROOT_ENV}
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -36,39 +36,39 @@ class TaskRoot(unittest.TestCase):
         return mock.patch.object(discovery, "orch_root", return_value=self.tmp / "nowhere" / "orch")
 
     def test_env_wins(self):
-        task = make_task(self.tmp / "custom")
-        with mock.patch.dict(os.environ, {discovery.TASK_ROOT_ENV: str(task)}):
-            self.assertEqual(discovery.task_root(), task)
-            self.assertEqual(discovery.plan_script(), task / "scripts" / "plan.py")
-            self.assertEqual(discovery.routing_path(), task / "configs" / "command-routing.json")
+        planner = make_planner(self.tmp / "custom")
+        with mock.patch.dict(os.environ, {discovery.PLANNER_ROOT_ENV: str(planner)}):
+            self.assertEqual(discovery.planner_root(), planner)
+            self.assertEqual(discovery.plan_script(), planner / "scripts" / "plan.py")
+            self.assertEqual(discovery.routing_path(), planner / "configs" / "command-routing.json")
 
     def test_invalid_env_falls_to_neighbour(self):
         orch = self.tmp / "packages" / "orch"
         orch.mkdir(parents=True)
-        neighbour = make_task(self.tmp / "packages" / "task")
-        with mock.patch.dict(os.environ, {discovery.TASK_ROOT_ENV: str(self.tmp / "missing")}), \
+        neighbour = make_planner(self.tmp / "packages" / "planner")
+        with mock.patch.dict(os.environ, {discovery.PLANNER_ROOT_ENV: str(self.tmp / "missing")}), \
                 mock.patch.object(discovery, "orch_root", return_value=orch):
-            self.assertEqual(discovery.task_root(), neighbour)
+            self.assertEqual(discovery.planner_root(), neighbour)
 
     def test_neighbour_of_installation(self):
         orch = self.tmp / "pkgs" / "orch"
         orch.mkdir(parents=True)
-        neighbour = make_task(self.tmp / "pkgs" / "task")
+        neighbour = make_planner(self.tmp / "pkgs" / "planner")
         with mock.patch.object(discovery, "orch_root", return_value=orch):
-            self.assertEqual(discovery.task_root(self.tmp), neighbour)
+            self.assertEqual(discovery.planner_root(self.tmp), neighbour)
 
     def test_monorepo_ancestor_of_start(self):
-        task = make_task(self.tmp / "repo" / "packages" / "task")
+        planner = make_planner(self.tmp / "repo" / "packages" / "planner")
         start = self.tmp / "repo" / "plans" / "P1"
         start.mkdir(parents=True)
         with self.no_neighbour():
-            self.assertEqual(discovery.task_root(start), task)
+            self.assertEqual(discovery.planner_root(start), planner)
 
-    def test_nothing_found_is_task_unavailable(self):
-        with self.no_neighbour(), self.assertRaises(discovery.TaskUnavailable) as caught:
-            discovery.task_root(self.tmp)
-        self.assertIn("TASK_UNAVAILABLE", str(caught.exception))
-        self.assertIn(discovery.TASK_ROOT_ENV, str(caught.exception))
+    def test_nothing_found_is_planner_unavailable(self):
+        with self.no_neighbour(), self.assertRaises(discovery.PlannerUnavailable) as caught:
+            discovery.planner_root(self.tmp)
+        self.assertIn("PLANNER_UNAVAILABLE", str(caught.exception))
+        self.assertIn(discovery.PLANNER_ROOT_ENV, str(caught.exception))
 
     def test_orch_root_is_the_orch_package(self):
         self.assertTrue((discovery.orch_root() / "bridges" / "task" / "bridge.json").is_file())

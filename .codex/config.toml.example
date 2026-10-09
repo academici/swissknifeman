@@ -130,6 +130,9 @@ enabled = false
 [plugins."php-packages@swissknifeman"]
 enabled = false
 
+[plugins."planner@swissknifeman"]
+enabled = true
+
 [plugins."pm@swissknifeman"]
 enabled = false
 
@@ -156,9 +159,6 @@ enabled = false
 
 [plugins."system@swissknifeman"]
 enabled = false
-
-[plugins."task@swissknifeman"]
-enabled = true
 
 [plugins."voice-ai@swissknifeman"]
 enabled = false

@@ -37,17 +37,17 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Plugin describe `plugin-describe/v1` | `urn:swissknifeman:aicore:plugin-describe:v1`, `packages/aicore/schemas/plugin-describe/v1` | aicore (ext) | development | protocol `1`; no cache |
 | Telemetry conventions `telemetry-conventions/v1` | `urn:swissknifeman:aicore:telemetry-conventions:v1`, `packages/aicore/schemas/telemetry-conventions/v1` | aicore (ext) | development | names only, no exporter; modules adopt them: P10, P11 ([ADR 0045](decisions/0045-telemetry-naming-conventions.md)) |
 | Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
-| Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/task/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
+| Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/planner/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
 | Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
 
 ### Contracts that exist only as data or code
 
 | Contract | `$id` / carrier | Owner | Stability | Gap and closing stage |
 | --- | --- | --- | --- | --- |
-| Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/task/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
+| Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/planner/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
 | Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1`, `packages/orch/bridges/*/bridge.json` | orch | alpha | no schema file; unify the two descriptors in the bridges stage: P10 |
 | Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; the files moved into `aicore` unchanged and the schema is still open |
-| Model catalog (transitional copy) | `mappings.<provider>` in `packages/task/configs/command-routing.json` | planner | development | equal to the aicore catalog (parity test); removed in P9 |
+| Model catalog (transitional copy) | `mappings.<provider>` in `packages/planner/configs/command-routing.json` | planner | development | equal to the aicore catalog (parity test); removed in P9 |
 
 ### Inventory of execution contracts
 
@@ -226,7 +226,7 @@ are additive in the same way.
 | Upcast | none |
 | Deprecation window | set with `v2`; URNs do not change with the module rename |
 | Unknown fields | rejected |
-| Fixtures | `packages/task/tests/engine/fixtures/{valid,invalid}` and the synthetic demo plans |
+| Fixtures | `packages/planner/tests/engine/fixtures/{valid,invalid}` and the synthetic demo plans |
 
 ### Bridge descriptors (`bridge.json`)
 

@@ -27,7 +27,7 @@ export default withMermaid(defineConfig({
       { text: 'Vault', link: '/brain/', activeMatch: '/brain/' },
       { text: 'References', link: '/reference', activeMatch: '/reference' },
       { text: 'core', link: '/core/', activeMatch: '/core/' },
-      { text: 'task', link: '/task/', activeMatch: '/task/' },
+      { text: 'planner', link: '/planner/', activeMatch: '/planner/' },
       { text: 'orch', link: '/orch/', activeMatch: '/orch/' },
     ],
 
@@ -243,18 +243,18 @@ export default withMermaid(defineConfig({
         },
       ],
 
-      '/task/': [
+      '/planner/': [
         {
-          text: 'Intent commands (task)',
-          items: [{ text: 'Overview: /task:* commands', link: '/task/' }],
+          text: 'Intent commands (planner)',
+          items: [{ text: 'Overview: /planner:* commands', link: '/planner/' }],
         },
         {
           text: 'Methodology plan-protocol',
           items: [
-            { text: 'Full cycle', link: '/task/methodology' },
-            { text: 'Plan Structure', link: '/task/plan-structure' },
-            { text: 'Templates', link: '/task/templates' },
-            { text: 'Constructor workflow', link: '/task/workflows' },
+            { text: 'Full cycle', link: '/planner/methodology' },
+            { text: 'Plan Structure', link: '/planner/plan-structure' },
+            { text: 'Templates', link: '/planner/templates' },
+            { text: 'Constructor workflow', link: '/planner/workflows' },
           ],
         },
       ],
@@ -328,7 +328,7 @@ export default withMermaid(defineConfig({
             { text: 'Learning — analyst', link: '/analyst/' },
             { text: 'Vault — brain', link: '/brain/' },
             { text: 'Foundation — core', link: '/core/' },
-            { text: 'Intent commands — task', link: '/task/' },
+            { text: 'Intent commands — planner', link: '/planner/' },
           ],
         },
       ],

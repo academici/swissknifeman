@@ -8,8 +8,8 @@
 #   ./install.sh [--bin-dir DIR] [--force] [--no-codex-plugins] [--no-grok-plugins]
 #   --bin-dir DIR   where to put symlinks (default ~/.local/bin)
 #   --force         overwrite other people's symlinks without asking
-#   --no-codex-plugins  do not install basic Codex-plugins core + task
-#   --no-grok-plugins   do not install the Grok task plugin
+#   --no-codex-plugins  do not install basic Codex-plugins core + planner
+#   --no-grok-plugins   do not install the Grok planner plugin
 set -euo pipefail
 # --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
 _skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
@@ -45,7 +45,7 @@ mkdir -p "$BIN_DIR"
 
 # Delegating the installation of batch CLI their own install.sh (there is a batch
 # post-configuration: maind — npm/service options; skiller — topology; harness — stateless).
-# `task` in the list NOT deliberately: it does not have bin/CLI/install.sh — this plugin-only
+# `planner` in the list NOT deliberately: it does not have bin/CLI/install.sh — this plugin-only
 # package (only slash-commands), is delivered via marketplace/vendor skiller-channel.
 fwd=(); $FORCE && fwd+=(--force); fwd+=(--bin-dir "$BIN_DIR")
 echo "Installation CLI packages (bin-dir: $BIN_DIR):"

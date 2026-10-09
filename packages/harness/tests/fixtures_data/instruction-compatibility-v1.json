@@ -13,13 +13,13 @@
       ],
       "assertions": [
         "`swissknifeman` is the umbrella repository and control layer",
-        "`skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages.",
+        "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages.",
         "`swissknifeman`",
         "`skiller`",
         "`harness`",
         "`maind`",
         "`analyst`",
-        "`task`",
+        "`planner`",
         "names are not roles"
       ]
     },
@@ -44,9 +44,9 @@
       ],
       "assertions": [
         "Read the relevant package guide before changing `packages/<name>/`",
-        "`task` remains plugin-only and has no standalone CLI.",
+        "`planner` remains plugin-only and has no standalone CLI.",
         "`packages/<name>/`",
-        "`task`",
+        "`planner`",
         "maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`"
       ]
     },
@@ -58,13 +58,13 @@
       ],
       "assertions": [
         "Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router",
-        "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group.",
+        "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group.",
         "`swissknifeman skills|env|maind|analyst|setup|doctor`",
         "`skiller`",
         "`harness`",
         "`maind`",
         "`analyst`",
-        "`task`",
+        "`planner`",
         "cross-package onboarding lives once in `maind/onboard.py`",
         "the umbrella owns the `swissknifeman` launcher alias"
       ]
@@ -120,7 +120,7 @@
         "codex"
       ],
       "assertions": [
-        "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
+        "Planner commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate planner."
       ]
     },
     {
@@ -284,7 +284,7 @@
         "canonical skill and command content stays under `packages/skiller/skills/`",
         "`.agents/skills/*`",
         "`packages/skiller/skills/`",
-        "`packages/task/commands/`"
+        "`packages/planner/commands/`"
       ]
     },
     {
@@ -302,7 +302,7 @@
         "codex"
       ],
       "assertions": [
-        "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
+        "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Planner workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
       ]
     },
     {
@@ -912,20 +912,20 @@
       ]
     },
     {
-      "id": "task.identity",
+      "id": "planner.identity",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "`task` is the plugin-only package for task-intent commands and executable plan protocol",
+        "`planner` is the plugin-only package for task-intent commands and executable plan protocol",
         "it has no `bin/`, standalone CLI, or installer.",
-        "`task`",
+        "`planner`",
         "`bin/`"
       ]
     },
     {
-      "id": "task.command-catalog",
+      "id": "planner.command-catalog",
       "provider_ids": [
         "claude-code",
         "codex"
@@ -937,7 +937,7 @@
       ]
     },
     {
-      "id": "task.plan-protocol",
+      "id": "planner.plan-protocol",
       "provider_ids": [
         "claude-code",
         "codex"
@@ -949,34 +949,34 @@
       ]
     },
     {
-      "id": "task.plan-files",
+      "id": "planner.plan-files",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
+        "Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
         "`plan.json`",
-        "`python3 <task>/scripts/plan.py`",
+        "`python3 <planner>/scripts/plan.py`",
         "`plan.py next|show|context`"
       ]
     },
     {
-      "id": "task.layout",
+      "id": "planner.layout",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
+        "Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
         "`commands/`",
-        "`lib/task/plan/`",
+        "`lib/planner/plan/`",
         "`scripts/plan.py`",
         "`tests/`"
       ]
     },
     {
-      "id": "task.schema-ownership",
+      "id": "planner.schema-ownership",
       "provider_ids": [
         "claude-code",
         "codex"
@@ -989,39 +989,39 @@
       ]
     },
     {
-      "id": "task.engineering-invariants",
+      "id": "planner.engineering-invariants",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
-        "`lib/task/`"
+        "Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
+        "`lib/planner/`"
       ]
     },
     {
-      "id": "task.validation-release",
+      "id": "planner.validation-release",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.",
-        "`bash packages/task/scripts/validate.sh`"
+        "Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.",
+        "`bash packages/planner/scripts/validate.sh`"
       ]
     },
     {
-      "id": "task.claude-code.slash-projection",
+      "id": "planner.claude-code.slash-projection",
       "provider_ids": [
         "claude-code"
       ],
       "assertions": [
-        "Claude Code projects the Task command catalog as `/task:*` commands.",
-        "`/task:*`"
+        "Claude Code projects the planner command catalog as `/planner:*` commands.",
+        "`/planner:*`"
       ]
     },
     {
-      "id": "task.claude-code.model-pins",
+      "id": "planner.claude-code.model-pins",
       "provider_ids": [
         "claude-code"
       ],

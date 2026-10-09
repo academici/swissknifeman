@@ -80,8 +80,8 @@ def credit(path: str) -> set[str]:
     m = re.match(r"^packages/([^/]+)/docs/", path)
     if m:
         return {"pkg:" + m.group(1)}
-    if path.startswith("docs/task/"):
-        return {"pkg:task"}
+    if path.startswith("docs/planner/"):
+        return {"pkg:planner"}
     if path.startswith("docs/core/"):
         return {"core", "pkg:aicore"}
     if path.startswith("docs/architecture/"):
@@ -96,8 +96,8 @@ def docs_hint(klass: str) -> str:
         return SURFACE_DOCS_HINT[klass]
     if klass.startswith("pkg:"):
         pkg = klass[len("pkg:"):]
-        if pkg == "task":
-            return f"packages/{pkg}/docs/** or docs/task/**"
+        if pkg == "planner":
+            return f"packages/{pkg}/docs/** or docs/planner/**"
         return f"packages/{pkg}/docs/**"
     if klass == "root":
         return "docs/*.md (top level)"

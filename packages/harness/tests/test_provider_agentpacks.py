@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "configs/common/agent-packs/roles.json"
 BINDINGS = ROOT / "configs/claude-code/agent-packs/role-bindings.json"
 CURSOR_MAPPING = ROOT / "configs/cursor/agent-packs/consumer-mapping.json"
-FORBIDDEN = re.compile(r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
+FORBIDDEN = re.compile(r"\.claude(?:/|\b)|(?<![\w-])/(?:planner|task):[a-z-]+|(?<![\w-])/(?:effort|clear)\b|"
                        r"\bWorkflow\b|\bSubagentStop\b|"
                        r"(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write)(?![\w-])")
 

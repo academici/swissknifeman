@@ -1216,10 +1216,10 @@ _CODEX_ROUTER_CATALOG_PATH = ("packages/harness/configs/claude-code/hooks/"
 
 def _codex_router_catalog():
     """Read the same catalog `~/.claude/hooks/agent-router/config.json` uses and project
-    its command names into Codex's own bare invocation form (`task:x`, not `/task:x`)."""
+    its command names into Codex's own bare invocation form (`planner:x`, not `/planner:x`)."""
     root = Path(__file__).resolve().parents[4]
     catalog = json.loads((root / _CODEX_ROUTER_CATALOG_PATH).read_text(encoding="utf-8"))
-    commands = [{"name": entry["name"].replace("/task:", "task:", 1),
+    commands = [{"name": entry["name"].replace("/planner:", "planner:", 1),
                 "weight": entry.get("weight", 1), "keywords": entry["keywords"]}
                for entry in catalog.get("commands", [])]
     hint_template = catalog.get(

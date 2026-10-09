@@ -36,18 +36,18 @@ def codex_migrated_command_skill(source: Path, relative_path: str) -> bytes | No
 
 
 def codex_task_plugin_root_expression() -> str:
-    """Return the shared task runtime from the configured SKM marketplace.
+    """Return the shared planner runtime from the configured SKM marketplace.
 
     Codex's marketplace cache deliberately contains only declared skills, not
-    the task Python runtime.  Project-selected skills therefore link to the
+    the planner Python runtime.  Project-selected skills therefore link to the
     canonical marketplace checkout; this locator discovers that single shared
-    checkout and never falls back to a consumer-local `packages/task` copy.
+    checkout and never falls back to a consumer-local `packages/planner` copy.
     """
     return (
         "$(codex plugin marketplace list --json | python3 -c "
         "'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item[\"root\"] "
         "for item in data.get(\"marketplaces\", []) if item.get(\"name\")==\"swissknifeman\" "
-        "and (pathlib.Path(item[\"root\"])/\"packages/task/lib/task\").is_dir()]; "
-        "len(roots)==1 or sys.exit(\"task runtime unavailable: expected one marketplace "
-        "root with packages/task/lib/task\"); print(roots[0]+\"/packages/task\")')"
+        "and (pathlib.Path(item[\"root\"])/\"packages/planner/lib/planner\").is_dir()]; "
+        "len(roots)==1 or sys.exit(\"planner runtime unavailable: expected one marketplace "
+        "root with packages/planner/lib/planner\"); print(roots[0]+\"/packages/planner\")')"
     )

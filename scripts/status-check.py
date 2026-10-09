@@ -20,7 +20,7 @@ PACKAGE_DIRS = {
     "harness": "packages/harness",
     "maind": "packages/maind",
     "analyst": "packages/analyst",
-    "task": "packages/task",
+    "planner": "packages/planner",
     "core": "core",
     "aicore": "packages/aicore",
 }

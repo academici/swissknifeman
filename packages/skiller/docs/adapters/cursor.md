@@ -109,16 +109,16 @@ agent --workspace <repo-cwd> \
 
 - `--workspace`, not `-C` (freeze E3).
 - Model pin: `composer-2.5-fast` / `composer-2.5` / `claude-opus-5-thinking-high` — see
-  [Provider model roles](/task/reference/provider-model-roles).
+  [Provider model roles](/planner/reference/provider-model-roles).
 - `auto` **not** replaces fixed frontier/implementation pin.
 
 IDE checklist (trusted): workspace root → Run Everything → MCP health → pinned model.
 
 ## Models and Auto
 
-Hand-verified inventory in the Task package's `configs/command-routing.json` →
+Hand-verified inventory in the planner package's `configs/command-routing.json` →
 `mappings.cursor.model_inventory`. Full guide (pins + inventory + Auto policy):
-[Provider model roles](/task/reference/provider-model-roles).
+[Provider model roles](/planner/reference/provider-model-roles).
 
 ## Delta-skill files
 
@@ -128,18 +128,18 @@ Main `SKILL.md` remains provider-neutral. Format - in
 
 ## Diagnostics
 
-For the optional Task projection check, set `TASK_ROOT` to the installed Task
+For the optional planner projection check, set `PLANNER_ROOT` to the installed planner
 package directory and `SWISSKNIFEMAN_ROOT` to its host repository.
 
 ```bash
 skiller budget --provider cursor --target .
 maind health --cwd
 harness doctor --settings --provider cursor --target .
-python3 "$TASK_ROOT/scripts/render-provider-commands.py" --check --root "$SWISSKNIFEMAN_ROOT"
+python3 "$PLANNER_ROOT/scripts/render-provider-commands.py" --check --root "$SWISSKNIFEMAN_ROOT"
 ```
 
 ## See also
 
 - [Harness setup: Cursor](/harness/setup/cursor) — permissions, MCP, profiles
-- [Provider model roles](/task/reference/provider-model-roles) — design/exec/audit/economy
-- [Provider commands](/task/reference/provider-commands) — generated command projections
+- [Provider model roles](/planner/reference/provider-model-roles) — design/exec/audit/economy
+- [Provider commands](/planner/reference/provider-commands) — generated command projections

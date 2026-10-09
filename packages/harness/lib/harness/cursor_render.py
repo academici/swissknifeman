@@ -113,7 +113,7 @@ class _CursorRule:
 # Rule bodies are projected from existing canons:
 # - catalog-backed instruction sections (`root.cursor.*`);
 # - observe profile policy (`_IDE_PERMISSIONS["observe"]`);
-# - command routing mapping (`packages/task/configs/command-routing.json`).
+# - command routing mapping (`packages/planner/configs/command-routing.json`).
 # Only frontmatter lives directly in this table.
 _RULES = (
     _CursorRule(".cursor/rules/swissknifeman-core.mdc",
@@ -241,10 +241,10 @@ def _router_rule_section(semantic_id: str, root: Path | None) -> bytes:
     )
     text = (
         f"<!-- semantic:{semantic_id} -->\n"
-        "## Cursor Task routing (explicit invocation only)\n\n"
-        "This managed rule is generated from `packages/task/configs/command-routing.json`.\n"
-        "Apply only when the owner explicitly invokes Task or attaches this manual rule.\n"
-        "Ordinary requests and existing plan files do not activate Task.\n\n"
+        "## Cursor planner routing (explicit invocation only)\n\n"
+        "This managed rule is generated from `packages/planner/configs/command-routing.json`.\n"
+        "Apply only when the owner explicitly invokes planner or attaches this manual rule.\n"
+        "Ordinary requests and existing plan files do not activate planner.\n\n"
         f"{fixed_rows}\n"
         f"- Model selectors: {classes}.\n"
         "- Never replace fixed frontier or fixed implementation routes with `auto`.\n"
@@ -254,9 +254,9 @@ def _router_rule_section(semantic_id: str, root: Path | None) -> bytes:
 
 def _cursor_routing_catalog(root: Path | None) -> dict:
     repo_root = Path(root) if root is not None else Path(__file__).resolve().parents[4]
-    candidate = repo_root / "packages/task/configs/command-routing.json"
+    candidate = repo_root / "packages/planner/configs/command-routing.json"
     if not candidate.is_file():
-        candidate = Path(__file__).resolve().parents[4] / "packages/task/configs/command-routing.json"
+        candidate = Path(__file__).resolve().parents[4] / "packages/planner/configs/command-routing.json"
     value = json.loads(candidate.read_text(encoding="utf-8"))
     if ("commands" not in value or "mappings" not in value
             or "cursor" not in value["mappings"]):

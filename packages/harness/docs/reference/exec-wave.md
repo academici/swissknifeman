@@ -8,18 +8,18 @@ the worker physically could not. The driver does not make decisions - he produce
 
 ## What it does
 
-- **`plan_reader`** reads the execution queue of ONE phase through the Task plan API
+- **`plan_reader`** reads the execution queue of ONE phase through the planner plan API
   (`plan.py show <plan> <Pn>|<Pn.m> --json`, `plan.py next <plan> --json`): terminal items
   (`done`, `done_with_deviations`, `skipped`) are excluded; for each remaining item - route
   (`item.route`), status and drivability. An item is driven when the phase is `detailed`, the item
   is not `blocked` and its route resolves; otherwise the refusal is named (`PHASE-NOT-DETAILED`,
   `ITEM-BLOCKED`, `ROUTING-UNRESOLVED`). Semantic `next_form` is the plan's `next` step. Nothing
   parses plan Markdown.
-- **`worker`** starts ONE item process `claude -p "/task:plan-run
+- **`worker`** starts ONE item process `claude -p "/planner:plan-run
   &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` under timeout (default 1800s),
   strictly one worker at a time (serial wave - parallel fan-out on
   common codebase does not start). Model selectors/effort are taken from
-  `packages/task/configs/command-routing.json`.
+  `packages/planner/configs/command-routing.json`.
 - **`gate`** gives a verdict `GREEN`/`ATTENTION`/`RED` from four sources:
   run outcome class, `plan.py check` (errors RED, warnings ATTENTION), git
   closing (`<SHA to>..HEAD` commits and the uncommitted remainder outside the plan directory),
@@ -29,7 +29,7 @@ the worker physically could not. The driver does not make decisions - he produce
 - **`journal`** appends a friction event (`plan.py log`: `blocker` for a refused launch,
   `difficulty` for a failed or idle run) EXACTLY when the session
   worker did not reach `plan.py finish` itself (timeout/transport/quota/error/
-  routing-blocked/no-op) — successful self-close `/task:plan-run` not
+  routing-blocked/no-op) — successful self-close `/planner:plan-run` not
   duplicated (D32).
 
 ## Usage

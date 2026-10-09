@@ -1,10 +1,10 @@
 # agent-router — opt-in project feature tips
 
-Task is launched only by explicitly calling a command or skill. Regular request for
-does not activate implementation, design or review Task.
+Planner is launched only by explicitly calling a command or skill. Regular request for
+does not activate implementation, design or review planner.
 
 `router.py` (UserPromptSubmit) by explicit inclusion router evaluates local
-agents and skills by keywords. Task-commands and Task-skills are excluded from
+agents and skills by keywords. Planner-commands and planner-skills are excluded from
 generation and scoring, including old ones project catalogs. The hint remains
 optional; it does not allow calling a command or changing a target.
 
@@ -13,7 +13,7 @@ installed SessionStart registrations. It does not add context at startup,
 including with old `POLICY=propose` and `POLICY=auto_dispatch`.
 
 Default `POLICY=off`. Old values `propose`/`auto_dispatch` save
-optional only non-Task hints; automatic start Task is no more.
+optional only non-planner hints; automatic start planner is no more.
 Per-project override: `.claude/agent-router.env.ini`; directory:
 `.claude/agent-router.config.json`.
 

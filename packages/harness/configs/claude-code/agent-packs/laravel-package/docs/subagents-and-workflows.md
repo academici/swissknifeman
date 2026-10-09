@@ -18,11 +18,11 @@ switch manually):
 
 | Command | Profile | Model/effort (commands) |
 |:--|:--|:--|
-| `/task:dev` | adaptive dev-loop (slice→impl→test→risk-review) | Opus/high (planning); subagents - by risk |
-| `/task:design` | design: research-fanout + plan/ADR, no code | Opus/high |
-| `/task:review` | read-only adversarial-review, severity-enum | Opus/xhigh |
-| `/task:research` | multi-source research (RAG) | Opus/high |
-| `/task:fix` | minor edit: single-agent, without fan-out | Sonnet/medium |
+| `/planner:dev` | adaptive dev-loop (slice→impl→test→risk-review) | Opus/high (planning); subagents - by risk |
+| `/planner:design` | design: research-fanout + plan/ADR, no code | Opus/high |
+| `/planner:review` | read-only adversarial-review, severity-enum | Opus/xhigh |
+| `/planner:research` | multi-source research (RAG) | Opus/high |
+| `/planner:fix` | minor edit: single-agent, without fan-out | Sonnet/medium |
 
 **Or directly:** orchestrator builds machine-readable PLAN (slices + `risk` + `skills`) and runs
 Workflow `{{PACK_PREFIX}}-dev-loop` with `args.slices` (see below). The scope of the slices is decided by a person.
@@ -31,7 +31,7 @@ Workflow `{{PACK_PREFIX}}-dev-loop` with `args.slices` (see below). The scope of
 
 ```mermaid
 flowchart TD
-  U["/task:dev «what we are building»"] --> O["Orchestrator → PLAN:<br/>slices + risk + model/effort/skills"]
+  U["/planner:dev «what we are building»"] --> O["Orchestrator → PLAN:<br/>slices + risk + model/effort/skills"]
   O -. "heavy reading on demand" .-> REC["recon-subagent (read-only, isolated):<br/>api-surface (BC-public surface diff)<br/>test-verifier · security-review<br/>→ to top summary only, main does not swell"]
   O --> SET["Setup: composer/env-preflight<br/>(composer validate, sqlite-driver) + one thread"]
   SET --> BUILD{"Build: next slice"}
@@ -47,7 +47,7 @@ flowchart TD
 ```
 
 Key: **model/effort subagents are set at cutoff risk and interrupt the session** (Sonnet impl / Opus+xhigh
-on HIGH-review / Haiku trivial); **fan-out — only on research-phase** (`/task:design|research`), not on
+on HIGH-review / Haiku trivial); **fan-out — only on research-phase** (`/planner:design|research`), not on
 coding. Delegate heavy reconnaissance recon-subagents - they read in their window and send a summary to the top.
 
 ## When to call subagents

@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "planner",
+  "title": "Planner: plans, phases, items and execution commands",
+  "kind": "capability",
+  "version": "0.28.3",
+  "stability": "beta",
+  "destination": "own-repo",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
+  ],
+  "provides": {
+    "cli": ["scripts/plan.py"],
+    "plugins": [{"name": "planner", "manifest": ".claude-plugin/plugin.json"}],
+    "contracts": [
+      {"id": "urn:swissknifeman:task:plan", "path": "schemas/plan/v1", "version": "v1", "stability": "beta"}
+    ]
+  },
+  "dev": {
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

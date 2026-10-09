@@ -263,6 +263,7 @@
 
 ### Changed
 
+- **planner:** the `task` module is renamed to `planner` (commands `/planner:*`, `PLANNER_ROOT`, import `planner`, the dev skill `planner-development-philosophy`); the harness, orch, aicore, analyst, maind, skiller and brain consumers, the host configuration, the instruction scope, the generated projections and the docs follow the new name; the plan URNs `urn:swissknifeman:task:plan:*` and the item field `task_files` are unchanged.
 - **skiller:** backups of `connect` (`settings.local.json`), `update --adopt-codex` (`.swissknife.json`), the retired
   Codex skill links and `release` (`CHANGELOG.md`) go through `aicore.state`: `.swissknifeman/backups/<stamp>/<path>` with
   rotation (the machine `state/backups` for the changelog) instead of `*.bak` files next to the original. The

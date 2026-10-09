@@ -102,7 +102,7 @@ class InstructionCompatibilityTests(unittest.TestCase):
             applied = apply_instructions(request)
             for target in (item for item in applied.targets if item.provider_id == "codex"):
                 rendered = (root / target.target_path).read_text(encoding="utf-8")
-                for token in ("/task:", "PreToolUse", "enabledPlugins", ".claude/settings",
+                for token in ("/planner:", "PreToolUse", "enabledPlugins", ".claude/settings",
                               ".claude/skills", "outputStyle", "plansDirectory"):
                     self.assertNotIn(token, rendered, f"{target.target_path}: {token}")
 

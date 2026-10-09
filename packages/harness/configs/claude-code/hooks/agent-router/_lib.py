@@ -49,8 +49,8 @@ def score_entries(text, entries):
         name = e.get("name")
         if not name:
             continue
-        # Task requires explicit invocation, even in legacy consumer catalogs.
-        if name.startswith(("/task:", "task:", "skill:task-", "skill:task:")):
+        # planner requires explicit invocation, even in legacy consumer catalogs.
+        if name.startswith(("/planner:", "planner:", "skill:planner-", "skill:planner:")):
             continue
         weight = e.get("weight", 1)
         s = sum(weight for kw in e.get("keywords", []) if kw and kw.lower() in low)

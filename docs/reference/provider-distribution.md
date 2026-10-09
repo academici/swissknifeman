@@ -28,7 +28,7 @@ Adding a fourth provider or a new channel means extending the JSON catalog and t
 | `packages/aicore/configs/provider-capabilities.json` | 37-capability matrix (native/adapted/unsupported) |
 | `packages/aicore/configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
 | `packages/aicore/configs/provider-projection.json` | Instruction/route/command projection policies |
-| `packages/task/configs/command-routing.json` | Task command routing SSOT |
+| `packages/planner/configs/command-routing.json` | planner command routing SSOT |
 | `packages/harness/configs/common/profile-catalog.json` | Harness profile catalog SSOT |
 | `config.json` (maind hub) | Fleet project registry, MCP inventory, `extra_servers` |
 

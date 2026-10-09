@@ -93,7 +93,7 @@ class DryRunTest(unittest.TestCase):
     def test_text_output_shows_argv_and_refusal(self):
         out = self._run([])
         self.assertIn(f"[DRIVING] {DRIVABLE_ID}", out)
-        self.assertIn(f"/task:plan-run {self.plan_dir.name} {DRIVABLE_ID}", out)
+        self.assertIn(f"/planner:plan-run {self.plan_dir.name} {DRIVABLE_ID}", out)
         self.assertIn(f"[FAILURE] {BLOCKED_ID}", out)
         self.assertIn("ITEM-BLOCKED", out)
 

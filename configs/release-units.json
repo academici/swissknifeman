@@ -2,7 +2,7 @@
   "schema_version": "release-unit-policy/v1",
   "_doc": "Independent version ownership for release attestation. Snapshot bytes never define the expected version. Optional keys within release-unit-policy/v1: plugins.<name>.path (package root of a version_owner=package plugin), plugins.<name>.grok_native (Grok installs the plugin package and serves its commands/), package_units (runtime package units id -> path), legacy_policy (the policy for historical refs without this file).",
   "plugins": {
-    "task": {
+    "planner": {
       "version_owner": "umbrella",
       "grok_native": true,
       "required_providers": [

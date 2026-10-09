@@ -53,7 +53,7 @@ are forbidden.
 | `harness` | `packages/harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` |
 | `maind` | `packages/maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` |
 | `analyst` | `packages/analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` |
-| `task` | `packages/task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` |
+| `planner` | `packages/planner` | `packages/planner/CLAUDE.md` | `packages/planner/AGENTS.md` |
 | `artifex` | `packages/artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` |
 | `brain` | `packages/brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` |
 
@@ -90,7 +90,7 @@ The initial ordered common inventories are frozen as follows:
 | `harness` | `harness.identity` · `harness.semantic-source` · `harness.layout` · `harness.command-surface` · `harness.agent-pack-lifecycle` · `harness.engineering-invariants` · `harness.cross-package-boundaries` · `harness.validation-release` |
 | `maind` | `maind.identity` · `maind.three-planes` · `maind.layout` · `maind.module-boundaries` · `maind.orchestration` · `maind.engineering-invariants` · `maind.validation-release` |
 | `analyst` | `analyst.identity-human-gate` · `analyst.layer-boundary` · `analyst.layout` · `analyst.module-boundaries` · `analyst.data-lifecycle` · `analyst.privacy` · `analyst.engineering-invariants` · `analyst.validation-release` |
-| `task` | `task.identity` · `task.command-catalog` · `task.plan-protocol` · `task.plan-files` · `task.layout` · `task.schema-ownership` · `task.engineering-invariants` · `task.validation-release` |
+| `planner` | `planner.identity` · `planner.command-catalog` · `planner.plan-protocol` · `planner.plan-files` · `planner.layout` · `planner.schema-ownership` · `planner.engineering-invariants` · `planner.validation-release` |
 | `artifex` | `artifex.identity` · `artifex.layout` · `artifex.runtime-boundaries` · `artifex.provenance` · `artifex.engineering-invariants` · `artifex.validation-release` |
 | `brain` | `brain.identity` · `brain.layout` · `brain.module-boundaries` · `brain.vault-safety` · `brain.engineering-invariants` · `brain.validation-release` |
 
@@ -103,7 +103,7 @@ The initial provider-extension inventories are:
 | `harness` | `harness.claude-code.config-surfaces` · `harness.claude-code.lifecycle-surfaces` · `harness.claude-code.settings-precedence` | empty |
 | `maind` | `maind.claude-code.plugin-and-mcp` · `maind.claude-code.workspace-trust` | empty |
 | `analyst` | `analyst.claude-code.capture-surfaces` · `analyst.claude-code.plugin` | empty |
-| `task` | `task.claude-code.slash-projection` · `task.claude-code.model-pins` | empty |
+| `planner` | `planner.claude-code.slash-projection` · `planner.claude-code.model-pins` | empty |
 | `artifex` | `artifex.claude-code.package-scope` | `artifex.codex.package-scope` |
 | `brain` | empty | empty |
 
@@ -138,7 +138,7 @@ Common sections are the sole source of rules that apply to both providers in one
    remain common even when current prose mentions one provider.
 4. Common sources are explicit catalog/fragments. Existing `CLAUDE.md` or `AGENTS.md` files
    are compatibility inputs and managed targets, never canonical source.
-5. Task command bodies and skill bodies remain in their frozen package canons. Instruction
+5. Planner command bodies and skill bodies remain in their frozen package canons. Instruction
    fragments may link to them but MUST NOT duplicate or fork their content.
 6. A renderer MUST NOT infer meaning from arbitrary Markdown headings or actual output.
    Structured section records and obligations define expected semantics.
@@ -269,52 +269,52 @@ Normative shape:
   "records": [
     {
       "contract_version": "1.1.0",
-      "artifact_id": "harness.instruction-projection.task.codex",
+      "artifact_id": "harness.instruction-projection.planner.codex",
       "canonical_sources": [
         {"source_id": "instruction.catalog", "path": "packages/harness/configs/common/instructions/catalog.json", "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
         {"source_id": "instruction.contract", "path": "packages/harness/docs/reference/provider-instruction-contract.md", "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-        {"source_id": "instruction.fragment.task.codex", "path": "packages/harness/configs/common/instructions/packages/task/codex.md", "hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
-        {"source_id": "instruction.fragment.task.common", "path": "packages/harness/configs/common/instructions/packages/task/common.md", "hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
+        {"source_id": "instruction.fragment.planner.codex", "path": "packages/harness/configs/common/instructions/packages/planner/codex.md", "hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"source_id": "instruction.fragment.planner.common", "path": "packages/harness/configs/common/instructions/packages/planner/common.md", "hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
       ],
       "adapter_id": "harness.instruction.codex",
       "adapter_version": "1.0.0",
       "provider_id": "codex",
-      "target_path": "packages/task/AGENTS.md",
+      "target_path": "packages/planner/AGENTS.md",
       "source_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "rendered_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "managed_boundary": {
         "mode": "managed-blocks",
         "block_ids": [
-          "instructions.task.codex.common",
-          "instructions.task.codex.extension"
+          "instructions.planner.codex.common",
+          "instructions.planner.codex.extension"
         ]
       },
       "semantic_metadata": {
         "artifact_kind": "instruction-projection",
         "block_ids": [
-          "instructions.task.codex.common",
-          "instructions.task.codex.extension"
+          "instructions.planner.codex.common",
+          "instructions.planner.codex.extension"
         ],
         "capabilities": ["instructions.project"],
         "catalog_version": "1.0.0",
         "instruction_contract_version": "1.0.0",
         "marker_ids": [
-          "swissknifeman:instructions:task:codex:common",
-          "swissknifeman:instructions:task:codex:extension"
+          "swissknifeman:instructions:planner:codex:common",
+          "swissknifeman:instructions:planner:codex:extension"
         ],
         "provider_id": "codex",
         "registry": "explicit",
-        "scope_id": "task",
+        "scope_id": "planner",
         "semantic_sections": {
           "common": [
-            "task.identity",
-            "task.command-catalog",
-            "task.plan-protocol",
-            "task.plan-files",
-            "task.layout",
-            "task.schema-ownership",
-            "task.engineering-invariants",
-            "task.validation-release"
+            "planner.identity",
+            "planner.command-catalog",
+            "planner.plan-protocol",
+            "planner.plan-files",
+            "planner.layout",
+            "planner.schema-ownership",
+            "planner.engineering-invariants",
+            "planner.validation-release"
           ],
           "provider_extension": []
         }
@@ -412,7 +412,7 @@ Compatibility requires semantic preservation of:
   invariants, validation, and Claude plugin/MCP/workspace specifics;
 - analyst on-demand/human gate, layer/privacy/data/audit invariants, validation, and Claude
   capture/plugin specifics;
-- task plugin-only command/plan protocol, schema ownership, model/effort policy, validation,
+- planner plugin-only command/plan protocol, schema ownership, model/effort policy, validation,
   and Claude slash-command projection specifics.
 
 Root `AGENTS.md` is an existing Codex extension/compatibility input but is unmanaged until
@@ -484,8 +484,8 @@ from actual render output.
 
 ### Positive — independent semantic parity
 
-The `task` common fragment projects its seven ordered common IDs independently to
-`packages/task/CLAUDE.md` and `packages/task/AGENTS.md`. The Claude extension block contains
+The `planner` common fragment projects its seven ordered common IDs independently to
+`packages/planner/CLAUDE.md` and `packages/planner/AGENTS.md`. The Claude extension block contains
 its two declared extension IDs; the Codex extension block is present and empty. Phrasing may
 differ. Parity is green because common IDs, order and obligations match and both lock records
 bind their own source fragment and renderer.
@@ -511,7 +511,7 @@ Outcomes are respectively `INSTRUCTION_SEMANTIC_ID_MISSING` and
 
 ### Negative — unmanaged existing path
 
-`packages/task/AGENTS.md` exists with useful user prose but has no exact instruction markers
+`packages/planner/AGENTS.md` exists with useful user prose but has no exact instruction markers
 and no matching lock. Outcome is `ownership-conflict` /
 `INSTRUCTION_OWNERSHIP_CONFLICT`. Check and plan are no-write; update and repair refuse;
 the useful prose is untouched and not implicitly adopted.

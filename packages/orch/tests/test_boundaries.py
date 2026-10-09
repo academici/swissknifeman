@@ -11,14 +11,14 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SELF = Path(__file__).resolve().relative_to(ROOT).as_posix()
-_NAMES = "task|skiller|harness|maind|analyst|artifex"
+_NAMES = "planner|skiller|harness|maind|analyst|artifex"
 FORBIDDEN = (
     re.compile(rf"packages/({_NAMES})\b"),
     re.compile(rf"^\s*(from|import)\s+({_NAMES})\b"),
     re.compile(r"\b(skiller|harness|maind|analyst|artifex)\b"),
     re.compile(r"plan\.py"),
-    re.compile(r"\btask:[a-z][a-z-]*"),
-    re.compile(r"task/(lib|plan|scripts|commands|skills)\b"),
+    re.compile(r"\bplanner:[a-z][a-z-]*"),
+    re.compile(r"planner/(lib|plan|scripts|commands|skills)\b"),
     # The native provider event is not a skill identity.
     re.compile(r"\b(?!system/init(?![a-z0-9-]))(general|quality|system|devops|oss-dev|repository-bootstrap)[/:][a-z][a-z0-9-]+"),
 )
@@ -49,8 +49,8 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual(found, [], "core references another package:\n" + "\n".join(found))
 
     def test_boundary_tokens_and_provider_event(self):
-        for line in ("packages/" + "task", "from task.plan import store", "skiller resolve",
-                     "plan" + ".py finish", "task:" + "plan-run", "task/commands/dev.md",
+        for line in ("packages/" + "planner", "from planner.plan import store", "skiller resolve",
+                     "plan" + ".py finish", "planner:" + "plan-run", "planner/commands/dev.md",
                      "quality/code-review", "system/agent-packs", "system/initial", "system/init-extra", "general/verify-claims"):
             with self.subTest(line=line):
                 self.assertTrue(any(pattern.search(line) for pattern in FORBIDDEN))

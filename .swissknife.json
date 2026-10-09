@@ -20,6 +20,6 @@
   "plugins": [
     "core",
     "oss-dev",
-    "task"
+    "planner"
   ]
 }

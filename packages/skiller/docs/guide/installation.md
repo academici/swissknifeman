@@ -20,8 +20,8 @@ and the state directory `~/.swissknifeman/`. When provider CLIs are present, it
 registers the local marketplace and installs the configured machine plugins.
 Codex selection combines CORE policy with the host's `default_command_plugins`;
 Grok source paths and optional hold plugins come from `machine_plugins.grok`.
-For the ecosystem host, these include Task and `prefix-hold`, exposing `$ task:*`
-in Codex and `/task:*` in Grok. Standalone installs have no host command plugins.
+For the ecosystem host, these include planner and `prefix-hold`, exposing `$ planner:*`
+in Codex and `/planner:*` in Grok. Standalone installs have no host command plugins.
 Grok does not install the root `core` plugin or profile plugins.
 
 After moving the checkout, rerun `./install.sh` to refresh the symlink and native
@@ -58,14 +58,14 @@ The following example uses the host's integration fields with an illustrative
 {
   "schema_version": 1,
   "plugin_dirs": ["plugins/*"],
-  "default_command_plugins": ["task"],
-  "version_files": [{"path": "plugins/task/configs/command-routing.json", "key": "plugin_version"}],
+  "default_command_plugins": ["planner"],
+  "version_files": [{"path": "plugins/planner/configs/command-routing.json", "key": "plugin_version"}],
   "machine_plugins": {
-    "grok": [{"name": "task", "path": "plugins/task", "holds": ["plugins/task/adapters/grok/prefix-hold"]}]
+    "grok": [{"name": "planner", "path": "plugins/planner", "holds": ["plugins/planner/adapters/grok/prefix-hold"]}]
   },
-  "runtime_projection_plugins": ["task"],
-  "codex_link_roots": ["plugins/task/adapters/codex/skills"],
-  "legacy_runtime_links": [{"link": "plugins/task", "plugin": "task", "source": "plugins/task"}],
+  "runtime_projection_plugins": ["planner"],
+  "codex_link_roots": ["plugins/planner/adapters/codex/skills"],
+  "legacy_runtime_links": [{"link": "plugins/planner", "plugin": "planner", "source": "plugins/planner"}],
   "commands": {
     "permissions": {"argv": ["tools/harness/bin/harness", "permissions"], "env_override": "SKM_HARNESS_BIN", "install_hint": "tools/harness/install.sh"},
     "settings_doctor": {"argv": ["tools/harness/bin/harness", "doctor", "--settings"], "env_override": "SKM_HARNESS_BIN"},
@@ -133,7 +133,7 @@ maind onboard <path|id> && maind sync --project <id>
 | **Cursor** | `skiller sync` + `maind onboard/sync` | skills in `.agents/skills` (native discovery); MCP in `.cursor/mcp.json`; permissions — [adapter Cursor](../adapters/cursor) |
 | **Cursor (legacy)** | `skiller vendor --agent cursor` | copies to `.cursor/skills` — avoid dual-write with `.agents` |
 | **Codex (vendor)** | `skiller sync` with `providers.codex.enabled=true` | managed copies in `.agents/skills` + provider-qualified lock |
-| **Grok** | `./install.sh` once, then per project `providers.selection.grok.enabled` + `maind sync --project <id>` + `harness hooks --provider grok … --target .` | machine plugins `task` and `prefix-hold` (`/task:*`); project MCP in `.grok/config.toml`; hooks in `.grok/hooks/`; skills through the connect catalog |
+| **Grok** | `./install.sh` once, then per project `providers.selection.grok.enabled` + `maind sync --project <id>` + `harness hooks --provider grok … --target .` | machine plugins `planner` and `prefix-hold` (`/planner:*`); project MCP in `.grok/config.toml`; hooks in `.grok/hooks/`; skills through the connect catalog |
 
 Grok plugins from step 1 are available in every project. They do not register
 the project or turn Grok on. A project opts in with

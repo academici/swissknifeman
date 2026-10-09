@@ -24,8 +24,8 @@ jobs:
       - name: Validate maind
         run: bash packages/maind/scripts/validate.sh
 
-      - name: Validate task and plan fleet
-        run: bash packages/task/scripts/validate.sh --fleet
+      - name: Validate planner and plan fleet
+        run: bash packages/planner/scripts/validate.sh --fleet
 
       - name: Validate orch contracts
         run: bash packages/orch/scripts/validate.sh

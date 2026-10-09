@@ -89,8 +89,8 @@ active»; it cannot be confused with layers, because they are repaired with diff
 
 | Layer | What is this | Who owns | How to check (read-only) |
 |:--|:--|:--|:--|
-| **canonical** | handwritten source of truth: `packages/*/skills/**`, `packages/task/commands/*.md`, package configs | person/package | normal `git diff`, review |
-| **generated** | canon projections: `skills.json`, both `marketplace.json`, `adapters/**`, `.claude/skills`+`.agents/skills`, publication-locks, part of the doc pages | generator (`skiller registry`, `render-provider-commands.py`) — **cannot be adjusted by hand** | `skiller registry --check` · `python3 packages/task/scripts/render-provider-commands.py --check --root .` |
+| **canonical** | handwritten source of truth: `packages/*/skills/**`, `packages/planner/commands/*.md`, package configs | person/package | normal `git diff`, review |
+| **generated** | canon projections: `skills.json`, both `marketplace.json`, `adapters/**`, `.claude/skills`+`.agents/skills`, publication-locks, part of the doc pages | generator (`skiller registry`, `render-provider-commands.py`) — **cannot be adjusted by hand** | `skiller registry --check` · `python3 packages/planner/scripts/render-provider-commands.py --check --root .` |
 | **effective** | what the agent actually sees in the session: active semantic identity, its provenance, collisions, hook owner, trace quality | provider runtime | `skiller doctor --effective-source [--json]` |
 
 **Rule:** drift `generated` being repaired **regeneration of the owning command**, rather than editing

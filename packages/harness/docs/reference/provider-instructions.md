@@ -9,7 +9,7 @@ Generated from the validated D86 catalog.
 | `harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` | `packages/harness/.cursor-instructions.mdc` | `packages/harness/.grok-instructions.md` | 8 | 4 | 0 | 0 | 0 |
 | `maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` | `packages/maind/.cursor-instructions.mdc` | `packages/maind/.grok-instructions.md` | 7 | 2 | 0 | 0 | 0 |
 | `analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` | `packages/analyst/.cursor-instructions.mdc` | `packages/analyst/.grok-instructions.md` | 8 | 2 | 0 | 0 | 0 |
-| `task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` | `packages/task/.cursor-instructions.mdc` | `packages/task/.grok-instructions.md` | 8 | 2 | 0 | 0 | 0 |
+| `planner` | `packages/planner/CLAUDE.md` | `packages/planner/AGENTS.md` | `packages/planner/.cursor-instructions.mdc` | `packages/planner/.grok-instructions.md` | 8 | 2 | 0 | 0 | 0 |
 | `artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` | `packages/artifex/.cursor-instructions.mdc` | `packages/artifex/.grok-instructions.md` | 6 | 1 | 1 | 0 | 0 |
 | `brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` | `packages/brain/.cursor-instructions.mdc` | `packages/brain/.grok-instructions.md` | 6 | 0 | 0 | 0 | 0 |
 

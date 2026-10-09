@@ -370,13 +370,13 @@
       "intent": "Use an explicitly available research or retrieval surface.",
       "support": {
         "claude-code": {
-          "adapter_id": "task.claude-code.external-research",
+          "adapter_id": "planner.claude-code.external-research",
           "diagnostic": "deterministic claude-code adapter satisfies command.external-research",
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -386,13 +386,13 @@
           ]
         },
         "codex": {
-          "adapter_id": "task.codex.external-research",
+          "adapter_id": "planner.codex.external-research",
           "diagnostic": "deterministic codex adapter satisfies command.external-research",
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -415,7 +415,7 @@
             "availability depends on an explicitly configured research surface and WebFetch permission token"
           ],
           "diagnostic": "deterministic cursor adapter satisfies command.external-research",
-          "adapter_id": "task.cursor.external-research"
+          "adapter_id": "planner.cursor.external-research"
         },
         "grok": {
           "level": "adapted",
@@ -431,7 +431,7 @@
             "availability depends on an explicitly configured research surface and WebFetch permission token"
           ],
           "diagnostic": "deterministic grok adapter satisfies command.external-research",
-          "adapter_id": "task.grok.external-research"
+          "adapter_id": "planner.grok.external-research"
         }
       }
     },
@@ -447,8 +447,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -463,8 +463,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -517,8 +517,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -533,8 +533,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -587,8 +587,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -603,8 +603,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -657,8 +657,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -673,8 +673,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -727,8 +727,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -743,8 +743,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -797,8 +797,8 @@
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -806,13 +806,13 @@
           "limitations": []
         },
         "codex": {
-          "adapter_id": "task.codex.workflow-carrier",
+          "adapter_id": "planner.codex.workflow-carrier",
           "diagnostic": "deterministic codex adapter satisfies command.workflow-carrier",
           "evidence": [
             {
               "claim": "the command routing mapping declares exact support levels for every v1 command capability",
-              "scope": "frozen task command capability mappings",
-              "source": "packages/task/configs/command-routing.json",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
               "verified_at": "2026-07-21"
             }
           ],
@@ -822,13 +822,13 @@
           ]
         },
         "cursor": {
-          "adapter_id": "task.cursor.workflow-carrier",
+          "adapter_id": "planner.cursor.workflow-carrier",
           "diagnostic": "deterministic Cursor adapter provides a generated workflow instruction carrier over native subagents",
           "evidence": [
             {
               "claim": "the Cursor command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog",
               "scope": "cursor command.workflow-carrier generated instruction projection",
-              "source": "packages/task/lib/task/command_render.py",
+              "source": "packages/planner/lib/planner/command_render.py",
               "verified_at": "2026-09-18"
             }
           ],
@@ -839,19 +839,19 @@
           ]
         },
         "grok": {
-          "adapter_id": "task.grok.workflow-carrier",
+          "adapter_id": "planner.grok.workflow-carrier",
           "diagnostic": "Grok workflow-carrier is a generated instruction carrier; Grok also has native Rhai workflows that remain provider-owned",
           "evidence": [
             {
               "claim": "the Grok command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog",
               "scope": "grok command.workflow-carrier generated instruction projection",
-              "source": "packages/task/lib/task/command_render.py",
+              "source": "packages/planner/lib/planner/command_render.py",
               "verified_at": "2026-09-18"
             }
           ],
           "level": "adapted",
           "limitations": [
-            "managed Task carrier is an instruction projection over native subagents",
+            "managed planner carrier is an instruction projection over native subagents",
             "Grok-native Rhai workflow runs are not a swissknifeman workflows.status store"
           ]
         }
@@ -2097,10 +2097,10 @@
             "target": ".cursor/rules/swissknifeman-router.mdc",
             "alwaysApply": false
           },
-          "diagnostic": "Cursor lifecycle.router is a manual Task rule requiring explicit invocation",
+          "diagnostic": "Cursor lifecycle.router is a manual planner rule requiring explicit invocation",
           "evidence": [
             {
-              "claim": "the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; Task does not activate from ordinary prompts",
+              "claim": "the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; planner does not activate from ordinary prompts",
               "scope": "cursor lifecycle.router explicit-only carrier",
               "source": "packages/harness/lib/harness/cursor_render.py",
               "verified_at": "2026-09-18"
@@ -2719,7 +2719,7 @@
     },
     {
       "id": "lifecycle.plan-regen",
-      "intent": "Check and re-render a Task plan after a JSON edit.",
+      "intent": "Check and re-render a planner plan after a JSON edit.",
       "support": {
         "claude-code": {
           "adapter_id": "harness.claude-code.lifecycle.plan-regen",
@@ -2735,7 +2735,7 @@
           "level": "adapted",
           "limitations": [
             "inactive by default; harness hooks --plan-regen on enables it",
-            "needs plan.py: $TASK_PLAN_CLI or packages/task/scripts/plan.py in the project",
+            "needs plan.py: $TASK_PLAN_CLI or packages/planner/scripts/plan.py in the project",
             "acts on Edit, Write and MultiEdit only"
           ]
         },

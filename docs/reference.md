@@ -435,8 +435,8 @@ Hand-verified class pins for Task routing (freeze 2026-09-17, `agent --list-mode
 `2026.09.15-d2fe57e`): `economy=composer-2.5-fast`, `implementation=composer-2.5`,
 `frontier=claude-opus-5-thinking-high`. Inventory-only: `gpt-5.6-sol-medium`, `auto`
 (`never-substitute-fixed-frontier`). Bare `composer` and `gpt-5.6-sol` **missing** in the directory.
-SSOT: `packages/task/configs/command-routing.json` → generated
-[Provider model roles](/task/reference/provider-model-roles).
+SSOT: `packages/planner/configs/command-routing.json` → generated
+[Provider model roles](/planner/reference/provider-model-roles).
 
 ### Initial Attestation
 

@@ -27,7 +27,7 @@ were separately authorized. Review does not automatically start a Task phase or 
 | Documentation | Actual code/API behavior, intended audience, working links, applicable documentation conventions |
 | Code | Runtime contract, correctness, security, compatibility, relevant performance and validation |
 
-A `plans/` path alone does not authorize `task:plan-audit`. Use that lifecycle command when an
+A `plans/` path alone does not authorize `planner:plan-audit`. Use that lifecycle command when an
 executable Task plan audit is requested or already authorized. A bounded design/spec review
 stays within that request. For mixed input, apply relevant dimensions in one review and identify
 the affected artifact in each finding; no mandatory parallel reviewers or second audit pass.

@@ -31,28 +31,28 @@ _ANALYTICS_CAPABILITIES = ("analytics.normalized-events", "analytics.run-report"
 
 def independent_inventory(root: Path = ROOT) -> dict[str, object]:
     """Derive the expected common set from terminal semantic catalogs/contracts."""
-    task = json.loads((root / "packages/task/configs/command-routing.json").read_text())
-    task_ids = {item for command in task["commands"]
+    planner = json.loads((root / "packages/planner/configs/command-routing.json").read_text())
+    planner_ids = {item for command in planner["commands"]
                 for item in command["capability_requirements"]}
     mapping_ids = {provider: set(mapping["capability_bindings"])
-                   for provider, mapping in task["mappings"].items()}
+                   for provider, mapping in planner["mappings"].items()}
     profile = json.loads((root / "packages/harness/configs/common/profile-catalog.json").read_text())
     harness_ids = {surface["id"] for surface in profile["surfaces"]}
     instructions = json.loads((root / "packages/harness/configs/common/instructions/catalog.json").read_text())
     instruction_ids = {item["id"] for item in instructions["capability_requirements"]}
     analytics_ids = set(_ANALYTICS_CAPABILITIES)
-    expected = task_ids | harness_ids | instruction_ids | analytics_ids
+    expected = planner_ids | harness_ids | instruction_ids | analytics_ids
     return {
         "expected": tuple(sorted(expected)),
         "contributors": {
-            "task": tuple(sorted(task_ids)), "harness": tuple(sorted(harness_ids)),
+            "planner": tuple(sorted(planner_ids)), "harness": tuple(sorted(harness_ids)),
             "instructions": tuple(sorted(instruction_ids)),
             "analytics": tuple(sorted(analytics_ids)),
         },
-        "task_mapping_missing": {
-            provider: sorted(task_ids - values) for provider, values in mapping_ids.items()},
+        "planner_mapping_missing": {
+            provider: sorted(planner_ids - values) for provider, values in mapping_ids.items()},
         "task_mapping_extra": {
-            provider: sorted(values - task_ids) for provider, values in mapping_ids.items()},
+            provider: sorted(values - planner_ids) for provider, values in mapping_ids.items()},
     }
 
 
@@ -62,7 +62,7 @@ def production_requirements(root: Path = ROOT) -> tuple[tuple[str, str, str, fro
     for provider in ProviderId:
         rows.append(("skiller.publication", provider.value, "skills.repository",
                      frozenset({"native", "adapted"})))
-    routing = json.loads((root / "packages/task/configs/command-routing.json").read_text())
+    routing = json.loads((root / "packages/planner/configs/command-routing.json").read_text())
     task_providers = set(routing["mappings"])
     for provider in ProviderId:
         if provider.value not in task_providers:
@@ -77,7 +77,7 @@ def production_requirements(root: Path = ROOT) -> tuple[tuple[str, str, str, fro
                        for capability in requirements):
                 continue
             for capability in requirements:
-                rows.append((f"task.{command['command_id']}", provider.value, capability,
+                rows.append((f"planner.{command['command_id']}", provider.value, capability,
                              frozenset({"native", "adapted"})))
     profile = json.loads((root / "packages/harness/configs/common/profile-catalog.json").read_text())
     for provider in ProviderId:
@@ -145,7 +145,7 @@ def conformance(root: Path = ROOT) -> dict[str, object]:
     report["green"] = not any((report["missing"], report["extra"], report["duplicates"],
                                report["matrix_missing"], report["matrix_extra"],
                                report["requirement_failures"],
-                               *report["task_mapping_missing"].values(),
+                               *report["planner_mapping_missing"].values(),
                                *report["task_mapping_extra"].values()))
     return report
 
@@ -268,11 +268,11 @@ def render_guide(manifest, report) -> bytes:
         "maind sync --project <id> --mode repair",
         "```",
         "",
-        "Native task invocation examples:",
+        "Native planner invocation examples:",
         "",
         "```text",
-        "Claude Code: /task:fix <brief>",
-        "Codex:       $ task:fix <brief>",
+        "Claude Code: /planner:fix <brief>",
+        "Codex:       $ planner:fix <brief>",
         "```",
         "",
         "## Support records",

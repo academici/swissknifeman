@@ -837,7 +837,7 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
     class-B `workflow-craft` precondition) and the D62 reconciliation against a frozen
     collision snapshot. Runs against the REAL repo catalog (like
     CoreDonorMutualExclusionCase above) — a synthetic fixture has neither the
-    root-bootstrap config nor the `task` sibling this gate must cover."""
+    root-bootstrap config nor the `planner` sibling this gate must cover."""
 
     def setUp(self):
         self.package_root = Path(__file__).resolve().parents[1]
@@ -886,9 +886,9 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
                 ("architecture", "unit:architect"), ("codebase-design", "unit:architect"),
                 ("domain-modeling", "unit:architect"),
                 ("package-contribution-protocol", "unit:architect"),
-                ("task-design", "unit:task"), ("task-plan-audit", "unit:task"),
-                ("task-plan-close", "unit:task"), ("task-plan-design", "unit:task"),
-                ("task-plan-run", "unit:task")):
+                ("planner-design", "unit:planner"), ("planner-plan-audit", "unit:planner"),
+                ("planner-plan-close", "unit:planner"), ("planner-plan-design", "unit:planner"),
+                ("planner-plan-run", "unit:planner")):
             self.assertEqual(result["positive_maps"]["codex"].get(identity), [expected_unit],
                              f"{identity}: expected exactly-once {expected_unit}, no root carrier")
         # class-A resolves via root only (private bucket, never a unit member) on both

@@ -171,7 +171,7 @@ class MaybeWriteTest(unittest.TestCase):
     def test_every_written_event_passes_check(self):
         self._write(outcome=_outcome(worker.OUTCOME_QUOTA), item_status="in_progress")
         proc = subprocess.run(
-            [sys.executable, str(REPO_ROOT / "packages/task/scripts/plan.py"), "check",
+            [sys.executable, str(REPO_ROOT / "packages/planner/scripts/plan.py"), "check",
              str(self.plan.plan_dir)], capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 

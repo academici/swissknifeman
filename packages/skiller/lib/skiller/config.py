@@ -146,7 +146,7 @@ class ProjectConfig(Mapping):
 
     project_type: str = field(default="", metadata={"json_type": str})
     buckets: list = field(default_factory=list, metadata={"json_type": list})
-    # Exact marketplace plugin set; `core`/`task` can be declared explicitly
+    # Exact marketplace plugin set; `core`/`planner` can be declared explicitly
     # for projects that intentionally need no profile buckets.
     plugins: list = field(default_factory=list, metadata={"json_type": list})
     exclude: list = field(default_factory=list, metadata={"json_type": list})

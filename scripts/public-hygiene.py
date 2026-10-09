@@ -79,8 +79,8 @@ PLAN_REFERENCE_RULES = [
 # views, bridges, golden outputs), so its identifiers cannot avoid that shape. They are synthetic and
 # these trees are exempt from the plan-reference rules ONLY; the content rules above still apply.
 PLAN_SYNTAX_TEST_TREES = {
-    "packages/task/tests/engine/": "plan engine tests and fixtures: ID, Short-ID and reference syntax",
-    "packages/task/bridges/orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
+    "packages/planner/tests/engine/": "plan engine tests and fixtures: ID, Short-ID and reference syntax",
+    "packages/planner/bridges/orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
     "packages/orch/fixtures/exec/": "orchestration exec-contract fixtures: plan-bound identifiers",
     "packages/orch/tests/": "orchestration tests and goldens: plan-bound identifiers and profile examples",
     "tests/golden/": "golden fixtures of the plan CLI output on the synthetic engine demo plan: its ID shape",

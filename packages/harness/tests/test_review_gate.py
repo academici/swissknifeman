@@ -9,7 +9,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parents[1]
 RG_SRC = PKG / "configs" / "claude-code" / "hooks" / "review-gate"
-TASK_SRC = PKG.parents[1] / "packages" / "task"
+PLANNER_SRC = PKG.parents[1] / "packages" / "planner"
 
 
 def _run(cmd, cwd):
@@ -122,13 +122,13 @@ class TestPlanLintCheck(unittest.TestCase):
         self.repo = self.tmp / "repo"
         self.repo.mkdir()
         _init_repo(self.repo)
-        shutil.copytree(TASK_SRC, self.repo / "packages" / "task",
+        shutil.copytree(PLANNER_SRC, self.repo / "packages" / "planner",
                         ignore=shutil.ignore_patterns("__pycache__", "tests", "adapters", "runtime", "docs"))
         (self.repo / "plans").mkdir()
         _run(["git", "add", "."], self.repo)
-        _run(["git", "commit", "-q", "-m", "task"], self.repo)
+        _run(["git", "commit", "-q", "-m", "planner"], self.repo)
         created = subprocess.run(
-            ["python3", str(self.repo / "packages/task/scripts/plan.py"), "new", "--codename", "DEMO",
+            ["python3", str(self.repo / "packages/planner/scripts/plan.py"), "new", "--codename", "DEMO",
              "--title", "Demo", "--actor", "claude-code/x/high", "--message", "m"],
             cwd=self.repo, capture_output=True, text=True)
         self.assertEqual(created.returncode, 0, created.stderr)

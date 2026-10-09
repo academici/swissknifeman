@@ -1,4 +1,4 @@
-"""Shared plan-guard policy: generated Task plan files are never edited by hand."""
+"""Shared plan-guard policy: generated planner plan files are never edited by hand."""
 from __future__ import annotations
 
 import fnmatch

@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "966bf0c24ed703954179dbd31714464bca05a37a8417554cb108cf1309855ed3",
+    "source_sha256": "a25044fa908ac8d0ce1936698c421e7166ab26fcb6d170ca30b09acedfe6fc17",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 340
   },
@@ -15,7 +15,7 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
-      "literal": "`skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages."
+      "literal": "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages."
     },
     {
       "semantic_id": "root.ecosystem-identity",
@@ -39,7 +39,7 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
-      "literal": "`task`"
+      "literal": "`planner`"
     },
     {
       "semantic_id": "root.ecosystem-identity",
@@ -67,7 +67,7 @@
     },
     {
       "semantic_id": "root.package-boundaries",
-      "literal": "`task` remains plugin-only and has no standalone CLI."
+      "literal": "`planner` remains plugin-only and has no standalone CLI."
     },
     {
       "semantic_id": "root.package-boundaries",
@@ -75,7 +75,7 @@
     },
     {
       "semantic_id": "root.package-boundaries",
-      "literal": "`task`"
+      "literal": "`planner`"
     },
     {
       "semantic_id": "root.package-boundaries",
@@ -87,7 +87,7 @@
     },
     {
       "semantic_id": "root.cli-routing",
-      "literal": "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group."
+      "literal": "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group."
     },
     {
       "semantic_id": "root.cli-routing",
@@ -111,7 +111,7 @@
     },
     {
       "semantic_id": "root.cli-routing",
-      "literal": "`task`"
+      "literal": "`planner`"
     },
     {
       "semantic_id": "root.cli-routing",
@@ -191,7 +191,7 @@
     },
     {
       "semantic_id": "root.plan-lifecycle",
-      "literal": "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
+      "literal": "Planner commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate planner."
     },
     {
       "semantic_id": "root.development-validation",
@@ -323,7 +323,7 @@
     },
     {
       "semantic_id": "root.codex.bootstrap",
-      "literal": "`packages/task/commands/`"
+      "literal": "`packages/planner/commands/`"
     },
     {
       "semantic_id": "root.codex.launch-and-hook-integrity",
@@ -331,7 +331,7 @@
     },
     {
       "semantic_id": "root.codex.fresh-agent-execution",
-      "literal": "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
+      "literal": "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Planner workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
     },
     {
       "semantic_id": "root.codex.package-scope-routing",
@@ -1066,131 +1066,131 @@
       "literal": "`/analyst:*`"
     },
     {
-      "semantic_id": "task.identity",
-      "literal": "`task` is the plugin-only package for task-intent commands and executable plan protocol"
+      "semantic_id": "planner.identity",
+      "literal": "`planner` is the plugin-only package for task-intent commands and executable plan protocol"
     },
     {
-      "semantic_id": "task.identity",
+      "semantic_id": "planner.identity",
       "literal": "it has no `bin/`, standalone CLI, or installer."
     },
     {
-      "semantic_id": "task.identity",
-      "literal": "`task`"
+      "semantic_id": "planner.identity",
+      "literal": "`planner`"
     },
     {
-      "semantic_id": "task.identity",
+      "semantic_id": "planner.identity",
       "literal": "`bin/`"
     },
     {
-      "semantic_id": "task.command-catalog",
+      "semantic_id": "planner.command-catalog",
       "literal": "Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort."
     },
     {
-      "semantic_id": "task.command-catalog",
+      "semantic_id": "planner.command-catalog",
       "literal": "`commands/`"
     },
     {
-      "semantic_id": "task.command-catalog",
+      "semantic_id": "planner.command-catalog",
       "literal": "each intent command declares its routed model class and effort"
     },
     {
-      "semantic_id": "task.plan-protocol",
+      "semantic_id": "planner.plan-protocol",
       "literal": "Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route."
     },
     {
-      "semantic_id": "task.plan-protocol",
+      "semantic_id": "planner.plan-protocol",
       "literal": "`plans/<PLAN-ID>/`"
     },
     {
-      "semantic_id": "task.plan-protocol",
+      "semantic_id": "planner.plan-protocol",
       "literal": "`plan-run` inherits the owner session route"
     },
     {
-      "semantic_id": "task.plan-files",
-      "literal": "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers."
+      "semantic_id": "planner.plan-files",
+      "literal": "Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers."
     },
     {
-      "semantic_id": "task.plan-files",
+      "semantic_id": "planner.plan-files",
       "literal": "`plan.json`"
     },
     {
-      "semantic_id": "task.plan-files",
-      "literal": "`python3 <task>/scripts/plan.py`"
+      "semantic_id": "planner.plan-files",
+      "literal": "`python3 <planner>/scripts/plan.py`"
     },
     {
-      "semantic_id": "task.plan-files",
+      "semantic_id": "planner.plan-files",
       "literal": "`plan.py next|show|context`"
     },
     {
-      "semantic_id": "task.layout",
-      "literal": "Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`."
+      "semantic_id": "planner.layout",
+      "literal": "Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`."
     },
     {
-      "semantic_id": "task.layout",
+      "semantic_id": "planner.layout",
       "literal": "`commands/`"
     },
     {
-      "semantic_id": "task.layout",
-      "literal": "`lib/task/plan/`"
+      "semantic_id": "planner.layout",
+      "literal": "`lib/planner/plan/`"
     },
     {
-      "semantic_id": "task.layout",
+      "semantic_id": "planner.layout",
       "literal": "`scripts/plan.py`"
     },
     {
-      "semantic_id": "task.layout",
+      "semantic_id": "planner.layout",
       "literal": "`tests/`"
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "Treat `schemas/plan/v1/` and the `plan-protocol` skill as synchronized sources of the plan schema; validate with `scripts/plan.py check` and change both when the schema changes."
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "`schemas/plan/v1/`"
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "`plan-protocol`"
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "change both when the schema changes"
     },
     {
-      "semantic_id": "task.engineering-invariants",
-      "literal": "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics."
+      "semantic_id": "planner.engineering-invariants",
+      "literal": "Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics."
     },
     {
-      "semantic_id": "task.engineering-invariants",
-      "literal": "`lib/task/`"
+      "semantic_id": "planner.engineering-invariants",
+      "literal": "`lib/planner/`"
     },
     {
-      "semantic_id": "task.validation-release",
-      "literal": "Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages."
+      "semantic_id": "planner.validation-release",
+      "literal": "Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages."
     },
     {
-      "semantic_id": "task.validation-release",
-      "literal": "`bash packages/task/scripts/validate.sh`"
+      "semantic_id": "planner.validation-release",
+      "literal": "`bash packages/planner/scripts/validate.sh`"
     },
     {
-      "semantic_id": "task.claude-code.slash-projection",
-      "literal": "Claude Code projects the Task command catalog as `/task:*` commands."
+      "semantic_id": "planner.claude-code.slash-projection",
+      "literal": "Claude Code projects the planner command catalog as `/planner:*` commands."
     },
     {
-      "semantic_id": "task.claude-code.slash-projection",
-      "literal": "`/task:*`"
+      "semantic_id": "planner.claude-code.slash-projection",
+      "literal": "`/planner:*`"
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
+      "semantic_id": "planner.claude-code.model-pins",
       "literal": "Claude Code command frontmatter pins routes; do not change those pins without explicit intent. `plan-run` inherits the owner session route."
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
+      "semantic_id": "planner.claude-code.model-pins",
       "literal": "do not change those pins without explicit intent."
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
+      "semantic_id": "planner.claude-code.model-pins",
       "literal": "`plan-run`"
     },
     {

@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 LIB = Path(__file__).resolve().parents[1] / "lib" / "brain"
-FORBIDDEN = {"skiller", "maind", "core", "task", "planner", "orch", "analyst", "harness"}
+FORBIDDEN = {"skiller", "maind", "core", "planner", "orch", "analyst", "harness"}
 ALLOWED_THIRD_PARTY = {"brain", "aicore", "__future__"}
 STDLIB = Path(sysconfig.get_paths()["stdlib"]).resolve()
 

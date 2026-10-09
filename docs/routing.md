@@ -190,7 +190,7 @@ to a single search engine.
 
 ## Model-routing pins task-commands
 
-Each `/task:*`-command pins `model`/`effort` in frontmatter `packages/task/commands/*.md`,
+Each `/planner:*`-command pins `model`/`effort` in frontmatter `packages/planner/commands/*.md`,
 interrupting session settings (SSOT-tier matrix - skill `general/plan-protocol` §9, here **not
 duplicated**, and is justified per-command). Section captures **rationalized each pin + verdict
 audit P3.1** — provenance to

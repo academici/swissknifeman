@@ -1,4 +1,4 @@
-"""Queue of a phase through the Task plan API (`plan.py show|next --json`)."""
+"""Queue of a phase through the planner plan API (`plan.py show|next --json`)."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -37,7 +37,7 @@ class QueueTest(unittest.TestCase):
     def test_next_form_is_the_semantic_next_of_the_plan(self):
         result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
         self.assertEqual(result["next_form"]["kind"], "run-items")
-        self.assertTrue(result["next_form"]["declaring_line"].startswith("run-items: task:plan-run "))
+        self.assertTrue(result["next_form"]["declaring_line"].startswith("run-items: planner:plan-run "))
         for item in result["items"]:
             self.assertEqual(item["next_form"], result["next_form"])
 

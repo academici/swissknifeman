@@ -8,7 +8,7 @@ Changed bytes under an unchanged version are never re-fetched, so every shipped 
   version-guard.py bump <package|unit> [--part patch|minor|X.Y.Z]
 
 Version owners (configs/release-units.json): package units live in packages/<name>/package.json,
-skill units in packages/skiller/configs/publication-versions.json, `task` follows the umbrella
+skill units in packages/skiller/configs/publication-versions.json, `planner` follows the umbrella
 (CHANGELOG heading, bumped by `skiller release`). Run `skiller registry` after `bump`.
 """
 from __future__ import annotations
@@ -135,8 +135,8 @@ def cmd_bump(args: argparse.Namespace) -> int:
     name = args.unit
     package = ROOT / "packages" / name
     versions = json.loads(PUBLICATION_VERSIONS.read_text(encoding="utf-8"))
-    if name == "task" or name == "umbrella":
-        sys.exit("ERROR: task follows the umbrella version; bump it with `skiller release` (CHANGELOG heading)")
+    if name == "planner" or name == "umbrella":
+        sys.exit("ERROR: planner follows the umbrella version; bump it with `skiller release` (CHANGELOG heading)")
     if (package / "package.json").is_file():
         current = json.loads((package / "package.json").read_text(encoding="utf-8"))["version"]
         target = next_version(current, args.part)

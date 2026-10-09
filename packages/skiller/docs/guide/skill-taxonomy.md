@@ -116,7 +116,7 @@ only for skills with an explicit task»; skill book given to the subagent is ret
       tracker, etc. - a fork of such skills greatly complicates the test on the stand and remains outside
       of this passage is not prohibited forever).
 - [ ] Skill that carries the canon for the MAIN session (standing instructions read multiple times
-      session - `plan-protocol` and the entire circuit `task:plan-*`, supervised CORE), is NOT forkable.
+      session - `plan-protocol` and the entire circuit `planner:plan-*`, supervised CORE), is NOT forkable.
 - [ ] Doubts about the class - **do not fork**: false fork gives empty subagent response in
       prod; a false refusal is only worth lost savings (asymmetry cost).
 
@@ -166,7 +166,7 @@ at all):**
       for the sake of a third-party checklist, breaking the range of the MAIN task - the skill itself does not benefit from this,
       and the session loses its shooting range. **Don't force override on advisory-class - not a space, but
       find P3.5** (`findings/P3-desc-burndown.md` §Shooting Ranges).
-- [ ] `plan-protocol` and the entire circuit `task:plan-*` — exception by design: EVERYONE route
+- [ ] `plan-protocol` and the entire circuit `planner:plan-*` — exception by design: EVERYONE route
       item'and is already itching §3 Routing plan (`plan-run` reads it),
       blanket override on top of this is a second, conflicting source of truth. Skill carries
       `Exec`-table as canon, not native `model:`/`effort:`.

@@ -60,12 +60,12 @@ class ProviderDocsTests(unittest.TestCase):
             root = Path(directory)
             (root / "configs").mkdir()
             (root / "docs").mkdir()
-            (root / "packages/task/configs").mkdir(parents=True)
+            (root / "packages/planner/configs").mkdir(parents=True)
             (root / "packages/harness/configs/common/instructions").mkdir(parents=True)
             # The generator intentionally consumes these bounded sources; copy exact fixtures.
             for relative in (
                 "packages/aicore/configs/provider-capabilities.json",
-                "packages/task/configs/command-routing.json",
+                "packages/planner/configs/command-routing.json",
                 "packages/harness/configs/common/profile-catalog.json",
                 "packages/harness/configs/common/instructions/catalog.json",
             ):
@@ -98,9 +98,9 @@ class ProviderDocsTests(unittest.TestCase):
     def test_internal_markdown_links_resolve_and_examples_keep_provider_syntax_separate(self):
         readme = provider_docs.expected_outputs(ROOT)[ROOT / "README.md"].decode()
         guide = provider_docs.expected_outputs(ROOT)[ROOT / "docs/provider-support.md"].decode()
-        self.assertIn("Claude Code: /task:fix <brief>", guide)
-        self.assertIn("Codex:       $ task:fix <brief>", guide)
-        self.assertNotIn("Codex:       /task:", guide)
+        self.assertIn("Claude Code: /planner:fix <brief>", guide)
+        self.assertIn("Codex:       $ planner:fix <brief>", guide)
+        self.assertNotIn("Codex:       /planner:", guide)
         self.assertIn("Full access is never a project or fleet default", guide)
         import re
         for source_path, text in ((ROOT / "README.md", readme),

@@ -18,7 +18,7 @@ process. Details Claude Code — in [developer's runbook](docs/develop.md).
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Provider support (generated)
 
-Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `5d6faa26b0541b74a38262da24fbeafb2967b59b1ecf8fac12d13162afb5f545`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
+Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `484277fb69ea46e280a194b67e9edc0c96ea373d7380a1ee435b381113bf1db7`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor | Grok |
 |:--|:--:|:--:|:--:|:--:|
@@ -68,7 +68,7 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 |:--|:--|
 | **🔌 Plugins with skills** | Single marketplace Claude Code (skill buckets). Curated **CORE** (8 skills ≈ 480 resident tokens) is distributed to each project; the rest depends on the type of project. Two channels: `connect` (marketplace, auto update) and `vendor` (physical. copies for giving out) |
 | **🎭 Roles and workflow** | `agent-packs` — versionable subagent bundles + workflow + hooks: stack packs (Laravel/Node/Python/Flutter) and role-packs (tech-lead/CTO/founder/maintainer). **dev-loop** drives vertical slices through risk-adaptive **review-gate** (Haiku→Sonnet→Opus by risk) |
-| **📋 Task management** | Plugin `task`: Claude and Grok `/task:design\|dev\|review\|research\|fix` plus `/task:plan-design\|plan-run\|plan-close\|plan-audit`, Codex `$ task:*`, Cursor `task:*`. Grok qualifies every Task command with the `task:` prefix |
+| **📋 Task management** | Plugin `planner`: Claude and Grok `/planner:design\|dev\|review\|research\|fix` plus `/planner:plan-design\|plan-run\|plan-close\|plan-audit`, Codex `$ planner:*`, Cursor `planner:*`. Grok qualifies every planner command with the `planner:` prefix |
 | **🪙 Token levers** | Flow discipline: ladder `context-economy` (trim CLAUDE.md to ~92%, routing models up to ~75%, audit MCP, selective-input 5–50×), concise conclusion (`compact-responses`, output-style `lean`), **PAO** for PHP (test output → ~20 tokens JSON) |
 | **🧠 Memory and graph** | Hub **mAInd**: shared ecosystem memory (agentmemory-daemon, isolation by namespace) + code graph (Serena, navigate by symbols instead of reading files) + topology between projects. Observability - `maind analyze`/`verify`/`health` |
 | **📈 Analytics and training** | Capturing a run with a hook `run-report` → post-run analysis `maind analyze` (verdict GREEN/ATTENTION/RED + memory usage metrics/column). Package **`analyst`** (P1 MVP): `analyst digest` deterministically extracts candidate lessons from a run → `review`/`promote` with **man in the gate** (auto-record disabled) → curated comes to mind mAInd. There is a cross-project aggregator (`scan`) and confidence-life cycle (`recompute`, Beta/decay + numeric state-machine) |
@@ -83,20 +83,20 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 | [`packages/harness`](packages/harness/) | environment for Claude Code, Codex, Cursor and Grok (permissions, MCP, hooks, agent-packs) | `harness` |
 | [`packages/maind`](packages/maind/) | hub of memory, graph and ecosystem coordination (MCP-bus) | `maind` |
 | [`packages/analyst`](packages/analyst/) | continuous learning: capturing lessons from runs, man-gate, provenance | `analyst` |
-| [`packages/task`](packages/task/) | task intent commands (`/task:*`, `$ task:*`, Cursor `task:*`) | plugins Claude Code, Codex and Grok |
+| [`packages/planner`](packages/planner/) | task intent commands (`/planner:*`, `$ planner:*`, Cursor `planner:*`) | plugins Claude Code, Codex and Grok |
 
 General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, `provider`, `artifacts`, `usage`; the root [`core`](core/) is a transitional shim over it).
 
 ## Installation
 
 ```bash
-./install.sh                  # CLI + router + Codex core/task + Grok task plugin
+./install.sh                  # CLI + router + Codex core/planner + Grok planner plugin
 ```
 
 `install.sh` delegates batch post-configuration to their own installers,
 puts a symlink `swissknifeman` → root router, connects the Codex marketplace
-with `core`/`task`, and installs the Grok plugins `packages/task` and
-`prefix-hold` (`grok plugin install … --trust`). Task commands are `/task:*`.
+with `core`/`planner`, and installs the Grok plugins `packages/planner` and
+`prefix-hold` (`grok plugin install … --trust`). planner commands are `/planner:*`.
 Grok does not install marketplace `core`: that entry's source is the
 repository root. Opt-out: `--no-codex-plugins`, `--no-grok-plugins`. A new Grok
 session picks up the commands. The script is once per machine: a project still
@@ -120,7 +120,7 @@ analyst <cmd>                 # continuous learning (digest, scan, review, promo
 ## Plugins Claude Code
 
 One marketplace (`.claude-plugin/marketplace.json`, name `swissknifeman` = umbrella) declares everything
-repo plugins: skill buckets, curated `core`, `task`, `skm`, `generate-skill`, `maind` and `analyst`.
+repo plugins: skill buckets, curated `core`, `planner`, `skm`, `generate-skill`, `maind` and `analyst`.
 Generated `skiller registry`. Plugin `maind` — commands only `/maind:*` (MCP-hub tools
 come per-project server `maind` from `.mcp.json` project, not from the plugin).
 

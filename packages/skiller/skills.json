@@ -692,8 +692,8 @@
       "path": "skills/axioma/ecosystem-map/SKILL.md",
       "version": "0.1.0",
       "description": "Where docs, plans, findings and vault links live in a project and how repo↔Brain sync. A locator, not canon — HOW planning works: plan-protocol.",
-      "sha256": "6feb798419c471a347abb3ce4062ebcb92a5f77941664bf9196a6c5446fe2714",
-      "content_sha256": "d73dda9bd2cf5c49a9655845bc84a863e03136f46cf94c57226323aa427f4762",
+      "sha256": "38354d1bca6bfa586420ea7edbc0a3af969765d82b467876445eeaac02172ffe",
+      "content_sha256": "5e23ae1d9717f0522a5ce3215accf7f95fafdc369fedef46aec2bf638949c0c8",
       "license": "MIT",
       "tags": [
         "axioma",
@@ -2527,8 +2527,8 @@
       "path": "skills/general/workflow-craft/SKILL.md",
       "version": "0.3.0",
       "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
-      "sha256": "7f784751d1e91794f380d227851f5906b04aa4c3be3604067d8e8ba53a3b093d",
-      "content_sha256": "7f088d7969b86073458ba88f850ed22faa464ef3f64759f95e6c204b2d8f15d1",
+      "sha256": "6160599c1a6050f34cf2814efa53c81c932f6022a05258681c250e176c542b98",
+      "content_sha256": "984e0df64bb04c0539a7e06c383b27fdbc6f7dd234ce283b486cd2c065d73d50",
       "license": "MIT",
       "tags": [
         "workflow",
@@ -4105,8 +4105,8 @@
       "path": "skills/quality/artifact-review/SKILL.md",
       "version": "0.2.0",
       "description": "Review plans, specifications, docs, or mixed artifacts against their adopted contracts.",
-      "sha256": "ce2da8504ca7f272ff97621766bd54d8e659adca9d04f59a9240fd7593fda18f",
-      "content_sha256": "d19bd4056b69e4d4d4e11691c5380fc354fd0a5cea6ed2bb31bcd0efc78ecba0",
+      "sha256": "1862e61ec43a4346d9d8dc21b7f601ef29edf45072e2b83781af4cf57648b1e3",
+      "content_sha256": "7d16873ce943440e2d48e5d0195de6096474f001d7b34a9b4c82059eb7633c03",
       "license": "MIT",
       "tags": [
         "quality",

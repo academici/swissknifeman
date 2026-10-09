@@ -54,15 +54,15 @@ class RootInstallCase(unittest.TestCase):
         self.assertEqual(self.log.read_text(encoding="utf-8").splitlines(), [
             f"plugin marketplace add {ROOT}",
             "plugin add core@swissknifeman",
-            "plugin add task@swissknifeman",
+            "plugin add planner@swissknifeman",
         ])
         self.assertEqual(self.grok_log.read_text(encoding="utf-8").splitlines(), [
             f"plugin marketplace add {ROOT}",
-            f"plugin install {ROOT}/packages/task --trust",
-            f"plugin install {ROOT}/packages/task/adapters/grok/prefix-hold --trust",
+            f"plugin install {ROOT}/packages/planner --trust",
+            f"plugin install {ROOT}/packages/planner/adapters/grok/prefix-hold --trust",
         ])
-        self.assertIn("Codex plugins installed: core task", result.stdout)
-        self.assertIn("Grok plugins installed: task prefix-hold", result.stdout)
+        self.assertIn("Codex plugins installed: core planner", result.stdout)
+        self.assertIn("Grok plugins installed: planner prefix-hold", result.stdout)
 
     def test_umbrella_installer_forwards_plugin_opt_outs_only_to_skiller(self):
         result = self.run_installer(UMBRELLA_INSTALLER, "--no-codex-plugins", "--no-grok-plugins")

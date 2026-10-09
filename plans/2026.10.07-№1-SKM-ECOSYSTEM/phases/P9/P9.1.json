@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.1",
   "title": "Начало фазы; переименование task → planner по всему репозиторию: модуль, команды и проекции, потребители, хаб, golden",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "sync-main и golden check; git mv packages/task → packages/planner, lib/task → lib/planner, dev-skill planner-development-philosophy, проекции task-* → planner-*; id модуля, плагины Claude/Codex/Grok, id команд planner:*, константы MODULE_ID и COMMAND_NAMESPACE в каталоге, рендере и next; окружение мостов PLANNER_ROOT/PLANNER_PLAN_PY; все потребители (harness, orch, aicore, analyst, maind, skiller, brain) и хаб (ecosystem-units, release-units, skiller-host, bootstrap, маркетплейсы, CI, скрипты, docs, инструкции scope planner) переведены; URN urn:swissknifeman:task:plan:* и task_files не тронуты; golden перезахвачен с причиной.",
   "why": "D9 и D56: имя planner без коллизии со встроенными Task* Claude Code; все следующие пункты P9 работают в окончательных путях. Жёсткие риски: (1) слепая замена «task» сломает URN urn:swissknifeman:task:plan:* (планы во всех проектах) или поле task_files — страхуют список неизменяемого и счётчик URN (V2); (2) пропущенный потребитель (хук harness, поиск в orch, worker) молча перестанет находить движок — страхуют grep полноты и тесты соседей (V2, V5); (3) ручная правка генерируемого разойдётся с генератором — только генераторы (V3).",
   "scope": {
@@ -307,6 +307,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:27:46Z"
+  "result": {
+    "started_at": "2026-10-09T17:39:07Z",
+    "finished_at": "2026-10-09T19:14:45Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "xhigh",
+      "session": "7bcbaf0d-7651-4496-a0e6-a720d4d77cc5"
+    },
+    "notes": "task → planner выполнено по всему репозиторию: git mv (packages/task, lib/task, dev-skill, adapters skills, docs/task, harness-фрагменты, bootstrap-проекции, тест плагина), MODULE_ID/COMMAND_NAMESPACE в lib/planner/__init__.py и рендер/каталог/next/review_selection на них, PLANNER_ROOT/PLANNER_PLAN_PY, потребители (harness, orch, aicore, analyst, maind, skiller, brain), хаб (ecosystem-units, release-units, skiller-host, bootstrap, маркетплейсы, CI, скрипты, docs, инструкции scope planner), golden перезахвачен с причиной «task renamed to planner». URN urn:swissknifeman:task:plan:* — 288 строк как до пункта; task_files не тронуты. Проекции и инструкции — только генераторами.",
+    "deviations": [
+      "V2 запретил остатки: правлена одна историческая строка CHANGELOG пакета агентов backend-laravel; запись legacy_runtime_links для task не оставлена (вернёт P9.2); ключ job task в CI оставлен (имя проверки может быть обязательным в защите ветки).",
+      "Закреплённые хэши APPROVED_*_SHA256 манифеста provider-capabilities.json в aicore/tests и byte_digest skiller claude-publication-golden пересчитаны по процедуре тестов: diff — только переименование путей, id адаптеров, имени модуля; поддержка и уровни не менялись.",
+      "Провайдерные проекции перегенерированы с нуля (старый lock владельца task.codex давал ownership-conflict); из provider-artifacts.lock.json удалены 4 осиротевшие записи packages/task/*; вне task_files пункта затронуты install.sh, .codex/config.toml.example, bootstrap/skills/release-discipline/SKILL.md (добавлены через --path)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T19:14:45Z"
 }

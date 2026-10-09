@@ -885,7 +885,7 @@ _CURSOR_CONSUMER_FIELDS = {
     "disconnect_policy",
 }
 _COMMON_FORBIDDEN = re.compile(
-    r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
+    r"\.claude(?:/|\b)|(?<![\w-])/(?:planner|task):[a-z-]+|(?<![\w-])/(?:effort|clear)\b|"
     r"\bWorkflow\b|\bSubagentStop\b|(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write|"
     r"Haiku|Sonnet|Opus)(?![\w-])")
 _TOKEN = re.compile(r"\{\{token:([a-z-]+)\}\}")

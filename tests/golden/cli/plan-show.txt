@@ -8,6 +8,6 @@ PLAN3 2026.10.05-№1-GOLD — Plan №1 — Gold | pipes [active]
     P2.1 🟡 In progress  Render report
     P2.2 ⬜ Not started  Publish report
   decisions: D1 accepted, D2 open
-  next: run-items: task:plan-run 2026.10.05-№1-GOLD P2.1
+  next: run-items: planner:plan-run 2026.10.05-№1-GOLD P2.1
 --- stderr ---
 

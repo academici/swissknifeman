@@ -2,7 +2,7 @@
 
 For the first task and the choice between direct work and Task start with [short route](./getting-started).
 Below is a detailed scenario Claude Code for work that needs a plan; it is not required for
-local reversible edits. Teams `task` are triggered by an explicit call.
+local reversible edits. Teams `planner` are triggered by an explicit call.
 
 One operational runbook: **how to actually conduct the development process** with Claude Code, when the project
 connected to the ecosystem academici. Not «what is installed», a «how to use it day after day» —
@@ -20,7 +20,7 @@ tries - repo rule «single source of truth > copies».
 ```
 setup ──▶ PLAN ──▶ EXECUTION ──▶ CHECK ──▶ RELEASE
   │        │           │             │           │
-onboarding  /task:design /task:dev     verify-     release-
+onboarding  /planner:design /planner:dev     verify-     release-
 skills+    task-brief-  dev-loop +    claims +    discipline
 MCP+memory template     review-gate   analyze     (validate→PR)
 +graph
@@ -46,8 +46,8 @@ Everything else in this runbook is a consequence of this principle.
 | Step | Command / tool | What's going on |
 |:--|:--|:--|
 | **Onboarding** | `swissknifeman setup <project>` | skills (CORE) + permissions + MCP + memory + graph with one command (→ `maind onboard`). Details: [ecosystem-integration](/maind/) |
-| **Plan** | `/task:design` · skill `task-brief-template` · `complex-task-orchestrator` | decompose into **vertical slices** with risk and DoD; plan - in `.claude/plans/<task>.md` (durable, primary source) |
-| **Execution** | `/task:dev` · dev-loop (agent-pack) | slice → impl → tests-to-green → risk-adaptive review-gate |
+| **Plan** | `/planner:design` · skill `task-brief-template` · `complex-task-orchestrator` | decompose into **vertical slices** with risk and DoD; plan - in `.claude/plans/<task>.md` (durable, primary source) |
+| **Execution** | `/planner:dev` · dev-loop (agent-pack) | slice → impl → tests-to-green → risk-adaptive review-gate |
 | **Verification** | `verify-claims` · `decision-verification` · `cross-layer-change-checklist` · `maind analyze` | facts - via RAG; affected layers - according to the checklist; post-run analysis of the run |
 | **Release** | skill `release-discipline` | `validate.sh` → `skiller registry` → `CHANGELOG [Unreleased]` → PR |
 
@@ -83,26 +83,26 @@ whenever you want **forget** past (unrelated task, accumulated noise). Durabilit
 Brief format for handoff — skill `session-handoff` (`.claude/handoffs/…`). Complete flow discipline -
 [context-economy](/skiller/guide/budget).
 
-## 4. Task management - plugin `task`
+## 4. Task management - plugin `planner`
 
-Plugin `task` — **default-on in each project** (connect-channel). Does not incur resident tax
+Plugin `planner` — **default-on in each project** (connect-channel). Does not incur resident tax
 (command descriptions are not injected into every request). That thin face above agent-packs/workflow: each
 command **kicks the model + reasoning effort + profile workflow**, interrupting the session settings - to
 do not switch manually.
 
 | Command | Pinits | For what |
 |:--|:--|:--|
-| `/task:design` | Opus / high | design → detailed technical specification/architecture |
-| `/task:dev` | Opus / high + dev-loop | development: vertical slices, risk-adaptive review-gate |
-| `/task:review` | high effort, risk-adaptive | code review |
-| `/task:research` | fan-out | research (breadth-first) |
-| `/task:fix` | — | spot bug fix |
+| `/planner:design` | Opus / high | design → detailed technical specification/architecture |
+| `/planner:dev` | Opus / high + dev-loop | development: vertical slices, risk-adaptive review-gate |
+| `/planner:review` | high effort, risk-adaptive | code review |
+| `/planner:research` | fan-out | research (breadth-first) |
+| `/planner:fix` | — | spot bug fix |
 
-**How phase is transferred to phase.** `/task:dev` is planning on Opus, cuts into slices (`model→service→
+**How phase is transferred to phase.** `/planner:dev` is planning on Opus, cuts into slices (`model→service→
 controller→test`, everyone at risk `LOW/MED/HIGH`), and if installed agent-pack — drives them through
 `*-dev-loop.js` (passes slices as `args.slices`). No pack - sequentially, one slice at a time.
 Fan-out on coding **not** is used (≈15× tokens; justified only on research). Text that
-`/task:dev` suggests when moving to the next phase - this is **brief** from section 3: do it
+`/planner:dev` suggests when moving to the next phase - this is **brief** from section 3: do it
 self-sufficient (target · DoD · files · solutions · dead ends · how to check).
 
 ## 5. Roles and agent-packs
@@ -128,7 +128,7 @@ Full ladder with measured magnitudes - [budget.md](/skiller/guide/budget) and sk
 |:--|:--|:--|
 | **Trim CLAUDE.md** | to ~92% injectable | ≤200 lines, only what will surprise the experienced; path-scoped rules `.claude/rules/` |
 | **Skill entry form** | is measured `skiller budget --first-turn` | short `description` + `when_to_use`; procedural bodies go to `context: fork`, a `paths:` do not count as automatic savings |
-| **Model routing** | to ~75% | Haiku (reconnaissance/routine) · Sonnet (default) · Opus (architecture/debug). Via `/model` or `/task:*` |
+| **Model routing** | to ~75% | Haiku (reconnaissance/routine) · Sonnet (default) · Opus (architecture/debug). Via `/model` or `/planner:*` |
 | **Audit MCP** | ~10–20k/server resident | keep 1–2 for the task, the rest - CLI; unused disable |
 | **Reconnaissance by subagents** | reads do not go to main-context | hard reading (cards, impact) — read-only to the subagent, summary only to top |
 | **Selective-input** | 5–50× | function slice/class, `tail -n`/`grep`, `git diff` — «point, don't paste» |
@@ -303,7 +303,7 @@ does not authorize a tag, push, publication, fleet rollout, or provider repair.
 change-set, which enters/removes/renames the package surface file (`packages/<pkg>/
 {bin,lib,commands,configs}/**`, `core/*.py`, root `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
 or edits its interface paths (`bin`/`commands`/`configs`/`install.sh`), without editing docks
-**of the same package** (`packages/<pkg>/docs/**`; y `task` — second legal home `docs/task/**`;
+**of the same package** (`packages/<pkg>/docs/**`; y `planner` — second legal home `docs/planner/**`;
 root - `docs/*.md`) in the same range. Bypass - commit trailer `Docs-Not-Needed: <reason>`
 (reason is printed, an empty value is not considered bypass).
 Measured frequency (research/24-P8.4-refine-2026-07-27.md` §1–§2,
@@ -336,9 +336,9 @@ Never edit a managed block directly — edit the source and run `--write`.
 
 **Package bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in `<package>/bridges/<partner>/` (manifest `bridge.json`), which talks to the partner only
-through its public CLI/JSON. List bridges with `python3 packages/task/scripts/plan.py bridge list`
-(Task ↔ orchestrator: `packages/task/bridges/orch`, verbs `brief`, `register`, `register-review`). Boundary tests in the
-Task and orch test suites enforce the rule.
+through its public CLI/JSON. List bridges with `python3 packages/planner/scripts/plan.py bridge list`
+(planner ↔ orchestrator: `packages/planner/bridges/orch`, verbs `brief`, `register`, `register-review`). Boundary tests in the
+planner and orch test suites enforce the rule.
 
 Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion
 artifacts made of wood - a separate decision of the owner (not auto-editing the gate).
@@ -352,7 +352,7 @@ blank slate → new session, but do `/task`-text as a self-contained brief. See 
 **«Ran into context in the middle of a phase».** `/compact` (don't wait for auto-compaction). If this was a change of topic -
 `/clear` with a plan file.
 
-**«Starting a new feature».** `/task:design` → plan in `.claude/plans/` → `/clear` → `/task:dev`.
+**«Starting a new feature».** `/planner:design` → plan in `.claude/plans/` → `/clear` → `/planner:dev`.
 
 **«Analyzing someone else's audit/plan».** External verdicts to be checked via RAG (section 10), even if
 «looks full». Call a crutch a crutch (`[POSSIBLE-DEFECT]`), should not be presented as a solution.
@@ -405,7 +405,7 @@ The main changes have these dispositions:
 | Whole-plan-only close and old phase/audit findings reducers | Omitted; existing JSON lifecycle and `plan-close` semantics retained |
 | Registry/command locks, manifests and documentation copies | Regenerated from v3 canonical sources; obsolete copied v2 pages removed |
 
-Verification uses the Task, Harness, mAInd and Skiller validators, registry freshness and targeted
+Verification uses the planner, Harness, mAInd and Skiller validators, registry freshness and targeted
 route/workflow/memory/retirement tests. Archived PLAN1 may warn about old removed reads; it remains
 schema-valid historical data and is not rewritten by this reconciliation.
 
@@ -443,8 +443,8 @@ describes how that work is isolated from a working machine. It is removed at cut
 5. **Plan execution.** The plan lives in `plans/<PLAN-ID>` of the clone; its architecture is in the plan's
    `knowledge/architecture.json`. It is executed by the stable `plan.py` of the live checkout, not by the
    `plan.py` in the clone, so the engine keeps working while the layout changes:
-   `python3 ~/projects/packages/swissknifeman/packages/task/scripts/plan.py <verb> <plan> ... --plans-root ~/projects/packages/swissknifeman-next/plans`.
-   The `/task:*` commands are installed from the live checkout (`claude plugin install task@swissknifeman
+   `python3 ~/projects/packages/swissknifeman/packages/planner/scripts/plan.py <verb> <plan> ... --plans-root ~/projects/packages/swissknifeman-next/plans`.
+   The `/planner:*` commands are installed from the live checkout (`claude plugin install planner@swissknifeman
    --scope local` in the clone). Do not edit the live checkout while a plan runs.
 6. **Phase rhythm.** At the start of a phase run `scripts/dev-clone.sh sync-main` (clean tree required; a
    conflict stops with `DEV_CLONE_CONFLICT` and the file list, nothing is resolved automatically). Run the

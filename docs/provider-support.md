@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `5d6faa26b0541b74a38262da24fbeafb2967b59b1ecf8fac12d13162afb5f545`
-- Carrier SHA-256 (canonical bytes plus one LF): `a4c58558ccaeecd6a815e3f911a6fd08e2b6a8a89afc9e9ee9a7299bf350c03d`
+- Canonical JSON SHA-256 (without carrier LF): `484277fb69ea46e280a194b67e9edc0c96ea373d7380a1ee435b381113bf1db7`
+- Carrier SHA-256 (canonical bytes plus one LF): `7d9a3bd4af5ec7e8cb3bca9cbd5549e61f9389795d80b9eba2c3f664cd3b1e05`
 - Common capabilities: `38`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`packages/aicore/configs/provider-capabilities.json`](../packages/aicore/configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -99,11 +99,11 @@ maind sync --project <id> --mode update
 maind sync --project <id> --mode repair
 ```
 
-Native task invocation examples:
+Native planner invocation examples:
 
 ```text
-Claude Code: /task:fix <brief>
-Codex:       $ task:fix <brief>
+Claude Code: /planner:fix <brief>
+Codex:       $ planner:fix <brief>
 ```
 
 ## Support records
@@ -232,22 +232,22 @@ Build a deterministic one-project/session run report from normalized semantic ev
 
 Use an explicitly available research or retrieval surface.
 
-- **claude-code** — `adapted`; binding: `—`; adapter: `task.claude-code.external-research`.
+- **claude-code** — `adapted`; binding: `—`; adapter: `planner.claude-code.external-research`.
   Diagnostic: deterministic claude-code adapter satisfies command.external-research
   Limitations: availability still depends on an explicitly configured research surface.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
-- **codex** — `adapted`; binding: `—`; adapter: `task.codex.external-research`.
+- **codex** — `adapted`; binding: `—`; adapter: `planner.codex.external-research`.
   Diagnostic: deterministic codex adapter satisfies command.external-research
   Limitations: availability still depends on an explicitly configured research surface.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
-- **cursor** — `adapted`; binding: `—`; adapter: `task.cursor.external-research`.
+- **cursor** — `adapted`; binding: `—`; adapter: `planner.cursor.external-research`.
   Diagnostic: deterministic cursor adapter satisfies command.external-research
   Limitations: availability depends on an explicitly configured research surface and WebFetch permission token.
   Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (cursor capability matrix).
 
-- **grok** — `adapted`; binding: `—`; adapter: `task.grok.external-research`.
+- **grok** — `adapted`; binding: `—`; adapter: `planner.grok.external-research`.
   Diagnostic: deterministic grok adapter satisfies command.external-research
   Limitations: availability depends on an explicitly configured research surface and WebFetch permission token.
   Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (grok capability matrix).
@@ -259,12 +259,12 @@ Read declared repository and plan inputs.
 - **claude-code** — `native`; binding: `{"surface": "provider-native filesystem read"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.filesystem-read
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **codex** — `native`; binding: `{"surface": "provider-native filesystem read"}`; adapter: `—`.
   Diagnostic: native codex binding satisfies command.filesystem-read
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **cursor** — `native`; binding: `{"surface": "provider-native filesystem read"}`; adapter: `—`.
   Diagnostic: native cursor binding satisfies command.filesystem-read
@@ -283,12 +283,12 @@ Write only declared task or plan-item targets.
 - **claude-code** — `native`; binding: `{"surface": "provider-native filesystem write"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.filesystem-write
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **codex** — `native`; binding: `{"surface": "provider-native filesystem write"}`; adapter: `—`.
   Diagnostic: native codex binding satisfies command.filesystem-write
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **cursor** — `native`; binding: `{"surface": "provider-native filesystem write"}`; adapter: `—`.
   Diagnostic: native cursor binding satisfies command.filesystem-write
@@ -307,12 +307,12 @@ Inspect declared repository history and diffs.
 - **claude-code** — `native`; binding: `{"surface": "provider-native Git read"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.git-read
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **codex** — `native`; binding: `{"surface": "provider-native Git read"}`; adapter: `—`.
   Diagnostic: native codex binding satisfies command.git-read
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **cursor** — `native`; binding: `{"surface": "provider-native Git read"}`; adapter: `—`.
   Diagnostic: native cursor binding satisfies command.git-read
@@ -331,12 +331,12 @@ Create only task-authorized commits.
 - **claude-code** — `native`; binding: `{"surface": "provider-native Git write"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.git-write
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **codex** — `native`; binding: `{"surface": "provider-native Git write"}`; adapter: `—`.
   Diagnostic: native codex binding satisfies command.git-write
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **cursor** — `native`; binding: `{"surface": "provider-native Git write"}`; adapter: `—`.
   Diagnostic: native cursor binding satisfies command.git-write
@@ -355,12 +355,12 @@ Run declared subagent and reviewer stages.
 - **claude-code** — `native`; binding: `{"surface": "provider-native subagents"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.subagents
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **codex** — `native`; binding: `{"surface": "provider-native subagents"}`; adapter: `—`.
   Diagnostic: native codex binding satisfies command.subagents
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
 - **cursor** — `native`; binding: `{"surface": "provider-native subagents"}`; adapter: `—`.
   Diagnostic: native cursor binding satisfies command.subagents
@@ -379,22 +379,22 @@ Resolve a semantic orchestration carrier through the provider projection.
 - **claude-code** — `native`; binding: `{"surface": "Workflow({scriptPath})"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.workflow-carrier
   Limitations: none.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
-- **codex** — `adapted`; binding: `—`; adapter: `task.codex.workflow-carrier`.
+- **codex** — `adapted`; binding: `—`; adapter: `planner.codex.workflow-carrier`.
   Diagnostic: deterministic codex adapter satisfies command.workflow-carrier
   Limitations: requires the generated carrier and native subagent binding.
-  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+  Evidence: [2026-07-21] the command routing mapping declares exact support levels for every v1 command capability — `packages/planner/configs/command-routing.json` (frozen planner command capability mappings).
 
-- **cursor** — `adapted`; binding: `—`; adapter: `task.cursor.workflow-carrier`.
+- **cursor** — `adapted`; binding: `—`; adapter: `planner.cursor.workflow-carrier`.
   Diagnostic: deterministic Cursor adapter provides a generated workflow instruction carrier over native subagents
   Limitations: implemented as a generated instruction carrier over native Cursor subagents; does not create a provider-native workflow run store.
-  Evidence: [2026-09-18] the Cursor command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog — `packages/task/lib/task/command_render.py` (cursor command.workflow-carrier generated instruction projection).
+  Evidence: [2026-09-18] the Cursor command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog — `packages/planner/lib/planner/command_render.py` (cursor command.workflow-carrier generated instruction projection).
 
-- **grok** — `adapted`; binding: `—`; adapter: `task.grok.workflow-carrier`.
+- **grok** — `adapted`; binding: `—`; adapter: `planner.grok.workflow-carrier`.
   Diagnostic: Grok workflow-carrier is a generated instruction carrier; Grok also has native Rhai workflows that remain provider-owned
-  Limitations: managed Task carrier is an instruction projection over native subagents; Grok-native Rhai workflow runs are not a swissknifeman workflows.status store.
-  Evidence: [2026-09-18] the Grok command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog — `packages/task/lib/task/command_render.py` (grok command.workflow-carrier generated instruction projection).
+  Limitations: managed planner carrier is an instruction projection over native subagents; Grok-native Rhai workflow runs are not a swissknifeman workflows.status store.
+  Evidence: [2026-09-18] the Grok command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog — `packages/planner/lib/planner/command_render.py` (grok command.workflow-carrier generated instruction projection).
 
 ### `context.observer`
 
@@ -758,11 +758,11 @@ Block hand edits of files generated by plan.py inside a plan directory.
 
 ### `lifecycle.plan-regen`
 
-Check and re-render a Task plan after a JSON edit.
+Check and re-render a planner plan after a JSON edit.
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.plan-regen`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.plan-regen
-  Limitations: inactive by default; harness hooks --plan-regen on enables it; needs plan.py: $TASK_PLAN_CLI or packages/task/scripts/plan.py in the project; acts on Edit, Write and MultiEdit only.
+  Limitations: inactive by default; harness hooks --plan-regen on enables it; needs plan.py: $TASK_PLAN_CLI or packages/planner/scripts/plan.py in the project; acts on Edit, Write and MultiEdit only.
   Evidence: [2026-10-05] a PostToolUse hook on a plan JSON edit returns plan.py check errors and does not render, and renders the views when only stale views are reported — `packages/harness/tests/test_plan_guard.py` (claude-code lifecycle.plan-regen check and render behavior).
 
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
@@ -819,9 +819,9 @@ Project semantic routing into native lifecycle activation.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn — `docs/provider-support.md` (codex lifecycle.router bias injection on UserPromptSubmit).
 
 - **cursor** — `adapted`; binding: `{"alwaysApply": false, "surface": "static Cursor rule", "target": ".cursor/rules/swissknifeman-router.mdc"}`; adapter: `harness.cursor.lifecycle.router`.
-  Diagnostic: Cursor lifecycle.router is a manual Task rule requiring explicit invocation
+  Diagnostic: Cursor lifecycle.router is a manual planner rule requiring explicit invocation
   Limitations: routing bias is session-scoped through a static rule projection; Cursor provides no per-prompt project hook field for routing context injection; sessionStart.additional_context is intentionally not required.
-  Evidence: [2026-09-18] the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; Task does not activate from ordinary prompts — `packages/harness/lib/harness/cursor_render.py` (cursor lifecycle.router explicit-only carrier).
+  Evidence: [2026-09-18] the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; planner does not activate from ordinary prompts — `packages/harness/lib/harness/cursor_render.py` (cursor lifecycle.router explicit-only carrier).
 
 - **grok** — `adapted`; binding: `—`; adapter: `harness.grok.lifecycle.router`.
   Diagnostic: Grok lifecycle.router uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)

@@ -14,8 +14,8 @@
 | harness | capability | 0.7.1 | hub | beta | aicore |
 | maind | capability | 0.6.0 | hub | beta | aicore |
 | orch | capability | 0.1.0 | own-repo | alpha | - |
+| planner | capability | 0.28.3 | own-repo | beta | aicore |
 | skiller | capability | 0.19.2 | own-repo | beta | aicore |
-| task (renamed to planner) | capability | 0.28.3 | own-repo | beta | aicore |
 
 ## Ownership map
 
@@ -23,14 +23,13 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
+| `packages/planner/configs/command-routing.json` | planner | planner | - | P9 | fixed | mappings.<provider>.{class_selectors,effort_selectors,model_inventory} are a transitional copy of packages/aicore/configs/model-catalog.json (parity test); replaced by a catalog snapshot in P9.3 (D57), the row is removed there |
 | `packages/skiller/skills/general/workflow-craft/` | skiller | planner | skills | P9 | fixed | - |
-| `packages/task/` | task | planner | - | P9 | fixed | folder is renamed to planner (module_aliases) |
-| `packages/task/configs/command-routing.json` | task | planner | - | P9 | fixed | mappings.<provider>.{class_selectors,effort_selectors,model_inventory} are a transitional copy of packages/aicore/configs/model-catalog.json (parity test); the copy is removed in P9 |
 | `orch/` | orch (hub root) | orch | docs/research | P10 | fixed | root research documents of the orchestration module |
 | `packages/orch/bridges/harness/` | orch | bridges/orch-harness | - | P10 | hypothesis | not described by the architecture; refine in P10 |
 | `packages/orch/bridges/skiller/` | orch | bridges/orch-skiller | - | P10 | fixed | - |
 | `packages/orch/bridges/task/` | orch | bridges/planner-orch | - | P10 | fixed | - |
-| `packages/task/bridges/orch/` | task | bridges/planner-orch | - | P10 | fixed | - |
+| `packages/planner/bridges/orch/` | planner | bridges/planner-orch | - | P10 | fixed | - |
 | `core/__init__.py` | core (hub root) | aicore | shim | P11 | fixed | transitional alias package; deleted with core/ |
 | `core/codegraph_telemetry.py` | core (hub root) | analyst | - | P11 | fixed | - |
 | `core/pathology.py` | core (hub root) | analyst | - | P11 | fixed | - |

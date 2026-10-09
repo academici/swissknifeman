@@ -567,6 +567,23 @@
       "package": "skiller"
     },
     {
+      "name": "planner",
+      "source": "./packages/planner",
+      "description": "planner: intent commands for Claude Code (/planner:design|dev|review|research|fix) plus the plan protocol (/planner:plan-design|plan-run|plan-close|plan-audit). Executable master plans live in plans/ per the plan-protocol skill: frontier designs, plan-run executes under the session model, frontier audits. Each fixed command pins its model and reasoning effort; plan-run pins neither and inherits the session route.",
+      "category": "ecosystem",
+      "tags": [
+        "tasks",
+        "claude-code",
+        "workflow",
+        "model-routing",
+        "effort",
+        "lean-tiered",
+        "academici",
+        "ecosystem"
+      ],
+      "package": "planner"
+    },
+    {
       "name": "pm",
       "source": "./packages/skiller/skills/pm",
       "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
@@ -656,23 +673,6 @@
         "management"
       ],
       "package": "skiller"
-    },
-    {
-      "name": "task",
-      "source": "./packages/task",
-      "description": "task: intent commands for Claude Code (/task:design|dev|review|research|fix) plus the plan protocol (/task:plan-design|plan-run|plan-close|plan-audit). Executable master plans live in plans/ per the plan-protocol skill: frontier designs, plan-run executes under the session model, frontier audits. Each fixed command pins its model and reasoning effort; plan-run pins neither and inherits the session route.",
-      "category": "ecosystem",
-      "tags": [
-        "tasks",
-        "claude-code",
-        "workflow",
-        "model-routing",
-        "effort",
-        "lean-tiered",
-        "academici",
-        "ecosystem"
-      ],
-      "package": "task"
     },
     {
       "name": "voice-ai",

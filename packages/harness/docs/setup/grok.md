@@ -42,8 +42,8 @@ From the swissknifeman checkout, when `grok` is on `PATH`:
 ```
 
 The script adds this checkout as a Grok marketplace, then installs
-`packages/task` and `packages/task/adapters/grok/prefix-hold` with `--trust`.
-Task commands in a new Grok session are `/task:*`. A repeat that prints
+`packages/planner` and `packages/planner/adapters/grok/prefix-hold` with `--trust`.
+Planner commands in a new Grok session are `/planner:*`. A repeat that prints
 `already configured` or `already installed` is success. Opt out with
 `--no-grok-plugins`. Marketplace `core` is not installed for Grok: its source
 is the repository root.
@@ -102,7 +102,7 @@ cd /path/to/swissknifeman
 grok --cwd "$(pwd)" \
      --model grok-4.6 \
      --always-approve \
-     '/task:plan-run <PLAN-ID> <Pn.m>'
+     '/planner:plan-run <PLAN-ID> <Pn.m>'
 ```
 
 ## MCP and hooks
@@ -124,5 +124,5 @@ logged to stderr and allowed: an observer must never turn a project into a silen
 ## See also
 
 - [Adapter Grok](/skiller/adapters/grok)
-- [Provider model roles](/task/reference/provider-model-roles)
+- [Provider model roles](/planner/reference/provider-model-roles)
 - [Harness setup: Cursor](./cursor)

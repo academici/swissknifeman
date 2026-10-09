@@ -54,9 +54,9 @@ jobs:
           python3 scripts/test-provider-docs.py -v
           python3 scripts/provider-docs.py --check
 
-      - name: Skiller host bindings (Task release surfaces, root installers)
+      - name: Skiller host bindings (planner release surfaces, root installers)
         run: |
-          python3 scripts/test-task-plugin-cache-revision.py -v
+          python3 scripts/test-planner-plugin-cache-revision.py -v
           python3 scripts/test-root-install.py -v
 
       - name: dev-clone guard (entry points, scripts/dev-clone.sh)

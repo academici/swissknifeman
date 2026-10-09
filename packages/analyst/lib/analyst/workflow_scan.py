@@ -1,4 +1,4 @@
-"""Read-only, deterministic inventory of registered Task workflow artifacts.
+"""Read-only, deterministic inventory of registered planner workflow artifacts.
 
 Field JavaScript is untrusted input.  This module reads only the two declared
 plan roots of enabled registry projects, hashes bytes before interpretation and
@@ -175,7 +175,7 @@ def inventory(projects):
 
 
 def template_sources(monorepo_root):
-    root = Path(monorepo_root) / "packages" / "task" / "workflows"
+    root = Path(monorepo_root) / "packages" / "planner" / "workflows"
     records = []
     for path in sorted(root.glob("wf-*.js")):
         raw = path.read_bytes()

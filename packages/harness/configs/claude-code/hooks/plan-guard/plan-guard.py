@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse guard: generated Task plan files are changed through plan.py, never by hand."""
+"""PreToolUse guard: generated planner plan files are changed through plan.py, never by hand."""
 import fnmatch
 import json
 import os

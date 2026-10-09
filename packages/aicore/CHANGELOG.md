@@ -276,6 +276,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
   architecture documents carry ADR 0037 to 0039.
 
 ### Changed
+- **Follow the task → planner rename:** the Codex runtime locator expression finds `packages/planner` and reports `planner runtime unavailable`; the evidence paths and adapter ids of `provider-capabilities.json` name the planner module (the pinned manifest hashes are recomputed).
 - **The gitignore policy moved into `aicore.state.gitignore`** (history preserved) and its data to
   `configs/gitignore-policy.json` of this package, found from the package file. The policy gains `project-config`
   (`.swissknifeman/config.toml`, committed) and `swissknifeman-state` (`.swissknifeman/state/`, ignored).

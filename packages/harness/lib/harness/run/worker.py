@@ -25,7 +25,7 @@ CLAUDE_BIN_ENV = "SKM_CLAUDE_BIN"
 
 
 PROVIDER_ID = "claude-code"
-WORKER_COMMAND_ID = "task:plan-run"
+WORKER_COMMAND_ID = "planner:plan-run"
 
 
 
@@ -51,8 +51,8 @@ def resolve_claude_bin():
     return shutil.which("claude")
 
 
-def _load_routing_config(task):
-    path = task_paths.routing_in(task)
+def _load_routing_config(planner):
+    path = task_paths.routing_in(planner)
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -70,10 +70,10 @@ def _first(selectors):
 def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin):
     """Internal documentation."""
     try:
-        task = task_paths.task_root(monorepo_root=monorepo_root)
-    except task_paths.TaskUnavailable as exc:
+        planner = task_paths.planner_root(monorepo_root=monorepo_root)
+    except task_paths.PlannerUnavailable as exc:
         raise WorkerUnavailable(f"routing media not available: {exc}") from exc
-    routing, reason = _load_routing_config(task)
+    routing, reason = _load_routing_config(planner)
     if routing is None:
         raise WorkerUnavailable(f"routing media not available: {reason}")
 
@@ -168,8 +168,8 @@ def run(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin
         timeout=DEFAULT_TIMEOUT):
     """Internal documentation."""
     try:
-        task_paths.task_root(monorepo_root=monorepo_root)
-    except task_paths.TaskUnavailable as exc:
+        task_paths.planner_root(monorepo_root=monorepo_root)
+    except task_paths.PlannerUnavailable as exc:
         raise WorkerUnavailable(f"{exc} (command-routing.json not available)") from exc
 
     resolved_bin = claude_bin or resolve_claude_bin()

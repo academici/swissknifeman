@@ -151,7 +151,7 @@
         "packages/maind/lib/maind/provider_deploy.py",
         "packages/skiller/lib/skiller/config.py",
         "packages/skiller/lib/skiller/publication.py",
-        "packages/task/lib/task/command_render.py"
+        "packages/planner/lib/planner/command_render.py"
       ],
       "released": false,
       "note": "SSOT of support levels"
@@ -192,7 +192,7 @@
       "owner": "aicore",
       "consumers": [
         "packages/aicore/lib/aicore/provider/models.py",
-        "packages/task/tests/test_model_catalog_parity.py"
+        "packages/planner/tests/test_model_catalog_parity.py"
       ],
       "released": false,
       "note": "canonical model catalog; command-routing.json keeps a transitional copy"
@@ -211,7 +211,7 @@
       "owner": "root",
       "consumers": [
         "packages/skiller/lib/skiller/release_attestation.py",
-        "packages/task/scripts/check-publication-version.py",
+        "packages/planner/scripts/check-publication-version.py",
         "scripts/version-guard.py"
       ],
       "released": false
@@ -374,7 +374,7 @@
         "packages/orch/bridges/task/discovery.py"
       ],
       "released": false,
-      "note": "declarative, no entrypoints; names the Task package-layout contract and the SKM_TASK_ROOT lookup"
+      "note": "declarative, no entrypoints; names the planner package-layout contract and the PLANNER_ROOT lookup"
     },
     {
       "path": "packages/orch/bridges/skiller/bridge.json",
@@ -456,23 +456,23 @@
       "note": "editor/doc schemas, loaded by name"
     },
     {
-      "path": "packages/task/bridges/orch/bridge.json",
-      "owner": "task",
+      "path": "packages/planner/bridges/orch/bridge.json",
+      "owner": "planner",
       "consumers": [
-        "packages/task/lib/task/plan/bridges.py"
+        "packages/planner/lib/planner/plan/bridges.py"
       ],
       "released": false
     },
     {
-      "path": "packages/task/configs/command-routing.json",
-      "owner": "task",
+      "path": "packages/planner/configs/command-routing.json",
+      "owner": "planner",
       "consumers": [
-        "packages/task/lib/task/plan/lifecycle.py",
-        "packages/task/lib/task/command_render.py",
-        "packages/task/lib/task/command_catalog.py",
-        "packages/task/scripts/render-provider-commands.py",
-        "packages/task/scripts/check-publication-version.py",
-        "packages/task/bridges/orch/launch.py",
+        "packages/planner/lib/planner/plan/lifecycle.py",
+        "packages/planner/lib/planner/command_render.py",
+        "packages/planner/lib/planner/command_catalog.py",
+        "packages/planner/scripts/render-provider-commands.py",
+        "packages/planner/scripts/check-publication-version.py",
+        "packages/planner/bridges/orch/launch.py",
         "packages/harness/lib/harness/cursor_render.py",
         "packages/harness/lib/harness/run/worker.py",
         "packages/artifex/lib/artifex/providers/codex.py",

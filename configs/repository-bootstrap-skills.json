@@ -48,6 +48,10 @@
       "canonical": "bootstrap/skills/package-architecture/SKILL.md"
     },
     {
+      "identity": "planner-development-philosophy",
+      "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md"
+    },
+    {
       "identity": "project-tooling-runbook",
       "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md"
     },
@@ -58,10 +62,6 @@
     {
       "identity": "skill-authoring",
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md"
-    },
-    {
-      "identity": "task-development-philosophy",
-      "canonical": "packages/task/dev-skills/task-development-philosophy/SKILL.md"
     }
   ],
   "class_b": [

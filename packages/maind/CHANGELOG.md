@@ -8,6 +8,9 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 ### Added
 - **Skills and agent:** the plugin `maind` 0.5.0 ships the skills `local-topology`, `swissknifeman-locator`, `cross-project-coordinator` and `shared-memory` and the agent `code-coordinator` (moved from the `system` bucket of skiller), and a Codex plugin manifest.
 
+### Changed
+- **Follow the task → planner rename:** the default command plugin of the audit is `planner`, and the plan convention block names the planner plugin.
+
 ### Removed
 - **`scripts/cache-brain-docs.sh`** moved to the brain module (`scripts/cache-brain-docs.sh`); it finds `maind` through `$MAIND_BIN` or `PATH`.
 

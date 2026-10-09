@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-PLAN_SCRIPT = REPO_ROOT / "packages" / "task" / "scripts" / "plan.py"
+PLAN_SCRIPT = REPO_ROOT / "packages" / "planner" / "scripts" / "plan.py"
 ACTOR = "claude-code/claude-opus-5-5/high"
 DATE = "2026.10.05"
 

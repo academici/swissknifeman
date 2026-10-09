@@ -9,7 +9,7 @@ plan_dirs="$(printf '%s\n' "$changed" | grep -oE '^plans/[^/]+/' | sed -E 's#/$#
 [ -n "$plan_dirs" ] || exit 0
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-plan_py="$repo_root/packages/task/scripts/plan.py"
+plan_py="$repo_root/packages/planner/scripts/plan.py"
 [ -f "$plan_py" ] || exit 0   # No plan CLI in this tree.
 
 violations=0

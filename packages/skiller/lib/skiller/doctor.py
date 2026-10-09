@@ -618,7 +618,7 @@ def _sibling_identities(repo_root, sibling, *, manifest_name):
     """Read-only, D44-ordered: a sibling package's OWN plugin manifest names its declared
     `skills` root(s) — never a blind recursive walk of the package. Returns the immediate
     subdirectory names that carry a SKILL.md (empty when the manifest declares `commands`
-    only, e.g. `task`'s Claude side — commands are a different identity space)."""
+    only, e.g. `planner`'s Claude side — commands are a different identity space)."""
     manifest_path = repo_root / sibling.source_path / manifest_name
     if not manifest_path.is_file():
         return ()

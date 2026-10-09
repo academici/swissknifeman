@@ -34,7 +34,7 @@ analyst workflow-scan [--project ID] --output DIR|FILE.json --now ISO [--json]
 
 Read-only inventory workflow-scripts only from explicit ones `local_path`/`vault_path` plan-root
 enabled-projects. The command hashes the bytes before parsing, saves aliases mirrors, believes Rule of
-Three on different plans and compares static features with four Task templates. JavaScript
+Three on different plans and compares static features with four planner templates. JavaScript
 not executed, absolute paths, prompts and script bodies are not included in the report. Result
 `workflow-fleet-report/v1` can only offer a proven refinement of an existing slot;
 fifth template-family and changing the stage matrix remain `report-only`.

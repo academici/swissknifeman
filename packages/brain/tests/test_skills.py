@@ -1,4 +1,4 @@
-"""The skill brain-locator and the plugin manifest of the brain module."""
+"""The skill brain-locator and the plugin manifests of the brain module."""
 import json
 import re
 import unittest
@@ -28,6 +28,13 @@ class TestSkill(unittest.TestCase):
         self.assertEqual(plugin["version"], unit["version"])
         self.assertEqual(unit["provides"]["plugins"], [{"name": "brain", "manifest": ".claude-plugin/plugin.json"}])
         self.assertTrue((ROOT / plugin["skills"][0]).is_dir())
+
+    def test_codex_manifest_matches_claude(self):
+        claude = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        codex = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        for key in ("name", "version", "description"):
+            self.assertEqual(codex[key], claude[key], key)
+        self.assertEqual(codex["skills"], ["./skills"])
 
 
 if __name__ == "__main__":

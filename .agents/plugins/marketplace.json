@@ -14,6 +14,22 @@
       "auth": "none"
     },
     {
+      "name": "analyst",
+      "source": "./packages/analyst",
+      "description": "analyst — continuous learning ecosystems: deterministic capture of candidate lessons from runs (digest), man-gate (review/promote), provenance; agent-analyst (/analyst:deep, digest-first). Commands + agent; skill session-observer.",
+      "category": "ecosystem",
+      "tags": [
+        "analyst",
+        "continuous-learning",
+        "lessons",
+        "provenance",
+        "academici",
+        "ecosystem"
+      ],
+      "install_policy": "explicit",
+      "auth": "none"
+    },
+    {
       "name": "architect",
       "source": "./packages/skiller/skills/architect",
       "description": "Architecture, API and data design, security, observability, tech stack selection",
@@ -92,6 +108,22 @@
         "php",
         "laravel",
         "bot"
+      ],
+      "install_policy": "explicit",
+      "auth": "none"
+    },
+    {
+      "name": "brain",
+      "source": "./packages/brain",
+      "description": "brain — Obsidian vault for the ecosystem: vault lookup, document sync and notes from ecosystem events; skill brain-locator.",
+      "category": "ecosystem",
+      "tags": [
+        "brain",
+        "obsidian",
+        "vault",
+        "docs",
+        "academici",
+        "ecosystem"
       ],
       "install_policy": "explicit",
       "auth": "none"
@@ -353,6 +385,24 @@
       "auth": "none"
     },
     {
+      "name": "harness",
+      "source": "./packages/harness",
+      "description": "harness — environment settings Claude Code: presets permissions, auto-approve/bypass, MCP-servers and hooks (memory/notify). Thin face above CLI harness; skill agent-packs.",
+      "category": "ecosystem",
+      "tags": [
+        "harness",
+        "claude-code",
+        "permissions",
+        "auto-approve",
+        "mcp",
+        "hooks",
+        "academici",
+        "ecosystem"
+      ],
+      "install_policy": "explicit",
+      "auth": "none"
+    },
+    {
       "name": "laravel-architecture",
       "source": "./packages/skiller/skills/laravel-architecture",
       "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
@@ -451,6 +501,23 @@
       "tags": [
         "legal",
         "compliance"
+      ],
+      "install_policy": "explicit",
+      "auth": "none"
+    },
+    {
+      "name": "maind",
+      "source": "./packages/maind",
+      "description": "mAInd hub — thin face above CLI: onboarding projects into the ecosystem academici (skills + memory + graph + MCP), sync, status, communication health; skills: local-topology, swissknifeman-locator, cross-project-coordinator, shared-memory.",
+      "category": "ecosystem",
+      "tags": [
+        "maind",
+        "hub",
+        "mcp",
+        "memory",
+        "graph",
+        "academici",
+        "ecosystem"
       ],
       "install_policy": "explicit",
       "auth": "none"
@@ -628,20 +695,6 @@
         "cli",
         "skills",
         "management"
-      ],
-      "install_policy": "explicit",
-      "auth": "none"
-    },
-    {
-      "name": "system",
-      "source": "./packages/skiller/skills/system",
-      "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "category": "meta",
-      "tags": [
-        "topology",
-        "architecture",
-        "navigation",
-        "meta"
       ],
       "install_policy": "explicit",
       "auth": "none"

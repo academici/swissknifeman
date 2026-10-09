@@ -3,7 +3,7 @@
 Real tokens/timings/cache-hit by agent + effective/dead skills -
 from logs Claude Code (`~/.claude/projects/<slug>/…`). stdlib-only, does not burn tokens.
 
-Complements quality skill `system/session-observer` (that one - about «why/drift»
+Complements the session-observer skill (that one - about «why/drift»
 via agent; this one is about NUMBERS deterministically). Uses the field `usage`
 (input/output/cache_read), which the rest of the tooling does not touch.
 

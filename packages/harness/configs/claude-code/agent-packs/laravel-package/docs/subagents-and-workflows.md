@@ -84,7 +84,7 @@ test framework {{TEST_FRAMEWORK}}, public contract/BC instead app-canon access-l
 > cheap models.
 
 Plugin swissknifeman gives more `Explore` (read-only research), `Plan`
-(architectural plan), `system:code-coordinator` (cross-project analysis),
+(architectural plan), `maind:code-coordinator` (cross-project analysis),
 `php:laravel-reviewer`/`php:laravel-test-writer` (general, app-oriented -
 for {{PACK_PREFIX}} prefer design ones `{{PACK_PREFIX}}-*`, sharpened to BC/package).
 

@@ -231,6 +231,15 @@ class CommandTests(unittest.TestCase):
         subprocess.run(["git", "rm", "-qf", "gen/new.txt", "gen/out.txt"], cwd=self.root, check=True)
         self.assertEqual(self.check(only="gen"), 1)
 
+    def test_recapture_drops_digest_of_a_file_removed_from_the_index(self):
+        self.capture()
+        subprocess.run(["git", "rm", "-qf", "gen/out.txt"], cwd=self.root, check=True)
+        self.assertEqual(self.check(only="gen"), 1)
+        self.assertEqual(self.capture(only="gen"), 0)
+        generation = json.loads((self.root / "tests/golden/generation.json").read_text())
+        self.assertNotIn("gen/out.txt", generation["digests"])
+        self.assertEqual(self.check(only="gen"), 0)
+
     def test_generator_check_failure_is_a_mismatch_and_blocks_capture(self):
         failing = FakeRunner({"tool-one": "a", "tool-two": "b"}, rc_by_argv={"gen-check": 3})
         self.assertEqual(self.capture(runner=failing), 1)

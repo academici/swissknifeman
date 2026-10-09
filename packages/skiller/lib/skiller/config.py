@@ -40,7 +40,7 @@ def _load_core_policy():
         "resident_budget_target": 750,
         "core_plugin": "core",
         "core_buckets": ["general", "oss-dev"],
-        "default_exclude": ["system/shared-memory", "system/cross-project-coordinator"],
+        "default_exclude": ["shared-memory", "cross-project-coordinator"],
     }
     try:
         p = Path(__file__).resolve().parents[2] / "configs" / "core-policy.json"
@@ -95,10 +95,9 @@ DEFAULT_EXCLUDE = list(_CORE_POLICY["default_exclude"])
 # Minimum safe set for UNRECOGNIZED project type (autodetect → standalone).
 # DO NOT expand `["*"]` (= all buckets) default is «soulless dump of everything». Explicit
 # `--profile standalone` («put everything») remains available; auto-fallback puts only the core.
-# == CORE_BUCKETS (channel-independent consistency): used to include a bucket `system`
-# entirely, but he carries system/shared-memory and system/cross-project-coordinator — exactly those
-# hub duplicates, what CORE-politics drives through DEFAULT_EXCLUDE. Fallback should not retract
-# them back, so it matches CORE_BUCKETS.
+# == CORE_BUCKETS (channel-independent consistency): the host-provided bucket `system` carries
+# shared-memory and cross-project-coordinator — exactly those hub duplicates, what CORE-politics
+# drives through DEFAULT_EXCLUDE. Fallback should not retract them back, so it matches CORE_BUCKETS.
 MINIMAL_BUCKETS = list(CORE_BUCKETS)
 
 

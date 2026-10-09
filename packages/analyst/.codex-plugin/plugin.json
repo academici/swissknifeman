@@ -1,0 +1,8 @@
+{
+  "description": "analyst — continuous learning ecosystems: deterministic capture of candidate lessons from runs (digest), man-gate (review/promote), provenance; agent-analyst (/analyst:deep, digest-first). Commands + agent; skill session-observer.",
+  "name": "analyst",
+  "skills": [
+    "./skills"
+  ],
+  "version": "0.4.0"
+}

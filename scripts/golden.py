@@ -366,6 +366,9 @@ def cmd_capture(root: Path, args, runner_factory=sandbox) -> int:
     tracked = tracked_files(root)
     fresh = compute_digests(root, selected, tracked)
     stale = {rel for files in output_files(selected, tracked).values() for rel in files}
+    # digests of files that left the index (a moved or deleted generated file) match the outputs too
+    stale |= {rel for rel in generation["digests"] if any(glob_regex(o).match(rel)
+                                                          for g in selected for o in g.get("outputs", []))}
     generation["digests"] = dict(sorted({**{k: v for k, v in generation["digests"].items() if k not in stale},
                                          **fresh}.items()))
     for doc, path, schema in ((cases, CASES_FILE, SCHEMA_CASES), (generation, GENERATION_FILE, SCHEMA_GENERATION)):

@@ -81,7 +81,7 @@ test framework {{TEST_FRAMEWORK}}, canon access-layer.
 > `opus`), a per-slice still to be confirmed `risk`. Foundation (contracts/models) write it yourself - don’t knock cheap models.
 
 Plugin swissknifeman gives more `Explore` (read-only research), `Plan`
-(architectural plan), `system:code-coordinator` (cross-project analysis),
+(architectural plan), `maind:code-coordinator` (cross-project analysis),
 `php:laravel-reviewer`/`php:laravel-test-writer` (general, Pest-oriented -
 for {{PACK_PREFIX}} prefer design ones `{{PACK_PREFIX}}-*`).
 

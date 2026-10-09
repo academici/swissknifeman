@@ -3,7 +3,7 @@
 Three hub nodes: brain (docs-hub), swissknifeman (skills-hub), projects_base
 (workspace). The config lives in $HOME, machine-specific (like .projects.json y
 Brain) and is NOT committed to projects. Team reads/creates it; distributed skill
-skills/system/local-topology explains the schema and resolves nodes using this file.
+the local-topology skill explains the schema and resolves nodes using this file.
 
 Subcommands:
   init   interactively collect the config (auto-detect defaults, prompt for each node)

@@ -7,9 +7,17 @@
 - **brain:** ручной `sync-brain.sh` сохраняет изменённые файлы хранилища при push и поддерживает явный `--force`;
   добавлены метаданные версии пакета для аттестации выпуска; неверные секунды, смещения UTC и переполнение
   даты отклоняются с `EVENT_DATA_INVALID` (exit 65).
+- **hub:** `golden.py capture` drops the digests of generated files that left the git index, so a moved generated file no longer
+  leaves `golden.py check` red.
 
 ### Added
 
+- **harness:** the plugin `harness` 0.7.0 ships the skill `agent-packs` (moved from the `system` bucket of skiller) and
+  a Codex plugin manifest; the agent-pack docs name the agent as `maind:code-coordinator`.
+- **analyst:** the plugin `analyst` 0.4.0 ships the skill `session-observer` (moved from the `system` bucket of skiller)
+  and a Codex plugin manifest.
+- **hub:** `scripts/e2e-module-skills.sh` checks, in a sandbox, that the module skills reach projects through the plugin
+  channel (`connect`) and the vendor channel (`sync`).
 - **skiller:** host-provided buckets and module skill sources. A bucket marked `"provided_by": "host"` in
   `buckets.json` has no catalog; the host config key `bucket_aliases` maps it to host plugins, and skiller reads their
   skills from the plugin directories the host names (`plugin_dirs`). `connect` expands the bucket into those plugins and
@@ -291,6 +299,9 @@
 
 ### Removed
 
+- **skiller:** the `system` bucket skills and its plugin manifests. The bucket is now provided by the host modules
+  (`bucket_aliases` in the host config): `maind`, `harness`, `analyst` and `brain`; profiles are unchanged. The CORE
+  `default_exclude` names the skills (`shared-memory`, `cross-project-coordinator`) instead of bucket paths.
 - **skiller:** the re-export layer over `core` and `aicore` (`skiller.common`, `budget`, `publication`, `skillset`,
   `release`, `release_attestation`, `quality.eval`) and the wrapper modules `plugins.py` and `native_codex.py`; callers
   import the `aicore` modules.

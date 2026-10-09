@@ -23,13 +23,7 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `packages/skiller/skills/system/agent-packs/` | skiller | harness | skills | P8 | fixed | - |
-| `packages/skiller/skills/system/agents/` | skiller | harness | skills | P8 | fixed | - |
-| `packages/skiller/skills/system/cross-project-coordinator/` | skiller | maind | skills | P8 | fixed | - |
-| `packages/skiller/skills/system/local-topology/` | skiller | maind | skills | P8 | fixed | - |
-| `packages/skiller/skills/system/session-observer/` | skiller | analyst | skills | P8 | fixed | - |
-| `packages/skiller/skills/system/shared-memory/` | skiller | maind | skills | P8 | fixed | - |
-| `packages/skiller/skills/system/swissknifeman-locator/` | skiller | maind | skills | P8 | fixed | - |
+| `packages/skiller/skills/general/workflow-craft/` | skiller | planner | skills | P9 | fixed | - |
 | `packages/task/` | task | planner | - | P9 | fixed | folder is renamed to planner (module_aliases) |
 | `packages/task/configs/command-routing.json` | task | planner | - | P9 | fixed | mappings.<provider>.{class_selectors,effort_selectors,model_inventory} are a transitional copy of packages/aicore/configs/model-catalog.json (parity test); the copy is removed in P9 |
 | `orch/` | orch (hub root) | orch | docs/research | P10 | fixed | root research documents of the orchestration module |

@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "plugin_dirs": ["packages/*"],
+  "bucket_aliases": {"system": ["maind", "harness", "analyst", "brain"]},
   "default_command_plugins": ["task"],
   "version_files": [{"path": "packages/task/configs/command-routing.json", "key": "plugin_version"}],
   "machine_plugins": {

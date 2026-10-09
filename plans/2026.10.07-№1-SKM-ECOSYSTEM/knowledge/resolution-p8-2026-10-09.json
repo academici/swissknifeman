@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "resolution-p8-2026-10-09",
+  "title": "P8 audit correction — F1 resolved and push boundary completed",
+  "sections": [
+    {
+      "id": "correction",
+      "title": "Executed correction",
+      "text": "Executed the owner instruction to repair the audit finding and commit/push the result. F1 of knowledge/audit-p8-2026-10-09 is resolved by commit 26dbef9ae0985a68602a75e31c0c2345ec2925e5: connect._resident_tokens now discovers module skill sources independently of host bucket expansion. Direct --plugins, legacy config.plugins, TOML [skiller].plugins and host-bucket selection all contribute their selected module skills to the Resident estimate. CHANGELOG records the correction. The original audit remains a historical verdict on ba372832; this is executor correction evidence, not another independent audit."
+    },
+    {
+      "id": "validation",
+      "title": "Validation",
+      "text": "Regression test ConnectTests.test_resident_estimate_counts_direct_and_host_bucket_module_selections passed all four selection cases. Full skiller validate passed in a sandbox snapshot of Git-tracked candidate sources with the current diff applied: 857 tests, registry drift check and Codex consumer acceptance GREEN. The original checkout has a local-only next-base-tooling root skill excluded from Git; its presence triggers root-bootstrap completeness. Validation in the tracked snapshot preserves the product invariant and leaves that local registration intact. Ecosystem boundary/render checks and standalone skiller passed; golden and public hygiene passed in the tracked snapshot. Both e2e-module-skills variants (legacy JSON and TOML) passed. docs-impact on 9d0aeaac..26dbef9a passed; product docs need no update because the correction restores existing behavior."
+    },
+    {
+      "id": "phase-close",
+      "title": "Phase close and evidence reuse",
+      "text": "P8.7 was reopened solely to resolve the historical push boundary. The owner explicitly authorized commit and push. Commit 26dbef9a was successfully pushed; fetch, clean tracked tree and no local-ahead commits passed before registering closure. Reuse unchanged broad module/script, task, other-module standalone, schema-compatibility and first-turn budget evidence from P8.7 at ba372832. Refresh the changed skiller validation, its standalone check, golden/hygiene, both e2e variants and the live push gate. The reporting-only correction does not alter the first-turn measurement or E27/R44/R59 disposition; the recorded 2464 managed estimate and approximately 1.3K extra plugin estimate retain the native-inventory limitation stated in the audit. Final bookkeeping commit/push is verified after closure."
+    }
+  ],
+  "applies_to": [
+    "P8",
+    "P8.2",
+    "P8.7"
+  ]
+}

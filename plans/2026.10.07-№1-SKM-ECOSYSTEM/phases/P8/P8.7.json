@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.7",
   "title": "Закрытие фазы: широкий прогон, e2e доставки модульных skills, бюджет первого хода, сверка E1 и E2, push",
-  "status": "blocked",
+  "status": "done",
   "summary": "Полный прогон тестов всех модулей и скриптов хаба, skiller и task в песочнице, ecosystem-units со standalone --baseline (skiller без core), golden без перезахвата, совместимость контрактов aicore против origin/ecosystem-split, docs-impact и hygiene; e2e-module-skills.sh обоими вариантами; skiller budget --first-turn (правило root.claude-code.context-budget); сверка E27, R44, R59 записью plan.py log; коммит, push ветки ecosystem-split.",
   "why": "Один широкий прогон фазы (task-development-philosophy: broad checks run once); P9 начинается с доверенной базы.",
   "scope": {
@@ -164,48 +164,52 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-09T15:55:09Z",
-    "finished_at": "2026-10-09T16:09:33Z",
+    "started_at": "2026-10-09T17:49:06Z",
+    "finished_at": "2026-10-09T17:49:59Z",
     "executor": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-5-5",
-      "effort": "medium",
-      "session": "b408b805-1583-41e2-aec3-148b773ecec3"
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a121b0-c363-7512-810b-b306ad30fd59"
     },
-    "notes": "V1-V6 green; first-turn budget 2464; E1/E2 reconciliation logged",
-    "escalation": "V7 needs 'git push origin ecosystem-split'; plan-run forbids push, so it waits for the owner",
+    "notes": "P8 audit correction completed and pushed (26dbef9a); affected checks GREEN, unchanged evidence reused as documented in resolution-p8-2026-10-09. Historical push-only blocker resolved under explicit owner authorization.",
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-09T16:09:33Z"
+        "at": "2026-10-09T17:49:59Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-09T16:09:33Z"
+        "at": "2026-10-09T17:49:59Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-09T16:09:33Z"
+        "at": "2026-10-09T17:49:59Z"
       },
       {
         "id": "V4",
         "exit": 0,
-        "at": "2026-10-09T16:09:33Z"
+        "at": "2026-10-09T17:49:59Z"
       },
       {
         "id": "V5",
         "exit": 0,
-        "at": "2026-10-09T16:09:33Z"
+        "at": "2026-10-09T17:49:59Z"
       },
       {
         "id": "V6",
         "exit": 0,
-        "at": "2026-10-09T16:09:33Z"
+        "at": "2026-10-09T17:49:59Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-09T17:49:59Z"
       }
     ]
   },
-  "updated_at": "2026-10-09T16:09:33Z"
+  "updated_at": "2026-10-09T17:49:59Z"
 }

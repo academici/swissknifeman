@@ -10,8 +10,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .common import (DB_VERSION, atomic_write_json, host_command_text, host_install_suffix,
-                     is_within, parse_flags, warn)
+from .common import DB_VERSION, host_command_text, host_install_suffix
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json
+from aicore.util.paths import is_within
+from aicore.util.term import warn
 from .host import host_command
 from .state import registry_git_state
 
@@ -311,7 +314,7 @@ def _provider_distribution_doctor(env, target):
     from .connect import prepare_connect_selection
     from .publication import build_connect_distribution_plan, build_vendor_distribution_plan
     from .skillset import DEFAULT_SKILLS_PATH, load_skillset_config
-    from core import find_repo_root
+    from aicore.util.repo import find_repo_root
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
     _core_donor_diagnostics(env)
@@ -590,7 +593,7 @@ def declared_fixture_unit_set(catalog, *, repo_root, package_root=None):
     fixture = _fixture_catalog(catalog)
     units = sorted({unit.plugin_id for unit in fixture.units} |
                    {sibling.name for sibling in catalog.sibling_plugins})
-    from .publication import package_rel
+    from aicore.content.publication import package_rel
     prefix = package_rel(repo_root, package_root or Path(__file__).resolve().parents[2])
     identity_source = f"{prefix + '/' if prefix else ''}lib/skiller/registry.py::build_catalog"
     per_provider = {
@@ -792,7 +795,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
     (D42 nine pairs + class-B precondition) → D62 reconciliation against the frozen
     `remediation-map.json`. Returns a plain dict — the CLI/tests decide what to print or
     persist; this function never writes outside the `tempfile.TemporaryDirectory` it owns."""
-    from core import find_repo_root
+    from aicore.util.repo import find_repo_root
     from .registry import build_catalog, build_registry
     from .publication import assert_root_bootstrap_set_completeness
 
@@ -882,7 +885,8 @@ def cmd_doctor(env, argv):
         _delegate_settings_doctor(env, opts)
         return
     if opts.get("context"):
-        from .budget import first_turn_report, format_first_turn_report
+        from .budget import first_turn_report
+        from aicore.content.budget import format_first_turn_report
         from .config import resolve_target
         provider = opts.get("provider") or "claude-code"
         if provider not in {"claude-code", "codex", "cursor", "grok"}:
@@ -918,7 +922,7 @@ def cmd_doctor(env, argv):
                 print(f"{diagnostic['code']}: {', '.join(values)}")
         return
     if opts.get("effective_source"):
-        from core import find_repo_root
+        from aicore.util.repo import find_repo_root
         repo_root = find_repo_root(env.root) or env.root
         diagnostics = gather_effective_source_diagnostics(env, repo_root=repo_root)
         report = build_effective_source_report(diagnostics)

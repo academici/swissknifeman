@@ -419,6 +419,17 @@ class ConfigShapeTests(unittest.TestCase):
         self.assertIn("transitional_roots", result.stderr)
         self.assertIn("path_suffixes", result.stderr)
 
+    def test_standalone_foundation_free_shape(self):
+        self.assertEqual(self.tree.check().returncode, 0)
+        self.tree.config["standalone"] = {"foundation_free": ["alpha"]}
+        self.assertEqual(self.tree.check().returncode, 0)
+        for value, word in (("alpha", "list of module folders"), ([1], "list of module folders"),
+                            (["nowhere"], "not a module folder")):
+            self.tree.config["standalone"] = {"foundation_free": value}
+            result = self.tree.check()
+            self.assertIn("ECOSYSTEM_CONFIG", codes(result))
+            self.assertIn(word, result.stderr)
+
 
 class MapCheckTests(unittest.TestCase):
     def setUp(self):
@@ -1024,6 +1035,16 @@ class StandaloneTests(unittest.TestCase):
                   "open('home.txt','w').write(str(home)); sys.exit(0 if ok else 1)")
         self.dev(test=["python3", "-c", script])
         result = self.standalone("alpha", env={"SKM_LEAK": "1"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_foundation_free_module_gets_no_foundation_paths(self):
+        script = ("import pathlib, sys; "
+                  "sys.exit(0 if not pathlib.Path('../../shared').exists() "
+                  "and pathlib.Path('../aicore/unit.json').is_file() else 1)")
+        self.dev(test=["python3", "-c", script])
+        self.assertEqual(self.standalone("alpha").returncode, 1)
+        self.tree.config["standalone"]["foundation_free"] = ["alpha"]
+        result = self.standalone("alpha")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_timeout_is_a_failure_and_temp_is_removed(self):

@@ -5,13 +5,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 from skiller.common import Env
 from skiller.host import load_host
-from skiller.publication import (_codex_skill_runtime_files,
-                                 assert_root_bootstrap_set_completeness,
-                                 load_repository_bootstrap_config,
-                                 render_repository_bootstrap_projections)
+from skiller.publication import (
+    assert_root_bootstrap_set_completeness, load_repository_bootstrap_config,
+    render_repository_bootstrap_projections)
+from aicore.content.publication import skill_runtime_files as _codex_skill_runtime_files
 from skiller.registry import (build_codex_publication, build_registry,
                               build_repository_bootstrap_publication, _sibling_plugins)
 

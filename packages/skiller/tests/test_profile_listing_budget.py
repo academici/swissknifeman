@@ -25,8 +25,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.budget import _listing_exclusion, resolve_active_set
-from skiller.common import Env, parse_frontmatter
+from skiller.budget import resolve_active_set
+from aicore.content.budget import listing_exclusion as _listing_exclusion
+from skiller.common import Env
+from aicore.content.skill import read_frontmatter as parse_frontmatter
 import tests.fixtures as fx
 
 BUDGET_1M = 30_000

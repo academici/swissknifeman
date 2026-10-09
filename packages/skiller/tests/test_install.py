@@ -13,11 +13,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import core
-
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-CORE_PARENT = Path(core.__file__).resolve().parents[1]
+# scripts/test.sh exports the located foundation; the installer copy in the synthetic host has no sibling.
+AICORE_ROOT = Path(os.environ.get("AICORE_ROOT") or PACKAGE_ROOT.parent / "aicore")
 HOST_CONFIG = {
     "schema_version": 1,
     "default_command_plugins": ["plugin-a"],
@@ -103,7 +102,7 @@ class InstallScriptCase(unittest.TestCase):
         env.update({
             "HOME": str(self.home),
             "PATH": f"{self.fake_bin}:{env['PATH']}",
-            "PYTHONPATH": str(CORE_PARENT),
+            "AICORE_ROOT": str(AICORE_ROOT),
             "CODEX_STUB_LOG": str(self.log),
             "GROK_STUB_LOG": str(self.grok_log),
             **extra_env,

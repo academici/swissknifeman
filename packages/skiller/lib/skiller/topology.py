@@ -14,10 +14,11 @@ import os
 import shutil
 import sys
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 
-from .common import (atomic_write_json, die, now_iso,
-                     parse_flags, warn)
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json
+from aicore.util.term import die, now_iso, warn
 from .state import load_db
 
 TOPOLOGY_VERSION = 1

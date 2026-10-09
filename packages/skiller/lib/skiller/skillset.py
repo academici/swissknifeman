@@ -23,19 +23,18 @@ import functools
 import json
 from pathlib import Path
 
-from core.io import atomic_write_json
+from aicore.util.io import atomic_write_json
 
-# The lock, the managed copies and the sync that applies a plan: moved to aicore.delivery.materialize,
-# re-exported under the historical names (after the first ``core`` import, which puts aicore on sys.path).
-from aicore.delivery.materialize import (  # noqa: F401
-    GITIGNORE_HEADER, LOCK_FILE, LOCK_VERSION, SOURCE, dir_sha256 as _dir_sha256,
-    hash_label as _hash_label, load_lock, lock_problem as _lock_problem,
-    remove_our_gitignore as _remove_our_gitignore, remove_path as _remove_path,
-    safe_copy_skill, sync_report_counts as _sync_report_counts, write_gitignore as _write_gitignore,
-    write_lock, write_manifest as _write_manifest)
-from aicore.delivery.materialize import sync_skillset as _sync_skillset
+# The lock, the managed copies and the sync that applies a plan live in aicore.delivery.materialize.
+from aicore.delivery.materialize import (
+    LOCK_VERSION, dir_sha256 as _dir_sha256, hash_label as _hash_label, load_lock,
+    lock_problem as _lock_problem, sync_report_counts as _sync_report_counts,
+    sync_skillset as _sync_skillset)
 
-from .common import apply_permissions, die, parse_flags, resolve_requires_bfs, warn
+from .common import apply_permissions
+from aicore.content.skill import resolve_requires_bfs
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist

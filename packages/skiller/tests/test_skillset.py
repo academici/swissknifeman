@@ -12,13 +12,12 @@ from pathlib import Path
 from unittest import mock
 
 from skiller.registry import build_registry
-from skiller.skillset import (_registry_index, cmd_init, do_sync, load_lock,
-                                    load_skillset_config,
-                                    materialize_skillset_config, plan_sync,
-                                    resolve_skillset, skillset_config_path,
-                                    sync_skillset, write_lock)
+from skiller.skillset import (
+    _registry_index, cmd_init, do_sync, load_skillset_config, materialize_skillset_config,
+    plan_sync, resolve_skillset, skillset_config_path, sync_skillset)
+from aicore.delivery.materialize import load_lock, write_lock, MANIFEST
 
-from skiller.common import MANIFEST, Env
+from skiller.common import Env
 
 from tests.fixtures import make_laravel_project, make_registry, write_skill
 

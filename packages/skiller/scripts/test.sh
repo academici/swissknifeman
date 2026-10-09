@@ -32,11 +32,7 @@ unset -f _aicore_ok
 # --- end aicore locator ---
 
 # lib/ contains skiller; REPO_ROOT makes tests.fixtures importable.
-# MONOREPO_ROOT makes core importable when this package is in the monorepo;
-# standalone layouts do not add a nonexistent core directory.
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 # Dev clone (PLAN3 D13): tests run against a throwaway HOME, never the real one; the entry-point
 # guard refuses CLI runs that reach the real HOME.

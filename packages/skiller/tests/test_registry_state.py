@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import MARKETPLACE
+from aicore.delivery import MARKETPLACE
 from skiller.registry import build_registry, write_plugin_manifests
 from skiller.state import (db_records, load_db, save_db, upsert_project)
 from skiller.doctor import cmd_doctor

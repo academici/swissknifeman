@@ -5,10 +5,13 @@ import uuid
 import re
 from pathlib import Path
 
-from core import atomic_write_text
-from core.provider.lock import _contained_target, _writer_guard
+from aicore.artifacts.lock import _contained_target, _writer_guard
+from aicore.util.io import atomic_write_text
 
-from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, warn
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import AGENT_DEFAULTS, MANIFEST
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
 from .config import ProjectConfig, load_config, resolve_target
 from .connect import do_connect
 from .host import load_host
@@ -176,7 +179,7 @@ def retire_orphan_codex_physical_skills(env, target, *, dry_run=False):
     skills_dir = target / ".agents" / "skills"
     if not skills_dir.is_dir():
         return False
-    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock
     lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
     owned = parse_lock(lock_path.read_bytes()).records if lock_path.is_file() else ()
     owned_prefixes = tuple(r.target_path for r in owned)
@@ -211,7 +214,7 @@ def retire_orphan_codex_physical_skills(env, target, *, dry_run=False):
 
 def retire_legacy_codex_vendor(env, target, *, dry_run=False):
     """Explicit connector cleanup of manifest-declared copies, with reversible backup."""
-    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock
     target = Path(target)
     with _writer_guard(target):
         path = _contained_target(target, ".agents/skills/" + MANIFEST)
@@ -267,9 +270,9 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
     The marker owns link destinations, never the source directories. Modified
     links and files fail before mutation; unique local capabilities remain.
     """
-    from .native_codex import native_inventory
-    from .common import parse_frontmatter
-    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    from aicore.delivery.codex import native_inventory
+    from aicore.content.skill import read_frontmatter as parse_frontmatter
+    from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock
     target = Path(target)
     marker = target / ".agents/.swissknifeman-codex-links.json"
     if not marker.is_file():
@@ -287,7 +290,7 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
         disabled = set()
         selection_path = _contained_target(target, ".codex/config.toml")
         if selection_path.is_file():
-            from .native_codex import _read
+            from aicore.delivery.codex import _read
             _, selection = _read(selection_path)
             effective = {Path(row["path"]).resolve(): row.get("enabled")
                          for row in selection.get("skills", {}).get("config", [])
@@ -372,9 +375,9 @@ def retire_equivalent_codex_skill_links(env, target, *, dry_run=False):
     supplied by an active SKM plugin.  The source tree remains untouched and
     the link is recoverable from the backup.
     """
-    from .common import parse_frontmatter
-    from .native_codex import native_inventory
-    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    from aicore.content.skill import read_frontmatter as parse_frontmatter
+    from aicore.delivery.codex import native_inventory
+    from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock
 
     target = Path(target)
     inventory = native_inventory(env, target)

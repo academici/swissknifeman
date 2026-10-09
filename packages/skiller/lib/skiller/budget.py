@@ -21,84 +21,29 @@ import json
 import os
 from pathlib import Path
 
-from core import atomic_write_text
+from aicore.util.io import atomic_write_text
 
-from aicore.content.skill import split_frontmatter as _split_frontmatter  # noqa: F401 (re-export)
-from aicore.content.budget import (  # noqa: F401 (re-export under the historical names)
-    CHARS_PER_TOKEN_CYR,
-    CHARS_PER_TOKEN_LAT,
-    CONTEXT_LIMIT,
-    TOP_N,
-    estimate_tokens,
-    skill_budget,
-    budget_for_set,
-    FIRST_TURN_TARGET_MAX,
-    FIRST_TURN_WARN,
-    HOOK_TIMEOUT,
-    KNOWN_MCP_TOOLS,
-    FALLBACK_MCP_TOOLS,
-    TOKENS_PER_MCP_TOOL,
-    ENABLE_TOOL_SEARCH_ENV,
-    MCP_MODE_DEFERRED,
-    MCP_MODE_AUTO,
-    MCP_MODE_OFF,
-    MCP_MODE_SOURCE_DEFAULT,
-    TOKENS_PER_MCP_TOOL_NAME,
-    FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS,
-    mcp_tool_count as _mcp_tool_count,
-    mcp_instruction_tokens as _mcp_instruction_tokens,
-    tool_search_mode as _tool_search_mode,
-    SKILL_LISTING_MAX_ENTRY_CHARS,
-    SKILL_LISTING_BUDGET_FRACTION,
-    SKILL_LISTING_CONTEXT_WINDOW,
-    CODEX_LISTING_FALLBACK_CHARS,
-    CODEX_LISTING_BUDGET_FRACTION,
-    LISTING_PROVIDERS,
-    CHAR_LISTING_PROVIDERS as _CHAR_LISTING_PROVIDERS,
-    DEFAULT_LISTING_PROVIDER,
-    MEASUREMENT_SURFACES,
-    MEASUREMENT_CLASSES,
-    MEASUREMENT_STATUSES,
-    MEASUREMENT_TTL,
-    LISTING_EXCLUDED_BY_FIELDS,
-    LISTING_EXCLUSION_PROVIDERS,
-    listing_exclusion as _listing_exclusion,
+from aicore.content.budget import (
+    CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT, TOP_N, estimate_tokens, skill_budget,
+    budget_for_set, FIRST_TURN_WARN, HOOK_TIMEOUT, SKILL_LISTING_BUDGET_FRACTION,
+    SKILL_LISTING_CONTEXT_WINDOW, LISTING_PROVIDERS, DEFAULT_LISTING_PROVIDER,
     split_listing_entries as _split_listing_entries,
-    format_listing_exclusions,
-    listing_entry_tokens as _listing_entry_tokens,
-    listing_entry_chars as _listing_entry_chars,
-    measure_listing_budget,
-    measurement_timestamp as _measurement_timestamp,
-    measurement_number as _measurement_number,
-    make_measurement,
-    aggregate_measurements,
-    listing_measurements,
-    format_listing_report,
-    measure_agents as _measure_agents,
-    measure_claude_md as _measure_claude_md,
-    measure_instructions as _measure_instructions,
-    settings_hook_commands as _settings_hook_commands,
-    run_hook as _run_hook,
-    measure_hooks as _measure_hooks,
-    measure_mcp,
-    FIRST_TURN_SOURCE_LABELS as _FIRST_TURN_SOURCE_LABELS,
-    first_turn_verdict as _first_turn_verdict,
-    codex_integrity as _codex_integrity,
-    format_plugins_block as _format_plugins_block,
-    format_first_turn_report,
-    bar as _bar,
-    format_report,
-)
+    listing_entry_tokens as _listing_entry_tokens, measure_listing_budget, format_listing_report,
+    measure_agents as _measure_agents, measure_instructions as _measure_instructions,
+    measure_hooks as _measure_hooks, measure_mcp, first_turn_verdict as _first_turn_verdict,
+    codex_integrity as _codex_integrity, format_first_turn_report, format_report)
 
-from .common import die, parse_flags, parse_frontmatter
+from aicore.content.skill import read_frontmatter as parse_frontmatter
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
                      ProjectConfig, all_buckets, core_skill_tuples, default_command_plugins,
                      known_command_plugins,
                      find_project_root, load_config, resolve_selection,
                      validate_config)
 from .host import load_host
-from .plugins import plugins_summary
-from .native_codex import native_inventory
+from aicore.delivery.claude import plugins_summary
+from aicore.delivery.codex import native_inventory
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
 

@@ -4,7 +4,7 @@
 Why: solutions for ~205 skills without metrics - fortune telling. Collects into one report:
 
   size - review `budget.skill_budget` (⊕tier0/↻tier1/⌥tier2); aicore.content.budget remains
-             THE ONLY source of token mathematics (budget.py re-exports it), this module only consumes it,
+             THE ONLY source of token mathematics, this module only consumes it,
              does not expand.
   overlap  — Jaccard≥0.4 by description-triggers (normalized description words) AND/OR
              5-gram word-shingle≥0.3 by body (is more resistant to reformulations than
@@ -37,8 +37,12 @@ import time
 from pathlib import Path
 
 from .analyze import agent_stats, logs_root, parse_transcript, skill_key
-from ..budget import _split_frontmatter, budget_for_set, resolve_active_set, skill_budget
-from ..common import die, parse_flags, parse_frontmatter
+from ..budget import resolve_active_set
+from aicore.content.budget import budget_for_set, skill_budget
+from aicore.content.skill import (
+    split_frontmatter as _split_frontmatter, read_frontmatter as parse_frontmatter)
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 from ..config import CORE_SKILLS, load_config
 from ..state import load_db
 

@@ -7,7 +7,7 @@
   "stability": "beta",
   "destination": "own-repo",
   "requires": [
-    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: util, provider, artifacts, config, state, content, delivery, release."}
   ],
   "provides": {
     "cli": ["bin/skiller"],

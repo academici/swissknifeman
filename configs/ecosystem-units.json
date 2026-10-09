@@ -1,6 +1,6 @@
 {
   "schema_version": "ecosystem-units/v1",
-  "_doc": "Hub map of the module split, read by scripts/ecosystem-units.py. targets: final module ids; module_aliases: current folder id -> target id; retired: folders without unit.json that are being removed; foundation: the shared base module and the names its code is imported under today; transitional_roots: root-level trees still being moved; standalone: foundation_paths (tracked paths copied next to vendor/<id> as the foundation stand-in), unset_env, timeout_s per command; version_sources: where the version of each module is read from (unit.json must equal it); ownership: files that move to another module (longest path wins); path_patterns: regexes with a named group 'target' that find paths of other folders in module files (climb: count only ../ runs that leave the module); path_suffixes: file suffixes scanned for path patterns; path_allow: files exempt from the path patterns, each with a reason.",
+  "_doc": "Hub map of the module split, read by scripts/ecosystem-units.py. targets: final module ids; module_aliases: current folder id -> target id; retired: folders without unit.json that are being removed; foundation: the shared base module and the names its code is imported under today; transitional_roots: root-level trees still being moved; standalone: foundation_paths (tracked paths copied next to vendor/<id> as the foundation stand-in), foundation_free (modules whose copy gets no foundation_paths), unset_env, timeout_s per command; version_sources: where the version of each module is read from (unit.json must equal it); ownership: files that move to another module (longest path wins); path_patterns: regexes with a named group 'target' that find paths of other folders in module files (climb: count only ../ runs that leave the module); path_suffixes: file suffixes scanned for path patterns; path_allow: files exempt from the path patterns, each with a reason.",
   "targets": [
     "aicore",
     "skiller",
@@ -54,6 +54,7 @@
   ],
   "standalone": {
     "foundation_paths": ["core"],
+    "foundation_free": ["skiller"],
     "unset_env": ["PYTHONPATH", "SKILLER_HOST_CONFIG"],
     "timeout_s": 1800
   },

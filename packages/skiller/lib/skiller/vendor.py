@@ -5,10 +5,15 @@ import shutil
 import sys
 
 from .boost import sync_boost_json
-from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions, die,
-                     is_within, is_within_lexical, parse_flags,
-                     parse_frontmatter_fields, resolve_requires_bfs,
-                     safe_copy_skill, sanitize, warn, write_skill_manifest)
+from .common import apply_permissions
+from aicore.content.skill import (
+    read_frontmatter_fields as parse_frontmatter_fields, resolve_requires_bfs)
+from aicore.delivery.materialize import (
+    AGENT_DEFAULTS, MANIFEST, safe_copy_skill, write_skill_manifest)
+from aicore.util.cli import parse_flags
+from aicore.util.paths import is_within, is_within_lexical
+from aicore.util.term import die, warn
+from aicore.util.text import sanitize
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples, known_command_plugins,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist

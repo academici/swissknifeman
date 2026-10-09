@@ -1,36 +1,13 @@
-"""General utilities: environment, output, parsing flag'ov and frontmatter.
-
-Verbatim common code (die/warn/now_iso/confirm/sanitize + core Env) moved to the
-general core; here - only specifics swissknifeman (path-property, parse_flags,
-frontmatter, delegation of the environment to host commands, registry constants)."""
+"""Skiller environment: the launch context (`Env`), delegation to host commands and registry
+constants. General helpers (output, flags, frontmatter, managed copies) live in `aicore` and are
+imported from there directly."""
 import subprocess
 import sys
 from dataclasses import dataclass
 
-# General core (connects via PYTHONPATH launcher/test.sh). Re-export for
-# package modules, which historically take these names from .common.
-from core import (  # noqa: F401
-    HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
-    is_within, is_within_lexical, now_iso, parse_flags,
-    parse_inline_list, run_cmd, safe_load_json, sanitize,
-    state_dir, warn,
-)
-
-# Skill model: moved to aicore.content.skill, re-exported under the historical names
-# (after the first ``core`` import, which puts aicore on sys.path).
-from aicore.content.skill import (  # noqa: F401
-    DEPENDENCY_DIAGNOSTIC_CODES, SKILL_IGNORE, aggregate_dependency_diagnostics,
-    resolve_requires_bfs, skill_content_hash,
-)
-from aicore.content.skill import read_frontmatter as parse_frontmatter  # noqa: F401
-from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fields  # noqa: F401
-from aicore.delivery import MARKETPLACE  # noqa: F401
-# Managed skill copies: moved to aicore.delivery.materialize, re-exported under the historical names.
-from aicore.delivery.materialize import (  # noqa: F401
-    AGENT_DEFAULTS, MANIFEST, MANIFEST_VERSION, SKILL_MANAGED_MARKER, safe_copy_skill,
-    strip_skill_managed_marker, write_skill_manifest)
-from aicore.delivery.materialize import mark_skill_managed as _mark_skill_managed  # noqa: F401
-from aicore.delivery.materialize import split_bom as _split_bom  # noqa: F401
+from aicore.util.env import HOME, BaseEnv
+from aicore.util.paths import state_dir
+from aicore.util.term import warn
 
 from .host import host_command, load_host
 
@@ -122,5 +99,3 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
              f"have gone to bed; restart: {' '.join(argv)} --target {target}")
     return True
 
-
-# parse_flags — from general core (re-export above); was previously duplicated here.

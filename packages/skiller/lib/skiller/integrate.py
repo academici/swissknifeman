@@ -14,8 +14,9 @@ auto-approve/memory/output-style/plans-dir) — in the host environment tool.
 import subprocess
 import sys
 
-from .common import (apply_permissions, die, host_command_text, host_install_suffix,
-                     parse_flags, warn)
+from .common import apply_permissions, host_command_text, host_install_suffix
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
 from .host import host_command
 from .config import (autodetect, load_config, load_profile, resolve_profile_name,
                      resolve_target)

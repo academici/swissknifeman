@@ -38,6 +38,26 @@ unset _skm_guard_dir _skm_real_home
 # --- end dev-clone guard ---
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
 CLI="$REPO_ROOT/bin/skiller"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
@@ -126,12 +146,9 @@ echo "Check: skiller doctor"
 HOST_ROOT="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$HOST_ROOT" ]] || HOST_ROOT="$REPO_ROOT"
 MARKETPLACE_ROOT="${SKILLER_MARKETPLACE_ROOT:-$HOST_ROOT}"
-# The shared `core` foundation sits two levels above the package (see bin/skiller).
-CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[[ -d "$CORE_ROOT/core" ]] || CORE_ROOT=""
 
 host_python() {  # stdin: python reading the host through skiller modules
-  PYTHONPATH="$REPO_ROOT/lib${CORE_ROOT:+:$CORE_ROOT}${PYTHONPATH:+:$PYTHONPATH}" python3 - "$REPO_ROOT"
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" python3 - "$REPO_ROOT"
 }
 
 # Basic `core` + host command plugins — machine bootstrap Codex: after installing the

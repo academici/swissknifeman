@@ -7,9 +7,11 @@ import tempfile
 # tests/ start with lib/ on sys.path (see scripts/test.sh); let's play it safe.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import (parse_flags, parse_frontmatter,
-                                  parse_frontmatter_fields, parse_inline_list,
-                                  sanitize, skill_content_hash)
+from aicore.content.skill import (
+    read_frontmatter as parse_frontmatter, read_frontmatter_fields as parse_frontmatter_fields,
+    skill_content_hash)
+from aicore.util.cli import parse_flags
+from aicore.util.text import parse_inline_list, sanitize
 import skiller.config as config_mod
 from skiller.config import autodetect, resolve_selection
 from skiller.vendor import flat_names, resolve_requires, build_requires_index

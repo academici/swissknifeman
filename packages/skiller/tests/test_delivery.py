@@ -6,13 +6,13 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
-from core.provider.runtime import codex_migrated_command_skill
-from skiller.common import MANIFEST, SKILL_MANAGED_MARKER
+from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock
+from aicore.delivery.materialize import MANIFEST, SKILL_MANAGED_MARKER
+from aicore.provider.runtime import codex_migrated_command_skill
 from skiller.delivery import (deliver, project_readback, prune_provider_caches,
                               recover_lock, release_history, verify_surface)
 from skiller.host import parse_host
-from skiller.release_attestation import digest, tree_digest
+from aicore.release.attestation import digest, tree_digest
 
 
 def surface(files, source="vendor/plugin-a"):

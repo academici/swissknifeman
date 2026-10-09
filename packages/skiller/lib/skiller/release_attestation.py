@@ -8,12 +8,11 @@ import json
 from pathlib import Path
 import subprocess
 
-from core import atomic_write_json, find_repo_root
-from .common import die, parse_flags
 from aicore.release import attestation as _attestation
-from aicore.release.attestation import (  # noqa: F401 (re-export)
-    POLICY_PATH, POLICY_SCHEMA, Source, check_transition, digest, surface, tree_digest, version_errors,
-)
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json
+from aicore.util.repo import find_repo_root
+from aicore.util.term import die
 
 # Location of this Skiller package; its prefix in the host root names the
 # publication-version map and the skill sources released as their own units.

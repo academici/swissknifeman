@@ -41,9 +41,11 @@ import os
 import sys
 from pathlib import Path
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 
-from .common import HUB_MARKER, MANIFEST, run_cmd
+from .common import HUB_MARKER
+from aicore.delivery.materialize import MANIFEST
+from aicore.util.cli import run_cmd
 
 HUB_START = HUB_MARKER
 HUB_END = "<!-- swissknifeman:hub:end -->"
@@ -258,7 +260,7 @@ def _codex_installed(env, target, registry, installed, channels, inventory):
     """
     if not inventory.get("ok"):
         return installed
-    from .native_codex import SUFFIX, _read, codex_home
+    from aicore.delivery.codex import SUFFIX, _read, codex_home
     selected = set(inventory.get("enabled", ()))
     overrides = {}
     try:
@@ -559,7 +561,7 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, legacy_s
     codex_check = None
     codex_installed = installed
     if forms.get("AGENTS.md") == FORM_SHORT:
-        from .native_codex import native_inventory
+        from aicore.delivery.codex import native_inventory
         codex_check = native_inventory(env, target)
         codex_installed = _codex_installed(env, target, registry, installed, channels, codex_check)
         for note in codex_check["notes"]:

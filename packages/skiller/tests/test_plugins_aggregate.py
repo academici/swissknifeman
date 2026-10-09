@@ -1,4 +1,4 @@
-"""Tests `skiller.plugins` / `skiller budget --with-plugins` (
+"""Tests `aicore.delivery.claude` plugin visibility / `skiller budget --with-plugins` (
 P1.1). Fixtures - literal output of a living `claude` 2.1.220 (`claude plugin list
 --json` / `claude plugin details <id>`, captured 2026-07-31), are substituted
 via `SKM_CLAUDE_BIN` (same pattern as online-tests `test_eval.py`). None
@@ -15,9 +15,8 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller import plugins as pl
 from skiller.budget import cmd_budget
-from aicore.delivery import claude as aicore_claude  # after skiller: the core shim puts aicore on sys.path
+from aicore.delivery import claude as aicore_claude
 import tests.fixtures as fx
 
 FIXTURES_DATA = Path(__file__).resolve().parent / "fixtures_data"
@@ -98,11 +97,11 @@ class PluginsAggregateCase(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.proj = self.tmp / "proj"
         self.proj.mkdir()
-        pl._details_cache.clear()
+        aicore_claude._details_cache.clear()
         self._old_env = os.environ.get("SKM_CLAUDE_BIN")
 
     def tearDown(self):
-        pl._details_cache.clear()
+        aicore_claude._details_cache.clear()
         if self._old_env is None:
             os.environ.pop("SKM_CLAUDE_BIN", None)
         else:
@@ -114,7 +113,7 @@ class PluginsAggregateCase(unittest.TestCase):
 
     def test_happy_path_sum_dedup_exclusion_and_broken(self):
         self._use_fake()
-        summary = pl.plugins_summary(self.proj)
+        summary = aicore_claude.plugins_summary(self.proj)
         self.assertEqual(summary["status"], "ok")
         ids = sorted(e["id"] for e in summary["entries"])
         # ai@swissknifeman (enabled:false) excluded; task@swissknifeman twice
@@ -142,7 +141,7 @@ class PluginsAggregateCase(unittest.TestCase):
             "brain@brain": ("brain 1.0.0\n\nProjected token cost\n"
                             "  Always-on:   ~42 tok   added to every session\n", 0),
         })
-        summary = pl.plugins_summary(self.proj)
+        summary = aicore_claude.plugins_summary(self.proj)
         self.assertEqual(summary["total"], 449 + 100 + 42)
         self.assertEqual(summary["broken"], [])
         self.assertTrue(any("brain@brain" in w for w in summary["warnings"]))
@@ -154,7 +153,7 @@ class PluginsAggregateCase(unittest.TestCase):
         with mock.patch.object(aicore_claude, "claude_bin", return_value=str(
                 _write_fake_plugin_cli(self.tmp, details={"x@y": (
                     "Always-on:   ~1.1k tok   added to every session\n", 0)}))):
-            tokens, error = pl.plugin_always_on_tokens("x@y", self.proj)
+            tokens, error = aicore_claude.plugin_always_on_tokens("x@y", self.proj)
         self.assertIsNone(tokens)
         self.assertIn("not recognized", error)
 
@@ -164,7 +163,7 @@ class PluginsAggregateCase(unittest.TestCase):
         script = _write_fake_plugin_cli(self.tmp, details={
             "architect@swissknifeman": (ARCHITECT_DETAILS, 0)})
         with mock.patch.object(aicore_claude, "claude_bin", return_value=str(script)):
-            tokens, error = pl.plugin_always_on_tokens("architect@swissknifeman", self.proj)
+            tokens, error = aicore_claude.plugin_always_on_tokens("architect@swissknifeman", self.proj)
         self.assertEqual(tokens, 1275)
         self.assertIsNone(error)
 
@@ -178,18 +177,18 @@ class PluginsAggregateCase(unittest.TestCase):
             "architect 0.1.0\n\nProjected token cost\n"
             "  Always-on:   ~1,275 tok   added to every session\n")
         with mock.patch.object(aicore_claude, "claude_bin", return_value=str(script)):
-            tokens, error = pl.plugin_always_on_tokens("architect@swissknifeman", self.proj)
+            tokens, error = aicore_claude.plugin_always_on_tokens("architect@swissknifeman", self.proj)
             self.assertEqual(tokens, 1275)
             self.assertIsNone(error)
-            pl._details_cache.clear()
-            wrong_cwd_tokens, wrong_cwd_error = pl.plugin_always_on_tokens(
+            aicore_claude._details_cache.clear()
+            wrong_cwd_tokens, wrong_cwd_error = aicore_claude.plugin_always_on_tokens(
                 "architect@swissknifeman", self.tmp)
         self.assertIsNone(wrong_cwd_tokens)
         self.assertIn("code 1", wrong_cwd_error)
 
     def test_missing_claude_binary_gives_na_not_zero(self):
         with mock.patch.object(aicore_claude, "claude_bin", return_value=None):
-            summary = pl.plugins_summary(self.proj)
+            summary = aicore_claude.plugins_summary(self.proj)
         self.assertEqual(summary["status"], "n/a")
         self.assertIsNone(summary["total"])
         self.assertTrue(summary["partial"])
@@ -197,7 +196,7 @@ class PluginsAggregateCase(unittest.TestCase):
 
     def test_listing_failure_gives_na_not_zero(self):
         self._use_fake(list_payload="", list_exit=1)
-        summary = pl.plugins_summary(self.proj)
+        summary = aicore_claude.plugins_summary(self.proj)
         self.assertEqual(summary["status"], "n/a")
         self.assertIsNone(summary["total"])
 
@@ -206,15 +205,15 @@ class PluginsAggregateCase(unittest.TestCase):
         # (P1.4 §2, fan-out savings for the fleet remain).
         self._use_fake()
         calls = []
-        real_run = pl._run_claude  # the skiller name re-exports aicore run_claude
+        real_run = aicore_claude.run_claude
 
         def _counting_run(argv, **kw):
             calls.append(tuple(argv))
             return real_run(argv, **kw)
 
         with mock.patch.object(aicore_claude, "run_claude", side_effect=_counting_run):
-            pl.plugin_always_on_tokens("codex@openai-codex", self.proj)
-            pl.plugin_always_on_tokens("codex@openai-codex", self.proj)
+            aicore_claude.plugin_always_on_tokens("codex@openai-codex", self.proj)
+            aicore_claude.plugin_always_on_tokens("codex@openai-codex", self.proj)
         self.assertEqual(len(calls), 1)
 
     def test_failure_not_cached_retries_under_different_cwd(self):
@@ -226,11 +225,11 @@ class PluginsAggregateCase(unittest.TestCase):
             "architect 0.1.0\n\nProjected token cost\n"
             "  Always-on:   ~1,275 tok   added to every session\n")
         with mock.patch.object(aicore_claude, "claude_bin", return_value=str(script)):
-            miss_tokens, miss_error = pl.plugin_always_on_tokens(
+            miss_tokens, miss_error = aicore_claude.plugin_always_on_tokens(
                 "architect@swissknifeman", self.tmp)
             self.assertIsNone(miss_tokens)
             self.assertIsNotNone(miss_error)
-            hit_tokens, hit_error = pl.plugin_always_on_tokens(
+            hit_tokens, hit_error = aicore_claude.plugin_always_on_tokens(
                 "architect@swissknifeman", self.proj)
         self.assertEqual(hit_tokens, 1275)
         self.assertIsNone(hit_error)
@@ -249,12 +248,12 @@ class PluginsCliIntegrationCase(unittest.TestCase):
         (self.proj / ".swissknife.json").write_text(
             json.dumps({"buckets": ["quality"]}), encoding="utf-8")
         (self.proj / "CLAUDE.md").write_text("word " * 40, encoding="utf-8")
-        pl._details_cache.clear()
+        aicore_claude._details_cache.clear()
         self._old_env = os.environ.get("SKM_CLAUDE_BIN")
         os.environ["SKM_CLAUDE_BIN"] = str(_write_fake_plugin_cli(self.tmp))
 
     def tearDown(self):
-        pl._details_cache.clear()
+        aicore_claude._details_cache.clear()
         if self._old_env is None:
             os.environ.pop("SKM_CLAUDE_BIN", None)
         else:

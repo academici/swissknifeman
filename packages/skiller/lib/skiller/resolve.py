@@ -2,7 +2,9 @@
 import argparse
 import json
 
-from .common import die, resolve_requires_bfs, safe_load_json
+from aicore.content.skill import resolve_requires_bfs
+from aicore.util.io import safe_load_json
+from aicore.util.term import die
 
 
 def resolve_skills(registry, requested, provider=None):

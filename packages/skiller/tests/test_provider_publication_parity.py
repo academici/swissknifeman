@@ -12,12 +12,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from core import find_repo_root
-from core.provider.manifest import default_manifest_path
+from aicore.provider.manifest import default_manifest_path, ProviderManifestError
+from aicore.util.repo import find_repo_root
 from skiller.common import Env
-from skiller.publication import run_codex_native_install
-from skiller.publication import validate_publication_capabilities
-from core import ProviderId, ProviderManifestError
+from aicore.content.publication import validate_publication_capabilities
+from aicore.delivery.distribution import run_codex_native_install
+from aicore.provider.values import ProviderId
 from skiller.registry import (build_claude_publication, build_codex_publication,
                               build_registry)
 from skiller.skillset import do_sync

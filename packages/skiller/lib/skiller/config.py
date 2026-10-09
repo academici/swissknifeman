@@ -7,14 +7,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
-from core.provider.manifest import default_manifest_path
-from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
-                  ResolvedProviderConfig, detect_project_type, load_provider_manifest,
-                  provider_config_catalog,
-                  resolve_provider_config as resolve_shared_provider_config)
+from aicore.provider.config import (
+    ProviderConfigCatalog, ProviderConfigLayer, ResolvedProviderConfig,
+    resolve_provider_config as resolve_shared_provider_config)
+from aicore.provider.manifest import (
+    default_manifest_path, load_provider_manifest, provider_config_catalog)
+from aicore.provider.values import ConfigSource
+from aicore.util.project import detect_project_type
 
-from .common import (AGENT_DEFAULTS, confirm, die,
-                     parse_frontmatter_fields, warn)
+from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fields
+from aicore.delivery.materialize import AGENT_DEFAULTS
+from aicore.util.term import confirm, die, warn
 from .host import load_host
 
 # CORE-distribution policy: token-saving skills that swissknifeman puts in

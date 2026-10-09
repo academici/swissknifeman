@@ -14,7 +14,8 @@ Commands:
                              run dev.test and dev.validate of a module in a copy of its tracked files plus the
                              foundation stand-in, with HOME and XDG inside a temporary directory; result per
                              module is pass, fail or n/a (no dev commands); --baseline runs the modules the
-                             baseline records as pass; --update-baseline records the results
+                             baseline records as pass; --update-baseline records the results; modules listed in
+                             standalone.foundation_free get no standalone.foundation_paths in their copy
 
 Diagnostics are lines ``ECOSYSTEM_<CODE>: <path>: <message>`` on stderr. Simple checks are registered in
 CHECKS; boundaries need the baseline and are run by the check command itself.
@@ -492,6 +493,13 @@ def check_config(ctx: Context) -> list:
                 bad(f"path_allow: {problem}")
     if not isinstance(config.get("ownership"), list):
         bad("ownership must be a list")
+    free = (config.get("standalone") or {}).get("foundation_free", [])
+    if not (isinstance(free, list) and all(isinstance(x, str) for x in free)):
+        bad("standalone.foundation_free must be a list of module folders")
+    else:
+        for folder in free:
+            if folder not in module_folders(ctx):
+                bad(f"standalone.foundation_free: {folder!r} is not a module folder")
     return issues
 
 
@@ -972,8 +980,10 @@ def run_standalone(ctx: Context, folder: str) -> tuple:
     foundation = (ctx.config.get("foundation") or {}).get("id")
     tmp = Path(tempfile.mkdtemp(prefix=f"skm-standalone-{folder}."))
     try:
-        for path in settings.get("foundation_paths") or ():
-            copy_tracked(ctx, path, tmp)
+        # A module listed in foundation_free proves it needs nothing of the stand-in paths (the old shared tree).
+        if folder not in (settings.get("foundation_free") or ()):
+            for path in settings.get("foundation_paths") or ():
+                copy_tracked(ctx, path, tmp)
         if foundation and folder != foundation:
             copy_tracked(ctx, f"packages/{foundation}", tmp, f"vendor/{foundation}")
         copy_tracked(ctx, f"packages/{folder}", tmp, f"vendor/{folder}")

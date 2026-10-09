@@ -162,7 +162,7 @@ class BoundaryScannerTests(unittest.TestCase):
 
     def test_shared_core_and_unrelated_package_names_stay_allowed(self):
         lines = ("from core.paths import find_repo_root", "import core",
-                 "$MONOREPO_ROOT/core/provider.py", "packages/core",
+                 "$REPO_ROOT/core/provider.py", "packages/core",
                  "packages/vitest", "packages/taskboard", "orchestration",
                  "harnessing", "Maind", "task:plan-run", "task = 'example'")
         self.write("lib/module.py", "\n".join(lines))

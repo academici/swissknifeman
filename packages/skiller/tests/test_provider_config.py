@@ -3,10 +3,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import (CapabilityId, CapabilitySupport, ConfigSource, NativeExtension,
-                  NativeExtensionId, ProviderConfigCatalog, ProviderConfigLayer, ProviderId,
-                  SupportLevel)
-from core.provider.manifest import default_manifest_path
+from aicore.provider.config import (
+    CapabilitySupport, NativeExtension, ProviderConfigCatalog, ProviderConfigLayer)
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.values import (
+    CapabilityId, ConfigSource, NativeExtensionId, ProviderId, SupportLevel)
 from skiller.common import Env
 from skiller.config import load_config, provider_config_layer, resolve_provider_config
 from skiller.config import resolve_distribution_providers

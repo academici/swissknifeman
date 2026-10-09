@@ -1,61 +1,22 @@
 """eval — the `skiller eval` command and the registry-bound part of skill evaluation.
 
 The evaluation itself (grader, benchmark builders, runner, result context `eval-context/v1`,
-viewer, scaffold) lives in `aicore.content.eval`; its names are re-exported here under the
-historical module path. What stays here reads the skill registry (`env.root`) or prints the CLI:
-`resolve_skill`, `cmd_eval` and its offline report.
+viewer, scaffold) lives in `aicore.content.eval`. What stays here reads the skill registry
+(`env.root`) or prints the CLI: `resolve_skill`, `cmd_eval` and its offline report.
 
-Package conventions: stdlib-only, `Env` explicit, atomic record (`core.io`), messages
+Package conventions: stdlib-only, `Env` explicit, atomic record (`aicore.util.io`), messages
 in Russian."""
 import json
 import time
 
-from core import atomic_write_json, atomic_write_text, die, parse_args, safe_load_json, warn
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_json, atomic_write_text, safe_load_json
+from aicore.util.term import die, warn
 
-from aicore.content.eval import (  # noqa: F401 (re-export under the historical names)
-    ASSERTION_TYPES,
-    CLAUDE_BIN_ENV,
-    DEFAULT_TIMEOUT,
-    DESC_MAX,
-    EVALS_SUBDIR,
-    GRADER_VERSION,
-    SYSTEM_OPERATORS,
-    _fmt_frac,
-    _sqrt_fraction,
-    _stringify_fractions,
-    aggregate_runs,
-    apply_system_operator,
-    build_benchmark,
-    build_run_cmd,
-    build_system_benchmark,
-    claude_bin,
-    classify_portability_tier,
-    codex_bin,
-    compare_eval_context,
-    compute_system_metrics,
-    eval_context,
-    evals_coverage,
-    grade_assertion,
-    grade_case,
-    grade_system_case,
-    pair_system_metric,
-    provider_capability_matrix,
-    render_html,
-    render_markdown,
-    run_case,
-    run_suite,
-    runner_context,
-    scaffold_evals,
-    score_description,
-    seeded_system_sample,
-    select_best_description,
-    skill_eval_context,
-    validate_evals,
-    validate_pressure,
-    validate_system_cases,
-    validate_system_graders,
-    validate_triggers,
-)
+from aicore.content.eval import (
+    DEFAULT_TIMEOUT, EVALS_SUBDIR, _stringify_fractions, build_benchmark, claude_bin, render_html,
+    render_markdown, run_suite, runner_context, scaffold_evals, skill_eval_context,
+    validate_evals, validate_pressure, validate_triggers)
 
 
 def resolve_skill(env, ref):

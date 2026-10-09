@@ -4,11 +4,16 @@ import os
 import shutil
 from pathlib import Path
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 
-from .budget import budget_for_set, listing_measurements, resolve_active_set
-from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, atomic_write_json, die,
-                     parse_flags, parse_frontmatter)
+from .budget import resolve_active_set
+from aicore.content.budget import budget_for_set, listing_measurements
+from aicore.content.skill import read_frontmatter as parse_frontmatter
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import AGENT_DEFAULTS, MANIFEST
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json
+from aicore.util.term import die
 from .config import ProjectConfig, find_project_root, load_config, resolve_selection
 from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state

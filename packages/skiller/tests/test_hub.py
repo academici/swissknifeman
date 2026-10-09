@@ -79,8 +79,8 @@ def make_project(tmp, *, plugins=("php", "quality"), claude_md=None, boost=False
 def run_hub(env, proj, **kw):
     buf = io.StringIO()
     inventory = kw.pop("codex_inventory", {"ok": False, "names": set(), "notes": []})
-    with redirect_stdout(buf), mock.patch("skiller.native_codex.native_inventory", return_value=inventory), \
-            mock.patch("skiller.native_codex.codex_home", return_value=env.home / ".codex"):
+    with redirect_stdout(buf), mock.patch("aicore.delivery.codex.native_inventory", return_value=inventory), \
+            mock.patch("aicore.delivery.codex.codex_home", return_value=env.home / ".codex"):
         result = hub.run(env, proj, **kw)
     result["stdout"] = buf.getvalue()
     return result
@@ -182,7 +182,7 @@ class HubFormTests(unittest.TestCase):
 
     def test_full_index_bypasses_native_codex_discovery(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
-        with mock.patch("skiller.native_codex.native_inventory", side_effect=AssertionError("native probe")):
+        with mock.patch("aicore.delivery.codex.native_inventory", side_effect=AssertionError("native probe")):
             result = hub.run(self.env, proj, root_files=["AGENTS.md"], full_index=True)
         self.assertEqual(result["forms"]["AGENTS.md"], hub.FORM_FULL)
 

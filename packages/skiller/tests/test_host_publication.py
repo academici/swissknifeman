@@ -9,8 +9,8 @@ from unittest import mock
 from skiller.common import Env
 from skiller.doctor import declared_fixture_unit_set
 from skiller.host import Host, load_host
-from skiller.publication import (_generator, package_rel,
-                                 render_repository_bootstrap_projections)
+from skiller.publication import _generator, render_repository_bootstrap_projections
+from aicore.content.publication import package_rel
 from skiller.registry import (_legacy_build_plugin_manifests, _sibling_plugins,
                               build_catalog, build_claude_publication,
                               build_codex_publication, build_registry)

@@ -16,11 +16,11 @@ from pathlib import Path
 from unittest import mock
 
 from skiller.host import load_host
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 from skiller.common import Env
 from skiller.config import load_config
 from skiller.connect import do_connect, prepare_connect_selection
-from skiller.publication import run_codex_native_install
+from aicore.delivery.distribution import run_codex_native_install
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, plan_sync
 from skiller.update import update_one
@@ -99,7 +99,7 @@ class ProviderDistributionCase(unittest.TestCase):
         materialize_codex_marketplace(self.root)
         config = self.project / ".codex/config.toml"
         with mock.patch.dict(os.environ, {"CODEX_HOME": str(self.tmp / "codex-home")}), \
-                mock.patch("skiller.publication.run_codex_native_install", side_effect=AssertionError("native install")), \
+                mock.patch("aicore.delivery.distribution.run_codex_native_install", side_effect=AssertionError("native install")), \
                 contextlib.redirect_stdout(io.StringIO()):
             do_connect(self.env, self.project, {"plugins": "php", "no_core": True, "dry_run": True,
                                                "native_codex": True}, register=False)
@@ -555,8 +555,8 @@ class ProviderDistributionCase(unittest.TestCase):
 
     def test_provider_b_failure_is_honest_and_repairable(self):
         self.write_provider_config(providers())
-        from skiller import skillset
-        original_copy = skillset.safe_copy_skill
+        from aicore.delivery import materialize
+        original_copy = materialize.safe_copy_skill
         calls = []
 
         def first_then_fail(*args, **kwargs):

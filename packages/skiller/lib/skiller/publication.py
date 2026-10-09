@@ -15,23 +15,20 @@ import re
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from core import (ArtifactAdapterIdentity,
-                  ArtifactRenderRequest,
-                  ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
-                  CapabilityRequirement, ProviderId, SupportLevel,
-                  plan_artifact_render)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactRenderResult, ArtifactSource,
+    ArtifactTarget, plan_artifact_render)
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 
-# Publication primitives: moved to aicore.content.publication, re-exported under the historical
-# names (after the first ``core`` import, which puts aicore on sys.path).
-from aicore.content.publication import (  # noqa: F401
+# Publication primitives live in aicore.content.publication; the distribution plans in aicore.delivery.
+from aicore.content.publication import (
     codex_marketplace_entry as _codex_marketplace_entry,
-    codex_plugin_manifest as _codex_plugin_manifest, contained as _contained,
-    distribution_catalog as _distribution_catalog, manifest_bytes as _manifest_text,
+    codex_plugin_manifest as _codex_plugin_manifest, manifest_bytes as _manifest_text,
     package_rel, publication_lock, render_whole_file,
     skill_runtime_files as _codex_skill_runtime_files, validate_publication_capabilities)
-from aicore.delivery.distribution import (  # noqa: F401
+from aicore.delivery.distribution import (
     DistributionIdentity, ProviderDistributionPlan, connect_distribution_plan,
-    distribution_artifact, run_codex_native_install, vendor_distribution_plan)
+    distribution_artifact, vendor_distribution_plan)
 
 
 def _generator(package_prefix: str) -> str:
@@ -593,7 +590,7 @@ _DISTRIBUTION_IDENTITY = DistributionIdentity(
 
 
 def selected_distribution_providers(config, *, project_id: str) -> tuple[str, ...]:
-    from .common import die
+    from aicore.util.term import die
     from .config import resolve_distribution_providers
     resolved = resolve_distribution_providers(config, project_id=project_id)
     if resolved.effective is None:
@@ -833,7 +830,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     # the existing class-A projection bytes byte-identical across the P1.5 owner bump.
     class_a_version = config["class_a_content_version"]
 
-    from .common import parse_frontmatter
+    from aicore.content.skill import read_frontmatter as parse_frontmatter
 
     artifacts: list[RootBootstrapArtifact] = []
     lock_records: list[dict[str, object]] = []

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 from skiller.host import load_host
 from skiller.publication import PublicationCatalog, build_publication_catalog
 from skiller.registry import (build_claude_publication, build_plugin_manifests,

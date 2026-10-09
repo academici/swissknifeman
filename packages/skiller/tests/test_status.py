@@ -13,7 +13,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import MANIFEST, MARKETPLACE
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import MANIFEST
 from skiller.status import (channel_overlap, cmd_status, detect_raw_vendor_path,
                             local_channel_entries, name_duplicates,
                             raw_vendor_overlap_dirs, registry_skill_names,

@@ -11,17 +11,15 @@ an earlier audit, NOT reinvented here.
 stdlib-only, `Env` is passed explicitly (tested in tmpdir)."""
 import sys
 
-from core import atomic_write_text, backup_file, find_repo_root
+from aicore.util.io import atomic_write_text, backup_file
+from aicore.util.repo import find_repo_root
 
-from .common import parse_flags
+from aicore.util.cli import parse_flags
 from .host import load_host
-from aicore.release.changelog import read_unreleased_section, release_changelog, unreleased_is_empty
+from aicore.release.changelog import (
+    read_unreleased_section, release_changelog, unreleased_is_empty)
 from aicore.release.version import (
-    classify_bump, commits_since, last_tag, next_available_version, sync_version_files,
-)
-
-# Historical names (tests and callers import them from here).
-from aicore.release.version import bump_version  # noqa: F401 (re-export)
+    classify_bump, commits_since, last_tag, next_available_version, sync_version_files)
 
 
 def cmd_release(env, argv):

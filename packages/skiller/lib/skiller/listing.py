@@ -1,7 +1,7 @@
 """list — registered projects (~/.swissknifeman/projects.json)."""
 from pathlib import Path
 
-from .common import parse_flags
+from aicore.util.cli import parse_flags
 from .state import load_db, save_db
 
 

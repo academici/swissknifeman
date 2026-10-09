@@ -5,15 +5,20 @@ import tempfile
 from dataclasses import replace
 from pathlib import Path
 
-from core import (apply_plan, atomic_write_text, find_repo_root, parse_lock,
-                  safe_load_json, serialize_lock)
-from core.provider.lock import ArtifactLock, LOCK_RELATIVE_PATH
-from core.provider.artifact import sha256_digest
+from aicore.artifacts.artifact import sha256_digest
+from aicore.artifacts.lock import (
+    apply_plan, parse_lock, serialize_lock, ArtifactLock, LOCK_RELATIVE_PATH)
+from aicore.util.io import atomic_write_text, safe_load_json
+from aicore.util.repo import find_repo_root
 
 from aicore.delivery.claude import enable_marketplace_plugins, redacted_settings_preview
 
-from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
-                     die, is_within, parse_flags, warn)
+from .common import apply_permissions
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import AGENT_DEFAULTS, MANIFEST
+from aicore.util.cli import parse_flags
+from aicore.util.paths import is_within
+from aicore.util.term import die, warn
 from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
                      all_buckets, default_command_plugins,
                      load_config, resolve_selection, resolve_target)
@@ -130,9 +135,9 @@ _prepare_connect_selection = prepare_connect_selection
 def _resident_tokens(env, plugins):
     """Rough estimate of resident ⊕ tier-0 (name+description) of the selected set of plugins -
     for «smart connection»: you can see the price BEFORE recording. core → CORE_SKILLS; bucket → all his skills;
-    generate-skill → his skill. Source of token mathematics ONE - aicore.content.budget.skill_budget, re-exported by budget (do not duplicate).
+    generate-skill → his skill. Source of token mathematics ONE - aicore.content.budget.skill_budget (do not duplicate).
     Return (tokens, n_skills)."""
-    from .budget import skill_budget
+    from aicore.content.budget import skill_budget
     total = n = 0
     for p in plugins:
         if p == CORE_PLUGIN:
@@ -403,7 +408,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     prepared = prepare_connect_selection(env, target, opts, config)
     native_plan = None
     if opts.get("native_codex"):
-        from .native_codex import plan_selection
+        from aicore.delivery.codex import plan_selection
         marketplace = json.loads((repo_root / ".agents/plugins/marketplace.json").read_text())
         try:
             native_plan = plan_selection(env, target, prepared["plugins"],
@@ -411,7 +416,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         except (OSError, ValueError) as exc:
             die(f"CODEX_SELECTION_PREFLIGHT: {exc}")
     if opts.get("native_codex_only"):
-        from .native_codex import apply_selection
+        from aicore.delivery.codex import apply_selection
         apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
         return {"provider": "codex", "target": str(native_plan["path"]),
                 "plugins": native_plan["selected"]}
@@ -452,7 +457,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
                 env, target, plan, dry_run=opts.get("dry_run", False),
                 register=register))
     if native_plan is not None:
-        from .native_codex import apply_selection
+        from aicore.delivery.codex import apply_selection
         apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
         if opts.get("hub") and not opts.get("dry_run", False):
             generate_hub(env, target, root_files=("AGENTS.md",))

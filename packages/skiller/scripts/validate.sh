@@ -43,8 +43,8 @@ from pathlib import Path
 
 root = Path(sys.argv[1])  # package root (skills/, lib/, buckets.json)
 # marketplace.json — in root monorepo; source-plugin paths are relative to the repo root.
-# (Canon - core.repo.find_repo_root; here is a self-contained take: heredoc is chasing
-#  before installation PYTHONPATH on core — we do not consciously import.)
+# (Canon - aicore.util.repo.find_repo_root; here is a self-contained take: the heredoc
+#  does not import the package on purpose.)
 def _repo_root(p):
     for cand in (p, *p.parents):
         if (cand / ".git").exists():
@@ -170,7 +170,7 @@ TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(trigger in description+whe
 def _collect_block_scalar(lines, start):
     """Indent lines YAML-block scalar starting from lines[start] → (lines, next_i).
     Empty ones are stored as hyphens; tails are trimmed (clip-chomp). Mirrors
-    lib/skiller/common.py::_collect_block_scalar (gate should read as generate)."""
+    aicore.util.text._collect_block_scalar (gate should read as generate)."""
     block, i = [], start
     while i < len(lines):
         ln = lines[i]
@@ -194,8 +194,8 @@ def parse_frontmatter(path):
     Collects YAML-block scalars (`key: |` / `key: >` + opt. Chomp) and cuts BOM
     (utf-8-sig) — ELSE `description: >` gives gate marker only '>', and Cyrillic/
     real length (block) descriptions are not checked = false green. Reads the same way
-    like generate-path lib/skiller/common.py::parse_frontmatter (conscious
-    self-contained take: heredoc chases to PYTHONPATH on core, not imported)."""
+    like generate-path aicore.content.skill.read_frontmatter (conscious
+    self-contained take: the heredoc does not import the package)."""
     lines = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -649,9 +649,9 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                           f"(update-upstreams.sh: AUDIT_STALE)")
 
 # --- 3. profiles/*.json ---------------------------------------------------
-# Taxonomy Canon - core.project.PROJECT_TYPES; here is a self-contained take
-# (heredoc chases to PYTHONPATH on core — we do not consciously import; hold
-#  in sync with core/project.py). Links to presets/packs/mcp live in the package
+# Taxonomy Canon - aicore.util.project.PROJECT_TYPES; here is a self-contained take
+# (the heredoc does not import the package on purpose; hold in sync with
+#  aicore/util/project.py). Links to presets/packs/mcp live in the package
 # configured environment publisher — checked only when available in this host.
 PROJECT_TYPE_IDS = {
     "obsidian-vault", "laravel-project", "php-package", "dart-flutter",
@@ -1277,11 +1277,7 @@ echo "CLI + shell scripts: syntax OK"
 # --- 12. lib/skiller package + unit/integration tests --------------------------
 [[ -d "$REPO_ROOT/lib/skiller" ]] || {
   echo "ERROR: lib/skiller package missing" >&2; exit 1; }
-# MONOREPO_ROOT (two levels above the package) — to import the package `core`;
-# optional: in standalone-directory layout core no, the path is not added.
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import skiller.cli" || {
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "import skiller.cli" || {
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
 "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
 
@@ -1380,10 +1376,8 @@ PY
 # ran" and "gate passed" are not the same thing. The expected inventory comes from the
 # host config (default command plugins + sibling plugin dirs); without a host the
 # gate has nothing to compare and is skipped explicitly.
-_CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$_CORE_ROOT/core" ] || _CORE_ROOT=""
 _host_rc=0
-PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${_CORE_ROOT:+:$_CORE_ROOT}" python3 -c \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c \
   'import sys; from pathlib import Path; from skiller.host import load_host; sys.exit(0 if load_host(Path(sys.argv[1])).default_command_plugins else 3)' \
   "$REPO_ROOT" || _host_rc=$?
 if [ "$_host_rc" -ne 0 ] && [ "$_host_rc" -ne 3 ]; then
@@ -1396,7 +1390,7 @@ elif ! command -v codex >/dev/null 2>&1; then
 else
   codex_version="$(codex --version 2>/dev/null || echo unknown)"
   _codex_gate_log="$(mktemp)"
-  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${_CORE_ROOT:+:$_CORE_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}" \
       python3 -m unittest tests.test_codex_consumer_acceptance -v) > "$_codex_gate_log" 2>&1; then
     echo "Codex publication consumer-acceptance: GREEN (codex ${codex_version})"
   else

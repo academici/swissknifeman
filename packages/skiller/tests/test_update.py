@@ -15,7 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import MANIFEST, MARKETPLACE
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import MANIFEST
 from skiller.connect import do_connect
 from skiller.host import clear_host_cache
 from skiller.registry import build_registry
@@ -66,7 +67,7 @@ class UpdateCase(unittest.TestCase):
             if name == "different":
                 (source / "guide.md").write_text("local-only", encoding="utf-8")
         inventory = {"ok": True, "paths": inventory_paths}
-        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+        with mock.patch("aicore.delivery.codex.native_inventory", return_value=inventory):
             self.assertTrue(silently(retire_equivalent_codex_skill_links, self.env, project,
                                      dry_run=True))
             self.assertTrue((directory / "same").is_symlink())
@@ -96,7 +97,7 @@ class UpdateCase(unittest.TestCase):
         (Path(links["duplicate"]) / "guide.md").write_text("unique safety rule")
         inventory = {"ok": True, "native_names": {"duplicate"},
                      "paths": {"duplicate": [str(native / "SKILL.md")]}}
-        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+        with mock.patch("aicore.delivery.codex.native_inventory", return_value=inventory):
             self.assertFalse(silently(retire_legacy_codex_links, self.env, project))
             self.assertTrue((directory / "duplicate").is_symlink())
             (native / "guide.md").write_text("unique safety rule")
@@ -131,7 +132,7 @@ class UpdateCase(unittest.TestCase):
         (directory / "local").mkdir()
         marker = project / ".agents/.swissknifeman-codex-links.json"
         marker.write_text(json.dumps({"version": 1, "links": {"local": str(self.env.root / "skills/php/local")}}))
-        with mock.patch("skiller.native_codex.native_inventory", return_value={"ok": True, "native_names": {"local"}}):
+        with mock.patch("aicore.delivery.codex.native_inventory", return_value={"ok": True, "native_names": {"local"}}):
             with self.assertRaisesRegex(ValueError, "LEGACY_LINK_MODIFIED"):
                 retire_legacy_codex_links(self.env, project)
         self.assertTrue((directory / "local").is_dir())
@@ -277,13 +278,13 @@ class UpdateCase(unittest.TestCase):
         import shutil
         shutil.copytree(source, native)
         inventory = {"ok": True, "native_names": {"run"}, "paths": {"run": [str(native / "SKILL.md")]}}
-        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+        with mock.patch("aicore.delivery.codex.native_inventory", return_value=inventory):
             self.assertTrue(silently(retire_legacy_codex_links, self.env, project))
         self.assertFalse((directory / "run").is_symlink())
         self._with_host({})
         (directory / "run").symlink_to(source)
         marker.write_text(json.dumps({"version": 1, "links": {"run": str(source)}}))
-        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+        with mock.patch("aicore.delivery.codex.native_inventory", return_value=inventory):
             with self.assertRaisesRegex(ValueError, "source outside owned skill roots"):
                 retire_legacy_codex_links(self.env, project)
 

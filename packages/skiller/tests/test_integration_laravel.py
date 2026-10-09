@@ -14,7 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.connect import do_connect
 from skiller.vendor import do_vendor
-from skiller.common import MANIFEST, MARKETPLACE
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import MANIFEST
 import tests.fixtures as fx
 
 

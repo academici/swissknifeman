@@ -17,7 +17,8 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 
-from core import die, find_repo_root
+from aicore.util.repo import find_repo_root
+from aicore.util.term import die
 
 HOST_CONFIG_ENV = "SKILLER_HOST_CONFIG"
 HOST_CONFIG_PATH = "configs/skiller-host.json"

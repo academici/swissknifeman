@@ -225,6 +225,11 @@
 
 ### Changed
 
+- **skiller:** the library imports `aicore` modules directly and no longer needs the root `core` package: the launchers
+  (`bin/skiller`, `scripts/test.sh`, `scripts/validate.sh`) drop the monorepo-root path, `scripts/generate-hub.sh` and
+  `install.sh` find `aicore` through the shared locator, and `skiller` is checked standalone without `core`
+  (`standalone.foundation_free` in `configs/ecosystem-units.json`).
+
 - **skiller:** the skill `brain-locator` moved from the `system` bucket to the `brain` module plugin (version 0.2.0, the path ladder starts with `brain vault --json`); the `system` bucket and the registry no longer list it, and the marketplace gains the plugin `brain`.
 
 - **skiller:** the `integrate` wizard block `[9] Brain docs-sync` calls the host command `brain_docs`
@@ -279,6 +284,10 @@
   `harness permissions` мержит в `.claude/settings.local.json`.
 
 ### Removed
+
+- **skiller:** the re-export layer over `core` and `aicore` (`skiller.common`, `budget`, `publication`, `skillset`,
+  `release`, `release_attestation`, `quality.eval`) and the wrapper modules `plugins.py` and `native_codex.py`; callers
+  import the `aicore` modules.
 
 - **skiller:** `brain_sync.py` (document sync between a project and the vault); it lives in `brain docs`.
 - `scripts/skiller-standalone-check.sh`: replaced by `ecosystem-units.py standalone`, which runs the same check for every

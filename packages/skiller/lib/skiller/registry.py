@@ -4,17 +4,21 @@ import json
 import sys
 from pathlib import Path
 
-from core import atomic_write_text, find_repo_root, safe_load_json
+from aicore.util.io import atomic_write_text, safe_load_json
+from aicore.util.repo import find_repo_root
 
-from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
-                     parse_inline_list, skill_content_hash)
+from aicore.content.skill import read_frontmatter as parse_frontmatter, skill_content_hash
+from aicore.delivery import MARKETPLACE
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
+from aicore.util.text import parse_inline_list
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .host import host_plugin_dirs, load_host
-from aicore.content.publication import manifest_bytes
+from aicore.content.publication import manifest_bytes, package_rel
 
-from .publication import (SiblingPlugin, package_rel, assert_root_bootstrap_set_completeness,
-                          build_publication_catalog, render_claude_publication,
-                          render_codex_publication, render_repository_bootstrap_projections)
+from .publication import (
+    SiblingPlugin, assert_root_bootstrap_set_completeness, build_publication_catalog,
+    render_claude_publication, render_codex_publication, render_repository_bootstrap_projections)
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 

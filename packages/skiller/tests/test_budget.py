@@ -11,12 +11,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.budget import (aggregate_measurements, budget_for_set, cmd_budget,
-                            estimate_tokens, make_measurement, resolve_active_set,
-                            skill_budget, write_budget_map)
+from skiller.budget import cmd_budget, resolve_active_set, write_budget_map
+from aicore.content.budget import (
+    aggregate_measurements, budget_for_set, estimate_tokens, make_measurement, skill_budget)
 from skiller.registry import build_registry
 import tests.fixtures as fx
-from core import atomic_write_text
+from aicore.util.io import atomic_write_text
 import json
 
 

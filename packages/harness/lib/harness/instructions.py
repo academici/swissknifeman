@@ -29,9 +29,9 @@ from core.provider.lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.4.0"
+CATALOG_VERSION = "1.5.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
-SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex")
+SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex", "brain")
 _SCOPE_TARGET_KEYS = {
     "claude-code": "claude_target",
     "codex": "codex_target",
@@ -74,6 +74,11 @@ TARGETS = {
         "cursor": "packages/artifex/.cursor-instructions.mdc",
         "grok": "packages/artifex/.grok-instructions.md",
     },
+    "brain": {
+        "claude-code": "packages/brain/CLAUDE.md", "codex": "packages/brain/AGENTS.md",
+        "cursor": "packages/brain/.cursor-instructions.mdc",
+        "grok": "packages/brain/.grok-instructions.md",
+    },
 }
 COMMON_IDS = {
     "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
@@ -103,6 +108,9 @@ COMMON_IDS = {
     "artifex": ("artifex.identity", "artifex.layout", "artifex.runtime-boundaries",
                  "artifex.provenance", "artifex.engineering-invariants",
                  "artifex.validation-release"),
+    "brain": ("brain.identity", "brain.layout", "brain.module-boundaries",
+              "brain.vault-safety", "brain.engineering-invariants",
+              "brain.validation-release"),
 }
 # Root common is on demand for every provider except these ids: they are projected to every root
 # target, so the rule reaches any agent that opens the repository (the first-turn budget gates additions).

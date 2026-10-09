@@ -7,7 +7,7 @@
 ## Purpose
 
 This contract defines one provider-neutral instruction canon for the swissknifeman root and
-its five package scopes. `CLAUDE.md` and `AGENTS.md` are independent provider projections of
+its seven package scopes. `CLAUDE.md` and `AGENTS.md` are independent provider projections of
 the same ordered common semantic sections, followed by an explicit provider-extension
 section set. Bytes and phrasing may differ; common meaning may not.
 
@@ -26,7 +26,7 @@ The contract envelope has these stable identities:
 | Contract | `provider-instruction-contract` / `1.0.0` |
 | Artifact kind | `instruction-projection` |
 | Providers | exactly `claude-code`, `codex` |
-| Scope IDs | exactly the six IDs in `Scopes` |
+| Scope IDs | exactly the eight IDs in `Scopes` |
 | Artifact ID | `harness.instruction-projection.<scope-id>.<provider-id>` |
 | Adapter ID | `harness.instruction.<provider-id>` |
 | Managed boundary | `managed-blocks`, exactly two ordered block IDs |
@@ -54,8 +54,10 @@ are forbidden.
 | `maind` | `packages/maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` |
 | `analyst` | `packages/analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` |
 | `task` | `packages/task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` |
+| `artifex` | `packages/artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` |
+| `brain` | `packages/brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` |
 
-A conforming catalog contains all and only these six scope records and all and only the two
+A conforming catalog contains all and only these eight scope records and all and only the two
 targets per scope. Missing, extra, duplicate, aliased or discovered targets fail before
 render. `packages/<name>` is never inferred from directory contents.
 
@@ -89,6 +91,8 @@ The initial ordered common inventories are frozen as follows:
 | `maind` | `maind.identity` · `maind.three-planes` · `maind.layout` · `maind.module-boundaries` · `maind.orchestration` · `maind.engineering-invariants` · `maind.validation-release` |
 | `analyst` | `analyst.identity-human-gate` · `analyst.layer-boundary` · `analyst.layout` · `analyst.module-boundaries` · `analyst.data-lifecycle` · `analyst.privacy` · `analyst.engineering-invariants` · `analyst.validation-release` |
 | `task` | `task.identity` · `task.command-catalog` · `task.plan-protocol` · `task.plan-files` · `task.layout` · `task.schema-ownership` · `task.engineering-invariants` · `task.validation-release` |
+| `artifex` | `artifex.identity` · `artifex.layout` · `artifex.runtime-boundaries` · `artifex.provenance` · `artifex.engineering-invariants` · `artifex.validation-release` |
+| `brain` | `brain.identity` · `brain.layout` · `brain.module-boundaries` · `brain.vault-safety` · `brain.engineering-invariants` · `brain.validation-release` |
 
 The initial provider-extension inventories are:
 
@@ -100,6 +104,8 @@ The initial provider-extension inventories are:
 | `maind` | `maind.claude-code.plugin-and-mcp` · `maind.claude-code.workspace-trust` | empty |
 | `analyst` | `analyst.claude-code.capture-surfaces` · `analyst.claude-code.plugin` | empty |
 | `task` | `task.claude-code.slash-projection` · `task.claude-code.model-pins` | empty |
+| `artifex` | `artifex.claude-code.package-scope` | `artifex.codex.package-scope` |
+| `brain` | empty | empty |
 
 `empty` is a normative empty ordered set, not a missing record. Its target still carries an
 extension managed block so ownership and future compatible additions remain explicit.

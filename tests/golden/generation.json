@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "388978bd4ab4",
-  "reason": "brain-locator moved to the brain module plugin",
+  "captured_from": "d4017257e033",
+  "reason": "brain module instruction scope",
   "generators": [
     {
       "id": "skiller-registry",
@@ -203,8 +203,8 @@
     ".grok/rules/swissknifeman-instructions.md": "d7450cad926742183bf3557e8d574fd8bbae9b81e0b5742b167a6ebce2012354",
     "bootstrap/publication-lock.json": "cd95f5ff1e402b4ad429ae08be8eb52c27063894e6825f689fb7fba4f3630d40",
     "docs/provider-support.md": "a502c02dd4cd841f29cee7f14de9576f9150abe5c072cc0c2e650260ae47a467",
-    "packages/harness/docs/reference/provider-instructions.md": "b3c19918179a3dcca9570b4cbd9ba71de9e3a99804d0f78d33369d3fcdb2aabf",
-    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "5e67c088193fbb6b7060d2e814c9179d74bc3df1ab50687978b22c7e81fcef72",
+    "packages/harness/docs/reference/provider-instructions.md": "13c1fc665b54fae794269a5ac8cc053f222ac421e9c2f1699f66fca0a2ef3e6e",
+    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "c5adf9277125f4e1a9587f073892dd5222af6dd732e229bed9d8841bf1b39e5b",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "40aa013bca21f181e007ad52aac83643e43169ef231691f3b0bfeba2c2ef149d",
     "packages/skiller/adapters/codex/core/publication-lock.json": "e87ad3716d9e5a19e3b1bbaf31238f0e677967663b86941a349a1228d7b853d4",
     "packages/skiller/adapters/codex/core/skills/general/anti-drift/SKILL.md": "372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8",

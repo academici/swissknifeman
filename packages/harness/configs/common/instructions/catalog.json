@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.4.0",
+  "catalog_version": "1.5.0",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -2781,6 +2781,195 @@
       ],
       "cursor_target": "packages/artifex/.cursor-instructions.mdc",
       "grok_target": "packages/artifex/.grok-instructions.md"
+    },
+    {
+      "id": "brain",
+      "sections": [
+        {
+          "id": "brain.identity",
+          "scope_id": "brain",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `brain` is the ecosystem module for the Obsidian vault: it finds the vault, syncs project documents with it and writes notes from ecosystem events; the vault belongs to a person, so brain adds notes and never rewrites their files.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "brain.maintainer",
+              "action": "preserve",
+              "object": "brain.identity.requirements",
+              "boundary": "brain.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.brain.common",
+              "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+            }
+          ],
+          "compatibility_assertions": [
+            "`brain` is the ecosystem module for the Obsidian vault",
+            "the vault belongs to a person, so brain adds notes and never rewrites their files.",
+            "`brain`"
+          ]
+        },
+        {
+          "id": "brain.layout",
+          "scope_id": "brain",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep `bin/brain` as the launcher, `lib/brain/` as stdlib-only logic on `aicore`, `skills/` for the module's own skills, and temporary-directory tests with the synthetic vault in `tests/fixtures/vault`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "brain.maintainer",
+              "action": "preserve",
+              "object": "brain.layout.requirements",
+              "boundary": "brain.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.brain.common",
+              "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `bin/brain` as the launcher, `lib/brain/` as stdlib-only logic on `aicore`",
+            "temporary-directory tests with the synthetic vault in `tests/fixtures/vault`.",
+            "`bin/brain`",
+            "`lib/brain/`",
+            "`tests/fixtures/vault`"
+          ]
+        },
+        {
+          "id": "brain.module-boundaries",
+          "scope_id": "brain",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Import only `brain` and `aicore`; reach planner, maind and skiller through events and their command lines, and take the vault path from `brain vault` resolution (configuration `brain.vault_path`), never from a hardcoded path.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "brain.maintainer",
+              "action": "preserve",
+              "object": "brain.module-boundaries.requirements",
+              "boundary": "brain.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.brain.common",
+              "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Import only `brain` and `aicore`",
+            "take the vault path from `brain vault` resolution (configuration `brain.vault_path`), never from a hardcoded path.",
+            "`brain.vault_path`"
+          ]
+        },
+        {
+          "id": "brain.vault-safety",
+          "scope_id": "brain",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Write to the vault only through `brain note` (one new note per event, idempotent by event id, never overwriting a file) and an explicit `brain docs push`; keep notes outside the synced `docs`, `docs-public` and `plans` folders.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "brain.maintainer",
+              "action": "preserve",
+              "object": "brain.vault-safety.requirements",
+              "boundary": "brain.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.brain.common",
+              "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Write to the vault only through `brain note`",
+            "never overwriting a file) and an explicit `brain docs push`",
+            "keep notes outside the synced `docs`, `docs-public` and `plans` folders.",
+            "`brain note`",
+            "`brain docs push`"
+          ]
+        },
+        {
+          "id": "brain.engineering-invariants",
+          "scope_id": "brain",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes and the subscriber answer contract: one JSON object on stdout, exit 65 for invalid event data and 75 for temporary failures.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "brain.maintainer",
+              "action": "preserve",
+              "object": "brain.engineering-invariants.requirements",
+              "boundary": "brain.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.brain.common",
+              "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes",
+            "exit 65 for invalid event data and 75 for temporary failures.",
+            "`BrainError`"
+          ]
+        },
+        {
+          "id": "brain.validation-release",
+          "scope_id": "brain",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`, then `python3 scripts/ecosystem-units.py check` and `python3 scripts/ecosystem-units.py standalone brain` from the hub root; use Russian Conventional Commit messages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "brain.maintainer",
+              "action": "preserve",
+              "object": "brain.validation-release.requirements",
+              "boundary": "brain.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.brain.common",
+              "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+            "use Russian Conventional Commit messages.",
+            "`bash scripts/test.sh`",
+            "`bash scripts/validate.sh`",
+            "`python3 scripts/ecosystem-units.py standalone brain`"
+          ]
+        }
+      ],
+      "claude_target": "packages/brain/CLAUDE.md",
+      "codex_target": "packages/brain/AGENTS.md",
+      "cursor_target": "packages/brain/.cursor-instructions.mdc",
+      "grok_target": "packages/brain/.grok-instructions.md"
     }
   ]
 }

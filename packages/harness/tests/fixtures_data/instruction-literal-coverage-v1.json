@@ -1,12 +1,12 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.4.0",
+  "fixture_version": "1.5.0",
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "a0bae93eea83b61af807caab642fee2d218d2e05a54f21444a4eeddec5835de8",
+    "source_sha256": "1d5520a52470a75b14e1a93c63a6cf98b6775aa5031cfffc57ce4ed0c058ee96",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 316
+    "literal_count": 340
   },
   "literals": [
     {
@@ -1272,6 +1272,102 @@
     {
       "semantic_id": "artifex.codex.package-scope",
       "literal": "`codex -C packages/artifex`"
+    },
+    {
+      "semantic_id": "brain.identity",
+      "literal": "`brain` is the ecosystem module for the Obsidian vault"
+    },
+    {
+      "semantic_id": "brain.identity",
+      "literal": "the vault belongs to a person, so brain adds notes and never rewrites their files."
+    },
+    {
+      "semantic_id": "brain.identity",
+      "literal": "`brain`"
+    },
+    {
+      "semantic_id": "brain.layout",
+      "literal": "Keep `bin/brain` as the launcher, `lib/brain/` as stdlib-only logic on `aicore`"
+    },
+    {
+      "semantic_id": "brain.layout",
+      "literal": "temporary-directory tests with the synthetic vault in `tests/fixtures/vault`."
+    },
+    {
+      "semantic_id": "brain.layout",
+      "literal": "`bin/brain`"
+    },
+    {
+      "semantic_id": "brain.layout",
+      "literal": "`lib/brain/`"
+    },
+    {
+      "semantic_id": "brain.layout",
+      "literal": "`tests/fixtures/vault`"
+    },
+    {
+      "semantic_id": "brain.module-boundaries",
+      "literal": "Import only `brain` and `aicore`"
+    },
+    {
+      "semantic_id": "brain.module-boundaries",
+      "literal": "take the vault path from `brain vault` resolution (configuration `brain.vault_path`), never from a hardcoded path."
+    },
+    {
+      "semantic_id": "brain.module-boundaries",
+      "literal": "`brain.vault_path`"
+    },
+    {
+      "semantic_id": "brain.vault-safety",
+      "literal": "Write to the vault only through `brain note`"
+    },
+    {
+      "semantic_id": "brain.vault-safety",
+      "literal": "never overwriting a file) and an explicit `brain docs push`"
+    },
+    {
+      "semantic_id": "brain.vault-safety",
+      "literal": "keep notes outside the synced `docs`, `docs-public` and `plans` folders."
+    },
+    {
+      "semantic_id": "brain.vault-safety",
+      "literal": "`brain note`"
+    },
+    {
+      "semantic_id": "brain.vault-safety",
+      "literal": "`brain docs push`"
+    },
+    {
+      "semantic_id": "brain.engineering-invariants",
+      "literal": "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes"
+    },
+    {
+      "semantic_id": "brain.engineering-invariants",
+      "literal": "exit 65 for invalid event data and 75 for temporary failures."
+    },
+    {
+      "semantic_id": "brain.engineering-invariants",
+      "literal": "`BrainError`"
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "use Russian Conventional Commit messages."
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "`bash scripts/test.sh`"
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "`bash scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "`python3 scripts/ecosystem-units.py standalone brain`"
     }
   ]
 }

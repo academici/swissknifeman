@@ -30,7 +30,7 @@ def main() -> int:
     literals = [{"semantic_id": row["id"], "literal": assertion}
                 for row in source["records"] for assertion in row["assertions"]]
     coverage = json.dumps({
-        "contract_version": source["contract_version"], "fixture_version": "1.4.0",
+        "contract_version": source["contract_version"], "fixture_version": "1.5.0",
         "provenance": {"source": str(COMPATIBILITY.relative_to(ROOT)),
                        "source_hash_scope": "file",
                        "source_sha256": hashlib.sha256(COMPATIBILITY.read_bytes()).hexdigest(),

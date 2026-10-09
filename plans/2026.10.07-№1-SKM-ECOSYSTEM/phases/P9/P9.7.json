@@ -1,0 +1,155 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.7",
+  "title": "Оверлеи слотов команд: plan.py overlays и вызов из каждой команды; проекции Codex, Cursor, Grok",
+  "status": "todo",
+  "summary": "unit.json provides.overlay_slots (10 команд); глагол plan.py overlays SLOT [--project] [--json] [--strict] через planner.integration.overlays (без aicore — пусто, exit 0); строка вызова слота первой строкой тела каждой из 10 команд; регенерация проекций Codex/Cursor/Grok, Claude-golden и алиасов из канона; тесты слотов и множества команд = слотов; golden с причиной.",
+  "why": "D6, D47, D59: человек дописывает свои правила к командам planner через оверлеи, не трогая модуль; общие проекции плагина не получают статического встраивания (D47). Жёсткий риск: команда без строки вызова или слот без команды — тест равенства множеств команд и overlay_slots.",
+  "scope": {
+    "include": [
+      "packages/planner/unit.json (overlay_slots)",
+      "packages/planner/lib/planner/integration/overlays.py, plan/cli.py, plan/catalog.py, skills/plan-protocol/references/api.md",
+      "packages/planner/commands/*.md и регенерация adapters/**, aliases/**, tests/fixtures_data/claude-command-golden/**",
+      "packages/planner/tests/test_overlays.py"
+    ],
+    "exclude": [
+      "статическое встраивание оверлеев в проекции (D47; по триггеру)"
+    ]
+  },
+  "depends_on": [
+    "P9.6"
+  ],
+  "decisions": [
+    "D6",
+    "D47",
+    "D59"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#overlays",
+      "why": "дизайн пункта: слоты, CLI, строка команды, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#overlays",
+      "why": "API resolve_overlays, render_overlays, describe_overlays, лимиты",
+      "required": true
+    },
+    {
+      "path": "packages/planner/commands/plan-run.md",
+      "why": "образец места вставки строки",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/cli.py",
+      "why": "регистрация глагола без плана (как schema)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/unit.json",
+      "change": "any",
+      "note": "файл появляется в P9.1 (переименование)"
+    },
+    {
+      "path": "packages/planner/lib/planner/integration/overlays.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/commands/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/adapters/**",
+      "change": "modify",
+      "note": "только рендером"
+    },
+    {
+      "path": "packages/planner/aliases/**",
+      "change": "modify",
+      "note": "только рендером"
+    },
+    {
+      "path": "packages/planner/skills/plan-protocol/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/planner/docs/reference/**",
+      "change": "modify",
+      "note": "только рендером"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только capture «planner command overlay slots»"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Строка вызова слота — дословно из knowledge/planner-p9-ext#overlays; проекции — только рендером из канона"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: `overlay_slots` в `unit.json` → `ecosystem-units.py check` → `integration/overlays.py` и глагол `overlays` (каталог, `references/api.md`) → строка в 10 командах → `render-provider-commands.py --write --root .` → тесты (`tests/test_overlays.py`) → `golden.py check` → capture с причиной → V1–V3 → CHANGELOG («planner: overlay slots for every command (plan.py overlays)»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c 'import json, pathlib; u = json.load(open(\"packages/planner/unit.json\")); slots = set(u[\"provides\"][\"overlay_slots\"]); cmds = {p.stem for p in pathlib.Path(\"packages/planner/commands\").glob(\"*.md\")}; assert slots == cmds, (slots ^ cmds); bad = [c for c in cmds if \"plan.py overlays planner:%s\" % c not in pathlib.Path(\"packages/planner/commands/%s.md\" % c).read_text()]; assert not bad, bad' && python3 packages/planner/scripts/render-provider-commands.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "слоты оверлеев всех команд planner",
+    "plan.py overlays"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-09T17:28:38Z"
+}

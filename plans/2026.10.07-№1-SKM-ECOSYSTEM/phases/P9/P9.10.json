@@ -1,0 +1,156 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.10",
+  "title": "Совместимость: фикстуры старых планов, чтение всех планов репозитория, aicore schema compat для plan/v1",
+  "status": "todo",
+  "summary": "Замороженная фикстура демо-плана движка 0.28.3 (tests/compat/plans/engine-0.28.3) и тест чтения старых планов (check, next, context с scenario, export, render, байты неизменённых документов); хаб-тест scripts/test-plan-compat.py — новый движок читает все планы repo plans/ и plans/archive/ (только читающие глаголы, на копиях); aicore schema compat для контрактов из нескольких документов (load_contract_set, kind-removed/kind-added) и опция --base-root; проверка plan/v1 против origin/ecosystem-split — только minor.",
+  "why": "E44 (старые планы читаются), правило плана о URN и минорных изменениях plan/v1 (D60). Сегодня aicore schema compat не читает plan/v1 («expected exactly plan.schema.json») — совместимость схемы плана не проверяется механически. Жёсткий риск: новый движок отвергнет план, записанный 0.28.3, во всех проектах после обновления — страхуют замороженная фикстура и прогон по всем планам репозитория.",
+  "scope": {
+    "include": [
+      "packages/planner/tests/compat/** (фикстура и тест)",
+      "scripts/test-plan-compat.py (хаб)",
+      "packages/aicore/lib/aicore/util/{schema,schemacompat}.py, их тесты и README раздела schema compat"
+    ],
+    "exclude": [
+      "миграция старых планов (не нужна: URN и v1 те же)",
+      "расширение профиля схем без теста паритета (§compat п.4)"
+    ]
+  },
+  "depends_on": [
+    "P9.9"
+  ],
+  "decisions": [
+    "D23",
+    "D46",
+    "D60"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы (п.4 — только читающие глаголы на планах репозитория)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-compat#compat",
+      "why": "дизайн пункта",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-schema#compat",
+      "why": "правила aicore schema compat (P6.2)",
+      "required": false
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schema.py",
+      "why": "load_contract (строки ~141–200), load_registry",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schemacompat.py",
+      "why": "_contracts, _compat, _compare_dirs, опции",
+      "required": true
+    },
+    {
+      "path": "tests/golden/cases.json",
+      "why": "каталог демо-плана (случай plan-show, поле from)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/tests/compat/**",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-plan-compat.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schemacompat.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify",
+      "note": "если файл есть"
+    },
+    {
+      "path": "docs/architecture/contracts.md",
+      "change": "modify",
+      "note": "только строка Fixtures plan/v1, если docs-impact требует"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Фикстура engine-0.28.3 — байты ревизии d3fd83e7 без правок и без регенерации"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: выгрузка фикстуры (`git archive d3fd83e7 <путь демо-плана> | tar -x -C <tmp>`, затем копия в `packages/planner/tests/compat/plans/engine-0.28.3/` и README) → `tests/compat/test_old_plans.py` (+ подключение каталога `tests/compat` в `validate.sh`, если раннер его не обходит) → `scripts/test-plan-compat.py` → aicore: `load_contract_set`, многодокументные контракты в `schemacompat`, `--base-root`, тесты, README → V3 (ожидание: minor `plan/v1:defs`, new `event-data/v1`, `check-plugin/v1`; ошибка профиля — §compat п.4) → V1–V4 → CHANGELOG (корневой: «planner: compatibility fixtures for plans of earlier engines»; aicore: «Added: schema compat for multi-document contracts and --base-root»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "set -e; bash packages/aicore/scripts/test.sh; bash packages/aicore/scripts/validate.sh; python3 scripts/test-plan-compat.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --root packages/planner/schemas --base-root packages/task/schemas --base origin/ecosystem-split && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0 (только minor/new; ломающих изменений нет)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "фикстуры совместимости старых планов",
+    "aicore schema compat для многодокументных контрактов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-09T17:28:02Z"
+}

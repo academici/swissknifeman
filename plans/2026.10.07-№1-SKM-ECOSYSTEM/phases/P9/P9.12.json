@@ -1,0 +1,190 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.12",
+  "title": "Закрытие фазы: широкий прогон, standalone planner, e2e событий и алиасов, бюджет первого хода, сверка E1 и E2, push",
+  "status": "todo",
+  "summary": "Широкий прогон тестов всех модулей и скриптов хаба, planner и skiller validate в песочнице, ecosystem-units check/render/standalone --baseline (planner pass), golden без перезахвата, aicore schema compat (aicore и planner против origin/ecosystem-split), docs-impact и hygiene, e2e событий (план → заметка brain), skiller budget --first-turn (и --with-plugins); сверка E04, E44, R04 и прочих тезисов фазы записью plan.py log; коммит, push ветки ecosystem-split.",
+  "why": "Правило плана: конец фазы — тесты и проверки автономности зелёные, push в origin ecosystem-split; сверка реестров E1/E2. Жёсткий риск: красная проверка соседнего модуля после переименования — чинится у владельца в этом пункте.",
+  "scope": {
+    "include": [
+      "широкий прогон",
+      "standalone planner",
+      "e2e событий",
+      "бюджет первого хода",
+      "сверка E1/E2",
+      "push"
+    ],
+    "exclude": [
+      "новые функции; правки — только исправления красных проверок"
+    ]
+  },
+  "depends_on": [
+    "P9.11"
+  ],
+  "decisions": [
+    "D56",
+    "D57",
+    "D58",
+    "D59",
+    "D60"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#checks",
+      "why": "состав широкого прогона",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9#e1e2",
+      "why": "тезисы фазы → пункты для сверки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9#deferred",
+      "why": "что перенесено с триггерами",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#e2e",
+      "why": "сквозная проверка событий",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-execution#register",
+      "why": "E04 — статус в фазе",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "E44 — статус в фазе",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "R04 — статус в фазе",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-deferred#register",
+      "why": "отложенные тезисы E2 — в фазе ничего не реализовано сверх (сверка)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/**",
+      "change": "modify",
+      "note": "только исправления красных проверок"
+    },
+    {
+      "path": "scripts/**",
+      "change": "modify",
+      "note": "только исправления красных проверок"
+    },
+    {
+      "path": "docs/**",
+      "change": "modify",
+      "note": "только исправления красных проверок"
+    },
+    {
+      "path": "configs/**",
+      "change": "modify",
+      "note": "только исправления красных проверок"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только исправления красных проверок"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "только исправления красных проверок"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Правки в пункте — только исправления красных проверок у владельца; каждое — plan.py log",
+    "Бюджет первого хода: skiller budget --first-turn ≤ 23K (цель 16K); с плагинами — сумма до 23K; выше — Owner verdict в отчёте, не обходить"
+  ],
+  "guidance": "Исполнитель: economy/medium.\n\nПорядок: V1 (долго — в фоне, дождаться) → V2 → V3 → V4 → V5 → V6 → V7 (числа бюджета — в `plan.py log`) → сверка: `plan.py log <plan> P9 --type note --summary \"E1 P9: E04 …, E44 …, E15 …, E22 …, E30–E33 …; E2 P9: R04 …\"` по knowledge/planner-p9 §e1e2 → commit пункта → push (`git push origin ecosystem-split`) → V8.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "set -e; bash packages/aicore/scripts/test.sh; bash packages/aicore/scripts/validate.sh; bash packages/brain/scripts/test.sh; bash packages/brain/scripts/validate.sh; PYTHONPATH=. python3 -m unittest discover -s core/tests; for m in harness maind orch analyst; do bash packages/$m/scripts/test.sh; done; bash packages/analyst/scripts/validate.sh; bash packages/maind/scripts/validate.sh; bash packages/harness/scripts/validate.sh; for t in scripts/test-*.py; do python3 \"$t\"; done; bash scripts/test-bootstrap-machine.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; } && SB=$(scripts/dev-sandbox.sh new --name p9-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone --baseline && python3 scripts/golden.py check && python3 -c 'import json; b = json.load(open(\"configs/ecosystem-baseline.json\")); assert b[\"standalone\"][\"planner\"] == \"pass\", b[\"standalone\"]; assert \"task\" not in b[\"standalone\"]'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --root packages/planner/schemas --base-root packages/task/schemas --base origin/ecosystem-split && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/e2e-plan-events.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строка e2e plan events: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 scripts/test-event-contracts.py && python3 scripts/test-plan-compat.py && python3 packages/planner/scripts/render-provider-commands.py --check --root . && (cd packages/harness && PYTHONPATH=\"$PWD/lib:$(cd ../.. && pwd)\" python3 -m harness.instructions --check)",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-bud-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- packages/skiller/bin/skiller budget --first-turn; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; итог первого хода ≤ 23K (число — в plan.py log)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V8",
+      "cmd": "git fetch -q origin && test -z \"$(git status --porcelain --untracked-files=no)\" && test \"$(git rev-list --count origin/ecosystem-split..HEAD)\" = 0",
+      "expect": "exit 0 (всё запушено, дерево чистое)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "фаза P9 закрыта, ветка запушена"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-09T17:30:05Z"
+}

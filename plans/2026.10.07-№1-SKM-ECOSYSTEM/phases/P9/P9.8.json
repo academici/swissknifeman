@@ -1,0 +1,152 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.8",
+  "title": "Внешние проверки плана: точка расширения planner:check, контракт check-plugin/v1, plan.py check",
+  "status": "todo",
+  "summary": "unit.json provides.extension_points [{id: check}] и контракт check-plugin/v1 (input, output); plan.py check [--no-external] вызывает плагины точки planner:check через planner.integration.plugins.run_checks (aicore invoke_point) после встроенных проверок, issues с префиксом плагина, сбой — EXTERNAL_CHECK_FAILED (warning или error по checks.external_failure); мутации и design-done плагинов не вызывают; фикстура-плагин и тесты.",
+  "why": "D6, D45, D59: внешние проверки плана — точка расширения planner (архитектура §6.4). Жёсткие риски: (1) плагин, вызванный каждой мутацией, замедлит любую правку плана — только глагол check, тест метки; (2) упавший плагин блокирует работу — по умолчанию warning; (3) недоверенный плагин — регистрация только машинным конфигом aicore (D43), planner сам ничего не регистрирует.",
+  "scope": {
+    "include": [
+      "packages/planner/unit.json (extension_points, contracts), packages/planner/schemas/check-plugin/v1/{input,output}.schema.json",
+      "packages/planner/lib/planner/integration/plugins.py, plan/{check,cli,catalog}.py",
+      "packages/planner/tests/** (test_external_checks.py, fixtures/plugins/check-demo)",
+      "skills/plan-protocol/references/api.md (--no-external)"
+    ],
+    "exclude": [
+      "регистрация плагинов (конфиг aicore, P6)",
+      "другие точки расширения"
+    ]
+  },
+  "depends_on": [
+    "P9.7"
+  ],
+  "decisions": [
+    "D6",
+    "D19",
+    "D43",
+    "D45",
+    "D59"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#checks",
+      "why": "дизайн пункта: точка, контракт, поведение check, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-plugins#plugins",
+      "why": "invoke_point, PluginResult, describe, ошибки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#extension",
+      "why": "манифест extension.json фикстуры-плагина",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#protocol",
+      "why": "запрос и ответ протокола 1",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/ext/fixtures/plugins",
+      "why": "образцы плагинов-фикстур (extension.json + plugin.py)",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/check.py",
+      "why": "Issue, порядок проверок, вывод",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/cli.py",
+      "why": "глагол check",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/unit.json",
+      "change": "any",
+      "note": "файл появляется в P9.1 (переименование)"
+    },
+    {
+      "path": "packages/planner/schemas/check-plugin/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/lib/planner/integration/plugins.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/skills/plan-protocol/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Внешние проверки — только глагол check; внутренние проверки мутаций и design-done их не вызывают"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: контракт check-plugin/v1 и записи `unit.json` → `ecosystem-units.py check` → `integration/plugins.py` → вызов в глаголе `check` и флаг `--no-external` (каталог, `references/api.md`) → фикстура-плагин (по образцу фикстур aicore; `capabilities_digest` — `aicore.util.digest.digest_json(provides)`) → тесты (§checks) → V1–V3 → CHANGELOG («planner: external plan checks through the planner:check extension point»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c 'import json; u = json.load(open(\"packages/planner/unit.json\")); assert [p[\"id\"] for p in u[\"provides\"][\"extension_points\"]] == [\"check\"]' && test -f packages/planner/schemas/check-plugin/v1/input.schema.json && test -f packages/planner/schemas/check-plugin/v1/output.schema.json && grep -q -- '--no-external' packages/planner/skills/plan-protocol/references/api.md",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "точка расширения planner:check и контракт check-plugin/v1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-09T17:28:40Z"
+}

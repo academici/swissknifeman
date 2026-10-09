@@ -15,7 +15,8 @@
   "decision": "A — packages/planner, плагин и команды /planner:*, PLANNER_ROOT; переходный период один minor: /task:* и SKM_TASK_ROOT принимаются с предупреждением; URN urn:swissknifeman:task:plan:* не меняются",
   "rationale": "M1 допустил переименование; M4 утвердил архитектуру.",
   "applies_to": [
-    "P9",
+    "P9.1",
+    "P9.2",
     "P13"
   ],
   "actor": {

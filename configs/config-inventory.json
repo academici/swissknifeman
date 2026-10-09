@@ -27,6 +27,18 @@
       "note": "analyst thresholds, schema defaults and generated config.example.toml"
     },
     {
+      "path": "packages/brain/configs/config.schema.json",
+      "owner": "brain",
+      "consumers": [
+        "packages/brain/lib/brain/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "brain vault path, catalog folder, document sync and notes"
+    },
+    {
       "path": "packages/aicore/configs/config.schema.json",
       "owner": "aicore",
       "consumers": [

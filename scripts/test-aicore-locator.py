@@ -19,10 +19,12 @@ START = "# --- aicore locator ---"
 END = "# --- end aicore locator ---"
 CARRIERS = [
     "packages/analyst/bin/analyst",
+    "packages/brain/bin/brain",
     "packages/harness/bin/harness",
     "packages/maind/bin/maind",
     "packages/skiller/bin/skiller",
     "packages/analyst/scripts/test.sh",
+    "packages/brain/scripts/test.sh",
     "packages/harness/scripts/test.sh",
     "packages/maind/scripts/test.sh",
     "packages/skiller/scripts/test.sh",

@@ -10,6 +10,7 @@
 | --- | --- | --- | --- | --- | --- |
 | aicore | foundation | 0.1.0 | own-repo | development | - |
 | analyst | capability | 0.3.0 | hub | beta | aicore |
+| brain | capability | 0.1.0 | hub | alpha | aicore |
 | harness | capability | 0.7.1 | hub | beta | aicore |
 | maind | capability | 0.6.0 | hub | beta | aicore |
 | orch | capability | 0.1.0 | own-repo | alpha | - |

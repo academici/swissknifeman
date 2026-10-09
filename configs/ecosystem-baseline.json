@@ -58,6 +58,7 @@
   "standalone": {
     "aicore": "pass",
     "analyst": "fail",
+    "brain": "pass",
     "harness": "fail",
     "maind": "fail",
     "orch": "fail",

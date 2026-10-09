@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "brain",
+  "title": "Obsidian vault: lookup, document sync and notes from ecosystem events",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "alpha",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: configuration, state, events."}
+  ],
+  "provides": {
+    "cli": ["bin/brain"],
+    "config": "configs/config.schema.json",
+    "doctor": [
+      {"id": "brain.vault", "category": "config", "probe": ["bin/brain", "doctor", "--json"], "output": "check-result/v1"}
+    ]
+  },
+  "permissions": {"filesystem": ["project", "state", "home"], "network": false, "shell": true},
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

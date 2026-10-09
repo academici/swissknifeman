@@ -20,6 +20,7 @@ END = "# --- end dev-clone guard ---"
 ENTRY_POINTS = [
     "bin/swissknifeman",
     "packages/analyst/bin/analyst",
+    "packages/brain/bin/brain",
     "packages/harness/bin/harness",
     "packages/maind/bin/maind",
     "packages/skiller/bin/skiller",

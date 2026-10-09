@@ -966,7 +966,7 @@ class RealRepositoryTests(unittest.TestCase):
         data = json.loads(subprocess.run([sys.executable, str(SCRIPT), "list", "--json"], capture_output=True,
                                          text=True, cwd=ROOT).stdout)
         self.assertEqual(sorted(m["id"] for m in data["modules"]),
-                         ["aicore", "analyst", "harness", "maind", "orch", "skiller", "task"])
+                         ["aicore", "analyst", "brain", "harness", "maind", "orch", "skiller", "task"])
         self.assertFalse((ROOT / "packages/artifex/unit.json").exists())
 
 
@@ -1074,7 +1074,7 @@ class StandaloneTests(unittest.TestCase):
 class RepositoryStandaloneTests(unittest.TestCase):
     def test_recorded_states(self):
         doc = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["standalone"]
-        self.assertEqual(set(doc), {"aicore", "analyst", "harness", "maind", "orch", "skiller", "task"})
+        self.assertEqual(set(doc), {"aicore", "analyst", "brain", "harness", "maind", "orch", "skiller", "task"})
         self.assertEqual(doc["skiller"], "pass")
         self.assertTrue(set(doc.values()) <= set(eu.STANDALONE_STATES))
 

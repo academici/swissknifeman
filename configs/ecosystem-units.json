@@ -36,6 +36,7 @@
   ],
   "version_sources": {
     "analyst": {"path": "packages/analyst/package.json", "read": "json:version"},
+    "brain": {"path": "packages/brain/lib/brain/__init__.py", "read": "python:__version__"},
     "harness": {"path": "packages/harness/package.json", "read": "json:version"},
     "maind": {"path": "packages/maind/package.json", "read": "json:version"},
     "orch": {"path": "packages/orch/lib/orch/__init__.py", "read": "python:__version__"},

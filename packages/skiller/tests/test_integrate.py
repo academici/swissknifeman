@@ -27,6 +27,7 @@ from skiller.host import clear_host_cache
 from skiller.integrate import (cmd_integrate, _available_mcp, _block_brain, _default_mcp, _gather,
                                _run_environment)
 from skiller.registry import build_registry
+from skiller.skillset import load_skillset_config
 import tests.fixtures as fx
 
 
@@ -84,8 +85,7 @@ class IntegrateCase(unittest.TestCase):
             ["--target", str(self.proj), "--bundle", "minimal",
              "--skills-channel", "vendor", "--yes"])
         # config vendor-mode materialized from project profile
-        cfg = json.loads(
-            (self.proj / ".swissknifeman" / "config.json").read_text())
+        cfg = load_skillset_config(self.proj, self.env)
         self.assertEqual(cfg["mode"], "vendor")
         self.assertIn("php", cfg["buckets"])  # laravel-project fixture profile
         # skills physically in the repo, in lock — managed:true, source swissknifeman

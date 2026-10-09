@@ -1,13 +1,14 @@
-"""skillset — vendor-mode on a single config.swissknifeman/config.json.
+"""skillset — vendor-mode on a single config: `[skiller.sync]` in `.swissknifeman/config.toml`.
 
-A single source of truth for the physical transfer of skills to the project: config in
-`.swissknifeman/config.json` sets the rules (specific skills + entire buckets −
+A single source of truth for the physical transfer of skills to the project: the config
+sets the rules (specific skills + entire buckets −
 exceptions), `sync` expands them into a flat set, copies the files to the repo and
-writes derivative `skills-lock.json` with a mark of origin.
+writes derivative `skills-lock.json` with a mark of origin. Projects that still keep the
+legacy `.swissknifeman/config.json` are read through `skiller.settings` with a warning.
 
 Stream (config → lock → files):
 
-    .swissknifeman/config.json   (source of truth, man rules)
+    [skiller.sync]               (source of truth, man rules)
             ↓ resolve_skillset    turning the rules into a flat set of skills
        set of skills from the library swissknifeman (by skills.json)
             ↓ sync_skillset       install + update(by sha256) + prune(by managed)
@@ -23,6 +24,7 @@ import functools
 import json
 from pathlib import Path
 
+from aicore.config import ConfigError
 from aicore.util.io import atomic_write_json
 
 # The lock, the managed copies and the sync that applies a plan live in aicore.delivery.materialize.
@@ -31,6 +33,7 @@ from aicore.delivery.materialize import (
     lock_problem as _lock_problem, sync_report_counts as _sync_report_counts,
     sync_skillset as _sync_skillset)
 
+from . import settings
 from .common import apply_permissions
 from aicore.content.skill import resolve_requires_bfs
 from aicore.util.cli import parse_flags
@@ -45,9 +48,9 @@ from .state import upsert_project
 # Where do we add the default skills? (Claude finds automatically).
 DEFAULT_SKILLS_PATH = ".claude/skills"
 CONFIG_DIR = ".swissknifeman"
-CONFIG_FILE = "config.json"
+CONFIG_FILE = "config.json"  # legacy vendor-mode file; the current one is settings.PROJECT_FILE
 
-# Config keys vendor-mode (.swissknifeman/config.json). Intentionally wider
+# Keys of the legacy vendor-mode file (.swissknifeman/config.json). Intentionally wider
 # .swissknife.json — is a separate, extensible physical mode config. transfer.
 SKILLSET_KEYS = {
     "version": int,
@@ -210,19 +213,8 @@ def resolve_presets(env, names):
 
 
 # --- config -------------------------------------------------------------------
-def skillset_config_path(target):
-    return Path(target) / CONFIG_DIR / CONFIG_FILE
-
-
-def load_skillset_config(target):
-    """Read .swissknifeman/config.json (or None, if it's not there)."""
-    cfg_file = skillset_config_path(target)
-    if not cfg_file.is_file():
-        return None
-    try:
-        cfg = json.loads(cfg_file.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        die(f"{cfg_file}: invalid JSON: {e}")
+def validate_skillset_config(cfg, cfg_file):
+    """Check the keys and types of a legacy `.swissknifeman/config.json` (`die` with the historical messages)."""
     import difflib
     for key, value in cfg.items():
         if key.startswith(("_", "$")):  # _comment / $schema — DX, not validated
@@ -236,6 +228,38 @@ def load_skillset_config(target):
             die(f"{cfg_file}: '{key}' should be {want}")
     if cfg.get("mode", "vendor") != "vendor":
         die(f"{cfg_file}: is only supported mode=vendor")
+
+
+def skillset_config_label(config):
+    """Where the vendor settings live, for messages: the legacy file while it is the source, else the TOML section."""
+    if config.sync_source == "legacy":
+        return f"{CONFIG_DIR}/{CONFIG_FILE}"
+    return f"[skiller.sync] in {settings.PROJECT_FILE}"
+
+
+def skillset_config_path(target, env=None):
+    """File that holds the vendor settings: the legacy `config.json` while it is the source, else `config.toml`."""
+    target = Path(target)
+    toml_file = target / settings.PROJECT_FILE
+    try:
+        source = settings.load(target, env=env, strict=False).sync_source
+    except ConfigError:
+        return toml_file
+    return target / CONFIG_DIR / CONFIG_FILE if source == "legacy" else toml_file
+
+
+def load_skillset_config(target, env=None):
+    """The vendor-mode config as a dict (`version`, `mode`, the keys that were set), or None if the project has none.
+
+    A project with only the legacy `.swissknifeman/config.json` gets that file's content as it is."""
+    config = settings.load(target, env=env)
+    if not config.sync_configured:
+        return None
+    if config.sync_source == "legacy":
+        cfg = dict(config.legacy_sync)
+    else:
+        cfg = {"version": LOCK_VERSION, "mode": "vendor"}
+    cfg.update(config.sync())
     return cfg
 
 
@@ -331,7 +355,7 @@ def resolve_skillset(env, cfg, include_core=False, *, diagnostics=None):
         if ("/" in token and token != full
                 and token.split("/", 1)[0] not in host_provided_buckets(env)):
             warn(f"include: '{token}' moved → '{full}' (split buckets) — "
-                 f"update .swissknifeman/config.json")
+                 f"update [skiller.sync] in {settings.PROJECT_FILE}")
         _select(selected, entry)
 
     # CORE-policy: default token skills + DEFAULT_EXCLUDE hub duplicates
@@ -465,29 +489,37 @@ sync_skillset = functools.partial(_sync_skillset, planner=_plan_for_sync)
 
 # --- config materialization (common for init and do_sync) ------------------------
 def materialize_skillset_config(env, target, opts, dry=False, force=False, quiet=False):
-    """Return config vendor-mode; create `.swissknifeman/config.json` from
-    project profile, if it does not already exist (force=True — recreate from autodetect).
+    """Return config vendor-mode; write `[skiller.sync]` to `.swissknifeman/config.toml` from the
+    project profile, if the project has none yet (force=True — recreate from autodetect).
 
     Existing curated config is respected (force=False → read as is, not
     grind). SINGLE materialization point for `cmd_init` and `do_sync` — to
-    the default set did not disperse between «create config» and «sync».
-    Returns (cfg, profile_name, created): created=True, if the file is written."""
-    cfg_path = skillset_config_path(target)
-    if cfg_path.is_file() and not force:
-        cfg = load_skillset_config(target)
+    the default set did not disperse between «create config» and «sync». A project that still keeps
+    the legacy `.swissknifeman/config.json` keeps writing there (`force` rewrites that file), so the
+    file the settings are read from stays the one they are written to.
+    Returns (cfg, profile_name, created): created=True, if the settings are written."""
+    current = settings.load(target, env=env)
+    if current.sync_configured and not force:
+        cfg = load_skillset_config(target, env)
         return cfg, (cfg.get("project_type") or ""), False
     legacy = load_config(env, target)
     buckets, profile_name, _psrc, source, _meta = resolve_selection(
         env, target, legacy, opts.get("profile", ""), [])
     cfg = {"version": LOCK_VERSION, "mode": "vendor", "agent": "claude",
            "buckets": list(buckets), "include": [], "exclude": []}
-    if not dry:
-        cfg_path.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write_json(cfg_path, cfg, version=LOCK_VERSION)
+    if current.sync_source == "legacy":
+        where = f"{CONFIG_DIR}/{CONFIG_FILE} (mode=vendor, buckets: {' '.join(buckets) or '-'})"
+        if not dry:
+            cfg_path = Path(target) / CONFIG_DIR / CONFIG_FILE
+            cfg_path.parent.mkdir(parents=True, exist_ok=True)
+            atomic_write_json(cfg_path, cfg, version=LOCK_VERSION)
+    else:
+        where = f"{settings.PROJECT_FILE} [skiller.sync] (buckets: {' '.join(buckets) or '-'})"
+        if not dry:
+            for key in ("agent", "buckets", "include", "exclude"):
+                settings.write_key(target, ("sync", key), cfg[key])
     if not quiet:
-        print(("[dry-run] " if dry else "")
-              + f"config vendor-mode: {CONFIG_DIR}/{CONFIG_FILE} "
-              f"(mode=vendor, buckets: {' '.join(buckets) or '-'})")
+        print(("[dry-run] " if dry else "") + f"config vendor-mode: {where}")
     if source == "autodetect-fallback" and not quiet:
         print("⚠ project type not recognized - MINIMUM kernel materialized;\n"
               "  for optimal dialing, specify the profile: --profile <type>")
@@ -501,7 +533,7 @@ def _do_sync_provider(env, target, opts, register=True, plan=None):
     This is the way to go for projects that outsource to third party developers WITHOUT access to
     registry swissknifeman: skill files are committed to the project repo (unlike
     connect, where skills live as plugins in the registry). Materializes
-    .swissknifeman/config.json from the project profile, if there is no config yet; already
+    [skiller.sync] from the project profile, if there is no config yet; already
     existing curated config is respected (do not grind). Parity with
     connect/do_vendor: permissions-presets, hub, registration (channel=vendor)."""
     dry = opts.get("dry_run", False)
@@ -628,7 +660,7 @@ def do_sync(env, target, opts, register=True):
 
 # --- CLI ----------------------------------------------------------------------
 def cmd_init(env, argv):
-    """Create `.swissknifeman/config.json` (mode=vendor) — without copying skills.
+    """Create `[skiller.sync]` in `.swissknifeman/config.toml` — without copying skills.
 
     Front, idempotent door «give me the config»: project type autodetect +
     profile → buckets. Copying does `skiller sync`. Previously config
@@ -637,15 +669,15 @@ def cmd_init(env, argv):
                               "--force": "bool", "--dry-run": "bool"})
     if opts["help"]:
         print("skiller init [--target DIR] [--profile TYPE] [--force] [--dry-run]\n"
-              "  Creates .swissknifeman/config.json (mode=vendor) from autodetect "
+              "  Creates [skiller.sync] in .swissknifeman/config.toml from autodetect "
               "project type and profile -\n"
               "  WITHOUT copying skills (does this skiller sync). Existing "
               "the config is not deleted without --force.")
         return
     target, via = resolve_target(env, opts, allow_home_confirm=True)
-    cfg_path = skillset_config_path(target)
-    if cfg_path.is_file() and not opts["force"]:
-        print(f"✓ {CONFIG_DIR}/{CONFIG_FILE} already exists ({via}) — I don't touch "
+    current = settings.load(target, env=env)
+    if current.sync_configured and not opts["force"]:
+        print(f"✓ {skillset_config_label(current)} already exists ({via}) — I don't touch "
               "(--force recreates). Next: skiller sync")
         return
     _cfg, profile_name, _created = materialize_skillset_config(
@@ -663,7 +695,7 @@ def cmd_sync(env, argv):
     if opts["help"]:
         print("skiller sync [--target DIR] [--dry-run] [--force] [--repair] "
               "[--hub] [--no-hub] [--no-core]\n"
-              "  Applies .swissknifeman/config.json (mode=vendor): copies "
+              "  Applies [skiller.sync] (legacy: .swissknifeman/config.json): copies "
               "skills from the library to the project, writes skills-lock.json (managed),\n"
               "  manifest .swissknifeman-manifest.json and deletes the retired ones "
               "managed-skills. Doesn't touch other people's skills (--force grinds\n"
@@ -674,10 +706,10 @@ def cmd_sync(env, argv):
               "is already in the project or passed --hub; --no-hub disables.")
         return
     target, via = resolve_target(env, opts, allow_home_confirm=True)
-    cfg = load_skillset_config(target)
+    cfg = load_skillset_config(target, env)
     if cfg is None:
-        die(f"{skillset_config_path(target)} not found - create a config "
-            "vendor-mode (mode=vendor, include/buckets/exclude)")
+        die(f"[skiller.sync] not found in {skillset_config_path(target, env)} - create a config "
+            "vendor-mode (include/buckets/exclude)")
 
     # Skills index at the root of the project: catching up with behavior vendor — update,
     # if the hub already exists or is explicitly requested. --no-hub overrides autodetection.

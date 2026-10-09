@@ -12,6 +12,13 @@
 
 ### Added
 
+- **skiller:** `[skiller]` and `[skiller.sync]` in `.swissknifeman/config.toml` hold the skill selection (`project_type`,
+  `buckets`, `plugins`, `exclude`, `presets`, `agent`, `skills_path`) and the vendor mode of `skiller sync` (`agent`,
+  `skills_path`, `presets`, `include`, `buckets`, `exclude`, `gitignore_managed`); the schema is
+  `packages/skiller/configs/config.schema.json` and the machine file cannot set these keys. A project that has only the
+  legacy files keeps working: each section is read from the legacy file as a whole unless `config.toml` sets a key of
+  it (then the file is ignored for that section). `skiller init` and the first `skiller sync` write `[skiller.sync]` for
+  new projects; `config.toml` also marks a project root.
 - **harness:** the plugin `harness` 0.7.0 ships the skill `agent-packs` (moved from the `system` bucket of skiller) and
   a Codex plugin manifest; the agent-pack docs name the agent as `maind:code-coordinator`.
 - **analyst:** the plugin `analyst` 0.4.0 ships the skill `session-observer` (moved from the `system` bucket of skiller)
@@ -237,8 +244,18 @@
   service files; Architecture section in the site navigation; the branch section of `docs/develop.md` describes the module
   checks, the baseline and the golden cycle.
 
+### Deprecated
+
+- **skiller:** the skiller keys of `.swissknife.json` and `.swissknifeman/config.json`. They are still read and produce
+  `SKILLER_LEGACY_CONFIG` (or `SKILLER_LEGACY_IGNORED` when `config.toml` overrides the section), once per process and
+  file; the other keys of `.swissknife.json` (`providers`, `memory_brain`, `policy_profile`) are not affected.
+
 ### Changed
 
+- **skiller:** backups of `connect` (`settings.local.json`), `update --adopt-codex` (`.swissknife.json`), the retired
+  Codex skill links and `release` (`CHANGELOG.md`) go through `aicore.state`: `.swissknifeman/backups/<stamp>/<path>` with
+  rotation (the machine `state/backups` for the changelog) instead of `*.bak` files next to the original. The
+  `.gitignore` of managed copies names `[skiller.sync]` as the source.
 - **skiller:** the library imports `aicore` modules directly and no longer needs the root `core` package: the launchers
   (`bin/skiller`, `scripts/test.sh`, `scripts/validate.sh`) drop the monorepo-root path, `scripts/generate-hub.sh` and
   `install.sh` find `aicore` through the shared locator, and `skiller` is checked standalone without `core`

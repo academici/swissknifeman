@@ -64,8 +64,11 @@ class LaravelCase(unittest.TestCase):
         settings = json.loads((claude / "settings.local.json").read_text())
         # explicit false for php not rubbed
         self.assertIs(settings["enabledPlugins"][f"php@{MARKETPLACE}"], False)
-        # backup created
-        self.assertTrue((claude / "settings.local.json.bak").exists())
+        # backup created by the shared state backups, nothing next to the file
+        copies = list((proj / ".swissknifeman/backups").glob("*/.claude/settings.local.json"))
+        self.assertEqual(len(copies), 1)
+        self.assertEqual(json.loads(copies[0].read_text())["enabledPlugins"], {f"php@{MARKETPLACE}": False})
+        self.assertFalse((claude / "settings.local.json.bak").exists())
 
     def test_connect_dry_run_writes_nothing(self):
         proj = fx.make_laravel_project(self.tmp)

@@ -9,7 +9,7 @@
 # as managed copies (recorded as such in skills-lock.json), honours the CORE `default_exclude`, writes the lock and the
 # copy manifest, and `skiller status` reads the copies as one vendor channel. The vendor set is written to
 # .swissknifeman/config.json; with --toml it is written to the [skiller.sync] section of .swissknifeman/config.toml
-# instead (works once skiller reads that section).
+# instead, and the plugin-channel project declares its type in [skiller] there rather than in .swissknife.json.
 # Exit 0: everything held. Any other exit: a check failed (a line "e2e-module-skills: FAIL ..." names it) or the call
 # is wrong.
 #
@@ -70,7 +70,12 @@ LOG="$WORK/out.log"
 P="$WORK/plugins-project"
 mkdir -p "$P"
 git -C "$P" init -q
-printf '{"project_type": "node-package"}\n' > "$P/.swissknife.json"
+if [ "$USE_TOML" -eq 1 ]; then
+  mkdir -p "$P/.swissknifeman"
+  printf 'schema_version = 1\n\n[skiller]\nproject_type = "node-package"\n' > "$P/.swissknifeman/config.toml"
+else
+  printf '{"project_type": "node-package"}\n' > "$P/.swissknife.json"
+fi
 
 (cd "$P" && "$SKILLER" connect --no-permissions) > "$LOG" 2>&1 || { cat "$LOG" >&2; fail "connect exited non-zero"; }
 

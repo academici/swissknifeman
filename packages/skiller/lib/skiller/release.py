@@ -11,7 +11,8 @@ an earlier audit, NOT reinvented here.
 stdlib-only, `Env` is passed explicitly (tested in tmpdir)."""
 import sys
 
-from aicore.util.io import atomic_write_text, backup_file
+from aicore.state import backup
+from aicore.util.io import atomic_write_text
 from aicore.util.repo import find_repo_root
 
 from aicore.util.cli import parse_flags
@@ -85,7 +86,7 @@ def cmd_release(env, argv):
         print(f"[dry-run] CHANGELOG.md not changed. After checking: {tag_cmd}")
         return
 
-    backup_file(changelog)
+    backup(changelog)
     atomic_write_text(changelog, release_changelog(text, new_version))
     sync_version_files(root, new_version, load_host(env.root).version_files)
     print(f"CHANGELOG.md updated: [Unreleased] -> [{new_version.removeprefix('v')}]. "

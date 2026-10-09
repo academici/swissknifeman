@@ -345,6 +345,7 @@ class SyncCase(Base):
         text = ignore.read_text()
         self.assertTrue(text.startswith(m.GITIGNORE_HEADER))
         self.assertIn("/alpha/\n", text)
+        self.assertIn("skiller sync   (from [skiller.sync] + skills-lock.json)", text)
         self.assertNotIn("local", text)
         self.sync(["alpha"], cfg={})
         self.assertFalse(ignore.exists())

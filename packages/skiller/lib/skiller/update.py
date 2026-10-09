@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from aicore.artifacts.lock import _contained_target, _writer_guard
+from aicore.state import backup, project_backups_dir
 from aicore.util.io import atomic_write_text
 
 from aicore.delivery import MARKETPLACE
@@ -17,6 +18,7 @@ from .connect import do_connect
 from .host import load_host
 from .hub import hub_artifacts_exist
 from .registry import alias_migration_hints, load_bucket_aliases
+from . import settings
 from .skillset import do_sync, load_skillset_config
 from .state import db_records, load_db, print_registry_state
 from .vendor import do_vendor
@@ -47,13 +49,15 @@ def detect_codex_skill_links(target):
     return marker if marker.is_file() else None
 
 
-def adopt_codex_provider_config(target, dry_run=False, plugins=None):
+def adopt_codex_provider_config(target, dry_run=False, plugins=None, env=None):
     """Opt an existing SKM project into the explicit three-provider contract.
 
     Legacy projects resolve to Claude Code only by compatibility default.  Codex
     therefore never receives its generated, project-contained marketplace bundle
     until the project declares it.  This migration is intentionally explicit at
-    the CLI boundary and preserves every unrelated project setting.
+    the CLI boundary and preserves every unrelated project setting. The `providers` key
+    belongs to `.swissknife.json`; the `plugins` selection goes to `[skiller]` in
+    `.swissknifeman/config.toml` when the project keeps its skiller settings there.
     """
     target = Path(target)
     config_path = target / ".swissknife.json"
@@ -85,18 +89,23 @@ def adopt_codex_provider_config(target, dry_run=False, plugins=None):
             changed = True
         elif not isinstance(value, dict):
             die(f"{config_path}: providers.selection.{provider} should be JSON-object")
-    if (plugins is not None and "plugins" not in data and not data.get("buckets")
-            and not data.get("project_type")):
+    current = settings.load(target, env=env)
+    selected = (plugins is not None and "plugins" not in current.explicit
+                and not current.values["buckets"] and not current.values["project_type"])
+    in_toml = selected and current.source == "config"
+    if selected and not in_toml:
         data["plugins"] = list(plugins)
         changed = True
-    if not changed:
+    if not changed and not in_toml:
         return False
     if dry_run:
         print(f"[dry-run] adopt three-provider contract {config_path}")
         return True
-    if config_path.exists():
-        shutil.copy2(config_path, f"{config_path}.bak")
-    atomic_write_text(config_path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    if changed:
+        backup(config_path, project=target)
+        atomic_write_text(config_path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    if in_toml:
+        settings.write_key(target, "plugins", list(plugins))
     print(f"adopt three-provider contract {config_path}")
     return True
 
@@ -336,17 +345,21 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
                 pending.append((name, link))
         if not pending:
             return False
-        backup = _contained_target(target, ".swissknifeman/backups/legacy-codex-links-" + uuid.uuid4().hex)
+        saved = project_backups_dir(target)
         if not dry_run:
-            backup.mkdir(parents=True)
-            (backup / marker.name).write_text(original)
+            # The marker is copied by the shared backup (stamped, rotated); the retired links are moved
+            # next to that copy under their own project-relative path, so one stamp holds both.
+            copy = backup(target / ".agents/.swissknifeman-codex-links.json", project=target)
+            saved = copy.parent.parent
+            links_dir = saved / ".agents" / "skills"
+            links_dir.mkdir(parents=True, exist_ok=True)
             for name, link in pending:
-                link.rename(backup / name)
+                link.rename(links_dir / name)
             retained = dict(value)
             retired = {name for name, _link in pending}
             retained["links"] = {k:v for k,v in links.items() if k not in retired}
             atomic_write_text(marker, json.dumps(retained, ensure_ascii=False, indent=2) + "\n")
-        print(f"{'[dry-run] ' if dry_run else ''}retire {len(pending)} replaced/disabled Codex skill links; backup={backup}")
+        print(f"{'[dry-run] ' if dry_run else ''}retire {len(pending)} replaced/disabled Codex skill links; backup={saved}")
         return True
 
 
@@ -460,15 +473,15 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
             records[record["channel"]] = record
     if adopt_codex:
         record_plugins = records.get("marketplace", {}).get("plugins")
-        adopt_codex_provider_config(target, dry_run=dry_run, plugins=record_plugins)
+        adopt_codex_provider_config(target, dry_run=dry_run, plugins=record_plugins, env=env)
     config = load_config(env, target)
     mk_file = detect_marketplace_file(target)
     codex_marketplace = detect_codex_marketplace(target)
     codex_links = detect_codex_skill_links(target)
-    # sync-channel (.swissknifeman/config.json) owns the same .swissknifeman-manifest.json,
+    # sync-channel ([skiller.sync]) owns the same .swissknifeman-manifest.json,
     # as legacy vendor — therefore if available sync-config updated sync'ohm (he
     # respects skill-granular include/exclude), a detect_vendor_path do not touch.
-    sync_cfg = load_skillset_config(target)
+    sync_cfg = load_skillset_config(target, env)
     vendor_path = None if sync_cfg else detect_vendor_path(target, config)
 
     if not mk_file and not codex_marketplace and not codex_links and not sync_cfg and not vendor_path:
@@ -511,7 +524,7 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
         codex_links = detect_codex_skill_links(target)
         print_registry_state(env)
     if sync_cfg:
-        # canonical Claude-channel: re-sync from .swissknifeman/config.json (skill-granular)
+        # canonical Claude-channel: re-sync from [skiller.sync] (skill-granular)
         rec = records.get("vendor", {})
         if not rec:
             print(f"NOTE: {target} was not in projects.json — registering (adopt)")

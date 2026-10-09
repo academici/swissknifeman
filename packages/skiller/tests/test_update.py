@@ -20,7 +20,7 @@ from aicore.delivery.materialize import MANIFEST
 from skiller.connect import do_connect
 from skiller.host import clear_host_cache
 from skiller.registry import build_registry
-from skiller.skillset import do_sync, skillset_config_path
+from skiller.skillset import do_sync
 from skiller.vendor import do_vendor
 from skiller.update import (cmd_update, prune_legacy_runtime_links, replay_opts, retire_equivalent_codex_skill_links,
                             retire_legacy_codex_links, retire_legacy_codex_vendor,
@@ -43,7 +43,7 @@ def _materialize(env):
 
 
 def _write_sync_config(target, cfg):
-    p = skillset_config_path(target)
+    p = Path(target) / ".swissknifeman" / "config.json"  # the legacy vendor file
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
 
@@ -109,8 +109,8 @@ class UpdateCase(unittest.TestCase):
             self.assertTrue((directory / "unique").is_symlink())
             self.assertEqual(set(json.loads(marker.read_text())["links"]), {"unique"})
             backup = next((project / ".swissknifeman/backups").iterdir())
-            self.assertEqual((backup / marker.name).read_bytes(), before)
-            self.assertTrue((backup / "duplicate").is_symlink())
+            self.assertEqual((backup / ".agents" / marker.name).read_bytes(), before)
+            self.assertTrue((backup / ".agents/skills/duplicate").is_symlink())
             self.assertFalse(silently(retire_legacy_codex_links, self.env, project))
             # Explicit local opt-out permits retirement without any replacement.
             config = project / ".codex/config.toml"

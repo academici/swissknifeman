@@ -383,7 +383,7 @@ def cmd_status(env, argv):
         out(f"\n⚠ DOUBLE CHANNELS: buckets [{' '.join(overlap)}] are active AT THE SAME TIME as "
             f"plugins (connect) and vendors (vendor) — skills are distributed twice.")
         out("  Leave one channel: remove the bucket from enabledPlugins (connect) OR from "
-            ".swissknifeman/config.json (vendor) + skiller sync.")
+            "[skiller.sync] in .swissknifeman/config.toml (vendor) + skiller sync.")
     if js:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return

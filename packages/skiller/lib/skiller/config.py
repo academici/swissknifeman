@@ -166,6 +166,8 @@ class ProjectConfig(Mapping):
     policy_profile: str = field(default="", metadata={"json_type": str})
     # Not a config key: without "json_type" in metadata field does not fall into CONFIG_KEYS.
     raw: Mapping = field(default_factory=dict, repr=False)
+    # Where the skiller keys came from ("config": [skiller]; "legacy": .swissknife.json); names the file in labels.
+    source: str = field(default="legacy", repr=False, compare=False)
 
     # Mapping-projection onto raw — read-only back-compat surface for consumers
     # (and tests), transmitting/reading the config with a dictionary. Values are taken from raw, and not
@@ -180,11 +182,11 @@ class ProjectConfig(Mapping):
         return len(self.raw)
 
     @classmethod
-    def from_raw(cls, data):
+    def from_raw(cls, data, source="legacy"):
         """Collect an object from what you read JSON WITHOUT validation (does it
         `validate_config` before assembly) and without normalizing values."""
         known = {f.name: f for f in fields(cls) if "json_type" in f.metadata}
-        return cls(raw=data, **{name: data[name] for name in known if name in data})
+        return cls(raw=data, source=source, **{name: data[name] for name in known if name in data})
 
     @classmethod
     def coerce(cls, config):
@@ -197,18 +199,22 @@ class ProjectConfig(Mapping):
 
     @classmethod
     def load(cls, env, target):
-        """Read `.swissknife.json` project: same messages `die`, same order
-        checks and the same empty config in the absence of a file as the previous one
-        `load_config` — the medium changes, not the behavior."""
-        cfg_file = target / ".swissknife.json"
-        if not cfg_file.exists():
+        """Read the skiller settings of a project: `[skiller]` in `.swissknifeman/config.toml`, else the
+        legacy `.swissknife.json` (same messages `die`, same order of checks, the empty config in the
+        absence of both as the previous `load_config`).
+
+        `raw` is the content of `.swissknife.json` (keys of other modules such as `providers` and
+        `memory_brain` stay in it) with the skiller keys replaced by the keys that were set in the
+        effective settings, so `cfg.get("buckets")` is absent when no layer set it. Legacy skiller keys
+        that `config.toml` overrides as a whole are dropped from `raw`."""
+        from . import settings
+        loaded = settings.load(target, env=env)
+        if loaded.legacy is None and loaded.source == "none":
             return cls()
-        try:
-            config = json.loads(cfg_file.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            die(f"{cfg_file}: invalid JSON: {e}")
-        validate_config(env, config, cfg_file)
-        return cls.from_raw(config)
+        raw = {key: value for key, value in (loaded.legacy or {}).items()
+               if key not in settings.SKILLER_KEYS or loaded.source == "legacy"}
+        raw.update(loaded.selection())
+        return cls.from_raw(raw, source="config" if loaded.source == "config" else "legacy")
 
 
 # Derived from fields ProjectConfig: one bearer name, the value is collected.
@@ -352,10 +358,15 @@ def _expand_presets_buckets(env, config):
     from .skillset import resolve_presets  # lazy: avoid cyclic import
     pre_buckets, pre_include, _skipped = resolve_presets(env, names)
     if pre_include and not pre_buckets:
-        warn(".swissknife.json: presets contain only skill-granular 'include' without "
+        warn(f"{_where(config)}: presets contain only skill-granular 'include' without "
              "'buckets' — in bucket-granular channels (connect/legacy vendor) no effect; "
-             "for skill-level use vendor sync (.swissknifeman/config.json)")
+             "for skill-level use vendor sync ([skiller.sync] in .swissknifeman/config.toml)")
     return list(dict.fromkeys(pre_buckets))
+
+
+def _where(config):
+    """Name of the source of the selection keys, for labels: the legacy file or the `[skiller]` section."""
+    return "[skiller]" if config.source == "config" else ".swissknife.json"
 
 
 def resolve_selection(env, target, config, flag_profile, flag_items):
@@ -377,7 +388,7 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return items, flag_profile, "flag", "--profile", prof.get("include_meta", False)
     if config.plugins:
-        return list(config.plugins), None, "config", ".swissknife.json plugins", False
+        return list(config.plugins), None, "config", f"{_where(config)} plugins", False
     preset_buckets = _expand_presets_buckets(env, config)
     if config.buckets or preset_buckets:
         # (presets ∪ buckets) − exclude. exclude in bucket-granular channels skill-level
@@ -386,15 +397,15 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         merged = list(dict.fromkeys(preset_buckets + list(config.buckets or [])))
         excl = set(config.exclude or [])
         items = [b for b in merged if b not in excl]
-        label = (".swissknife.json presets+buckets" if preset_buckets and config.buckets
-                 else ".swissknife.json presets" if preset_buckets
-                 else ".swissknife.json buckets")
+        label = (f"{_where(config)} presets+buckets" if preset_buckets and config.buckets
+                 else f"{_where(config)} presets" if preset_buckets
+                 else f"{_where(config)} buckets")
         return items, None, "config", label, False
     if config.project_type:
         prof = load_profile(env, config.project_type)
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return (items, config.project_type, "config",
-                ".swissknife.json project_type", prof.get("include_meta", False))
+                f"{_where(config)} project_type", prof.get("include_meta", False))
     name = autodetect(target)
     prof = load_profile(env, name)
     # Type not recognized (fallback profile standalone = `["*"]`) → DO NOT put everything in a row:
@@ -423,12 +434,14 @@ def resolve_profile_name(target, config, flag_profile):
 
 # --- project root discovery ----------------------------------------------------
 def find_project_root(env, start=None):
-    """Nearest dir upward containing .swissknife.json, .claude/ or .git."""
+    """Nearest dir upward containing .swissknifeman/config.toml, .swissknife.json, .claude/ or .git."""
     p = (start or Path.cwd()).resolve()
     home = env.home.resolve()
     while True:
         if str(p) == p.root:
             return None, None
+        if (p / ".swissknifeman" / "config.toml").is_file():
+            return p, ".swissknifeman/config.toml"
         if (p / ".swissknife.json").is_file():
             return p, ".swissknife.json"
         if (p / ".swissknifeman" / "config.json").is_file():
@@ -452,9 +465,9 @@ def resolve_target(env, opts, allow_home_confirm=False):
     else:
         target, via = find_project_root(env)
         if target is None:
-            die("project root not found above CWD (was looking for .swissknife.json, "
-                ".claude/, .git). Go to project or create "
-                ".swissknife.json at its root.")
+            die("project root not found above CWD (was looking for .swissknifeman/config.toml, "
+                ".swissknife.json, .claude/, .git). Go to project or create "
+                ".swissknifeman/config.toml at its root.")
         if target == env.home.resolve() and allow_home_confirm:
             print("The project root was defined as the home directory.")
             if not confirm(f"Continue with {target}?"):

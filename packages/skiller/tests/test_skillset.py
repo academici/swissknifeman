@@ -46,10 +46,9 @@ def _materialize_registry(env):
 
 
 def _write_config(target, cfg):
-    d = skillset_config_path(target).parent
-    d.mkdir(parents=True, exist_ok=True)
-    skillset_config_path(target).write_text(
-        json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+    legacy = Path(target) / ".swissknifeman" / "config.json"  # the legacy vendor file
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
 
 
 def _write_preset(root, name, **body):
@@ -759,7 +758,7 @@ class TestInit(unittest.TestCase):
             self.assertEqual(cfg["mode"], "vendor")
             self.assertEqual(cfg["version"], 1)
             self.assertEqual(set(cfg["buckets"]), {"php", "quality"})
-            # the file is actually written and valid as .swissknifeman/config.json
+            # the file is actually written and valid as config.toml
             self.assertTrue(skillset_config_path(target).is_file())
             self.assertEqual(load_skillset_config(target)["mode"], "vendor")
 

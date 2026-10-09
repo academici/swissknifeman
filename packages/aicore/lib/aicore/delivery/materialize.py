@@ -422,7 +422,7 @@ def write_gitignore(target, skills_path, locked):
     lines = [
         GITIGNORE_HEADER,
         "# Managed swissknifeman-keep skills OUT git — they are reproducible:",
-        "#   skiller sync   (from .swissknifeman/config.json + skills-lock.json)",
+        "#   skiller sync   (from [skiller.sync] + skills-lock.json)",
         "# Local/custom skills are NOT listed here → remain in the repository.",
         "",
     ] + [f"/{n}/" for n in managed]

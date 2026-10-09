@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:config:v1",
+  "title": "skiller config",
+  "description": "Settings of the skiller module: which skills a project receives through the marketplace (connect) and through managed copies (sync). Selecting skills is a property of the project, so a machine file cannot set these keys.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_type": {
+      "type": "string",
+      "description": "Name of the project profile (profiles/<name>.json) that picks the buckets when no buckets or plugins are set; empty means autodetect.",
+      "default": "",
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "buckets": {
+      "type": "array",
+      "description": "Buckets enabled through the marketplace channel (connect) and the legacy vendor.",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "One bucket name."
+      },
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Exact set of marketplace plugins to enable; when set it replaces the bucket selection.",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "One plugin name."
+      },
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Names subtracted from the selection of presets and buckets.",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "One bucket or skill name."
+      },
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "presets": {
+      "type": "array",
+      "description": "Named bucket groups (presets/<name>.json) expanded before the selection.",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "One preset name."
+      },
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "agent": {
+      "type": "string",
+      "description": "Agent of the legacy bucket vendor: one of the delivery agents; empty means the default agent.",
+      "default": "",
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "skills_path": {
+      "type": "string",
+      "description": "Project folder that receives vendored skill copies; empty means the agent default.",
+      "default": "",
+      "x-skm-layers": [
+        "defaults",
+        "project",
+        "legacy-swissknife",
+        "legacy-skillset",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "sync": {
+      "type": "object",
+      "description": "Skill-granular vendor mode applied by skiller sync: managed skill copies and skills-lock.json.",
+      "additionalProperties": false,
+      "properties": {
+        "agent": {
+          "type": "string",
+          "description": "Agent that receives the managed copies; empty means claude.",
+          "default": "",
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        },
+        "skills_path": {
+          "type": "string",
+          "description": "Project folder that receives the managed copies; empty means .claude/skills.",
+          "default": "",
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        },
+        "presets": {
+          "type": "array",
+          "description": "Named groups of buckets and skills (presets/<name>.json) expanded before the selection.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One preset name."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        },
+        "include": {
+          "type": "array",
+          "description": "Specific skills to copy, as <bucket>/<skill> or a plain skill name.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One skill token."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        },
+        "buckets": {
+          "type": "array",
+          "description": "Whole buckets to copy.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One bucket name."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        },
+        "exclude": {
+          "type": "array",
+          "description": "Skills and buckets subtracted from presets, buckets and include.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One skill or bucket token."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        },
+        "gitignore_managed": {
+          "type": "boolean",
+          "description": "Whether the skills folder gets a .gitignore that lists only the managed copies.",
+          "default": false,
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "legacy-swissknife",
+            "legacy-skillset",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    }
+  }
+}

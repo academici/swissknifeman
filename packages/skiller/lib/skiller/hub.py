@@ -44,6 +44,7 @@ from pathlib import Path
 from aicore.util.repo import find_repo_root
 
 from .common import HUB_MARKER
+from .settings import configured_skills_paths
 from aicore.delivery.materialize import MANIFEST
 from aicore.util.cli import run_cmd
 
@@ -124,10 +125,8 @@ def collect_installed(registry, target):
             add_skill(s)
 
     scan_roots = list(SCAN_ROOTS)
-    for cfg_rel in (".swissknifeman/config.json", ".swissknife.json"):
-        cfg = _load_json(target / cfg_rel)
-        sp = cfg.get("skills_path") if isinstance(cfg, dict) else None
-        if sp and sp not in scan_roots:
+    for sp in configured_skills_paths(target):
+        if sp not in scan_roots:
             scan_roots.append(sp)
 
     for rel_root in scan_roots:

@@ -8,6 +8,7 @@ from pathlib import Path
 from aicore.artifacts.artifact import sha256_digest
 from aicore.artifacts.lock import (
     apply_plan, parse_lock, serialize_lock, ArtifactLock, LOCK_RELATIVE_PATH)
+from aicore.state import backup
 from aicore.util.io import atomic_write_text, safe_load_json
 from aicore.util.repo import find_repo_root
 
@@ -302,9 +303,9 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
         print(f"--- dry-run: {dest} ---")
         print(json.dumps(redacted_settings_preview(settings), ensure_ascii=False, indent=2))
     else:
-        if dest.exists():
-            shutil.copy2(dest, f"{dest}.bak")
-            print(f"Backup:    {dest}.bak")
+        saved = backup(dest, project=target)
+        if saved is not None:
+            print(f"Backup:    {saved}")
         atomic_write_text(dest,
                           json.dumps(settings, ensure_ascii=False, indent=2) + "\n")
         print(f"Recorded: {dest}")

@@ -10,6 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from aicore.config import ConfigError
 from .common import DB_VERSION, host_command_text, host_install_suffix
 from aicore.util.cli import parse_flags
 from aicore.util.io import atomic_write_json
@@ -111,7 +112,7 @@ def _vendor_drift(env):
     """Drift vendor-skills by fleet: registered mode=vendor projects whose set
     has parted ways with the CURRENT registry (add — new skill has appeared, update — sha256 has changed,
     remove — fell out of the config). Dry plan_sync, does not write anything. Connect-only projects
-    (without .swissknifeman/config.json) are skipped - the update comes from marketplace
+    (without [skiller.sync]) are skipped - the update comes from marketplace
     itself. Returns [(project_name, plan), ...] only for those who have drift."""
     from .config import load_config
     from .publication import build_vendor_distribution_plan
@@ -129,8 +130,8 @@ def _vendor_drift(env):
         if not pdir.is_dir():
             continue
         try:
-            cfg = load_skillset_config(pdir)
-        except SystemExit as exc:
+            cfg = load_skillset_config(pdir, env)
+        except (SystemExit, ConfigError) as exc:
             drifted.append((p.get("id") or pdir.name,
                             {"errors": [str(exc) or type(exc).__name__]}))
             continue
@@ -327,9 +328,9 @@ def _provider_distribution_doctor(env, target):
         print("  [ok ] marketplace plan: " + ", ".join(item.provider_id for item in connect))
     except SystemExit as exc:
         print(f"  [warn] marketplace plan blocked: {exc}")
-    cfg = load_skillset_config(target)
+    cfg = load_skillset_config(target, env)
     if cfg is None:
-        print("  [ok ] vendor plan: no .swissknifeman/config.json")
+        print("  [ok ] vendor plan: no [skiller.sync] in .swissknifeman/config.toml")
         return
     try:
         vendor = build_vendor_distribution_plan(

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.4",
   "title": "Служебные файлы skiller: [skiller] и [skiller.sync] в .swissknifeman/config.toml, наследные .swissknife.json и .swissknifeman/config.json, писатели, резервные копии через aicore.state",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Схема configs/config.schema.json и config.example.toml, provides.config в unit.json, запись в config-inventory; lib/skiller/settings.py (aicore.config + ExtraLayer наследных файлов по правилу «секция целиком», предупреждения SKILLER_LEGACY_CONFIG/SKILLER_LEGACY_IGNORED); ProjectConfig.load и load_skillset_config поверх него; find_project_root по config.toml; читатели hub, delivery, update, status через загрузчик; init/sync пишут [skiller.sync] в TOML для новых проектов; adopt пишет plugins по источнику; резервные копии connect, adopt, release, codex-links через aicore.state.backup; e2e-module-skills.sh получает вариант --toml.",
   "why": "D5, D39, D53: настройки модуля — секция слоёного конфига, служебные копии — в backups с ротацией; живые проекты на наследных файлах продолжают работать до upgrade (P13). Жёсткие риски: (1) ProjectConfig.raw и load_skillset_config должны отдавать то же, что раньше, для проектов только с наследными файлами (регресс connect/vendor/sync/update у живых проектов); (2) чужие ключи .swissknife.json (providers, memory_brain, policy_profile) не теряются и не переносятся; (3) запись в config.toml — только через aicore.config.edit_layer_file (бэкап, атомарность, сверка).",
   "scope": {
@@ -265,6 +265,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T12:49:55Z"
+  "result": {
+    "started_at": "2026-10-09T15:10:26Z",
+    "finished_at": "2026-10-09T15:32:19Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "04312c06-1170-4f71-a0f0-5f5c5f089ceb"
+    },
+    "notes": "[skiller]/[skiller.sync] in config.toml: schema, example, inventory, settings.py (section-as-a-whole rule, SKILLER_LEGACY_CONFIG/IGNORED), loaders and readers via settings, init/sync/adopt writers, backups via aicore.state, e2e --toml, 20 new tests; V1-V5 green.",
+    "deviations": [
+      "cli.py/doctor.py/four test files outside the list; ProjectConfig.source field; codex-links backup layout under the stamp directory"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T15:32:19Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T15:32:19Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T15:32:19Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T15:32:19Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T15:32:19Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T15:32:19Z"
 }

@@ -39,6 +39,19 @@
       "note": "brain vault path, catalog folder, document sync and notes"
     },
     {
+      "path": "packages/skiller/configs/config.schema.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/skillset.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "skiller skill selection (buckets, plugins, profile) and vendor sync in [skiller] and [skiller.sync]"
+    },
+    {
       "path": "packages/aicore/configs/config.schema.json",
       "owner": "aicore",
       "consumers": [

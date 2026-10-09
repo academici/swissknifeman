@@ -1,6 +1,9 @@
 """Command manager. Entry point: main(argv) -> calls cmd_*(env, args)."""
 import sys
 
+from aicore.config import ConfigError
+from aicore.util.term import die
+
 from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
@@ -62,4 +65,7 @@ def main(argv=None):
     if handler is None:
         print(f"Unknown command: {cmd}", file=sys.stderr)
         sys.exit(1)
-    handler(env, args)
+    try:
+        handler(env, args)
+    except ConfigError as exc:
+        die(str(exc))

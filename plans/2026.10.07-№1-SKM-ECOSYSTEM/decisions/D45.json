@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D45",
+  "title": "Внешние плагины: протокол 1, describe перед вызовом, дисциплина процесса, доверие и секреты",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Как именно запускаются внешние плагины и подписчики (D19, E18, E19, E40, R08, R09, R13, R14, R05)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Манифест extension/v1 (kind command | subscriber; secret-resolver — по первому потребителю), читается и проверяется до запуска (схема, entrypoint внутри каталога, протокол, requires, профиль). Протокол \"1\", транспорт stdio-json: один JSON-запрос в stdin (op describe | invoke | event), ровно один JSON-объект в stdout, логи только в stderr. describe перед каждым использованием, без кеша; расхождение id/version/kind/protocol/capabilities_digest (digest_json(manifest.provides)) — отказ до invoke. Процесс: новая сессия, общий дедлайн чтения и ожидания (selectors, не communicate), SIGTERM группе → 2 с → SIGKILL группе, после выхода ребёнка — SIGKILL группе; stdout ≤ 1 MiB; хвост stderr 2 KiB с заменой переданных секретов на ***. Потомок, ушедший через setsid, не сдерживается — conformance обнаруживает его через PR_SET_CHILD_SUBREAPER; принуждение (cgroup v2 cgroup.kill, Landlock read-only) — по триггеру сторонних плагинов. Окружение очищается до allowlist; trusted (только машинный конфиг) получает объявленные env и секреты env://; untrusted — ни того, ни другого. permissions/v1 — единый словарь для unit.json, extension.json и (P10) run-policy; профиль trusted-local с enforced:false показывается в aicore ext status (doctor).",
+      "pros": "Предсказуемый одноразовый протокол без кадров и heartbeat, проверяемый conformance-командой для чужого плагина",
+      "cons": "setsid-побег не сдерживается до cgroup; describe удваивает число запусков"
+    },
+    {
+      "id": "B",
+      "text": "Сразу cgroup v2 и Landlock для всех плагинов",
+      "pros": "Полное сдерживание",
+      "cons": "Нужна делегация cgroup и ядро с Landlock; своих плагинов-нарушителей нет — преждевременно (D19)"
+    }
+  ],
+  "context": "D19 принял манифест, handshake, очищенное окружение и trusted; R08 — дисциплину процесса, R49 (cookie, кадры, heartbeat) отложен. go-plugin и семантика killpg/setsid/subreaper/cgroup проверены через perplexity-web 2026-10-09.",
+  "decision": "A — Манифест extension/v1 (kind command | subscriber; secret-resolver — по первому потребителю), читается и проверяется до запуска (схема, entrypoint внутри каталога, протокол, requires, профиль). Протокол \"1\", транспорт stdio-json: один JSON-запрос в stdin (op describe | invoke | event), ровно один JSON-объект в stdout, логи только в stderr. describe перед каждым использованием, без кеша; расхождение id/version/kind/protocol/capabilities_digest (digest_json(manifest.provides)) — отказ до invoke. Процесс: новая сессия, общий дедлайн чтения и ожидания (selectors, не communicate), SIGTERM группе → 2 с → SIGKILL группе, после выхода ребёнка — SIGKILL группе; stdout ≤ 1 MiB; хвост stderr 2 KiB с заменой переданных секретов на ***. Потомок, ушедший через setsid, не сдерживается — conformance обнаруживает его через PR_SET_CHILD_SUBREAPER; принуждение (cgroup v2 cgroup.kill, Landlock read-only) — по триггеру сторонних плагинов. Окружение очищается до allowlist; trusted (только машинный конфиг) получает объявленные env и секреты env://; untrusted — ни того, ни другого. permissions/v1 — единый словарь для unit.json, extension.json и (P10) run-policy; профиль trusted-local с enforced:false показывается в aicore ext status (doctor).",
+  "rationale": "Реализует D19 и R08 минимально на stdlib; ограничения записаны явно и проверяемы (conformance no-descendants), принуждение — по триггеру.",
+  "applies_to": [
+    "P6.4",
+    "P6.5",
+    "P6.7",
+    "P6.8",
+    "P6.10"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

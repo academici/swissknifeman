@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.2",
   "title": "Механизм бакета, предоставляемого хостом: модульные источники skills, bucket_aliases хоста; connect, vendor, sync, budget, status, doctor (на фикстурах)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Новый lib/skiller/module_skills.py (источники skills из плагинов модулей через plugin_dirs хоста, бакеты provided_by: host, expand_bucket, проверка коллизий), ключ bucket_aliases в конфиге хоста; all_buckets принимает бакеты хоста; connect разворачивает их в плагины модулей и убирает <bucket>@marketplace; vendor и sync копируют skills модулей с requires/exclude по именам; budget, status, doctor, registry и validate понимают бакет хоста. Тесты на синтетическом хосте; реальные buckets.json и skiller-host.json не меняются, golden — без перезахвата.",
   "why": "D52: после переноса system/* (P8.3) проекты должны получать эти skills обоими каналами без правки профилей и конфигов, а skiller не может знать имён модулей. Механизм отделён от переноса, чтобы его можно было проверить на фикстурах и сохранить байт-в-байт. Жёсткие риски: (1) connect удаляет из enabledPlugins только ключ бакета хоста, которого маркетплейс не объявляет, — ничего больше (merge-only запись настроек); (2) standalone skiller без хоста не падает, а предупреждает; (3) проверка provenance skills-lock не ослабляется для записей библиотеки.",
   "scope": {
@@ -217,6 +217,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T12:49:26Z"
+  "result": {
+    "started_at": "2026-10-09T13:24:37Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "cdd9ed60-0962-4d0a-ad8d-b61338d21225"
+    }
+  },
+  "updated_at": "2026-10-09T13:24:37Z"
 }

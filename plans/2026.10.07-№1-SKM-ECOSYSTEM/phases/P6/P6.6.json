@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.6",
   "title": "События: emit, журнал events.jsonl (только дописывание под flock), чтение; настройки [aicore] и unit.json модулей; CLI aicore events emit|list",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "aicore.ext.journal (journal_dir, append с flock/fsync/починкой порванного хвоста, iter_lines только полных строк), aicore.ext.events (Event, build_event, emit, read_events, лимит data 64 KiB, отказ Secret), aicore.ext.settings (секция [aicore] через aicore.config), aicore.ext.units (unit.json всех модулей: events, subscribes, overlay_slots, extension_points); группа CLI events: emit (эмуляция) и list; фикстура модуля demo; тест архитектуры «только journal пишет журнал». Шаг доставки добавляет P6.7 (до него emit ведёт себя как delivery=off).",
   "why": "R06 (журнал — источник правды), R07/R32 (лимит data), E22, E30. Жёсткие риски: (1) конкурентные emit и порванный хвост — инварианты I1–I4, I11 модели ext-p6-events §model, тест на 2 процесса × 200 событий; (2) источник не должен ломаться на ошибках ввода-вывода — I11; (3) секрет в data — отказ без вывода значения.",
   "scope": {
@@ -192,12 +192,36 @@
   },
   "result": {
     "started_at": "2026-10-09T03:09:38Z",
+    "finished_at": "2026-10-09T05:41:26Z",
     "executor": {
       "provider": "claude",
       "model": "sonnet-5-5",
       "effort": "high",
       "session": "f86187b8-6915-48fb-a486-0a3905f620c6"
-    }
+    },
+    "notes": "journal (flock, O_APPEND, one write, fsync, torn-tail repair, snapshot readers), events (Event, build_event, emit best-effort, read_events), settings, units, aicore events emit|list, demo fixture; grok-4.7 reviews: 15 findings fixed over three sessions; aicore 1220 tests, units/inventory/hygiene/golden/analyst green",
+    "deviations": [
+      "defects of closed P6.1-P6.4 found by the grok review fixed in this run (schemacompat, config map dot guard, propertyNames type)",
+      "test_only_journal_writes_the_journal allows provider/request_lifecycle.py (own per-request file); emit validates delivery but does not deliver or read config until P6.7",
+      "review budget spent; last corrections verified by regression tests only; role=reviewer commit not used"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T05:41:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T05:41:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T05:41:26Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T05:41:16Z"
+  "updated_at": "2026-10-09T05:41:26Z"
 }

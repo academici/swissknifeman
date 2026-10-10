@@ -226,7 +226,7 @@ are additive in the same way.
 | Upcast | none |
 | Deprecation window | set with `v2`; URNs do not change with the module rename |
 | Unknown fields | rejected |
-| Fixtures | `packages/planner/tests/engine/fixtures/{valid,invalid}` and the synthetic demo plans |
+| Fixtures | `packages/planner/tests/engine/fixtures/{valid,invalid}`, the synthetic demo plans, `packages/planner/tests/compat/plans/engine-0.28.3` (frozen plans of earlier engines) and `scripts/test-plan-compat.py` (every plan of the repository) |
 
 ### Bridge descriptors (`bridge.json`)
 

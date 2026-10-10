@@ -14,6 +14,7 @@
 
 ### Added
 
+- **planner:** compatibility fixtures for plans of earlier engines: the frozen demo plan of engine 0.28.3 (`packages/planner/tests/compat`) is read, checked, rendered and exported unchanged, and `scripts/test-plan-compat.py` reads every plan of the repository with the reading verbs; `aicore schema compat` now compares contracts of several documents per kind (`kind-removed`, `kind-added`) and takes `--base-root` (refused when the base holds no schemas there), so `plan/v1` is checked against the base of the renamed module; a foundation contract that a schema references is read from the base on the old side.
 - **planner:** external plan checks through the `planner:check` extension point: `unit.json` declares the point and the `check-plugin/v1` contract (input and output schemas), `plan.py check [--no-external]` calls the plugins registered in the aicore machine configuration after its own checks and reports their issues with a `[<plugin>]` prefix; a failing plugin is an `EXTERNAL_CHECK_FAILED` warning (an error with `checks.external_failure = "error"`); mutations never call plugins.
 - **planner:** overlay slots for every command (`plan.py overlays`): `unit.json` declares `provides.overlay_slots` (one per command), `plan.py overlays planner:<command> [--project] [--json] [--strict]` prints the owner's rules from `[aicore.overlays."planner:<command>"]` (empty without aicore), and each of the ten commands opens with a call to its slot in every projection; the shared projections embed no overlay text.
 - **planner:** `planner.*` events with data contracts: `unit.json` declares `planner.plan.created`, `planner.plan.closed`, `planner.phase.closed`, `planner.item.started`, `planner.item.finished`, `planner.decision.accepted` and the contract `event-data/v1` (a closed data schema per type); `new`, `start`, `finish`, `reconcile` and `decide` journal them after the plan lock is released (a chain by `causationid`, a repeated attempt and `events.enabled = false` emit nothing, a failing journal never changes the command and gives one `PLANNER_EVENT_NOT_EMITTED` warning); producer fixtures, the hub check `scripts/test-event-contracts.py` of consumer fixtures against the producer schema and `scripts/e2e-plan-events.sh` (plan → events → brain note).
@@ -269,7 +270,7 @@
 
 ### Changed
 
-- **planner:** `workflow-craft` skill moves from the skiller library (`general` bucket) to the planner plugin (Claude and Codex); the root bootstrap projection now points at the plugin copy, and vendored copies of `general/workflow-craft` disappear at the next `skiller sync` while the skill arrives with the planner plugin.
+- **planner:** `workflow-craft` skill moves from the skiller library (`general` bucket) to the planner plugin (Claude and Codex); the root bootstrap projection of the skill is removed because the planner plugin is the single carrier, and vendored copies of `general/workflow-craft` disappear at the next `skiller sync` while the skill arrives with the planner plugin.
 
 - **planner:** projection rendering on aicore, engine runs without aicore, standalone without core: `plan.py` and
   `render-provider-commands.py` find aicore through the canonical locator (`AICORE_ROOT`, `_vendor/aicore`, the sibling

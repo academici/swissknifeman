@@ -313,12 +313,13 @@ only (`x-skm-layers`); see [ADR 0040](../../docs/architecture/decisions/0040-ext
 
 ## Schema compatibility
 
-`aicore schema compat [--base REF] [--json]` compares the contract schemas of the working tree with the same contracts at
+`aicore schema compat [--base REF] [--base-root DIR] [--json]` compares the contract schemas of the working tree with the same contracts at
 a git reference (default `HEAD`), within one major version, by rules of backward compatibility (a removed property of a
 closed object, a new `required`, a narrowed `enum`, a changed `type` or `const`, a tightened bound, a closed
 `additionalProperties`, and so on; what cannot be proven, such as `pattern` or `oneOf`, counts as breaking). A breaking
 change is an error (exit 1) for contracts that are `beta` or above in `unit.json` and a warning below; a bad reference
-or no git exits 2. The validator profile also knows `patternProperties` and `propertyNames`
+or no git exits 2. A contract directory with several documents is compared kind by kind (a removed kind is breaking, a new one
+is a note), and `--base-root DIR` names the schema directory at the base when the module was renamed (no schemas there is an error). The validator profile also knows `patternProperties` and `propertyNames`
 ([ADR 0043](../../docs/architecture/decisions/0043-validator-profile-and-schema-compatibility.md)).
 
 ## Telemetry conventions

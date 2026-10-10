@@ -4,6 +4,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 
 ## [Unreleased]
 
+### Added
+- **`aicore schema compat` for multi-document contracts:** a contract directory with several documents is compared per kind (`aicore.util.schema.load_contract_set`; the kind is the last segment of the `$id`, the file name is not read); a kind that disappeared is the breaking rule `kind-removed`, a new kind is the note `kind-added`; the report names `contract/version:kind`. `--base-root DIR` names the schema directory at the base reference when it differs from `--root` (a renamed module). A foundation contract that a module's schema references is found in the aicore schemas when it is not beside the module's schemas, and is read from the base reference on the old side so its changes show where it is used; `--base-root` that holds no schemas at the base is refused (`SCHEMA_COMPAT_BASE_ROOT`, exit 2); every `*.schema.json` of a contract directory is compared whatever its file name.
+
 ### Fixed
 - **`aicore schema compat` soundness:** a new `patternProperties` entry is graded breaking unless the old object was closed,
   had no patterns and no kept property can meet the pattern; properties covered by a pattern are compared with the pattern's

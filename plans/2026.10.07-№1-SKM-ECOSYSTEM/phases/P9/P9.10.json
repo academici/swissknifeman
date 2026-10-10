@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.10",
   "title": "Совместимость: фикстуры старых планов, чтение всех планов репозитория, aicore schema compat для plan/v1",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Замороженная фикстура демо-плана движка 0.28.3 (tests/compat/plans/engine-0.28.3) и тест чтения старых планов (check, next, context с scenario, export, render, байты неизменённых документов); хаб-тест scripts/test-plan-compat.py — новый движок читает все планы repo plans/ и plans/archive/ (только читающие глаголы, на копиях); aicore schema compat для контрактов из нескольких документов (load_contract_set, kind-removed/kind-added) и опция --base-root; проверка plan/v1 против origin/ecosystem-split — только minor.",
   "why": "E44 (старые планы читаются), правило плана о URN и минорных изменениях plan/v1 (D60). Сегодня aicore schema compat не читает plan/v1 («expected exactly plan.schema.json») — совместимость схемы плана не проверяется механически. Жёсткий риск: новый движок отвергнет план, записанный 0.28.3, во всех проектах после обновления — страхуют замороженная фикстура и прогон по всем планам репозитория.",
   "scope": {
@@ -153,12 +153,39 @@
   },
   "result": {
     "started_at": "2026-10-10T07:05:52Z",
+    "finished_at": "2026-10-10T08:25:28Z",
     "executor": {
       "provider": "anthropic",
       "model": "sonnet-5.5",
       "effort": "high",
       "session": "b8686398-1753-4531-be00-386f1221e15d"
-    }
+    },
+    "notes": "Frozen 0.28.3 fixture and read test, hub test over all repository plans, aicore schema compat for multi-document contracts (load_contract_set, kind-removed/kind-added, --base-root, base-side foundation); Grok 4.7 review of P9.10 and P9.9 done, findings fixed",
+    "deviations": [
+      "scripts/test-plan-compat.py tolerates the 24 human_view errors of one archived plan (same with the stable engine); plan/v1 changes are reported per consumer kind, not under defs; review corrections and a stale docs-sync copy (docs/planner provider-commands, ecosystem.md row, changelog wording of P9.9) fixed in this change set"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T08:25:28Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T08:25:28Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T08:25:28Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T08:25:28Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-10T07:05:52Z"
+  "updated_at": "2026-10-10T08:25:28Z"
 }

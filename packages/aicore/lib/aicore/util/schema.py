@@ -31,6 +31,8 @@ _VERSION_DIR = re.compile(r"v[1-9][0-9]*")
 _TYPE_NAMES = frozenset({"null", "boolean", "integer", "number", "string", "array", "object"})
 _cache: dict[tuple[Path, str, tuple[str, ...], str, tuple[Path, ...]], "Registry"] = {}
 _CONTRACT_REF = re.compile(r"([a-z][a-z0-9-]*):(v[1-9][0-9]*)")
+_SET_ID = re.compile(r"(.+:)([a-z][a-z0-9-]*):(v[1-9][0-9]*)")
+_FOUNDATION_SCHEMAS = Path(__file__).resolve().parents[3] / "schemas"
 
 
 class SchemaProfileError(ValueError):
@@ -138,11 +140,14 @@ def load_schema_file(path: Path, *, urn_prefix: str, kind: str, version: str = "
     return Registry({schema_id: schema}, urn_prefix=urn_prefix, kinds=(kind,), version=version)
 
 
-def load_contract(contract_dir: Path, *, urn_prefix: str = CONTRACT_URN_PREFIX) -> tuple[Registry, str]:
+def load_contract(contract_dir: Path, *, urn_prefix: str = CONTRACT_URN_PREFIX,
+                  foundation: Path | None = None) -> tuple[Registry, str]:
     """Load one contract directory ``<contract>/v<N>/``; return its registry and its kind.
 
     The kind is the stem of the single ``<kind>.schema.json`` file and must equal the contract name; the
-    ``$id`` must be ``<urn_prefix><kind>:v<N>`` for the version ``v<N>`` named by the directory.
+    ``$id`` must be ``<urn_prefix><kind>:v<N>`` for the version ``v<N>`` named by the directory. ``foundation``
+    is the directory of the foundation contracts that a reference may reach when they are not beside this one
+    (default: the schemas of aicore itself).
     """
     directory = Path(contract_dir).resolve()
     version, kind = directory.name, directory.parent.name
@@ -152,17 +157,54 @@ def load_contract(contract_dir: Path, *, urn_prefix: str = CONTRACT_URN_PREFIX) 
     if [path.name for path in files] != [f"{kind}.schema.json"]:
         raise SchemaProfileError(f"{directory}: expected exactly {kind}.schema.json, found "
                                  f"{[path.name for path in files]}")
-    extras = _referenced_contract_dirs(directory, urn_prefix)
+    extras = _referenced_contract_dirs(directory, urn_prefix, foundation)
     registry = load_registry(directory, urn_prefix=urn_prefix, kinds=(kind,), version=version, extra_dirs=extras)
     registry.for_kind(kind)  # raises when the $id does not match the directory
     return registry, kind
 
 
-def _referenced_contract_dirs(directory: Path, urn_prefix: str) -> tuple[Path, ...]:
+def load_contract_set(contract_dir: Path, *, foundation: Path | None = None) -> tuple[Registry, list[str]]:
+    """Load a contract directory ``<contract>/v<N>/`` that holds several ``<kind>.schema.json`` documents.
+
+    The kind of a document is the last segment of its ``$id``; every ``$id`` must be ``<prefix><kind>:v<N>`` for
+    one ``<prefix>`` shared by the directory and for the version ``v<N>`` named by the directory. The file name is
+    not read (it may spell the kind with dots). References to the foundation contracts resolve as in
+    ``load_contract`` (including ``foundation``). Return the registry and the sorted kinds.
+    """
+    directory = Path(contract_dir).resolve()
+    version = directory.name
+    if not _VERSION_DIR.fullmatch(version):
+        raise SchemaProfileError(f"{directory}: directory name must be v<N>, got {version!r}")
+    schemas = _read_schemas(directory)
+    prefix: str | None = None
+    kinds: list[str] = []
+    for schema_id in schemas:
+        match = _SET_ID.fullmatch(schema_id)
+        if match is None or match.group(3) != version:
+            raise SchemaProfileError(f"{directory}: $id {schema_id!r} must be <prefix><kind>:{version}")
+        if prefix is not None and match.group(1) != prefix:
+            raise SchemaProfileError(f"{directory}: $id {schema_id!r} does not share the prefix {prefix!r}")
+        prefix = match.group(1)
+        kinds.append(match.group(2))
+    kinds.sort()
+    registry = load_registry(directory, urn_prefix=prefix or "", kinds=tuple(kinds), version=version,
+                             extra_dirs=_referenced_contract_dirs(directory, CONTRACT_URN_PREFIX, foundation))
+    for schema_id, document in schemas.items():
+        for ref in _refs(document):
+            try:
+                registry.resolve(ref, schema_id)
+            except RefError as exc:
+                raise SchemaProfileError(f"{directory.parent.name}/{version}: unresolved reference {ref!r}: {exc}")
+    return registry, kinds
+
+
+def _referenced_contract_dirs(directory: Path, urn_prefix: str,
+                              foundation: Path | None = None) -> tuple[Path, ...]:
     """Sibling contract directories that ``$ref`` values reach from ``directory``, transitively.
 
     A ``$ref`` to ``<urn_prefix><contract>:v<N>`` (with or without a fragment) names the directory
-    ``<schemas>/<contract>/v<N>`` next to the one being loaded.
+    ``<schemas>/<contract>/v<N>`` next to the one being loaded; for the foundation prefix a directory missing
+    there is looked up in ``foundation`` (default: the schemas of aicore itself).
     """
     schemas_root = directory.parent.parent
     found: list[Path] = []
@@ -179,7 +221,9 @@ def _referenced_contract_dirs(directory: Path, urn_prefix: str) -> tuple[Path, .
                     continue
                 match = _CONTRACT_REF.fullmatch(document[len(urn_prefix):])
                 target = schemas_root / match.group(1) / match.group(2) if match else None
-                if target is None or not target.is_dir() or not any(target.glob("*.schema.json")):
+                if match and urn_prefix == CONTRACT_URN_PREFIX and not _has_schemas(target):
+                    target = (foundation or _FOUNDATION_SCHEMAS) / match.group(1) / match.group(2)
+                if target is None or not _has_schemas(target):
                     raise SchemaProfileError(f"{current.parent.name}/{current.name}: unresolved contract "
                                              f"reference {ref!r}")
                 target = target.resolve()
@@ -188,6 +232,10 @@ def _referenced_contract_dirs(directory: Path, urn_prefix: str) -> tuple[Path, .
                     found.append(target)
                     pending.append(target)
     return tuple(found)
+
+
+def _has_schemas(directory: Path | None) -> bool:
+    return directory is not None and directory.is_dir() and any(directory.glob("*.schema.json"))
 
 
 def _refs(node: Any) -> Iterator[str]:

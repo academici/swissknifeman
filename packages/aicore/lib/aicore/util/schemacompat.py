@@ -7,7 +7,8 @@ counts as breaking. Annotations (``title``, ``description``, ``default``, ``x-sk
 
 ``main`` is the ``aicore schema compat`` command: it compares the contracts of the working tree with the same
 contracts at a git reference, inside one major version, and grades each breaking change by the ``stability`` of
-the contract in ``unit.json``.
+the contract in ``unit.json``. A contract directory may hold several documents (kinds): each kind of the base is
+compared with the same kind of the tree, a kind that disappeared is breaking and a new kind is a note.
 """
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Set, TextIO, Tuple
 
-from .schema import RefError, Registry, SchemaProfileError, _compile, _equal, load_contract
+from .schema import RefError, Registry, SchemaProfileError, _compile, _equal, clear_registry_cache, load_contract, load_contract_set
 
 # rule -> whether the change breaks documents that were valid by the old schema
 RULES: Dict[str, bool] = {
@@ -48,6 +49,9 @@ RULES: Dict[str, bool] = {
     "oneof-changed": True,
     "ref-changed": False,
     "ref-sibling-conflict": True,
+    # set-level rules of contracts that hold several documents (see _compare_set)
+    "kind-removed": True,
+    "kind-added": False,
 }
 
 # Stabilities whose breaking changes are refused; the others (development, alpha) only warn.
@@ -57,7 +61,8 @@ GIT_TIMEOUT = 30
 
 # (keyword, value when absent, direction): a "min" bound is tightened by growing, a "max" bound by shrinking
 _BOUNDS = (("minLength", 0, "min"), ("minItems", 0, "min"), ("minimum", None, "min"), ("maximum", None, "max"))
-_SCHEMA_FILE = re.compile(r"[a-z][a-z0-9-]*/v[1-9][0-9]*/[a-z][a-z0-9-]*\.schema\.json")
+_SCHEMA_FILE = re.compile(r"[a-z][a-z0-9-]*/v[1-9][0-9]*/[^/]+\.schema\.json")  # any name: the loader reads every file
+FOUNDATION_ROOT = "packages/aicore/schemas"  # the foundation contracts that a module's schemas may reference
 
 
 class Change(NamedTuple):
@@ -366,6 +371,8 @@ def build_parser(out: TextIO, err: TextIO) -> argparse.ArgumentParser:
     parser.add_argument("--base", metavar="REF", default=DEFAULT_REF, help="git reference to compare with (default: HEAD)")
     parser.add_argument("--root", metavar="DIR", help="directory of the contract schemas "
                         "(default: packages/aicore/schemas of the repository, else the schemas of this module)")
+    parser.add_argument("--base-root", metavar="DIR", help="directory of the contract schemas at the base reference "
+                        "when it differs from --root (a module that was renamed)")
     parser.add_argument("--unit", metavar="FILE", help="unit.json that grades the contracts (default: <root>/../unit.json)")
     parser.add_argument("--contract", metavar="NAME", help="compare one contract only")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
@@ -404,6 +411,7 @@ def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str
 
 
 def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, str]]) -> dict:
+    clear_registry_cache()  # the files may have changed since an earlier run in this process
     repo = _git_toplevel(cwd, env)
     root = _schema_root(options.root, repo, cwd)
     try:
@@ -417,15 +425,24 @@ def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, s
         current = {key: value for key, value in current.items() if key[0] == options.contract}
         if not current:
             raise _Refusal("SCHEMA_COMPAT_UNKNOWN_CONTRACT", f"no contract {options.contract!r} in {root}")
-    base_files = _base_files(repo, relroot, options.base, env)
+    base_relroot = relroot
+    if options.base_root:
+        base_dir = Path(options.base_root)
+        base_dir = (base_dir if base_dir.is_absolute() else cwd / base_dir).resolve()
+        try:
+            base_relroot = base_dir.relative_to(repo).as_posix()
+        except ValueError:
+            raise _Refusal("SCHEMA_COMPAT_ROOT", f"{base_dir} is outside the repository {repo}")
+    base_files = _base_files(repo, base_relroot, options.base, env)
+    if options.base_root and not base_files:
+        raise _Refusal("SCHEMA_COMPAT_BASE_ROOT", f"{options.base} holds no contract schemas under {base_relroot!r}")
+    foundation = repo / FOUNDATION_ROOT if (repo / FOUNDATION_ROOT).is_dir() else None
     contracts = []
     with tempfile.TemporaryDirectory(prefix="skm-compat-") as scratch:
-        base_root = Path(scratch)
-        for relpath in base_files:
-            target = base_root / relpath
-            target.parent.mkdir(parents=True, exist_ok=True)
-            location = relpath if relroot == "." else f"{relroot}/{relpath}"
-            target.write_bytes(_git(repo, ["show", f"{options.base}:{location}"], env).stdout)
+        base_root, base_foundation = Path(scratch) / "module", Path(scratch) / "foundation"
+        _extract(repo, options.base, base_relroot, base_files, base_root, env)
+        foundation_files = _base_files(repo, FOUNDATION_ROOT, options.base, env)
+        _extract(repo, options.base, FOUNDATION_ROOT, foundation_files, base_foundation, env)
         base_contracts = _contracts(base_root)
         for (name, version), directory in sorted(current.items(), key=lambda item: (item[0][0], _major(item[0][1]))):
             stability = stabilities.get((name, version), module_stability)
@@ -435,39 +452,84 @@ def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, s
                 previous = [v for (n, v) in base_contracts if n == name and _major(v) < _major(version)]
                 entry["status"] = "major" if previous else "new"
             else:
-                entry["changes"] = _grade(_compare_dirs(base_contracts[(name, version)], directory, name, version),
-                                          stability)
+                found = _compare_dirs(base_contracts[(name, version)], directory, name, version,
+                                      base_foundation if foundation_files else None, foundation)
+                entry["changes"] = _grade(found, stability)
             contracts.append(entry)
     return {"base": options.base, "contracts": contracts}
 
 
-def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str) -> List[Change]:
+def _is_single(directory: Path) -> bool:
+    """A contract directory with the one document named like the contract (``<contract>.schema.json``)."""
+    return [path.name for path in directory.glob("*.schema.json")] == [f"{directory.parent.name}.schema.json"]
+
+
+def _extract(repo: Path, ref: str, relroot: str, files: Sequence[str], target_root: Path,
+             env: Optional[Mapping[str, str]]) -> None:
+    """Write the schema files of ``relroot`` as the reference holds them under ``target_root``."""
+    target_root.mkdir(parents=True, exist_ok=True)
+    for relpath in files:
+        target = target_root / relpath
+        target.parent.mkdir(parents=True, exist_ok=True)
+        location = relpath if relroot == "." else f"{relroot}/{relpath}"
+        target.write_bytes(_git(repo, ["show", f"{ref}:{location}"], env).stdout)
+
+
+def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str,
+                  base_foundation: Optional[Path] = None,
+                  foundation: Optional[Path] = None) -> List[Tuple[Optional[str], Change]]:
+    """Changes as ``(kind, change)``; ``kind`` is ``None`` for a contract of one document.
+
+    A reference to a foundation contract is resolved in the foundation of its own side: the base of the reference
+    for the old schema, the tree for the new one, so a change in a foundation contract shows where it is used.
+    """
     label = f"{name}/{version}"
+    single = _is_single(base_dir) and _is_single(current_dir)
     try:
-        old, kind = load_contract(base_dir)
+        old, old_kinds = _load(base_dir, single, base_foundation)
     except SchemaProfileError as exc:
         raise _Refusal("SCHEMA_COMPAT_BASE_INVALID", f"{label} at the base: {exc}", 1)
     try:
-        new, _ = load_contract(current_dir)
+        new, new_kinds = _load(current_dir, single, foundation)
     except SchemaProfileError as exc:
         raise _Refusal("SCHEMA_COMPAT_INVALID", f"{label}: {exc}", 1)
+    found: List[Tuple[Optional[str], Change]] = []
     try:
-        return compare(old, old.for_kind(kind)[1], new, new.for_kind(kind)[1])
+        for kind in old_kinds:
+            if kind not in new_kinds:
+                found.append((kind, Change("", "kind-removed", RULES["kind-removed"], f"document {kind!r} removed")))
+                continue
+            found += [(None if single else kind, change)
+                      for change in compare(old, old.for_kind(kind)[1], new, new.for_kind(kind)[1])]
+        for kind in new_kinds:
+            if kind not in old_kinds:
+                found.append((kind, Change("", "kind-added", RULES["kind-added"], f"document {kind!r} added")))
     except RefError as exc:
         raise _Refusal("SCHEMA_COMPAT_INVALID", f"{label}: {exc}", 1)
+    return found
 
 
-def _grade(changes: Sequence[Change], stability: str) -> List[dict]:
+def _load(directory: Path, single: bool, foundation: Optional[Path]) -> Tuple[Registry, List[str]]:
+    if single:
+        registry, kind = load_contract(directory, foundation=foundation)
+        return registry, [kind]
+    return load_contract_set(directory, foundation=foundation)
+
+
+def _grade(changes: Sequence[Tuple[Optional[str], Change]], stability: str) -> List[dict]:
     graded = []
-    for change in changes:
+    for kind, change in changes:
         if not change.breaking:
             severity = "info"
         elif stability in WARN_ONLY_STABILITY:
             severity = "warning"
         else:
             severity = "error"
-        graded.append({"path": change.path, "rule": change.rule, "breaking": change.breaking,
-                       "severity": severity, "message": change.message})
+        entry = {"path": change.path, "rule": change.rule, "breaking": change.breaking,
+                 "severity": severity, "message": change.message}
+        if kind is not None:
+            entry["kind"] = kind
+        graded.append(entry)
     return graded
 
 
@@ -484,7 +546,8 @@ def render_text(report: dict) -> str:
             lines.append(f"{label}: {entry['status']} (not compared)")
         for change in entry["changes"]:
             counts[change["severity"]] += 1
-            lines.append(f"{label} {change['path'] or '/'}: {change['rule']} ({change['severity']}) "
+            where = f"{label}:{change['kind']}" if "kind" in change else label
+            lines.append(f"{where} {change['path'] or '/'}: {change['rule']} ({change['severity']}) "
                          f"{change['message']}")
     lines.append(f"compat: {len(report['contracts'])} contracts against {report['base']}: "
                  f"{counts['error']} errors, {counts['warning']} warnings, {counts['info']} notes")
@@ -509,11 +572,14 @@ def _schema_root(option: Optional[str], repo: Path, cwd: Path) -> Path:
 
 
 def _contracts(root: Path) -> Dict[Tuple[str, str], Path]:
-    """``(contract, version) -> directory`` for every ``<contract>/v<N>/<contract>.schema.json`` below ``root``."""
+    """``(contract, version) -> directory`` for every ``<contract>/v<N>/`` below ``root`` that holds schema documents.
+
+    A directory with the one document ``<contract>.schema.json`` is a contract of one document, a directory with
+    other or several documents is a contract of a set of kinds (see ``aicore.util.schema.load_contract_set``).
+    """
     found = {}
     for path in sorted(root.glob("*/v*/*.schema.json")):
-        relpath = path.relative_to(root).as_posix()
-        if _SCHEMA_FILE.fullmatch(relpath) and path.stem[: -len(".schema")] == path.parent.parent.name:
+        if _SCHEMA_FILE.fullmatch(path.relative_to(root).as_posix()):
             found[(path.parent.parent.name, path.parent.name)] = path.parent
     return found
 

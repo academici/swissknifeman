@@ -80,7 +80,8 @@ class TestRules(unittest.TestCase):
     }
 
     def test_every_rule_has_a_case(self):
-        self.assertEqual(set(RULES), set(self.CASES) | {"ref-changed", "ref-sibling-conflict"})
+        self.assertEqual(set(RULES), set(self.CASES) | {"ref-changed", "ref-sibling-conflict", "kind-removed",
+                                                                       "kind-added"})  # the last two: TestMultiDocument
 
     def test_each_rule_fires_alone_with_its_breaking_flag(self):
         for rule, (old, new) in self.CASES.items():
@@ -558,6 +559,156 @@ class TestCommand(unittest.TestCase):
     def test_the_group_is_listed_by_the_dispatcher(self):
         self.assertIn("\n  schema   contract tools: compat\n", cli.usage())
         self.assertEqual(("aicore.util.schemacompat", "main"), cli.GROUPS["schema"][:2])
+
+
+class TestMultiDocument(unittest.TestCase):
+    """Contracts of several documents: one directory ``<contract>/v1/`` with a kind per file."""
+    PLAN = "urn:swissknifeman:mod:plan:"
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.repo = Path(self._tmp.name).resolve() / "repo"
+        self.env = {"PATH": os.environ["PATH"], "HOME": self._tmp.name, "GIT_CONFIG_NOSYSTEM": "1"}
+        self.repo.mkdir()
+        git(self.repo, "init", "-q")
+        self.module = "old"
+
+    def schemas(self, module=None):
+        return self.repo / "packages" / (module or self.module) / "schemas"
+
+    def write(self, kind, extra=None, stem=None, module=None):
+        directory = self.schemas(module) / "plan" / "v1"
+        directory.mkdir(parents=True, exist_ok=True)
+        body = {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": f"{self.PLAN}{kind}:v1",
+                "type": "object", "additionalProperties": False, "properties": {"a": {"type": "string"}}}
+        body.update(extra or {})
+        (directory / f"{stem or kind}.schema.json").write_text(json.dumps(body), encoding="utf-8")
+
+    def unit(self, stability="stable", module=None):
+        path = self.schemas(module).parent / "unit.json"
+        contracts = [{"id": "urn:swissknifeman:mod:plan", "path": "schemas/plan/v1", "version": "v1",
+                      "stability": stability}]
+        path.write_text(json.dumps({"stability": "development", "provides": {"contracts": contracts}}),
+                        encoding="utf-8")
+
+    def commit(self):
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "state")
+
+    def compat(self, *argv, module=None):
+        out, err = io.StringIO(), io.StringIO()
+        code = cli.main(["schema", "compat", "--root", str(self.schemas(module)), *argv], env=self.env,
+                        cwd=self.repo, out=out, err=err)
+        return code, out.getvalue(), err.getvalue()
+
+    def state(self):
+        self.write("alpha")
+        self.write("beta")
+        self.unit()
+        self.commit()
+
+    def test_a_new_optional_field_is_a_note_of_its_kind(self):
+        self.state()
+        self.write("alpha", {"properties": {"a": {"type": "string"}, "b": {"type": "string"}}})
+        code, out, err = self.compat("--base", "HEAD")
+        self.assertEqual((0, ""), (code, err))
+        self.assertIn("plan/v1:alpha /properties/b: property-added (info)", out)
+        self.assertNotIn("plan/v1:beta", out)
+
+    def test_a_breaking_change_names_its_kind_and_fails(self):
+        self.state()
+        self.write("beta", {"required": ["a"]})
+        code, out, _ = self.compat("--json")
+        entry = json.loads(out)["contracts"][0]
+        self.assertEqual(1, code)
+        self.assertEqual([("beta", "required-added", "error")],
+                         [(c["kind"], c["rule"], c["severity"]) for c in entry["changes"]])
+
+    def test_a_removed_kind_is_breaking_and_a_new_kind_is_a_note(self):
+        self.state()
+        (self.schemas() / "plan" / "v1" / "beta.schema.json").unlink()
+        self.write("gamma")
+        code, out, _ = self.compat()
+        self.assertEqual(1, code)
+        self.assertIn("plan/v1:beta /: kind-removed (error) document 'beta' removed", out)
+        self.assertIn("plan/v1:gamma /: kind-added (info) document 'gamma' added", out)
+
+    def test_documents_named_with_dots_are_read_by_their_kind(self):
+        self.write("thing-created", stem="thing.created")
+        self.unit()
+        self.commit()
+        self.write("thing-created", {"required": ["a"]}, stem="thing.created")
+        code, out, _ = self.compat()
+        self.assertEqual(1, code)
+        self.assertIn("plan/v1:thing-created /: required-added (error)", out)
+
+    def test_the_base_may_live_under_another_root(self):
+        self.state()
+        git(self.repo, "mv", "packages/old", "packages/new")
+        self.module = "new"
+        self.write("alpha", {"properties": {"a": {"type": "string"}, "b": {"type": "string"}}})
+        missing, _, err = self.compat("--base", "HEAD")
+        self.assertEqual(0, missing)  # the renamed root has no base: every contract is new
+        code, out, err = self.compat("--base", "HEAD", "--base-root", str(self.schemas("old")))
+        self.assertEqual((0, ""), (code, err))
+        self.assertIn("plan/v1:alpha /properties/b: property-added (info)", out)
+        self.assertIn("1 contracts against HEAD", out)
+
+    def test_a_base_root_outside_the_repository_is_refused(self):
+        self.state()
+        code, _, err = self.compat("--base-root", self._tmp.name)
+        self.assertEqual(2, code)
+        self.assertTrue(err.startswith("SCHEMA_COMPAT_ROOT: "), err)
+
+    def test_a_base_root_that_holds_no_schemas_is_refused_not_all_new(self):
+        self.state()
+        self.write("alpha", {"required": ["a"]})
+        for typo in (".", "packages/old/schema"):
+            with self.subTest(base_root=typo):
+                code, out, err = self.compat("--base", "HEAD", "--base-root", str(self.repo / typo))
+                self.assertEqual((2, ""), (code, out))
+                self.assertTrue(err.startswith("SCHEMA_COMPAT_BASE_ROOT: "), err)
+        self.assertEqual(1, self.compat("--base", "HEAD", "--base-root", str(self.schemas()))[0])
+
+    def test_a_file_name_outside_the_usual_spelling_is_compared_with_its_base(self):
+        self.write("my-extra", stem="my_extra")
+        self.write("alpha")
+        self.unit()
+        self.commit()
+        self.write("my-extra", {"required": ["a"]}, stem="my_extra")
+        code, out, _ = self.compat()
+        self.assertEqual(1, code)
+        self.assertIn("plan/v1:my-extra /: required-added (error)", out)
+        self.assertNotIn("kind-added", out)
+
+    def test_a_foundation_contract_is_taken_from_the_base_on_the_old_side(self):
+        foundation = self.repo / "packages" / "aicore" / "schemas" / "artifact-ref" / "v1"
+        foundation.mkdir(parents=True)
+        (foundation / "artifact-ref.schema.json").write_text(json.dumps(
+            {"$id": "urn:swissknifeman:aicore:artifact-ref:v1", "type": "string"}), encoding="utf-8")
+        reference = {"properties": {"a": {"$ref": "urn:swissknifeman:aicore:artifact-ref:v1"}}}
+        self.write("alpha", reference)
+        self.unit()
+        self.commit()
+        self.assertEqual(0, self.compat()[0])
+        (foundation / "artifact-ref.schema.json").write_text(json.dumps(
+            {"$id": "urn:swissknifeman:aicore:artifact-ref:v1", "type": "integer"}), encoding="utf-8")
+        code, out, _ = self.compat()
+        self.assertEqual(1, code)
+        self.assertIn("plan/v1:alpha /properties/a: type-changed (error)", out)
+
+    def test_a_single_document_contract_keeps_its_report_shape(self):
+        directory = self.schemas() / "thing" / "v1"
+        directory.mkdir(parents=True)
+        (directory / "thing.schema.json").write_text(json.dumps(
+            {"$id": "urn:swissknifeman:aicore:thing:v1", "type": "string"}), encoding="utf-8")
+        self.unit()
+        self.commit()
+        code, out, err = self.compat("--json")
+        self.assertEqual((0, ""), (code, err))
+        self.assertEqual([("thing", "v1", "compared", [])],
+                         [(e["contract"], e["version"], e["status"], e["changes"]) for e in json.loads(out)["contracts"]])
 
 
 if __name__ == "__main__":

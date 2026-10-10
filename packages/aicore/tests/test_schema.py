@@ -247,5 +247,63 @@ class TestLoadContract(SchemaCase):
             schema.load_contract(user, urn_prefix=PREFIX)
 
 
+class TestLoadContractSet(SchemaCase):
+    PLAN = "urn:test:plan:"
+
+    def directory(self, name: str = "plan", version: str = "v1") -> Path:
+        directory = self.dir / name / version
+        directory.mkdir(parents=True)
+        return directory
+
+    def write(self, directory: Path, file_stem: str, kind: str, body: dict, prefix: str = None, version: str = "v1"):
+        doc = {"$schema": schema.DIALECT, "$id": f"{prefix or self.PLAN}{kind}:{version}", **body}
+        (directory / f"{file_stem}.schema.json").write_text(json.dumps(doc), encoding="utf-8")
+
+    def test_loads_every_kind_under_a_shared_prefix(self):
+        directory = self.directory()
+        self.write(directory, "defs", "defs", {"$defs": {"id": {"type": "string", "pattern": "^[a-z]+$"}}})
+        self.write(directory, "item", "item", {"type": "object", "additionalProperties": False,
+                                               "properties": {"id": {"$ref": f"{self.PLAN}defs:v1#/$defs/id"}}})
+        registry, kinds = schema.load_contract_set(directory)
+        self.assertEqual(["defs", "item"], kinds)
+        self.assertEqual(self.PLAN, registry.urn_prefix)
+        self.assertEqual([], schema.validate({"id": "abc"}, "item", registry))
+        self.assertEqual(["pattern"], [i.code for i in schema.validate({"id": "A"}, "item", registry)])
+
+    def test_the_kind_comes_from_the_id_not_from_the_file_name(self):
+        directory = self.directory("event-data")
+        self.write(directory, "thing.created", "thing-created", {"type": "string"})
+        registry, kinds = schema.load_contract_set(directory)
+        self.assertEqual(["thing-created"], kinds)
+        self.assertEqual([], schema.validate("x", "thing-created", registry))
+
+    def test_prefix_and_version_must_agree(self):
+        directory = self.directory()
+        self.write(directory, "a", "a", {})
+        self.write(directory, "b", "b", {}, prefix="urn:other:")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "does not share the prefix"):
+            schema.load_contract_set(directory)
+        elsewhere = self.directory("plan2", "v2")
+        self.write(elsewhere, "a", "a", {}, version="v1")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "must be <prefix><kind>:v2"):
+            schema.load_contract_set(elsewhere)
+        bad = self.directory("plan3", "latest")
+        self.write(bad, "a", "a", {}, version="latest")
+        with self.assertRaises(schema.SchemaProfileError):
+            schema.load_contract_set(bad)
+
+    def test_an_unresolved_reference_is_a_profile_error(self):
+        directory = self.directory()
+        self.write(directory, "a", "a", {"properties": {"x": {"$ref": f"{self.PLAN}missing:v1"}}})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved reference"):
+            schema.load_contract_set(directory)
+
+    def test_the_foundation_contracts_are_found_next_to_aicore(self):
+        directory = self.directory()
+        self.write(directory, "a", "a", {"properties": {"ref": {"$ref": f"{schema.CONTRACT_URN_PREFIX}artifact-ref:v1"}}})
+        registry, _ = schema.load_contract_set(directory)
+        self.assertIn(f"{schema.CONTRACT_URN_PREFIX}artifact-ref:v1", registry._schemas)
+
+
 if __name__ == "__main__":
     unittest.main()

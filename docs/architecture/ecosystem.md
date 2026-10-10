@@ -422,7 +422,8 @@ A shared skill stays in `skiller`; a skill about a particular module lives in th
 | `system/local-topology`, `system/swissknifeman-locator`, `system/cross-project-coordinator`, `system/shared-memory` | maind (plugin `maind`, done in P8) |
 | `system/session-observer` | analyst (plugin `analyst`, done in P8) |
 | bootstrap skills (`bootstrap/skills`, `*/dev-skills`) | unchanged |
-| `general/complex-task-orchestrator`, `general/task-brief-template`, `general/skills-ssot`, `general/project-map`, `general/workflow-craft` | stay in `skiller`; module binding reviewed when `skiller` is reduced to shared skills |
+| `general/workflow-craft` | planner (plugin `planner`, done in P9) |
+| `general/complex-task-orchestrator`, `general/task-brief-template`, `general/skills-ssot`, `general/project-map` | stay in `skiller`; module binding reviewed when `skiller` is reduced to shared skills |
 | all other `general/*` and other buckets | stay in `skiller` |
 
 ## 9. Migration discipline

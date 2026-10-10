@@ -26,7 +26,7 @@ returns a report.
 `prepare` (phase P5.3) validates the input, policy and role manifests, orders stages by `depends_on`,
 enforces the minimum route of the primary stage, matches each model stage against the
 `(binding, provider)` capability record (a missing record counts as `unknown`), and resolves models only
-through the command-routing catalog. An unmet requirement of a `required` stage raises
+through the model catalog of aicore (`--model-catalog`). An unmet requirement of a `required` stage raises
 `CAPABILITY_UNSUPPORTED`; an optional stage becomes a refusal. Provider and model are never replaced
 silently.
 

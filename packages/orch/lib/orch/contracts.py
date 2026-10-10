@@ -1,11 +1,11 @@
 """exec/v1 schema registry, semantic validation and document digests."""
 from __future__ import annotations
 
-from hashlib import sha256
-import json
 from pathlib import Path
 import re
 from typing import Callable, NamedTuple
+
+from aicore.util import digest as canonical
 
 from orch import CONTRACT_VERSION
 from orch import schema
@@ -59,12 +59,11 @@ def validate(doc: object, kind: str, registry: schema.Registry | None = None) ->
 
 
 def canonical_digest(doc: dict) -> str:
-    """Hash canonical JSON without digest or the derived suffix of input_id."""
+    """Bare sha256 hex of the canonical JSON without digest or the derived suffix of input_id."""
     payload = {key: value for key, value in doc.items() if key != "digest"}
     if isinstance(payload.get("input_id"), str):
         payload["input_id"] = payload["input_id"].rsplit("@", 1)[0]
-    encoded = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return sha256(encoded.encode("utf-8")).hexdigest()
+    return canonical.sha256_hex(canonical.canonical_json_bytes(payload))
 
 
 def _walk(value: object, path: str = ""):
@@ -84,8 +83,14 @@ def _execution_input(doc: object) -> list[Issue]:
         return []
     issues = []
     digest, input_id = doc.get("digest"), doc.get("input_id")
-    if isinstance(digest, str) and digest != canonical_digest(doc):
-        issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest does not match canonical JSON"))
+    if isinstance(digest, str):
+        try:
+            matches = digest == canonical_digest(doc)
+        except TypeError:  # floats are not canonical JSON; the schema check reports the offending value
+            issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest cannot be computed: document is not canonical JSON"))
+        else:
+            if not matches:
+                issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest does not match canonical JSON"))
     if isinstance(input_id, str) and isinstance(digest, str) and not input_id.endswith("@" + digest[:12]):
         issues.append(Issue("/input_id", "INPUT_ID", "input_id must end with @digest[:12]"))
     scope, result_contract = doc.get("scope"), doc.get("result_contract")

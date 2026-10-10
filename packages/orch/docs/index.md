@@ -1,7 +1,7 @@
 # orch
 
 Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
-Status: **internal, not published**. The package uses only the Python standard library.
+Status: **internal, not published**. The package uses only the Python standard library, `orch` and the `aicore` foundation.
 
 - [exec/v1 contracts](contracts.md) — nine document kinds, conventions, contract changelog.
 - [Engine Port](engine-port.md) — operations, run states, binding capability matrix.

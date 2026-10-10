@@ -59,7 +59,7 @@ class BoundaryTests(unittest.TestCase):
             with self.subTest(line=line):
                 self.assertFalse(any(pattern.search(line) for pattern in FORBIDDEN))
 
-    def test_runtime_imports_are_stdlib_or_orch(self):
+    def test_runtime_imports_are_stdlib_orch_or_aicore(self):
         allowed = getattr(sys, "stdlib_module_names", None)
         if allowed is None:  # Python 3.9 CI; stdlib_module_names was added in 3.10.
             paths = {sysconfig.get_path("stdlib"), sysconfig.get_path("platstdlib"),
@@ -67,7 +67,7 @@ class BoundaryTests(unittest.TestCase):
             allowed = set(sys.builtin_module_names) | {
                 info.name for info in pkgutil.iter_modules([p for p in paths if p])
             }
-        allowed = set(allowed) | {"orch"}
+        allowed = set(allowed) | {"orch", "aicore"}
         root = Path(__file__).resolve().parents[1] / "lib/orch"
         for path in sorted(root.rglob("*.py")):
             for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

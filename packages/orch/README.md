@@ -2,14 +2,16 @@
 
 Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
 Status: **internal, not published (decision D2 of the orchestration-prep plan)**. Runtime code uses only the Python
-standard library and `orch`; it is independent of other packages of this repository.
+standard library, `orch` and the `aicore` foundation (schema validator, digest, model catalog); it is independent
+of every other package of this repository. The aicore checkout is found through `AICORE_ROOT`, `_vendor/aicore` or
+the sibling `aicore` folder.
 
-The package supplies a closed-profile JSON Schema validator, shared `exec/v1`
+The package supplies the `exec/v1` schemas validated by the closed-profile validator of aicore, shared `exec/v1`
 definitions, all nine document schemas and their fixtures, canonical document
 digests and a `validate` CLI. It also defines the EnginePort protocol, RunState
 reducer and binding capability matrix. `orch.py prepare --binding native|cao|claude-only --provider P --input I
 --policy POLICY --out DIR --dry-run` prints a launch-plan and writes its prompt or CAO profile files into `DIR`;
-models come from the `mappings` of a routing config (`--routing`, `ORCH_ROUTING` or a bridge's `routing_path()`).
+models come from the `model-catalog/v1` file of aicore (`--model-catalog FILE`; the default is the catalog packaged with aicore).
 Starting runs is future work; `prepare` without `--dry-run` returns `NOT_IMPLEMENTED`.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
@@ -31,9 +33,8 @@ Diagnostics use `CODE: message` on stderr. Exit codes: `0` success (including
 warning-only documents), `1` invalid input or refusal, `2` usage error.
 `--quiet` suppresses stdout and preserves diagnostics and the exit status.
 
-The registry rejects schema keywords outside its closed profile. Its validator
-is an adapted copy of the plan store's closed-profile validator (decision D4 of the orchestration-prep plan);
-the plan bridge tests keyword parity.
+The registry rejects schema keywords outside its closed profile. The validator is the closed-profile validator
+of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks that orch keeps no profile of its own.
 
 ## Docs
 

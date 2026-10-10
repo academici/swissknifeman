@@ -6,7 +6,9 @@
   "version": "0.1.0",
   "stability": "alpha",
   "destination": "own-repo",
-  "requires": [],
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: schema validator, digest, model catalog, error classes, configuration, events, plugins, state."}
+  ],
   "provides": {
     "cli": ["scripts/orch.py"],
     "contracts": [

@@ -13,7 +13,7 @@
 | brain | capability | 0.1.0 | hub | alpha | aicore |
 | harness | capability | 0.7.1 | hub | beta | aicore |
 | maind | capability | 0.6.0 | hub | beta | aicore |
-| orch | capability | 0.1.0 | own-repo | alpha | - |
+| orch | capability | 0.1.0 | own-repo | alpha | aicore |
 | planner | capability | 0.28.3 | own-repo | beta | aicore |
 | skiller | capability | 0.19.2 | own-repo | beta | aicore |
 

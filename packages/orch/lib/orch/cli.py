@@ -80,7 +80,7 @@ def _prepare(args: argparse.Namespace) -> int:
         input_doc, policy = _load_json(args.input), _load_json(args.policy)
         directory = Path(args.roles_dir) if args.roles_dir else render.ROLES_DIR
         roles = {path.stem: _load_json(path) for path in sorted(directory.glob("*.json"))}
-        engine = BINDINGS[args.binding](args.out, catalog=catalog.Catalog.load(args.routing),
+        engine = BINDINGS[args.binding](args.out, catalog=catalog.Catalog.load(args.model_catalog),
                                         roles_dir=args.roles_dir)
         plan = engine.prepare(input_doc, policy, roles, provider=args.provider, dry_run=True)
     except PortError as error:
@@ -140,7 +140,8 @@ def main(argv: list[str] | None = None) -> int:
     command.add_argument("--policy", type=Path, required=True)
     command.add_argument("--out", type=Path, required=True, help="directory for prompts and profiles")
     command.add_argument("--dry-run", action="store_true")
-    command.add_argument("--routing", type=Path, help="routing config holding the model mappings")
+    command.add_argument("--model-catalog", type=Path, dest="model_catalog", metavar="FILE",
+                         help="model-catalog/v1 file (default: the catalog packaged with aicore)")
     command.add_argument("--roles-dir", type=Path)
     args = parser.parse_args(argv)
     if args.verb == "launch":

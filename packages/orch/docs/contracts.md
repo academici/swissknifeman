@@ -6,14 +6,16 @@ Engine operations and run states are described in [engine-port.md](engine-port.m
 
 ## Conventions
 
-- JSON Schema draft 2020-12 in the closed keyword profile shared with the plan store (`orch.schema`).
+- JSON Schema draft 2020-12 in the closed keyword profile of the aicore validator (`orch.schema` re-exports `aicore.util.schema`; orch keeps no profile of its own).
   Numeric bounds and cross-field rules are semantic checks in `orch.contracts.semantic_checks`.
 - Every document carries `$schema` (`urn:swissknifeman:orch:exec:<kind>:v1`) and
   `contract_version: "exec/v1"`. An unknown version is refused with `CONTRACT_VERSION`.
 - Objects are closed (`additionalProperties: false`) except `extensions`, run-event `data`,
   effect-receipt `expected_prior`/`result` and launch-plan `env`.
 - `canonical_digest(doc)` is sha256 of sorted compact JSON without `digest`, with the `@digest`
-  suffix removed from `input_id`.
+  suffix removed from `input_id`; it is computed with the canonical JSON of aicore (`digest/v1`), and the
+  `exec/v1` form stays the bare lowercase hex without the `sha256:` tag. A document with a float is not canonical JSON:
+  `validate` reports `DIGEST_MISMATCH` next to the schema issue.
 - Shared definitions (`id`, `sha256`, `ts`, `path`, `provider`, `modelClass`, `effort`, `route`,
   `check`, `support`, `binding`, `roleId`, `commitRole`) live in [`defs.schema.json`](../schemas/exec/v1/defs.schema.json).
 

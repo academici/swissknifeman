@@ -2,7 +2,7 @@
 
 ## Boundaries
 
-`orch` owns the `exec/v1` JSON Schemas (nine document kinds), the stdlib-only closed-profile validator,
+`orch` owns the `exec/v1` JSON Schemas (nine document kinds), the `exec/v1` document semantics on top of the closed-profile validator of aicore (`orch.schema` re-exports it),
 the Engine Port (Protocol, errors, run-state reducer), the binding capability matrix and capability seeds,
 role manifests and canonical role texts, and the `scripts/orch.py` CLI (`validate`, `input adhoc`,
 `render-prompt`, `prepare --dry-run`, `launch`).
@@ -15,7 +15,7 @@ discovered by `orch.discovery`.
 
 ```text
 contracts (packages/orch)  <-  partners, engines
-orch code imports only the standard library and orch.*
+orch code imports only the standard library, orch.* and aicore.* (validator, digest, model catalog)
 partners read exec/v1 documents as JSON; they do not import orch
 engines use partner CLI/JSON APIs only
 ```
@@ -23,7 +23,10 @@ engines use partner CLI/JSON APIs only
 - Generated copies of canonical text into another package's managed block are build-time generation,
   not a runtime dependency.
 - Conformance tests live on the consumer side of the contract and run partner CLIs as subprocesses.
-- `tests/test_boundaries.py` walks `lib/orch/**/*.py` and rejects non-stdlib imports, and scans the
+- aicore is located by `scripts/orch.py` (Python) and by `scripts/test.sh` and `scripts/validate.sh` (bash) the same way
+  as in every module: `AICORE_ROOT`, then `_vendor/aicore`, then the sibling `aicore`.
+- Models come from the aicore model catalog (`orch.catalog`, `--model-catalog`); orch keeps no model names.
+- `tests/test_boundaries.py` walks `lib/orch/**/*.py` and rejects imports outside the standard library, `orch` and `aicore`, and scans the
   package outside `bridges/` for names of other packages.
 
 ## Layout
@@ -32,7 +35,7 @@ engines use partner CLI/JSON APIs only
 packages/orch/
   README.md  docs/  scripts/{orch.py,ro-run.py,validate.sh,test.sh}
   schemas/exec/v1/            # defs + nine document schemas
-  lib/orch/                   # schema, contracts, port, discovery, catalog, render, adhoc, bindings/, cli
+  lib/orch/                   # schema (aicore validator), contracts, port, discovery, catalog, render, adhoc, bindings/, cli
   roles/<role>.md|json        # canonical role texts and role manifests
   bindings/matrix.json        # binding capability matrix
   bindings/capabilities/      # <binding>--<provider>.json seeds (status declared)

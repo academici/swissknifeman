@@ -36,6 +36,8 @@ CARRIERS = [
     "packages/skiller/scripts/generate-hub.sh",
     "packages/skiller/install.sh",
     "packages/planner/scripts/validate.sh",
+    "packages/orch/scripts/test.sh",
+    "packages/orch/scripts/validate.sh",
 ]
 PY_CANONICAL = ROOT / "packages/aicore/scripts/aicore_locator.py"
 PY_START = "# --- aicore locator (python) ---"
@@ -43,6 +45,7 @@ PY_END = "# --- end aicore locator (python) ---"
 PY_CARRIERS = [
     "packages/planner/scripts/plan.py",
     "packages/planner/scripts/render-provider-commands.py",
+    "packages/orch/scripts/orch.py",
 ]
 
 

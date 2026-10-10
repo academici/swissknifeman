@@ -49,7 +49,7 @@
   ],
   "standalone": {
     "foundation_paths": ["core"],
-    "foundation_free": ["skiller", "planner"],
+    "foundation_free": ["skiller", "planner", "orch"],
     "unset_env": ["PYTHONPATH", "SKILLER_HOST_CONFIG"],
     "timeout_s": 1800
   },

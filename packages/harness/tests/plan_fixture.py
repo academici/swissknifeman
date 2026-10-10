@@ -1,5 +1,6 @@
 """Layout-v3 plan fixtures for Harness black-box tests, built only through `plan.py`."""
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -22,7 +23,10 @@ def run_plan(*args, plans_root=None, expect=0):
     argv = [sys.executable, str(PLAN_SCRIPT), *args]
     if plans_root is not None:
         argv += ["--plans-root", str(plans_root)]
-    result = subprocess.run(argv, capture_output=True, text=True, timeout=60, check=False)
+    # Fixture plans must not start event delivery: it runs after the call and would move journal cursors the test
+    # compares or commits.
+    env = {**os.environ, "SKM_AICORE_EVENTS__DELIVERY": "off"}
+    result = subprocess.run(argv, capture_output=True, text=True, timeout=60, check=False, env=env)
     if result.returncode != expect:
         raise RuntimeError(f"plan.py {args} exited {result.returncode}: {result.stderr}")
     return result

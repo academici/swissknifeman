@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.12",
   "title": "Закрытие фазы: широкий прогон, standalone planner, e2e событий и алиасов, бюджет первого хода, сверка E1 и E2, push",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Широкий прогон тестов всех модулей и скриптов хаба, planner и skiller validate в песочнице, ecosystem-units check/render/standalone --baseline (planner pass), golden без перезахвата, aicore schema compat (aicore и planner против origin/ecosystem-split), docs-impact и hygiene, e2e событий (план → заметка brain), skiller budget --first-turn (и --with-plugins); сверка E04, E44, R04 и прочих тезисов фазы записью plan.py log; коммит, push ветки ecosystem-split.",
   "why": "Правило плана: конец фазы — тесты и проверки автономности зелёные, push в origin ecosystem-split; сверка реестров E1/E2. Жёсткий риск: красная проверка соседнего модуля после переименования — чинится у владельца в этом пункте.",
   "scope": {
@@ -185,6 +185,61 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:30:05Z"
+  "result": {
+    "started_at": "2026-10-10T08:27:30Z",
+    "finished_at": "2026-10-10T09:21:25Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "a6c38cd8-cd07-4078-8b7b-b4a79c727580"
+    },
+    "notes": "Wide run green; standalone planner pass; e2e events OK; first-turn budget 2512; E1/E2 reconciled.",
+    "deviations": [
+      "harness fixture event delivery off"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-10T09:21:25Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T09:21:25Z"
 }

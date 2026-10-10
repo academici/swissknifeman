@@ -117,6 +117,9 @@ A refusal of a `required` stage turns the plan into a report: `prepare` raises `
 | --- | --- | --- |
 | `run_id`, `stage_id`, `attempt` (≥ 1), `seq` (≥ 0), `ts`, `kind` | * | ordered event identity |
 | `summary`, `data`, `raw_ref`, `route_observed` | | details, raw transport reference, observed route |
+| `event_id`, `causation_id`, `correlation_id` | | event key (`evt-…`), key of the causing event, submission (`sub-…`) the event belongs to |
+| `owner_epoch` (≥ 1), `attempt_id`, `call_id` | | owner epoch of the producer; attempt (`att-…`) and provider call (`call-…`) keys |
+| `error`, `raw` | | failure record (`error/v1` of aicore) for `provider_error`, `quota_block`, `auth_block`, `timeout`, `failed`; raw transport fragment as `artifact-ref/v1` |
 
 `quota_block`, `auth_block` and `provider_error` are not task failures. A raw event that cannot be
 parsed becomes `unknown_outcome`, never `completed`.
@@ -131,6 +134,10 @@ parsed becomes `unknown_outcome`, never `completed`.
 | `usage` | * | `reported` with numbers, or `unknown` without numbers (unknown ≠ 0) |
 | `commits` | | optional array of `{sha, role, ref, paths_digest}`; all four fields required per entry; roles are `executor`, `reviewer`, `fix` |
 | `session`, `changed_paths`, `artifacts`, `checks`, `errors`, `report`, `started_at`, `finished_at` | | evidence of the attempt |
+| `attempt_id`, `owner_epoch` (≥ 1), `submission_id` | | keys of the attempt and of its submission; owner epoch of the producer |
+| `input_ref` | | brief given to the stage, as `artifact-ref/v1` |
+| `skills`, `modules` | | `{name, digest}` of each skill that took part (tagged digest) and `{id, version}` of each module |
+| `errors[].error` | | normalized failure record (`error/v1`); `errors[].class` is unchanged |
 
 Semantic: `completed` has no `parse` error; `cost_usd` is a decimal string. Commit hashes must
 be unique (`COMMIT_SHA_DUPLICATE`). `paths_digest` is lowercase SHA-256 of the UTF-8 string
@@ -144,8 +151,11 @@ newline. For `a.py` and `b.py`, hash the bytes `a.py\nb.py`.
 | `effect_key`, `kind`, `intent`, `precondition_checked` | * | `<run>:<stage>:<kind>:<target>` and the expected prior state |
 | `outcome`, `reconcile`, `recorded_at` | * | `applied`, `already_applied`, `failed` or `unknown`; how to reconcile |
 | `result` | | open result object |
+| `attempt_id`, `owner_epoch` (≥ 1) | | attempt that produced the effect; owner epoch of the producer |
+| `precondition` | | `{checked_at, matched}` and optional `observed_prior`, `reason_code`: the re-check made immediately before the effect |
 
-Semantic: an `unknown` outcome needs a reconcile method other than `none`.
+Semantic: an `unknown` outcome needs a reconcile method other than `none`; a precondition that did not match
+(`matched: false`) requires outcome `failed`.
 
 ### check-evidence
 
@@ -158,6 +168,31 @@ Semantic: an `unknown` outcome needs a reconcile method other than `none`.
 
 Semantic: a command has `exit` and no verdict; a manual procedure has a verdict and observation and no exit.
 
+### Identity keys
+
+Every level of the idempotency hierarchy has its own key format; the prefix tells the levels apart.
+
+| Level | Field | Format | Repeating the key |
+| --- | --- | --- | --- |
+| submission | `submission_id` (`correlation_id` on events) | `sub-` + `[A-Za-z0-9._-]` (≤ 120) | `submission_id`: returns the existing run; `correlation_id` only names the submission |
+| run | `run_id` | unchanged identifier (new runs of orch: `run-` + 24 hex) | — |
+| attempt | `attempt_id` | `att-` + `[A-Za-z0-9._:/-]` (≤ 200) | registration is a no-op |
+| call | `call_id` | `call-` + `[A-Za-z0-9._:-]` (≤ 200) | deduplicated in the journal |
+| event | `event_id` (`causation_id` names the causing event) | `evt-` + `[A-Za-z0-9._:-]` (≤ 200) | `event_id`: an identical repeat is ignored, different content is a conflict |
+| effect | `effect_key` | `<run>:<stage>:<kind>:<target>` | `already_applied` |
+
+Shared definitions added to `defs.schema.json`: `submissionId`, `attemptId`, `callId`, `eventId`,
+`moduleVersion`, `reasonCode`, `skillRef`. Fields that reference aicore contracts (`error/v1`,
+`artifact-ref/v1`, digest) resolve through the registry of orch, which loads those contracts of aicore.
+
+### Semantic checks of identity
+
+| Code | Documents | Rule |
+| --- | --- | --- |
+| `KEY_REUSED` | any document with keys | two keys of `submission_id`, `run_id`, `attempt_id`, `call_id`, `event_id` of one document have the same value |
+| `EPOCH_INVALID` | run-event, stage-result, effect-receipt | `owner_epoch` is below 1 |
+| `PRECONDITION_MISMATCH` | effect-receipt | `precondition.matched` is false and `outcome` is not `failed` |
+
 ## Versioning
 
 A minor change adds only optional fields inside `v1`; `$id` stays the same and the change is recorded
@@ -165,6 +200,15 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 
 ## Changelog контрактов
 
+- exec/v1 — optional `effect-receipt.attempt_id`, `owner_epoch` and `precondition`
+  (`checked_at`, `matched`, `observed_prior`, `reason_code`); semantic `PRECONDITION_MISMATCH`;
+  existing documents remain valid.
+- exec/v1 — optional `stage-result.attempt_id`, `owner_epoch`, `submission_id`, `input_ref`, `skills`,
+  `modules` and `errors[].error`; existing documents remain valid.
+- exec/v1 — optional `run-event.event_id`, `causation_id`, `correlation_id`, `owner_epoch`, `attempt_id`,
+  `call_id`, `error` and `raw`; semantic `EPOCH_INVALID`; existing documents remain valid.
+- exec/v1 — new shared definitions `submissionId`, `attemptId`, `callId`, `eventId`, `moduleVersion`,
+  `reasonCode`, `skillRef` and semantic `KEY_REUSED`; existing documents remain valid.
 - exec/v1 — `launch-plan.stages[].argv` items may be empty strings (a launch catalog argument such as `--tools ""`); existing documents remain valid.
 - exec/v1 — optional `run-policy.isolation` (`mode`, `integration`, `recheck`) and
   `ISOLATION_POLICY_CONFLICT`; existing documents remain valid.

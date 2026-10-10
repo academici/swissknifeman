@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 from typing import Callable, NamedTuple
 
+import aicore
 from aicore.util import digest as canonical
 
 from orch import CONTRACT_VERSION
@@ -15,6 +16,10 @@ KINDS = (
     "execution-input", "run-policy", "role-manifest", "capability-record", "run-event",
     "stage-result", "effect-receipt", "check-evidence", "launch-plan",
 )
+# aicore contracts that exec/v1 schemas reference (transitively); they join the registry for $ref resolution.
+AICORE_CONTRACTS = ("error", "artifact-ref", "digest", "common")
+# Identity keys, one per level of the idempotency hierarchy; values of different levels never coincide.
+KEY_FIELDS = ("submission_id", "run_id", "attempt_id", "call_id", "event_id")
 # Plan bridges add their own stricter phrases.
 LIFECYCLE_PHRASES = ("report_api", "report API")
 
@@ -32,7 +37,9 @@ SEMANTIC: dict[str, Callable[[object], list[Issue]]] = {}
 def load_registry() -> schema.Registry:
     """Load the cached registry from this package, independent of the current cwd."""
     directory = Path(__file__).resolve().parents[2] / "schemas" / "exec" / "v1"
-    return schema.load_registry(directory, urn_prefix=URN_PREFIX, kinds=KINDS)
+    foundation = Path(aicore.__file__).resolve().parents[2] / "schemas"
+    extras = tuple(foundation / name / "v1" for name in AICORE_CONTRACTS)
+    return schema.load_registry(directory, urn_prefix=URN_PREFIX, kinds=KINDS, extra_dirs=extras)
 
 
 def semantic_checks(doc: object, kind: str) -> list[Issue]:
@@ -45,6 +52,8 @@ def semantic_checks(doc: object, kind: str) -> list[Issue]:
     check = SEMANTIC.get(kind)
     if check is not None:
         issues.extend(check(doc))
+    if isinstance(doc, dict):
+        issues.extend(_key_reuse(doc))
     return issues
 
 
@@ -222,6 +231,28 @@ SEMANTIC.update({
 })
 
 
+def _key_reuse(doc: dict) -> list[Issue]:
+    """Report identity keys of different levels that carry the same value."""
+    issues = []
+    seen: dict[str, str] = {}
+    for name in KEY_FIELDS:
+        value = doc.get(name)
+        if not isinstance(value, str):
+            continue
+        if value in seen:
+            issues.append(Issue(f"/{name}", "KEY_REUSED", f"{name} repeats the value of {seen[value]}"))
+        else:
+            seen[value] = name
+    return issues
+
+
+def _owner_epoch(doc: dict) -> list[Issue]:
+    value = doc.get("owner_epoch")
+    if isinstance(value, int) and not isinstance(value, bool) and value < 1:
+        return [Issue("/owner_epoch", "EPOCH_INVALID", "owner_epoch must be at least 1")]
+    return []
+
+
 def _attempt_range(doc: dict, *, event: bool = False) -> list[Issue]:
     issues = []
     for name, minimum in (("attempt", 1), ("seq", 0)) if event else (("attempt", 1),):
@@ -232,13 +263,13 @@ def _attempt_range(doc: dict, *, event: bool = False) -> list[Issue]:
 
 
 def _run_event(doc: object) -> list[Issue]:
-    return _attempt_range(doc, event=True) if isinstance(doc, dict) else []
+    return _attempt_range(doc, event=True) + _owner_epoch(doc) if isinstance(doc, dict) else []
 
 
 def _stage_result(doc: object) -> list[Issue]:
     if not isinstance(doc, dict):
         return []
-    issues = _attempt_range(doc)
+    issues = _attempt_range(doc) + _owner_epoch(doc)
     commits = doc.get("commits")
     if isinstance(commits, list):
         seen = set()
@@ -271,11 +302,16 @@ def _stage_result(doc: object) -> list[Issue]:
 def _effect_receipt(doc: object) -> list[Issue]:
     if not isinstance(doc, dict):
         return []
+    issues = _owner_epoch(doc)
     reconcile = doc.get("reconcile")
     if doc.get("outcome") == "unknown" and isinstance(reconcile, dict) and reconcile.get("method") == "none":
-        return [Issue("/reconcile/method", "RECEIPT_RECONCILE",
-                      "unknown effect outcome requires a reconciliation method")]
-    return []
+        issues.append(Issue("/reconcile/method", "RECEIPT_RECONCILE",
+                            "unknown effect outcome requires a reconciliation method"))
+    precondition = doc.get("precondition")
+    if isinstance(precondition, dict) and precondition.get("matched") is False and doc.get("outcome") != "failed":
+        issues.append(Issue("/precondition/matched", "PRECONDITION_MISMATCH",
+                            "a precondition that did not match requires outcome failed"))
+    return issues
 
 
 def _check_evidence(doc: object) -> list[Issue]:

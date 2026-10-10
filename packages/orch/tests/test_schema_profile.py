@@ -72,6 +72,10 @@ class SchemaProfileTests(unittest.TestCase):
             "check": {"id": "V1", "cmd": "true", "expect": "exit 0", "kind": "acceptance"},
             "support": "unknown", "binding": "cao", "roleId": "reviewer", "commitRole": "fix",
             "section": {"id": "x", "title": "X", "text": ""},
+            "submissionId": "sub-abc", "attemptId": "att-run-1-primary-1", "callId": "call-1",
+            "eventId": "evt-run-1-3", "moduleVersion": {"id": "orch", "version": "0.1.0"},
+            "reasonCode": "PRECONDITION_CHANGED",
+            "skillRef": {"name": "x", "digest": "sha256:" + "a" * 64},
         }
         root, _ = registry.resolve(base, base)
         self.assertEqual(set(root["$defs"]), set(valid))
@@ -82,7 +86,10 @@ class SchemaProfileTests(unittest.TestCase):
                 self.assertTrue(schema.validate_node(registry, node, base, None))
         for name, value in (("id", "x" * 161), ("id", "abc\n"), ("sha256", "A" * 64),
                             ("path", "/absolute"), ("path", "has space"), ("provider", "Codex"),
-                            ("route", {"class": "economy"}),
+                            ("route", {"class": "economy"}), ("submissionId", "att-1"),
+                            ("attemptId", "sub-1"), ("callId", "evt-1"), ("eventId", "call-1"),
+                            ("moduleVersion", {"id": "orch"}), ("reasonCode", "lower"),
+                            ("skillRef", {"name": "x", "digest": "a" * 64}),
                             ("actor", {"provider": "codex", "model": "x", "extra": 1})):
             with self.subTest(name=name, value=value):
                 self.assertTrue(schema.validate_node(registry, {"$ref": "#/$defs/" + name}, base, value))

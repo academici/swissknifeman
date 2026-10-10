@@ -212,6 +212,71 @@
         "reviewer",
         "fix"
       ]
+    },
+    "submissionId": {
+      "description": "Caller-supplied submission key: repeating a submission returns the existing run.",
+      "type": "string",
+      "pattern": "^sub-[A-Za-z0-9._-]{1,120}$"
+    },
+    "attemptId": {
+      "description": "Key of one stage execution or one work-item attempt.",
+      "type": "string",
+      "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"
+    },
+    "callId": {
+      "description": "Key of one provider call.",
+      "type": "string",
+      "pattern": "^call-[A-Za-z0-9._:-]{1,200}$"
+    },
+    "eventId": {
+      "description": "Key of one run event, assigned by its producer.",
+      "type": "string",
+      "pattern": "^evt-[A-Za-z0-9._:-]{1,200}$"
+    },
+    "moduleVersion": {
+      "description": "Version of a module that took part in a run.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Module identifier.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "version": {
+          "description": "Module version (SemVer).",
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "reasonCode": {
+      "description": "Stable upper-case code of a decision or refusal reason.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+    },
+    "skillRef": {
+      "description": "Skill that took part in a stage, with the digest of the delivered content.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Skill name.",
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text"
+        },
+        "digest": {
+          "description": "Tagged digest of the delivered skill content.",
+          "$ref": "urn:swissknifeman:aicore:digest:v1"
+        }
+      },
+      "required": [
+        "name",
+        "digest"
+      ],
+      "additionalProperties": false
     }
   }
 }

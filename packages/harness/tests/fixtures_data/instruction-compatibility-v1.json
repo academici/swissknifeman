@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.5.0",
+  "fixture_version": "1.6.0",
   "provenance": {
     "captured_before_renderer": true
   },
@@ -918,9 +918,9 @@
         "codex"
       ],
       "assertions": [
-        "`planner` is the plugin-only package for task-intent commands and executable plan protocol",
-        "it has no `bin/`, standalone CLI, or installer.",
+        "`planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet).",
         "`planner`",
+        "`scripts/plan.py`",
         "`bin/`"
       ]
     },
@@ -995,8 +995,38 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
-        "`lib/planner/`"
+        "Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics.",
+        "`lib/planner/plan/`",
+        "`lib/planner/integration/`"
+      ]
+    },
+    {
+      "id": "planner.configuration",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`.",
+        "`planner.plan.settings`",
+        "`configs/config.schema.json`",
+        "`config.example.toml`",
+        "`aicore config example`"
+      ]
+    },
+    {
+      "id": "planner.events-and-extensions",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`.",
+        "`planner.*`",
+        "`planner.integration.events`",
+        "`schemas/event-data/v1`",
+        "`unit.json`",
+        "`planner:check`"
       ]
     },
     {
@@ -1006,8 +1036,9 @@
         "codex"
       ],
       "assertions": [
-        "Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.",
-        "`bash packages/planner/scripts/validate.sh`"
+        "Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages.",
+        "`bash packages/planner/scripts/validate.sh`",
+        "`python3 scripts/ecosystem-units.py standalone planner`"
       ]
     },
     {

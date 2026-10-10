@@ -22,7 +22,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Digest `digest/v1` | `urn:swissknifeman:aicore:digest:v1`, `packages/aicore/schemas/digest/v1` | aicore | development | `exec` and plan digests still use the bare-hex form and their own copies; they adopt it with their modules: P9, P10 |
 | Error `error/v1` | `urn:swissknifeman:aicore:error:v1`, `packages/aicore/schemas/error/v1` | aicore (provider) | development | orch and the engines adopt the classes: P10 |
 | Capability support `capability-support/v1` | `urn:swissknifeman:aicore:capability-support:v1`, `packages/aicore/schemas/capability-support/v1` | aicore (provider) | development | the record of `exec/v1` `capability-record` adopts it: P10 |
-| Model catalog `model-catalog/v1` | `urn:swissknifeman:aicore:model-catalog:v1`, `packages/aicore/schemas/model-catalog/v1`, data `packages/aicore/configs/model-catalog.json` | aicore (provider) | development | readers move from `command-routing.json`: planner P9, orch P10, harness P11 |
+| Model catalog `model-catalog/v1` | `urn:swissknifeman:aicore:model-catalog:v1`, `packages/aicore/schemas/model-catalog/v1`, data `packages/aicore/configs/model-catalog.json` | aicore (provider) | development | planner reads a generated snapshot in `command-routing.json` (done in P9, [ADR 0053](decisions/0053-planner-engine-without-hard-aicore-dependency.md)); readers move: orch P10, harness P11 |
 | Config explain `config-explain/v1` | `urn:swissknifeman:aicore:config-explain:v1`, `packages/aicore/schemas/config-explain/v1` | aicore (config) | development | none yet; modules adopt `aicore.config.resolve` with their own section schemas: P8 to P11 |
 | Skill descriptor `skill-descriptor/v1` | `urn:swissknifeman:aicore:skill-descriptor:v1`, `packages/aicore/schemas/skill-descriptor/v1` | aicore (content) | development | none yet; the receipt of skill digests in a run is P10 ([ADR 0038](decisions/0038-skill-descriptor-agent-skills-standard.md)) |
 | Eval context `eval-context/v1` | `urn:swissknifeman:aicore:eval-context:v1`, `packages/aicore/schemas/eval-context/v1` | aicore (content) | development | none yet; benchmarks carry it as `context` in `skill-benchmark/v3` and `system-bank-benchmark/v2` ([ADR 0039](decisions/0039-eval-result-context.md)) |
@@ -37,7 +37,10 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Plugin describe `plugin-describe/v1` | `urn:swissknifeman:aicore:plugin-describe:v1`, `packages/aicore/schemas/plugin-describe/v1` | aicore (ext) | development | protocol `1`; no cache |
 | Telemetry conventions `telemetry-conventions/v1` | `urn:swissknifeman:aicore:telemetry-conventions:v1`, `packages/aicore/schemas/telemetry-conventions/v1` | aicore (ext) | development | names only, no exporter; modules adopt them: P10, P11 ([ADR 0045](decisions/0045-telemetry-naming-conventions.md)) |
 | Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
-| Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/planner/schemas/plan/v1` | planner (task until the rename) | beta | none; the URNs never change |
+| Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/planner/schemas/plan/v1` | planner | beta | none; the URNs never change; minor additions only ([ADR 0056](decisions/0056-execution-scenario-and-one-owner-per-attempt.md)) |
+| Planner config `planner` section | `urn:swissknifeman:planner:config:v1`, `packages/planner/configs/config.schema.json` | planner | beta | table `[planner]` of the layered config, plus the `plan.settings` layer ([ADR 0054](decisions/0054-planner-settings-in-the-layered-config.md)) |
+| Planner event data `event-data/v1` (one document per event type) | `urn:swissknifeman:planner:event-data:<type>:v1`, `packages/planner/schemas/event-data/v1` | planner | beta | none; consumers ignore unknown fields ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)) |
+| Planner check plugin `check-plugin/v1` (input, output) | `urn:swissknifeman:planner:check-plugin:<kind>:v1`, `packages/planner/schemas/check-plugin/v1` | planner | beta | none; the input of the extension point `planner:check` ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)) |
 | Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
 
 ### Contracts that exist only as data or code
@@ -47,7 +50,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/planner/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
 | Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1`, `packages/orch/bridges/*/bridge.json` | orch | alpha | no schema file; unify the two descriptors in the bridges stage: P10 |
 | Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; the files moved into `aicore` unchanged and the schema is still open |
-| Model catalog (transitional copy) | `mappings.<provider>` in `packages/planner/configs/command-routing.json` | planner | development | equal to the aicore catalog (parity test); removed in P9 |
+| Model catalog snapshot | `mappings.<provider>` in `packages/planner/configs/command-routing.json` | planner | development | generated from the aicore catalog by the projection renderer and verified with `--check`; planner needs it without aicore ([ADR 0053](decisions/0053-planner-engine-without-hard-aicore-dependency.md)) |
 
 ### Inventory of execution contracts
 
@@ -178,14 +181,20 @@ All are `development`. Compatibility inside `v1` is checked mechanically by `aic
 is an error from `beta` on ([ADR 0043](decisions/0043-validator-profile-and-schema-compatibility.md)). `common/v1` holds
 `$defs` only and is referenced from other contracts.
 
-### Event types: planner.plan.closed and brain.note.created
+### Event types: planner.* and brain.note.created
 
-Event types are not schemas of their own: the envelope is `event/v1` and the catalog of types is `provides.events` of
-each `unit.json`. Two types matter for `brain`:
+The envelope is `event/v1` and the catalog of types is `provides.events` of each `unit.json`. A producer may publish
+the schema of the data of each type: planner does, as the multi-document contract `event-data/v1` (one closed schema
+per type, `dataschema` of the event is `urn:swissknifeman:planner:event-data:<type>:v1`). Planner emits six types after
+the plan lock is released: `planner.plan.created`, `planner.plan.closed`, `planner.phase.closed`,
+`planner.item.started`, `planner.item.finished` and `planner.decision.accepted`. Every type carries `plan_id` and
+`title`; `short_id` and `repository` are optional; notes, deviation texts and secrets are never in the data. Consumers
+ignore unknown fields, so additions are minor. `scripts/test-event-contracts.py` validates every consumer fixture of a
+type against the producer schema; when they disagree the consumer fixture is fixed. Two types matter for `brain`:
 
 | Event | Producer | Consumer | Data |
 | --- | --- | --- | --- |
-| `planner.plan.closed` | planner (emitted from P9) | `brain:plan-notes` | The consumer's expectation, recorded as fixtures in `packages/brain/tests/fixtures/events/planner.plan.closed/`: `plan_id` and `title` are required; `short_id`, `status`, `goal`, `closed_at` (RFC 3339), `repository`, `phases` (`{id, title, status}`) and `counts` (`items`, `done`, `done_with_deviations`, `cancelled`) are optional; unknown fields are ignored. The schema is made at the source and checked against the fixtures ([ADR 0048](decisions/0048-plan-closed-subscriber-and-idempotent-notes.md)). |
+| `planner.plan.closed` | planner | `brain:plan-notes` | Required: `plan_id`, `title`, `status` (`done`). Optional: `short_id`, `goal`, `closed_at` (RFC 3339), `repository`, `phases` (`{id, title, status}`) and `counts` (`items`, `done`, `done_with_deviations`, `skipped`, `blocked`). The consumer fixtures in `packages/brain/tests/fixtures/events/planner.plan.closed/` are checked against this schema ([ADR 0048](decisions/0048-plan-closed-subscriber-and-idempotent-notes.md), [ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)). |
 | `brain.note.created` | brain (`provides.events`) | none yet | `{"note": "<path from the vault root>", "plan_id": "...", "event_id": "..."}`, caused by the closing event. |
 
 ### check-result/v1
@@ -227,6 +236,12 @@ are additive in the same way.
 | Deprecation window | set with `v2`; URNs do not change with the module rename |
 | Unknown fields | rejected |
 | Fixtures | `packages/planner/tests/engine/fixtures/{valid,invalid}`, the synthetic demo plans, `packages/planner/tests/compat/plans/engine-0.28.3` (frozen plans of earlier engines) and `scripts/test-plan-compat.py` (every plan of the repository) |
+
+Changes inside `v1` are minor only: optional fields, same `$id`. The one so far is `orchestration.scenario` (the name of
+a run-policy profile, or `solo`); the owner of an attempt needs no field ([ADR 0056](decisions/0056-execution-scenario-and-one-owner-per-attempt.md)).
+`aicore schema compat` reads multi-document contracts such as `plan/v1`, `event-data/v1` and `check-plugin/v1`; with
+`--root` and `--base-root` it compares a folder with the folder it was renamed from (`packages/task/schemas` before the
+rename), so the rename itself shows no breaking change.
 
 ### Bridge descriptors (`bridge.json`)
 

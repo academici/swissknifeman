@@ -23,7 +23,7 @@
     "path|packages/harness/configs/common/instructions/catalog.json|artifex": 12,
     "path|packages/harness/configs/common/instructions/catalog.json|brain": 10,
     "path|packages/harness/configs/common/instructions/catalog.json|maind": 13,
-    "path|packages/harness/configs/common/instructions/catalog.json|planner": 19,
+    "path|packages/harness/configs/common/instructions/catalog.json|planner": 21,
     "path|packages/harness/configs/common/instructions/catalog.json|skiller": 18,
     "path|packages/harness/lib/harness/cursor_render.py|planner": 4,
     "path|packages/harness/lib/harness/cursor_render.py|skiller": 1,

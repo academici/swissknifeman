@@ -1,6 +1,6 @@
-# task - commands for setting and completing tasks
+# planner - commands for setting and completing tasks
 
-**What is it.** Optional helpers for Claude Code (`/planner:*`), Codex (`$ planner:*`), Cursor (`planner:*`) and
+**What is it.** `planner` (formerly `task`) is a set of optional helpers for Claude Code (`/planner:*`), Codex (`$ planner:*`), Cursor (`planner:*`) and
 Grok (`/planner:*`) for explicit job selection. Workflows are enabled only by explicitly calling the
 command/skill: Codex gets `allow_implicit_invocation: false`, Claude - `disable-model-invocation: true`;
 the environment does not select commands by keywords. Each command except `plan-run` **pins the model +
@@ -10,6 +10,11 @@ injected into every request.
 
 **When to take.** When an explicit route is useful for development, research, design or review.
 The normal task can be executed directly; teams do not require the creation of a plan.
+
+The previous names keep working for one minor release: the plugin `task` provides `/task:*` copies of the commands
+that print a deprecation line, `SKM_TASK_ROOT` is read with a warning when `PLANNER_ROOT` is not set, and plan URNs
+(`urn:swissknifeman:task:plan:*`) do not change. Codex, Cursor and Grok projections are refreshed by
+`swissknifeman upgrade`.
 
 Native installation of planner includes commands, configuration and the Python plan engine, not only skill
 projections. After the update, open a new session: the files on disk change, but an already running agent
@@ -63,6 +68,8 @@ from the active package tree; the runtime contains no Markdown compatibility lay
 | [Methodology](./methodology) | design → run → close/audit cycle on `plan.py`, friction log, owner gates, review |
 | [Plan structure](./plan-structure) | layout `plans/<ID>/`, schemas, statuses, batches, views, ignore rules |
 | [Templates](./templates) | view and context-pack templates, Mustache subset |
+| [Configuration](./configuration) | the `[planner]` table: layers, keys, defaults, `plan.py config` |
+| [Events and extensions](./extensions) | `planner.*` events, command overlays, the `planner:check` point for external plan checks |
 | [Provider model roles](./reference/provider-model-roles) | pins economy/implementation/frontier + inventory for the providers |
 | [Provider commands](./reference/provider-commands) | generated per-provider command projections |
 | [Workflow Designer](./workflows) | canonical orchestration script templates; plan lifecycle verbs |

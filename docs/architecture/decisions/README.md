@@ -77,3 +77,8 @@ by a new record.
 | [0049](0049-module-skills-through-host-provided-buckets.md) | Module skills reach projects through host-provided buckets | Accepted |
 | [0050](0050-skiller-settings-in-the-layered-config.md) | Skiller settings live in the layered project config | Accepted |
 | [0051](0051-skill-metadata-in-the-index.md) | Skill metadata in the index and `skiller describe` | Accepted |
+| [0052](0052-planner-rename-compatibility-alias.md) | `task` becomes `planner` in one rename, with a compatibility plugin for one minor release | Accepted |
+| [0053](0053-planner-engine-without-hard-aicore-dependency.md) | The planner engine runs without aicore; aicore is reached through `planner.integration` | Accepted |
+| [0054](0054-planner-settings-in-the-layered-config.md) | Planner settings live in the layered `[planner]` configuration | Accepted |
+| [0055](0055-planner-events-overlays-and-external-checks.md) | Planner events, command overlays and the `planner:check` extension point | Accepted |
+| [0056](0056-execution-scenario-and-one-owner-per-attempt.md) | Execution scenario and one owner per attempt, as minor changes of `plan/v1` | Accepted |

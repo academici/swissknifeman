@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.5.0",
+  "catalog_version": "1.6.0",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -2255,7 +2255,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 1,
-          "intent": "Apply this source-derived instruction: `planner` is the plugin-only package for task-intent commands and executable plan protocol; it has no `bin/`, standalone CLI, or installer.",
+          "intent": "Apply this source-derived instruction: `planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet).",
           "obligations": [
             {
               "modality": "must",
@@ -2269,13 +2269,13 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
-            "`planner` is the plugin-only package for task-intent commands and executable plan protocol",
-            "it has no `bin/`, standalone CLI, or installer.",
+            "`planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet).",
             "`planner`",
+            "`scripts/plan.py`",
             "`bin/`"
           ]
         },
@@ -2299,7 +2299,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
@@ -2328,7 +2328,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
@@ -2357,7 +2357,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
@@ -2387,7 +2387,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
@@ -2418,7 +2418,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
@@ -2434,7 +2434,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
+          "intent": "Apply this source-derived instruction: Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics.",
           "obligations": [
             {
               "modality": "must",
@@ -2448,12 +2448,76 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
-            "`lib/planner/`"
+            "Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics.",
+            "`lib/planner/plan/`",
+            "`lib/planner/integration/`"
+          ]
+        },
+        {
+          "id": "planner.configuration",
+          "scope_id": "planner",
+          "kind": "common",
+          "provider_id": null,
+          "order": 8,
+          "intent": "Apply this source-derived instruction: Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "planner.maintainer",
+              "action": "maintain",
+              "object": "planner.configuration.requirements",
+              "boundary": "planner.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+            }
+          ],
+          "compatibility_assertions": [
+            "Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`.",
+            "`planner.plan.settings`",
+            "`configs/config.schema.json`",
+            "`config.example.toml`",
+            "`aicore config example`"
+          ]
+        },
+        {
+          "id": "planner.events-and-extensions",
+          "scope_id": "planner",
+          "kind": "common",
+          "provider_id": null,
+          "order": 9,
+          "intent": "Apply this source-derived instruction: Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "planner.maintainer",
+              "action": "enforce",
+              "object": "planner.events-and-extensions.requirements",
+              "boundary": "planner.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.planner.common",
+              "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+            }
+          ],
+          "compatibility_assertions": [
+            "Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`.",
+            "`planner.*`",
+            "`planner.integration.events`",
+            "`schemas/event-data/v1`",
+            "`unit.json`",
+            "`planner:check`"
           ]
         },
         {
@@ -2461,8 +2525,8 @@
           "scope_id": "planner",
           "kind": "common",
           "provider_id": null,
-          "order": 8,
-          "intent": "Apply this source-derived instruction: Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.",
+          "order": 10,
+          "intent": "Apply this source-derived instruction: Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages.",
           "obligations": [
             {
               "modality": "must",
@@ -2476,12 +2540,13 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "b0be67ed5f58811fbd06912e2177853bc7112e7631eeefe38136a648c75c2d30"
+              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
             }
           ],
           "compatibility_assertions": [
-            "Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.",
-            "`bash packages/planner/scripts/validate.sh`"
+            "Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages.",
+            "`bash packages/planner/scripts/validate.sh`",
+            "`python3 scripts/ecosystem-units.py standalone planner`"
           ]
         },
         {

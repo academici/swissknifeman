@@ -255,6 +255,8 @@ export default withMermaid(defineConfig({
             { text: 'Plan Structure', link: '/planner/plan-structure' },
             { text: 'Templates', link: '/planner/templates' },
             { text: 'Constructor workflow', link: '/planner/workflows' },
+            { text: 'Configuration', link: '/planner/configuration' },
+            { text: 'Events and extensions', link: '/planner/extensions' },
           ],
         },
       ],

@@ -23,7 +23,7 @@ VERBS = ("check", "show", "next")
 TIMEOUT = 300
 # A plan archived before the rule "a human view is never an agent input" keeps reads of views/*.md; the stable
 # engine reports the same errors. They are tolerated by code and count, and any other error is a failure.
-KNOWN_ERRORS = {"2026.10.05-№1-TASK-PLAN-JSON": {"human_view": 24}}
+KNOWN_ERRORS = {"TASK-PLAN-JSON": {"human_view": 24}}  # keyed by the plan id after its date and number
 _ERROR_LINE = re.compile(r"^([a-z][a-z0-9_]*): ")
 
 
@@ -64,7 +64,7 @@ class RepositoryPlansTests(unittest.TestCase):
                 shutil.copytree(source, plans_root / source.name)
                 for verb in VERBS:
                     result = self.run_verb(verb, plans_root, source.name)
-                    known = KNOWN_ERRORS.get(source.name) if verb == "check" else None
+                    known = next((codes for suffix, codes in KNOWN_ERRORS.items() if source.name.endswith("-" + suffix)), None) if verb == "check" else None
                     if known and result.returncode == 1:
                         self.assertEqual(error_codes(result), known, f"check: {result.stdout[-2000:]}")
                         continue

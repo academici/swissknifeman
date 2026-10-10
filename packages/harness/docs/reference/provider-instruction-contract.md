@@ -90,7 +90,7 @@ The initial ordered common inventories are frozen as follows:
 | `harness` | `harness.identity` · `harness.semantic-source` · `harness.layout` · `harness.command-surface` · `harness.agent-pack-lifecycle` · `harness.engineering-invariants` · `harness.cross-package-boundaries` · `harness.validation-release` |
 | `maind` | `maind.identity` · `maind.three-planes` · `maind.layout` · `maind.module-boundaries` · `maind.orchestration` · `maind.engineering-invariants` · `maind.validation-release` |
 | `analyst` | `analyst.identity-human-gate` · `analyst.layer-boundary` · `analyst.layout` · `analyst.module-boundaries` · `analyst.data-lifecycle` · `analyst.privacy` · `analyst.engineering-invariants` · `analyst.validation-release` |
-| `planner` | `planner.identity` · `planner.command-catalog` · `planner.plan-protocol` · `planner.plan-files` · `planner.layout` · `planner.schema-ownership` · `planner.engineering-invariants` · `planner.validation-release` |
+| `planner` | `planner.identity` · `planner.command-catalog` · `planner.plan-protocol` · `planner.plan-files` · `planner.layout` · `planner.schema-ownership` · `planner.engineering-invariants` · `planner.configuration` · `planner.events-and-extensions` · `planner.validation-release` |
 | `artifex` | `artifex.identity` · `artifex.layout` · `artifex.runtime-boundaries` · `artifex.provenance` · `artifex.engineering-invariants` · `artifex.validation-release` |
 | `brain` | `brain.identity` · `brain.layout` · `brain.module-boundaries` · `brain.vault-safety` · `brain.engineering-invariants` · `brain.validation-release` |
 

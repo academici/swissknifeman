@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.11",
   "title": "Документация planner, инструкции через каталог harness, ecosystem и contracts, ADR 0052–0056, CHANGELOG",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Инструкции planner через каталог harness (planner.identity, engineering-invariants, новые configuration и events-and-extensions, validation-release) с регенерацией; docs модуля (configuration.md, extensions.md, plan-structure, index) и копия docs/planner; ecosystem.md (раздел planner, P9) и contracts.md (plan/v1 minor, event-data/v1, check-plugin/v1, конфиг planner, снимок каталога моделей, многодокументный compat); ADR 0052–0056 и каталог ADR; итоговая строка CHANGELOG; docs-impact и hygiene зелёные.",
   "why": "D24 (долговечная документация архитектуры и решений) и правило плана о генерируемых инструкциях; решения D56–D60 должны быть записаны как ADR. Жёсткий риск: тексты расходятся с кодом — сверять с --help, схемой и unit.json после P9.1–P9.10.",
   "scope": {
@@ -192,6 +192,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:42Z"
+  "result": {
+    "started_at": "2026-10-10T08:27:30Z",
+    "finished_at": "2026-10-10T08:37:48Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "a6c38cd8-cd07-4078-8b7b-b4a79c727580"
+    },
+    "notes": "Planner instructions regenerated (identity, engineering-invariants, validation-release changed; configuration and events-and-extensions added; catalog 1.6.0), module docs configuration.md and extensions.md plus plan-structure and index, ecosystem.md, contracts.md, ADR 0052-0056 with catalog, CHANGELOG line.",
+    "deviations": [
+      "hygiene exemption for compat fixtures, test-plan-compat known-errors key, ecosystem baseline update"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T08:37:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T08:37:48Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T08:37:48Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T08:37:48Z"
 }

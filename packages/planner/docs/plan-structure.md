@@ -1,7 +1,7 @@
 # Planner JSON plans — layout v4
 
 JSON owns plan contracts, instructions, orchestration and outcomes. Agents use
-`python3 <TASK>/scripts/plan.py` or read JSON. Human Markdown is generated from templates
+`python3 <planner>/scripts/plan.py` or read JSON. Human Markdown is generated from templates
 under `views/` and excluded from agent input and indexing. The API never parses those views.
 
 ```text
@@ -58,13 +58,13 @@ the plan API does not install or launch them.
 ## API
 
 ```bash
-python3 <TASK>/scripts/plan.py new --codename DEMO --title Demo --actor provider/model/high --message-file owner.txt
-python3 <TASK>/scripts/plan.py show PLAN1 plan
-python3 <TASK>/scripts/plan.py context PLAN1 P1.1 --stdout
-python3 <TASK>/scripts/plan.py --output json next PLAN1 --json
-python3 <TASK>/scripts/plan.py apply PLAN1 --file coordinated-patches.json
-python3 <TASK>/scripts/plan.py export PLAN1 > snapshot.json
-python3 <TASK>/scripts/plan.py import plans/<existing-id> --file snapshot.json
+python3 <planner>/scripts/plan.py new --codename DEMO --title Demo --actor provider/model/high --message-file owner.txt
+python3 <planner>/scripts/plan.py show PLAN1 plan
+python3 <planner>/scripts/plan.py context PLAN1 P1.1 --stdout
+python3 <planner>/scripts/plan.py --output json next PLAN1 --json
+python3 <planner>/scripts/plan.py apply PLAN1 --file coordinated-patches.json
+python3 <planner>/scripts/plan.py export PLAN1 > snapshot.json
+python3 <planner>/scripts/plan.py import plans/<existing-id> --file snapshot.json
 ```
 
 Author with `add-phase`, `add-item`, `add-decision`, `add-document`, `set`, `push`, `batches`.
@@ -165,6 +165,19 @@ Plan → phase → item `orchestration` overrides `strategy: dag|sequential`, in
 optional owner-selected `max_parallel`. DAG scheduling uses dependencies and disjoint write
 ownership. Sequential scheduling orders siblings. A parent waits for its children. Cycles,
 unknown dependencies/parents and unordered overlapping write sets are errors.
+
+### Execution scenario and attempt owner
+
+`orchestration.scenario` is an optional name: a run-policy profile of an execution engine, or `solo` for the current
+session. When an item has none, the phase, the plan, `orchestration.by_class.<route class>` and
+`orchestration.default_scenario` (see [Configuration](./configuration)) are tried in that order; the context pack reports
+the result as `orchestration.scenario` and `orchestration.scenario_source`. Planner stores the name and does not check it
+against engine profiles.
+
+The owner of an attempt is `result.executor.session`. `start` of an item that is in progress under another session
+fails with `ITEM_OWNED`; `start --take-over` hands the attempt over and the `start` event records the previous executor.
+`finish` does not check ownership, so an execution engine can register the result of its own executor. When either side
+has no session, the item is simply continued as before. The `--registrar` of `finish` is never an owner.
 
 `unit … next` returns ready units as JSON; `unit … <U#> context` returns a full JSON worker brief.
 `dispatch --agent` records the executor and writes `brief.json`. A self unit belongs to the item

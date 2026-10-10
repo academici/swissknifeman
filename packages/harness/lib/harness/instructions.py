@@ -29,7 +29,7 @@ from core.provider.lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.5.0"
+CATALOG_VERSION = "1.6.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "planner", "artifex", "brain")
 _SCOPE_TARGET_KEYS = {
@@ -104,6 +104,7 @@ COMMON_IDS = {
                 "analyst.engineering-invariants", "analyst.validation-release"),
     "planner": ("planner.identity", "planner.command-catalog", "planner.plan-protocol", "planner.plan-files",
                 "planner.layout", "planner.schema-ownership", "planner.engineering-invariants",
+                "planner.configuration", "planner.events-and-extensions",
                 "planner.validation-release"),
     "artifex": ("artifex.identity", "artifex.layout", "artifex.runtime-boundaries",
                  "artifex.provenance", "artifex.engineering-invariants",

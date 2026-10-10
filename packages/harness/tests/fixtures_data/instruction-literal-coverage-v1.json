@@ -1,12 +1,12 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.5.0",
+  "fixture_version": "1.6.0",
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "a25044fa908ac8d0ce1936698c421e7166ab26fcb6d170ca30b09acedfe6fc17",
+    "source_sha256": "ddbf00468d50143b6a95d0a99dc4752eb06fb06c764588f8476dec6175913139",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 340
+    "literal_count": 353
   },
   "literals": [
     {
@@ -1067,15 +1067,15 @@
     },
     {
       "semantic_id": "planner.identity",
-      "literal": "`planner` is the plugin-only package for task-intent commands and executable plan protocol"
-    },
-    {
-      "semantic_id": "planner.identity",
-      "literal": "it has no `bin/`, standalone CLI, or installer."
+      "literal": "`planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet)."
     },
     {
       "semantic_id": "planner.identity",
       "literal": "`planner`"
+    },
+    {
+      "semantic_id": "planner.identity",
+      "literal": "`scripts/plan.py`"
     },
     {
       "semantic_id": "planner.identity",
@@ -1159,19 +1159,71 @@
     },
     {
       "semantic_id": "planner.engineering-invariants",
-      "literal": "Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics."
+      "literal": "Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics."
     },
     {
       "semantic_id": "planner.engineering-invariants",
-      "literal": "`lib/planner/`"
+      "literal": "`lib/planner/plan/`"
+    },
+    {
+      "semantic_id": "planner.engineering-invariants",
+      "literal": "`lib/planner/integration/`"
+    },
+    {
+      "semantic_id": "planner.configuration",
+      "literal": "Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`."
+    },
+    {
+      "semantic_id": "planner.configuration",
+      "literal": "`planner.plan.settings`"
+    },
+    {
+      "semantic_id": "planner.configuration",
+      "literal": "`configs/config.schema.json`"
+    },
+    {
+      "semantic_id": "planner.configuration",
+      "literal": "`config.example.toml`"
+    },
+    {
+      "semantic_id": "planner.configuration",
+      "literal": "`aicore config example`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`."
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`planner.*`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`planner.integration.events`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`schemas/event-data/v1`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`unit.json`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`planner:check`"
     },
     {
       "semantic_id": "planner.validation-release",
-      "literal": "Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages."
+      "literal": "Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages."
     },
     {
       "semantic_id": "planner.validation-release",
       "literal": "`bash packages/planner/scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "planner.validation-release",
+      "literal": "`python3 scripts/ecosystem-units.py standalone planner`"
     },
     {
       "semantic_id": "planner.claude-code.slash-projection",

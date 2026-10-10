@@ -51,7 +51,7 @@ swissknifeman/                      # the hub repository
 
 `core/` dissolves into `aicore` and `analyst` (the shared code is already in `packages/aicore`; `core/` keeps a
 compatibility shim and the modules of later stages, see [ADR 0028](decisions/0028-aicore-subsystems-and-core-shim.md)); `packages/artifex` is retired and stays in history by tag;
-`packages/planner` becomes `packages/planner`; the root research folder of orchestration moves into
+`packages/task` became `packages/planner`; the root research folder of orchestration moves into
 `packages/orch/docs/research/`. Until a module is moved, the transitional roots (`core/`, `orch/`, `packages/artifex/`,
 `packages/planner/`) are covered by the ownership map. The legacy driver `harness/run` stays until `orch` reaches parity.
 
@@ -340,11 +340,29 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   item class ([ADR 0012](decisions/0012-planner-configuration.md), [ADR 0013](decisions/0013-orchestration-scenarios-and-prepared-brief.md));
   also by overlays of command slots, subscriptions to its own events and external plan checks.
 - **Emits:** `planner.plan.created|closed`, `planner.item.started|finished`, `planner.phase.closed`,
-  `planner.decision.accepted`.
+  `planner.decision.accepted`, after the plan lock is released; the data follow `schemas/event-data/v1`
+  ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)).
 - **Does not own:** model names (`aicore.provider`), launch argv (`orch`), delivery into projects (`aicore.delivery`),
   projection of commands to Codex, Grok and Cursor (`aicore.content`).
-- **Rename:** `/planner:*` becomes `/planner:*` and `PLANNER_ROOT` becomes `PLANNER_ROOT`, with transitional aliases
-  ([ADR 0009](decisions/0009-task-renamed-to-planner.md)).
+- **Rename:** `/task:*` became `/planner:*` and `SKM_TASK_ROOT` became `PLANNER_ROOT`, with transitional aliases for one
+  minor release: the compatibility plugin `task` (`packages/planner/aliases/task`), the old environment variable with a
+  warning, and `task:<id>` command lines read as `planner:<id>`
+  ([ADR 0009](decisions/0009-task-renamed-to-planner.md), [ADR 0052](decisions/0052-planner-rename-compatibility-alias.md)).
+- **After P9:**
+  - *Command line:* `scripts/plan.py` (no `bin/` yet); plugin `planner`. Extra verbs `config show|explain` and
+    `overlays <slot>`; `check` also runs external checks.
+  - *Engine and foundation:* `lib/planner/plan/` is stdlib-only and runs without `aicore`; `lib/planner/integration/`
+    is the only place that imports it, and the projection renderer is the other. Without `aicore` the configuration is
+    the schema defaults and `plan.settings`, no events are emitted, overlays are empty and external checks are skipped
+    ([ADR 0053](decisions/0053-planner-engine-without-hard-aicore-dependency.md)). The model catalog of command routing
+    is a generated snapshot of the `aicore` catalog.
+  - *Configuration:* table `[planner]` (`configs/config.schema.json`, `config.example.toml`) in the layered config,
+    plus the `plan.settings` layer ([ADR 0054](decisions/0054-planner-settings-in-the-layered-config.md)).
+  - *Extension:* ten overlay slots `planner:<command>` (one per command) and the extension point `planner:check` with
+    `schemas/check-plugin/v1`; the data of events are the contract `schemas/event-data/v1`.
+  - *Execution:* optional `orchestration.scenario` and one owner per attempt (`ITEM_OWNED`, `start --take-over`), minor
+    changes of `plan/v1` ([ADR 0056](decisions/0056-execution-scenario-and-one-owner-per-attempt.md)).
+  - *Skills:* the `workflow-craft` skill moved from `skiller` into the plugin `planner`.
 
 ### orch
 
@@ -381,7 +399,7 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   ([ADR 0046](decisions/0046-brain-surface-and-vault-lookup.md),
   [ADR 0047](decisions/0047-document-sync-through-a-host-command.md),
   [ADR 0048](decisions/0048-plan-closed-subscriber-and-idempotent-notes.md)).
-- **Still to come:** the emitter of `planner.plan.closed` (P9), the move of `maind` onto `brain vault` (P11), `brain`
+- **Still to come:** the move of `maind` onto `brain vault` (P11), `brain`
   on `PATH` (P12), the migration of `.swissknife.json::memory_brain` (P13). Moving the external vault code comes later
   ([ADR 0007](decisions/0007-brain-module-scope.md)).
 
@@ -456,7 +474,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
 | P6 | `aicore` extensions: events, subscriptions, overlays, external plugin commands |
 | P7 | `brain` skeleton, document sync and `brain-locator`, first subscriber (done) |
 | P8 | `skiller` reduced to shared skills; code on `aicore`; module skills through the host-provided `system` bucket; settings in the layered config; skill metadata and `skiller describe` (done) |
-| P9 | `planner` rename with aliases, configuration, overlays, events, commands on `aicore` |
+| P9 | `planner` rename with the `task` compatibility alias, layered configuration, events, overlay slots, external plan checks, execution scenario and attempt owner, commands on `aicore` (done) |
 | P10 | `orch` and bridges: work-source port, engine choice in configuration, events |
 | P11 | hub modules (`maind`, `analyst`, `harness`) on `aicore` and new state places; `core/` and `artifex` removed |
 | P12 | hub: umbrella CLI, marketplace and plugin set, CI matrix, module documentation |
@@ -473,7 +491,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
   backup, hook and MCP paths rewritten;
 - everything changed is backed up and can be rolled back.
 
-Compatibility: plan schemas and URNs do not change; aliases of `/planner:*` and the old environment variables work for one
+Compatibility: plan schemas and URNs do not change; aliases of `/task:*` and the old environment variables work for one
 minor release with a warning. The guide `docs/upgrade/<version>.md` lists requirements, backup, dry-run, apply, the
 `doctor` check, rollback and the steps for the second computer. The upgrade is rehearsed on copies of projects in a
 sandbox and on the second computer; only then is the branch merged and a major version tagged.

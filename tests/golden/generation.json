@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "c3c080d96f7d",
-  "reason": "workflow-craft moved to the planner plugin",
+  "captured_from": "26078af911af",
+  "reason": "planner instruction sections: reference and literal coverage regenerated",
   "generators": [
     {
       "id": "skiller-registry",
@@ -202,8 +202,8 @@
     ".grok/rules/swissknifeman-instructions.md": "d7450cad926742183bf3557e8d574fd8bbae9b81e0b5742b167a6ebce2012354",
     "bootstrap/publication-lock.json": "d04b486c1fb6beaaa1924fa58eb316a841850898b2de93e2c581ed777800b56d",
     "docs/provider-support.md": "2e1d793c251c5b077020617804c67e7143608ac59c7271abdf634ca826724999",
-    "packages/harness/docs/reference/provider-instructions.md": "d1358008adc7d2824e651b99db8d9e31e1c5e6ba7293a8e6fd77266a4bf82805",
-    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "0ca8bf2d4254dae9fd64b290afc34b46c25bad883088f051d6324914f8a45e8c",
+    "packages/harness/docs/reference/provider-instructions.md": "cd297a47d5f609d0a1c26e423a47f454d313642e29ea79562e725bea4f608684",
+    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "e0c86b9b0ea1c89af96eb1057cd43519337414a41f7d1175694b0d411befbdef",
     "packages/planner/docs/reference/provider-commands.md": "43aa1483a8310e33e50f3b188474767774cc3f3839de0385dee57fd17d143923",
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "fd0b05fa5f4b6fb788582b23b1705ea82f67fd69071f59c1b3c4d034080d0780",

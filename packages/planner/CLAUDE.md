@@ -6,10 +6,12 @@
 <!-- semantic:planner.layout -->
 <!-- semantic:planner.schema-ownership -->
 <!-- semantic:planner.engineering-invariants -->
+<!-- semantic:planner.configuration -->
+<!-- semantic:planner.events-and-extensions -->
 <!-- semantic:planner.validation-release -->
 <!-- instruction:planner.identity -->
 ## planner.identity
-`planner` is the plugin-only package for task-intent commands and executable plan protocol; it has no `bin/`, standalone CLI, or installer.
+`planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet).
 <!-- instruction:planner.command-catalog -->
 ## planner.command-catalog
 Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort.
@@ -27,10 +29,16 @@ Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, it
 Treat `schemas/plan/v1/` and the `plan-protocol` skill as synchronized sources of the plan schema; validate with `scripts/plan.py check` and change both when the schema changes.
 <!-- instruction:planner.engineering-invariants -->
 ## planner.engineering-invariants
-Keep `lib/planner/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.
+Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics.
+<!-- instruction:planner.configuration -->
+## planner.configuration
+Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`.
+<!-- instruction:planner.events-and-extensions -->
+## planner.events-and-extensions
+Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`.
 <!-- instruction:planner.validation-release -->
 ## planner.validation-release
-Before release run `bash packages/planner/scripts/validate.sh` and use Russian Conventional Commit messages.
+Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages.
 <!-- swissknifeman:instructions:planner:claude-code:common:end -->
 
 <!-- swissknifeman:instructions:planner:claude-code:extension:begin -->

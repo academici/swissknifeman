@@ -25,6 +25,7 @@ EXPECTED = {
     "launch-plan/missing-refusals.json": "required",
     "launch-plan/bad-transport.json": "enum",
     "launch-plan/env-non-string.json": "type",
+    "launch-plan/key-reused.json": "KEY_REUSED",
     "run-event/epoch-zero.json": "EPOCH_INVALID",
     "run-event/key-reused.json": "KEY_REUSED",
     "effect-receipt/precondition-mismatch.json": "PRECONDITION_MISMATCH",

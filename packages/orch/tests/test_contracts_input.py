@@ -27,6 +27,9 @@ EXPECTED = {
     "role-manifest/inline-body.json": "additional",
     "capability-record/declared-supported-no-doc.json": "CAPABILITY_EVIDENCE",
     "capability-record/bad-support.json": "enum",
+    "run-policy/fallback-undeclared.json": "FALLBACK_UNDECLARED",
+    "capability-record/fresh-before-observed.json": "CAPABILITY_FRESHNESS",
+    "execution-input/condensed-drift.json": "CONDENSED_REQUIRED_DRIFT",
 }
 
 

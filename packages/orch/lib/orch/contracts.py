@@ -1,6 +1,7 @@
 """exec/v1 schema registry, semantic validation and document digests."""
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 import re
 from typing import Callable, NamedTuple
@@ -17,9 +18,11 @@ KINDS = (
     "stage-result", "effect-receipt", "check-evidence", "launch-plan",
 )
 # aicore contracts that exec/v1 schemas reference (transitively); they join the registry for $ref resolution.
-AICORE_CONTRACTS = ("error", "artifact-ref", "digest", "common")
+AICORE_CONTRACTS = ("error", "artifact-ref", "digest", "common", "permissions", "capability-support")
 # Identity keys, one per level of the idempotency hierarchy; values of different levels never coincide.
 KEY_FIELDS = ("submission_id", "run_id", "attempt_id", "call_id", "event_id")
+# The required part of an execution input; a condensed brief pins it by digest.
+REQUIRED_PART = ("goal", "scope", "acceptance", "constraints", "decisions", "route", "result_contract", "escalation")
 # Plan bridges add their own stricter phrases.
 LIFECYCLE_PHRASES = ("report_api", "report API")
 
@@ -95,7 +98,7 @@ def _execution_input(doc: object) -> list[Issue]:
     if isinstance(digest, str):
         try:
             matches = digest == canonical_digest(doc)
-        except TypeError:  # floats are not canonical JSON; the schema check reports the offending value
+        except (TypeError, ValueError):  # not canonical JSON (floats, lone surrogates): the schema check reports it
             issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest cannot be computed: document is not canonical JSON"))
         else:
             if not matches:
@@ -231,6 +234,70 @@ SEMANTIC.update({
 })
 
 
+def required_digest(doc: dict) -> str:
+    """Bare sha256 hex of the canonical JSON of the required part of an execution input."""
+    part = {key: doc[key] for key in REQUIRED_PART if key in doc}
+    return canonical.sha256_hex(canonical.canonical_json_bytes(part))
+
+
+_TS = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?Z", re.ASCII)
+
+
+def _parse_ts(value: object) -> tuple[datetime, str] | None:
+    """Whole seconds and the fraction digits of a ``ts`` value (the schema allows any number of digits)."""
+    match = _TS.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        return None
+    try:
+        return datetime.strptime(match.group(1), "%Y-%m-%dT%H:%M:%S"), match.group(2) or ""
+    except ValueError:  # a pattern-valid value that is not a calendar time; the schema check cannot tell
+        return None
+
+
+def _ts_before(first: tuple[datetime, str], second: tuple[datetime, str]) -> bool:
+    width = max(len(first[1]), len(second[1]))
+    return (first[0], first[1].ljust(width, "0")) < (second[0], second[1].ljust(width, "0"))
+
+
+def _condensed(doc: dict) -> list[Issue]:
+    condensed = doc.get("condensed")
+    if not isinstance(condensed, dict) or not isinstance(condensed.get("required_digest"), str):
+        return []
+    try:
+        matches = condensed["required_digest"] == required_digest(doc)
+    except (TypeError, ValueError):  # not canonical JSON (floats, lone surrogates): the schema check reports it
+        return [Issue("/condensed/required_digest", "CONDENSED_REQUIRED_DRIFT",
+                      "required_digest cannot be computed: the required part is not canonical JSON")]
+    if matches:
+        return []
+    return [Issue("/condensed/required_digest", "CONDENSED_REQUIRED_DRIFT",
+                  "required_digest does not match the canonical JSON of the required part")]
+
+
+def _capability_freshness(doc: dict) -> list[Issue]:
+    issues = []
+    observed, fresh = _parse_ts(doc.get("observed_at")), _parse_ts(doc.get("fresh_until"))
+    if observed is not None and fresh is not None and _ts_before(fresh, observed):
+        issues.append(Issue("/fresh_until", "CAPABILITY_FRESHNESS", "fresh_until is earlier than observed_at"))
+    source, status = doc.get("source"), doc.get("status")
+    if isinstance(source, str) and isinstance(status, str):
+        # declared and probed records keep their own source; an inferred source only backs a declared record.
+        consistent = status == "declared" if source == "inferred" else source == status
+        if not consistent:
+            issues.append(Issue("/source", "CAPABILITY_FRESHNESS", f"source {source} contradicts status {status}"))
+    return issues
+
+
+def _fallback_declared(doc: dict) -> list[Issue]:
+    on_error = doc.get("on_error")
+    if not isinstance(on_error, dict) or doc.get("fallback_routes"):
+        return []
+    return [Issue(f"/on_error/{name}/action", "FALLBACK_UNDECLARED",
+                  "action fallback_route requires a non-empty fallback_routes")
+            for name, rule in on_error.items()
+            if isinstance(rule, dict) and rule.get("action") == "fallback_route"]
+
+
 def _key_reuse(doc: dict) -> list[Issue]:
     """Report identity keys of different levels that carry the same value."""
     issues = []
@@ -351,3 +418,19 @@ SEMANTIC.update({
     "check-evidence": _check_evidence,
     "launch-plan": _launch_plan,
 })
+
+
+def _with(base: Callable[[object], list[Issue]], *extra: Callable[[dict], list[Issue]]):
+    """Extend the checks of a kind with checks that only look at documents shaped as objects."""
+    def check(doc: object) -> list[Issue]:
+        issues = base(doc)
+        if isinstance(doc, dict):
+            for more in extra:
+                issues.extend(more(doc))
+        return issues
+    return check
+
+
+SEMANTIC["execution-input"] = _with(SEMANTIC["execution-input"], _condensed)
+SEMANTIC["run-policy"] = _with(SEMANTIC["run-policy"], _fallback_declared)
+SEMANTIC["capability-record"] = _with(SEMANTIC["capability-record"], _capability_freshness)

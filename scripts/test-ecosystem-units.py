@@ -764,11 +764,11 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual(self.violations(), {"path|packages/beta/scripts/loc.sh|aicore": 1})
 
     def test_climb_to_a_sibling_module(self):
-        self.tree.write("packages/alpha/package.json", '{"p": "../orch/x"}\n')
-        self.tree.write("packages/beta/lib/beta/p.py", "A = '../orch/x'\n")  # orch is no folder here
-        self.tree.write("packages/orch/lib/orch/__init__.py", "")
+        self.tree.write("packages/alpha/package.json", '{"p": "../scripts/x"}\n')
+        self.tree.write("packages/beta/lib/beta/p.py", "A = '../scripts/x'\n")  # inside the module, no escape
+        self.tree.write("packages/scripts/lib/scripts/__init__.py", "")
         result = json.loads(self.tree.check("--json").stdout)
-        self.assertEqual({v["key"] for v in result["violations"]}, {"path|packages/alpha/package.json|orch"})
+        self.assertEqual({v["key"] for v in result["violations"]}, {"path|packages/alpha/package.json|scripts"})
 
     def test_files_without_scanned_suffix_are_skipped(self):
         self.tree.write("packages/alpha/data.bin", "packages/beta/x\n")

@@ -62,7 +62,7 @@ compatibility shim and the modules of later stages, see [ADR 0028](decisions/002
 | `aicore` | foundation | none | exists: `core/*` except analytics, `core/provider/*`, `core/usage.py` and `configs/provider-*.json` moved in; still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `planner` command rendering |
 | `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/planner` |
-| `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch`, root `orch/` |
+| `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch` (research in `docs/research`) |
 | `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus `topology`, `listing`, `state` from `skiller` |
 | `analyst` | analytics, lessons, traces | `aicore` | `packages/analyst` plus `runs`, `pathology`, `codegraph_telemetry` from `core` |
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |

@@ -14,7 +14,12 @@
     "config": "configs/config.schema.json",
     "plugins": [{"name": "planner", "manifest": ".claude-plugin/plugin.json"}],
     "contracts": [
-      {"id": "urn:swissknifeman:task:plan", "path": "schemas/plan/v1", "version": "v1", "stability": "beta"}
+      {"id": "urn:swissknifeman:task:plan", "path": "schemas/plan/v1", "version": "v1", "stability": "beta"},
+      {"id": "urn:swissknifeman:planner:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "beta"}
+    ],
+    "events": [
+      "planner.plan.created", "planner.plan.closed", "planner.phase.closed",
+      "planner.item.started", "planner.item.finished", "planner.decision.accepted"
     ]
   },
   "dev": {

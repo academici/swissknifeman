@@ -45,10 +45,11 @@ if [ -z "$HUB_ROOT" ] || [ "$(cd "$HUB_ROOT/packages/planner" 2>/dev/null && pwd
 fi
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
-# Tests read the layered configuration: give them an empty machine home instead of the real one.
+# Tests read the layered configuration: give them an empty machine home instead of the real one. The plan commands
+# they run journal planner.* events: delivery stays off so no subscriber (brain notes) starts; test_events enables it.
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
-hermetic() { env HOME="$TEST_HOME" SKM_HOME="$TEST_HOME" "$@"; }
+hermetic() { env HOME="$TEST_HOME" SKM_HOME="$TEST_HOME" SKM_AICORE_EVENTS__DELIVERY=off "$@"; }
 
 echo "[1/6] python compile"
 python3 -m compileall -q lib tests scripts || err "py_compile"

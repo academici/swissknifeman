@@ -8,6 +8,7 @@
   "datacontenttype": "application/json",
   "data": {
     "plan_id": "2026.01.15-DEMO-PLAN",
+    "status": "done",
     "title": "Ecosystem split"
   }
 }

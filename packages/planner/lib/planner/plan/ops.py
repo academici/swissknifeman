@@ -13,7 +13,9 @@ from pathlib import Path
 import re
 from typing import Any, Iterator
 
-from . import settings, store, views
+from planner.integration import events as emission
+
+from . import lifecycle, settings, store, views
 from .model import SHORT_ID, PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
@@ -173,6 +175,9 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
         store.append_log(root, event, lock=lock)
         plan = store.load_plan(root)
         _after_mutation(plan)
+        announce = [lifecycle.plan_created_event(plan)]
+        project_root = lifecycle.event_project_root(plan)
+    emission.emit_all(announce, project_root=project_root, plan_id=plan_id)
     return plan
 
 

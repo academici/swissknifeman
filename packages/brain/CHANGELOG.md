@@ -4,6 +4,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 
 ## [Unreleased]
 
+### Changed
+- **Notes:** the plan-closed fixture follows the planner data contract (`status` `done`, counts `skipped` and `blocked` instead of `cancelled`, a valid `artifact-ref`); the note reads and prints `skipped` and `blocked` counts.
+
 ### Fixed
 - **Document sync:** the generated manual script preserves changed vault files on push (`DOCS_CONFLICT`, exit 1), leaves identical files untouched and supports explicit `push --force`.
 - **Release metadata:** `package.json` supplies the package-owned version for plugin and runtime attestation; validation checks it against the module, plugin and Python runtime.

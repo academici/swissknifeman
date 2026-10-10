@@ -21,7 +21,7 @@ FULL_NOTE = """---
 type: plan-closed
 plan: 2026.01.15-DEMO-PLAN
 short_id: PLAN3
-status: done_with_deviations
+status: done
 closed: "2026-10-09T09:59:41Z"
 project: Demo
 repository: swissknifeman
@@ -38,15 +38,16 @@ tags: [plan, closed]
 | --- | --- | --- |
 | P6 | Extensions and events | done |
 | P7 | brain: module base | done_with_deviations |
-| P8 | Pipes \\| cells | cancelled |
+| P8 | Pipes \\| cells | skipped |
 
-Counts: items 12, done 9, done with deviations 2, cancelled 1.
+Counts: items 12, done 9, done with deviations 2, skipped 1.
 
 Closed 2026-10-09T09:59:41Z.
 """
 MINIMAL_NOTE = """---
 type: plan-closed
 plan: 2026.01.15-DEMO-PLAN
+status: done
 closed: "2026-10-09T09:15:30.250Z"
 event_id: a1b2c3d4e5f60718293a4b5c6d7e8f90
 event_source: "urn:swissknifeman:module:planner"

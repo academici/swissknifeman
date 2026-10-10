@@ -80,7 +80,7 @@ closed plan it writes one Markdown note into the vault and then emits `brain.not
 
 **What is read.** The `event/v1` envelope (`specversion` `1.0`) and its `data`: `plan_id` and `title` are required;
 `short_id`, `status`, `goal`, `closed_at` (RFC 3339), `repository`, `phases` (`{id, title, status}`) and `counts`
-(`items`, `done`, `done_with_deviations`, `cancelled`) are optional; unknown fields are ignored. The expectation is
+(`items`, `done`, `done_with_deviations`, `skipped`, `blocked`) are optional; unknown fields are ignored. The expectation is
 recorded in `tests/fixtures/events/`. Events of another type are skipped.
 
 **Where it goes.** Into the folder of the project in the vault, in `notes.folder` (default `Ecosystem/Plans`), when the

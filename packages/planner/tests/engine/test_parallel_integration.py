@@ -30,6 +30,8 @@ class ParallelIntegrationTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         self.git("init", "-q", "-b", "main")
+        # The project journal of planner events lives in .swissknifeman/state, which the gitignore policy ignores.
+        (self.repo / ".git" / "info" / "exclude").write_text(".swissknifeman/state/\n")
         for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"),
                            ("commit.gpgsign", "false"), ("gc.auto", "0"), ("maintenance.auto", "false")):
             self.git("config", key, value)

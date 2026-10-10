@@ -46,7 +46,7 @@ LOCK_FILE = "notes.lock"
 LEDGER_FILE = "notes.jsonl"
 _NO_LINKS = (errno.EPERM, errno.ENOTSUP, errno.ENOSYS, errno.EMLINK)
 _COUNT_LABELS = {"items": "items", "done": "done", "done_with_deviations": "done with deviations",
-                 "cancelled": "cancelled"}
+                 "skipped": "skipped", "blocked": "blocked"}
 
 PathLike = Union[str, "os.PathLike[str]"]
 

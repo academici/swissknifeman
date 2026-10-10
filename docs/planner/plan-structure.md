@@ -41,8 +41,9 @@ decision reaches an item's pack through `applies_to` (item or phase) or `global:
 (both together are a `scope_ambiguous` error). `settings.context_pack` is `legacy` (absent; a
 document without `applies_to` enters every pack) or `scoped` (written by `plan.py new`; unbound
 content is dropped, reads already present in the pack are marked `included`, upstream and
-phase dependencies are summaries). `settings.context_budget_kb` (default 256) is the warning
-threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
+phase dependencies are summaries). `settings.context_budget_kb` (default 256, the `context.budget_kb` key of the `[planner]`
+configuration) is the warning threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
+It carries `policy` (`review_rounds_max`, `corrections_max`) from the same configuration.
 An item read names exactly one of `path` or `ref`. Local refs include phases, items,
 units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
 The separate `section` key accepts a knowledge section id or exact title; it cannot
@@ -199,3 +200,26 @@ The planner marketplace plugin delivers `skills/plan-protocol` with the engine, 
 and provider commands. The protocol is explicitly invoked and shares the same installed package
 as its API. Temporary migration tooling has been removed from the active package tree;
 source-format conversion is not a runtime compatibility layer.
+
+## Events
+
+With the aicore foundation present, the engine journals `planner.*` events to the event journal of the project
+(`<project>/.swissknifeman/state`; the machine journal when the plans folder is not in a project), so other
+modules can react without calling the engine. The module declares them in `unit.json` (`provides.events`) and
+publishes one closed data schema per type in `schemas/event-data/v1/` (`urn:swissknifeman:planner:event-data`).
+
+| Type | Journaled by | Data beyond `plan_id`, `title`, `short_id`, `repository` |
+|:--|:--|:--|
+| `planner.plan.created` | `new` | `created` |
+| `planner.item.started` | `start`, per item | `item_id`, `phase_id`, `executor`, `route`, `resumed`, `take_over` |
+| `planner.item.finished` | `finish` | `item_id`, `phase_id`, `status`, `attempt_id`, `checks`, `commits`, `deviation_count` |
+| `planner.phase.closed` | `finish`, `reconcile` | `phase_id`, `result`, `closed_at`, `summary` |
+| `planner.plan.closed` | `finish`, `reconcile` | `status`, `goal`, `closed_at`, `phases`, `counts` |
+| `planner.decision.accepted` | `decide` | `decision_id`, `decision` (cut at 4096 characters), `answered_by`, `applies_to` |
+
+Events are written after the plan lock is released, so a subscriber that runs synchronously may call `plan.py`
+on the same plan. The events of one command form a chain through `causationid`. A repeated `finish` with a recorded
+`--attempt-id` and a refused command emit nothing; `[planner.events] enabled = false` switches the emission off.
+Emission is best-effort: a failing journal never changes the result or exit code of a command and gives one
+`PLANNER_EVENT_NOT_EMITTED` warning on stderr per process. Notes, deviation texts and rationales never travel in an
+event. The module `brain` subscribes to `planner.plan.closed` and writes a note into the vault.

@@ -9,16 +9,21 @@
   "data": {
     "artifacts": [
       {
-        "kind": "report",
-        "path": "reports/close.json"
+        "$schema": "urn:swissknifeman:aicore:artifact-ref:v1",
+        "digest": "sha256:abababababababababababababababababababababababababababababababab",
+        "size": 1024,
+        "media_type": "text/markdown",
+        "sensitivity": "normal",
+        "name": "close report",
+        "location": "project"
       }
     ],
     "closed_at": "2026-10-09T09:59:41Z",
     "counts": {
-      "cancelled": 1,
       "done": 9,
       "done_with_deviations": 2,
-      "items": 12
+      "items": 12,
+      "skipped": 1
     },
     "goal": "Split the monolith into independent modules.",
     "phases": [
@@ -34,14 +39,14 @@
       },
       {
         "id": "P8",
-        "status": "cancelled",
+        "status": "skipped",
         "title": "Pipes | cells"
       }
     ],
     "plan_id": "2026.01.15-DEMO-PLAN",
     "repository": "swissknifeman",
     "short_id": "PLAN3",
-    "status": "done_with_deviations",
+    "status": "done",
     "title": "Ecosystem split"
   }
 }

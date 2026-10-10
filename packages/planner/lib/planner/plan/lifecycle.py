@@ -19,8 +19,9 @@ from typing import Any, Iterable, Iterator, Mapping
 
 from planner import COMMAND_NAMESPACE
 from planner.command_catalog import load_routing_metadata
+from planner.integration import events as emission
 
-from . import store
+from . import settings, store
 from .model import (CLASS_ORDER, EFFORT_ORDER, ITEM_ID, PHASE_ID, SATISFYING, TERMINAL, ItemStatus, PlanError,
                     id_sort_key, parse_ref, phase_status)
 
@@ -34,6 +35,7 @@ _CHECK_ID = re.compile(r"^V[0-9]+$")
 _GIT_SHA = re.compile(r"^[0-9a-f]{7,40}$")
 _EVIDENCE_KEYS = ("evidence_id", "started_at", "finished_at")
 _PRODUCER_KINDS = ("engine", "executor", "human")
+DECISION_TEXT_LIMIT = 4096  # characters of a decision in planner.decision.accepted
 
 
 # ---------------------------------------------------------------- reading a plan
@@ -286,7 +288,7 @@ def _route_verdict(plan: store.Plan, items: list[str], actor: dict) -> str:
 @contextmanager
 def _mutation(plan) -> Iterator[tuple[store.Plan, store.PlanLock]]:
     """Lock -> fresh snapshot -> body -> views; the caller's ``Plan`` object is refreshed afterwards."""
-    from . import settings, views  # views imports this module for scheduling
+    from . import views  # views imports this module for scheduling
 
     root = plan.root if isinstance(plan, store.Plan) else store.resolve_plan_dir(plan)
     timeout = float(settings.for_root(root.parent).get("lock.timeout_seconds"))
@@ -310,6 +312,60 @@ def _commit(p: store.Plan, changes: list[tuple[str, str | None, dict]], events: 
             {"phase": p.phases, "item": p.items, "decision": p.decisions, "unit": p.units}[kind][key] = doc
     for event in events:
         store.append_log(p.root, event, lock=lock)
+
+
+# ---------------------------------------------------------------- planner.* events
+
+def event_project_root(p: store.Plan) -> Path | None:
+    """The project whose journal receives the events of ``p`` (``None``: the machine journal)."""
+    return settings.project_root_of(p.root.parent)
+
+
+def _event_data(p: store.Plan, title: str, **fields: Any) -> dict:
+    """Common fields of the data of every ``planner.*`` event, then ``fields`` without the empty ones."""
+    data = {"plan_id": p.plan["id"]}
+    if p.plan.get("short_id"):
+        data["short_id"] = p.plan["short_id"]
+    data["title"] = title
+    if p.plan.get("repository"):
+        data["repository"] = p.plan["repository"]
+    data.update({key: value for key, value in fields.items() if value is not None})
+    return data
+
+
+def _route_data(route: Mapping | None) -> dict | None:
+    wanted = {key: route[key] for key in ("class", "effort") if isinstance(route, Mapping) and route.get(key)}
+    return wanted or None
+
+
+def plan_created_event(p: store.Plan) -> tuple[str, dict]:
+    return "planner.plan.created", _event_data(p, p.plan["title"], created=p.plan.get("created"))
+
+
+def _phase_closed_event(p: store.Plan, phase_id: str) -> tuple[str, dict]:
+    closed = p.phases[phase_id]["closed"]
+    return "planner.phase.closed", _event_data(p, p.phases[phase_id]["title"], phase_id=phase_id,
+                                               result=closed["result"], closed_at=closed["at"],
+                                               summary=closed.get("summary"))
+
+
+def _plan_closed_event(p: store.Plan, closed_at: str) -> tuple[str, dict]:
+    statuses = [status_of(p, item_id) for item_id in p.items]
+    counts = {"items": len(statuses)}
+    counts.update({status.value: statuses.count(status.value) for status in ItemStatus if status in TERMINAL})
+    phases = [{"id": phase_id, "title": p.phases[phase_id]["title"], "status": p.phases[phase_id]["closed"]["result"]}
+              for phase_id in phase_order(p)]
+    return "planner.plan.closed", _event_data(p, p.plan["title"], status="done", goal=p.plan.get("goal"),
+                                              closed_at=closed_at, phases=phases, counts=counts)
+
+
+def _closure_events(p: store.Plan, phases: Iterable[str], plan_done: bool, now: str) -> list[tuple[str, dict]]:
+    """``planner.phase.closed`` per closed phase, then ``planner.plan.closed`` when the plan ended; ``p`` holds the
+    saved state."""
+    events = [_phase_closed_event(p, phase_id) for phase_id in phases]
+    if plan_done:
+        events.append(_plan_closed_event(p, now))
+    return events
 
 
 def _actor_doc(p: store.Plan, actor: Mapping | None, item: str | None = None) -> dict:
@@ -604,11 +660,18 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
                 event["registered_by"] = registrar
             events.append(event)
         _commit(p, changes, gate_events + events, lock)
+        announce = [("planner.item.started", _event_data(
+            p, p.items[item_id]["title"], item_id=item_id, phase_id=phase_id,
+            executor={key: actor[key] for key in ("provider", "model", "effort", "session") if actor.get(key)},
+            route=_route_data(p.items[item_id].get("route")), resumed=item_id in resumed,
+            take_over=True if owners[item_id] else None)) for item_id in requested]
+        project_root, plan_id = event_project_root(p), p.plan["id"]
         packs = tuple(context.build(p, item_id) for item_id in requested)
         result = StartResult(tuple(requested), phase_id, next_batch_id(p, phase_id, requested[0]), verdict,
                              tuple(resumed), packs)
         wanted = (p.plan.get("settings") or {}).get("scout") == "auto" if scout is None else scout
         root = p.root
+    emission.emit_all(announce, project_root=project_root, plan_id=plan_id)
     if not wanted:
         return result
     from . import scout as scout_map  # scout imports this module for the plan lock
@@ -827,7 +890,15 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             changes.append(_done_plan(p))
         _commit(p, changes, events, lock)
         closure = closing[0][2]["closed"]["result"] if closing else None
-        return FinishResult(item_id, status, closure, plan_done, next(p))
+        announce = [("planner.item.finished", _event_data(
+            p, p.items[item_id]["title"], item_id=item_id, phase_id=phase_id, status=status, attempt_id=attempt_id,
+            checks={i: recorded[i] for i in ordered} or None, commits=commits or None,
+            deviation_count=len(deviations)))]
+        announce += _closure_events(p, [phase_id] if closing else [], plan_done, now)
+        project_root, plan_id = event_project_root(p), p.plan["id"]
+        outcome = FinishResult(item_id, status, closure, plan_done, next(p))
+    emission.emit_all(announce, project_root=project_root, plan_id=plan_id)
+    return outcome
 
 
 # ---------------------------------------------------------------- reconcile
@@ -874,7 +945,11 @@ def reconcile(plan, actor: Mapping | None = None) -> ReconcileResult:
         if changes:
             _commit(p, changes, events, lock)
         closed = tuple((phase_id, doc["closed"]["result"]) for phase_id, doc in closing.items())
-        return ReconcileResult(closed, plan_done, next(p))
+        announce = _closure_events(p, closing, plan_done, now)
+        project_root, plan_id = event_project_root(p), p.plan["id"]
+        result = ReconcileResult(closed, plan_done, next(p))
+    emission.emit_all(announce, project_root=project_root, plan_id=plan_id)
+    return result
 
 
 # ---------------------------------------------------------------- log, decisions, grants
@@ -925,7 +1000,13 @@ def decide(plan, decision_id: str, accept: str, rationale: str, by: str = "agent
         event = store.new_event("decision", f"{decision_id} accepted", _actor_doc(p, actor), data={
             "id": decision_id, "by": by, **({"option": option} if option else {})})
         _commit(p, [("decision", decision_id, doc)], [event], lock)
-        return doc
+        announce = [("planner.decision.accepted", _event_data(
+            p, doc["title"], decision_id=decision_id, decision=text if len(text) <= DECISION_TEXT_LIMIT
+            else text[:DECISION_TEXT_LIMIT - 1] + "…", answered_by=by,
+            applies_to=list(doc.get("applies_to") or []) or None))]
+        project_root, plan_id = event_project_root(p), p.plan["id"]
+    emission.emit_all(announce, project_root=project_root, plan_id=plan_id)
+    return doc
 
 
 def supersede(plan, old: str, new: str, actor: Mapping | None = None) -> None:

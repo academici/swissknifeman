@@ -9,7 +9,7 @@
   "data": {
     "closed_at": "2026-10-09T13:30:00+02:00",
     "counts": {
-      "blocked": 0,
+      "reopened": 0,
       "done": 1,
       "items": 1
     },

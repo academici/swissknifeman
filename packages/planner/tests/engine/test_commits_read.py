@@ -31,6 +31,8 @@ class CommitsReadTests(unittest.TestCase):
         patch.start()
         self.addCleanup(patch.stop)
         self.git("init", "-q", "-b", "main")
+        # The project journal of planner events lives in .swissknifeman/state, which the gitignore policy ignores.
+        (self.repo / ".git" / "info" / "exclude").write_text(".swissknifeman/state/\n")
         for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"),
                            ("commit.gpgsign", "false")):
             self.git("config", key, value)

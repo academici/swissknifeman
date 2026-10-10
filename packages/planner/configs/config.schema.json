@@ -246,7 +246,7 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "Whether the planner emits its planner.* events. Reserved: no effect yet.",
+          "description": "Whether the planner emits its planner.* events.",
           "default": true
         }
       }

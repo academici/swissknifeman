@@ -21,19 +21,19 @@ class TestFixtures(unittest.TestCase):
         self.assertIsNone(reason)
         self.assertEqual((PLAN, "Ecosystem split", "a1b2c3d4e5f60718293a4b5c6d7e8f90"),
                          (plan.plan_id, plan.title, plan.event_id))
-        self.assertEqual((None, None, None, None, None, (), ()),
+        self.assertEqual((None, "done", None, None, None, (), ()),
                          (plan.short_id, plan.status, plan.goal, plan.closed_at, plan.repository, plan.phases,
                           plan.counts))
         self.assertEqual("2026-10-09T09:15:30.250Z", plan.closed)  # the event time stands in for closed_at
 
     def test_valid_full(self):
         plan, _ = events.parse_plan_closed(load_event("valid-full"))
-        self.assertEqual(("PLAN3", "done_with_deviations", "swissknifeman", "2026-10-09T09:59:41Z"),
+        self.assertEqual(("PLAN3", "done", "swissknifeman", "2026-10-09T09:59:41Z"),
                          (plan.short_id, plan.status, plan.repository, plan.closed_at))
         self.assertEqual("Split the monolith into independent modules.", plan.goal)
         self.assertEqual(["P6", "P7", "P8"], [p.id for p in plan.phases])
         self.assertEqual("Pipes | cells", plan.phases[2].title)
-        self.assertEqual((("items", 12), ("done", 9), ("done_with_deviations", 2), ("cancelled", 1)), plan.counts)
+        self.assertEqual((("items", 12), ("done", 9), ("done_with_deviations", 2), ("skipped", 1)), plan.counts)
         self.assertEqual("urn:swissknifeman:module:planner", plan.event_source)
 
     def test_valid_additive_ignores_unknown_fields_on_every_level(self):

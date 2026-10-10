@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:event-data:planner-item-finished:v1",
+  "title": "planner.item.finished",
+  "description": "Data of the planner.item.finished event. An item was finished.",
+  "type": "object",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Id of the plan the event belongs to.",
+      "minLength": 1
+    },
+    "short_id": {
+      "type": "string",
+      "description": "Short id of the plan such as PLAN7.",
+      "pattern": "^PLAN[1-9][0-9]*$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the item.",
+      "minLength": 1
+    },
+    "repository": {
+      "type": "string",
+      "description": "Repository the plan belongs to.",
+      "minLength": 1
+    },
+    "item_id": {
+      "type": "string",
+      "description": "Id of the item.",
+      "minLength": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "description": "Id of the phase of the item.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Final status of the item.",
+      "enum": [
+        "done",
+        "done_with_deviations",
+        "blocked",
+        "skipped"
+      ]
+    },
+    "attempt_id": {
+      "type": "string",
+      "description": "Attempt id of the registration.",
+      "minLength": 1
+    },
+    "checks": {
+      "type": "object",
+      "description": "Exit code of each recorded check by id.",
+      "patternProperties": {
+        "^V[0-9]+$": {
+          "type": "integer",
+          "description": "Exit code of the check."
+        }
+      },
+      "additionalProperties": false
+    },
+    "commits": {
+      "type": "array",
+      "description": "Commits of the item.",
+      "items": {
+        "type": "string",
+        "description": "Commit sha.",
+        "minLength": 1
+      }
+    },
+    "deviation_count": {
+      "type": "integer",
+      "description": "Number of recorded deviations.",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "plan_id",
+    "title",
+    "item_id",
+    "phase_id",
+    "status"
+  ],
+  "additionalProperties": false
+}

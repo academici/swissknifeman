@@ -99,6 +99,7 @@ docs/orch/
 # Project-local Task terminal-admission runtime state (leases and hash-only events).
 .swissknifeman/task-terminal/
 .swissknifeman/terminal-admission/
+.swissknifeman/state/
 
 # Local-only working documents (never tracked)
 /roadmap/

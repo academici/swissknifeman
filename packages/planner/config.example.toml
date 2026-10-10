@@ -80,7 +80,7 @@ schema_version = 1
 # frontier = ""
 
 [planner.events]
-# Whether the planner emits its planner.* events. Reserved: no effect yet. Boolean.
+# Whether the planner emits its planner.* events. Boolean.
 # enabled = true
 
 [planner.checks]

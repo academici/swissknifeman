@@ -8,8 +8,8 @@ role manifests and canonical role texts, and the `scripts/orch.py` CLI (`validat
 `render-prompt`, `prepare --dry-run`, `launch`).
 
 `orch` does not own plan data or lifecycle, model execution (nothing is started yet), or environment
-installation. Partners are reached only through named bridges (`bridges/<partner>/`) or as processes
-discovered by `orch.discovery`.
+installation. Partners are reached only through bridges (units of the hub, `bridges/<id>/`, outside this
+package) or as processes discovered by `orch.discovery`.
 
 ## Dependency rule
 
@@ -27,7 +27,7 @@ engines use partner CLI/JSON APIs only
   as in every module: `AICORE_ROOT`, then `_vendor/aicore`, then the sibling `aicore`.
 - Models come from the aicore model catalog (`orch.catalog`, `--model-catalog`); orch keeps no model names.
 - `tests/test_boundaries.py` walks `lib/orch/**/*.py` and rejects imports outside the standard library, `orch` and `aicore`, and scans the
-  package outside `bridges/` for names of other packages.
+  package for names of other packages.
 
 ## Layout
 
@@ -40,7 +40,6 @@ packages/orch/
   bindings/matrix.json        # binding capability matrix
   bindings/capabilities/      # <binding>--<provider>.json seeds (status declared)
   configs/                    # launch catalog
-  bridges/<partner>/          # the only place that names a partner
   fixtures/  tests/
 ```
 

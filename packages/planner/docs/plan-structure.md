@@ -80,12 +80,16 @@ survive import exactly. Import is a data API; source-format conversion is never 
 
 ## Named bridges
 
-The planner core knows no partner tool by name: every link to one lives in `bridges/<name>/` with a
-`bridge.json` manifest (`plan.py schema bridge`). `plan.py bridge list` shows the bridges found by
-scanning `bridges/`; `plan.py bridge <name> <verb> [args…]` runs a declared entrypoint and passes its
-output and exit code through. A bridge may import planner modules but reaches its partner only through
-the partner's public CLI or files. `tests/test_boundary.py` keeps the core clean; its temporary
-`tests/boundary_allowlist.json` may only shrink. `validate.sh` also runs `bridges/*/tests`.
+The planner core knows no partner tool by name: every link to one lives in a bridge, a directory
+`<name>/` with a `bridge.json` manifest (`plan.py schema bridge`) that is also a unit of the hub (`bridges/<id>/`
+with a `unit.json`). The planner finds bridges in the directories of the `bridges.roots` setting (a relative path is
+taken from the project root, a leading `~` is expanded; the repository of the hub sets `["bridges"]` in
+`.swissknifeman/config.toml`) and then in a built-in `bridges/` of the package when one exists; the first root that
+holds a name wins and a shadowed bridge is reported as `BRIDGE_SHADOWED`. `plan.py bridge list` shows the bridges found;
+`plan.py bridge <name> <verb> [args…]` runs a declared entrypoint and passes its output and exit code through. A bridge
+reaches the planner and its partner only through their public command lines and files, found by environment variable or
+command on `PATH`. `tests/test_boundary.py` keeps the core clean; its temporary `tests/boundary_allowlist.json` may only
+shrink. The tests of a bridge belong to the bridge (`bash scripts/test-bridges.sh` in the hub).
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
 
 ## Attempts and evidence

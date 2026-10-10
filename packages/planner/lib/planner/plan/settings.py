@@ -71,3 +71,8 @@ def for_plan(plan: store.Plan):
 def for_root(plans_root: str | Path):
     """Configuration for commands without a plan (``new``): machine, project, environment, ``--config``."""
     return _resolve(project_root_of(Path(plans_root)), None, ("root", str(plans_root)))
+
+
+def for_project(project_root: str | Path | None):
+    """Configuration of a project without a plan (``bridge``): machine, project, environment, ``--config``."""
+    return _resolve(None if project_root is None else Path(project_root), None, ("project", str(project_root)))

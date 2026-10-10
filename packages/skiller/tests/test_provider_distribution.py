@@ -834,7 +834,7 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
     """P1.4 (D51/D62/D63): cold per-provider install/discover of the declared fixture
     (repo marketplace minus the three donor buckets) proves catalog-wide identity
     uniqueness — never a named-ID list — plus the negative fixture (D42 curated CORE pairs +
-    class-B `workflow-craft` precondition) and the D62 reconciliation against a frozen
+    class-B preconditions) and the D62 reconciliation against a frozen
     collision snapshot. Runs against the REAL repo catalog (like
     CoreDonorMutualExclusionCase above) — a synthetic fixture has neither the
     root-bootstrap config nor the `planner` sibling this gate must cover."""
@@ -892,21 +892,20 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
             self.assertEqual(result["positive_maps"]["codex"].get(identity), [expected_unit],
                              f"{identity}: expected exactly-once {expected_unit}, no root carrier")
         # class-A resolves via root only (private bucket, never a unit member) on both
-        # providers; class-B `workflow-craft` is Codex-only by declared asymmetry (D43)
+        # providers; `workflow-craft` resolves once from the planner plugin on both
         self.assertEqual(result["positive_maps"]["codex"].get("cross-project-optimizer"),
                          ["root:codex"])
         self.assertEqual(result["positive_maps"]["claude-code"].get("cross-project-optimizer"),
                          ["root:claude-code"])
-        self.assertEqual(result["positive_maps"]["codex"].get("workflow-craft"), ["root:codex"])
-        self.assertNotIn("workflow-craft", result["positive_maps"]["claude-code"])
+        self.assertEqual(result["positive_maps"]["codex"].get("workflow-craft"), ["unit:planner"])
+        self.assertEqual(result["positive_maps"]["claude-code"].get("workflow-craft"), ["unit:planner"])
 
     def test_negative_fixture_proves_the_four_pairs_and_class_b_precondition(self):
         from skiller.doctor import run_effective_runtime_gate
         result = run_effective_runtime_gate(self.env)
         self.assertEqual(len(result["negative_pairs"]), 4)
         self.assertIn("verify-claims", {item["identity"] for item in result["negative_pairs"]})
-        self.assertIsNotNone(result["workflow_craft_precondition_error"])
-        self.assertIn("precondition violated", result["workflow_craft_precondition_error"])
+        self.assertIsNone(result["class_b_precondition_error"])  # no class-B record is declared
 
     def test_cli_effective_runtime_reports_ok_and_writes_artifacts(self):
         import contextlib

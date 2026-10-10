@@ -64,18 +64,6 @@
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md"
     }
   ],
-  "class_b": [
-    {
-      "_doc": "A public-bucket canon whose unit (`general`) is not enabled — the root carrier has no owner/provenance/hash otherwise. Codex-only by declared asymmetry (a Claude root projection changes first-turn budget, requires `skiller budget --first-turn`, outside this scope). `precondition` is enforced against an explicitly-passed enabled-inventory only — this renderer never reads a live provider profile/cache.",
-      "identity": "workflow-craft",
-      "source_class": "public-bucket",
-      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
-      "providers": [
-        "codex"
-      ],
-      "asymmetry_reason": "a Claude root projection changes the first-turn budget and requires `skiller budget --first-turn` (CLAUDE.md), which is outside this scope; the asymmetry is declared, not accidental",
-      "precondition": "no enabled unit serves this identity"
-    }
-  ],
+  "class_b": [],
   "unit_version": "0.3.1"
 }

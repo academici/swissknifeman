@@ -369,7 +369,7 @@ flowchart LR
 
 **In the column:** 123 skills, 83 ribs requires, 91 ribs produces_for.
 
-## Isolated skills (87)
+## Isolated skills (86)
 
 Skills without connections `requires`/`produces_for` — are self-sufficient.
 
@@ -390,7 +390,7 @@ Skills without connections `requires`/`produces_for` — are self-sufficient.
 | frontend-nuxt | `nuxt`, `nuxt-modules`, `nuxt-seo` |
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
-| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `shell`, `skills-ssot`, `workflow-craft`, `writing-style` |
+| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `shell`, `skills-ssot`, `writing-style` |
 | laravel-architecture | `config-driven-abstraction`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |

@@ -28,7 +28,9 @@ FORBIDDEN = (
     re.compile(r"urn:swissknifeman:orch:"),
     re.compile(r"\b(general|quality|system|devops|oss-dev|repository-bootstrap)[/:][a-z][a-z0-9-]+"),
 )
-SKIPPED_DIRS = ("bridges/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
+# skills/workflow-craft/ is workflow-authoring guidance moved verbatim from the skiller library (its content
+# names the orchestration partners by design and is not edited); the code and commands stay checked.
+SKIPPED_DIRS = ("bridges/", "docs/.vitepress/cache/", "docs/.vitepress/dist/", "skills/workflow-craft/")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 SKIPPED_FILES = {"CHANGELOG.md", SELF}
 REASON = re.compile(r"^P7\.[0-9]+: \S")

@@ -1,5 +1,5 @@
 {
   "artifact_count": 49,
-  "byte_digest": "dd7bd10c538269e0a1bb566f39bea1a953fdf9c6162129ff136ffb6917d7a11d",
+  "byte_digest": "4597effb0d9db49bd9d0eec2bff0cddcb33431bb89ef150b6e3394507d6e6347",
   "format": "sha256 of pathlib-sorted artifact target, repository-relative path, NUL, exact bytes, NUL"
 }

@@ -226,15 +226,6 @@
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
       "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
       "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
-    },
-    {
-      "identity": "workflow-craft",
-      "provider": "codex",
-      "target": ".agents/skills/workflow-craft/SKILL.md",
-      "source_class": "public-bucket",
-      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
-      "canonical_sha256": "6160599c1a6050f34cf2814efa53c81c932f6022a05258681c250e176c542b98",
-      "rendered_sha256": "9444d5bd250fb45e6af65ba82ad0af463565daba6e34d2e83568922cdf0779f1"
     }
   ]
 }

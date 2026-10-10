@@ -753,10 +753,14 @@ def _validate_class_b_record(record: object, class_a_identities: Sequence[str]) 
 
 
 def _class_b_donor_bucket(canonical: str) -> str:
-    """The publication bucket that owns the class-B canonical file (`skills/<bucket>/<id>/…`)."""
+    """The publication unit that owns the class-B canonical file: the bucket for
+    `skills/<bucket>/<id>/SKILL.md`, the owning module plugin for `<module>/skills/<id>/SKILL.md`."""
     parts = Path(canonical).parts
     try:
-        return parts[parts.index("skills") + 1]
+        index = parts.index("skills")
+        if len(parts) > index + 2 and parts[index + 2] == "SKILL.md" and index > 0:
+            return parts[index - 1]
+        return parts[index + 1]
     except (ValueError, IndexError):
         raise ValueError(f"class_b canonical path {canonical!r} is not under a skills/<bucket>/ tree") from None
 

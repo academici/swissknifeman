@@ -39,7 +39,7 @@ flowchart LR
     axioma_doctrine["axioma-doctrine<br/>⊕90 ↻1233"]:::warm
     axioma_glossary["axioma-glossary<br/>⊕110 ↻1311"]:::hot
     axioma_stack["axioma-stack<br/>⊕105 ↻1309"]:::hot
-    ecosystem_map["ecosystem-map<br/>⊕47 ↻644"]:::warm
+    ecosystem_map["ecosystem-map<br/>⊕47 ↻649"]:::warm
   end
   subgraph azguard["azguard"]
     azguard["azguard<br/>⊕37 ↻1647"]:::mild
@@ -173,7 +173,6 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
     task_brief_template["task-brief-template<br/>⊕47 ↻1176"]:::warm
     verify_claims["verify-claims<br/>⊕41 ↻341"]:::warm
-    workflow_craft["workflow-craft<br/>⊕48 ↻3620"]:::warm
     writing_style["writing-style<br/>⊕98 ↻1819"]:::hot
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -406,13 +405,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 210 skills · ⊕ always **10968** current (is always resident if you include the entire registry) · ↻ bodies 259780 current · ⌥ on-demand 823694 current (snippets + references).
+**Total:** 209 skills · ⊕ always **10920** current (is always resident if you include the entire registry) · ↻ bodies 256165 current · ⌥ on-demand 823694 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 21 | 1234 | 23096 | 7557 |
+| `general` | 20 | 1186 | 19476 | 7557 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
@@ -420,7 +419,7 @@ flowchart LR
 | `php` | 17 | 531 | 18231 | 54365 |
 | `pm` | 10 | 462 | 10775 | 23510 |
 | `founder` | 10 | 430 | 14976 | 577 |
-| `axioma` | 4 | 352 | 4497 | 0 |
+| `axioma` | 4 | 352 | 4502 | 0 |
 | `quality` | 11 | 346 | 15468 | 6562 |
 | `frontend-vue` | 11 | 340 | 14761 | 257982 |
 | `frontend-linting` | 4 | 323 | 5818 | 18280 |
@@ -483,7 +482,6 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `workflow-craft` | general | 3620 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |
@@ -493,3 +491,4 @@ The heaviest bodies are loaded when using the skill.
 | `vue-router-best-practices` | frontend-vue | 2569 |
 | `mcp-builder` | ai | 2560 |
 | `mutation-testing` | quality | 2552 |
+| `vue-best-practices` | frontend-vue | 2546 |

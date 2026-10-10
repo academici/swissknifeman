@@ -269,6 +269,8 @@
 
 ### Changed
 
+- **planner:** `workflow-craft` skill moves from the skiller library (`general` bucket) to the planner plugin (Claude and Codex); the root bootstrap projection now points at the plugin copy, and vendored copies of `general/workflow-craft` disappear at the next `skiller sync` while the skill arrives with the planner plugin.
+
 - **planner:** projection rendering on aicore, engine runs without aicore, standalone without core: `plan.py` and
   `render-provider-commands.py` find aicore through the canonical locator (`AICORE_ROOT`, `_vendor/aicore`, the sibling
   `aicore`), `planner.integration` is the only runtime place that imports it, the model selectors and inventory of

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.9",
   "title": "Skills planner: перенос workflow-craft из skiller в плагин planner, доставка и бюджет первого хода",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "git mv packages/skiller/skills/general/workflow-craft → packages/planner/skills/workflow-craft (содержимое без правок); skiller без workflow-craft (doctor, тесты, burndown-списки, бакет general через registry); bootstrap canonical → planner; строка ownership снята; тест skills planner; registry и golden с причиной; бюджет первого хода до/после в plan.py log.",
   "why": "D8, D52: workflow-craft привязан к planner (его SSOT — шаблоны wf-*.js и команда make-workflow planner); перенос отложен из P8 «по месту по бюджету». Жёсткий риск: проекты теряют skill — он приходит с плагином planner (Claude и Codex), бюджет первого хода сверяется до и после.",
   "scope": {
@@ -173,6 +173,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:00Z"
+  "result": {
+    "started_at": "2026-10-10T06:12:37Z",
+    "finished_at": "2026-10-10T07:04:33Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "b71c33d4-63b6-4b3f-996b-86580369e769"
+    },
+    "notes": "workflow-craft moved to planner plugin; budget 2464→2512",
+    "deviations": [
+      "class-B root projection removed (planner plugin is the single carrier); boundary test skips moved skill content; skiller test/golden fixtures updated"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T07:04:33Z"
 }

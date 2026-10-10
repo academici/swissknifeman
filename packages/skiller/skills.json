@@ -126,7 +126,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 21,
+      "count": 20,
       "status": "active"
     },
     "laravel-architecture": {
@@ -692,8 +692,8 @@
       "path": "skills/axioma/ecosystem-map/SKILL.md",
       "version": "0.1.0",
       "description": "Where docs, plans, findings and vault links live in a project and how repo↔Brain sync. A locator, not canon — HOW planning works: plan-protocol.",
-      "sha256": "38354d1bca6bfa586420ea7edbc0a3af969765d82b467876445eeaac02172ffe",
-      "content_sha256": "5e23ae1d9717f0522a5ce3215accf7f95fafdc369fedef46aec2bf638949c0c8",
+      "sha256": "dcce677699ec5e44e62ef70f17df65316c9f1571d01c6ddd283e4200fd6a8a93",
+      "content_sha256": "ddc9f81ec3fc7026d18baa118318af628d56abe79b9af37ed9604faa6cf1c4d1",
       "license": "MIT",
       "tags": [
         "axioma",
@@ -2518,24 +2518,6 @@
       "produces_for": [
         "architecture",
         "tech-stack-selection"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "workflow-craft",
-      "bucket": "general",
-      "path": "skills/general/workflow-craft/SKILL.md",
-      "version": "0.3.0",
-      "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
-      "sha256": "6160599c1a6050f34cf2814efa53c81c932f6022a05258681c250e176c542b98",
-      "content_sha256": "984e0df64bb04c0539a7e06c383b27fdbc6f7dd234ce283b486cd2c065d73d50",
-      "license": "MIT",
-      "tags": [
-        "workflow",
-        "orchestration",
-        "multi-agent",
-        "templates",
-        "authoring"
       ],
       "source": "local"
     },

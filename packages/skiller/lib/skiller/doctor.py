@@ -568,8 +568,8 @@ def _print_effective_source_report(report):
 # install/discover of the DECLARED fixture (all repo marketplace units minus exactly the
 # three donor buckets `general`/`research`/`oss-dev`, D42-conformant), asserting
 # catalog-wide identity uniqueness — never a list of named IDs — plus a negative fixture
-# that proves the nine excluded core/donor pairs and the class-B `workflow-craft`
-# precondition are diagnosed, not silently dropped. Materialization is confined to a
+# that proves the nine excluded core/donor pairs and the class-B
+# preconditions (when the host declares any) are diagnosed, not silently dropped. Materialization is confined to a
 # caller-owned `tempfile.TemporaryDirectory`; canonical bytes are always read from the
 # real `package_root` (never copied into a live profile/cache/home).
 _DONOR_BUCKETS = _CORE_DONOR_BUCKETS
@@ -729,8 +729,8 @@ def catalog_wide_collisions(carrier_map):
 def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
     """The D51 negative fixture: `core` and every donor bucket enabled together. Proves the
     nine core/donor pairs surface as named D42 diagnostics (never silently dropped) and
-    that the class-B `workflow-craft` precondition fails closed when its donor bucket
-    (`general`) is enabled. Returns `(nine_pairs, workflow_craft_error)`."""
+    that a class-B precondition fails closed when its owning unit is enabled
+    (`None` when the host declares no class-B record). Returns `(nine_pairs, class_b_error)`."""
     from .publication import render_repository_bootstrap_projections
 
     worst_case = _worst_case_enabled(catalog)
@@ -742,15 +742,19 @@ def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
     host = replace(load_host(package_root), root=tmp_root)
     if host.bootstrap is None:
         return pairs, None
+    from .publication import _class_b_donor_bucket, load_repository_bootstrap_config
+    class_b = load_repository_bootstrap_config(repo_root, host).get("class_b", [])
+    if not class_b:
+        return pairs, None
     try:
         render_repository_bootstrap_projections(
             repo_root=tmp_root, package_root=fixture_package_root,
             host=host,
-            donor_enabled={"general": True})
-        workflow_craft_error = None
+            donor_enabled={_class_b_donor_bucket(row["canonical"]): True for row in class_b})
+        class_b_error = None
     except ValueError as exc:
-        workflow_craft_error = str(exc)
-    return pairs, workflow_craft_error
+        class_b_error = str(exc)
+    return pairs, class_b_error
 
 
 def reconcile_remediation_collisions(collisions, *, positive_maps, negative_pairs,
@@ -762,7 +766,7 @@ def reconcile_remediation_collisions(collisions, *, positive_maps, negative_pair
     A record whose `classes` include `unit-vs-unit` (a core↔donor-bucket pair) is D42's
     permanent, by-construction diagnostic — it never closes; it classifies `still-measured`
     iff the exact (identity, donor) pair is still among `negative_pairs`. A pure
-    `root-vs-unit` record (the 16 deleted root duplicates, or class-B `workflow-craft`)
+    `root-vs-unit` record (the 16 deleted root duplicates, or a class-B record)
     classifies `resolved` iff the positive fixture no longer shows it as a live collision
     (root-vs-unit) AND every one of its owner items is terminal; `still-measured` if it is
     still a live collision in the positive fixture; otherwise `unowned-or-unexplained`."""
@@ -828,7 +832,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
                 tmp_root, root_artifacts)
 
     with tempfile.TemporaryDirectory() as tmp:
-        negative_pairs, workflow_craft_error = negative_fixture_diagnostics(
+        negative_pairs, class_b_error = negative_fixture_diagnostics(
             catalog, repo_root=repo_root, package_root=root, tmp_root=Path(tmp))
 
     return {
@@ -837,7 +841,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
         "collisions_by_provider": collisions_by_provider,
         "undeclared_by_provider": undeclared_by_provider,
         "negative_pairs": negative_pairs,
-        "workflow_craft_precondition_error": workflow_craft_error,
+        "class_b_precondition_error": class_b_error,
     }
 
 
@@ -949,8 +953,8 @@ def cmd_doctor(env, argv):
         print(f"  positive fixture: codex {len(result['positive_maps']['codex'])} identities, "
               f"claude-code {len(result['positive_maps']['claude-code'])} identities")
         print(f"  negative fixture: {len(result['negative_pairs'])} D42 pairs, "
-              f"workflow-craft precondition error: "
-              f"{'yes' if result['workflow_craft_precondition_error'] else 'NO (BUG)'}")
+              f"class-B precondition error: "
+              f"{'yes' if result['class_b_precondition_error'] else 'n/a (no class-B record)'}")
         if opts.get("fixture_out"):
             atomic_write_json(Path(opts["fixture_out"]), result["fixture_unit_set"])
         if opts.get("carrier_out"):

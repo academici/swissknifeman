@@ -4,7 +4,7 @@
 
 Source of truth for ported skills (machine registry - `skills.json`). Distribution to projects: `skiller connect` (plugin buckets) / `vendor` (physical. transfer). CORE-set of token skills (`general`/`oss-dev`) is heard by default - see `connect`/`vendor`.
 
-Total: 210 skills in 47 buckets.
+Total: 209 skills in 47 buckets.
 
 ## Skills for buckets
 
@@ -220,7 +220,7 @@ Total: 210 skills in 47 buckets.
 |:--|:--|:--|
 | `wayfinder` | Use for Laravel Wayfinder route/action generation, typed imports, forms, and import bound… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (21)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (20)
 
 | Skill | Description | Tags |
 |:--|:--|:--|
@@ -243,7 +243,6 @@ Total: 210 skills in 47 buckets.
 | `spec-interview` | Pre-code interview: one question at a time, reads the codebase itself, proposes a recomme… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex tasks: goal, scope, invariants, assumptions, out of scope, acc… | `workflow`, `template`, `requirements`, `context` |
 | `verify-claims` | Use when a decision relies on changing external premises; verify in primary sources. Repo… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
-| `workflow-craft` | Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates f… | `workflow`, `orchestration`, `multi-agent`, `templates`, `authoring` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
 ### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (6)
@@ -481,7 +480,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `attribute` | `attribute-authorization` |
 | `attributes` | `eloquent-accessors`, `enum-attributes` |
 | `auth` | `security-design` |
-| `authoring` | `workflow-craft` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
 | `axioma` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map` |
@@ -647,7 +645,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `monetization` | `go-to-market`, `monetization-design`, `pitch-deck`, `unit-economics` |
 | `monitoring` | `capacity-planning`, `health-checks`, `runbook` |
 | `monorepo` | `package-contribution-protocol` |
-| `multi-agent` | `workflow-craft` |
 | `multi-config` | `vite-multi-build` |
 | `multi-tenant` | `config-driven-abstraction` |
 | `mutation` | `mutation-testing` |
@@ -664,7 +661,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `onboarding` | `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
-| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `laravel-subagents`, `mcp-blender`, `tech-lead`, `workflow-craft` |
+| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
 | `ousterhout` | `codebase-design` |
 | `outbox` | `transactional-outbox-relay` |
@@ -771,7 +768,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `tdd` | `implement`, `tdd-discipline` |
 | `tech-radar` | `axioma-stack` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
-| `templates` | `workflow-craft` |
 | `term-index` | `axioma-glossary` |
 | `testability` | `codebase-design` |
 | `testing` | `dart-package-development`, `db-test-preflight`, `diagnosing-bugs`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `tdd-discipline`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
@@ -815,5 +811,5 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `webrtc` | `voice-ai` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `postmortem`, `refactoring-plan`, `session-handoff`, `shell`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
+| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `postmortem`, `refactoring-plan`, `session-handoff`, `shell`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead` |
 | `writing` | `writing-style` |

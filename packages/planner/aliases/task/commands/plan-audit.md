@@ -5,6 +5,7 @@ argument-hint: "<PLAN> <Pn|design> [--reviewer <provider/model>] [--effort xhigh
 ---
 > `/task:plan-audit` is deprecated and will be removed in the next minor release: use `/planner:plan-audit`. Say this to the user once, then follow the instructions below; `<Planner package root>` is the root of the enabled planner plugin.
 
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.

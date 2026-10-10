@@ -5,7 +5,7 @@ argument-hint: "[what to build: brief / slices / plan reference] [--review] [--r
 model: sonnet
 effort: high
 ---
-
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DEVELOPMENT task. User input: `$ARGUMENTS`.
 
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.

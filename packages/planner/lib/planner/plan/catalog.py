@@ -16,7 +16,7 @@ VERB_DATA = {
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits",
-    "config": None,
+    "config": None, "overlays": None,
 }
 
 # Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
@@ -30,6 +30,7 @@ VERB_MODES = {
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "reconcile": "write",
     "archive": "write", "commit": "write", "commits": "read", "config": "read",
+    "overlays": "read",
 }
 
 # Maintained refusal registry. Tests compare it with PlanError literals across lib/planner/plan.
@@ -43,7 +44,7 @@ FIELD_NOT_ARRAY FIELD_OWNED FIELD_UNKNOWN GATE_INVALID GATE_NOT_GRANTED GATE_UNK
 GIT_UNAVAILABLE GIT_BUSY GIT_CONFLICT GIT_FAILED OUTSIDE_SCOPE NOTHING_TO_COMMIT
 ID_DUPLICATE ITEMS_DUPLICATE ITEMS_REQUIRED ITEMS_SPAN_PHASES ITEM_NOT_IN_PROGRESS ITEM_NOT_STARTABLE ITEM_OWNED
 KIND_UNKNOWN LIMIT_INVALID LINK_INVALID LOG_INVALID LOG_TYPE_INVALID MESSAGE_REQUIRED MINUTES_INVALID NOTES_REQUIRED
-NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN PARALLEL_LIMIT PATCH_INVALID
+NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN OVERLAY_SLOT_UNKNOWN OVERLAY_TOO_LARGE PARALLEL_LIMIT PATCH_INVALID
 PATH_INVALID PHASE_NOT_DETAILED PLAN_AMBIGUOUS PLAN_CODENAME_INVALID PLAN_DATE_INVALID PLAN_EXISTS
 PLAN_INVALID PLAN_LOCKED PLAN_NOT_DONE PLAN_NOT_FOUND RATIONALE_REQUIRED READ_MISSING REASON_REQUIRED
 REF_INVALID REF_QUALIFIED REF_UNKNOWN REPO_UNKNOWN ROUTE_MISMATCH ROUTE_UNDERSHOOT
@@ -111,6 +112,7 @@ VERB_ERRORS = {
     "reconcile": _PLAN | _WRITE,
     "archive": _PLAN | _WRITE | {"ALREADY_ARCHIVED", "ARCHIVE_EXISTS", "PLAN_NOT_DONE", "REASON_REQUIRED"},
     "config": _PLAN,
+    "overlays": {"OVERLAY_SLOT_UNKNOWN", "OVERLAY_TOO_LARGE", "VERB_FAILED"},
     "commits": _PLAN | _TARGET | {"CONTENT_INVALID", "GIT_UNAVAILABLE", "GIT_FAILED", "SCHEMA_INVALID"},
     "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",
                        "GIT_UNAVAILABLE", "GIT_BUSY", "GIT_CONFLICT", "GIT_FAILED", "OUTSIDE_SCOPE", "NOTHING_TO_COMMIT"},

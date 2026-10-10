@@ -20,6 +20,9 @@
     "events": [
       "planner.plan.created", "planner.plan.closed", "planner.phase.closed",
       "planner.item.started", "planner.item.finished", "planner.decision.accepted"
+    ],
+    "overlay_slots": [
+      "design", "dev", "fix", "make-workflow", "plan-audit", "plan-close", "plan-design", "plan-run", "research", "review"
     ]
   },
   "dev": {

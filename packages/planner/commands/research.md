@@ -5,6 +5,7 @@ argument-hint: "[question / topic]"
 model: opus
 effort: high
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:research` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a RESEARCH task. User input: `$ARGUMENTS`. The route is pinned to Opus/high.
 
 Return an answer supported by verified sources and one concrete next step. Use a workflow only when real

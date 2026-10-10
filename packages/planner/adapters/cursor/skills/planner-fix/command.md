@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/fix.md
-Canonical SHA-256: sha256:14c2a0f7942755a6c949edc91a59431080ca8111d4d73f6bfcc5c736b047b716
+Canonical SHA-256: sha256:f135dc20d28221905be1c5e71983903abc05b4f866d6fd7d1707bb9f01c29a0a
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -10,6 +10,7 @@ argument-hint: "[what to fix]"
 model: sonnet
 effort: medium
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:fix` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a SMALL incremental repair. User input: `$ARGUMENTS`.
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.
 Complete the repair directly: design, a plan, phase audit, and plan close are not completion prerequisites;

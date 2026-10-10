@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.7",
   "title": "Оверлеи слотов команд: plan.py overlays и вызов из каждой команды; проекции Codex, Cursor, Grok",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "unit.json provides.overlay_slots (10 команд); глагол plan.py overlays SLOT [--project] [--json] [--strict] через planner.integration.overlays (без aicore — пусто, exit 0); строка вызова слота первой строкой тела каждой из 10 команд; регенерация проекций Codex/Cursor/Grok, Claude-golden и алиасов из канона; тесты слотов и множества команд = слотов; golden с причиной.",
   "why": "D6, D47, D59: человек дописывает свои правила к командам planner через оверлеи, не трогая модуль; общие проекции плагина не получают статического встраивания (D47). Жёсткий риск: команда без строки вызова или слот без команды — тест равенства множеств команд и overlay_slots.",
   "scope": {
@@ -150,6 +150,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:38Z"
+  "result": {
+    "started_at": "2026-10-10T05:08:18Z",
+    "finished_at": "2026-10-10T05:51:03Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1bbb087d-0294-4c78-b388-e2208e96027c"
+    },
+    "notes": "overlays verb, 10 slots, call line in all projections, tests, api.md, CHANGELOG; V1-V3 green",
+    "deviations": [
+      "public-hygiene: events fixtures tree exempted (P9.6 data left V3 red); envelope verb-coverage case and golden captures for plan-help/plan-unknown-subcommand added; read-catalog error enum extended"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T05:51:03Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T05:51:03Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T05:51:03Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T05:51:03Z"
 }

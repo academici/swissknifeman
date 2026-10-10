@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-audit.md
-Canonical SHA-256: sha256:c937b492eaf1a04468b8d19950afa08d31f50c6c0c9ee676b33a8d3e5cd10ae6
+Canonical SHA-256: sha256:95d9ea32f84545b3c5858316efef76341ad0d27866b7a696bfc21c07bb49c7e2
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -22,6 +22,7 @@ disable-model-invocation: true
 description: "Read-only planner plan audit of a design or a phase on explicit owner request."
 argument-hint: "<PLAN> <Pn|design> [--reviewer <provider/model>] [--effort xhigh]"
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.

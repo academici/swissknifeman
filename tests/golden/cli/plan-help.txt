@@ -9,6 +9,8 @@ positional arguments:
     new                 create a plan
     config              show the effective [planner] configuration or explain
                         where a value comes from
+    overlays            print the owner's overlay rules of a command slot
+                        (planner:<command>)
     show                overview of a plan, or one document as canonical JSON
     get                 read one document by reference (JSON envelope)
     list                list document rows with filters (JSON envelope)

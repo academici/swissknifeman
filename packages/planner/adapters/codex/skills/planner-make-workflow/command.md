@@ -1,8 +1,9 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/make-workflow.md
-Canonical SHA-256: sha256:3d994280dcac8b73ff553f50416001bd872e13a99526ecc893abcd5ee52948b8
+Canonical SHA-256: sha256:6cea6cf95e0b37aed1d257e11c28532f6e10906805c7444fcb7e4e072911b048
 Adapter: planner.codex-command/1.0.18
 -->
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:make-workflow` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
 not need this path. User input: `$ARGUMENTS`. The route is pinned to implementation/high.
 

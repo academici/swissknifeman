@@ -386,6 +386,20 @@ def cmd_config(args) -> int:
     return 0
 
 
+def cmd_overlays(args) -> int:
+    from ..integration import overlays
+    found = overlays.resolve(args.slot, project=overlays.project_root(project=args.project))
+    if args.json:
+        _print_json({"slot": found["slot"], "overlays": found["overlays"], "warnings": found["warnings"],
+                     "aicore": found["aicore"]})
+    else:
+        sys.stdout.write(found["text"])
+        for warning in found["warnings"]:
+            if isinstance(warning, dict):
+                print(f"plan.py overlays: {warning['code']}: {warning['message']}", file=sys.stderr)
+    return 1 if args.strict and any(isinstance(w, dict) for w in found["warnings"]) else 0
+
+
 def cmd_finish(args) -> int:
     result = lifecycle.finish(
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
@@ -621,6 +635,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("key", nargs="?", help="with explain: one key or a table such as context")
     p.add_argument("--plan", help="plan id, PLAN<N> or path: add its plan.settings layer")
     p.add_argument("--json", action="store_true", help="machine-readable output")
+
+    p = verb("overlays", cmd_overlays, "print the owner's overlay rules of a command slot (planner:<command>)",
+             plan=False)
+    p.add_argument("slot", help="planner:<command> or <command>, declared in provides.overlay_slots of unit.json")
+    p.add_argument("--project", type=Path, default=None, help="project root (default: the nearest git repository)")
+    p.add_argument("--json", action="store_true", help='print {"slot", "overlays", "warnings", "aicore"} instead')
+    p.add_argument("--strict", action="store_true", help="exit 1 when a configured overlay file was skipped")
 
     p = verb("show", cmd_show, "overview of a plan, or one document as canonical JSON")
     p.add_argument("ref", nargs="?", help="plan, brief, Pn, Pn.m, D#, Pn.m/U#")

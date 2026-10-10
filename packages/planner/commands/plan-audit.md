@@ -3,6 +3,7 @@ disable-model-invocation: true
 description: "Read-only planner plan audit of a design or a phase on explicit owner request."
 argument-hint: "<PLAN> <Pn|design> [--reviewer <provider/model>] [--effort xhigh]"
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.

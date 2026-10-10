@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-close.md
-Canonical SHA-256: sha256:f4637af69e4d3a46a993f2f0d7e131222f198791b8e0ca00e77bdef9a91365d5
+Canonical SHA-256: sha256:bf7a594a0aa3b150fd57e439b29508daa8cfcd2879ab33135c1bd073323c3c45
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -24,6 +24,7 @@ argument-hint: "<PLAN> <Pn.m|archive>"
 model: sonnet
 effort: low
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-close` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** record a missing outcome, reopen a finished item, or archive a done plan.

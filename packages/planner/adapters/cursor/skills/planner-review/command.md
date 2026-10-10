@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/review.md
-Canonical SHA-256: sha256:7eaf2e4ea10d1a80c0c013077d338a779961170acb72694891eee3f0a1e8ed6a
+Canonical SHA-256: sha256:8de59557e90f6491267b6c32ed833eda2f70e6e28313dc7edbd069f0a0d6e72e
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -8,6 +8,7 @@ disable-model-invocation: true
 description: "Risk-scaled read-only review of code, docs or specs."
 argument-hint: "<artifact: diff / branch / PR# / docs path> [--reviewer <provider/model>] [--effort high]"
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:review` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.

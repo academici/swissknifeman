@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/research.md
-Canonical SHA-256: sha256:d7ae590be099d85609cdf2ce3a0193441d575aa5a09b04faa465e654b98a370c
+Canonical SHA-256: sha256:9df646c85be25dca0a689708d43f460b3166a67dbef1fc330a5f70414f1d331f
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -10,6 +10,7 @@ argument-hint: "[question / topic]"
 model: opus
 effort: high
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:research` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a RESEARCH task. User input: `$ARGUMENTS`. The route is pinned to Opus/high.
 
 Return an answer supported by verified sources and one concrete next step. Use a workflow only when real

@@ -71,6 +71,7 @@ class VerbCoverageTests(EnvelopeCase):
             ("bridge", ["bridge", "list"], 0),
             ("commits", ["commits", plan], 0),
             ("config", ["config", "show", "--plans-root", str(self.plans)], 0),
+            ("overlays", ["overlays", "planner:review", "--project", str(self.root)], 0),
             ("commit", ["commit", plan, "P1.1", "--role", "executor", "--dry-run"], 1),  # outside Git
             ("check", ["check", plan], 0),
             ("next", ["next", plan], 0),

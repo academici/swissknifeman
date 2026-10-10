@@ -5,6 +5,7 @@ argument-hint: "<workflow type and objective> [--reviewer <provider/model>]"
 model: sonnet
 effort: high
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:make-workflow` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
 not need this path. User input: `$ARGUMENTS`. The route is pinned to Sonnet/high.
 

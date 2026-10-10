@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-run.md
-Canonical SHA-256: sha256:2bc899189565b7b7e1b5daaea1fff7a8b9bd03596e8777d062e42278608b9955
+Canonical SHA-256: sha256:25c38dbf1756ca54689471460616823a0cbc33e6d3be2f68ec2b74d8052b048b
 Adapter: planner.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -30,6 +30,7 @@ export PLANNER_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | pytho
 `plan.py` means `python3 "$PLANNER_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
 `--actor codex/<model>/<reasoning effort>` from this session's settings.
 
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks,

@@ -5,6 +5,7 @@ argument-hint: "<PLAN>|new <title> [Pn] [--review]"
 model: opus
 effort: high
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-design` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** a plan whose target phase is `detailed`: every item is executable by a weaker model from its

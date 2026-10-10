@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-design.md
-Canonical SHA-256: sha256:629d83af3eea76d7e63b6d6631be43817a84f380eb52530031cdcea788cc32d6
+Canonical SHA-256: sha256:ba865c3380b9c61219fcb45e90f36cfda1875b5f83c099274d948f63f46e58f6
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -24,6 +24,7 @@ argument-hint: "<PLAN>|new <title> [Pn] [--review]"
 model: opus
 effort: high
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-design` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** a plan whose target phase is `detailed`: every item is executable by a weaker model from its

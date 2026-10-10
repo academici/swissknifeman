@@ -7,7 +7,7 @@ effort: high
 ---
 > `/task:dev` is deprecated and will be removed in the next minor release: use `/planner:dev`. Say this to the user once, then follow the instructions below; `<Planner package root>` is the root of the enabled planner plugin.
 
-
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DEVELOPMENT task. User input: `$ARGUMENTS`.
 
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.

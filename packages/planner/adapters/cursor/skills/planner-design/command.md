@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/design.md
-Canonical SHA-256: sha256:a328f090de7954840729242431aa8a7c807cc2a9b901030cf876df971740b72d
+Canonical SHA-256: sha256:c1d0d91b5d9ae0341fa447da914afc7da0c78bfbd951095c73befd31848e8868
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -10,6 +10,7 @@ argument-hint: "[what to design] [--reviewer <provider/model>]"
 model: opus
 effort: high
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:design` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DESIGN task: produce durable artifacts, not implementation. User input: `$ARGUMENTS`.
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.
 Activate this workflow only for an explicit design request. Scale, risk, or an existing plan does not

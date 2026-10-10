@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `planner:make-workflow`.
 - Invocation: `planner:make-workflow <arguments>`
 - Routing: `implementation/high -> composer-2.5/high`
 - Canonical source: `packages/planner/commands/make-workflow.md`
-- Canonical SHA-256: `sha256:3d994280dcac8b73ff553f50416001bd872e13a99526ecc893abcd5ee52948b8`
+- Canonical SHA-256: `sha256:6cea6cf95e0b37aed1d257e11c28532f6e10906805c7444fcb7e4e072911b048`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

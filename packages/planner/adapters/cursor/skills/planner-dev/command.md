@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/dev.md
-Canonical SHA-256: sha256:371fe2a7752320d9ff5163e4e49af345389ea8c8de19cd930c93e309d34899a7
+Canonical SHA-256: sha256:4990aee2f1ece9fa8830c691c6546b5adbd78e159671f16d82139c69b7b1ecb7
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -10,7 +10,7 @@ argument-hint: "[what to build: brief / slices / plan reference] [--review] [--r
 model: sonnet
 effort: high
 ---
-
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DEVELOPMENT task. User input: `$ARGUMENTS`.
 
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.

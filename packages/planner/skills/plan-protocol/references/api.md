@@ -57,6 +57,19 @@ comes from; `--json` gives `{"aicore", "layers", "values"}` for `show` and `conf
 `CONFIG_INVALID` naming file, line and key. The context pack's `policy` object carries `review_rounds_max` and
 `corrections_max`.
 
+## Overlays
+
+Every command of the module opens with a call to its overlay slot: the owner's own rules for that command, kept
+outside the module. `plan.py overlays SLOT [--project DIR] [--json] [--strict]` takes `planner:<command>` or
+`<command>` (the slots are `provides.overlay_slots` of `unit.json`, one per command) and prints the block of the
+files listed under `[aicore.overlays."planner:<command>"]` in the layered configuration, in layer order. The
+block is empty without overlays; the files add rules and never replace the plan, its checks or safety rules.
+Warnings (`OVERLAY_MISSING`, `OVERLAY_INVALID`) go to stderr; `--strict` makes them exit 1. `--json` prints
+`{"slot", "overlays": [{"path", "layer", "digest", "bytes"}], "warnings", "aicore"}`. `--project` defaults to the
+git repository of the working directory. Without aicore the output is empty and the exit code 0 (`--json`:
+`warnings` is `["AICORE_UNAVAILABLE"]`). Refusals: `OVERLAY_SLOT_UNKNOWN`, `OVERLAY_TOO_LARGE` (the texts of a slot
+are limited to 32 KiB).
+
 ## Parallel lanes
 
 | Verb | Mode | Data | Use |

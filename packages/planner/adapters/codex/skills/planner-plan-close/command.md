@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-close.md
-Canonical SHA-256: sha256:f4637af69e4d3a46a993f2f0d7e131222f198791b8e0ca00e77bdef9a91365d5
+Canonical SHA-256: sha256:bf7a594a0aa3b150fd57e439b29508daa8cfcd2879ab33135c1bd073323c3c45
 Adapter: planner.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -30,6 +30,7 @@ export PLANNER_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | pytho
 `plan.py` means `python3 "$PLANNER_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
 `--actor codex/<model>/<reasoning effort>` from this session's settings.
 
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-close` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** record a missing outcome, reopen a finished item, or archive a done plan.

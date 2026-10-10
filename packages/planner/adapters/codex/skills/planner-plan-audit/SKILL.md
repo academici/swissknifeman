@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `planner:plan-audit`.
 - Invocation: `$ planner:plan-audit <arguments>`
 - Routing: `frontier/xhigh -> gpt-6-astra/xhigh`
 - Canonical source: `packages/planner/commands/plan-audit.md`
-- Canonical SHA-256: `sha256:c937b492eaf1a04468b8d19950afa08d31f50c6c0c9ee676b33a8d3e5cd10ae6`
+- Canonical SHA-256: `sha256:95d9ea32f84545b3c5858316efef76341ad0d27866b7a696bfc21c07bb49c7e2`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this planner command or skill. Planner is not an

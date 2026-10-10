@@ -3,6 +3,7 @@ disable-model-invocation: true
 description: "Risk-scaled read-only review of code, docs or specs."
 argument-hint: "<artifact: diff / branch / PR# / docs path> [--reviewer <provider/model>] [--effort high]"
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:review` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.

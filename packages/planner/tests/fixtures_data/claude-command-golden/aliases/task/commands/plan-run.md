@@ -5,6 +5,7 @@ argument-hint: "<PLAN> [Pn.m ...] [--review] [--reviewer <provider/model>] [--re
 ---
 > `/task:plan-run` is deprecated and will be removed in the next minor release: use `/planner:plan-run`. Say this to the user once, then follow the instructions below; `<Planner package root>` is the root of the enabled planner plugin.
 
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks,

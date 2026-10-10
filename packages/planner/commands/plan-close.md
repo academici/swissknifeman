@@ -5,6 +5,7 @@ argument-hint: "<PLAN> <Pn.m|archive>"
 model: sonnet
 effort: low
 ---
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-close` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** record a missing outcome, reopen a finished item, or archive a done plan.

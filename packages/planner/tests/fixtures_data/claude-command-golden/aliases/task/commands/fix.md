@@ -7,6 +7,7 @@ effort: medium
 ---
 > `/task:fix` is deprecated and will be removed in the next minor release: use `/planner:fix`. Say this to the user once, then follow the instructions below; `<Planner package root>` is the root of the enabled planner plugin.
 
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:fix` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a SMALL incremental repair. User input: `$ARGUMENTS`.
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.
 Complete the repair directly: design, a plan, phase audit, and plan close are not completion prerequisites;

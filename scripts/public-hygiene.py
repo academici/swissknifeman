@@ -80,6 +80,7 @@ PLAN_REFERENCE_RULES = [
 # these trees are exempt from the plan-reference rules ONLY; the content rules above still apply.
 PLAN_SYNTAX_TEST_TREES = {
     "packages/planner/tests/engine/": "plan engine tests and fixtures: ID, Short-ID and reference syntax",
+    "packages/planner/tests/fixtures/events/": "planner.* event envelopes the engine emitted for its synthetic demo plan: its ID shape",
     "packages/planner/bridges/orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
     "packages/orch/fixtures/exec/": "orchestration exec-contract fixtures: plan-bound identifiers",
     "packages/orch/tests/": "orchestration tests and goldens: plan-bound identifiers and profile examples",

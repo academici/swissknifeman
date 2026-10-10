@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-design.md
-Canonical SHA-256: sha256:629d83af3eea76d7e63b6d6631be43817a84f380eb52530031cdcea788cc32d6
+Canonical SHA-256: sha256:ba865c3380b9c61219fcb45e90f36cfda1875b5f83c099274d948f63f46e58f6
 Adapter: planner.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -30,6 +30,7 @@ export PLANNER_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | pytho
 `plan.py` means `python3 "$PLANNER_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
 `--actor codex/<model>/<reasoning effort>` from this session's settings.
 
+Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-design` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
 
 **Goal:** a plan whose target phase is `detailed`: every item is executable by a weaker model from its

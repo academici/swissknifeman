@@ -243,6 +243,47 @@ class EmissionTests(EventCase):
 
 @needs_aicore
 class SubscriberTests(EventCase):
+    def test_invocation_config_controls_delivery_and_subscriptions(self):
+        from aicore.state import machine_config_file
+        from planner.plan import settings
+        marker = self.home / "invocation-marker.txt"
+        script = self.home / "invocation-subscriber.py"
+        script.write_text(f"import sys\nfrom pathlib import Path\nsys.stdin.read()\n"
+                          f"Path({str(marker)!r}).write_text('delivered')\n", encoding="utf-8")
+        machine = machine_config_file()
+        machine.parent.mkdir(parents=True, exist_ok=True)
+        machine.write_text('schema_version = 1\n[aicore.events]\ndelivery = "off"\n', encoding="utf-8")
+        invocation = self.home / "invocation.toml"
+        invocation.write_text('schema_version = 1\n[aicore.events]\ndelivery = "sync"\n'
+                              '[aicore.subscriptions.invocation]\non = ["planner.item.started"]\n'
+                              f'run = [{json.dumps(sys.executable)}, {json.dumps(str(script))}]\n', encoding="utf-8")
+        settings.set_invocation(invocation)
+        self.addCleanup(settings.set_invocation, None)
+        with mock.patch.dict(os.environ):
+            os.environ.pop("SKM_AICORE_EVENTS__DELIVERY", None)
+            self.start("P1.1")
+        self.assertEqual(marker.read_text(), "delivered")
+        self.assertEqual(len(self.journal("planner.item.started")), 1)
+
+    def test_invocation_off_overrides_machine_sync_delivery(self):
+        from aicore.state import machine_config_file
+        from aicore.ext import delivery
+        from planner.plan import settings
+        machine = machine_config_file()
+        machine.parent.mkdir(parents=True, exist_ok=True)
+        machine.write_text('schema_version = 1\n[aicore.events]\ndelivery = "sync"\n', encoding="utf-8")
+        invocation = self.home / "invocation.toml"
+        invocation.write_text('schema_version = 1\n[aicore.events]\ndelivery = "off"\n', encoding="utf-8")
+        settings.set_invocation(invocation)
+        self.addCleanup(settings.set_invocation, None)
+        with mock.patch.dict(os.environ), mock.patch.object(delivery, "deliver") as deliver, \
+                mock.patch.object(delivery, "spawn_background") as background:
+            os.environ.pop("SKM_AICORE_EVENTS__DELIVERY", None)
+            self.start("P1.1")
+        deliver.assert_not_called()
+        background.assert_not_called()
+        self.assertEqual(len(self.journal("planner.item.started")), 1)
+
     def test_a_sync_subscriber_that_calls_plan_py_on_the_same_plan_is_not_blocked(self):
         from aicore.state import machine_config_file
         marker = self.home / "marker.txt"

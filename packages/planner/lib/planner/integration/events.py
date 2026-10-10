@@ -51,10 +51,12 @@ def emit_all(events: Iterable[tuple[str, dict]], *, project_root: str | Path | N
         if not enabled(project_root):
             return
         from aicore.ext import events as journal
+        from planner.plan import settings
+        config_file = settings.invocation_file()
         cause = None
         for event_type, data in batch:
             stored = journal.emit(event_type, data, source=SOURCE, subject=plan_id, project=project_root,
-                                  dataschema=data_schema(event_type), causationid=cause)
+                                  dataschema=data_schema(event_type), causationid=cause, config_file=config_file)
             if stored is not None:  # a journal that failed was already reported by aicore
                 cause = stored.id
     except Exception as exc:  # noqa: BLE001 — the command that produced the events must not fail

@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "audit-p9-fixes-2026-10-10",
+  "title": "Исполнение находок аудита P9: F1 и F2",
+  "sections": [
+    {
+      "id": "scope",
+      "title": "Основание и граница",
+      "text": "Исполнено по запросу владельца «и тут же исполняй что нашел, но не запускай долгих прогонов». Исходный независимый аудит: @plan/knowledge/audit-p9-2026-10-10.json, RED кандидата 319d91d9. Исправления ниже — самопроверка исполнителя, не новый независимый GREEN. Закрытые состояния и исторические результаты пунктов не переписывались; дополнения к evidence записаны этим документом и notes API."
+    },
+    {
+      "id": "fixes",
+      "title": "Исправления",
+      "text": "F1 / P9.6: packages/planner/lib/planner/integration/events.py:54–59 передаёт settings.invocation_file() в journal.emit. Invocation-слой теперь управляет режимом доставки, подписками и плагинами вместе с events.enabled. Регрессии: реальная sync-подписка, существующая только в --config, получает событие при machine delivery=off; invocation delivery=off не запускает доставку при machine delivery=sync.\n\nF2 / P9.8: packages/planner/lib/planner/integration/plugins.py:80–87 возвращает одну EXTERNAL_CHECK_FAILED для enabled-регистрации без читаемого manifest; severity берётся из checks.external_failure. Disabled-регистрации не диагностируются. Исправный соседний плагин по-прежнему запускается и отдаёт findings. Нечитаемый manifest не позволяет определить points, поэтому его регистрация явно диагностируется.\n\nДокументация обновлена в packages/planner/docs/extensions.md (проекция docs/planner — docs-sync), CHANGELOG [Unreleased] пополнен."
+    },
+    {
+      "id": "validation",
+      "title": "Короткие проверки",
+      "text": "До исправления 4 новые регрессии показали отсутствие sync-доставки, неожиданную sync-доставку вместо off и отсутствие EXTERNAL_CHECK_FAILED при warn/error; disabled-контроль прошёл. После исправления test_events + test_external_checks: 44 теста, OK, 17.339 s, временные HOME/SKM_HOME, обычная доставка off. После добавления регрессии invalid JSON manifest выполнен только этот новый тест: 1 тест, OK, 0.177 s. Всего 45 тестов.\n\nСтруктурные проверки: ecosystem-units.py check exit 0; render-provider-commands.py --check --root . — check OK (no-op); public-hygiene.py — 0 violations; docs-sync; git diff --check exit 0. Широкие validate, standalone и e2e всей фазы повторно не запускались по указанию владельца, их прежние результаты относятся к исходному кандидату. Следующая граница остаётся P10 design."
+    }
+  ],
+  "applies_to": [
+    "P9.6",
+    "P9.8",
+    "P9.12"
+  ]
+}

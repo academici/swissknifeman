@@ -9,6 +9,8 @@ Planner writes events to the `aicore` journal after a change is stored and after
 subscriber that runs `plan.py` itself therefore never blocks. Emission is best effort: if the journal cannot be
 written, the command still succeeds and prints one `PLANNER_EVENT_NOT_EMITTED` warning. Set `events.enabled = false`
 to turn events off. Repeating `finish` with the same attempt id emits nothing.
+The global `--config FILE` also applies to aicore event delivery, subscriptions and plugins, so the invocation
+uses the delivery mode and subscribers declared in that file.
 
 | Type | Emitted by | Data beyond the common fields |
 |:--|:--|:--|
@@ -59,3 +61,6 @@ slow a mutation. The issues join the findings of `check` with the plugin id as p
 or answers with an invalid output gives one `EXTERNAL_CHECK_FAILED` finding whose severity is
 `checks.external_failure`; it never stops the other plugins or the built-in checks. `plan.py check --no-external`
 skips the point and `checks.external = false` disables it.
+An enabled plugin registration with a missing or invalid manifest also produces one `EXTERNAL_CHECK_FAILED`
+finding with the configured severity: its extension points cannot be determined. Disabled registrations are ignored,
+and a broken registration does not stop other plugins from running.

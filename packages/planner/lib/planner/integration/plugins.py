@@ -77,13 +77,18 @@ def run_checks(plan_input: Mapping[str, Any], *, project: str | Path | None = No
         from aicore.ext import settings as ext_settings
         loaded = ext_settings.load(project, config_file=settings.invocation_file())
         registrations, _problems = plugins.registered_plugins(loaded, units=units)
+        # An unreadable manifest cannot tell us its points. Surface the broken enabled registration
+        # rather than silently claiming that every configured check passed.
+        findings = [Finding(failure, FAILED, registration.id,
+                            f"{registration.problem['code']}: {registration.problem['message']}")
+                    for registration in registrations
+                    if registration.enabled and registration.manifest is None and registration.problem]
         results = [plugins.invoke_one(registration, POINT, plan_input, project=project)
                    for registration in registrations
                    if registration.enabled and registration.manifest is not None
                    and registration.manifest.kind == "command" and POINT in registration.manifest.points]
     except ExtError as exc:
         return [Finding(failure, FAILED, "aicore", f"{exc.code}: {exc.message}")]
-    findings: list[Finding] = []
     for result in results:
         findings.extend(_findings(result, failure))
     return findings

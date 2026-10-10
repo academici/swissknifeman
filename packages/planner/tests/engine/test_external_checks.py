@@ -165,6 +165,36 @@ class RegisteredPluginTests(ExternalCheckCase):
 
 @needs_aicore
 class FailureTests(ExternalCheckCase):
+    def test_a_missing_manifest_obeys_the_configured_failure_severity(self):
+        for severity, expected_exit in (("warn", 0), ("error", 1)):
+            with self.subTest(severity=severity):
+                self.config = ""
+                self.machine(f'[aicore.plugins.check-demo]\nmanifest = "{self.home / "missing.json"}"\n'
+                             f'trusted = true\n[planner.checks]\nexternal_failure = "{severity}"\n')
+                code, out, err = self.check()
+                self.assertEqual(code, expected_exit)
+                self.assertEqual((out + err).count("EXTERNAL_CHECK_FAILED"), 1)
+                self.assertIn("EXTERNAL_CHECK_FAILED: check-demo: PLUGIN_MANIFEST_INVALID", out + err)
+                self.assertEqual(self.calls(), [])
+
+    def test_a_disabled_registration_with_a_missing_manifest_is_ignored(self):
+        self.machine(f'[aicore.plugins.check-demo]\nmanifest = "{self.home / "missing.json"}"\n'
+                     'enabled = false\n[planner.checks]\nexternal_failure = "error"\n')
+        code, out, err = self.check()
+        self.assertEqual(code, 0)
+        self.assertNotIn("EXTERNAL_CHECK_FAILED", out + err)
+
+    def test_an_invalid_manifest_is_reported_without_launching_the_plugin(self):
+        manifest = self.home / "invalid.json"
+        manifest.write_text("{", encoding="utf-8")
+        self.machine(f'[aicore.plugins.check-demo]\nmanifest = "{manifest}"\ntrusted = true\n'
+                     '[planner.checks]\nexternal_failure = "error"\n')
+        code, out, err = self.check()
+        self.assertEqual(code, 1)
+        self.assertEqual((out + err).count("EXTERNAL_CHECK_FAILED"), 1)
+        self.assertIn("PLUGIN_MANIFEST_INVALID", err)
+        self.assertEqual(self.calls(), [])
+
     def test_a_failing_plugin_is_a_warning_and_does_not_fail_the_check(self):
         self.register("error")
         code, out, err = self.check()
@@ -220,6 +250,13 @@ class FailureTests(ExternalCheckCase):
         self.machine(f'[aicore.plugins.check-other]\nmanifest = "{other / "extension.json"}"\ntrusted = true\n')
         _, out, err = self.check()
         self.assertIn("EXTERNAL_CHECK_FAILED: check-demo", out)
+        self.assertIn("[check-other] the demo check rejects", err)
+        self.config = ""
+        self.machine(f'[aicore.plugins.check-demo]\nmanifest = "{self.home / "missing.json"}"\ntrusted = true\n'
+                     f'[aicore.plugins.check-other]\nmanifest = "{other / "extension.json"}"\ntrusted = true\n')
+        _, out, err = self.check()
+        self.assertEqual(out.count("EXTERNAL_CHECK_FAILED"), 1)
+        self.assertIn("EXTERNAL_CHECK_FAILED: check-demo: PLUGIN_MANIFEST_INVALID", out)
         self.assertIn("[check-other] the demo check rejects", err)
 
 

@@ -303,7 +303,11 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--repair-owned requires --write")
     root = Path(args.root).resolve()
 
-    routing_bytes = _routing_snapshot_bytes(root)
+    try:
+        routing_bytes = _routing_snapshot_bytes(root)
+    except ValueError as exc:
+        print(f"render-provider-commands: {exc}", file=sys.stderr)
+        return 1
     if args.write and (root / _ROUTING).read_bytes() != routing_bytes:
         (root / _ROUTING).write_bytes(routing_bytes)
     try:

@@ -84,8 +84,8 @@ schema_version = 1
 # enabled = true
 
 [planner.checks]
-# Whether plugins subscribed to the planner:check point are called. Reserved: no effect yet. Boolean.
+# Whether plan.py check calls the plugins registered at the planner:check extension point. Boolean.
 # external = true
 
-# What a failing external check counts as in the plan check. Reserved: no effect yet. One of: "warn", "error".
+# What a plugin that fails, times out or answers with an invalid output counts as in plan.py check: a warning (warn) or an error. One of: "warn", "error".
 # external_failure = "warn"

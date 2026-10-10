@@ -258,12 +258,12 @@
       "properties": {
         "external": {
           "type": "boolean",
-          "description": "Whether plugins subscribed to the planner:check point are called. Reserved: no effect yet.",
+          "description": "Whether plan.py check calls the plugins registered at the planner:check extension point.",
           "default": true
         },
         "external_failure": {
           "type": "string",
-          "description": "What a failing external check counts as in the plan check. Reserved: no effect yet.",
+          "description": "What a plugin that fails, times out or answers with an invalid output counts as in plan.py check: a warning (warn) or an error.",
           "default": "warn",
           "enum": [
             "warn",

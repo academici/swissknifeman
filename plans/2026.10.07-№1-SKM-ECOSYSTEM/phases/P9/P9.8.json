@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.8",
   "title": "Внешние проверки плана: точка расширения planner:check, контракт check-plugin/v1, plan.py check",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "unit.json provides.extension_points [{id: check}] и контракт check-plugin/v1 (input, output); plan.py check [--no-external] вызывает плагины точки planner:check через planner.integration.plugins.run_checks (aicore invoke_point) после встроенных проверок, issues с префиксом плагина, сбой — EXTERNAL_CHECK_FAILED (warning или error по checks.external_failure); мутации и design-done плагинов не вызывают; фикстура-плагин и тесты.",
   "why": "D6, D45, D59: внешние проверки плана — точка расширения planner (архитектура §6.4). Жёсткие риски: (1) плагин, вызванный каждой мутацией, замедлит любую правку плана — только глагол check, тест метки; (2) упавший плагин блокирует работу — по умолчанию warning; (3) недоверенный плагин — регистрация только машинным конфигом aicore (D43), planner сам ничего не регистрирует.",
   "scope": {
@@ -147,6 +147,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:40Z"
+  "result": {
+    "started_at": "2026-10-10T05:08:18Z",
+    "finished_at": "2026-10-10T06:08:19Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1bbb087d-0294-4c78-b388-e2208e96027c"
+    },
+    "notes": "planner:check point, check-plugin/v1 schemas, integration/plugins.py, plan.py check --no-external, demo plugin fixture, 22 tests, api.md, CHANGELOG; V1-V3 green",
+    "deviations": [
+      "config schema and generated config.example.toml descriptions of checks.* updated (no longer reserved); plugin findings carry the prefix in the message, the plugin code stays the issue code"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T06:08:19Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T06:08:19Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T06:08:19Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T06:08:19Z"
 }

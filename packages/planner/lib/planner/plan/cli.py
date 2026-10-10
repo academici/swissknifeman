@@ -279,8 +279,25 @@ def cmd_batches(args) -> int:
     return 0
 
 
+def _external_issues(plan, args) -> list:
+    """The findings of the plugins at ``planner:check``; only the ``check`` verb asks, never a mutation."""
+    document = plan.plan if isinstance(plan.plan, dict) else {}
+    if args.no_external or not integration.available() or not isinstance(document.get("id"), str):
+        return []
+    config = settings.for_plan(plan)
+    if not config.get("checks.external"):
+        return []
+    from ..integration import plugins
+    project = settings.project_root_of(plan.root.parent)
+    plan_input = plugins.build_input(plan_id=document["id"], short_id=str(document.get("short_id") or ""),
+                                     plan_dir=plan.root, plans_root=plan.root.parent, project_root=project)
+    failure = "error" if config.get("checks.external_failure") == "error" else "warning"
+    return [check.Issue(*finding) for finding in plugins.run_checks(plan_input, project=project, failure=failure)]
+
+
 def cmd_check(args) -> int:
-    issues = check.check(store.load_plan(_plan_dir(args)))
+    plan = store.load_plan(_plan_dir(args))
+    issues = [*check.check(plan), *_external_issues(plan, args)]
     errors = [i for i in issues if i.level == "error"]
     warnings = [i for i in issues if i.level == "warning"]
     if args.json:
@@ -752,6 +769,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = verb("check", cmd_check, "check a plan; exit 1 on errors")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--no-external", action="store_true",
+                   help="skip the plugins registered at the planner:check extension point")
 
     p = verb("render", cmd_render, "regenerate the Markdown views")
     p.add_argument("--check", action="store_true", help="report stale views, write nothing")

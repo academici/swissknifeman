@@ -70,6 +70,21 @@ git repository of the working directory. Without aicore the output is empty and 
 `warnings` is `["AICORE_UNAVAILABLE"]`). Refusals: `OVERLAY_SLOT_UNKNOWN`, `OVERLAY_TOO_LARGE` (the texts of a slot
 are limited to 32 KiB).
 
+## External checks
+
+`unit.json` opens the extension point `planner:check`. `plan.py check PLAN [--no-external] [--json]` runs its own
+checks and then calls every plugin registered at the point: `[aicore.plugins.<id>]` in the machine configuration of
+aicore (the planner registers nothing; a plugin of `kind` `command` lists `planner:check` in `provides.points`).
+The input follows `schemas/check-plugin/v1/input.schema.json` (`plan_id`, `short_id`, `plan_dir`, `plans_root`,
+`project_root`, `planner_version`, `schema_urn_prefix`); the plugin reads the plan data itself from `plan_dir` or
+through `plan.py export`. The output follows `output.schema.json`: `{"issues": [{"severity": "error" | "warning",
+"code", "message", "ref"?, "path"?}]}`, at most 500. A finding appears as an ordinary check issue with the plugin's
+code and the message prefixed `[<plugin>]`; an error fails the check. A plugin that fails, times out or answers
+outside the contract is one `EXTERNAL_CHECK_FAILED` finding naming the plugin and the reason; its severity is
+`checks.external_failure` (`warn`, the default, or `error`). `--no-external` and `checks.external = false` skip the
+plugins; without aicore they are skipped silently. Only the `check` verb calls plugins: mutations, `design-done` and
+the other verbs never do.
+
 ## Parallel lanes
 
 | Verb | Mode | Data | Use |

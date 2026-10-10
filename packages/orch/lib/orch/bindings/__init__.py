@@ -219,7 +219,7 @@ class Binding:
     def run(self, launch_plan: dict) -> str:
         raise PortError("NOT_IMPLEMENTED", "run is not available in this version")
 
-    def watch(self, run_id: str) -> Iterator[dict]:
+    def watch(self, run_id: str, after_seq: int | None = None) -> Iterator[dict]:
         raise PortError("NOT_IMPLEMENTED", "watch is not available in this version")
 
     def cancel(self, run_id: str) -> dict:

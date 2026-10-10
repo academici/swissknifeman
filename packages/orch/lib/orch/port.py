@@ -14,6 +14,7 @@ BINDINGS = ("native", "cao", "claude-only")
 PORT_ERROR_CODES = (
     "INPUT_INVALID", "POLICY_INVALID", "ROLE_UNKNOWN", "ROUTE_UNDERSHOOT", "CAPABILITY_UNSUPPORTED",
     "RESUME_REFUSED", "RUN_UNKNOWN", "NOT_IMPLEMENTED", "SEQ_ORDER", "AFTER_TERMINAL",
+    "EVENT_CONFLICT", "STALE_EPOCH",
 )
 TERMINAL = {
     "quota_block": "quota_blocked", "auth_block": "auth_blocked", "timeout": "timeout",
@@ -24,6 +25,13 @@ TERMINAL = {
 RETRYABLE = frozenset({"failed", "timeout", "quota_blocked", "auth_blocked", "unknown_outcome"})
 # Terminal events that carry a cause class into stage-result errors; none of them is a task failure.
 ERROR_CLASS = {"quota_block": "quota", "auth_block": "auth", "timeout": "timeout", "provider_error": "provider"}
+# Stage-result error category of a normalized error/v1 class, for an event that carries an error
+# but whose kind has no category of its own (``failed``).
+STAGE_ERROR_CLASS = {
+    "authentication": "auth", "authorization": "auth", "quota": "quota", "rate_limit": "quota",
+    "transport": "transport", "timeout": "timeout", "provider_internal": "provider",
+    "model_unavailable": "provider",
+}
 EOF_MESSAGE = "stream ended without terminal event"
 
 
@@ -48,7 +56,7 @@ class EnginePort(Protocol):
 
     def run(self, launch_plan: dict) -> str: ...
 
-    def watch(self, run_id: str) -> Iterator[dict]: ...
+    def watch(self, run_id: str, after_seq: int | None = None) -> Iterator[dict]: ...
 
     def cancel(self, run_id: str) -> dict: ...
 
@@ -71,27 +79,50 @@ class RunState:
     def __init__(self, run_id: str):
         self.run_id = run_id
         self._seen: dict[int, str] = {}
+        self._ids: dict[str, str] = {}
         self._last_seq: int | None = None
+        self._max_epoch: int | None = None
         self._stages: dict[str, dict] = {}
+        self._foreign: list[dict] = []
 
     def apply(self, event: dict) -> None:
+        """Apply one event; the checks run in a fixed order and none of them changes the state."""
+        if isinstance(event, dict) and event.get("contract_version", CONTRACT_VERSION) != CONTRACT_VERSION:
+            # An event of another contract version is kept for later inspection and never applied.
+            self._foreign.append(copy.deepcopy(event))
+            return
         issues = [issue for issue in contracts.validate(event, "run-event") if issue.level == "error"]
         if issues:
             raise PortError("INPUT_INVALID", "run-event does not match exec/v1",
                             {"issues": [issue._asdict() for issue in issues]})
         if event["run_id"] != self.run_id:
             raise PortError("RUN_UNKNOWN", f"event belongs to run {event['run_id']!r}, not {self.run_id!r}")
-        seq, encoded = event["seq"], _canonical(event)
+        seq, encoded, event_id = event["seq"], _canonical(event), event.get("event_id")
+        if event_id is not None and event_id in self._ids:
+            if self._ids[event_id] == encoded:
+                return  # idempotent replay
+            raise PortError("EVENT_CONFLICT", f"event_id {event_id!r} repeated with different content")
         if seq in self._seen:
             if self._seen[seq] == encoded:
                 return  # idempotent replay
             raise PortError("SEQ_ORDER", f"seq {seq} repeated with different content")
         if self._last_seq is not None and seq < self._last_seq:
             raise PortError("SEQ_ORDER", f"seq {seq} is lower than last seen {self._last_seq}")
+        epoch = event.get("owner_epoch")
+        if epoch is not None and self._max_epoch is not None and epoch < self._max_epoch:
+            raise PortError("STALE_EPOCH", f"owner_epoch {epoch} is lower than {self._max_epoch} seen before")
         stage = self._next_stage(event)
         self._seen[seq] = encoded
+        if event_id is not None:
+            self._ids[event_id] = encoded
         self._last_seq = seq
+        if epoch is not None:
+            self._max_epoch = epoch if self._max_epoch is None else max(self._max_epoch, epoch)
         self._stages[event["stage_id"]] = stage
+
+    def foreign(self) -> list[dict]:
+        """Copies of the events of another contract version, in arrival order."""
+        return copy.deepcopy(self._foreign)
 
     def _next_stage(self, event: dict) -> dict:
         stage_id, kind, attempt = event["stage_id"], event["kind"], event["attempt"]
@@ -122,10 +153,15 @@ class RunState:
             if attempt > current["attempt"]:
                 raise PortError("INPUT_INVALID", f"stage {stage_id!r} attempt {attempt} has not started")
             stage = dict(current, errors=list(current["errors"]))
-            if kind in ERROR_CLASS:
-                error = {"class": ERROR_CLASS[kind], "message": event.get("summary", kind.replace("_", " "))}
+            normalized = event.get("error")
+            if kind in ERROR_CLASS or (kind == "failed" and normalized is not None):
+                category = ERROR_CLASS.get(kind) or STAGE_ERROR_CLASS.get(normalized["class"], "task")
+                message = event.get("summary") or (normalized or {}).get("safe_message") or kind.replace("_", " ")
+                error = {"class": category, "message": message}
                 if "raw_ref" in event:
                     error["raw_ref"] = event["raw_ref"]["path"]
+                if normalized is not None:
+                    error["error"] = copy.deepcopy(normalized)
                 stage["errors"].append(error)
             if kind in TERMINAL:
                 stage["status"] = TERMINAL[kind]
@@ -175,7 +211,7 @@ class RunState:
         if stage["route_observed"] is not None:
             result["route"]["observed"] = dict(stage["route_observed"], source="event")
         if stage["errors"]:
-            result["errors"] = [dict(error) for error in stage["errors"]]
+            result["errors"] = copy.deepcopy(stage["errors"])
         if stage["finished_at"] is not None:
             result["finished_at"] = stage["finished_at"]
         issues = [issue for issue in contracts.validate(result, "stage-result") if issue.level == "error"]

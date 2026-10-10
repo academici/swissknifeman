@@ -225,5 +225,112 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(len(state.stages()["primary"]["errors"]), 1)
 
 
+def error_doc(error_class="provider_internal", **extra):
+    return dict({"class": error_class, "code": "UPSTREAM_FAILURE", "retryable": True,
+                 "safe_message": "provider failed"}, **extra)
+
+
+class EventIdentityTests(unittest.TestCase):
+    def rejected(self, code, state, doc):
+        before = state.stages()
+        with self.assertRaises(PortError) as caught:
+            state.apply(doc)
+        self.assertEqual(caught.exception.code, code)
+        self.assertEqual(state.stages(), before)
+
+    def test_event_id_repeat_is_ignored(self):
+        started = event(0, "started", event_id="evt-1")
+        state = fold([started, event(1, "output", event_id="evt-2")])
+        before = state.stages()
+        state.apply(started)
+        self.assertEqual(state.stages(), before)
+
+    def test_event_id_with_other_content_is_conflict_before_seq_rules(self):
+        state = fold([event(0, "started", event_id="evt-1"), event(1, "output", event_id="evt-2")])
+        self.rejected("EVENT_CONFLICT", state, event(2, "output", event_id="evt-2"))
+        self.rejected("EVENT_CONFLICT", state, event(0, "started", event_id="evt-1", summary="changed"))
+
+    def test_seq_rules_remain_for_events_with_other_ids(self):
+        state = fold([event(0, "started", event_id="evt-1")])
+        self.rejected("SEQ_ORDER", state, event(0, "started", event_id="evt-9"))
+
+    def test_older_epoch_is_stale(self):
+        state = fold([event(0, "started", owner_epoch=2)])
+        self.rejected("STALE_EPOCH", state, event(1, "output", owner_epoch=1))
+        state.apply(event(1, "output", owner_epoch=2))
+        state.apply(event(2, "output", owner_epoch=3))
+        self.rejected("STALE_EPOCH", state, event(3, "output", owner_epoch=2))
+
+    def test_event_without_epoch_is_not_fenced(self):
+        state = fold([event(0, "started", owner_epoch=5)])
+        state.apply(event(1, "output"))
+        self.assertEqual(state.stages()["primary"]["last_seq"], 1)
+
+    def test_rejected_event_does_not_advance_the_epoch(self):
+        state = fold([event(0, "started", owner_epoch=1), event(1, "completed", owner_epoch=1)])
+        self.rejected("AFTER_TERMINAL", state, event(2, "output", owner_epoch=9))
+        state.apply(event(2, "started", stage="other", owner_epoch=1))  # epoch 9 never fenced the owner
+        self.assertEqual(state.stages()["other"]["status"], "running")
+
+    def test_replay_of_old_epoch_event_is_ignored_not_stale(self):
+        old = event(1, "output", owner_epoch=1, event_id="evt-1")
+        state = fold([event(0, "started", owner_epoch=1), old, event(2, "output", owner_epoch=2)])
+        state.apply(old)
+
+    def test_foreign_version_is_kept_and_not_applied(self):
+        foreign = dict(event(5, "output"), contract_version="exec/v2", unknown_field=True)
+        state = fold([event(0, "started")])
+        before = state.stages()
+        state.apply(foreign)
+        state.apply(foreign)
+        self.assertEqual(state.stages(), before)
+        self.assertEqual(state.foreign(), [foreign, foreign])
+        state.foreign()[0]["kind"] = "changed"
+        self.assertEqual(state.foreign()[0]["kind"], "output")
+        foreign["kind"] = "later"
+        self.assertEqual(state.foreign()[0]["kind"], "output")
+
+    def test_foreign_version_does_not_consume_seq_or_id(self):
+        state = fold([event(0, "started")])
+        state.apply(dict(event(1, "output", event_id="evt-1"), contract_version="exec/v2"))
+        state.apply(event(1, "output", event_id="evt-1"))
+        self.assertEqual(state.stages()["primary"]["last_seq"], 1)
+
+    def test_missing_contract_version_is_invalid_not_foreign(self):
+        doc = event(1, "output")
+        del doc["contract_version"]
+        state = fold([event(0, "started")])
+        self.rejected("INPUT_INVALID", state, doc)
+        self.assertEqual(state.foreign(), [])
+
+    def test_normalized_error_is_kept_in_stage_errors(self):
+        error = error_doc("quota", code="USAGE_LIMIT", retry_after_s=60)
+        state = fold([event(0, "started"), event(1, "quota_block", error=error)])
+        record = state.stages()["primary"]["errors"][0]
+        self.assertEqual((record["class"], record["error"]), ("quota", error))
+        error["code"] = "CHANGED"
+        self.assertEqual(state.stages()["primary"]["errors"][0]["error"]["code"], "USAGE_LIMIT")
+
+    def test_failed_event_with_error_records_a_stage_error(self):
+        state = fold([event(0, "started"), event(1, "failed", error=error_doc("authentication", code="BAD_KEY"))])
+        record = state.stages()["primary"]["errors"][0]
+        self.assertEqual(record["class"], "auth")
+        self.assertEqual(record["message"], "provider failed")
+        for name in ("completed", "failed"):  # a failed event without an error keeps the old behaviour
+            self.assertEqual(fold([event(0, "started"), event(1, name)]).stages()["primary"]["errors"], [])
+
+    def test_stage_result_does_not_alias_the_recorded_error(self):
+        state = fold([event(0, "started"), event(1, "failed", error=error_doc("authentication", code="BAD"))])
+        result(state)["errors"][0]["error"]["code"] = "MUTATED"
+        self.assertEqual(state.stages()["primary"]["errors"][0]["error"]["code"], "BAD")
+        self.assertEqual(result(state)["errors"][0]["error"]["code"], "BAD")
+
+    def test_stage_result_with_normalized_error_is_valid(self):
+        state = fold([event(0, "started"), event(1, "timeout", error=error_doc("timeout", code="NO_ANSWER"))])
+        doc = result(state)
+        self.assertEqual(doc["errors"][0]["error"]["class"], "timeout")
+        self.assertEqual([i for i in contracts.validate(doc, "stage-result") if i.level == "error"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

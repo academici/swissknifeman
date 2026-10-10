@@ -200,6 +200,11 @@
         "max_parallel": {
           "type": "integer",
           "description": "Optional concurrent dispatch ceiling; positive when present."
+        },
+        "scenario": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Execution scenario: the name of a run-policy profile of an execution engine, or solo for the current session."
         }
       },
       "required": [],

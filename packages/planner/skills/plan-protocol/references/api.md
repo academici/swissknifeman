@@ -161,6 +161,14 @@ preserves existing path-based artifact declarations. Repeating the same `(path, 
 no-op; adding an id to a declaration without one is allowed, but changing an existing id is refused.
 The responses report `changed: false` for a no-op.
 
+`start <plan> <items…> --actor … [--session S|auto] [--take-over]` resumes an `in_progress` item only from
+the session that owns it: when `result.executor` and the new actor both carry a `session` and they differ
+(or the providers differ), `start` is refused with `ITEM_OWNED` and writes nothing. `--take-over` replaces
+the executor, keeps `result.started_at` and records `data.take_over.previous` (the former executor) in the
+`start` event. Calls without a session keep the earlier behaviour; `finish` does not check ownership.
+`orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) names the execution scenario; the context
+pack resolves it with `orchestration.scenario_source`.
+
 Optional `reads[].ref` names local plan data, including `knowledge/<id>#section`; exactly one of
 `ref` or `path` is required, with the existing `why` and `required` fields. Repository code/docs
 remain path-based reads. `context` resolves plan reads into complete sections. Required missing

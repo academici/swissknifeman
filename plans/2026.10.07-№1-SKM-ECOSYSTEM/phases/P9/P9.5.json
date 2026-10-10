@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.5",
   "title": "Исполнение: сценарий оркестрации по умолчанию (D16) и один владелец попытки пункта (E04); минорное поле plan/v1",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Минорное поле plan/v1 defs.orchestration.scenario (+ skill plan-protocol); planner.plan.execution.scenario с порядком item → phase → plan → orchestration.by_class → default_scenario; пакет контекста orchestration.scenario и scenario_source; start пункта in_progress из другой сессии → ITEM_OWNED, передача --take-over (data.take_over.previous в событии журнала start); finish владение не проверяет; каталог ошибок и глаголов; тесты.",
   "why": "D16: умолчание сценария оркестрации по классу пункта в конфиге planner с переопределением полем orchestration пункта; D21/E04: один владелец попытки пункта. D60 уточняет правило плана (только минорные изменения plan/v1). Жёсткие риски: (1) отказ ITEM_OWNED сломает обычное продолжение в той же сессии или поток моста orch — правило только при двух разных session и только в start (V2 тесты); (2) поле, которое старый движок отвергнет, — допустимо по правилу эволюции (minor), проверка совместимости — P9.10.",
   "scope": {
@@ -145,6 +145,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:28:35Z"
+  "result": {
+    "started_at": "2026-10-10T03:52:26Z",
+    "finished_at": "2026-10-10T04:17:37Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "e9bbe23e-51e2-4c34-bf54-4699121e1a83"
+    },
+    "notes": "orchestration.scenario (minor plan/v1) with execution.scenario resolution and scenario/scenario_source in the context pack; start refuses another session with ITEM_OWNED, --take-over records data.take_over.previous; finish unchanged; catalog, skill, api.md, tests (20), CHANGELOG.",
+    "deviations": [
+      "Schema/skill text avoids naming orch (core boundary test); ITEM_OWNED added to read-catalog error enum; owner check runs for all requested items before any write"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T04:17:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T04:17:37Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T04:17:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T04:17:37Z"
 }

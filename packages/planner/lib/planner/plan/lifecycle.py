@@ -483,12 +483,31 @@ class StartResult:
         return "\n".join(lines)
 
 
+def _owner_conflict(doc: Mapping, actor: Mapping) -> dict | None:
+    """The executor that owns the attempt of an ``in_progress`` item when ``actor`` is another one, else ``None``.
+
+    Ownership is the ``session`` of ``result.executor``: it is checked only when both sides name a session, so
+    plans and calls without one keep resuming as before.
+    """
+    result = doc.get("result") if isinstance(doc.get("result"), dict) else {}
+    prior = result.get("executor") if isinstance(result.get("executor"), dict) else {}
+    if doc.get("status") != "in_progress" or not prior.get("session") or not actor.get("session"):
+        return None
+    if prior["session"] != actor["session"] or prior.get("provider") != actor.get("provider"):
+        return dict(prior)
+    return None
+
+
 def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
-          scout: bool | None = None, registrar: Mapping | None = None) -> StartResult:
+          scout: bool | None = None, registrar: Mapping | None = None, take_over: bool = False) -> StartResult:
     """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed.
 
     ``actor`` is the executor (route-checked, stored as ``result.executor``); ``registrar`` is who called and
     only lands in the ``start`` event as ``registered_by``.
+
+    One session owns the attempt of an ``in_progress`` item: another session starting it is refused with
+    ``ITEM_OWNED`` unless ``take_over`` hands the attempt over (the ``start`` event then records the previous
+    executor in ``data.take_over``). ``finish`` does not check ownership.
 
     ``scout`` asks the provider's weak model for a context map after the start (D3); ``None`` follows
     ``plan.settings.scout``. A scout failure never fails the start.
@@ -519,6 +538,13 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         for item_id in requested:
             if status_of(p, item_id) not in ("todo", "in_progress"):
                 raise PlanError("ITEM_NOT_STARTABLE", f"{item_id} is {status_of(p, item_id)}; use reopen to redo it")
+        owners = {item_id: _owner_conflict(p.items[item_id], actor) for item_id in requested}
+        for item_id, owner in owners.items():
+            if owner and not take_over:
+                since = (p.items[item_id].get("result") or {}).get("started_at")
+                raise PlanError("ITEM_OWNED", f"{item_id} is in progress by {owner.get('provider')}/{owner.get('model')} "
+                                              f"session {owner['session']} since {since}; resume it from that session "
+                                              f"or start --take-over")
         for dep in _phase_deps(p, phase_id):
             if not p.phases[dep].get("closed"):
                 raise PlanError("DEPENDENCY_NOT_READY", f"phase {phase_id} waits for phase {dep}")
@@ -568,9 +594,12 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             doc["status"], doc["result"] = "in_progress", result
             changes.append(("item", item_id, doc))
             batch_id = next_batch_id(p, phase_id, item_id)
+            data = {"requested": requested, "route": verdict}
+            if owners[item_id]:
+                data["take_over"] = {"previous": owners[item_id]}
             event = store.new_event(
                 "start", f"start {item_id}" + (f" (batch {batch_id})" if batch_id else ""), actor,
-                item=item_id, phase=phase_id, data={"requested": requested, "route": verdict})
+                item=item_id, phase=phase_id, data=data)
             if registrar is not None:
                 event["registered_by"] = registrar
             events.append(event)

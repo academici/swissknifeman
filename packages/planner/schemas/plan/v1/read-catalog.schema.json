@@ -164,6 +164,7 @@
                 "ITEMS_SPAN_PHASES",
                 "ITEM_NOT_IN_PROGRESS",
                 "ITEM_NOT_STARTABLE",
+                "ITEM_OWNED",
                 "KIND_UNKNOWN",
                 "LIMIT_INVALID",
                 "LINK_INVALID",

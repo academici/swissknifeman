@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 
-from . import edges, refs, settings, store
+from . import edges, execution, refs, settings, store
 from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
@@ -298,6 +298,7 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         phase = event.get("phase") or (item_phase(target) if target and ITEM_ID.fullmatch(target) else None)
         if event.get("type") in LESSON_TYPES and (phase == phase_id or target in near):
             lessons.append(event)
+    name, source = execution.scenario(plan, item_id)
     result = {
         "ref": f"{plan.plan.get('short_id') or plan.plan['id']}.{item_id}", "plan": copy.deepcopy(plan.plan),
         "brief": copy.deepcopy(plan.brief), "phase": copy.deepcopy(plan.phases.get(phase_id, {})),
@@ -308,7 +309,8 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         "documents": [copy.deepcopy(d) for d in plan.documents.values()
                       if scope_reason(d, item_id, phase_id, mode) is not None],
         "units": [copy.deepcopy(plan.units[f"{item_id}/{u}"]) for u in units.unit_ids(plan, item_id)],
-        "orchestration": units.policy(plan, item_id), "ready_units": units.ready(plan, item_id),
+        "orchestration": {**units.policy(plan, item_id), "scenario": name, "scenario_source": source},
+        "ready_units": units.ready(plan, item_id),
         "policy": policy(plan),
     }
     if mode == "scoped":

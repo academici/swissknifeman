@@ -76,6 +76,12 @@ an item or unit; dispatch refuses a different explicit provider/model. Provider 
 live in `configs/command-routing.json`. A batch runs at the maximum route of its members and
 requires compatible explicit selections. `plan-run` itself has no fixed model.
 
+One session owns the attempt of an item: `start` of an `in_progress` item by another session (both
+`result.executor` and `--actor` carry a `session`) is refused with `ITEM_OWNED`; resume it from the owning
+session or hand it over with `start --take-over` (the `start` event records `data.take_over.previous`).
+Without a session on either side `start` resumes as before, and `finish` never checks the owner, so a bridge
+can register another session's result with `--executed-by`.
+
 ## 5. API verbs
 
 For query shapes, typed links, write rules and parser-derived discovery, read [references/api.md](references/api.md).
@@ -86,7 +92,7 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 | query | `get`, `list`, `events`, `artifact`, `links`, `neighborhood`, `schema [<kind> \| --verbs]` |
 | link | `link`, `unlink`, `add-artifact` (validated mutations; exact repeats are no-ops) |
 | inspect | `show [<ref>] [--json]`, `next [--json]`, `next <plan> --parallel N [--json]`, `context <item> [--stdout]`, `check [--json]`, `render [--check]` |
-| execute | `reconcile` (integrator only), `start <items…> --actor … [--registrar P/M/E]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
+| execute | `reconcile` (integrator only), `start <items…> --actor … [--registrar P/M/E] [--take-over]`, `log <ref> --type …`, `finish <item> --status … --check V#=<exit> [--executed-by P/M/E] [--attempt-id ID] [--evidence V#=PATH]` |
 | git | `commit <Pn.m\|Pn.m/U#> --role executor\|reviewer\|fix [--path P] [--leave-outside] [--dry-run]`, `commits [<ref>]` |
 | bridge | `bridge list`, `bridge <name> <verb> [args…]` |
 | owner | `decide`, `supersede`, `grant <GATE> --note …`, `reopen`, `archive` |
@@ -144,8 +150,13 @@ Use item `units` as the subtask graph. Each unit declares `kind` (`preparation`,
 owned `files` (empty for read-only work), checks, outputs and `route`. Route may select an explicit
 `provider`, `model`, effort and provider-native JSON `settings`. No model is launched by the API.
 
-Plan → phase → item `orchestration` sets `strategy: dag|sequential`, optional `max_parallel` and
-instructions. `unit <plan> <item> next` reports ready nodes as JSON; `unit … <U#> context` returns
+Plan → phase → item `orchestration` sets `strategy: dag|sequential`, optional `max_parallel`,
+instructions and an optional `scenario` (`^[a-z][a-z0-9-]*$`: the name of a run-policy profile of an execution engine, or
+`solo` for the current session). The scenario of an item is the first one set on the item, its phase or the
+plan, then the config key `orchestration.by_class.<route class>`, then `orchestration.default_scenario`
+(`solo`); the context pack reports it as `orchestration.scenario` with `orchestration.scenario_source`
+(`item|phase|plan|config:by_class|config:default`). The planner does not check that a profile of that
+name exists. `unit <plan> <item> next` reports ready nodes as JSON; `unit … <U#> context` returns
 the full JSON worker input. Dispatch writes `<U#>/brief.json`. All declared units must be accepted
 or explicitly rejected before an item finishes. Children finish before their parent.
 

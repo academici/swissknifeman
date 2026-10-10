@@ -1,6 +1,6 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "a0994160b1c0",
+  "captured_from": "e7e299b92dd8",
   "reason": "planner loop policies from configuration",
   "generators": [
     {
@@ -209,7 +209,7 @@
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "fd0b05fa5f4b6fb788582b23b1705ea82f67fd69071f59c1b3c4d034080d0780",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/design.md": "713265faea4339b4e97d79bf64987a5f9c7dd0ca3ef40a292ab8349f22a5f3d9",
-    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/dev.md": "ecbca2a623ff39fdd16db12fb910f17e4b3050f43fd7c6fb2b95acf23febd024",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/dev.md": "d9f181d4a294b47e45ea91b8818427d81d5bd528cac07ab615a08d5241fc46a1",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/fix.md": "8e730de4d61b22c142744a56620b0637a086c9924aec5c33b8c9149fcf003d4f",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/make-workflow.md": "d2f291596efdb443938ed482cbc8bc56e746d3d66b0078078fa32e9b917d975f",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/plan-audit.md": "772e5ad48a8ce34fc8e5773e3a2b1b0e64d6d74b072bbb238fa97c412b98bc5a",

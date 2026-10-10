@@ -191,14 +191,12 @@
       "properties": {
         "templates_dir": {
           "type": "string",
-          "description": "Folder with view templates that replace the built-in ones of the same file name; a relative path is taken from the folder of the configuration file, a leading ~ is expanded. An empty string keeps the built-in templates.",
+          "description": "Folder with view templates (project file or --config only: the rendered views are committed with the plan) that replace the built-in ones of the same file name; a relative path is taken from the folder of the configuration file, a leading ~ is expanded. An empty string keeps the built-in templates.",
           "default": "",
           "x-skm-layers": [
             "defaults",
-            "machine",
             "project",
-            "invocation",
-            "flags"
+            "invocation"
           ]
         }
       }
@@ -210,7 +208,7 @@
       "properties": {
         "default_scenario": {
           "type": "string",
-          "description": "Scenario used when the item class has no entry of its own.",
+          "description": "Scenario used when the item class has no entry of its own. Reserved: no effect yet.",
           "default": "solo",
           "pattern": "^[a-z][a-z0-9-]*$"
         },
@@ -221,19 +219,19 @@
           "properties": {
             "economy": {
               "type": "string",
-              "description": "Scenario for items of class economy; an empty string uses default_scenario.",
+              "description": "Scenario for items of class economy; an empty string uses default_scenario. Reserved: no effect yet.",
               "default": "",
               "pattern": "^$|^[a-z][a-z0-9-]*$"
             },
             "implementation": {
               "type": "string",
-              "description": "Scenario for items of class implementation; an empty string uses default_scenario.",
+              "description": "Scenario for items of class implementation; an empty string uses default_scenario. Reserved: no effect yet.",
               "default": "",
               "pattern": "^$|^[a-z][a-z0-9-]*$"
             },
             "frontier": {
               "type": "string",
-              "description": "Scenario for items of class frontier; an empty string uses default_scenario.",
+              "description": "Scenario for items of class frontier; an empty string uses default_scenario. Reserved: no effect yet.",
               "default": "",
               "pattern": "^$|^[a-z][a-z0-9-]*$"
             }
@@ -248,7 +246,7 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "Whether the planner emits its planner.* events.",
+          "description": "Whether the planner emits its planner.* events. Reserved: no effect yet.",
           "default": true
         }
       }
@@ -260,12 +258,12 @@
       "properties": {
         "external": {
           "type": "boolean",
-          "description": "Whether plugins subscribed to the planner:check point are called.",
+          "description": "Whether plugins subscribed to the planner:check point are called. Reserved: no effect yet.",
           "default": true
         },
         "external_failure": {
           "type": "string",
-          "description": "What a failing external check counts as in the plan check.",
+          "description": "What a failing external check counts as in the plan check. Reserved: no effect yet.",
           "default": "warn",
           "enum": [
             "warn",

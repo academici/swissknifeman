@@ -35,7 +35,7 @@ For a requested selector, read `references/reviewer-selection.md`: use a fresh r
 on that exact route, then at most `policy.corrections_max` owning corrections (context pack `policy`, or
 `plan.py config show`; default 1) and affected checks. The reviewer never repairs.
 
-Review is opt-in ([review contract](../references/intent-routing.md#review-is-opt-in)). Only with
+Review is opt-in (review contract: `<Planner package root>/references/intent-routing.md#review-is-opt-in`). Only with
 `--review`, `--reviewer` or an explicit owner request, strip review options from the task text and,
 after GREEN checks, launch one fresh read-only pass over the whole diff using `planner:review` depth.
 Use the selected or current native route. One owning correction and affected checks may follow;

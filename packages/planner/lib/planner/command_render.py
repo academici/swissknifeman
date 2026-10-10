@@ -798,6 +798,8 @@ def _alias_command_bytes(command: str, content: bytes) -> bytes:
               f"release: use `/{COMMAND_NAMESPACE}:{command}`. Say this to the user once, then follow "
               f"the instructions below; `<Planner package root>` is the root of the enabled "
               f"{MODULE_ID} plugin.")
+    # A relative link points into the planner package, which the alias folder is not part of.
+    body = re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", r"\1: `<Planner package root>/\2`", body)
     return f"---\n{''.join(lines)}---\n{notice}\n\n{body}".encode("utf-8")
 
 

@@ -47,11 +47,20 @@ def layer_files(project_root: str | Path | None) -> list:
 
 
 def plan_settings_layer(plan_settings: Mapping | None) -> dict:
-    """The ``[planner]`` section the settings of a plan contribute: only ``context_budget_kb`` (an integer >= 1)."""
+    """The ``[planner]`` section the settings of a plan contribute: only ``context_budget_kb`` (an integer >= 1).
+
+    The plan schema has no upper bound, the configuration has one: a larger value is lowered to it, so an old plan
+    keeps working (a warning threshold that large never fires anyway).
+    """
     kb = (plan_settings or {}).get("context_budget_kb")
     if isinstance(kb, int) and not isinstance(kb, bool) and kb >= 1:
-        return {"context": {"budget_kb": kb}}
+        return {"context": {"budget_kb": min(kb, _budget_maximum())}}
     return {}
+
+
+def _budget_maximum() -> int:
+    schema = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
+    return schema["properties"]["context"]["properties"]["budget_kb"]["maximum"]
 
 
 def _nested(values: Mapping[str, Any]) -> dict:

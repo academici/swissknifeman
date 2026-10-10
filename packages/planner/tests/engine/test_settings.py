@@ -165,6 +165,17 @@ class LayerTests(ConfigCase):
         layers = {layer["name"]: layer for layer in settings.for_plan(self.load()).layers}
         self.assertTrue(layers["plan.settings"]["present"])
 
+    def test_a_large_plan_budget_is_lowered_to_the_bound_instead_of_refusing(self):
+        ops.patch(self.load(), "plan", {"settings": {"context_budget_kb": 8192}})
+        self.assertEqual(settings.for_plan(self.load()).get("context.budget_kb"), 4096)
+        self.assertEqual(context.budget_bytes(self.load()), 4096 * 1024)
+
+    def test_the_template_folder_cannot_come_from_the_machine_file(self):
+        self.write(self.machine_file(), '[planner.views]\ntemplates_dir = "/tmp"\n')
+        with self.assertRaises(PlanError) as caught:
+            settings.for_plan(self.load())
+        self.assertEqual(caught.exception.code, "CONFIG_INVALID")
+
     def test_a_value_outside_its_bounds_refuses_with_file_and_line(self):
         path = self.project_file("[planner.policy]\nreview_rounds_max = 0\n")
         with self.assertRaises(PlanError) as caught:

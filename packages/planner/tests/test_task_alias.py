@@ -5,6 +5,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import re
 import unittest
 
 import fixtures  # noqa: F401,E402 — restores the lib and aicore fallbacks
@@ -36,6 +37,10 @@ class AliasPluginTests(unittest.TestCase):
     def setUpClass(cls):
         cls.catalog = build_command_catalog(COMMAND_ROOT, ROUTING_PATH)
         cls.plan = plan_claude_alias_render(cls.catalog, plugin_bytes=PLUGIN_PATH.read_bytes())
+
+    def test_no_alias_command_links_outside_its_own_folder(self):
+        for artifact in self.plan.artifacts:
+            self.assertNotIn("](../", artifact.managed_bytes.decode("utf-8"), artifact.path)
 
     def test_ten_commands_and_the_plugin_are_generated(self):
         self.assertTrue(self.plan.ok)
@@ -76,7 +81,10 @@ class AliasPluginTests(unittest.TestCase):
             self.assertTrue(notice.startswith(f"> `/task:{name}` is deprecated"), notice)
             self.assertIn(f"use `/planner:{name}`", notice)
             self.assertEqual(alias[close + 2], "")
-            self.assertEqual(alias[close + 3:], origin[close + 1:])
+            # a relative link into the package becomes a package-root reference (the alias folder has no references/)
+            expected = [re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", r"\1: `<Planner package root>/\2`", line)
+                        for line in origin[close + 1:]]
+            self.assertEqual(alias[close + 3:], expected)
             self.assertNotIn("Skill(", "\n".join(alias))
 
 

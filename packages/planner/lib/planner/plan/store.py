@@ -340,8 +340,9 @@ def new_event(event_type: str, summary: str, actor: dict, *, item: str | None = 
 
 
 def append_log(plan_dir: str | Path, event: dict, *, lock: PlanLock | None = None,
-               registry: _schema.Registry | None = None) -> None:
-    """Validate ``event`` and append it as one line; takes the plan lock unless the caller already holds it."""
+               registry: _schema.Registry | None = None, lock_timeout: float = 30.0) -> None:
+    """Validate ``event`` and append it as one line; takes the plan lock (waiting ``lock_timeout`` seconds) unless
+    the caller already holds it."""
     reg = registry if registry is not None else _schema.load_registry()
     issues = _schema.validate(event, "log-event", reg)
     if issues:
@@ -358,7 +359,7 @@ def append_log(plan_dir: str | Path, event: dict, *, lock: PlanLock | None = Non
     if lock is not None:
         write()
     else:
-        with PlanLock(plan_dir):
+        with PlanLock(plan_dir, timeout=lock_timeout):
             write()
 
 

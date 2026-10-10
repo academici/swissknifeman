@@ -179,6 +179,8 @@
                 "NOT_TERMINAL",
                 "OPTION_UNKNOWN",
                 "OUTSIDE_SCOPE",
+                "OVERLAY_SLOT_UNKNOWN",
+                "OVERLAY_TOO_LARGE",
                 "PARALLEL_LIMIT",
                 "PATCH_INVALID",
                 "PATH_INVALID",

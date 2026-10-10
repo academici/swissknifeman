@@ -22,7 +22,8 @@ FORBIDDEN = (
     # The native provider event is not a skill identity.
     re.compile(r"\b(?!system/init(?![a-z0-9-]))(general|quality|system|devops|oss-dev|repository-bootstrap)[/:][a-z][a-z0-9-]+"),
 )
-SKIPPED_DIRS = ("bridges/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
+# docs/research/ is a verbatim historical record of the design research; it names partners by nature.
+SKIPPED_DIRS = ("bridges/", "docs/research/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 
 

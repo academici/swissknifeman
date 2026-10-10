@@ -455,7 +455,7 @@ SSOT: `packages/planner/configs/command-routing.json` → generated
 
 ### Coding-agent orchestration comparison — reference (2026-10-05)
 
-**What:** the owner-requested research packet in `orch/` compares extending the existing
+**What:** the owner-requested research packet in `packages/orch/docs/research/` compares extending the existing
 Task/Harness/Artifex execution path with an external
 [AWS Labs CAO](https://github.com/awslabs/cli-agent-orchestrator) Python-workflow backend.
 It preserves the original Perplexity dialogue, exact queries and returned answers,
@@ -482,10 +482,10 @@ This research made no runtime, schema, delivery, release or migration policy cha
 Concurrent Task edits are recorded separately; test results describe their execution time.
 No paid agent runs were performed; reliability, subscription entitlement and savings remain unmeasured.
 Prior code-review-graph and style-skill skip decisions are preserved. Detailed evidence:
-`orch/research/sources.md`, `orch/research/source-index.json` and
-`orch/research/local-checks.json`.
+`packages/orch/docs/research/sources.md`, `packages/orch/docs/research/source-index.json` and
+`packages/orch/docs/research/local-checks.json`.
 
-**Role-decomposition follow-up (2026-10-05):** `orch/task-role-decomposition.md`
+**Role-decomposition follow-up (2026-10-05):** `packages/orch/docs/research/design/task-role-decomposition.md`
 analyses separating Task data/lifecycle from execution, review and skill delivery.
 Local context, scout, actor/receipt and Harness launch boundaries were inspected.
 [Claude subagent configuration](https://code.claude.com/docs/en/sub-agents),

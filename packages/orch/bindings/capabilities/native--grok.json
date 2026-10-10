@@ -41,15 +41,15 @@
     },
     {
       "kind": "perplexity",
-      "ref": "orch/research/perplexity/Q12.md"
+      "ref": "docs/research/perplexity/Q12.md"
     },
     {
       "kind": "perplexity",
-      "ref": "orch/research/perplexity/Q13b.md"
+      "ref": "docs/research/perplexity/Q13b.md"
     },
     {
       "kind": "perplexity",
-      "ref": "orch/research/perplexity/Q15.md"
+      "ref": "docs/research/perplexity/Q15.md"
     }
   ]
 }

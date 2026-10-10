@@ -23,7 +23,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `orch/` | orch (hub root) | orch | docs/research | P10 | fixed | root research documents of the orchestration module |
 | `packages/orch/bridges/harness/` | orch | bridges/orch-harness | - | P10 | hypothesis | not described by the architecture; refine in P10 |
 | `packages/orch/bridges/skiller/` | orch | bridges/orch-skiller | - | P10 | fixed | - |
 | `packages/orch/bridges/task/` | orch | bridges/planner-orch | - | P10 | fixed | - |

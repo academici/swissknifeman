@@ -28,7 +28,6 @@
   },
   "transitional_roots": [
     "core/",
-    "orch/",
     "packages/artifex/"
   ],
   "version_sources": {
@@ -42,7 +41,7 @@
   },
   "path_patterns": [
     {"id": "sibling-package", "regex": "packages/(?P<target>[a-z][a-z0-9-]*)/", "reason": "a module must not name another module's folder; use a bridge or an event"},
-    {"id": "repo-escape", "regex": "\\.\\./(?:\\.\\./)*(?P<target>core|configs|scripts|bin|orch)\\b", "reason": "a module must not reach into hub-level folders through relative paths", "climb": true}
+    {"id": "repo-escape", "regex": "\\.\\./(?:\\.\\./)*(?P<target>core|configs|scripts|bin)\\b", "reason": "a module must not reach into hub-level folders through relative paths", "climb": true}
   ],
   "path_suffixes": [".py", ".sh", ".js", ".mjs", ".json", ".toml", ".yml", ".yaml"],
   "path_allow": [
@@ -64,7 +63,6 @@
     {"path": "core/tests/test_runs.py", "target": "analyst", "subsystem": "tests", "phase": "P11", "confidence": "fixed"},
     {"path": "core/tests/test_pathology.py", "target": "analyst", "subsystem": "tests", "phase": "P11", "confidence": "fixed"},
     {"path": "core/tests/test_codegraph_telemetry.py", "target": "analyst", "subsystem": "tests", "phase": "P11", "confidence": "fixed"},
-    {"path": "orch/", "target": "orch", "subsystem": "docs/research", "phase": "P10", "confidence": "fixed", "note": "root research documents of the orchestration module"},
     {"path": "packages/artifex/", "target": "retired", "phase": "P11", "confidence": "fixed", "note": "module is retired and not scanned by the boundary check"},
     {"path": "packages/planner/bridges/orch/", "target": "bridges/planner-orch", "phase": "P10", "confidence": "fixed"},
     {"path": "packages/orch/bridges/task/", "target": "bridges/planner-orch", "phase": "P10", "confidence": "fixed"},

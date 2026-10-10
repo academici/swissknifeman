@@ -63,7 +63,7 @@
     "brain": "pass",
     "harness": "fail",
     "maind": "fail",
-    "orch": "fail",
+    "orch": "pass",
     "planner": "pass",
     "skiller": "pass"
   }

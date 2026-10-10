@@ -22,7 +22,7 @@ sync_pkg() {
     local tmp
     tmp="$(mktemp -d)"
     cp -r "$src/." "$tmp/"
-    rm -rf "$tmp/.vitepress"
+    rm -rf "$tmp/.vitepress" "$tmp/research"   # research records are not published
     if [ ! -e "$dst" ]; then
       rm -rf "$tmp"
       echo "  docs/$1 not materialized; source tree playable"
@@ -41,6 +41,7 @@ sync_pkg() {
   mkdir -p "$dst"
   cp -r "$src/." "$dst/"
   rm -rf "$dst/.vitepress"   # nested per-package vitepress is not needed in the unit
+  rm -rf "$dst/research"     # verbatim research records stay in the module, not on the site
   echo "  docs/$1 ← packages/$1/docs"
 }
 echo "docs-sync:"

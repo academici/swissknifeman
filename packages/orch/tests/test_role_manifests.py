@@ -8,7 +8,6 @@ import unittest
 from orch import contracts
 
 ORCH = Path(__file__).resolve().parents[1]
-REPO = ORCH.parents[1]
 ROLES = ORCH / "roles"
 ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "registrar")
 
@@ -32,7 +31,8 @@ class RoleManifestTests(unittest.TestCase):
         for role in ROLE_IDS:
             for item in _manifest(role)["instructions"]:
                 with self.subTest(role=role, path=item["path"]):
-                    path = REPO / item["path"]
+                    self.assertTrue(item["path"].startswith("roles/"))
+                    path = ORCH / item["path"]
                     self.assertTrue(path.is_file())
                     self.assertEqual(item["sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
 

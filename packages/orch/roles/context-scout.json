@@ -6,7 +6,7 @@
   "description": "Find the files and symbols that matter for `goal`, `scope.include` and the acceptance checks:",
   "instructions": [
     {
-      "path": "packages/orch/roles/context-scout.md",
+      "path": "roles/context-scout.md",
       "purpose": "canonical role text",
       "sha256": "1c77c20c5bba9ad888f3180f9eea29b6232f1e85868b7510eb4dadf6fac3e491"
     }

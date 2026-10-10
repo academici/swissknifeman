@@ -17,6 +17,7 @@
 
 ### Added
 
+- **planner:** the `planner-development-philosophy` dev skill (0.6.0) asks plan authors to keep item fields technical (paths, names, codes, commands, invariants, hard risks), to move rationale and research into knowledge documents or artifacts reached through section reads, and to keep mandatory constraints verbatim.
 - **planner:** phase summary: `task` is renamed to `planner` with the `task` compatibility alias; planner has a layered `[planner]` configuration, `planner.*` events with data contracts, overlay slots for every command, external plan checks through `planner:check`, and an execution scenario with one owner per item attempt; its instructions, module docs (configuration, events and extensions), the architecture pages and ADR 0052–0056 describe the result.
 - **planner:** compatibility fixtures for plans of earlier engines: the frozen demo plan of engine 0.28.3 (`packages/planner/tests/compat`) is read, checked, rendered and exported unchanged, and `scripts/test-plan-compat.py` reads every plan of the repository with the reading verbs; `aicore schema compat` now compares contracts of several documents per kind (`kind-removed`, `kind-added`) and takes `--base-root` (refused when the base holds no schemas there), so `plan/v1` is checked against the base of the renamed module; a foundation contract that a schema references is read from the base on the old side.
 - **planner:** external plan checks through the `planner:check` extension point: `unit.json` declares the point and the `check-plugin/v1` contract (input and output schemas), `plan.py check [--no-external]` calls the plugins registered in the aicore machine configuration after its own checks and reports their issues with a `[<plugin>]` prefix; a failing plugin is an `EXTERNAL_CHECK_FAILED` warning (an error with `checks.external_failure = "error"`); mutations never call plugins.
@@ -274,6 +275,8 @@
 
 ### Changed
 
+- **orch:** research moved from the root `orch/` into `packages/orch/docs/research`; role instruction paths are
+  module-relative (`roles/<id>.md`); standalone orch passes; research is not published to the docs site.
 - **planner:** `workflow-craft` skill moves from the skiller library (`general` bucket) to the planner plugin (Claude and Codex); the root bootstrap projection of the skill is removed because the planner plugin is the single carrier, and vendored copies of `general/workflow-craft` disappear at the next `skiller sync` while the skill arrives with the planner plugin.
 
 - **planner:** projection rendering on aicore, engine runs without aicore, standalone without core: `plan.py` and

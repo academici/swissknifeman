@@ -1,6 +1,6 @@
 """Package boundary: the core never names another package of the repository.
 
-Knowledge of a partner lives only in ``bridges/<partner>/``. The aicore foundation is the shared base and
+Knowledge of a partner lives only in a bridge, a unit of the hub (``bridges/<id>/``). The aicore foundation is the shared base and
 stays allowed, but only through ``lib/planner/integration`` and the projection renderer; the plan engine
 runs without it. ``boundary_allowlist.json`` lists temporary violations by file with the owning plan
 item; it may only shrink, so a stale entry fails the test as well.
@@ -30,7 +30,7 @@ FORBIDDEN = (
 )
 # skills/workflow-craft/ is workflow-authoring guidance moved verbatim from the skiller library (its content
 # names the orchestration partners by design and is not edited); the code and commands stay checked.
-SKIPPED_DIRS = ("bridges/", "docs/.vitepress/cache/", "docs/.vitepress/dist/", "skills/workflow-craft/")
+SKIPPED_DIRS = ("docs/.vitepress/cache/", "docs/.vitepress/dist/", "skills/workflow-craft/")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 SKIPPED_FILES = {"CHANGELOG.md", SELF}
 REASON = re.compile(r"^P7\.[0-9]+: \S")
@@ -72,7 +72,7 @@ class BoundaryTests(unittest.TestCase):
     def test_core_names_no_other_package(self):
         allowed = allowlist()
         found = [hit for relative in core_files() if relative not in allowed for hit in violations(relative)]
-        self.assertEqual(found, [], "core references another package; move it into bridges/<partner>/:\n"
+        self.assertEqual(found, [], "core references another package; move it into a bridge of the hub:\n"
                          + "\n".join(found))
 
     def test_allowlist_only_shrinks(self):

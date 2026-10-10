@@ -35,12 +35,15 @@ The catalog is built from the live argument parser. Each entry contains `name`, 
 
 ## Named bridges
 
-Links to other tools live only in named bridges under `<Planner package root>/bridges/<name>/`; the
-core never names a partner. `plan.py bridge list` validates every `bridge.json` (kind `bridge`,
-`schema bridge`) and prints one row per bridge (`--output json`: `{"bridges": [...]}`).
+Links to other tools live only in named bridges (`<root>/<name>/bridge.json`); the core never names a partner.
+The planner scans the `bridges.roots` setting (relative paths are taken from the project root, `~` is expanded),
+then a built-in `<Planner package root>/bridges/` when it exists; the first root that holds a name wins and a
+shadowed one is reported as `BRIDGE_SHADOWED` on stderr. `plan.py bridge list` validates every `bridge.json` (kind
+`bridge`, `schema bridge`) and prints one row per bridge (`--output json`: `{"bridges": [...]}`; `path` is relative
+to the project root when the bridge is inside it).
 `plan.py bridge <name> <verb> [args…]` runs the verb's entrypoint with the remaining arguments
 unchanged; the bridge owns its output and exit code, and the dispatcher sets `PLANNER_ROOT`,
-`PLANNER_PLAN_PY` and `PYTHONPATH`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
+`PLANNER_PLAN_PY`, `PYTHONPATH` and, when the foundation is found, `AICORE_ROOT`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
 `BRIDGE_UNKNOWN`, `BRIDGE_VERB_UNKNOWN`.
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor and registers its
 reports back through `plan.py` only (see the bridge's README).

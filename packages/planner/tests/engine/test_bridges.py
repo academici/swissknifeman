@@ -1,4 +1,6 @@
 """Bridge dispatcher: manifest discovery, validation, verb passthrough and refusals."""
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -6,6 +8,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from planner import integration
 from planner.plan import bridges, schema
 from planner.plan.model import PlanError
 
@@ -35,11 +38,21 @@ class BridgeCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name) / "bridges"
+        self.project = Path(self.tmp.name).resolve() / "project"
+        self.root = self.project / "bridges"
         self.probe_out = Path(self.tmp.name) / "probe.json"
-        patcher = mock.patch.object(bridges, "default_root", return_value=self.root)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        home = Path(self.tmp.name) / "home"
+        home.mkdir()
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_")}
+        env.update(HOME=str(home), SKM_HOME=str(home))
+        environment = mock.patch.dict(os.environ, env, clear=True)
+        environment.start()
+        self.addCleanup(environment.stop)
+        for name, value in (("default_root", mock.Mock(return_value=self.root)),
+                            ("project_root", mock.Mock(return_value=self.project))):
+            patcher = mock.patch.object(bridges, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def add(self, name: str, document: dict | None = None, raw: str | None = None) -> Path:
         directory = self.root / name
@@ -158,6 +171,110 @@ class RunTests(BridgeCase):
         self.assertEqual(code, 1)
         self.assertIn("BRIDGE_UNKNOWN", err)
         self.assertFalse(self.probe_out.exists())
+
+
+class RootsTests(BridgeCase):
+    """``bridges.roots`` of the configuration, the built-in root, shadowing and the foundation hand-over."""
+
+    def configure(self, *roots: str) -> None:
+        folder = self.project / ".swissknifeman"
+        folder.mkdir(parents=True, exist_ok=True)
+        listed = ", ".join(json.dumps(r) for r in roots)
+        (folder / "config.toml").write_text(f"schema_version = 1\n[planner.bridges]\nroots = [{listed}]\n",
+                                            encoding="utf-8")
+
+    def add_to(self, root: Path, name: str) -> Path:
+        directory = root / name
+        directory.mkdir(parents=True)
+        (directory / "probe.py").write_text(PROBE, encoding="utf-8")
+        (directory / "bridge.json").write_text(json.dumps(manifest(name)), encoding="utf-8")
+        return directory
+
+    def names(self) -> list:
+        return [row["name"] for row in bridges.listing()["bridges"]]
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_relative_root_is_taken_from_the_project_and_listed_relative(self):
+        self.add_to(self.project / "hub-bridges", "gamma")
+        self.configure("hub-bridges")
+        self.assertEqual(bridges.roots(), [(self.project / "hub-bridges").resolve()])
+        self.assertEqual(bridges.listing()["bridges"][0]["path"], "hub-bridges/gamma")
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_absolute_root_outside_the_project_is_listed_absolute(self):
+        outside = Path(self.tmp.name).resolve() / "outside"
+        self.add_to(outside, "delta")
+        self.configure(str(outside))
+        row, = bridges.listing()["bridges"]
+        self.assertEqual(row["path"], (outside / "delta").as_posix())
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_home_is_expanded(self):
+        home = Path(os.environ["HOME"])
+        self.add_to(home / "mine", "epsilon")
+        self.configure("~/mine")
+        self.assertEqual(bridges.roots(), [(home / "mine").resolve()])
+        self.assertEqual(self.names(), ["epsilon"])
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_configured_root_comes_before_the_built_in_one(self):
+        self.add_to(self.root, "alpha")
+        self.add_to(self.project / "more", "beta")
+        self.configure("more")
+        self.assertEqual(bridges.roots(), [(self.project / "more").resolve(), self.root.resolve()])
+        self.assertEqual(self.names(), ["alpha", "beta"])
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_first_root_wins_and_the_shadowed_bridge_is_reported(self):
+        first = self.add_to(self.project / "first", "alpha")
+        self.add_to(self.root, "alpha")
+        self.configure("first")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            found = bridges.scan()
+        self.assertEqual([directory for directory, _ in found], [first.resolve()])
+        self.assertIn(f"BRIDGE_SHADOWED: alpha in {(self.root / 'alpha').resolve()} is shadowed by {first.resolve()}",
+                      err.getvalue())
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_a_shadowed_manifest_is_not_validated(self):
+        first = self.add_to(self.project / "first", "alpha")
+        broken = self.add_to(self.root, "alpha")
+        (broken / "bridge.json").write_text(json.dumps(manifest("alpha", entrypoints={"go": "missing.py"})),
+                                            encoding="utf-8")
+        self.configure("first")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            found = bridges.scan()
+        self.assertEqual([directory for directory, _ in found], [first.resolve()])
+        self.assertIn("BRIDGE_SHADOWED: alpha", err.getvalue())
+
+    def test_without_configuration_only_the_built_in_root_counts(self):
+        self.add_to(self.root, "alpha")
+        self.assertEqual(bridges.roots(), [self.root.resolve()])
+        self.assertEqual(self.names(), ["alpha"])
+
+    def test_without_aicore_the_configured_roots_are_not_read(self):
+        self.add_to(self.root, "alpha")
+        self.add_to(self.project / "more", "beta")
+        self.configure("more")
+        with mock.patch.dict(integration._PROBE, {"available": False, "root": None, "reason": "AICORE_NOT_FOUND"},
+                             clear=True):
+            self.assertEqual(self.names(), ["alpha"])
+
+    def test_a_missing_built_in_root_is_not_listed(self):
+        self.assertEqual(bridges.roots(), [])
+        self.assertEqual(bridges.listing(), {"bridges": []})
+
+    @unittest.skipUnless(integration.available(), "needs the aicore foundation")
+    def test_environment_hands_over_the_foundation_root(self):
+        self.assertEqual(bridges.environment().get("AICORE_ROOT"), integration.status()["root"])
+
+    def test_environment_without_aicore_sets_no_foundation_root(self):
+        with mock.patch.dict(os.environ, {}, clear=False), \
+                mock.patch.dict(integration._PROBE, {"available": False, "root": None, "reason": "x"}, clear=True):
+            os.environ.pop("AICORE_ROOT", None)
+            self.assertNotIn("AICORE_ROOT", bridges.environment())
 
 
 class SchemaTests(unittest.TestCase):

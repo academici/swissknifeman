@@ -166,6 +166,7 @@ or explicitly rejected before an item finishes. Children finish before their par
 snapshot.json` restores a validated graph, preserving historical state and supporting evidence.
 `--replace` is required to restore an existing JSON plan. Import never interprets Markdown.
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
+The planner finds bridges through the `bridges.roots` setting of its configuration.
 
 `plan.py --output json <verb>` prints exactly one envelope for every verb, validated against
 `schemas/plan/v1/envelope.schema.json` (kind `envelope`) before it is printed:

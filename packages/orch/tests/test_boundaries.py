@@ -23,7 +23,7 @@ FORBIDDEN = (
     re.compile(r"\b(?!system/init(?![a-z0-9-]))(general|quality|system|devops|oss-dev|repository-bootstrap)[/:][a-z][a-z0-9-]+"),
 )
 # docs/research/ is a verbatim historical record of the design research; it names partners by nature.
-SKIPPED_DIRS = ("bridges/", "docs/research/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
+SKIPPED_DIRS = ("docs/research/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 
 

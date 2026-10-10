@@ -82,7 +82,7 @@ PLAN_SYNTAX_TEST_TREES = {
     "packages/planner/tests/engine/": "plan engine tests and fixtures: ID, Short-ID and reference syntax",
     "packages/planner/tests/compat/": "frozen synthetic plans of earlier engines: their ID shape",
     "packages/planner/tests/fixtures/events/": "planner.* event envelopes the engine emitted for its synthetic demo plan: its ID shape",
-    "packages/planner/bridges/orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
+    "bridges/planner-orch/tests/": "plan-to-orchestration bridge tests: Short-ID subjects and parity with plan files",
     "packages/orch/fixtures/exec/": "orchestration exec-contract fixtures: plan-bound identifiers",
     "packages/orch/tests/": "orchestration tests and goldens: plan-bound identifiers and profile examples",
     "tests/golden/": "golden fixtures of the plan CLI output on the synthetic engine demo plan: its ID shape",

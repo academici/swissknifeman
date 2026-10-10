@@ -14,7 +14,10 @@
 | harness | capability | 0.7.1 | hub | beta | aicore |
 | maind | capability | 0.6.0 | hub | beta | aicore |
 | orch | capability | 0.1.0 | own-repo | alpha | aicore |
+| orch-harness | bridge | 0.1.0 | hub | alpha | aicore, orch, harness |
+| orch-skiller | bridge | 0.1.0 | hub | alpha | aicore, orch, skiller |
 | planner | capability | 0.28.3 | own-repo | beta | aicore |
+| planner-orch | bridge | 0.1.0 | hub | alpha | aicore, planner, orch |
 | skiller | capability | 0.19.2 | own-repo | beta | aicore |
 
 ## Ownership map
@@ -23,10 +26,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `packages/orch/bridges/harness/` | orch | bridges/orch-harness | - | P10 | hypothesis | not described by the architecture; refine in P10 |
-| `packages/orch/bridges/skiller/` | orch | bridges/orch-skiller | - | P10 | fixed | - |
-| `packages/orch/bridges/task/` | orch | bridges/planner-orch | - | P10 | fixed | - |
-| `packages/planner/bridges/orch/` | planner | bridges/planner-orch | - | P10 | fixed | - |
 | `core/__init__.py` | core (hub root) | aicore | shim | P11 | fixed | transitional alias package; deleted with core/ |
 | `core/codegraph_telemetry.py` | core (hub root) | analyst | - | P11 | fixed | - |
 | `core/pathology.py` | core (hub root) | analyst | - | P11 | fixed | - |

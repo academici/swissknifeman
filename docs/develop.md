@@ -334,11 +334,14 @@ Blocks are listed in `configs/managed-blocks.json`. `--check` prints `DRIFT`/`MI
 `--write` regenerates only the text between the managed markers (the block itself is inserted by hand once).
 Never edit a managed block directly — edit the source and run `--write`.
 
-**Package bridges.** A package core stays pure: it never names other repository packages. All knowledge
-about a partner lives in `<package>/bridges/<partner>/` (manifest `bridge.json`), which talks to the partner only
-through its public CLI/JSON. List bridges with `python3 packages/planner/scripts/plan.py bridge list`
-(planner ↔ orchestrator: `packages/planner/bridges/orch`, verbs `brief`, `register`, `register-review`). Boundary tests in the
-planner and orch test suites enforce the rule.
+**Bridges.** A package core stays pure: it never names other repository packages. All knowledge
+about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to
+its partners through their public CLI/JSON and finds them by environment variable or command on `PATH`, never by a
+neighbouring folder. The planner finds bridges through the `bridges.roots` setting (`.swissknifeman/config.toml` of this
+repository sets `["bridges"]`); list them with `python3 packages/planner/scripts/plan.py bridge list`
+(`planner-orch`: verbs `brief`, `register`, `register-review`, `commit`, `launch`; `orch-skiller`; `orch-harness`).
+Run the tests of every bridge with `bash scripts/test-bridges.sh`. The boundary check of `scripts/ecosystem-units.py`
+and the planner and orch test suites enforce the rule.
 
 Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion
 artifacts made of wood - a separate decision of the owner (not auto-editing the gate).

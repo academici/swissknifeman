@@ -47,8 +47,8 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 
 | Contract | `$id` / carrier | Owner | Stability | Gap and closing stage |
 | --- | --- | --- | --- | --- |
-| Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `packages/planner/bridges/orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
-| Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1`, `packages/orch/bridges/*/bridge.json` | orch | alpha | no schema file; unify the two descriptors in the bridges stage: P10 |
+| Bridge descriptor of planner | `urn:swissknifeman:task:plan:bridge:v1`, `bridges/planner-orch/bridge.json` | planner | beta | none; schema is in `plan/v1` |
+| Bridge descriptor of orch | `urn:swissknifeman:orch:bridge:v1` | orch | alpha | retired: `orch-skiller` and `orch-harness` are described by their `unit.json` (kind `bridge`) and no longer carry a `bridge.json` |
 | Provider manifests | `packages/aicore/configs/provider-capabilities.json`, `provider-distribution.json`, `provider-projection.json` (`schema_version` or `contract_version` `1.0.0`) | aicore (provider) | development | version field only, no JSON Schema; the files moved into `aicore` unchanged and the schema is still open |
 | Model catalog snapshot | `mappings.<provider>` in `packages/planner/configs/command-routing.json` | planner | development | generated from the aicore catalog by the projection renderer and verified with `--check`; planner needs it without aicore ([ADR 0053](decisions/0053-planner-engine-without-hard-aicore-dependency.md)) |
 
@@ -248,14 +248,16 @@ rename), so the rename itself shows no breaking change.
 | Aspect | Policy |
 | --- | --- |
 | Reads | the partner CLI reads the descriptors of its own side |
-| Writes | planner: `urn:swissknifeman:task:plan:bridge:v1`; orch: `urn:swissknifeman:orch:bridge:v1` |
+| Writes | planner: `urn:swissknifeman:task:plan:bridge:v1` (`bridges/planner-orch/bridge.json`, `name` equals the folder name) |
 | Upcast | none |
-| Deprecation window | set when the descriptors are unified |
-| Unknown fields | rejected for the planner descriptor (schema in `plan/v1`); the orch descriptor has no schema yet |
-| Fixtures | the three orch descriptors and the planner descriptor in the repository |
+| Deprecation window | none; the bridge verb name changed from `orch` to `planner-orch` without an alias |
+| Unknown fields | rejected (schema in `plan/v1`) |
+| Fixtures | the planner descriptor in the repository |
 
 The descriptor names the partner, the direction, the contract (`exec/v1`, `skiller.resolve/v1`, and so on), the
-entrypoints and the required CLI and environment variable. The `protocol` range of `unit.json` is meant for bridges.
+entrypoints and the required CLI and environment variable. Only the bridge that the planner dispatches carries a
+`bridge.json`; every bridge is a hub unit with a `unit.json` (kind `bridge`, destination `hub`, `protocol` range,
+`dev.test`). The planner finds bridge directories through the `bridges.roots` setting.
 
 ### Skills index fields, host buckets and skiller describe
 

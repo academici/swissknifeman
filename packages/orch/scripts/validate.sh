@@ -72,11 +72,6 @@ done
 
 echo "[6/6] tests"
 bash scripts/test.sh || err "unittest"
-# Named bridges carry their own tests; a missing bridges/ directory is skipped.
-for bridge_tests in bridges/*/tests; do
-  [[ -d "$bridge_tests" ]] || continue
-  python3 -m unittest discover -s "$bridge_tests" -t "$bridge_tests" -p "test_*.py" || err "bridge unittest $bridge_tests"
-done
 
 if [[ "$fail" -eq 0 ]]; then
   echo "validate: OK"

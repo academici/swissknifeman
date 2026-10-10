@@ -45,6 +45,7 @@ swissknifeman/                      # the hub repository
   bridges/
     planner-orch/                    # glue between two modules (hub)
     orch-skiller/
+    orch-harness/
   bin/swissknifeman                  # umbrella CLI: install, upgrade, doctor, config, units
   configs/  scripts/  bootstrap/  docs/  .github/
 ```
@@ -67,7 +68,7 @@ compatibility shim and the modules of later stages, see [ADR 0028](decisions/002
 | `analyst` | analytics, lessons, traces | `aicore` | `packages/analyst` plus `runs`, `pathology`, `codegraph_telemetry` from `core` |
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
-| `bridges/*` | glue between modules | both sides through their CLI | the bridges now inside `planner` and `orch` |
+| `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`) |
 | hub root | assembly, install, update, docs, CI | all modules | `bin/`, `scripts/`, `configs/`, `bootstrap/`, `docs/` |
 
 The file-level map, with the stage that moves each entry and a confidence mark, is generated into

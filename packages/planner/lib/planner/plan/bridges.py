@@ -1,8 +1,10 @@
 """Named bridges: discovery and dispatch of ``bridges/<name>/bridge.json`` entrypoints.
 
-The core knows no partner by name. A bridge is found by scanning the bridges root; its manifest is
-validated against the ``bridge`` schema kind, and a verb runs the declared script with the bridge's own
-arguments. The bridge's output and exit code pass through unchanged.
+The core knows no partner by name. A bridge is found by scanning the bridge roots: the directories of the
+``bridges.roots`` setting (a relative path is taken from the project root, a leading ``~`` is expanded), then the
+built-in ``<planner>/bridges`` when it exists. The first root that holds a name wins. A manifest is validated against
+the ``bridge`` schema kind, and a verb runs the declared script with the bridge's own arguments. The bridge's output
+and exit code pass through unchanged.
 """
 from __future__ import annotations
 
@@ -13,7 +15,7 @@ import re
 import subprocess
 import sys
 
-from . import schema
+from . import schema, settings, store
 from .model import PlanError
 
 PLANNER_ROOT = Path(__file__).resolve().parents[3]
@@ -21,7 +23,33 @@ VERB = re.compile(r"^[a-z][a-z0-9-]*\Z")
 
 
 def default_root() -> Path:
+    """The built-in root shipped with the planner (absent when no bridge ships with it)."""
     return PLANNER_ROOT / "bridges"
+
+
+def project_root(project: str | Path | None = None) -> Path | None:
+    """``project`` as given, else the project of the nearest ``plans/`` at or above the working directory."""
+    if project is not None:
+        return Path(project).resolve()
+    return settings.project_root_of(store.find_plans_root())
+
+
+def roots(project: str | Path | None = None) -> list[Path]:
+    """Bridge roots in order: ``bridges.roots`` of the configuration, then the built-in root when it is a directory."""
+    base = project_root(project)
+    found: list[Path] = []
+    for entry in settings.for_project(base).get("bridges.roots") or ():
+        path = Path(entry).expanduser()
+        found.append(path if path.is_absolute() else (base or Path.cwd()) / path)
+    builtin = default_root()
+    if builtin.is_dir():
+        found.append(builtin)
+    unique: list[Path] = []
+    for path in found:
+        path = path.resolve()
+        if path not in unique:
+            unique.append(path)
+    return unique
 
 
 def _invalid(path: Path, message: str, issues=()) -> PlanError:
@@ -55,13 +83,44 @@ def load(directory: Path) -> dict:
     return manifest
 
 
-def scan(root: Path | None = None) -> list[tuple[Path, dict]]:
-    """Every bridge under ``root`` in name order; a missing root means no bridges."""
-    base = Path(root) if root is not None else default_root()
+def _scan_root(base: Path, skip: frozenset = frozenset()) -> list[tuple[Path, dict]]:
+    """Bridges of one root; a directory named in ``skip`` is not read (its name is the bridge name)."""
     if not base.is_dir():
         return []
-    return [(manifest_path.parent, load(manifest_path.parent))
-            for manifest_path in sorted(base.glob("*/bridge.json"))]
+    return [(manifest_path.parent, load(manifest_path.parent)) for manifest_path in sorted(base.glob("*/bridge.json"))
+            if manifest_path.parent.name not in skip]
+
+
+def scan(root: Path | None = None) -> list[tuple[Path, dict]]:
+    """Every bridge in name order; a missing root means no bridges.
+
+    An explicit ``root`` is scanned alone. Otherwise every root of ``roots()`` is scanned in order and a repeated name
+    keeps its first bridge, with a ``BRIDGE_SHADOWED`` warning on stderr for the others.
+    """
+    if root is not None:
+        return _scan_root(Path(root))
+    chosen: dict[str, Path] = {}
+    found: list[tuple[Path, dict]] = []
+    for base in roots():
+        shadowed = frozenset(chosen)
+        if base.is_dir():
+            for manifest_path in sorted(base.glob("*/bridge.json")):
+                if manifest_path.parent.name in shadowed:
+                    print(f"BRIDGE_SHADOWED: {manifest_path.parent.name} in {manifest_path.parent} is shadowed by "
+                          f"{chosen[manifest_path.parent.name]}", file=sys.stderr)
+        for directory, manifest in _scan_root(base, shadowed):
+            chosen[manifest["name"]] = directory
+            found.append((directory, manifest))
+    return sorted(found, key=lambda pair: pair[1]["name"])
+
+
+def _display_path(directory: Path) -> str:
+    """Path of a bridge relative to the project root when it is inside it, absolute otherwise."""
+    base = project_root()
+    try:
+        return directory.resolve().relative_to(base).as_posix() if base is not None else directory.resolve().as_posix()
+    except ValueError:
+        return directory.resolve().as_posix()
 
 
 def listing(root: Path | None = None) -> dict:
@@ -69,7 +128,7 @@ def listing(root: Path | None = None) -> dict:
     for directory, manifest in scan(root):
         rows.append({"name": manifest["name"], "partner": manifest["partner"], "direction": manifest["direction"],
                      "contract": manifest["contract"], "verbs": sorted(manifest["entrypoints"]),
-                     "path": f"bridges/{directory.name}"})
+                     "path": _display_path(directory)})
     return {"bridges": rows}
 
 
@@ -81,6 +140,10 @@ def environment() -> dict[str, str]:
     env["TASK_ROOT"] = env["PLANNER_ROOT"]  # Compatibility alias: remove in the next minor release.
     env["TASK_PLAN_PY"] = env["PLANNER_PLAN_PY"]  # Compatibility alias: remove in the next minor release.
     env["PYTHONPATH"] = lib + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    from planner import integration
+    aicore_root = integration.status()["root"]
+    if aicore_root:
+        env["AICORE_ROOT"] = aicore_root
     return env
 
 

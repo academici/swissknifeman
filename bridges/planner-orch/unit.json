@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "planner-orch",
+  "title": "Bridge between the planner and orch: execution-input briefs, report registration, commits and launch",
+  "kind": "bridge",
+  "version": "0.1.0",
+  "stability": "alpha",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: canonical digest."},
+    {"unit": "planner", "range": "^0.28", "description": "Plan command line (scripts/plan.py) and the plan engine library read by brief."},
+    {"unit": "orch", "range": "^0.1", "description": "Orchestration command line (scripts/orch.py) and the exec/v1 contract."}
+  ],
+  "provides": {
+    "cli": ["brief.py", "register.py", "register_review.py", "commit.py", "launch.py"]
+  },
+  "protocol": {"min": "1", "max": "1"},
+  "dev": {
+    "test": ["bash", "scripts/test.sh"]
+  }
+}

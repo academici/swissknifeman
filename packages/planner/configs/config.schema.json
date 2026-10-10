@@ -201,6 +201,22 @@
         }
       }
     },
+    "bridges": {
+      "type": "object",
+      "description": "Named bridges to partner tools.",
+      "additionalProperties": false,
+      "properties": {
+        "roots": {
+          "type": "array",
+          "description": "Directories that hold named bridges (<root>/<name>/bridge.json); a relative path is resolved against the project root, a leading ~ is expanded.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        }
+      }
+    },
     "orchestration": {
       "type": "object",
       "description": "Orchestration scenarios of plan-run.",

@@ -188,6 +188,17 @@ class Tree:
         self.write(f"packages/{name}/lib/{name}/__init__.py", "")
         self.config["version_sources"][name] = {"path": f"packages/{name}/package.json", "read": "json:version"}
 
+    def add_bridge(self, name: str, requires=("aicore", "alpha"), **overrides):
+        """A bridge unit in ``bridges/<name>/`` that requires the given units (the foundation range is ``^0.1``)."""
+        ranges = {"aicore": "^0.1", "alpha": "^1.2"}
+        doc = {"$schema": "urn:swissknifeman:aicore:unit:v1", "id": name, "title": name, "kind": "bridge",
+               "version": "0.1.0", "stability": "alpha", "destination": "hub",
+               "requires": [{"unit": unit, "range": ranges.get(unit, "^0.1")} for unit in requires],
+               "provides": {}, "protocol": {"min": "1", "max": "1"}}
+        doc.update(overrides)
+        self.write_json(f"bridges/{name}/unit.json", doc)
+        return doc
+
     def use_boundary_config(self):
         """The path patterns and suffixes of the real configuration."""
         real = json.loads((ROOT / "configs/ecosystem-units.json").read_text(encoding="utf-8"))
@@ -907,6 +918,139 @@ class RenderTests(unittest.TestCase):
         self.assertFalse(self.doc.exists())
 
 
+class BridgeUnitTests(unittest.TestCase):
+    """Bridges are units of the hub: ``bridges/<id>/unit.json``."""
+
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.use_boundary_config()
+        self.tree.set_baseline({})
+
+    def assertFails(self, code: str):
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(f"ECOSYSTEM_{code}", codes(result), result.stderr)
+        return result
+
+    def assertPasses(self):
+        result = self.tree.check()
+        self.assertEqual((result.returncode, result.stderr), (0, ""))
+
+    def test_bridge_may_require_a_capability_and_needs_no_version_source(self):
+        self.tree.add_bridge("alpha-beta")
+        self.assertPasses()
+
+    def test_bridge_is_listed_and_rendered_under_its_folder(self):
+        self.tree.add_bridge("alpha-beta")
+        self.tree.flush()
+        listed = json.loads(run(self.tree.root, "list", "--json").stdout)["modules"]
+        self.assertIn(("alpha-beta", "bridge"), [(row["id"], row["kind"]) for row in listed])
+        self.assertEqual(run(self.tree.root, "render").returncode, 0)
+        text = (self.tree.root / eu.OWNERSHIP_DOC).read_text(encoding="utf-8")
+        self.assertIn("| alpha-beta | bridge | 0.1.0 | hub | alpha | aicore, alpha |", text)
+
+    def test_current_module_of_a_bridge_path(self):
+        self.assertEqual(eu.current_module("bridges/alpha-beta/brief.py"), "bridges/alpha-beta")
+        self.assertEqual(eu.current_module("packages/alpha/lib/alpha/x.py"), "alpha")
+        self.assertEqual(eu.current_module("bridges/README.md"), "bridges (hub root)")
+
+    def test_capability_requires_only_the_foundation(self):
+        self.tree.write_json("packages/beta/unit.json", {**self.tree.alpha, "id": "beta", "requires": [
+            {"unit": "alpha", "range": "^1.2"}], "provides": {}})
+        self.tree.write("packages/beta/package.json", json.dumps({"version": "1.2.0"}))
+        self.tree.config["version_sources"]["beta"] = {"path": "packages/beta/package.json", "read": "json:version"}
+        self.assertFails("UNIT_REQUIRES")
+
+    def test_a_bridge_is_required_by_nobody(self):
+        self.tree.add_bridge("alpha-beta", requires=("aicore",))
+        self.tree.alpha["requires"].append({"unit": "alpha-beta", "range": "^0.1"})
+        self.assertFails("UNIT_REQUIRES")
+
+    def test_bridge_requires_no_other_bridge(self):
+        self.tree.add_bridge("first", requires=("aicore",))
+        self.tree.add_bridge("second", requires=("aicore", "first"))
+        self.assertFails("UNIT_REQUIRES")
+
+    def test_kind_bridge_in_packages_is_refused(self):
+        self.tree.alpha["kind"] = "bridge"
+        self.assertFails("UNIT_KIND")
+
+    def test_capability_in_bridges_is_refused(self):
+        self.tree.add_bridge("alpha-beta", kind="capability")
+        self.assertFails("UNIT_KIND")
+
+    def test_bridge_belongs_to_the_hub(self):
+        self.tree.add_bridge("alpha-beta", destination="own-repo")
+        self.assertFails("UNIT_KIND")
+
+    def test_bridge_folder_without_unit_json_is_refused(self):
+        self.tree.write("bridges/alpha-beta/README.md", "no manifest\n")
+        self.assertFails("UNIT_MISSING")
+
+    def test_bridge_id_must_equal_its_folder(self):
+        self.tree.add_bridge("alpha-beta", id="other")
+        self.assertFails("UNIT_ID")
+
+    def test_bridge_folder_named_like_a_module_is_refused(self):
+        self.tree.add_bridge("alpha")
+        self.assertFails("UNIT_ID")
+
+    def test_bridge_cli_must_exist_in_the_bridge(self):
+        self.tree.add_bridge("alpha-beta", provides={"cli": ["brief.py"]})
+        self.assertFails("UNIT_PATH")
+        self.tree.write("bridges/alpha-beta/brief.py", "print(1)\n")
+        self.assertPasses()
+
+    def test_port_must_name_an_extension_point_of_a_required_module(self):
+        self.tree.alpha["provides"]["extension_points"] = [{"id": "source", "description": "Work source."}]
+        self.tree.add_bridge("alpha-beta", provides={"ports": [{"id": "alpha:source", "bridge": "alpha-beta"}]})
+        self.assertPasses()
+        self.tree.add_bridge("alpha-beta", provides={"ports": [{"id": "alpha:missing", "bridge": "alpha-beta"}]})
+        self.assertFails("UNIT_PORT")
+
+    def test_port_of_a_module_the_bridge_does_not_require_is_refused(self):
+        self.tree.alpha["provides"]["extension_points"] = [{"id": "source", "description": "Work source."}]
+        self.tree.add_bridge("alpha-beta", requires=("aicore",),
+                             provides={"ports": [{"id": "alpha:source", "bridge": "alpha-beta"}]})
+        self.assertFails("UNIT_PORT")
+
+    def test_port_must_name_its_own_bridge(self):
+        self.tree.alpha["provides"]["extension_points"] = [{"id": "source", "description": "Work source."}]
+        self.tree.add_bridge("alpha-beta", provides={"ports": [{"id": "alpha:source", "bridge": "elsewhere"}]})
+        self.assertFails("UNIT_PORT")
+
+    def test_import_of_a_partner_from_a_bridge_is_a_violation(self):
+        self.tree.add_bridge("alpha-beta")
+        self.tree.write("bridges/alpha-beta/use.py", "import alpha\nfrom alpha.sub import thing\n")
+        result = self.assertFails("BOUNDARY_NEW")
+        self.assertIn("bridges/alpha-beta/use.py", result.stderr)
+        data = json.loads(self.tree.check("--json").stdout)
+        self.assertEqual({v["key"]: v["count"] for v in data["violations"]},
+                         {"import|bridges/alpha-beta/use.py|alpha": 2})
+
+    def test_import_of_the_foundation_needs_requires_in_a_bridge(self):
+        self.tree.add_bridge("alpha-beta", requires=("alpha",))
+        self.tree.write("bridges/alpha-beta/use.py", "import aicore\n")
+        self.assertFails("BOUNDARY_NEW")
+
+    def test_the_path_of_a_neighbour_package_is_a_violation_in_a_bridge(self):
+        self.tree.add_bridge("alpha-beta")
+        self.tree.write("bridges/alpha-beta/where.py", "ROOT = 'packages/alpha/lib'\n")
+        self.assertFails("BOUNDARY_NEW")
+
+    def test_the_foundation_locator_path_is_allowed_in_a_bridge_that_requires_it(self):
+        self.tree.add_bridge("alpha-beta")
+        self.tree.write("bridges/alpha-beta/where.py", "LIB = HUB / 'packages' / 'aicore'  # packages/aicore/lib\n")
+        self.assertPasses()
+
+    def test_a_bridge_has_no_standalone_run(self):
+        self.tree.add_bridge("alpha-beta", dev={"test": ["true"]})
+        self.tree.flush()
+        result = run(self.tree.root, "standalone", "alpha-beta")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("standalone alpha-beta: n/a", result.stdout)
+
+
 class EnvironmentTests(unittest.TestCase):
     def test_not_a_git_tree(self):
         tmp = Path(tempfile.mkdtemp(prefix="skm-eu-test-")).resolve()
@@ -976,8 +1120,10 @@ class RealRepositoryTests(unittest.TestCase):
     def test_modules_and_aliases(self):
         data = json.loads(subprocess.run([sys.executable, str(SCRIPT), "list", "--json"], capture_output=True,
                                          text=True, cwd=ROOT).stdout)
-        self.assertEqual(sorted(m["id"] for m in data["modules"]),
+        self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] != "bridge"),
                          ["aicore", "analyst", "brain", "harness", "maind", "orch", "planner", "skiller"])
+        self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] == "bridge"),
+                         ["orch-harness", "orch-skiller", "planner-orch"])
         self.assertFalse((ROOT / "packages/artifex/unit.json").exists())
 
 

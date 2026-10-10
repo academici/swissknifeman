@@ -65,6 +65,10 @@ schema_version = 1
 # Allowed in layers: defaults, project, invocation.
 # templates_dir = ""
 
+[planner.bridges]
+# Directories that hold named bridges (<root>/<name>/bridge.json); a relative path is resolved against the project root, a leading ~ is expanded. Array of strings.
+# roots = []
+
 [planner.orchestration]
 # Scenario used when the item class has no entry of its own. Reserved: no effect yet. String.
 # default_scenario = "solo"

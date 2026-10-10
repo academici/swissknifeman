@@ -1,0 +1,180 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.6",
+  "title": "Reducer, повторы, журнал и эффекты: event_id и STALE_EPOCH, событие неизвестной версии, property-тесты; retry.decide и таблица действий; журнал run и watch(run_id, after_seq); effects.check перед эффектом",
+  "status": "in_progress",
+  "summary": "RunState: дедупликация по event_id (EVENT_CONFLICT), fencing owner_epoch (STALE_EPOCH), событие чужой contract_version сохраняется и не применяется, error/v1 в ошибках стадии; property-тесты stdlib с seed; lib/orch/retry.py (class_of, decide, DEFAULT_ACTIONS); lib/orch/journal.py (run_dir, append_event, read_events(after_seq), write_doc/read_doc); EnginePort.watch(run_id, after_seq=None); lib/orch/effects.py (check, record) — повторная проверка предусловия.",
+  "why": "D21, D20, D64; E23, E24, R20, R21, R22, R25, R27. Это модель конкурентности и целостности исполнения (knowledge/orch-p10-contracts#invariants I1, I4–I7): ошибка здесь даёт повтор эффекта или потерю исхода. Жёсткие риски: (1) дедупликация по event_id и по seq противоречат — порядок проверок фиксирован в §reducer; (2) отклонённое событие частично меняет состояние — полная проверка до изменения, свойство P5/P7; (3) повтор после частичных изменений без reconcile — правило 3 decide и тест R20; (4) журнал без блокировки при двух писателях — flock, тест конфликта.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/{port,retry,journal,effects}.py, packages/orch/lib/orch/bindings/__init__.py (сигнатура watch)",
+      "packages/orch/tests/{test_runstate.py, test_runstate_properties.py, test_retry.py, test_journal.py, test_effects.py, test_port.py}",
+      "packages/orch/docs/engine-port.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "живой watch привязок и движок (Plan 2)",
+      "CLI для журнала (P10.10 пишет run.json и квитанции через journal)"
+    ]
+  },
+  "depends_on": [
+    "P10.5"
+  ],
+  "decisions": [
+    "D21",
+    "D20",
+    "D64",
+    "D66"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#invariants",
+      "why": "модель инвариантов: I1, I4, I5, I6, I7, блокировки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#reducer",
+      "why": "изменения RunState и property-тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#retry",
+      "why": "retry.decide: входы, правила, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#journal",
+      "why": "журнал run и watch",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#effects",
+      "why": "effects.check и record",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#model",
+      "why": "приём журнала под flock в aicore.ext (образец)",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/port.py",
+      "why": "RunState и коды",
+      "required": true
+    },
+    {
+      "path": "packages/orch/docs/engine-port.md",
+      "why": "таблицы операций, кодов и reducer",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_runstate.py",
+      "why": "существующие тесты reducer",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/state/locations.py",
+      "why": "каталог состояния проекта для run_dir",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/port.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/retry.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/journal.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/effects.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/bindings/__init__.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/engine-port.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "RunState и retry/effects — без I/O и системных часов (время приходит аргументом); journal — единственный модуль с файловым вводом-выводом из этого пункта",
+    "Новые коды порта EVENT_CONFLICT и STALE_EPOCH — в конец PORT_ERROR_CODES и таблицы docs/engine-port.md",
+    "Property-тесты — только stdlib random.Random с фиксированными seed; время прогона < 5 с"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: коды порта + таблица docs → RunState (порядок шагов §reducer) → существующие test_runstate зелёные → property-тесты P1–P8 → retry.py + test_retry (ERROR_CLASSES сверяется с enum aicore error/v1 чтением схемы через AICORE_ROOT) → journal.py + test_journal (временный HOME/SKM_HOME и проект) → EnginePort.watch и Binding.watch с after_seq + строка docs → effects.py + test_effects (сценарий R27) → V1–V2 → CHANGELOG («orch: reducer with event identity and owner epoch, retry decision table, run journal with watch cursor, effect precondition re-check»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "cd packages/orch && PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.test_runstate_properties tests.test_retry tests.test_journal tests.test_effects && PYTHONPATH=lib:../aicore/lib python3 -c 'from orch.port import PORT_ERROR_CODES as c; assert c[-2:] == (\"EVENT_CONFLICT\", \"STALE_EPOCH\"), c; from orch.retry import DEFAULT_ACTIONS as d; assert d[\"context_limit\"] == \"replan\" and d[\"unknown_outcome\"] == \"reconcile\"; import inspect; from orch.port import EnginePort; assert \"after_seq\" in inspect.signature(EnginePort.watch).parameters'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "reducer с fencing и property-тестами",
+    "retry.decide",
+    "журнал run и watch(after_seq)",
+    "effects.check"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T18:02:05Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "85c0b7a4-fa47-4883-9885-deee6bef3260"
+    }
+  },
+  "updated_at": "2026-10-10T18:02:05Z"
+}

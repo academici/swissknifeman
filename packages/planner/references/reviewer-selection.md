@@ -40,8 +40,8 @@ pass and before recording completion. This uses native agent sessions and the ex
 as GREEN. `--review` without a selector retains the dedicated review-item shape at the end of scope.
 No owner request means no review item and no review launch.
 
-For an automatic owner-requested item review, allow at most two completed rounds and one owning
-correction. Interrupted or cancelled transport is not GREEN and is not a completed round. Reconcile
+For an automatic owner-requested item review, allow at most `policy.review_rounds_max` completed rounds and
+`policy.corrections_max` owning corrections (context pack `policy`, or `plan.py config show`; defaults 2 and 1). Interrupted or cancelled transport is not GREEN and is not a completed round. Reconcile
 a running native session before launching another. A local re-review checks findings and changed
 dependency closure; a repeated concurrency/transaction/auth/data-integrity class checks the shared
 invariant model rather than repeating local patches. Any further round needs a new bounded owner

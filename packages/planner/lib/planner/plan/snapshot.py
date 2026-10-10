@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from . import check, store, views
+from . import check, settings, store, views
 from .model import PlanError
 
 TABLES = {"phase": "phases", "item": "items", "unit": "units", "decision": "decisions", "document": "documents"}
@@ -52,7 +52,7 @@ def import_snapshot(root: str | Path, value: dict, *, replace: bool = False) -> 
     # Validation is read-only and happens before creating even the publication lock.
     proposed = _graph(root, value)
     root.parent.mkdir(parents=True, exist_ok=True)
-    with store.PlanLock(root.parent):
+    with store.PlanLock(root.parent, timeout=float(settings.for_root(root.parent).get("lock.timeout_seconds"))):
         if (root / "plan.json").exists() and not replace:
             raise PlanError("PLAN_EXISTS", f"{root} already has a JSON plan; pass --replace to restore it")
         short_id = proposed.plan["short_id"]

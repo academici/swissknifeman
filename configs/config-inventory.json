@@ -52,6 +52,19 @@
       "note": "skiller skill selection (buckets, plugins, profile) and vendor sync in [skiller] and [skiller.sync]"
     },
     {
+      "path": "packages/planner/configs/config.schema.json",
+      "owner": "planner",
+      "consumers": [
+        "packages/planner/lib/planner/integration/config.py",
+        "packages/planner/lib/planner/plan/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "planner thresholds, defaults of new plans and items, review loop policies, view templates, orchestration scenarios, events and external checks in [planner]"
+    },
+    {
       "path": "packages/aicore/configs/config.schema.json",
       "owner": "aicore",
       "consumers": [

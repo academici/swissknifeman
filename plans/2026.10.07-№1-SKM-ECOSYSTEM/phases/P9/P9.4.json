@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.4",
   "title": "Конфиг planner: схема [planner] по инвентаризации D15, config.example.toml, слой plan.settings, замена констант, политики циклов, шаблоны представлений, plan.py config",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Схема [planner] (configs/config.schema.json, все ключи D58 включая ключи P9.5–P9.8), config.example.toml генератором aicore (schema_version = 1), unit.json provides.config, запись config-inventory; planner.integration.config и движковый planner.plan.settings (for_plan, for_root, set_invocation; слой plan.settings, деградация без aicore); константы DEFAULT_BUDGET_KB, TOP_SOURCES, HEAVY_TEXT_BYTES, MAX_CHAIN, таймаут PlanLock, умолчания new_plan/add_item и шаблоны представлений берутся из конфига; политики циклов в пакете контекста (policy) и в текстах команд; глагол plan.py config show|explain (--json, config-explain/v1) и глобальная --config.",
   "why": "D15 и D58 (прямое требование владельца M5): бюджеты, пороги, умолчания и политики planner настраиваются без форка с приоритетом defaults → машина → проект → plan.settings → флаги; R04 — версия формата конфига и explain --json. Жёсткие риски: (1) изменение поведения по умолчанию — умолчания схемы равны прежним константам, golden без перезахвата, кроме текстов команд; (2) обнуление политик — нижняя граница 1 в схеме; (3) ошибка конфига ломает каждую команду — CONFIG_INVALID с файлом и строкой (aicore), тест.",
   "scope": {
@@ -220,6 +220,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-09T17:30:04Z"
+  "result": {
+    "started_at": "2026-10-10T02:51:29Z",
+    "finished_at": "2026-10-10T03:29:54Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "aabe744e-8479-4f5a-b017-7779dd6a337f"
+    },
+    "notes": "Schema [planner] with all D58 keys, config.example.toml, unit.json provides.config, inventory entry; planner.integration.config and plan.settings (for_plan, for_root, set_invocation) with caching and no-aicore degradation; constants replaced by config (context, budget, check, refs, lock, new_plan, add_item, views templates dir); policy in the context pack and command texts; plan.py config show|explain and global --config; tests/engine/test_settings.py (30 tests).",
+    "deviations": [
+      "golden also recaptured for plan-help and plan-unknown-subcommand; CONFIG_INVALID/AICORE_REQUIRED are shared refusals registered in the catalog and read-catalog schema; budget report gains top_sources; lock timeout also in gitops.commit and snapshot import; validate.sh runs tests with temporary HOME/SKM_HOME; plan.settings budget above 4096 refuses with CONFIG_INVALID (see log)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T03:29:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T03:29:54Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T03:29:54Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T03:29:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T03:29:54Z"
 }

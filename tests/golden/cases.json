@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "ce743e9b4fdd",
-  "reason": "digests of the generated task compatibility plugin golden files, left out when the alias plugin was added",
+  "captured_from": "a0994160b1c0",
+  "reason": "planner loop policies from configuration",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

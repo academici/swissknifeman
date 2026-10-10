@@ -16,6 +16,7 @@ VERB_DATA = {
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits",
+    "config": None,
 }
 
 # Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
@@ -28,13 +29,13 @@ VERB_MODES = {
     "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "reconcile": "write",
-    "archive": "write", "commit": "write", "commits": "read",
+    "archive": "write", "commit": "write", "commits": "read", "config": "read",
 }
 
 # Maintained refusal registry. Tests compare it with PlanError literals across lib/planner/plan.
 ERROR_CODES = frozenset("""
-ACCEPT_REQUIRED ACTOR_REQUIRED AGENT_REQUIRED ALREADY_ARCHIVED ARCHIVE_EXISTS ATTEMPT_CONFLICT
-ATTEMPT_ID_INVALID BRIDGE_INVALID BRIDGE_UNKNOWN BRIDGE_VERB_UNKNOWN BY_INVALID CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONTENT_INVALID
+ACCEPT_REQUIRED ACTOR_REQUIRED AGENT_REQUIRED AICORE_REQUIRED ALREADY_ARCHIVED ARCHIVE_EXISTS ATTEMPT_CONFLICT
+ATTEMPT_ID_INVALID BRIDGE_INVALID BRIDGE_UNKNOWN BRIDGE_VERB_UNKNOWN BY_INVALID CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONFIG_INVALID CONTENT_INVALID
 DECISION_NOT_ACCEPTED DECISION_NOT_OPEN DECISION_REQUIRED DECISION_SELF_SUPERSEDE DECISION_SUPERSEDED
 DEPENDENCY_NOT_READY DEPTH_INVALID DESIGN_INCOMPLETE DEVIATION_REQUIRED DIRECTION_INVALID
 ESCALATION_REQUIRED EVIDENCE_CONFLICT EVIDENCE_INVALID EVIDENCE_REQUIRED EVIDENCE_SUBJECT EXTERNAL_GATE
@@ -49,6 +50,9 @@ REF_INVALID REF_QUALIFIED REF_UNKNOWN REPO_UNKNOWN ROUTE_MISMATCH ROUTE_UNDERSHO
 ROUTING_UNAVAILABLE SCHEMA_INVALID SECTION_UNKNOWN SINCE_INVALID STATUS_INVALID UNITS_OPEN
 UNIT_DEPENDENCY UNIT_INVALID UNIT_SELF UNIT_STATE IO_ERROR USAGE VERB_FAILED
 """.split())
+
+# Refusals any verb can end with: CLI input and output, schema checks, and the configuration every command reads.
+SHARED_ERRORS = frozenset({"IO_ERROR", "USAGE", "SCHEMA_INVALID", "CONFIG_INVALID", "AICORE_REQUIRED"})
 
 _PLAN = {"PLAN_NOT_FOUND", "PLAN_AMBIGUOUS"}
 _TARGET = {"REF_INVALID", "REF_UNKNOWN", "REF_QUALIFIED"}
@@ -106,6 +110,7 @@ VERB_ERRORS = {
     "reopen": _PLAN | _WRITE | {"REF_UNKNOWN", "NOT_TERMINAL", "REASON_REQUIRED"},
     "reconcile": _PLAN | _WRITE,
     "archive": _PLAN | _WRITE | {"ALREADY_ARCHIVED", "ARCHIVE_EXISTS", "PLAN_NOT_DONE", "REASON_REQUIRED"},
+    "config": _PLAN,
     "commits": _PLAN | _TARGET | {"CONTENT_INVALID", "GIT_UNAVAILABLE", "GIT_FAILED", "SCHEMA_INVALID"},
     "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",
                        "GIT_UNAVAILABLE", "GIT_BUSY", "GIT_CONFLICT", "GIT_FAILED", "OUTSIDE_SCOPE", "NOTHING_TO_COMMIT"},
@@ -144,7 +149,7 @@ def verbs(parser: argparse.ArgumentParser) -> dict:
     for name, command in sorted(sub.choices.items()):
         if not command.description:
             raise ValueError(f"catalog summary is missing for {name}")
-        errors = VERB_ERRORS[name] | {"IO_ERROR", "USAGE", "SCHEMA_INVALID"}
+        errors = VERB_ERRORS[name] | SHARED_ERRORS
         if not errors <= ERROR_CODES:
             raise ValueError(f"unregistered catalog refusal for {name}")
         row = {"name": name, "summary": command.description, "mode": VERB_MODES[name],

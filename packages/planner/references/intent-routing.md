@@ -49,8 +49,8 @@ Review runs only on an explicit owner request:
 
 One review is one reviewer over the requested scope. `--reviewer` in `plan-run` explicitly requests
 item-scoped independent sessions; otherwise do not split the scope or spawn subagents unless asked.
-See `reviewer-selection.md` for exact selection and bounded automatic item rounds. A finding gets one owning
-fix and a re-check of that finding only; a second full review needs a new owner request.
+See `reviewer-selection.md` for exact selection and bounded automatic item rounds. A finding gets at most `policy.corrections_max` owning
+fixes (default 1) and a re-check of that finding only; a second full review needs a new owner request.
 
 Outside an explicitly selected plan route, do not require design finish, phase audit, plan
 close, plan archival, status/roadmap carriers, or a launch/handoff file. A concise result or

@@ -4,7 +4,7 @@
       "artifact_id": "planner.codex.plugin",
       "path": "packages/planner/.codex-plugin/plugin.json",
       "rendered_hash": "sha256:2f4c3463fc32b77c95e1cc37156f92663557d8ddec8e1b3c01cd050c3d5bd7c9",
-      "source_hash": "sha256:e7a08de52d71277e973a52822cc7afff94ff144006884b3e5141dd74018d28f7"
+      "source_hash": "sha256:1a7df17b4227d07c104c00d71ce1e582ee3326f8b3f6c50935ddc02e478bf98f"
     },
     {
       "artifact_id": "planner.codex.design.skill",
@@ -27,20 +27,20 @@
     {
       "artifact_id": "planner.codex.dev.skill",
       "path": "packages/planner/adapters/codex/skills/planner-dev/SKILL.md",
-      "rendered_hash": "sha256:f2fdc077845df07147fb150d3db131de95c87e63596d655e1bebb5ad13f78160",
-      "source_hash": "sha256:d07656060136297bdc6b2c8902ab775ec0a6f8ab4770a5a2ce9fb5174492e0fc"
+      "rendered_hash": "sha256:976f09933e9f72641736407db6a26355a4e211b17b507bdc56b259c9166f09a7",
+      "source_hash": "sha256:5df2aa12d8dca5a7164f36a39217f0cf98d8bfa41820728ea0db793f9d6463bf"
     },
     {
       "artifact_id": "planner.codex.dev.invocation-policy",
       "path": "packages/planner/adapters/codex/skills/planner-dev/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:c4f951626c56df2097e5ddae2218104890fe19600a9c38d6cedc9d482d537a72"
+      "source_hash": "sha256:31b7fe457b015ab5728d44d522e70cf073c9a0d0a0d08a54abdf4b8f954cd0cc"
     },
     {
       "artifact_id": "planner.codex.dev.runtime",
       "path": "packages/planner/adapters/codex/skills/planner-dev/command.md",
-      "rendered_hash": "sha256:08e785d5ca72a62f2f0b9e142a087574d13b3d07a9600abc8e4a99c4d9d92d1e",
-      "source_hash": "sha256:131a844553b8aa15efb1ab2aec6b1dd88a4bb05919817a83680075ed23d5781d"
+      "rendered_hash": "sha256:c4947cd30998472a0c59b07d528e9d9449b4f62c14f60d50ae9c6d83db119fad",
+      "source_hash": "sha256:d5d9cc2e62cbb5ff23e4cdfecde2ab1c466bca64ce8d6338f1ef13d6de8d37fa"
     },
     {
       "artifact_id": "planner.codex.fix.skill",
@@ -63,20 +63,20 @@
     {
       "artifact_id": "planner.codex.make.workflow.skill",
       "path": "packages/planner/adapters/codex/skills/planner-make-workflow/SKILL.md",
-      "rendered_hash": "sha256:cabcdf756c964de848491d43c3370c5226e81708c17b7632c72675e5ebebfd69",
-      "source_hash": "sha256:cfca31ffa29147655e199d0e18d2af82902c7034d534a0269a7e0239810bc798"
+      "rendered_hash": "sha256:d16bfbbf6f06cfcb70ff042a27dfb94429e4d9a0f83f455c4d5822f7e7975810",
+      "source_hash": "sha256:ceea46561fb5963ebe940ef14eca2a970475671ba8e6c34023143f0911352a16"
     },
     {
       "artifact_id": "planner.codex.make.workflow.invocation-policy",
       "path": "packages/planner/adapters/codex/skills/planner-make-workflow/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:8cd462c0208562b882126c0fd9cbc097b22df3a0c041ea538ecf94aaea0bdd98"
+      "source_hash": "sha256:64375c57f1ec36cb3c952adc85b0e95ca7ff6d5bb050130bfe9c106df37debc2"
     },
     {
       "artifact_id": "planner.codex.make.workflow.runtime",
       "path": "packages/planner/adapters/codex/skills/planner-make-workflow/command.md",
-      "rendered_hash": "sha256:a29e054c4a69392d00126c5f3037ce0b65fbc0ac08b008da4db79a92d360f8dd",
-      "source_hash": "sha256:acd2b55496dbe12101a74aa028df9e213a61db1e434928ca37ed5f99bf83f072"
+      "rendered_hash": "sha256:9a952a3b2c8c6edc53b0186c29ce05dd299fcbbbbc707a009faf17418a439bec",
+      "source_hash": "sha256:be0e04e6a1dea193e2298df8ae0847505193bbe55bbcf3f32df6d9e9de351a04"
     },
     {
       "artifact_id": "planner.codex.plan.audit.skill",
@@ -135,20 +135,20 @@
     {
       "artifact_id": "planner.codex.plan.run.skill",
       "path": "packages/planner/adapters/codex/skills/planner-plan-run/SKILL.md",
-      "rendered_hash": "sha256:997d876e24d7e0d6feca6c337334a446fb1bbe5540052740cc2e2e601b2e30e9",
-      "source_hash": "sha256:f3eb992b0448a49fd05123462d8ca2882a2806e32392a09009b361e9cef07d2f"
+      "rendered_hash": "sha256:96d6fd0b779f2f08d80a98604b6def0752e8cd707564427bad9950c0a1a45d79",
+      "source_hash": "sha256:1df67e05068bd178ce34e232dd7b2315ed73bef48db4ff2779f0179f65292057"
     },
     {
       "artifact_id": "planner.codex.plan.run.invocation-policy",
       "path": "packages/planner/adapters/codex/skills/planner-plan-run/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:4fa3f75d52b76c3b5201ad8b5f4f7b81aaf5d218f4df34c1d42a18ceb92407e2"
+      "source_hash": "sha256:e4011dce3b8cdeabc0e5c0e45043f488d3819706f4cf271c49d429237f6f161d"
     },
     {
       "artifact_id": "planner.codex.plan.run.runtime",
       "path": "packages/planner/adapters/codex/skills/planner-plan-run/command.md",
-      "rendered_hash": "sha256:cddaf6a186002bfebe34989fdb4f4873b7781939f912fc5b525f34cb4ed01a1e",
-      "source_hash": "sha256:0f77e39c594e291b076c5c49520151141d8784d35842bf40754369096a1d2bac"
+      "rendered_hash": "sha256:1b0a53ee39972dc37597541e301f6e5a94260a945d0b6217ed8519b90504aa0d",
+      "source_hash": "sha256:9fad0a3b24274d31f287f5ea6261ea15a0a65bcd295ad094f987106adfebc990"
     },
     {
       "artifact_id": "planner.codex.research.skill",

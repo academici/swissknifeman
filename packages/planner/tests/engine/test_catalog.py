@@ -120,14 +120,14 @@ class ParserCatalogTests(unittest.TestCase):
 class ErrorRegistryTests(unittest.TestCase):
     def test_registered_codes_match_plan_error_literals_and_cli_refusals(self):
         observed = set()
-        for path in PLAN_LIB.glob("*.py"):
+        for path in [*PLAN_LIB.glob("*.py"), *PLAN_LIB.parent.joinpath("integration").glob("*.py")]:
             for node in ast.walk(ast.parse(path.read_text())):
                 if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
                         and node.func.id in ("PlanError", "_failure") and node.args
                         and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)):
                     observed.add(node.args[0].value)
         self.assertEqual(catalog.ERROR_CODES, observed)
-        declared = set().union(*catalog.VERB_ERRORS.values()) | {"IO_ERROR", "USAGE", "SCHEMA_INVALID"}
+        declared = set().union(*catalog.VERB_ERRORS.values()) | catalog.SHARED_ERRORS
         self.assertEqual(declared, observed)
         item_schema = schema.load_registry().for_kind("read-catalog")[0]
         registered = item_schema["properties"]["verbs"]["items"]["properties"]["errors"]["items"]["enum"]

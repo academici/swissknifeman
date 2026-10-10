@@ -13,8 +13,8 @@ from pathlib import Path
 import re
 import sys
 
-
-from . import (bridges, budget, catalog, check, context, gitops, lifecycle, ops, parallel, query, schema, snapshot,
+from .. import integration
+from . import (bridges, budget, catalog, check, context, gitops, lifecycle, ops, parallel, query, schema, settings, snapshot,
                stats, store, units, views)
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
@@ -360,6 +360,31 @@ def cmd_context(args) -> int:
     return 0
 
 
+def cmd_config(args) -> int:
+    if args.plan:
+        config = settings.for_plan(store.load_plan(_plan_dir(args)))
+    else:
+        config = settings.for_root(args.plans_root or store.find_plans_root())
+    if args.action == "explain":
+        if args.json:
+            _print_json(config.explain_json(args.key))
+        else:
+            print(config.explain_text(args.key))
+        return 0
+    if args.key:
+        raise UsageError("config show takes no key; use config explain KEY")
+    if args.json:
+        _print_json({"aicore": config.aicore, "layers": list(config.layers), "values": dict(config.values)})
+        return 0
+    for key, value in config.values.items():
+        print(f"{key} = {json.dumps(value, ensure_ascii=False)}  ({config.sources.get(key, 'defaults')})")
+    if config.aicore["aicore"] == "available":
+        print(f"aicore: available {config.aicore['root']}")
+    else:
+        print("aicore: unavailable — machine and project layers are not read")
+    return 0
+
+
 def cmd_finish(args) -> int:
     result = lifecycle.finish(
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
@@ -560,6 +585,8 @@ def cmd_commit(args) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="plan.py", description="Planner plan (layout v4): authoring and lifecycle verbs.")
     parser.add_argument("--output", choices=("text", "json"), default="text", help="structured success/error envelope")
+    parser.add_argument("--config", type=Path, default=None, metavar="FILE",
+                        help="configuration file for this run: the invocation layer of [planner] (needs aicore)")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--plans-root", type=Path, default=None, help="plans/ directory (default: nearest up from cwd)")
     sub = parser.add_subparsers(dest="command", required=True, metavar="VERB")
@@ -586,6 +613,13 @@ def build_parser() -> argparse.ArgumentParser:
     message.add_argument("--message", help="first owner message, verbatim")
     message.add_argument("--message-file", type=Path)
     p.add_argument("--date", help="YYYY.MM.DD (default today)")
+
+    p = verb("config", cmd_config, "show the effective [planner] configuration or explain where a value comes from",
+             plan=False)
+    p.add_argument("action", nargs="?", choices=("show", "explain"), default="show")
+    p.add_argument("key", nargs="?", help="with explain: one key or a table such as context")
+    p.add_argument("--plan", help="plan id, PLAN<N> or path: add its plan.settings layer")
+    p.add_argument("--json", action="store_true", help="machine-readable output")
 
     p = verb("show", cmd_show, "overview of a plan, or one document as canonical JSON")
     p.add_argument("ref", nargs="?", help="plan, brief, Pn, Pn.m, D#, Pn.m/U#")
@@ -847,10 +881,13 @@ def main(argv=None) -> int:
     # Know the output contract even if parsing fails (missing args, bad CSV, etc.).
     tail = argv
     output = "text"
-    if tail[:1] == ["--output"] and len(tail) >= 2:
-        output, tail = tail[1], tail[2:]
-    elif tail and tail[0].startswith("--output="):
-        output, tail = tail[0].split("=", 1)[1], tail[1:]
+    while tail:  # leading global options, in any order
+        if tail[0] in ("--output", "--config") and len(tail) >= 2:
+            output, tail = (tail[1] if tail[0] == "--output" else output), tail[2:]
+        elif tail[0].startswith(("--output=", "--config=")):
+            output, tail = (tail[0].split("=", 1)[1] if tail[0].startswith("--output=") else output), tail[1:]
+        else:
+            break
     parse_as_json = output == "json" or bool(tail and tail[0] in _READ_VERBS)
     errors = io.StringIO()
     try:
@@ -867,6 +904,9 @@ def main(argv=None) -> int:
     # A bridge verb owns its output and exit code; only dispatcher refusals use the envelope.
     passthrough = args.command == "bridge" and args.name != "list"
     try:
+        if args.config is not None:
+            integration.require("--config")
+        settings.set_invocation(args.config)
         if as_json and not passthrough:
             output = io.StringIO()
             with redirect_stdout(output):

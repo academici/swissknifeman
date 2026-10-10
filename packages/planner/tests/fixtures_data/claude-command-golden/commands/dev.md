@@ -30,7 +30,8 @@ an automatic review. Run explicitly requested checks. Report a foreign red basel
 it intersects scope or dependency closure.
 
 For a requested selector, read `references/reviewer-selection.md`: use a fresh read-only session
-on that exact route, then one owning correction and affected checks. The reviewer never repairs.
+on that exact route, then at most `policy.corrections_max` owning corrections (context pack `policy`, or
+`plan.py config show`; default 1) and affected checks. The reviewer never repairs.
 
 Review is opt-in ([review contract](../references/intent-routing.md#review-is-opt-in)). Only with
 `--review`, `--reviewer` or an explicit owner request, strip review options from the task text and,

@@ -14,13 +14,12 @@ from typing import Any, Iterator, NamedTuple
 from . import context as _context
 from . import edges as _edges
 from . import schema as _schema
-from . import store
+from . import settings, store
 from .model import ITEM_ID, TERMINAL, parse_ref
 
 _UNIT_ID = re.compile(r"^U[0-9]+$")
 _DRIVE = re.compile(r"^[A-Za-z]:[\\/]")
 _GLOB = re.compile(r"[*?\[{]")
-HEAVY_TEXT_BYTES = 16 * 1024
 _READ_PATH = re.compile(r"^@plan/(knowledge|decisions)/([^/]+)\.json$")
 _TARGETED_EVENTS = frozenset({"start", "finish", "design_done", "phase_closed", "deviation", "blocker",
                               "difficulty", "assumption"})
@@ -621,10 +620,11 @@ class _Context:
         sections = p.plan.get("sections") if isinstance(p.plan, dict) else None
         plan_texts = [("plan.json", "sections", i, e) for i, e in enumerate(sections if isinstance(sections, list) else [])
                       if isinstance(e, dict)]
+        heavy_bytes = settings.for_plan(p).get("check.heavy_text_kb") * 1024
         for where, field, index, entry in [("brief.json", f, i, {"text": t}) for f, i, t in texts] + plan_texts:
             text = entry.get("text")
             size = len(text.encode("utf-8")) if isinstance(text, str) else 0
-            if size > HEAVY_TEXT_BYTES:
+            if size > heavy_bytes:
                 self.warn("context_heavy", f"{where}/{field}/{index}",
                           f"{max(1, size // 1024)} KB enters every context pack; move phase-specific records to "
                           "knowledge/<id>.json with applies_to")

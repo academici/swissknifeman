@@ -7,13 +7,12 @@ import json
 from pathlib import Path
 import re
 
-from . import edges, refs, store
+from . import edges, refs, settings, store
 from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
 LESSON_TYPES = ("deviation", "blocker", "difficulty", "assumption")
 PACK_MODES = ("legacy", "scoped")
-DEFAULT_BUDGET_KB = 256
 UPSTREAM_KEYS = ("id", "title", "status", "summary", "deliverables", "artifacts")
 RESULT_KEYS = ("notes", "deviations", "pending", "escalation", "commits")
 PHASE_KEYS = ("id", "title", "goal", "deliverables", "contract", "closed")
@@ -29,8 +28,14 @@ def pack_mode(plan: store.Plan) -> str:
 
 def budget_bytes(plan: store.Plan) -> int:
     """The pack size warning threshold in bytes; it is a report limit, never a trim."""
-    kb = plan.plan.get("settings", {}).get("context_budget_kb")
-    return (kb if isinstance(kb, int) and not isinstance(kb, bool) and kb >= 1 else DEFAULT_BUDGET_KB) * 1024
+    return settings.for_plan(plan).get("context.budget_kb") * 1024
+
+
+def policy(plan: store.Plan) -> dict:
+    """The loop policies the commands follow: review rounds per item and owning corrections per review."""
+    config = settings.for_plan(plan)
+    return {"review_rounds_max": config.get("policy.review_rounds_max"),
+            "corrections_max": config.get("policy.corrections_max")}
 
 
 def scope_reason(doc: dict, item_id: str, phase_id: str, mode: str) -> str | None:
@@ -304,6 +309,7 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
                       if scope_reason(d, item_id, phase_id, mode) is not None],
         "units": [copy.deepcopy(plan.units[f"{item_id}/{u}"]) for u in units.unit_ids(plan, item_id)],
         "orchestration": units.policy(plan, item_id), "ready_units": units.ready(plan, item_id),
+        "policy": policy(plan),
     }
     if mode == "scoped":
         result["projection"] = {"mode": mode, "note": PROJECTION_NOTE}

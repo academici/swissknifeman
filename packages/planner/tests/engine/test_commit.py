@@ -286,7 +286,7 @@ class CommitTests(unittest.TestCase):
             self.commit()
         with store.PlanLock(self.root):
             real_lock = store.PlanLock
-            with mock.patch.object(store, "PlanLock", side_effect=lambda root: real_lock(root, timeout=0)):
+            with mock.patch.object(store, "PlanLock", side_effect=lambda root, **_: real_lock(root, timeout=0)):
                 self.refusal("PLAN_LOCKED")
 
     def test_failed_add_preserves_the_original_index(self):

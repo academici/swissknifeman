@@ -10,7 +10,7 @@ import re
 import subprocess
 import tempfile
 
-from . import store
+from . import settings, store
 from .model import PlanError, parse_ref
 
 
@@ -181,7 +181,7 @@ def commit(plan_dir: str | Path, ref: str, *, role: str, paths: list[str] = (), 
     root = Path(plan_dir).resolve()
     _target(store.load_plan(root), ref)
     repo = Path(os.fsdecode(_git(root, "rev-parse", "--show-toplevel", code="GIT_UNAVAILABLE")).removesuffix("\n")).resolve()
-    with store.PlanLock(root):
+    with store.PlanLock(root, timeout=float(settings.for_root(root.parent).get("lock.timeout_seconds"))):
         plan = store.load_plan(root)
         item, target = _target(plan, ref)
         if any(_git_path(repo, marker).exists() for marker in

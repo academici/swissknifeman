@@ -652,7 +652,7 @@ class ContextScopeTests(CheckCase):
                          ["brief.json/messages/1", "brief.json/sections/0"])
 
     def test_context_heavy_and_legacy_sections(self):
-        big = "x" * (check.HEAVY_TEXT_BYTES + 1)
+        big = "x" * (16 * 1024 + 1)
         self.edit("plan.json", lambda d: d.update(sections=[
             {"id": "Legacy-status", "title": "Status", "text": big}, {"id": "ok", "title": "legacy-notes", "text": "t"}]))
         self.edit("brief.json", lambda d: d.update(messages=[{"id": "M1", "date": "2026-10-07", "text": big}]))

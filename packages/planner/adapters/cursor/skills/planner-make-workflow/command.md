@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/make-workflow.md
-Canonical SHA-256: sha256:f73971b6d94e6118823200d06c838e1f9b22c0bc2ae11dcc09248c157208c161
+Canonical SHA-256: sha256:3d994280dcac8b73ff553f50416001bd872e13a99526ecc893abcd5ee52948b8
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -81,11 +81,12 @@ fresh read-only reviewer inspect, not execute, it against the invariants in
 - A `dev` workflow contains slice, implementation, tests-to-green, explicitly requested review, inter-slice gates,
   and commit stages.
 - A `design-only` workflow contains retrieval, design in the main loop, self-check/DoR gate,
-  optional requested read-only audit and one owning correction; a bounded re-audit needs changed evidence. It contains no
+  optional requested read-only audit and owning corrections within `policy.corrections_max`; a bounded re-audit needs changed evidence. It contains no
   implementation, test, or SemVer stage.
 
 The verdict is `GREEN` or `RED` with concrete invariant, location, and failure details. `RED` blocks delivery:
-return one owning correction and allow at most two completed review passes. A repeated systemic
+return at most `policy.corrections_max` owning corrections and allow at most `policy.review_rounds_max` completed
+review passes (`plan.py config show`; defaults 1 and 2). A repeated systemic
 class/area changes the shared model; exhaustion needs an explicit bounded decision in the main loop.
 Only `GREEN` releases `plans/<ID>/workflows/wf-<code-name>-<purpose>.js`.
 

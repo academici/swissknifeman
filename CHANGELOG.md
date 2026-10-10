@@ -14,6 +14,7 @@
 
 ### Added
 
+- **planner:** layered configuration `[planner]` with `plan.settings`, configurable thresholds, defaults and loop policies: context budget and report size, check text size, supersede chain depth, lock wait, defaults of new plans and items, review round and correction limits (`policy` in the context pack), a folder of view templates; `plan.py config [show | explain [KEY]] [--plan PLAN] [--json]`, the global `--config FILE` and `config.example.toml`. Defaults equal the former constants.
 - **planner:** task compatibility alias for `/task:*` and `SKM_TASK_ROOT` for one minor release: the generated `task` plugin carries deprecated copies of the ten commands, `SKM_TASK_ROOT` is read after `PLANNER_ROOT` with a `SKM_TASK_ROOT_DEPRECATED` warning, bridges still get `TASK_ROOT` and `TASK_PLAN_PY`, and `task:<id>` is accepted as `planner:<id>` with a `TASK_COMMAND_DEPRECATED` warning.
 - **docs:** skiller guide page "Configuration, host buckets and metadata" and `skiller describe` in the CLI reference; a
   Skills section in the README and docs of `maind`, `harness`, `analyst` and `brain`; `ecosystem.md` (skiller after the

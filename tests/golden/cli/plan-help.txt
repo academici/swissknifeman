@@ -1,12 +1,14 @@
 exit: 0
 --- stdout ---
-usage: plan.py [-h] [--output {text,json}] VERB ...
+usage: plan.py [-h] [--output {text,json}] [--config FILE] VERB ...
 
 Planner plan (layout v4): authoring and lifecycle verbs.
 
 positional arguments:
   VERB
     new                 create a plan
+    config              show the effective [planner] configuration or explain
+                        where a value comes from
     show                overview of a plan, or one document as canonical JSON
     get                 read one document by reference (JSON envelope)
     list                list document rows with filters (JSON envelope)
@@ -70,5 +72,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --output {text,json}  structured success/error envelope
+  --config FILE         configuration file for this run: the invocation layer
+                        of [planner] (needs aicore)
 --- stderr ---
 

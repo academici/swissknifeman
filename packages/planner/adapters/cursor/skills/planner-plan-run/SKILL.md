@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `planner:plan-run`.
 - Invocation: `planner:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/planner/commands/plan-run.md`
-- Canonical SHA-256: `sha256:8fd80e4e78697daa877d81b455746a3f94ce7d06a4d8074604074aa4f916ae2b`
+- Canonical SHA-256: `sha256:2bc899189565b7b7e1b5daaea1fff7a8b9bd03596e8777d062e42278608b9955`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

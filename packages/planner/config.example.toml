@@ -1,0 +1,91 @@
+# planner configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[planner]
+
+[planner.context]
+# Size of a context pack above which a warning is reported, in KB; the pack is never trimmed. The plan setting context_budget_kb overrides it for that plan. Integer >= 1 and <= 4096.
+# budget_kb = 256
+
+# Number of the largest sources the budget report lists. Integer >= 1 and <= 50.
+# top_sources = 5
+
+[planner.check]
+# Size of a text field above which check warns that it is heavy, in KB. Integer >= 1 and <= 1024.
+# heavy_text_kb = 16
+
+[planner.refs]
+# Longest chain of superseding decisions followed while resolving a reference to another plan. Integer >= 1 and <= 64.
+# max_chain = 8
+
+[planner.lock]
+# Seconds a mutation waits for the lock of a plan before it fails with PLAN_LOCKED. Integer >= 1 and <= 600.
+# timeout_seconds = 30
+
+[planner.new_plan]
+# settings.design_audit of a new plan. One of: "none", "required".
+# design_audit = "none"
+
+# settings.scout of a new plan. One of: "off", "auto".
+# scout = "off"
+
+# settings.context_pack of a new plan. One of: "legacy", "scoped".
+# context_pack = "scoped"
+
+# settings.evidence of a new plan; written only when required. One of: "optional", "required".
+# evidence = "optional"
+
+# settings.language of a new plan; an empty string writes nothing. String.
+# language = ""
+
+# settings.commit.scope of a new plan: a lower-case scope for commit subjects; an empty string writes nothing. String.
+# commit_scope = ""
+
+[planner.new_item]
+# route.class of a new item. One of: "economy", "implementation", "frontier".
+# route_class = "implementation"
+
+# route.effort of a new item. One of: "low", "medium", "high", "xhigh", "max", "ultra".
+# route_effort = "high"
+
+# review.mode of a new item. One of: "none", "self", "requested".
+# review_mode = "none"
+
+[planner.policy]
+# Completed review rounds allowed on one item. Integer >= 1 and <= 3.
+# review_rounds_max = 2
+
+# Owning corrections allowed for the findings of a review. Integer >= 1 and <= 2.
+# corrections_max = 1
+
+[planner.views]
+# Folder with view templates that replace the built-in ones of the same file name; a relative path is taken from the folder of the configuration file, a leading ~ is expanded. An empty string keeps the built-in templates. String.
+# Allowed in layers: defaults, machine, project, invocation, flags.
+# templates_dir = ""
+
+[planner.orchestration]
+# Scenario used when the item class has no entry of its own. String.
+# default_scenario = "solo"
+
+[planner.orchestration.by_class]
+# Scenario for items of class economy; an empty string uses default_scenario. String.
+# economy = ""
+
+# Scenario for items of class implementation; an empty string uses default_scenario. String.
+# implementation = ""
+
+# Scenario for items of class frontier; an empty string uses default_scenario. String.
+# frontier = ""
+
+[planner.events]
+# Whether the planner emits its planner.* events. Boolean.
+# enabled = true
+
+[planner.checks]
+# Whether plugins subscribed to the planner:check point are called. Boolean.
+# external = true
+
+# What a failing external check counts as in the plan check. One of: "warn", "error".
+# external_failure = "warn"

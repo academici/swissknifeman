@@ -286,10 +286,11 @@ def _route_verdict(plan: store.Plan, items: list[str], actor: dict) -> str:
 @contextmanager
 def _mutation(plan) -> Iterator[tuple[store.Plan, store.PlanLock]]:
     """Lock -> fresh snapshot -> body -> views; the caller's ``Plan`` object is refreshed afterwards."""
-    from . import views  # views imports this module for scheduling
+    from . import settings, views  # views imports this module for scheduling
 
     root = plan.root if isinstance(plan, store.Plan) else store.resolve_plan_dir(plan)
-    with store.PlanLock(root) as lock:
+    timeout = float(settings.for_root(root.parent).get("lock.timeout_seconds"))
+    with store.PlanLock(root, timeout=timeout) as lock:
         fresh = store.load_plan(root)
         yield fresh, lock
         views.render_all(fresh)  # reached only when the body did not raise

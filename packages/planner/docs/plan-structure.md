@@ -41,8 +41,9 @@ decision reaches an item's pack through `applies_to` (item or phase) or `global:
 (both together are a `scope_ambiguous` error). `settings.context_pack` is `legacy` (absent; a
 document without `applies_to` enters every pack) or `scoped` (written by `plan.py new`; unbound
 content is dropped, reads already present in the pack are marked `included`, upstream and
-phase dependencies are summaries). `settings.context_budget_kb` (default 256) is the warning
-threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
+phase dependencies are summaries). `settings.context_budget_kb` (default 256, the `context.budget_kb` key of the `[planner]`
+configuration) is the warning threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
+It carries `policy` (`review_rounds_max`, `corrections_max`) from the same configuration.
 An item read names exactly one of `path` or `ref`. Local refs include phases, items,
 units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
 The separate `section` key accepts a knowledge section id or exact title; it cannot

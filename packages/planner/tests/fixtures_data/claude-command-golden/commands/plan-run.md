@@ -23,8 +23,10 @@ one commit per item, inside the item's scope.
 6. Run each Validation check once per relevant change; keep long output in a file.
    With `--reviewer`, run the selected native read-only reviewer after GREEN checks; record its
    verdict and actual session in an artifact and a `plan.py log --type note` event, then
-   `plan.py commit <plan> <item> --role reviewer`. A finding returns one owning correction and affected
-   checks, committed with `--role fix` after they rerun, then at most one re-review; no recursive reviewer fixes.
+   `plan.py commit <plan> <item> --role reviewer`. A finding returns at most `policy.corrections_max` owning
+   corrections (context pack `policy`, or `plan.py config show`; default 1) and affected checks, committed with
+   `--role fix` after they rerun, then a re-review while fewer than `policy.review_rounds_max` rounds (default 2)
+   are complete; no recursive reviewer fixes.
 7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…"`
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
 8. One scoped commit: `plan.py commit <plan> <item> --role executor` (plan JSON + product files of the item;

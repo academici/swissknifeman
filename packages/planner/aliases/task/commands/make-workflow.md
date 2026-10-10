@@ -78,11 +78,12 @@ fresh read-only reviewer inspect, not execute, it against the invariants in
 - A `dev` workflow contains slice, implementation, tests-to-green, explicitly requested review, inter-slice gates,
   and commit stages.
 - A `design-only` workflow contains retrieval, design in the main loop, self-check/DoR gate,
-  optional requested read-only audit and one owning correction; a bounded re-audit needs changed evidence. It contains no
+  optional requested read-only audit and owning corrections within `policy.corrections_max`; a bounded re-audit needs changed evidence. It contains no
   implementation, test, or SemVer stage.
 
 The verdict is `GREEN` or `RED` with concrete invariant, location, and failure details. `RED` blocks delivery:
-return one owning correction and allow at most two completed review passes. A repeated systemic
+return at most `policy.corrections_max` owning corrections and allow at most `policy.review_rounds_max` completed
+review passes (`plan.py config show`; defaults 1 and 2). A repeated systemic
 class/area changes the shared model; exhaustion needs an explicit bounded decision in the main loop.
 Only `GREEN` releases `plans/<ID>/workflows/wf-<code-name>-<purpose>.js`.
 

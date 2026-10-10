@@ -4,10 +4,9 @@ from __future__ import annotations
 import copy
 import json
 
-from . import context, store
+from . import context, settings, store
 from .model import item_phase
 
-TOP_SOURCES = 5
 SOURCE_KEYS = ("documents", "decisions", "reads", "upstream", "phase_dependencies")
 
 
@@ -50,7 +49,7 @@ def measure(plan: store.Plan, item_id: str, *, repos=None) -> dict:
     total = len(context.render(plan, item_id, with_scout=False, repos=repos).encode("utf-8"))
     report = {
         "item": item_id, "mode": mode, "bytes": total, "budget_bytes": context.budget_bytes(plan),
-        "over_budget": total > context.budget_bytes(plan),
+        "over_budget": total > context.budget_bytes(plan), "top_sources": settings.for_plan(plan).get("context.top_sources"),
         "by_key": {key: _size(value) for key, value in pack.items()}, "sources": sources,
         "unbound": {"documents": sum(s["key"] == "documents" for s in unbound),
                     "decisions": sum(s["key"] == "decisions" for s in unbound),
@@ -83,8 +82,8 @@ def text(report: dict) -> str:
         lines.append(f"  duplicate reads: {dup['reads']}, {_kb(dup['bytes'])} KB")
     if "scoped_preview_bytes" in report:
         lines.append(f"  scoped preview: {_kb(report['scoped_preview_bytes'])} KB (settings.context_pack: scoped)")
-    top = [f"{s['ref']} {_kb(s['bytes'])} KB" + (f" ({s['reason']})" if s.get("reason") else "")
-           for s in report["sources"][:TOP_SOURCES]]
-    if top:
-        lines.append("  top: " + ", ".join(top))
+    largest = [f"{s['ref']} {_kb(s['bytes'])} KB" + (f" ({s['reason']})" if s.get("reason") else "")
+               for s in report["sources"][:report["top_sources"]]]
+    if largest:
+        lines.append("  top: " + ", ".join(largest))
     return "\n".join(lines)

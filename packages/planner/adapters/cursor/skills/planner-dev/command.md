@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/dev.md
-Canonical SHA-256: sha256:4d4ed13a9dbb9320314fc7bc6538c409932ee583c67216a76be4be7de5ce4224
+Canonical SHA-256: sha256:371fe2a7752320d9ff5163e4e49af345389ea8c8de19cd930c93e309d34899a7
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -35,7 +35,8 @@ an automatic review. Run explicitly requested checks. Report a foreign red basel
 it intersects scope or dependency closure.
 
 For a requested selector, read `references/reviewer-selection.md`: use a fresh read-only session
-on that exact route, then one owning correction and affected checks. The reviewer never repairs.
+on that exact route, then at most `policy.corrections_max` owning corrections (context pack `policy`, or
+`plan.py config show`; default 1) and affected checks. The reviewer never repairs.
 
 Review is opt-in ([review contract](../references/intent-routing.md#review-is-opt-in)). Only with
 `--review`, `--reviewer` or an explicit owner request, strip review options from the task text and,

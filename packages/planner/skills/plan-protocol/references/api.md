@@ -45,6 +45,18 @@ unchanged; the bridge owns its output and exit code, and the dispatcher sets `PL
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor and registers its
 reports back through `plan.py` only (see the bridge's README).
 
+## Configuration
+
+Thresholds, defaults of new plans and items, and review loop policies come from the layered `[planner]`
+configuration (defaults, machine file, project file, `plan.settings`, environment, `--config FILE`, flags);
+`config.example.toml` lists every key. `plan.py config [show | explain [KEY]] [--plan PLAN] [--json]` prints
+the effective values (`key = value  (layer)`, then the `aicore:` status line) or, with `explain`, where a value
+comes from; `--json` gives `{"aicore", "layers", "values"}` for `show` and `config-explain/v1` for `explain`
+(`{"aicore", "entries"}` without aicore). `--plan` adds the plan's `settings.context_budget_kb` layer. The global
+`--config FILE` precedes the verb and needs aicore (`AICORE_REQUIRED`). An invalid layer refuses every command with
+`CONFIG_INVALID` naming file, line and key. The context pack's `policy` object carries `review_rounds_max` and
+`corrections_max`.
+
 ## Parallel lanes
 
 | Verb | Mode | Data | Use |

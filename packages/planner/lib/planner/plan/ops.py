@@ -13,13 +13,12 @@ from pathlib import Path
 import re
 from typing import Any, Iterator
 
-from . import store, views
+from . import settings, store, views
 from .model import SHORT_ID, PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
 _PLAN_TITLE_PREFIX = re.compile(r"^Plan №[1-9][0-9]* —")
-DEFAULT_ROUTE = {"class": "implementation", "effort": "high"}
 
 # Top-level fields no authoring verb may change: identity and lifecycle-owned state.
 OWNED_FIELDS = {
@@ -43,10 +42,15 @@ def _after_mutation(plan: store.Plan) -> None:
     views.render_all(plan)
 
 
+def _lock_timeout(plan_root: Path) -> float:
+    """Seconds to wait for the lock of the plan in ``plan_root`` (``lock.timeout_seconds``)."""
+    return float(settings.for_root(Path(plan_root).parent).get("lock.timeout_seconds"))
+
+
 @contextmanager
 def _mutation(plan) -> Iterator[store.Plan]:
     root = plan.root if isinstance(plan, store.Plan) else store.resolve_plan_dir(plan)
-    with store.PlanLock(root):
+    with store.PlanLock(root, timeout=_lock_timeout(root)):
         fresh = store.load_plan(root)
         yield fresh
         _after_mutation(fresh)  # reached only when the body did not raise
@@ -102,6 +106,20 @@ def _identities(plans_root: Path) -> list[dict]:
     return list(rows.values())
 
 
+def _new_plan_settings(config) -> dict:
+    """The ``settings`` of a new plan from ``new_plan.*``; empty ``language`` and ``commit_scope`` and an optional
+    ``evidence`` are not written."""
+    result = {"design_audit": config.get("new_plan.design_audit"), "scout": config.get("new_plan.scout"),
+              "context_pack": config.get("new_plan.context_pack")}
+    if config.get("new_plan.evidence") == "required":
+        result["evidence"] = "required"
+    if config.get("new_plan.language"):
+        result["language"] = config.get("new_plan.language")
+    if config.get("new_plan.commit_scope"):
+        result["commit"] = {"scope": config.get("new_plan.commit_scope")}
+    return result
+
+
 def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: str, owner: str,
              authoring: dict, message: str, date: str | None = None, message_date: str | None = None,
              channel: str | None = None) -> store.Plan:
@@ -136,7 +154,7 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
         "$schema": _schema_const("plan"), "id": plan_id, "short_id": short_id, "title": title, "status": "active",
         "created": created, "updated_at": store.now(), "repository": repository, "owner": owner,
         "authoring": copy.deepcopy(authoring), "goal": title, "context": title, "phases": [],
-        "settings": {"design_audit": "none", "scout": "off", "context_pack": "scoped"},
+        "settings": _new_plan_settings(settings.for_root(plans_root)),
     }
     brief_message = {"id": "M1", "date": message_date or created, "text": message}
     if channel:
@@ -146,7 +164,7 @@ def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: s
     store.check_doc(plan_doc, "plan", "plan.json")  # refuse before the directory or lock file exists
     store.check_doc(brief_doc, "brief", "brief.json")
     store.check_doc(event, "log-event", "log event")
-    with store.PlanLock(root) as lock:
+    with store.PlanLock(root, timeout=_lock_timeout(root)) as lock:
         store.save_many([(root / "plan.json", plan_doc, "plan"), (root / "brief.json", brief_doc, "brief")])
         (root / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
         for name in (".ignore", ".cursorignore"):
@@ -188,6 +206,7 @@ def add_item(plan, phase: str, title: str, *, data: dict | None = None, batch: s
     with _mutation(plan) as p:
         if phase not in p.phases:
             raise PlanError("REF_UNKNOWN", f"unknown phase {phase!r}")
+        config = settings.for_plan(p)
         phase_doc = copy.deepcopy(p.phases[phase])
         existing = set(phase_doc.get("items", [])) | {key for key in p.items if key.startswith(f"{phase}.")}
         number = _next_number(f"{phase}.", existing)
@@ -195,8 +214,9 @@ def add_item(plan, phase: str, title: str, *, data: dict | None = None, batch: s
         doc = {
             "$schema": _schema_const("item"), "id": item_id, "title": title, "status": "todo",
             "summary": "Outcome placeholder", "why": "From plan goal",
-            "scope": {"include": ["to be designed"], "exclude": []}, "route": dict(DEFAULT_ROUTE),
-            "review": {"mode": "none"}, "authority": {"kind": "routine"},
+            "scope": {"include": ["to be designed"], "exclude": []},
+            "route": {"class": config.get("new_item.route_class"), "effort": config.get("new_item.route_effort")},
+            "review": {"mode": config.get("new_item.review_mode")}, "authority": {"kind": "routine"},
             "rag": {"need": "none", "status": "not_needed"}, "result": None,
         }
         doc.update(copy.deepcopy(extra))

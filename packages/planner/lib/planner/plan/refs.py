@@ -12,11 +12,10 @@ import os
 from pathlib import Path
 from typing import Mapping
 
-from . import store
+from . import settings, store
 from .model import PlanError, parse_ref
 
 ENV_REPOS = "SKM_PLAN_REPOS"
-MAX_CHAIN = 8
 _KEYS = {"decision": ("decision", "rationale"), "item": (), "phase": ()}
 
 
@@ -78,6 +77,7 @@ def resolve(plan: store.Plan, ref: str, *, repos: Mapping[str, str] | None = Non
     except PlanError as exc:
         return _fail(ref, exc.code, exc.message)
     kind, key, chain = parsed.kind, parsed.target, []
+    max_chain = settings.for_plan(plan).get("refs.max_chain")
     while True:
         doc = _document(target, kind, key)
         if doc is None:
@@ -86,7 +86,7 @@ def resolve(plan: store.Plan, ref: str, *, repos: Mapping[str, str] | None = Non
         if not isinstance(successor, str):
             break
         chain.append(key)
-        if successor in chain or len(chain) >= MAX_CHAIN:
+        if successor in chain or len(chain) >= max_chain:
             return _fail(ref, "CYCLE", f"supersede chain {' -> '.join([*chain, successor])} does not end")
         key = successor
     source = target.path(kind, key)

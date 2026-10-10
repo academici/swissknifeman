@@ -8,10 +8,12 @@ from __future__ import annotations
 from pathlib import Path
 import json
 import re
+import sys
 from typing import Any
 
 from .. import COMMAND_NAMESPACE
 from . import lifecycle, store
+from . import settings as plan_config
 from .model import SATISFYING, STATUS_LABEL, TERMINAL, ItemStatus, id_sort_key
 from .templating import TemplateError, render
 
@@ -36,7 +38,9 @@ def line(value: Any) -> str:
 def render_all(plan: store.Plan, check: bool = False) -> list[str]:
     """Render human views. Never create agent instruction files inside a plan."""
     model = build_model(plan)
-    files = {f"{VIEW_DIR}/{name}": _render_template(name.removesuffix(".md"), model) for name in VIEW_FILES}
+    overrides = _override_dir(plan)
+    files = {f"{VIEW_DIR}/{name}": _render_template(name.removesuffix(".md"), model, overrides)
+             for name in VIEW_FILES}
     documents = [("brief", "brief.json", plan.brief)]
     for kind, table in (("phase", plan.phases), ("item", plan.items), ("unit", plan.units),
                         ("decision", plan.decisions), ("document", plan.documents)):
@@ -58,7 +62,7 @@ def render_all(plan: store.Plan, check: bool = False) -> list[str]:
         fields += [{"title": s["title"], "body": s["text"]} for s in doc.get("sections", [])]
         relative = "../" * len(Path(source).parts) + source
         files[name] = _render_template("document", {"title": doc.get("title", "Owner brief"),
-                                                    "source": relative, "fields": fields})
+                                                    "source": relative, "fields": fields}, overrides)
     changed = []
     for name, text in files.items():
         path = plan.root / name
@@ -80,15 +84,44 @@ def render_all(plan: store.Plan, check: bool = False) -> list[str]:
     return changed
 
 
-def _load_template(name: str) -> str:
-    try:
-        return (TEMPLATE_DIR / f"{name}.md").read_text(encoding="utf-8")
-    except OSError as exc:
-        raise TemplateError(f"missing template {name!r}: {exc}") from exc
+_WARNED: set = set()
 
 
-def _render_template(name: str, model: dict) -> str:
-    text = render(_load_template(name), model, lambda partial: _load_template(f"_{partial}"))
+def _warn_once(code: str, subject: str, message: str) -> None:
+    if (code, subject) not in _WARNED:
+        _WARNED.add((code, subject))
+        print(f"warning: {code}: {message}", file=sys.stderr)
+
+
+def _override_dir(plan: store.Plan) -> Path | None:
+    """The folder of replacement templates (``views.templates_dir``), or None for the built-in templates only."""
+    folder = plan_config.for_plan(plan).path("views.templates_dir")
+    if folder is None:
+        return None
+    if not folder.is_dir():
+        _warn_once("VIEW_TEMPLATES_MISSING", str(folder),
+                   f"views.templates_dir {str(folder)!r} is not a folder; using the built-in templates")
+        return None
+    for path in sorted(folder.glob("*.md")):
+        if not (TEMPLATE_DIR / path.name).is_file():
+            _warn_once("VIEW_TEMPLATE_UNKNOWN", str(path),
+                       f"{path.name} in {str(folder)!r} replaces no built-in template and is ignored")
+    return folder
+
+
+def _load_template(name: str, overrides: Path | None = None) -> str:
+    for folder in (overrides, TEMPLATE_DIR):
+        if folder is None or not (folder / f"{name}.md").is_file():
+            continue
+        try:
+            return (folder / f"{name}.md").read_text(encoding="utf-8")
+        except OSError as exc:
+            raise TemplateError(f"missing template {name!r}: {exc}") from exc
+    raise TemplateError(f"missing template {name!r}: {TEMPLATE_DIR / (name + '.md')}")
+
+
+def _render_template(name: str, model: dict, overrides: Path | None = None) -> str:
+    text = render(_load_template(name, overrides), model, lambda partial: _load_template(f"_{partial}", overrides))
     return text.rstrip("\n") + "\n"  # one trailing newline, whatever the last section left behind
 
 

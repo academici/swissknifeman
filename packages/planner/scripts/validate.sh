@@ -45,6 +45,10 @@ if [ -z "$HUB_ROOT" ] || [ "$(cd "$HUB_ROOT/packages/planner" 2>/dev/null && pwd
 fi
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
+# Tests read the layered configuration: give them an empty machine home instead of the real one.
+TEST_HOME="$(mktemp -d)"
+trap 'rm -rf "$TEST_HOME"' EXIT
+hermetic() { env HOME="$TEST_HOME" SKM_HOME="$TEST_HOME" "$@"; }
 
 echo "[1/6] python compile"
 python3 -m compileall -q lib tests scripts || err "py_compile"
@@ -100,7 +104,7 @@ PY
 
 echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
 # lib/ — package planner; the aicore lib serves the projection renderer and its tests.
-PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
+hermetic PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s tests -p "test_*.py" || err "unittest"
 
 if $fleet; then
@@ -110,13 +114,13 @@ if $fleet; then
     echo "  hub layout not found — gate skipped (--fleet)"
   fi
 fi
-PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
+hermetic PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s tests/engine -p "test_*.py" || err "engine unittest"
 
 # Named bridges carry their own tests; an empty or missing bridges/ directory is skipped.
 for bridge_tests in bridges/*/tests; do
   [[ -d "$bridge_tests" ]] || continue
-  PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
+  hermetic PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
     python3 -m unittest discover -s "$bridge_tests" -t "$bridge_tests" -p "test_*.py" || err "bridge unittest $bridge_tests"
 done
 

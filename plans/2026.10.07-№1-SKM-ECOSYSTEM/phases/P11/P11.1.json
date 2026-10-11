@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.1",
   "title": "Начало фазы; аналитика запусков из core в analyst; aicore.util.partners; команда analyst runs; maind analyze через analyst; хаб-раннер test-integration.sh",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "sync-main и golden check; git mv core/{runs,pathology,codegraph_telemetry}.py и их тестов в analyst (run_reports, pathology, codegraph); фасад core без этих имён; новый aicore.util.partners (поиск партнёра, run_partner_json, PARTNER_UNAVAILABLE); команды analyst runs show|codegraph --json с контрактами run-lookup/v1 и run-codegraph/v1; maind analyze и codegraph_usage получают отчёты через analyst и деградируют без него; хаб-раннер scripts/test-integration.sh; строки ownership перенесённых файлов удалены.",
   "why": "D68, D67; карта P2 (core/runs, pathology, codegraph_telemetry → analyst, P11) — первый перенос, без которого core не удалить (P11.12). Жёсткие риски: (1) maind analyze без analyst — деградация с причиной, команда не падает (тест); (2) старые тесты maind патчат find_run_report и после правки перестанут патчить — переписать на поддельный партнёр (rules п.15); (3) раннеры модулей сбрасывают переменные партнёров — test-integration.sh должен реально запускать тесты с партнёром, а не пропускать их.",
   "scope": {
@@ -278,6 +278,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:18:11Z"
+  "result": {
+    "started_at": "2026-10-11T12:46:30Z",
+    "finished_at": "2026-10-11T13:05:51Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "0c230eb3-dae7-4152-a91a-3d61527aec3d"
+    },
+    "notes": "Run analytics moved to analyst (run_reports, pathology, codegraph); core facade without them; aicore.util.partners; analyst runs show|codegraph with run-lookup/v1 and run-codegraph/v1; maind analyze and codegraph_usage read through analyst and degrade with PARTNER_* reasons; scripts/test-integration.sh (analyst 338, maind 625, harness 745 tests, real analyst exercised). ownership rows removed, render done, baseline unchanged (56). Fact for P11.2: analyst still imports core (common, promote, sessions, doctor); bin/analyst whitelist gained runs. Docs and CHANGELOGs updated. Hard risk: public CLI contracts (new, alpha) - task:review recommended.",
+    "deviations": [
+      "sync-main skipped (nothing to merge); RunReportLookup gained path/status; real-analyst tests skip unless SKM_ANALYST_ROOT/BIN set; golden analyst-help recaptured; git mv committed separately"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T13:05:51Z"
 }

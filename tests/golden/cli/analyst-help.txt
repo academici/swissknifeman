@@ -16,6 +16,7 @@ Commands (package root = installation directory analyst):
   compact   consolidate old events events.ndjson in snapshot (--before ISO | --dry-run)
   token-report  token report on usage-trend.ndjson + rolling/pinned baseline
                 (--sessions N | --by model|role | --vs-baseline | --baseline set --note "...")
+  runs      read-only JSON of a project's run reports: `runs show|codegraph --project DIR [--json]`
   sessions  weekly medians first_turn_overhead from the living jsonl-session transcripts
             (--project ID | --weeks N | --json)
   doctor    environment diagnostics

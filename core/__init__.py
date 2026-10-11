@@ -3,7 +3,7 @@
 The shared primitives moved to ``packages/aicore`` (:mod:`aicore`). This package keeps the old
 import names working: every moved module is registered in ``sys.modules`` under its old name
 (the very same module object), and the flat facade below keeps its previous ``__all__``.
-Modules that have not moved yet (``runs``, ``pathology``, ``codegraph_telemetry``) still live here. New code imports ``aicore``.
+Run analytics moved to analyst. New code imports ``aicore``.
 """
 import importlib
 import os
@@ -122,7 +122,6 @@ from aicore.artifacts.lock import (ArtifactAction, ArtifactActionKind, ArtifactL
 from aicore.provider.registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
                                       AdapterSelectionResult, RegistryDiagnostic, RegistrySeverity)
 from aicore.util.repo import find_monorepo_root, find_repo_root, sibling_bin
-from .runs import find_run_report, find_run_report_result
 from aicore.util.term import confirm, die, now_iso, parse_iso, warn
 from aicore.util.text import parse_frontmatter, parse_inline_list, sanitize
 
@@ -131,8 +130,7 @@ __all__ = [
     "parse_frontmatter", "parse_inline_list",
     "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
     "backup_file",
-    "read_ndjson", "read_ndjson_iter", "pid_alive", "find_run_report",
-    "find_run_report_result",
+    "read_ndjson", "read_ndjson_iter", "pid_alive",
     "is_within", "is_within_lexical", "state_dir",
     "find_repo_root", "find_monorepo_root", "sibling_bin",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",

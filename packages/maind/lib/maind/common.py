@@ -14,7 +14,7 @@ from pathlib import Path
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, backup_file, confirm,
     detect_project_type, die, docs_visibility_for, find_monorepo_root,
-    find_run_report, find_run_report_result, now_iso, parse_args, parse_iso, pid_alive, read_ndjson,
+    now_iso, parse_args, parse_iso, pid_alive, read_ndjson,
     read_ndjson_iter, run_cmd, safe_load_json, sanitize, warn,
 )
 from core import load_json_db as _core_load_json_db

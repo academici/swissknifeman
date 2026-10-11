@@ -27,13 +27,6 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
 | `core/__init__.py` | core (hub root) | aicore | shim | P11 | fixed | transitional alias package; deleted with core/ |
-| `core/codegraph_telemetry.py` | core (hub root) | analyst | - | P11 | fixed | - |
-| `core/pathology.py` | core (hub root) | analyst | - | P11 | fixed | - |
-| `core/runs.py` | core (hub root) | analyst | - | P11 | fixed | - |
-| `core/tests/test_codegraph_telemetry.py` | core (hub root) | analyst | tests | P11 | fixed | - |
-| `core/tests/test_find_run_report.py` | core (hub root) | analyst | tests | P11 | fixed | - |
-| `core/tests/test_pathology.py` | core (hub root) | analyst | tests | P11 | fixed | - |
-| `core/tests/test_runs.py` | core (hub root) | analyst | tests | P11 | fixed | - |
 | `core/tests/test_shim.py` | core (hub root) | aicore | shim | P11 | fixed | deleted with core/ |
 | `packages/artifex/` | artifex | retired | - | P11 | fixed | module is retired and not scanned by the boundary check |
 | `packages/harness/lib/harness/cursor_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |

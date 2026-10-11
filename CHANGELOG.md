@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **analyst:** run analytics moved from `core` (`runs`, `pathology`, `codegraph_telemetry` are now `analyst.run_reports`,
+  `analyst.pathology`, `analyst.codegraph`); `core` no longer exports `find_run_report*`. New `analyst runs show|codegraph --json`
+  with the contracts `run-lookup/v1` and `run-codegraph/v1`.
+- **aicore:** `aicore.util.partners` finds a partner module's command (`SKM_<NAME>_BIN`, `SKM_<NAME>_ROOT`, `PATH`) and reads its
+  JSON output (`PARTNER_UNAVAILABLE`, `PARTNER_FAILED`, `PARTNER_BAD_OUTPUT`).
+- **hub:** `scripts/test-integration.sh` runs the analyst, maind and harness tests with every partner wired from the hub layout.
+
 ### Fixed
 
 - **orch:** `unknown_outcome` стадии без права записи выбирает `retry` даже при конфликтующем

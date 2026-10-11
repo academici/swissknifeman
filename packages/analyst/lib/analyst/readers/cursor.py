@@ -1,5 +1,5 @@
 """Named reader for Cursor hook envelopes (schema=1)."""
-from core.runs import ANALYTICS_METRICS, ANALYTICS_OUTCOMES
+from ..run_reports import ANALYTICS_METRICS, ANALYTICS_OUTCOMES
 
 from . import reject_sensitive, source_provenance
 

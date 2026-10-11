@@ -46,8 +46,9 @@ import os
 import statistics
 from pathlib import Path
 
-from .common import (atomic_write_json, die, find_run_report, now_iso, parse_args,
+from .common import (atomic_write_json, die, now_iso, parse_args,
                      read_ndjson, safe_load_json, warn)
+from .run_reports import find_run_report
 
 TREND_REL = Path(".swissknife") / "analytics" / "usage-trend.ndjson"
 BASELINE_REL = Path(".swissknife") / "analyst" / "baseline.json"

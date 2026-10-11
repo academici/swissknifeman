@@ -1,7 +1,7 @@
 """pathology — detectors workflow-pathologies by run-report (SCHEMA=2).
 
 Login - dict run report `<project>/.claude/runs/<sid>.json`, who writes
-harness-hook run-report (see packages/harness/configs/claude-code/hooks/run-report/_lib.py).
+harness-hook run-report (the run-report hook of harness).
 Exit `detect()` — flat list of finds:
 
     {code, severity: 'info'|'attention', metric, threshold, evidence, data}

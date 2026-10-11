@@ -4,7 +4,7 @@
 Links requirement→contract→route→dispatch→finding→public outcome into one record so
 P3.2/P3.3 derive metrics from one instrument instead of re-parsing provider logs per
 consumer. This is a DISTINCT schema from the D90 normalized analytics envelope
-(`analyst.events`/`runs`/`readers`, `core.runs.EventEnvelope`) — different consumers,
+(`analyst.events`/`runs`/`readers`, `run_reports.EventEnvelope`) — different consumers,
 different closed field set; the two are never merged (contract § Boundaries).
 
 Provider readers (`harness.provider_trace`) build a RAW payload; this module owns all

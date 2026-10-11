@@ -10,7 +10,7 @@ from aicore.state import resolve_with_legacy
 from aicore.state import state_dir as aicore_state_dir
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm,
-    die, find_monorepo_root, find_run_report, now_iso, parse_args, parse_iso,
+    die, find_monorepo_root, now_iso, parse_args, parse_iso,
     read_ndjson, run_cmd, safe_load_json, sanitize, state_dir, warn,
 )
 

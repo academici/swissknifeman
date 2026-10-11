@@ -1,14 +1,14 @@
-"""Tests core/pathology.py — detectors workflow-pathologies by run-report.
+"""Tests analyst/pathology.py — detectors workflow-pathologies by run-report.
 
 Fixtures - inlinedict's in the form of a real report SCHEMA=2 hook run-report
-(see packages/harness/configs/claude-code/hooks/run-report/_lib.py). Everyone
+(the run-report hook of harness). Everyone
 detector protected by a pair «fires / doesn't work»; separately - protective
 contract: SCHEMA=1-the report and outright garbage are not dropped detect().
 
-Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
+Launch: bash scripts/test.sh"""
 import unittest
 
-from core.pathology import detect
+from analyst.pathology import detect
 
 
 def base_report(**over):

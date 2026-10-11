@@ -24,7 +24,7 @@ packages/aicore/
 
 | Subsystem | Holds | Used by |
 | --- | --- | --- |
-| `aicore.util` | atomic write, paths, text, terminal, CLI and processes, HTTP, repository root, managed blocks, project type, `digest` (canonical JSON and tagged SHA-256), `schema` (closed-profile JSON Schema validator) | all modules |
+| `aicore.util` | atomic write, paths, text, terminal, CLI and processes, HTTP, repository root, managed blocks, project type, `digest` (canonical JSON and tagged SHA-256), `schema` (closed-profile JSON Schema validator), `partners` (find a partner module's command and read its JSON output as a child process) | all modules |
 | `aicore.provider` | provider capability manifests, configuration layers, control plane, health, adapter registry, request lifecycle, `errors` (failure classes and classification by data), `models` (model catalog); data in `configs/` found from the package file (`provider.data.config_path`, `manifest.default_manifest_path()`) | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile | skiller, harness, maind |
 | `aicore.state` | standard machine and project places (`SKM_HOME`, XDG, `.swissknifeman/`), legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |

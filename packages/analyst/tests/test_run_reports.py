@@ -1,7 +1,7 @@
 import copy
 import unittest
 
-from core.runs import EventEnvelope, event_key
+from analyst.run_reports import EventEnvelope, event_key
 
 
 def _event(provider_id="claude-code"):

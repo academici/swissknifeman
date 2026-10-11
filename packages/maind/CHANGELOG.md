@@ -9,6 +9,9 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 - **Skills and agent:** the plugin `maind` 0.5.0 ships the skills `local-topology`, `swissknifeman-locator`, `cross-project-coordinator` and `shared-memory` and the agent `code-coordinator` (moved from the `system` bucket of skiller), and a Codex plugin manifest.
 
 ### Changed
+- **analyze:** `maind analyze` and the codegraph usage scan read run reports, codegraph summaries and analytics events through
+  `analyst runs show|codegraph --json`; without analyst the source is reported `unavailable` (`PARTNER_UNAVAILABLE`,
+  `PARTNER_FAILED` or `PARTNER_BAD_OUTPUT`) and the command still finishes. `maind.common` no longer re-exports `find_run_report*`.
 - **Follow the task → planner rename:** the default command plugin of the audit is `planner`, and the plan convention block names the planner plugin.
 
 ### Removed

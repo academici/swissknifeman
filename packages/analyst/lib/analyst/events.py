@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from core.runs import EventEnvelope, event_key
+from .run_reports import EventEnvelope, event_key
 
 
 def analytics_home(project_path):

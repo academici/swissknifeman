@@ -35,7 +35,7 @@ FACADE = [
     'artifact_dry_run', 'atomic_write_json', 'atomic_write_text', 'backup_file',
     'canonical_desired_bytes', 'canonical_json_bytes', 'confirm', 'connect_channel',
     'content_hash', 'detect_project_type', 'die', 'docs_visibility_for', 'effective_projection',
-    'find_monorepo_root', 'find_repo_root', 'find_run_report', 'find_run_report_result',
+    'find_monorepo_root', 'find_repo_root',
     'http_get_json', 'http_post_json', 'is_within', 'is_within_lexical',
     'load_distribution_catalog', 'load_json_db', 'load_projection_catalog',
     'load_provider_manifest', 'managed_block', 'now_iso', 'parse_args',

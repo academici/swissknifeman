@@ -1,4 +1,4 @@
-"""Tests core.runs.find_run_report* (the run-report finder stays in core until the analyst move)."""
+"""Tests analyst.run_reports.find_run_report*."""
 import json
 import os
 import tempfile
@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from core import find_run_report
+from analyst.run_reports import find_run_report
 
 
 class TestFindRunReport(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestFindRunReport(unittest.TestCase):
             self.assertIsNone(find_run_report(d))
 
     def test_foreign_absolute_changed_file_rejects_report_even_when_cwd_claims_project(self):
-        from core.runs import find_run_report_result
+        from analyst.run_reports import find_run_report_result
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             runs = root / ".claude" / "runs"
@@ -44,7 +44,7 @@ class TestFindRunReport(unittest.TestCase):
             self.assertEqual(result.diagnostic["code"], "RUN_REPORT_PROJECT_MISMATCH")
 
     def test_session_provider_and_project_identity_are_checked_when_present(self):
-        from core.runs import find_run_report_result
+        from analyst.run_reports import find_run_report_result
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self._make(root, "s1", {

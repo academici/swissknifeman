@@ -1,7 +1,7 @@
-"""Tests for core.codegraph_telemetry."""
+"""Tests for analyst.codegraph."""
 import unittest
 
-from core.codegraph_telemetry import (codegraph_from_by_name, codegraph_summary,
+from analyst.codegraph import (codegraph_from_by_name, codegraph_summary,
                                       codegraph_tool_op, scan_run_report)
 
 

@@ -7,7 +7,7 @@ having already distilled the transcript). digest takes ONLY high-precision signa
   A. resolved-failure — check (test/lint) fell and then passed in the same run
      («worked after N attempts») → lesson-gotcha with evidence test-pass;
   B. workaround — agent explicitly wrote a bypass in dev-loop-signal (devloop.workarounds);
-  C. pathology — detector `core.pathology.detect` found pathology With ready remediation
+  C. pathology — detector `analyst.pathology.detect` found pathology With ready remediation
      (file-reread/tool-error-loop/protected-write/no-verify) And the code RECIDATES: the same
      pathology encountered ≥2 times in the last 5 runs of the project. One-time operation -
      noise of one session, does not create a lesson (the rest is a signal for `maind analyze`, not for memory);
@@ -30,9 +30,10 @@ import re
 from pathlib import Path
 
 from aicore.config import ConfigError
-from core.pathology import detect as detect_pathologies
 
-from .common import die, find_run_report, parse_args, safe_load_json
+from .common import die, parse_args, safe_load_json
+from .pathology import detect as detect_pathologies
+from .run_reports import find_run_report
 from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
                       classify_consolidation, event_append, jaccard,
                       new_lesson, similar_lessons)
@@ -87,14 +88,14 @@ def _is_real_check(cmd):
         return False
     return True
 
-# source run-report — single core.find_run_report (reveals ~ on the way)
+# source run-report — single run_reports.find_run_report (reveals ~ on the way)
 
-# ── signal C: recurrent pathologies (core.pathology + relapse rule) ─────────
+# ── signal C: recurrent pathologies (pathology + relapse rule) ─────────
 PATHOLOGY_WINDOW = DEFAULT_THRESHOLDS.pathology_window       # relapse rule: window of how many last runs we look at
 PATHOLOGY_MIN_HITS = DEFAULT_THRESHOLDS.pathology_min_hits   # code must occur in at least this many runs of the window
 
 # Codes with ready remediation → potential lesson (upon relapse). Other codes
-# core.pathology.detect — signals for analyze/dashboard, do NOT go into memory (no
+# pathology.detect — signals for analyze/dashboard, do NOT go into memory (no
 # specific «what to do», only diagnosis - nothing to teach the agent).
 _PATHOLOGY_REMEDIATIONS = {
     "file-reread": "keep the read card; to re-apply use "
@@ -137,7 +138,7 @@ def _recent_run_reports(project_path, current, limit=PATHOLOGY_WINDOW):
 
 def _pathology_hit_counts(project_path, current, thresholds=DEFAULT_THRESHOLDS):
     """{code: how many runs from the window contain ≥1 find this code}. detect driving
-    for each window run separately - it’s clean and cheap (see core/pathology.py)."""
+    for each window run separately - it’s clean and cheap (see pathology.py)."""
     counts = {}
     for rr in _recent_run_reports(project_path, current, thresholds.pathology_window):
         for code in {f.get("code") for f in detect_pathologies(rr)}:
@@ -211,7 +212,7 @@ def extract_workarounds(run_report, *, scope, project):
 
 
 def extract_pathologies(run_report, project_path, thresholds=DEFAULT_THRESHOLDS):
-    """Signal C: run pathologies (`core.pathology.detect`) with ready-made remediation
+    """Signal C: run pathologies (`analyst.pathology.detect`) with ready-made remediation
     And a relapse - the same code was encountered ≥PATHOLOGY_MIN_HITS times in the last
     PATHOLOGY_WINDOW project runs (current inclusive). One-time trigger
     lesson does not create (noise of one session); codes without remediation in _PATHOLOGY_REMEDIATIONS

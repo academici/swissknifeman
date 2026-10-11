@@ -65,7 +65,7 @@ compatibility shim and the modules of later stages, see [ADR 0028](decisions/002
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/planner` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch` (research in `docs/research`) |
 | `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus `topology`, `listing`, `state` from `skiller` |
-| `analyst` | analytics, lessons, traces | `aicore` | `packages/analyst` plus `runs`, `pathology`, `codegraph_telemetry` from `core` |
+| `analyst` | analytics, lessons, traces | `aicore` | `packages/analyst` (run analytics moved from `core`) |
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
 | `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`) |
@@ -419,9 +419,10 @@ deploy) on top of `aicore.artifacts` and `aicore.config`, and the MCP server. Th
 
 ### analyst
 
-Lessons, digest, metrics, provider readers and traces, plus run analytics from `core` (`runs`, `pathology`,
-`codegraph_telemetry`). Subscribes to `planner.*` and `orch.run.*`. Reads the planner workflow through its CLI, not by
-import.
+Lessons, digest, metrics, provider readers and traces, plus run analytics (`run_reports`, `pathology`, `codegraph`;
+moved from `core`). Other modules read run reports through `analyst runs show|codegraph --json` (contracts `run-lookup/v1`
+and `run-codegraph/v1`), found with `aicore.util.partners`. Subscribes to `planner.*` and `orch.run.*`. Reads the planner
+workflow through its CLI, not by import.
 
 ### harness
 

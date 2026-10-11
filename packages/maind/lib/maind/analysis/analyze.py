@@ -14,14 +14,30 @@ import json
 import os
 from pathlib import Path
 
-from core.codegraph_telemetry import scan_run_report
-from core.runs import find_analytics_events
-from ..common import find_run_report, find_run_report_result, parse_args, read_ndjson_iter, run_cmd
+from ..analyst_source import run_lookup
+from ..common import parse_args, read_ndjson_iter, run_cmd
 from ..config import load_config
 from ..health import _target
 
 
-# ── source 1: run-report (primary) — single core.find_run_report (reveals ~)
+# ── source 1: run-report (primary) — read through `analyst runs show` (see analyst_source) ──
+def run_report_source(ppath, session=None, project_id=None):
+    """Run report, codegraph summary and neutral events of a project, read through analyst.
+
+    Without analyst the source is ``unavailable`` with the reason (``PARTNER_UNAVAILABLE``,
+    ``PARTNER_FAILED`` or ``PARTNER_BAD_OUTPUT``) and the analysis continues without a run report."""
+    data, problem = run_lookup(ppath, session=session, project_id=project_id)
+    if problem is not None:
+        return {"status": "unavailable", "reason": problem["code"], "message": problem["message"],
+                "report": None, "codegraph": None, "events": [], "diagnostics": [
+                    {"code": problem["code"], "message": problem["message"]}]}
+    lookup = data["lookup"]
+    diagnostics = []
+    if lookup.get("reason"):
+        diagnostics.append({"code": lookup["reason"], "source": lookup.get("path")})
+    return {"status": lookup["status"], "reason": lookup.get("reason"), "message": None,
+            "report": data.get("report"), "codegraph": data.get("codegraph"),
+            "events": data["events"], "diagnostics": diagnostics}
 
 
 # ── source 2: log Bash (forensics; WITHOUT return codes - PreToolUse) ─────────
@@ -128,16 +144,15 @@ def pending_lessons(project_path):
     return total
 
 
-def analytics_slice(project_path, session=None):
-    """Neutral analytics consumer; it deliberately has no provider raw-path knowledge."""
-    events = find_analytics_events(project_path, session=session)
-    providers = sorted({event.provider_id for event in events})
+def analytics_slice(events, session=None):
+    """Neutral analytics consumer over the events analyst returned; no provider raw-path knowledge."""
+    providers = sorted({event["provider_id"] for event in events})
     metrics = {}
     provenance = []
-    for event in sorted(events, key=lambda item: (item.occurred_at, item.event_id)):
-        for name, value in event.metrics.items():
+    for event in sorted(events, key=lambda item: (item["occurred_at"], item["event_id"])):
+        for name, value in event["metrics"].items():
             metrics[name] = metrics.get(name, 0) + value
-        provenance.append(dict(event.provenance))
+        provenance.append(dict(event["provenance"]))
     return {"events": len(events), "providers": providers,
             "run_report": {"contract_version": "1.0.0", "session_id": session,
                            "metrics": {name: metrics[name] for name in sorted(metrics)},
@@ -158,7 +173,7 @@ def health_slice(env, config, project):
 
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-def compute_verdict(run_report, git, observer, *, evidence_diagnostics=()):
+def compute_verdict(run_report, git, observer, *, evidence_diagnostics=(), codegraph=None):
     """(verdict, confidence, red, reasons, repass) from collected slices.
     RED — failed test/work flow. ATTENTION — lint/tool-failures/deferred/workarounds/dirty
     tree/LOOP. repass — dev-loop tool_failures (engine was unavailable → fact not verified)."""
@@ -191,7 +206,7 @@ def compute_verdict(run_report, git, observer, *, evidence_diagnostics=()):
 
         # memory observability/column (key run-report.maind — additive; old report → empty).
         maind = run_report.get("maind") or {}
-        cg = scan_run_report(run_report)
+        cg = codegraph or {}
         codegraph_calls = cg.get("calls", 0)
         by_name = (run_report.get("tools") or {}).get("by_name") or {}
         scan = sum(by_name.get(t, 0) for t in ("Read", "Grep", "Glob"))
@@ -229,8 +244,8 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     local = project.get("local_path")
     ppath = os.path.expanduser(local) if local else os.getcwd()
 
-    lookup = find_run_report_result(ppath, session, project_id=pid)
-    run_report = lookup.report
+    source = run_report_source(ppath, session, pid)
+    run_report = source["report"]
     # bash-log correlated by REAL session run-report'a (in production session_id run-report ==
     # id sessions Claude == session in bash-log); explicit --session takes precedence.
     effective_session = session or (run_report or {}).get("session_id")
@@ -239,21 +254,19 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     git = git_status(ppath, base)
     health = health_slice(env, config, project) if with_health else None
 
-    diagnostics = []
-    if lookup.diagnostic is not None:
-        diagnostic = dict(lookup.diagnostic)
-        diagnostic["conflicts"] = [dict(row) for row in diagnostic.get("conflicts", ())]
-        diagnostics.append(diagnostic)
+    diagnostics = source["diagnostics"]
     verdict, confidence, red, reasons, repass = compute_verdict(
-        run_report, git, observer, evidence_diagnostics=diagnostics)
+        run_report, git, observer, evidence_diagnostics=diagnostics, codegraph=source["codegraph"])
     return {
         "project": pid, "path": ppath,
         "verdict": verdict, "confidence": confidence,
         "red": red, "reasons": reasons, "repass": repass,
-        "run_report": run_report, "run_report_diagnostics": diagnostics, "bash_log": bash_log,
+        "run_report": run_report, "run_report_diagnostics": diagnostics,
+        "run_report_source": {"status": source["status"], "reason": source["reason"]},
+        "codegraph": source["codegraph"], "bash_log": bash_log,
         "observer": observer, "git": git, "health": health,
         "pending_lessons": pending_lessons(ppath),
-        "analytics": analytics_slice(ppath, effective_session),
+        "analytics": analytics_slice(source["events"], effective_session),
     }
 
 
@@ -280,7 +293,7 @@ def _print_human(rep):
         print(f"  tools: {tools.get('total', 0)}  · files changed: "
               f"{len(rr.get('files_changed') or [])}")
         md = rr.get("maind") or {}
-        cg = scan_run_report(rr)
+        cg = rep.get("codegraph") or {}
         if md or cg.get("calls"):
             mem_calls = sum(v.get("calls", 0) for k, v in md.items() if k.startswith("memory_"))
             graph_calls = sum(v.get("calls", 0) for k, v in md.items() if k.startswith("graph_"))
@@ -302,6 +315,9 @@ def _print_human(rep):
             print(f"  tool-failures: {len(rr['tool_failures'])}")
             for tf in rr["tool_failures"][:5]:
                 print(f"    ✗ {tf.get('tool', '?')}: {tf.get('snippet', '')[:100]}")
+    elif (rep.get("run_report_source") or {}).get("status") == "unavailable":
+        print(f"  source unavailable ({rep['run_report_source']['reason']}) - forensics bash-log/git. "
+              "Install analyst or set SKM_ANALYST_ROOT")
     else:
         print("  no - forensics bash-log/git. Enable: "
               "harness hooks --target <project> --run-report on")

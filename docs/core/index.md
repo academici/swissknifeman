@@ -16,17 +16,14 @@ modules move onto `aicore` ([ADR 0028](../architecture/decisions/0028-aicore-sub
 | `core.provider.{artifact,lock,reconcile}` | `aicore.artifacts.*` |
 | `core.usage` | `aicore.usage` |
 | `core.gitignore_policy` | `aicore.state.gitignore` |
+| `core.runs`, `core.pathology`, `core.codegraph_telemetry` | `analyst.run_reports`, `analyst.pathology`, `analyst.codegraph`; read by other modules through `analyst runs show\|codegraph --json` |
 
 Every old name is registered in `sys.modules` as the same module object as the new one, so `mock.patch("core.io.os.replace")`
 acts on `aicore.util.io`. The flat facade `from core import …` keeps its previous `__all__`. If `aicore` is not
 importable, the shim looks for it in `$AICORE_ROOT/lib`, then in `packages/aicore/lib` next to `core/`; otherwise it
 raises `ImportError("aicore not found: set AICORE_ROOT or run from the monorepo")`.
 
-## What still lives in `core/`
-
-| Module | Stays until | Then goes to |
-|:--|:--|:--|
-| `runs`, `pathology`, `codegraph_telemetry` | hub modules stage | `analyst` |
+Run analytics left `core/` for `analyst`. `core/` now holds only the shim and its test.
 
 ## Reference: run telemetry (SCHEMA=2)
 
@@ -37,7 +34,7 @@ usage partition in/out by model). This run report is read by:
 
 - **`maind analyze`** — the post-run verdict GREEN/ATTENTION/RED (did the agent use its memory and graph);
 - **`analyst token-report`** — usage trend and rolling baseline (`.claude/analyze/baseline.json`);
-- **`core.pathology.detect`** — the detector of recurrent pathologies (rule ≥2/5 on the run-report history).
+- **`analyst.pathology.detect`** — the detector of recurrent pathologies (rule ≥2/5 on the run-report history).
 
 The operational layer of this is [Development §9](/develop#_9-performance-measurement★).
 

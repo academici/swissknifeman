@@ -188,3 +188,49 @@ class FakeMemoryServer:
     def __exit__(self, *exc):
         self.httpd.shutdown()
         self.httpd.server_close()
+
+
+FAKE_ANALYST = '''#!{python}
+import json, sys
+with open({log!r}, "a", encoding="utf-8") as handle:
+    handle.write(json.dumps(sys.argv[1:]) + "\\n")
+spec = json.load(open({spec!r}, encoding="utf-8"))
+if spec.get("exit"):
+    sys.stderr.write(spec.get("stderr", "boom") + "\\n")
+    sys.exit(spec["exit"])
+sys.stdout.write(spec["stdout"] if "stdout" in spec else json.dumps(spec[sys.argv[2]]))
+'''
+
+
+def make_fake_analyst(tmp, *, show=None, codegraph=None, exit_code=0, stdout=None):
+    """A stand-in for ``analyst``: an executable script in ``tmp`` that prints a fixture for ``runs show`` or
+    ``runs codegraph``. Return ``(path, calls)``; ``calls()`` lists the argv each call received.
+    """
+    tmp = Path(tmp)
+    tmp.mkdir(parents=True, exist_ok=True)
+    spec = tmp / "fake-analyst.json"
+    log = tmp / "fake-analyst.log"
+    body = {"show": show, "codegraph": codegraph}
+    if exit_code:
+        body["exit"] = exit_code
+    if stdout is not None:
+        body["stdout"] = stdout
+    spec.write_text(json.dumps(body), encoding="utf-8")
+    script = tmp / "fake-analyst"
+    script.write_text(FAKE_ANALYST.format(python=sys.executable, log=str(log), spec=str(spec)), encoding="utf-8")
+    script.chmod(0o755)
+
+    def calls():
+        if not log.is_file():
+            return []
+        return [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+
+    return str(script), calls
+
+
+def lookup_payload(project, *, report=None, status=None, reason=None, codegraph=None, events=()):
+    """A ``run-lookup/v1`` document as ``analyst runs show --json`` prints it."""
+    status = status or ("found" if report is not None else "missing")
+    return {"$schema": "urn:swissknifeman:analyst:run-lookup:v1", "project": str(project),
+            "lookup": {"status": status, "path": None, "reason": reason}, "report": report,
+            "codegraph": codegraph, "events": list(events)}

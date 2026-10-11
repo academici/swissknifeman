@@ -14,6 +14,7 @@ from .promote import cmd_deprecate, cmd_promote
 from .proposals import cmd_proposals
 from .recompute import cmd_recompute
 from .review import cmd_review
+from .runs_cli import cmd_runs
 from .scan import cmd_scan
 from .sessions import cmd_sessions
 from .status import cmd_compact, cmd_status
@@ -36,6 +37,7 @@ COMMANDS = {
     "status": cmd_status,
     "compact": cmd_compact,
     "token-report": cmd_token_report,
+    "runs": cmd_runs,
     "sessions": cmd_sessions,
     "doctor": cmd_doctor,
     "workflow-scan": cmd_workflow_scan,

@@ -91,3 +91,33 @@ def scan_run_report(report) -> dict:
     tools = report.get("tools") or {}
     by_name = tools.get("by_name") if isinstance(tools, dict) else None
     return codegraph_summary(codegraph_from_by_name(by_name or {}))
+
+
+_RUN_DIRS = ((".claude/runs", "claude-code"), (".cursor/runs", "cursor"), (".codex/runs", "codex"))
+MAX_REPORTS = 40
+
+
+def load_reports(project_path, limit: int = MAX_REPORTS):
+    """Recent run reports of a project, newest first: ``(mtime, provider, path, report)`` rows.
+
+    Reads the ``.claude``, ``.cursor`` and ``.codex`` runs folders; unreadable or non-object files are skipped.
+    """
+    import json
+    from pathlib import Path
+
+    project = Path(project_path)
+    rows = []
+    for rel, provider in _RUN_DIRS:
+        runs = project / rel
+        if not runs.is_dir():
+            continue
+        for fp in runs.glob("*.json"):
+            try:
+                mtime = fp.stat().st_mtime
+                data = json.loads(fp.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if isinstance(data, dict):
+                rows.append((mtime, provider, str(fp), data))
+    rows.sort(key=lambda item: item[0], reverse=True)
+    return rows[:limit]

@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
-from .io import safe_load_json
-from .provider.values import ProviderId
+from aicore.util.io import safe_load_json
+from aicore.provider.values import ProviderId
 
 
 ANALYTICS_CONTRACT_VERSION = "1.0.0"
@@ -30,7 +30,7 @@ class EventEnvelope:
     """Minimal immutable D90 normalized-event lookup primitive.
 
     Provider acquisition, redaction, persistence and migration intentionally stay outside
-    `core`; this validates only the public semantic envelope used by multiple consumers.
+    this module; this validates only the public semantic envelope used by multiple consumers.
     """
 
     contract_version: str
@@ -114,6 +114,14 @@ class RunReportLookup:
 
     report: dict | None
     diagnostic: MappingProxyType | None
+    path: str | None = None
+
+    @property
+    def status(self) -> str:
+        """``found`` (trusted report), ``rejected`` (typed diagnostic) or ``missing``."""
+        if self.report is not None:
+            return "found"
+        return "rejected" if self.diagnostic is not None else "missing"
 
 
 def _within(path: Path, root: Path) -> bool:
@@ -192,7 +200,7 @@ def find_run_report_result(project_path, session=None, *, project_id=None):
     mismatch = _run_report_project_mismatch(
         report, project, selected, expected_session=session or selected.stem,
         expected_project_id=project_id)
-    return RunReportLookup(None if mismatch else report, mismatch)
+    return RunReportLookup(None if mismatch else report, mismatch, str(selected))
 
 
 def find_run_report(project_path, session=None):

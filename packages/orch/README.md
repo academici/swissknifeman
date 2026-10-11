@@ -24,6 +24,10 @@ Incompatible versions return `CONTRACT_VERSION` before schema validation.
 The `[orch]` configuration (engine, per-role engine, default profile, work source, capability freshness, pack
 folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as
 versioned packs with test cases (`configs/run-policies/<id>/`): `orch.py policy list|show|test`.
+Work comes from the extension point `orch:work-source` (contract `schemas/work-source/v1`), served by the plugin
+named by `work_source`: `orch.py source claim|brief|prepare|register` claims an item for a run, stores its brief as an
+artifact, writes the run's `launch-plan.json` and registers the outcome through owner fencing and an evidence gate
+([docs/work-source.md](docs/work-source.md)).
 
 From the repository root:
 

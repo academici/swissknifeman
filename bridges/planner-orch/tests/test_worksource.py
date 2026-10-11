@@ -1,0 +1,354 @@
+"""The work-source plugin of the bridge (orch:work-source): claim, brief, register with owner fencing and the evidence
+gate, each answer valid by the contract of orch, and the plugin protocol through aicore.ext.plugins.
+
+Every test works on a temporary plan created with ``plan.py`` in a temporary folder; the plans of the repository are
+never touched.
+"""
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest import mock
+
+_BRIDGE = Path(__file__).resolve().parents[1]
+for _path in (_BRIDGE, _BRIDGE / "tests"):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
+
+import bridge_fixture  # noqa: E402  (skips the module without a planner)
+import partners  # noqa: E402
+
+ORCH = partners.find_orch_root()
+if ORCH is None:
+    raise unittest.SkipTest("orch not found (set SKM_ORCH_ROOT)")
+partners.use_aicore()
+
+from aicore.ext import plugins  # noqa: E402
+from aicore.state import blobs  # noqa: E402
+from aicore.util import digest, schema  # noqa: E402
+
+import worksource  # noqa: E402
+
+PLAN_PY = bridge_fixture.PLAN_PY
+ACTOR = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
+ACTOR_TEXT = "claude-code/claude-opus-5-5/high"
+WORKER = {"provider": "claude-code", "model": "claude-opus-5-5"}
+CONTRACT = ORCH / "schemas" / "work-source" / "v1"
+ITEM = {"summary": "s", "why": "w", "scope": {"include": ["x"], "exclude": []}, "deliverables": ["d"],
+        "validation": [{"id": "V1", "cmd": "true", "expect": "exit 0", "kind": "acceptance"}]}
+
+
+def run(cwd, *argv, check=True) -> subprocess.CompletedProcess:
+    done = subprocess.run([sys.executable, str(PLAN_PY), *argv], cwd=cwd, capture_output=True, text=True,
+                          encoding="utf-8", check=False)
+    if check and done.returncode:
+        raise AssertionError(f"plan.py {' '.join(argv)}: {done.stderr or done.stdout}")
+    return done
+
+
+class Template:
+    """One temporary plan with three items in three batches, built once and copied for every test."""
+
+    root: Path | None = None
+
+    @classmethod
+    def build(cls) -> Path:
+        if cls.root is None:
+            cls.root = Path(tempfile.mkdtemp(prefix="ws-template-"))
+            project = cls.root / "project"
+            (project / "plans").mkdir(parents=True)
+            subprocess.run(["git", "init", "-q", str(project)], check=True)
+            run(project, "new", "--plans-root", "plans", "--codename", "WS", "--title", "Work source",
+                "--repository", "ws", "--owner", "ws", "--actor", ACTOR_TEXT, "--message", "m", "--date", "2026.10.07")
+            plan = next((project / "plans").iterdir()).name
+            run(project, "add-phase", plan, "--title", "One")
+            run(project, "set", plan, "P1", "--json", json.dumps({"goal": "g"}))
+            for index, title in enumerate(("A", "B", "C"), 1):
+                item = dict(ITEM, task_files=[{"path": f"lib/{title}.py", "change": "any"}])
+                run(project, "add-item", plan, "P1", "--title", title, "--json", json.dumps(item))
+            run(project, "batches", plan, "P1", "--json", json.dumps(
+                [{"id": f"B{n}", "items": [f"P1.{n}"], "mode": "recommended"} for n in (1, 2, 3)]))
+            run(project, "set", plan, "P1.3", "--json", json.dumps({"orchestration": {"scenario": "nope"}}))
+            run(project, "design-done", plan, "P1", "--actor", ACTOR_TEXT)
+        return cls.root / "project"
+
+    @classmethod
+    def cleanup(cls) -> None:
+        if cls.root is not None:
+            shutil.rmtree(cls.root, ignore_errors=True)
+            cls.root = None
+
+
+def tearDownModule():
+    Template.cleanup()
+
+
+class Case(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.project = Path(self.tmp.name) / "project"
+        shutil.copytree(Template.build(), self.project)
+        self.plan = next((self.project / "plans").iterdir()).name
+        cwd = Path.cwd()
+        os.chdir(self.project)
+        self.addCleanup(os.chdir, cwd)
+        self.registry = schema.load_contract_set(CONTRACT)[0]
+
+    def valid(self, doc: dict, kind: str) -> None:
+        issues = schema.validate(doc, kind, self.registry)
+        self.assertEqual([f"{i.path}: {i.message}" for i in issues], [], doc)
+
+    def op(self, handler, **fields) -> dict:
+        request = {key: value for key, value in fields.items() if value is not None}
+        self.valid(request, "input")
+        answer = handler(request)
+        self.valid(answer, "output")
+        return answer
+
+    def claim(self, run_id="run-a", items=None) -> dict:
+        return self.op(worksource.op_claim, op="claim", plan=self.plan, items=items, run_id=run_id,
+                       submission_id=f"sub-{run_id}", actor=ACTOR)
+
+    def item(self, ref: str) -> dict:
+        return json.loads(run(self.project, "--output", "json", "get", self.plan, ref).stdout)["data"]["doc"]
+
+    def evidence(self, check="V1", exit_code=0, subject="P1.1") -> str:
+        path = self.project / "ev" / f"{subject}-{check}.json"
+        path.parent.mkdir(exist_ok=True)
+        short = json.loads((self.project / "plans" / self.plan / "plan.json").read_text())["short_id"]
+        path.write_text(json.dumps({
+            "$schema": "urn:swissknifeman:task:plan:check-evidence:v1", "evidence_id": f"ev-{check}",
+            "check_id": check, "subject": f"{short}.{subject}", "procedure": {"cmd": "true"},
+            "candidate": {"head": "0123456"}, "exit": exit_code, "started_at": "2026-10-11T00:00:00Z",
+            "finished_at": "2026-10-11T00:00:01Z", "producer": {"kind": "executor"}}), encoding="utf-8")
+        return path.relative_to(self.project).as_posix()
+
+    def register(self, ref="P1.1", run_id="run-a", status="done", evidence=None, report=None) -> dict:
+        return self.op(worksource.op_register, op="register", plan=self.plan, ref=ref, run_id=run_id,
+                       attempt_id=f"att-{run_id}-{ref}", status=status, report=report or {"summary": "did it"},
+                       evidence=evidence or {}, registrar=ACTOR, executed_by=WORKER)
+
+
+class ClaimTests(Case):
+    def test_claim_takes_the_next_ready_item_and_owns_it(self):
+        answer = self.claim()
+        self.assertEqual((answer["status"], answer["ref"], answer["title"]), ("claimed", "P1.1", "A"))
+        self.assertEqual((answer["scenario"], answer["session"]), ("solo", "run-a"))
+        self.assertEqual(answer["attempt_id"], "att-run-a-P1.1")
+        self.assertEqual(answer["route"], {"class": "implementation", "effort": "high"})
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "run-a")
+
+    def test_repeated_claim_of_the_same_run_gives_the_same_answer(self):
+        first = self.claim()
+        self.assertEqual(self.claim(), first)  # the next ready item is not taken: the run resumes its own
+        self.assertEqual(self.claim(items=["P1.1"]), first)
+
+    def test_nothing_ready_is_none(self):
+        self.claim(run_id="run-other")
+        answer = self.claim(run_id="run-b")
+        self.assertEqual(answer["status"], "none")
+        self.assertNotIn("ref", answer)
+
+    def test_item_owned_by_another_session_is_blocked_without_take_over(self):
+        self.claim(run_id="run-other")
+        answer = self.claim(run_id="run-b", items=["P1.1"])
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "ITEM_OWNED"))
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "run-other")
+
+    def test_a_repeat_without_items_after_the_registration_is_the_same_claim(self):
+        first = self.claim()
+        self.register(evidence={"V1": self.evidence()})
+        self.assertEqual(self.claim(), first)  # not the next ready item
+        self.assertEqual(self.item("P1.2")["status"], "todo")
+
+    def test_run_ids_are_attempt_id_characters_with_room_for_the_reference(self):
+        for run_id in ("user@host", "run/1", "r" * 101):
+            request = {"op": "claim", "plan": self.plan, "run_id": run_id, "submission_id": "sub-x", "actor": ACTOR}
+            self.assertNotEqual(schema.validate(request, "input", self.registry), [], run_id)
+
+    def test_an_attempt_id_the_planner_cannot_take_is_blocked_before_start(self):
+        run_id = "r" * 125  # outside the contract; the plugin still refuses before anything is written
+        answer = worksource.op_claim({"op": "claim", "plan": self.plan, "items": ["P1.1"], "run_id": run_id,
+                                      "submission_id": "sub-x", "actor": ACTOR})
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "ATTEMPT_ID_INVALID"))
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+
+    def test_the_invocation_configuration_of_orch_reaches_the_scenario_check(self):
+        packs = Path(self.tmp.name) / "packs"
+        shutil.copytree(ORCH / "configs" / "run-policies" / "solo", packs / "custom-scenario")
+        policy = packs / "custom-scenario" / "policy.json"
+        policy.write_text(policy.read_text(encoding="utf-8").replace('"solo"', '"custom-scenario"'), encoding="utf-8")
+        config = Path(self.tmp.name) / "orch.toml"
+        config.write_text(f"schema_version = 1\n[orch.profiles]\ndirs = [{json.dumps(str(packs))}]\n", encoding="utf-8")
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps({"orchestration": {"scenario": "custom-scenario"}}))
+        without = self.claim(items=["P1.1"])
+        self.assertEqual((without["status"], without["reason_code"]), ("blocked", "SCENARIO_UNKNOWN"))
+        answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"], run_id="run-a",
+                         submission_id="sub-run-a", actor=ACTOR, orch_config=str(config))
+        self.assertEqual((answer["status"], answer["scenario"]), ("claimed", "custom-scenario"))
+
+    def test_unknown_scenario_is_blocked_before_the_item_starts(self):
+        answer = self.claim(items=["P1.3"])
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "SCENARIO_UNKNOWN"))
+        self.assertEqual(answer["scenario"], "nope")
+        self.assertEqual(self.item("P1.3")["status"], "todo")
+
+
+class BriefTests(Case):
+    def brief(self, ref="P1.1") -> dict:
+        return self.op(worksource.op_brief, op="brief", plan=self.plan, ref=ref, run_id="run-a")
+
+    def test_brief_is_a_blob_declared_as_an_input_and_a_repeat_reuses_it(self):
+        self.claim()
+        first = self.brief()
+        self.assertFalse(first["reused"])
+        stored = json.loads(blobs.read_bytes(first["input_ref"], project=self.project))
+        self.assertEqual(stored["digest"], first["digest"])
+        self.assertTrue(stored["input_id"].endswith("@" + first["digest"][:12]))
+        self.assertEqual(first["artifact_id"], "brief-P1-1-" + first["digest"][:12])
+        path = blobs.blob_path(first["input_ref"], project=self.project).relative_to(self.project).as_posix()
+        self.assertEqual(self.item("P1.1")["artifacts"], [{"path": path, "role": "input"}])
+        again = self.brief()
+        self.assertTrue(again["reused"])
+        self.assertEqual({k: again[k] for k in ("input_ref", "digest", "artifact_id")},
+                         {k: first[k] for k in ("input_ref", "digest", "artifact_id")})
+        self.assertEqual(len(self.item("P1.1")["artifacts"]), 1)
+
+    def test_brief_digest_is_the_aicore_digest(self):
+        self.claim()
+        doc = json.loads(blobs.read_bytes(self.brief()["input_ref"], project=self.project))
+        payload = {key: value for key, value in doc.items() if key != "digest"}
+        payload["input_id"] = payload["input_id"].rsplit("@", 1)[0]
+        self.assertEqual(doc["digest"], digest.sha256_hex(digest.canonical_json_bytes(payload)))
+        fixture = json.loads((ORCH / "fixtures/exec/v1/valid/execution-input/plan-bound.json").read_text())
+        import brief
+        self.assertEqual(brief.canonical_digest(fixture), fixture["digest"])
+
+
+class RegisterTests(Case):
+    def test_evidence_that_passes_closes_the_item_and_a_repeat_is_a_no_op(self):
+        self.claim()
+        answer = self.register(evidence={"V1": self.evidence()})
+        self.assertEqual((answer["outcome"], answer["gate"]), ("recorded", {"verdict": "pass", "checks": {"V1": 0}}))
+        self.assertEqual(self.item("P1.1")["status"], "done")
+        again = self.register(evidence={"V1": self.evidence()})
+        self.assertEqual(again["outcome"], "no-op")
+
+    def test_a_claim_repeated_after_the_registration_is_the_same_claim(self):
+        first = self.claim(items=["P1.1"])
+        self.register(evidence={"V1": self.evidence()})
+        self.assertEqual(self.claim(items=["P1.1"]), first)
+        self.assertEqual(self.item("P1.1")["status"], "done")
+
+    def test_missing_evidence_is_refused_and_nothing_is_written(self):
+        self.claim()
+        report = {"summary": "did it", "checks_run": [{"id": "V1", "cmd": "true", "exit": 0}],
+                  "open_issues": [{"text": "a remark", "kind": "note"}]}
+        answer = self.register(report=report)
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "REGISTER_EVIDENCE_MISSING"))
+        self.assertEqual(answer["gate"], {"verdict": "missing", "checks": {"V1": None}})
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        events = json.loads(run(self.project, "--output", "json", "events", self.plan, "--item", "P1.1",
+                                "--type", "note").stdout)["data"]
+        self.assertEqual(events, [])  # the note was not logged before the refusal
+
+    def test_a_file_that_is_not_check_evidence_is_missing_and_nothing_is_logged(self):
+        self.claim()
+        fake = self.project / "ev" / "fake.json"
+        fake.parent.mkdir(exist_ok=True)
+        fake.write_text(json.dumps({"check_id": "V1", "exit": 0}), encoding="utf-8")
+        answer = self.register(evidence={"V1": "ev/fake.json"}, report={
+            "summary": "did it", "open_issues": [{"text": "a remark that must not be logged", "kind": "note"}]})
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "REGISTER_EVIDENCE_MISSING"))
+        self.assertIn("EVIDENCE_INVALID", answer["message"])
+        events = json.loads(run(self.project, "--output", "json", "events", self.plan, "--item", "P1.1",
+                                "--type", "note").stdout)["data"]
+        self.assertEqual(events, [])
+
+    def test_a_take_over_after_the_guard_is_fenced_by_finish(self):
+        self.claim()
+        wrapper = Path(self.tmp.name) / "plan-wrap.py"
+        wrapper.write_text(
+            "import subprocess, sys\n"
+            f"real = {str(PLAN_PY)!r}\n"
+            "argv = sys.argv[1:]\n"
+            "if argv and argv[0] == 'finish':\n"
+            f"    subprocess.run([sys.executable, real, 'start', {self.plan!r}, 'P1.1', '--actor', {ACTOR_TEXT!r},\n"
+            "                    '--session', 'other-session', '--take-over', '--no-scout'], check=True,\n"
+            "                   capture_output=True)\n"
+            "raise SystemExit(subprocess.run([sys.executable, real, *argv]).returncode)\n", encoding="utf-8")
+        with mock.patch.dict(os.environ, {"PLANNER_PLAN_PY": str(wrapper)}):
+            answer = self.register(evidence={"V1": self.evidence()})
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "REGISTER_STALE_OWNER"))
+        self.assertEqual(answer["gate"]["verdict"], "stale")
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "other-session")
+
+    def test_red_evidence_is_refused(self):
+        self.claim()
+        answer = self.register(evidence={"V1": self.evidence(exit_code=2)})
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "REGISTER_EVIDENCE_RED"))
+        self.assertEqual(answer["gate"], {"verdict": "red", "checks": {"V1": 2}})
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+
+    def test_take_over_by_another_session_fences_the_old_run(self):
+        self.claim()
+        run(self.project, "start", self.plan, "P1.1", "--actor", ACTOR_TEXT, "--session", "run-b", "--take-over",
+            "--no-scout")
+        answer = self.register(evidence={"V1": self.evidence()})
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "REGISTER_STALE_OWNER"))
+        self.assertEqual(answer["gate"]["verdict"], "stale")
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "run-b")
+
+    def test_blocked_needs_no_evidence(self):
+        self.claim()
+        answer = self.register(status="blocked", report={"summary": "stuck", "open_issues": [
+            {"text": "the owner must choose", "kind": "escalation"}]})
+        self.assertEqual((answer["outcome"], answer["gate"]["verdict"]), ("recorded", "none"))
+        self.assertEqual(self.item("P1.1")["status"], "blocked")
+
+
+class ProtocolTests(Case):
+    """describe and invoke through aicore.ext.plugins with the plugin registered in a temporary machine config."""
+
+    def setUp(self):
+        super().setUp()
+        home = Path(self.tmp.name) / "home"
+        config = home / "skm" / "config" / "config.toml"
+        config.parent.mkdir(parents=True)
+        config.write_text("schema_version = 1\n\n[aicore.plugins.planner-orch]\n"
+                          f"manifest = {json.dumps(str(_BRIDGE / 'extension.json'))}\ntrusted = true\n",
+                          encoding="utf-8")
+        self.env = {**os.environ, "HOME": str(home), "SKM_HOME": str(home / "skm")}
+        patcher = mock.patch.dict(os.environ, self.env)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_describe_matches_the_manifest_and_invoke_claims(self):
+        registration = plugins.find_registration("planner-orch", self.project, env=self.env)
+        self.assertTrue(registration.usable, registration.problem)
+        described = plugins.describe_plugin(registration, env=self.env, project=self.project)
+        self.assertEqual((described.id, described.kind, described.transport), ("planner-orch", "command", "stdio-json"))
+        request = {"op": "claim", "plan": self.plan, "run_id": "run-p", "submission_id": "sub-p", "actor": ACTOR}
+        result = plugins.invoke_one(registration, "orch:work-source", request, env=self.env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.valid(result.output, "output")
+        self.assertEqual((result.output["status"], result.output["ref"]), ("claimed", "P1.1"))
+
+    def test_an_unknown_op_is_a_protocol_error(self):
+        registration = plugins.find_registration("planner-orch", self.project, env=self.env)
+        result = plugins.invoke_one(registration, "orch:work-source", {"op": "peek"}, env=self.env,
+                                    project=self.project)
+        self.assertEqual((result.status, result.code), ("error", "INPUT_INVALID"))
+
+
+if __name__ == "__main__":
+    unittest.main()

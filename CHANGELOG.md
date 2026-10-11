@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- **aicore:** `SKM_<MODULE>_ROOT` locates a module's folder and is no longer reported as an unknown configuration
+  variable (`CONFIG_ENV_UNKNOWN`) unless the module's schema has a top-level key `root`.
 - **planner:** `--config` передаётся в доставку событий aicore вместе с настройками подписок и плагинов;
   внешняя проверка сообщает `EXTERNAL_CHECK_FAILED` для включённого плагина с отсутствующим или неверным
   манифестом, учитывает `checks.external_failure` и продолжает запуск остальных плагинов.
@@ -17,6 +19,17 @@
 
 ### Added
 
+- **orch:** work-source port with the planner-orch plugin; claim with an owner session, briefs as content-addressed
+  artifacts, registration with owner fencing and an evidence gate: contract `urn:swissknifeman:orch:work-source`
+  (`schemas/work-source/v1`, `input`/`output`, ops `claim`, `brief`, `register`) and extension point `work-source` in
+  `unit.json`; `orch.worksource` (`WorkSource`, `PluginWorkSource` through `aicore.ext.plugins`, `WORK_SOURCE_UNAVAILABLE`,
+  `WORK_SOURCE_FAILED`); `orch.py source claim|brief|prepare|register` with `run.json`, `launch-plan.json` and
+  `receipts/register.json` in the run directory and `orch.run.*` events; `bridges/planner-orch/extension.json` and
+  `worksource.py` (port `orch:work-source` in `unit.json`); `register.py --owner-session` (`REGISTER_STALE_OWNER`) and
+  `--gate evidence` (`REGISTER_EVIDENCE_MISSING`, `REGISTER_EVIDENCE_RED`); `scripts/e2e-work-source.sh`.
+- **planner:** `finish --owner-session SESSION` refuses `ITEM_OWNED` under the plan lock when the item is held by
+  another session (a repeat of the recorded attempt stays a no-op); the work-source port fences its registration
+  with it.
 - **orch:** `orch.run.*` events with data contracts: `unit.json` provides `orch.run.started`, `orch.run.stage.finished`, `orch.run.finished` and `orch.run.refused` and the contract `urn:swissknifeman:orch:event-data` (`schemas/event-data/v1`, closed schemas per type); `orch.events.emit` journals best-effort after the run journal is written (`events.enabled`, `ORCH_EVENT_NOT_EMITTED` on stderr, exit code and output unchanged; pure operations never emit); producer fixtures under `tests/fixtures/events/`; `docs/events.md`.
 - **orch:** launch-plan with digests, route and engine decisions, policy decision and proof; `orch.py explain`; skill digests from the orch-skiller bridge: `prepare_common` records `digests` of every input, the `config` snapshot, `modules`, `decisions` with the candidates considered (`tie_break` `policy-order`), `policy_decision`, the dry-run `proof` with capability freshness (`capabilities.stale` warn or refuse, `CAPABILITY_STALE`), refusal `reason_code` and `chain`, `submission_id` and the plan `digest` last; `condense` stages are prepared like other model stages; `prepare --binding` is optional (the `[orch]` configuration chooses the engine, a missing capability is a refusal and never another engine) and takes `--submission-id` and `--skills`; `orch.py explain LAUNCH_PLAN [--json]`; `orch.resume.verify_resume` names the drifted inputs; `RunState.stage_result` carries `skills`, `modules`, `attempt_id` and `owner_epoch`; `resolve_role.py` adds the skill `digest` (`SKILL_DIGEST_UNKNOWN` warning without one) and `--all-roles`.
 - **orch:** layered `[orch]` configuration with engine choice; run-policy packs with versions and test cases: `configs/config.schema.json` (`engine`, `engine_by_role`, `default_profile`, `work_source`, `capabilities.stale`, `profiles.dirs` (machine, invocation and flag layers only; absolute or `~` paths), `events.enabled`) with a generated `config.example.toml`; `orch.settings` (`load`, `affecting`, `digest`, `select_engine` with the reasons `ENGINE_FROM_FLAG`, `ENGINE_FROM_ROLE`, `ENGINE_FROM_CONFIG`); `orch.policies` (`discover`, `load`, `run_cases`; `POLICY_UNKNOWN`, `POLICY_INVALID`, `POLICY_SHADOWED`) and the packs `solo`, `scout-solo`, `frontend-bounded`, `review-only` and `full` under `configs/run-policies/`; `orch.py [--config FILE] policy list|show|test`. The `frontend-bounded` pack names the role `bounded-implementer`, which has a manifest.

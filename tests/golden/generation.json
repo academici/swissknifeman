@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "3391f214cca3",
-  "reason": "orch.py gains the explain verb",
+  "captured_from": "fedfa3c64392",
+  "reason": "orch.py gains the source verb (work-source port)",
   "generators": [
     {
       "id": "skiller-registry",

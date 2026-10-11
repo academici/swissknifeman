@@ -754,7 +754,7 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
            deviations: Iterable[str] = (), pending: Iterable[str] = (), escalation: str | None = None,
            commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None,
            executed_by: Mapping | None = None, attempt_id: str | None = None,
-           evidence: Mapping[str, str] | None = None) -> FinishResult:
+           evidence: Mapping[str, str] | None = None, owner_session: str | None = None) -> FinishResult:
     """Record the outcome of ``item_id``; closes the phase, and the plan, when it was the last open piece.
 
     ``actor`` is the registrar; ``executed_by`` (route-checked) replaces ``result.executor``. A repeat of the
@@ -764,6 +764,10 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
     ``evidence`` maps ``V#`` to a check-evidence file: its exit is the recorded check result and its path the
     check's ``evidence``; a ``checks`` exit that disagrees is ``EVIDENCE_CONFLICT``. With
     ``plan.settings.evidence == "required"`` a done item needs evidence for every acceptance check.
+
+    ``owner_session`` fences the registration under the plan lock: unless it is a repeat of the recorded attempt,
+    an item whose ``result.executor.session`` is another session (for example after ``start --take-over``) is
+    refused with ``ITEM_OWNED`` and nothing is written. Without it ``finish`` does not check ownership.
     """
     checks, deviations, pending, commits = dict(checks or {}), list(deviations), list(pending), list(commits)
     evidence = dict(evidence or {})
@@ -791,6 +795,10 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
                                                     f"{item.get('status')} with other outcome")
             return FinishResult(item_id, item["status"], None, p.plan.get("status") == "done", next(p),
                                 already_registered=True, attempt_id=attempt_id)
+        owner = (prior.get("executor") or {}).get("session") if isinstance(prior.get("executor"), dict) else None
+        if owner_session is not None and owner != owner_session:
+            raise PlanError("ITEM_OWNED", f"{item_id} is held by {'session ' + owner if owner else 'no session'}, "
+                                          f"not by {owner_session}; nothing was written")
         current = item.get("status", "todo")
         if current != "in_progress" and not (status == "skipped" and current == "todo"):
             raise PlanError("NOT_STARTED", f"{item_id} is {current}; start it first"

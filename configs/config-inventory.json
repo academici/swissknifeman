@@ -379,6 +379,37 @@
       "released": false
     },
     {
+      "path": "packages/orch/configs/config.schema.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "[orch]: engine choice, default run-policy, work source plugin, capability freshness, pack folders, events"
+    },
+    {
+      "glob": "packages/orch/configs/run-policies/**/*.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/policies.py"
+      ],
+      "released": false,
+      "note": "shipped run-policy packs (policy.json) and their test cases (cases/*.json)"
+    },
+    {
+      "path": "bridges/planner-orch/extension.json",
+      "owner": "root",
+      "consumers": [
+        "packages/aicore/lib/aicore/ext/plugins.py",
+        "bridges/planner-orch/worksource.py"
+      ],
+      "released": false,
+      "note": "plugin manifest of the orch:work-source port, registered by the machine in [aicore.plugins.planner-orch]"
+    },
+    {
       "path": "packages/skiller/.swissknifeman.example/config.json",
       "owner": "skiller",
       "consumers": [

@@ -14,9 +14,13 @@
     "config": "configs/config.schema.json",
     "contracts": [
       {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},
-      {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha"}
+      {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:work-source", "path": "schemas/work-source/v1", "version": "v1", "stability": "alpha"}
     ],
-    "events": ["orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused"]
+    "events": ["orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused"],
+    "extension_points": [
+      {"id": "work-source", "description": "Work source of orchestration runs: input orch work-source input v1, output orch work-source output v1."}
+    ]
   },
   "dev": {
     "test": ["bash", "scripts/test.sh"],

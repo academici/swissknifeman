@@ -180,7 +180,9 @@ against engine profiles.
 
 The owner of an attempt is `result.executor.session`. `start` of an item that is in progress under another session
 fails with `ITEM_OWNED`; `start --take-over` hands the attempt over and the `start` event records the previous executor.
-`finish` does not check ownership, so an execution engine can register the result of its own executor. When either side
+`finish` does not check ownership, so an execution engine can register the result of its own executor; with
+`--owner-session S` it refuses `ITEM_OWNED` under the plan lock when the item is held by another session (fencing of
+a registration that lost its item; a repeat of the recorded attempt stays a no-op). When either side
 has no session, the item is simply continued as before. The `--registrar` of `finish` is never an owner.
 
 `unit … next` returns ready units as JSON; `unit … <U#> context` returns a full JSON worker brief.

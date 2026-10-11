@@ -47,6 +47,12 @@ class TestEnvironmentLayer(Workspace):
         self.assertEqual(written.count("SKM_DEMO_NOPE"), 1)
         self.assertIn("warning:", written)
 
+    def test_module_root_locator_is_not_configuration(self):
+        resolved = self.resolve(env=self.env_with(SKM_DEMO_ROOT="/opt/demo", SKM_DEMO_VERBOSE="1"))
+        self.assertTrue(resolved.get("verbose"))
+        self.assertEqual(self.warnings, [])
+        self.assertEqual(list(resolved.warnings), [])
+
     def test_variables_of_other_modules_and_other_prefixes_are_ignored(self):
         resolved = self.resolve(env=self.env_with(SKM_OTHER_VERBOSE="1", SKM_VERBOSE="1", DEMO_VERBOSE="1",
                                                   SKM_DEMOX="1"))

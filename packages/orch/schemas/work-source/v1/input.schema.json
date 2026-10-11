@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:work-source:input:v1",
+  "title": "work-source input",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, or register its outcome.",
+  "oneOf": [
+    {"$ref": "#/$defs/claim"},
+    {"$ref": "#/$defs/brief"},
+    {"$ref": "#/$defs/register"}
+  ],
+  "$defs": {
+    "text": {
+      "description": "Non-empty text.",
+      "type": "string",
+      "minLength": 1
+    },
+    "runId": {
+      "description": "Id of the orchestration run; it is also the owner session of the claimed work and part of the attempt id, so it uses the attempt-id characters and leaves room for the reference.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$"
+    },
+    "attemptId": {
+      "description": "Key of one attempt at the work.",
+      "type": "string",
+      "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"
+    },
+    "submissionId": {
+      "description": "Idempotency key of the submission.",
+      "type": "string",
+      "pattern": "^sub-[A-Za-z0-9._-]{1,120}$"
+    },
+    "actor": {
+      "description": "Provider, model and optional reasoning effort of an actor.",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "description": "Provider identifier, such as claude-code or codex.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "model": {
+          "description": "Model identifier.",
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "description": "Reasoning effort.",
+          "type": "string",
+          "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+        }
+      },
+      "required": ["provider", "model"],
+      "additionalProperties": false
+    },
+    "claim": {
+      "description": "Claim one piece of work for a run: the first of items, or the next ready one of the source.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "claim"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "items": {
+          "description": "Candidate references in order; without it the source picks the next ready piece.",
+          "type": "array",
+          "minItems": 1,
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
+        "run_id": {"description": "Run that claims the work.", "$ref": "#/$defs/runId"},
+        "submission_id": {"description": "Submission of the run.", "$ref": "#/$defs/submissionId"},
+        "actor": {"description": "Who runs the work.", "$ref": "#/$defs/actor"},
+        "orch_config": {"description": "Invocation configuration file of the orch command that claims; the source passes it back to orch when it asks orch.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "plan", "run_id", "submission_id", "actor"],
+      "additionalProperties": false
+    },
+    "brief": {
+      "description": "Build the content-addressed brief of a claimed piece of work.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "brief"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "unit": {"description": "Part of the piece of work to brief, when only one part is run.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that owns the work.", "$ref": "#/$defs/runId"}
+      },
+      "required": ["op", "plan", "ref", "run_id"],
+      "additionalProperties": false
+    },
+    "register": {
+      "description": "Register the outcome of a piece of work: owner fencing and the evidence gate first, then the record.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "register"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that claimed the work; it must still own it.", "$ref": "#/$defs/runId"},
+        "attempt_id": {"description": "Attempt being registered; a repeat is a no-op.", "$ref": "#/$defs/attemptId"},
+        "status": {
+          "description": "Outcome of the work.",
+          "type": "string",
+          "enum": ["done", "done_with_deviations", "blocked"]
+        },
+        "report": {"description": "Stage-report of the worker.", "type": "object"},
+        "evidence": {
+          "description": "Check-evidence file of each acceptance check, by check id.",
+          "type": "object",
+          "patternProperties": {
+            "^V[0-9]+$": {"description": "Path of a check-evidence file.", "$ref": "#/$defs/text"}
+          },
+          "additionalProperties": false
+        },
+        "registrar": {"description": "Who registers the outcome.", "$ref": "#/$defs/actor"},
+        "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "plan", "ref", "run_id", "attempt_id", "status", "report", "evidence", "registrar", "executed_by"],
+      "additionalProperties": false
+    }
+  }
+}

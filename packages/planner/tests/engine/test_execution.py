@@ -176,6 +176,20 @@ class ItemOwnerTests(OwnerCase):
         self.assertEqual(self.load().items["P1.1"]["status"], "done")
         self.assertEqual(self.load().items["P1.1"]["result"]["executor"], self.B)
 
+    def test_finish_with_owner_session_fences_the_old_owner(self):
+        self.started_by(self.A)
+        self.start("P1.1", actor=self.B, take_over=True)
+        error = self.refused("ITEM_OWNED", lifecycle.finish, "P1.1", "done", checks={"V1": 0}, notes="n",
+                             owner_session="session-a", attempt_id="att-a")
+        self.assertIn("session session-b", str(error))
+        lifecycle.finish(self.root, "P1.1", "done", checks={"V1": 0}, notes="n", owner_session="session-b",
+                         attempt_id="att-b", executed_by=OPUS)
+        self.assertEqual(self.load().items["P1.1"]["status"], "done")
+        # The repeat of the recorded attempt is a no-op although the session is gone from the executor.
+        again = lifecycle.finish(self.root, "P1.1", "done", checks={"V1": 0}, notes="n", owner_session="session-b",
+                                 attempt_id="att-b", executed_by=OPUS)
+        self.assertTrue(again.already_registered)
+
     def test_finish_by_another_session_without_executed_by_passes_too(self):
         self.started_by(self.A)
         lifecycle.finish(self.root, "P1.1", "done", checks={"V1": 0}, notes="n", actor=self.B)
@@ -201,6 +215,9 @@ class OwnerCliTests(OwnerCase):
         row = next(v for v in catalog.verbs(cli.build_parser())["verbs"] if v["name"] == "start")
         self.assertIn("ITEM_OWNED", row["errors"])
         self.assertIn("--take-over", [a["name"] for a in row["args"]])
+        row = next(v for v in catalog.verbs(cli.build_parser())["verbs"] if v["name"] == "finish")
+        self.assertIn("ITEM_OWNED", row["errors"])
+        self.assertIn("--owner-session", [a["name"] for a in row["args"]])
 
 
 if __name__ == "__main__":

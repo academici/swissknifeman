@@ -1,4 +1,4 @@
-"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, explain a launch-plan, list and test run-policy packs."""
+"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, explain a launch-plan, list and test run-policy packs, and run the cycle of a work source (claim, brief, prepare, register)."""
 from __future__ import annotations
 
 import argparse
@@ -7,12 +7,14 @@ from pathlib import Path
 import sys
 
 from aicore.config import ConfigError
+from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import adhoc, catalog, launch, policies, render, settings
+from orch import adhoc, catalog, events, journal, launch, policies, render, settings
 from orch.bindings import BINDINGS, check_skills
 from orch.contracts import validate
 from orch.port import PortError
 from orch.schema import SchemaProfileError
+from orch.worksource import PluginWorkSource, WorkSourceError
 
 
 def _launch(args: argparse.Namespace) -> int:
@@ -98,18 +100,25 @@ def _primary_role(policy: dict) -> str:
     return "executor"
 
 
+def _dry_run(input_doc: dict, policy: dict, current: settings.Settings, *, out, provider, binding_flag=None,
+             model_catalog=None, roles_dir=None, submission_id=None, skills=None) -> dict:
+    """The launch-plan of a dry-run preparation with the configuration read once by the caller."""
+    binding, decision = settings.select_engine(current, _primary_role(policy), flag=binding_flag)
+    roles = render.load_roles(roles_dir)
+    engine = BINDINGS[binding](out, catalog=catalog.Catalog.load(model_catalog), roles_dir=roles_dir, settings=current,
+                               submission_id=submission_id, skills=skills, engine_decision=decision)
+    return engine.prepare(input_doc, policy, roles, provider=provider, dry_run=True)
+
+
 def _prepare(args: argparse.Namespace) -> int:
     try:
         if not args.dry_run:
             raise PortError("NOT_IMPLEMENTED", "prepare only supports --dry-run in this version")
         input_doc, policy = _load_json(args.input), _load_json(args.policy)
         current = settings.load(project=_project_root(), config_file=args.config)  # the configuration is read once
-        binding, decision = settings.select_engine(current, _primary_role(policy), flag=args.binding)
-        roles = render.load_roles(args.roles_dir)
-        engine = BINDINGS[binding](args.out, catalog=catalog.Catalog.load(args.model_catalog),
-                                   roles_dir=args.roles_dir, settings=current, submission_id=args.submission_id,
-                                   skills=_load_skills(args.skills), engine_decision=decision)
-        plan = engine.prepare(input_doc, policy, roles, provider=args.provider, dry_run=True)
+        plan = _dry_run(input_doc, policy, current, out=args.out, provider=args.provider, binding_flag=args.binding,
+                        model_catalog=args.model_catalog, roles_dir=args.roles_dir,
+                        submission_id=args.submission_id, skills=_load_skills(args.skills))
     except PortError as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)
         for issue in error.data.get("issues", []):
@@ -249,6 +258,251 @@ def _policy(args: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- the cycle of a work source
+
+RUN_DOC = "run.json"
+LAUNCH_PLAN_DOC = "launch-plan.json"
+REGISTER_RECEIPT = "receipts/register.json"
+STAGE_STATUS = {"done": "completed", "done_with_deviations": "completed", "blocked": "failed"}
+
+
+class SourceRefusal(Exception):
+    """A refusal of a ``source`` command: ``CODE: message`` on stderr and ``exit`` (1, or 3 without a source)."""
+
+    def __init__(self, code: str, message: str, exit_code: int = 1):
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+        self.exit_code = exit_code
+
+
+def _actor(text: str) -> dict:
+    """``PROVIDER/MODEL[/EFFORT]`` as a work-source actor."""
+    parts = text.split("/") if isinstance(text, str) else []
+    if len(parts) not in (2, 3) or not all(parts):
+        raise argparse.ArgumentTypeError(f"{text!r} must be PROVIDER/MODEL[/EFFORT]")
+    return dict(zip(("provider", "model", "effort"), parts))
+
+
+def _evidence(text: str) -> tuple:
+    check_id, sep, path = text.partition("=")
+    if not sep or not path or not check_id[:1] == "V" or not check_id[1:].isdigit():
+        raise argparse.ArgumentTypeError(f"{text!r} must be V<n>=PATH")
+    return check_id, path
+
+
+def submission_id(plan: str, items: list, actor: dict) -> str:
+    """The default submission of a claim: the same plan, items and actor give the same submission (and run)."""
+    return "sub-" + sha256_hex(canonical_json_bytes({"plan": plan, "items": list(items), "actor": actor}))[:24]
+
+
+def run_id_of(submission: str) -> str:
+    return "run-" + sha256_hex(submission.encode("utf-8"))[:24]
+
+
+def _source(current: settings.Settings, project, config_file) -> PluginWorkSource:
+    return PluginWorkSource(current.work_source, project=project, config_file=config_file)
+
+
+def _call(source: PluginWorkSource, op: str, **fields) -> dict:
+    try:
+        return getattr(source, op)(**fields)
+    except WorkSourceError as error:
+        raise SourceRefusal(error.code, error.message, 3 if error.code == "WORK_SOURCE_UNAVAILABLE" else 1) from None
+
+
+def _run(run_id: str, project) -> tuple:
+    """``(run directory, run.json)`` of a claimed run; ``RUN_UNKNOWN`` when it was never claimed here."""
+    directory = journal.run_dir(run_id, project=project)
+    doc = journal.read_doc(directory, RUN_DOC)
+    if doc is None:
+        raise SourceRefusal("RUN_UNKNOWN", f"no claimed run {run_id} in {directory.parent}")
+    return directory, doc
+
+
+def _emit(event_type: str, data: dict, *, subject: str, current, project, config_file) -> None:
+    events.emit(event_type, {key: value for key, value in data.items() if value is not None}, subject=subject,
+                settings=current, project=project, config_file=config_file)
+
+
+def _print(doc: dict) -> None:
+    print(json.dumps(doc, ensure_ascii=False, indent=2))
+
+
+def _source_claim(args, current, project) -> int:
+    actor, items = args.actor, list(args.item or [])
+    submission = args.submission_id or submission_id(args.plan, items, actor)
+    run_id = run_id_of(submission)
+    directory = journal.run_dir(run_id, project=project)
+    before = journal.read_doc(directory, RUN_DOC)
+    emit = dict(current=current, project=project, config_file=args.config)
+    # A repeated claim asks for the run's own item, so a run never moves on to other work once its item is closed.
+    asked = [before["ref"]] if before is not None and before.get("ref") else items
+    try:
+        answer = _call(_source(current, project, args.config), "claim", plan=args.plan, plans_root=args.plans_root,
+                       items=asked or None, run_id=run_id, submission_id=submission, actor=actor,
+                       orch_config=str(Path(args.config).resolve()) if args.config else None)
+    except SourceRefusal as refusal:
+        _emit("orch.run.refused", {"submission_id": submission, "step": "claim", "reason_codes": [refusal.code],
+                                   "run_id": run_id}, subject=submission, **emit)
+        raise
+    _print({"run_id": run_id, "submission_id": submission, **answer})
+    if answer["status"] == "claimed":
+        doc = {"run_id": run_id, "submission_id": submission, "plugin": current.work_source, "plan": args.plan,
+               "plans_root": args.plans_root, "ref": answer["ref"], "attempt_id": answer["attempt_id"],
+               "scenario": answer.get("scenario"), "session": answer.get("session")}
+        if before is not None:  # a repeated claim keeps what later steps recorded (input_ref)
+            doc = {**before, **doc}
+        journal.write_doc(directory, RUN_DOC, doc)
+        if before is None or before.get("attempt_id") != doc["attempt_id"]:
+            _emit("orch.run.started", {"run_id": run_id, "submission_id": submission, "attempt_id": doc["attempt_id"],
+                                       "source": {"plugin": current.work_source, "ref": doc["ref"]},
+                                       "scenario": doc["scenario"]}, subject=run_id, **emit)
+        return 0
+    if answer["status"] == "blocked":
+        _emit("orch.run.refused", {"submission_id": submission, "step": "claim", "run_id": run_id,
+                                   "reason_codes": [answer.get("reason_code") or "CLAIM_BLOCKED"],
+                                   "ref": answer.get("ref")}, subject=submission, **emit)
+        return 1
+    return 0
+
+
+def _source_brief(args, current, project) -> int:
+    directory, doc = _run(args.run, project)
+    answer = _call(_source(current, project, args.config), "brief", plan=doc["plan"], plans_root=doc.get("plans_root"),
+                   ref=doc["ref"], run_id=doc["run_id"])
+    journal.write_doc(directory, RUN_DOC, {**doc, "input_ref": answer["input_ref"], "input_id": answer["input_id"]})
+    _print(answer)
+    return 0
+
+
+def _brief_doc(doc: dict, project) -> dict:
+    from aicore.state import blobs
+    if not isinstance(doc.get("input_ref"), dict):
+        raise SourceRefusal("RUN_NOT_BRIEFED", f"run {doc['run_id']} has no brief; run source brief first")
+    try:
+        found = json.loads(blobs.read_bytes(doc["input_ref"], project=project))
+    except FileNotFoundError:
+        raise SourceRefusal("BRIEF_UNAVAILABLE", f"the brief {doc['input_ref']['digest']} is not in the artifact "
+                            "store of this project") from None
+    except ValueError as error:
+        raise SourceRefusal("BRIEF_UNAVAILABLE", str(error)) from None
+    if not isinstance(found, dict):
+        raise SourceRefusal("BRIEF_UNAVAILABLE", "the stored brief is not a JSON object")
+    return found
+
+
+def _source_prepare(args, current, project) -> int:
+    directory, doc = _run(args.run, project)
+    emit = dict(current=current, project=project, config_file=args.config)
+    refused = {"submission_id": doc["submission_id"], "step": "prepare", "run_id": doc["run_id"], "ref": doc["ref"],
+               "policy_id": doc.get("scenario"), "binding": args.binding}
+    try:
+        input_doc = _brief_doc(doc, project)
+        policy = policies.load(doc.get("scenario") or current.default_profile, current)
+        plan = _dry_run(input_doc, policy, current, out=directory / "prepare", provider=args.provider,
+                        binding_flag=args.binding, model_catalog=args.model_catalog,
+                        submission_id=doc["submission_id"])
+    except PortError as error:
+        report = error.data.get("launch_plan")
+        codes = [error.code] + [item["reason_code"] for item in (report or {}).get("refusals", [])
+                                if item.get("reason_code") and item["reason_code"] != error.code]
+        _emit("orch.run.refused", {**refused, "reason_codes": codes}, subject=doc["submission_id"], **emit)
+        print(f"{error.code}: {error.message}", file=sys.stderr)
+        if report:
+            _print(report)
+        return 1
+    except (SourceRefusal, policies.PolicyError, catalog.CatalogError, launch.LaunchError,
+            settings.SettingsError) as error:
+        _emit("orch.run.refused", {**refused, "reason_codes": [error.code]}, subject=doc["submission_id"], **emit)
+        raise SourceRefusal(error.code, error.message if isinstance(error, SourceRefusal) else str(error)) from None
+    journal.write_doc(directory, LAUNCH_PLAN_DOC, plan)
+    _print(plan)
+    return 0
+
+
+def _source_register(args, current, project) -> int:
+    directory, doc = _run(args.run, project)
+    try:
+        report = json.loads(Path(args.report).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SourceRefusal("INPUT_INVALID", f"cannot read the report {args.report}: {error}") from None
+    evidence = dict(args.evidence or [])
+    if len(evidence) != len(args.evidence or []):
+        raise SourceRefusal("INPUT_INVALID", "--evidence repeats a check id")
+    answer = _call(_source(current, project, args.config), "register", plan=doc["plan"],
+                   plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
+                   attempt_id=doc["attempt_id"], status=args.status, report=report, evidence=evidence,
+                   registrar=args.actor, executed_by=args.executed_by or args.actor)
+    journal.write_doc(directory, REGISTER_RECEIPT, answer)
+    _print(answer)
+    emit = dict(current=current, project=project, config_file=args.config)
+    if answer["outcome"] == "refused":
+        _emit("orch.run.refused", {"submission_id": doc["submission_id"], "step": "register", "run_id": doc["run_id"],
+                                   "ref": doc["ref"], "reason_codes": [answer.get("reason_code") or "REGISTER_REFUSED"]},
+              subject=doc["submission_id"], **emit)
+        return 1
+    if answer["outcome"] == "recorded":  # a repeat that changed nothing (no-op) is not a second end of the run
+        _emit("orch.run.stage.finished", {"run_id": doc["run_id"], "stage_id": "primary", "attempt": 1,
+                                          "status": STAGE_STATUS[args.status], "attempt_id": doc["attempt_id"]},
+              subject=doc["run_id"], **emit)
+        _emit("orch.run.finished", {"run_id": doc["run_id"], "submission_id": doc["submission_id"], "ref": doc["ref"],
+                                    "attempt_id": doc["attempt_id"], "outcome": args.status,
+                                    "gate": answer["gate"]["verdict"]}, subject=doc["run_id"], **emit)
+    return 0
+
+
+def _source_command(args: argparse.Namespace) -> int:
+    handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
+               "register": _source_register}[args.action]
+    try:
+        project = _project_root()
+        current = settings.load(project=project, config_file=args.config)  # the configuration is read once
+        return handler(args, current, project)
+    except SourceRefusal as refusal:
+        print(f"{refusal.code}: {refusal.message}", file=sys.stderr)
+        return refusal.exit_code
+    except PortError as error:
+        print(f"{error.code}: {error.message}", file=sys.stderr)
+        return 1
+    except ConfigError as error:
+        print(f"CONFIG_INVALID: {error}", file=sys.stderr)
+        return 1
+    except settings.SettingsError as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
+
+
+def _source_parser(verbs) -> None:
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register")
+    actions = command.add_subparsers(dest="action", required=True)
+    claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
+    claim.add_argument("--plan", required=True, help="collection of the work source, such as a plan id or path")
+    claim.add_argument("--plans-root", dest="plans_root", metavar="DIR")
+    claim.add_argument("--item", action="append", metavar="REF", help="candidate reference (repeatable)")
+    claim.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="who runs the work")
+    claim.add_argument("--submission-id", dest="submission_id", metavar="SUB",
+                       help="submission key (default: derived from plan, items and actor)")
+    brief = actions.add_parser("brief", help="store the brief of a claimed run as an artifact")
+    brief.add_argument("--run", required=True, metavar="RUN")
+    prepare = actions.add_parser("prepare", help="dry-run launch-plan of a briefed run (launch-plan.json)")
+    prepare.add_argument("--run", required=True, metavar="RUN")
+    prepare.add_argument("--provider", required=True)
+    prepare.add_argument("--binding", choices=sorted(BINDINGS),
+                         help="engine; without it the [orch] configuration chooses")
+    prepare.add_argument("--model-catalog", type=Path, dest="model_catalog", metavar="FILE",
+                         help="model-catalog/v1 file (default: the catalog packaged with aicore)")
+    register = actions.add_parser("register", help="register the outcome of a run (fencing and evidence gate)")
+    register.add_argument("--run", required=True, metavar="RUN")
+    register.add_argument("--report", required=True, type=Path, help="stage-report JSON file")
+    register.add_argument("--status", required=True, choices=sorted(STAGE_STATUS))
+    register.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V#=PATH",
+                          help="check-evidence file of an acceptance check (repeatable)")
+    register.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="the registrar")
+    register.add_argument("--executed-by", dest="executed_by", type=_actor, metavar="P/M[/E]",
+                          help="who did the work (default: the registrar)")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="orch.py")
     parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
@@ -313,7 +567,10 @@ def main(argv: list[str] | None = None) -> int:
     test = actions.add_parser("test", help="run the cases of packs (all packs without an id)")
     test.add_argument("policy_id", nargs="*")
     test.add_argument("--json", action="store_true")
+    _source_parser(verbs)
     args = parser.parse_args(argv)
+    if args.verb == "source":
+        return _source_command(args)
     if args.verb == "policy":
         return _policy(args)
     if args.verb == "launch":

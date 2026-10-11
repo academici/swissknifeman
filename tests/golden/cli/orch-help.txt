@@ -1,11 +1,11 @@
 exit: 0
 --- stdout ---
 usage: orch.py [-h] [--config FILE]
-               {validate,launch,input,render-prompt,prepare,explain,policy}
+               {validate,launch,input,render-prompt,prepare,explain,policy,source}
                ...
 
 positional arguments:
-  {validate,launch,input,render-prompt,prepare,explain,policy}
+  {validate,launch,input,render-prompt,prepare,explain,policy,source}
     validate            validate an exec/v1 JSON document
     launch              read the launch catalog (role x provider)
     input               create an execution-input without a plan
@@ -14,6 +14,8 @@ positional arguments:
                         files only
     explain             why a launch-plan looks as it does (read-only)
     policy              run-policy packs: list, show, test
+    source              cycle of a work source: claim, brief, prepare,
+                        register
 
 options:
   -h, --help            show this help message and exit

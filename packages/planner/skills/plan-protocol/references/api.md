@@ -196,7 +196,9 @@ The responses report `changed: false` for a no-op.
 the session that owns it: when `result.executor` and the new actor both carry a `session` and they differ
 (or the providers differ), `start` is refused with `ITEM_OWNED` and writes nothing. `--take-over` replaces
 the executor, keeps `result.started_at` and records `data.take_over.previous` (the former executor) in the
-`start` event. Calls without a session keep the earlier behaviour; `finish` does not check ownership.
+`start` event. Calls without a session keep the earlier behaviour. `finish` checks ownership only with `--owner-session S`:
+an item whose `result.executor.session` is not `S` is refused with `ITEM_OWNED` under the plan lock (a repeat of
+the recorded `--attempt-id` stays a no-op).
 `orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) names the execution scenario; the context
 pack resolves it with `orchestration.scenario_source`.
 

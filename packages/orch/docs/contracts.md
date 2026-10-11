@@ -229,6 +229,8 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 
 ## Changelog контрактов
 
+- work-source/v1 — new contract `urn:swissknifeman:orch:work-source` (`input`, `output`) of the extension point
+  `orch:work-source`: `claim`, `brief` and `register`; exec/v1 does not change.
 - exec/v1 — no schema change: preparation now fills the optional launch-plan fields (`digests`, `config`, `modules`, `decisions`, `policy_decision`, `proof`, refusal `reason_code` and `chain`, `delivery.skills`), `stage-result` can carry `skills`, `modules`, `attempt_id` and `owner_epoch`, and `condense` is a prepared model stage; existing documents remain valid.
 - exec/v1 — optional `execution-input.provenance.commit` (plan provenance) and `execution-input.condensed`;
   semantic `CONDENSED_REQUIRED_DRIFT`; existing documents remain valid.

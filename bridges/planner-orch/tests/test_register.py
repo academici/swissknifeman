@@ -83,6 +83,15 @@ class PlanCallsTests(unittest.TestCase):
         self.assertEqual(flag_values(finish, "--evidence"), ["V1=@plan/ev/V1.json"])
         self.assertTrue(flag_values(finish, "--notes")[0].endswith("\nEvidence: logs/run.txt"))
 
+    def test_under_the_evidence_gate_claims_never_become_checks(self):
+        doc = report(checks_run=[{"id": "V1", "cmd": "make", "exit": 0},
+                                 {"id": "V2", "procedure": "look at it", "verdict": "pass"}])
+        finish = register.plan_calls(doc, args(evidence={"V1": "@plan/ev/V1.json"}, gate="evidence"))[-1]
+        self.assertEqual(flag_values(finish, "--check"), [])
+        self.assertEqual(flag_values(finish, "--evidence"), ["V1=@plan/ev/V1.json"])
+        without = register.plan_calls(doc, args(evidence={"V1": "@plan/ev/V1.json"}, gate=None))[-1]
+        self.assertEqual(flag_values(without, "--check"), ["V2=0"])  # no gate: the previous behaviour
+
     def test_every_issue_kind_maps_to_log_then_finish(self):
         calls = register.plan_calls(report(open_issues=ALL_ISSUES),
                                     args(status="done_with_deviations", attempt_id="run-1"))

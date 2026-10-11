@@ -12,6 +12,9 @@ of the hub (`unit.json`, kind `bridge`); the planner finds it through `bridges.r
 | `commit` | `commit.py` | Task → orch: one scoped operation commit as a stage-result `commits[]` fragment |
 | `launch` | `launch.py` | orch → Task: a role's launch command line with the model resolved from Task's provider mapping |
 
+The bridge is also the plugin of orch's extension point `orch:work-source` (`extension.json`, entrypoint
+`worksource.py`, `unit.json` `provides.ports`): see [Work source](#work-source).
+
 Run a verb through the Task dispatcher: `plan.py bridge planner-orch <verb> [args…]`. `plan.py bridge list`
 validates `bridge.json` and lists the verbs.
 
@@ -47,7 +50,8 @@ code through unchanged, also under `plan.py --output json`.
 
 ```text
 plan.py bridge planner-orch register <plan> <item>[/<U#>] --report REPORT.json --status STATUS --actor P/M[/E]
-        [--executed-by P/M[/E]] [--attempt-id ID] [--evidence V#=PATH …] [--plans-root DIR] [--dry-run]
+        [--executed-by P/M[/E]] [--attempt-id ID] [--evidence V#=PATH …] [--owner-session SESSION]
+        [--gate evidence] [--plans-root DIR] [--dry-run]
 ```
 
 The orch registrar role classifies the report and hands it here; the bridge maps every field into the plan
@@ -91,6 +95,25 @@ registration-receipt `{"plan", "ref", "calls": [{"argv", "exit", "result": "reco
 "error"?}], "next"}`, where `next` is the `plan.py next <plan>` line. The first refused call stops the
 registration (exit 1, receipt without `next`); a repeat with the same attempt id completes it.
 
+Guards, both checked before the first call that changes the plan (the work-source port always passes both; without
+them the registration behaves as described above):
+
+- `--owner-session SESSION` (fencing): `plan.py --output json get <plan> <item>` must show
+  `result.executor.session` = SESSION, or `result.attempt_id` = `--attempt-id` (the item was already closed by this
+  attempt, so its repeat reaches `finish` and is a no-op there); otherwise `REGISTER_STALE_OWNER`, for example after
+  `start --take-over` by another session. `finish` also gets `--owner-session SESSION`, so a take-over between this
+  read and the closing write is refused by the planner under its plan lock (`ITEM_OWNED`, reported as
+  `REGISTER_STALE_OWNER` with gate `stale`); `log` calls made in that window stay in the journal.
+- `--gate evidence`: `done` and `done_with_deviations` need `--evidence` for every acceptance check of the item
+  (`REGISTER_EVIDENCE_MISSING`, also for a file that the planner's `finish` would refuse: the gate reads it with the
+  planner's own `load_evidence`, so `$schema`, subject, candidate and producer are checked) with exit 0 (a procedure:
+  verdict `pass`; `REGISTER_EVIDENCE_RED` otherwise). Paths resolve as the planner resolves them
+  (repository-relative or `@plan/`). `checks_run` entries without a file never become `--check`. `blocked` passes
+  without evidence; a unit return has no gate (verdict `none`).
+
+With a guard the receipt carries `"gate": {"verdict": "pass|missing|red|stale|none", "checks": {"V<n>": exit|null}}`;
+a guard refusal prints the receipt with `calls: []` and that gate on stdout and `CODE: message` on stderr (exit 1).
+
 ## register-review
 
 ```text
@@ -128,9 +151,38 @@ on stderr, exit 1. A `--dry-run` creates no commit, so the bridge refuses with `
 
 Bridge codes (stderr `CODE: message`, exit 1, nothing written): `REGISTER_REPORT_INVALID`,
 `REGISTER_UNCLASSIFIED` (an `open_issues` entry without a known `kind` — classify, never guess),
-`REGISTER_STATUS_MISMATCH`, `REGISTER_ATTEMPT_REQUIRED`, `REGISTER_FINDINGS_INVALID`. They are bridge codes,
+`REGISTER_STATUS_MISMATCH`, `REGISTER_ATTEMPT_REQUIRED`, `REGISTER_FINDINGS_INVALID`, and the guard codes
+`REGISTER_STALE_OWNER`, `REGISTER_EVIDENCE_MISSING`, `REGISTER_EVIDENCE_RED`, `REGISTER_ITEM_UNREADABLE` (the item
+cannot be read for a guard). They are bridge codes,
 not core `ERROR_CODES`. A refusal of a `plan.py` call (`CODE: message` of the core) lands in the receipt as
 `refused` with its `error`.
+
+## Work source
+
+`extension.json` (extension/v1, kind `command`, point `orch:work-source`, protocol 1) registers the bridge as the
+work source of orch. The machine enables it in its configuration:
+
+```toml
+[aicore.plugins.planner-orch]
+manifest = "<hub>/bridges/planner-orch/extension.json"
+trusted = true   # passes PLANNER_ROOT, PLANNER_PLAN_PY, SKM_ORCH_ROOT, AICORE_ROOT, SKM_AICORE_EVENTS__DELIVERY
+```
+
+Untrusted, the plugin finds the planner and orch through `planner` and `orch` on `PATH`. `worksource.py` answers
+`op: describe` and `op: invoke` with one plugin-response; the input and output of every op follow orch's
+`schemas/work-source/v1`, and the plan is written only through `plan.py`.
+
+| Op | What the bridge does |
+| --- | --- |
+| `claim` | Candidate: the first of `items`, else the item this run holds (executor session `run_id`) or already closed (`result.attempt_id` = `att-<run_id>-<item>`), else the first item of the first `run-items` lane of `plan.py next <plan> --parallel 1 --json`; none → `status: none`. An attempt id outside the planner's pattern (at most 128 characters) is `blocked` `ATTEMPT_ID_INVALID` before anything is written. Then `get` (title, route), `context --stdout` (`orchestration.scenario`, `scenario_source`), `orch.py [--config <orch_config>] policy show <scenario>`, and `start <plan> <ref> --actor <P/M/E> --session <run_id> --no-scout --json`. Answer `attempt_id` = `att-<run_id>-<ref>`, `session` = `run_id`; a repeat of the same run gives the same answer, also after the item was closed by that attempt (`result.attempt_id`; no `start` then). |
+| `brief` | `brief.build` in process (no plan write) → `aicore.state.blobs.put_json(..., project=<repository of the plan>)`; `plan.py add-artifact <plan> <item> --path <blob path> --role input` (a repeat is a no-op). A repeat whose brief differs only in `digest`, the `@` suffix and `provenance.source_digest` from the newest brief already declared on the item reuses that brief (declaring the brief changes the item and so the source digest). `artifact_id` = `brief-<ref with . and / as ->-<digest[:12]>`, returned to orch only (a planner artifact id names an output). |
+| `register` | `register.py <plan> <ref> --report <tmp> --status S --actor <registrar> --executed-by <worker> --attempt-id <attempt_id> --evidence V#=PATH… --owner-session <run_id> --gate evidence`; `outcome` `recorded`, `no-op` (every call was a no-op) or `refused` with the code of the guard or of the refused `plan.py` call; `gate` and `receipt` from the receipt. |
+
+| Answer | `reason_code` |
+| --- | --- |
+| claim `blocked` | `SCENARIO_UNKNOWN` (no run-policy pack for the scenario), `ITEM_OWNED` (held by another session; never taken over), `ATTEMPT_ID_INVALID`, or the planner's refusal of `get`, `context` or `start` |
+| register `refused` | `REGISTER_STALE_OWNER`, `REGISTER_EVIDENCE_MISSING`, `REGISTER_EVIDENCE_RED`, the other register codes above, or a refusal of `log`/`finish` (`CHECKS_RED`, `EVIDENCE_INVALID`, …) |
+| protocol error | `INPUT_INVALID` (not the point or an unknown op), a brief refusal of the planner (`PHASE_NOT_DETAILED`, `READ_MISSING`, …), `BRIDGE_PARTNER_UNAVAILABLE`, `AICORE_NOT_FOUND` |
 
 ## Finding orch
 
@@ -155,7 +207,9 @@ bash bridges/planner-orch/scripts/test.sh    # with PLANNER_ROOT (and SKM_ORCH_R
 bash scripts/test-bridges.sh                 # every bridge of the hub, partners wired from the hub layout
 ```
 
-`test_brief.py`, `test_register.py` and `test_commit_bridge.py` (the stage-result check skips without orch) work without orch. `test_conformance.py` (documents valid for
+`test_brief.py`, `test_register.py` and `test_commit_bridge.py` (the stage-result check skips without orch) work without orch.
+`test_worksource.py` (claim, brief, register with the guards, every request and answer valid by orch's
+`work-source/v1`, and describe and invoke through `aicore.ext.plugins`) runs on temporary plans and skips without orch. `test_conformance.py` (documents valid for
 `orch.py validate`, lifecycle phrases of the bridge ⊇ orch's, orch check-evidence accepted by Task) and
 `test_schema_profile.py` (orch's closed schema profile ⊇ Task's) skip when orch is not found.
 `test_record_parity.py` pins every recording obligation W1–W12 to its owner; rows owned by orch roles or by

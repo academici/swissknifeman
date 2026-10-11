@@ -952,6 +952,11 @@ def _load_file(layer: str, path: Path, module_id: str, *, must_exist: bool = Fal
     return LayerInfo(layer, file, section is not None), section, index
 
 
+# ``SKM_<MODULE>_ROOT`` names the folder of a module for the tools that look for it (bridges, locators). It is not
+# read as configuration unless the module's schema has a top-level key ``root``.
+LOCATOR_SUFFIX = "ROOT"
+
+
 def _warn_stderr(message: str) -> None:
     print(f"warning: {message}", file=sys.stderr)
 
@@ -966,6 +971,8 @@ def _apply_env(state: _State, env: Mapping[str, str], warn: Callable[[str], None
         if not name.startswith(prefix):
             continue
         leaf = names.get(name[len(prefix):])
+        if leaf is None and name[len(prefix):] == LOCATOR_SUFFIX:
+            continue  # SKM_<MODULE>_ROOT locates the module's folder; it is not a configuration key
         if leaf is None:
             if any(name[len(prefix):].startswith("__".join(map_key).upper() + "__") for map_key in state.schema.maps):
                 message = (f"[CONFIG_ENV_UNKNOWN] environment variable {name} names an entry of a {module_id} "

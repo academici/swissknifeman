@@ -5,8 +5,16 @@ Replaces the manual registrar map: every report field becomes a ``plan.py`` call
 function (report and arguments to argv lists); ``main`` runs the calls, all ``log`` first and then one
 ``finish`` or ``unit … return``, and prints a registration-receipt.
 
+Two guards run before the first call that changes the plan. ``--owner-session SESSION`` (fencing) refuses with
+``REGISTER_STALE_OWNER`` when the item's executor session is another one, for example after ``start --take-over``.
+``--gate evidence`` lets only check-evidence files decide an item's acceptance checks: ``done`` and
+``done_with_deviations`` need a file for every acceptance check (``REGISTER_EVIDENCE_MISSING``) whose exit is 0
+(``REGISTER_EVIDENCE_RED``), and ``checks_run`` claims without a file never become ``--check``. Without the flags the
+registration behaves as before.
+
 Run as ``plan.py bridge planner-orch register <plan> <item>[/<U#>] --report REPORT.json --status STATUS --actor P/M[/E]
-[--executed-by P/M[/E]] [--attempt-id ID] [--evidence V#=PATH …] [--plans-root DIR] [--dry-run]``.
+[--executed-by P/M[/E]] [--attempt-id ID] [--evidence V#=PATH …] [--owner-session SESSION] [--gate evidence]
+[--plans-root DIR] [--dry-run]``.
 """
 from __future__ import annotations
 
@@ -22,6 +30,7 @@ import partners
 ISSUE_KINDS = ("pending", "deviation", "blocker", "difficulty", "assumption", "note", "escalation")
 LOG_KINDS = ("deviation", "blocker", "difficulty", "assumption", "note")
 STATUSES = ("done", "done_with_deviations", "blocked")
+GATES = ("evidence",)
 REPORT_FIELDS = ("summary", "changed_paths", "checks_run", "evidence", "open_issues")
 _ISSUE_FIELDS = ("text", "kind", "impact", "next")
 _CHECK_ID = re.compile(r"^V[0-9]+$", re.ASCII)
@@ -29,11 +38,12 @@ _REF = re.compile(r"^(P[0-9]+\.[0-9]+)(?:/(U[0-9]+))?$", re.ASCII)
 
 
 class Refusal(Exception):
-    """A bridge refusal: ``CODE: message`` on stderr, exit 1, nothing written."""
+    """A bridge refusal: ``CODE: message`` on stderr, exit 1, nothing written. ``gate`` is the gate state, if any."""
 
-    def __init__(self, code: str, message: str):
+    def __init__(self, code: str, message: str, gate: dict | None = None):
         super().__init__(f"{code}: {message}")
         self.code = code
+        self.gate = gate
 
 
 def _text(value) -> bool:
@@ -178,7 +188,8 @@ def plan_calls(report: dict, args) -> list[list[str]]:
     calls = [_log(args, item, issue) for issue in issues if issue["kind"] in LOG_KINDS]
     finish = ["finish", args.plan, item, "--status", args.status, "--notes", "\n".join(notes)]
     for check in report["checks_run"]:
-        if check["id"] not in evidence:  # the evidence file carries the exit (D19); never both
+        # The evidence file carries the exit (D19); never both. Under the gate a claim without a file is not a result.
+        if check["id"] not in evidence and not getattr(args, "gate", None):
             finish += ["--check", f"{check['id']}={_verdict_exit(check)}"]
     for check_id, path in evidence.items():
         finish += ["--evidence", f"{check_id}={path}"]
@@ -189,6 +200,8 @@ def plan_calls(report: dict, args) -> list[list[str]]:
     escalations = [issue["text"] for issue in issues if issue["kind"] == "escalation"]
     if escalations:
         finish += ["--escalation", "; ".join(escalations)]
+    if getattr(args, "owner_session", None):  # fencing again under the plan lock, at the write that closes the item
+        finish += ["--owner-session", args.owner_session]
     return calls + [finish + _tail(args)]
 
 
@@ -210,6 +223,93 @@ def _unit_calls(args, item, unit, report, notes, evidence, extra_evidence) -> li
     for path in report["changed_paths"]:
         ret += ["--changed", path]
     return calls + [ret + _tail(args)]
+
+
+# ---------------------------------------------------------------- guards: owner and evidence
+
+
+def read_item(plan: str, plans_root, item: str) -> dict:
+    """The item document from ``plan.py --output json get``; ``REGISTER_ITEM_UNREADABLE`` when it cannot be read."""
+    argv = ["--output", "json", "get", plan, item] + (["--plans-root", str(plans_root)] if plans_root else [])
+    done = run_plan(argv)
+    try:
+        doc = json.loads(done.stdout)["data"]["doc"] if done.returncode == 0 else None
+    except (ValueError, KeyError, TypeError):
+        doc = None
+    if not isinstance(doc, dict):
+        raise Refusal("REGISTER_ITEM_UNREADABLE", f"{item} cannot be read: {(done.stderr or done.stdout).strip()}")
+    return doc
+
+
+def check_owner(doc: dict, item: str, session: str, attempt_id: str | None = None) -> None:
+    """Fencing: the run that registers must still own the item (``result.executor.session``).
+
+    A registration replaces the executor with the worker and keeps no session, so an item already closed by this
+    very attempt (``result.attempt_id``) is still this run's: the repeat after a lost answer reaches ``finish``,
+    which writes nothing for it (or refuses ``ATTEMPT_CONFLICT`` when the outcome differs).
+    """
+    result = doc.get("result") or {}
+    owner = (result.get("executor") or {}).get("session")
+    if owner != session and not (attempt_id and result.get("attempt_id") == attempt_id):
+        held = f"session {owner}" if owner else "no session"
+        raise Refusal("REGISTER_STALE_OWNER", f"{item} is held by {held}, not by {session}; the attempt lost "
+                                              "ownership and registers nothing", {"verdict": "stale", "checks": {}})
+
+
+def _evidence_prover(plan: str, plans_root, item: str):
+    """``(check_id, path) -> (exit | None, problem | None)`` by the planner's own check-evidence contract, the one
+    ``finish`` applies (``load_evidence``): a file ``finish`` would refuse never passes the gate."""
+    store, lifecycle, model = partners.planner_engine("plan.store", "plan.lifecycle", "plan.model")
+    loaded = store.load_plan(store.resolve_plan_dir(plan, plans_root))
+
+    def prove(check_id: str, path: str):
+        try:
+            return lifecycle.load_evidence(loaded, item, {check_id: path}, [check_id])[check_id], None
+        except model.PlanError as error:
+            return None, f"{error.code}: {error.message}"
+    return prove
+
+
+def evidence_gate(doc: dict, args, prove) -> dict:
+    """``{verdict, checks}`` of the evidence gate; ``REGISTER_EVIDENCE_MISSING`` or ``REGISTER_EVIDENCE_RED``.
+
+    Only ``done`` and ``done_with_deviations`` are gated; ``blocked`` passes without evidence (verdict ``none``).
+    A file that is not valid check-evidence of the item and check counts as missing.
+    """
+    if args.status not in ("done", "done_with_deviations"):
+        return {"verdict": "none", "checks": {}}
+    acceptance = [c["id"] for c in doc.get("validation", []) if isinstance(c, dict) and c.get("kind") == "acceptance"]
+    checks: dict = {}
+    unusable = []
+    for check_id in acceptance:
+        path = args.evidence.get(check_id)
+        checks[check_id], problem = prove(check_id, path) if path else (None, None)
+        if problem:
+            unusable.append(f"{check_id}={path} ({problem})")
+    missing = [check_id for check_id, code in checks.items() if code is None]
+    if missing:
+        detail = f"; unusable evidence: {', '.join(unusable)}" if unusable else ""
+        raise Refusal("REGISTER_EVIDENCE_MISSING", f"acceptance check(s) without check-evidence: {', '.join(missing)}"
+                                                   f"{detail}", {"verdict": "missing", "checks": checks})
+    red = [f"{check_id}={code}" for check_id, code in checks.items() if code != 0]
+    if red:
+        raise Refusal("REGISTER_EVIDENCE_RED", f"acceptance check(s) failed by their evidence: {', '.join(red)}",
+                      {"verdict": "red", "checks": checks})
+    return {"verdict": "pass", "checks": checks}
+
+
+def guard(args, item: str, unit: str) -> dict | None:
+    """Run the requested guards before anything is written; the gate state, or None without ``--gate``."""
+    if not args.owner_session and not args.gate:
+        return None
+    doc = read_item(args.plan, args.plans_root, item)
+    if args.owner_session:
+        check_owner(doc, item, args.owner_session, args.attempt_id)
+    if not args.gate:
+        return None
+    if unit:  # a unit return carries no acceptance result; the integrator's accept does
+        return {"verdict": "none", "checks": {}}
+    return evidence_gate(doc, args, _evidence_prover(args.plan, args.plans_root, item))
 
 
 # ---------------------------------------------------------------- running them
@@ -284,6 +384,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--attempt-id", metavar="ID", help="delivery attempt; required with open_issues")
     p.add_argument("--evidence", action="append", default=[], type=_evidence_arg, metavar="V#=PATH",
                    help="check-evidence file; its exit is the check result (repeatable)")
+    p.add_argument("--owner-session", metavar="SESSION",
+                   help="refuse with REGISTER_STALE_OWNER unless the item's executor session is SESSION")
+    p.add_argument("--gate", choices=GATES,
+                   help="evidence: acceptance results come from check-evidence files only (MISSING, RED refusals)")
     p.add_argument("--plans-root", type=Path)
     p.add_argument("--dry-run", action="store_true", help="print the argv lists as JSON and write nothing")
     return p
@@ -295,19 +399,25 @@ def main(argv: list[str] | None = None) -> int:
     if len(evidence) != len(args.evidence):
         parser().error("--evidence repeats a check id")
     args.evidence = evidence
+    item, _, unit = args.ref.partition("/")
     try:
         calls = plan_calls(load_json(args.report, "REGISTER_REPORT_INVALID", "stage-report"), args)
+        gate = guard(args, item, unit)
     except Refusal as refusal:
+        if refusal.gate is not None:  # under the guards the refusal also says what the gate saw
+            print(json.dumps({"plan": args.plan, "ref": args.ref, "calls": [], "gate": refusal.gate},
+                             ensure_ascii=False, indent=2))
         print(refusal, file=sys.stderr)
         return 1
     if args.dry_run:
         print(json.dumps(calls, ensure_ascii=False, indent=2))
         return 0
-    item, _, unit = args.ref.partition("/")
     if unit and evidence:
         named = " ".join(f"--evidence {check_id}={path}" for check_id, path in evidence.items())
         print(f"note: the integrator records unit evidence with: unit … {unit} accept {named}", file=sys.stderr)
     receipt = {"plan": args.plan, "ref": args.ref, "calls": []}
+    if gate is not None:
+        receipt["gate"] = gate
     seen: set[tuple[str, str]] = set()
     types = {argv[argv.index("--type") + 1] for argv in calls if argv[0] == "log"}
     if types:
@@ -315,7 +425,13 @@ def main(argv: list[str] | None = None) -> int:
         if seen is None:
             receipt["calls"].append(entry)
             return finish_receipt(receipt, args.plan, args.plans_root, 1)
-    return finish_receipt(receipt, args.plan, args.plans_root, execute(calls, seen, receipt))
+    code = execute(calls, seen, receipt)
+    last = receipt["calls"][-1] if receipt["calls"] else {}
+    if code and args.owner_session and last.get("argv", [""])[0] == "finish" \
+            and str(last.get("error", "")).startswith("ITEM_OWNED"):
+        receipt["gate"] = {"verdict": "stale", "checks": {}}  # taken over after the guard, refused under the lock
+        print(f"REGISTER_STALE_OWNER: {last['error']}", file=sys.stderr)
+    return finish_receipt(receipt, args.plan, args.plans_root, code)
 
 
 if __name__ == "__main__":

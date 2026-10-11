@@ -90,7 +90,8 @@ are errors that name the layer, file, line and key.
 
 Environment variables are `SKM_<MODULE>_<PATH>`: upper-case module id, `-` as `_`, path segments joined by `__`, for
 example `SKM_ANALYST_RECOMPUTE__CANDIDATE_MIN_N=30`. The text is parsed by the type of the key (booleans:
-`true|false|1|0|yes|no`; arrays: a JSON array). An unknown path under a known module warns once.
+`true|false|1|0|yes|no`; arrays: a JSON array). An unknown path under a known module warns once; `SKM_<MODULE>_ROOT`
+locates the module's folder and is not configuration (unless the schema has a top-level key `root`).
 
 Config files are TOML 1.0. `tomllib` of Python 3.15 or later also accepts TOML 1.1, which Python 3.9 to 3.14 cannot
 read, so do not use 1.1 syntax in a shared file.

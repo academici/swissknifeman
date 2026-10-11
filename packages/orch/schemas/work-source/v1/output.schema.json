@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:work-source:output:v1",
+  "title": "work-source output",
+  "description": "Answer of the extension point orch:work-source to one operation; a refusal is a reason code, not a failure of the plugin.",
+  "oneOf": [
+    {"$ref": "#/$defs/claim"},
+    {"$ref": "#/$defs/brief"},
+    {"$ref": "#/$defs/register"}
+  ],
+  "$defs": {
+    "text": {
+      "description": "Non-empty text.",
+      "type": "string",
+      "minLength": 1
+    },
+    "reasonCode": {
+      "description": "Stable upper-case code of a refusal.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+    },
+    "digest": {
+      "description": "SHA-256 hex digest.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "claim": {
+      "description": "Outcome of a claim: claimed (the run owns the work now), none (nothing ready) or blocked (refused).",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "claim"},
+        "status": {"description": "Outcome of the claim.", "type": "string", "enum": ["claimed", "none", "blocked"]},
+        "ref": {"description": "Reference of the claimed or refused piece of work.", "$ref": "#/$defs/text"},
+        "title": {"description": "Title of the piece of work.", "$ref": "#/$defs/text"},
+        "scenario": {
+          "description": "Run-policy scenario of the work.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "scenario_source": {"description": "Where the scenario comes from.", "$ref": "#/$defs/text"},
+        "route": {
+          "description": "Minimum model route of the work.",
+          "type": "object",
+          "properties": {
+            "class": {
+              "description": "Minimum semantic model class.",
+              "type": "string",
+              "enum": ["economy", "implementation", "frontier"]
+            },
+            "effort": {
+              "description": "Requested reasoning effort.",
+              "type": "string",
+              "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+            }
+          },
+          "required": ["class", "effort"],
+          "additionalProperties": false
+        },
+        "attempt_id": {
+          "description": "Attempt that owns the work.",
+          "type": "string",
+          "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"
+        },
+        "session": {"description": "Owner session recorded by the source; the run id.", "$ref": "#/$defs/text"},
+        "reason_code": {"description": "Why the claim was blocked.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "status"],
+      "additionalProperties": false
+    },
+    "brief": {
+      "description": "The brief stored as a content-addressed artifact.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "brief"},
+        "input_ref": {"description": "Reference of the stored brief.", "$ref": "urn:swissknifeman:aicore:artifact-ref:v1"},
+        "input_id": {"description": "Id of the brief, ending with @ and the first digest characters.", "$ref": "#/$defs/text"},
+        "digest": {"description": "Digest of the brief document.", "$ref": "#/$defs/digest"},
+        "reused": {"description": "Whether the store already held this brief.", "type": "boolean"},
+        "artifact_id": {
+          "description": "Name of the brief artifact, derived from the reference and the digest.",
+          "type": "string",
+          "pattern": "^brief-[A-Za-z0-9._-]+-[0-9a-f]{12}$"
+        }
+      },
+      "required": ["op", "input_ref", "input_id", "digest", "reused", "artifact_id"],
+      "additionalProperties": false
+    },
+    "register": {
+      "description": "Outcome of a registration and the state of its acceptance gate.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "register"},
+        "outcome": {"description": "recorded, no-op for a repeat, or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
+        "gate": {
+          "description": "Evidence gate: pass, missing or red evidence, stale owner, or none (no gate applied).",
+          "type": "object",
+          "properties": {
+            "verdict": {"description": "Gate verdict.", "type": "string", "enum": ["pass", "missing", "red", "stale", "none"]},
+            "checks": {
+              "description": "Exit proven by the evidence of each acceptance check; null when missing.",
+              "type": "object",
+              "patternProperties": {
+                "^V[0-9]+$": {"description": "Proven exit, or null.", "type": ["integer", "null"]}
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["verdict", "checks"],
+          "additionalProperties": false
+        },
+        "receipt": {"description": "Registration receipt of the source.", "type": "object"},
+        "reason_code": {"description": "Why the registration was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome", "gate"],
+      "additionalProperties": false
+    }
+  }
+}

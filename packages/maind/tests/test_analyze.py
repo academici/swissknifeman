@@ -2,6 +2,7 @@
 report assembly and --json. Without network/demon - health-disable slice (with_health=False),
 live memory metering is not needed for parsing logic."""
 import contextlib
+import io
 import json
 import os
 import tempfile
@@ -146,6 +147,17 @@ class RunReportSourceCase(unittest.TestCase):
                 with partner_env(fake):
                     source = run_report_source(tmp)
                 self.assertEqual((source["status"], source["reason"]), ("unavailable", "PARTNER_BAD_OUTPUT"), stdout)
+
+    def test_schema_valid_but_unusable_items_are_bad_output(self):
+        bad_lookups = [{"events": [{}]}, {"events": [{"provider_id": "codex", "session_id": "s", "event_id": "e",
+                                                       "occurred_at": "t", "provenance": {}, "metrics": []}]},
+                       {"events": [], "codegraph": {"calls": "lots"}}]
+        with tempfile.TemporaryDirectory() as tmp:
+            for extra in bad_lookups:
+                fake, _ = make_fake_analyst(Path(tmp) / "bin", show={**lookup_payload(tmp), **extra})
+                with partner_env(fake):
+                    source = run_report_source(tmp)
+                self.assertEqual((source["status"], source["reason"]), ("unavailable", "PARTNER_BAD_OUTPUT"), extra)
 
     def test_legacy_variable_still_finds_analyst(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -292,11 +304,13 @@ class PendingLessonsCase(unittest.TestCase):
                          "status": "active", "local_path": str(projdir)}]
             write_maind_config(root, projects=projects)
             config, _ = load_config(env)
-            with partner_env():
+            err = io.StringIO()
+            with partner_env(), contextlib.redirect_stderr(err):
                 rep = analyze_report(env, config, config["projects"][0], with_health=False)
             self.assertEqual((rep["verdict"], rep["confidence"]), ("GREEN", "low"))
             self.assertEqual(rep["run_report_source"], {"status": "unavailable", "reason": "PARTNER_UNAVAILABLE"})
             self.assertEqual(rep["run_report_diagnostics"][0]["code"], "PARTNER_UNAVAILABLE")
+            self.assertTrue(err.getvalue().startswith("PARTNER_UNAVAILABLE: analyst not found"))
             self.assertEqual(rep["analytics"]["events"], 0)
 
 
@@ -311,6 +325,15 @@ class AnalyticsConsumerCase(unittest.TestCase):
         self.assertEqual((slice_["events"], slice_["providers"]), (1, ["codex"]))
         self.assertEqual(slice_["run_report"]["metrics"], {"usage": 1})
         self.assertEqual(slice_["run_report"]["provenance"][0]["sha256"], "a" * 64)
+
+    def test_only_the_selected_session_counts(self):
+        def event(session, usage):
+            return {"provider_id": "codex", "session_id": session, "event_id": "e-" + session,
+                    "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": usage},
+                    "provenance": {"sha256": "a" * 64}}
+        slice_ = analytics_slice([event("s1", 1), event("s2", 10)], "s1")
+        self.assertEqual((slice_["events"], slice_["run_report"]["metrics"]), (1, {"usage": 1}))
+        self.assertEqual(analytics_slice([event("s1", 1), event("s2", 10)])["events"], 2)
 
     def test_no_events(self):
         self.assertEqual(analytics_slice([])["events"], 0)

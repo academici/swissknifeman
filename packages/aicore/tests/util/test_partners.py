@@ -55,6 +55,10 @@ class TestLookupOrder(PartnerTestCase):
         env = self.env(SKM_ANALYST_BIN=plain, SKM_ANALYST_ROOT=str(self.tmp / "none"))
         self.assertIsNone(partner_command("analyst", env=env))
 
+    def test_env_without_path_does_not_fall_back_to_the_process_path(self):
+        self.assertIsNone(partner_command("ls", env={}))
+        self.assertIsNone(partner_command("planner", env={}))
+
     def test_name_with_dash_maps_to_underscore(self):
         found = _script(self.tmp / "x", "true")
         self.assertEqual(partner_command("agent-memory", env=self.env(SKM_AGENT_MEMORY_BIN=found)), [found])

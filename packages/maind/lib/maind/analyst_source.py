@@ -28,10 +28,27 @@ def _call(args, valid):
     return data, None
 
 
+def _is_event(event):
+    return (isinstance(event, dict)
+            and all(isinstance(event.get(key), str) for key in ("provider_id", "session_id", "event_id", "occurred_at"))
+            and isinstance(event.get("provenance"), dict)
+            and isinstance(event.get("metrics"), dict)
+            and all(isinstance(value, (int, float)) and not isinstance(value, bool)
+                    for value in event["metrics"].values()))
+
+
+def _is_summary(summary):
+    return (isinstance(summary, dict) and isinstance(summary.get("calls"), int)
+            and not isinstance(summary.get("calls"), bool)
+            and isinstance(summary.get("by_op", {}), dict)
+            and all(isinstance(count, int) for count in summary.get("by_op", {}).values()))
+
+
 def _is_lookup(data):
     lookup = data.get("lookup") if isinstance(data, dict) else None
     return (isinstance(lookup, dict) and isinstance(lookup.get("status"), str)
-            and isinstance(data.get("events"), list)
+            and isinstance(data.get("events"), list) and all(_is_event(event) for event in data["events"])
+            and (data.get("codegraph") is None or _is_summary(data["codegraph"]))
             and (data.get("report") is None or isinstance(data.get("report"), dict))
             and (data.get("codegraph") is None or isinstance(data.get("codegraph"), dict)))
 
@@ -39,7 +56,7 @@ def _is_lookup(data):
 def _is_codegraph(data):
     reports = data.get("reports") if isinstance(data, dict) else None
     return isinstance(reports, list) and all(
-        isinstance(row, dict) and isinstance(row.get("provider"), str) and isinstance(row.get("summary"), dict)
+        isinstance(row, dict) and isinstance(row.get("provider"), str) and _is_summary(row.get("summary"))
         for row in reports)
 
 

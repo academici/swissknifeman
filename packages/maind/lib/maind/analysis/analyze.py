@@ -12,6 +12,7 @@ fact not verified) are placed in the block «Unverified → REPEAT PASS».
 stdlib-only; Env is passed explicitly. Reuses health.health_report, projects, core.run_cmd."""
 import json
 import os
+import sys
 from pathlib import Path
 
 from ..analyst_source import run_lookup
@@ -145,7 +146,12 @@ def pending_lessons(project_path):
 
 
 def analytics_slice(events, session=None):
-    """Neutral analytics consumer over the events analyst returned; no provider raw-path knowledge."""
+    """Neutral analytics consumer over the events analyst returned; no provider raw-path knowledge.
+
+    With ``session`` only that session's events count: analyst returns the events of every session when the caller
+    did not name one, while the run report (and so ``session``) may belong to the newest session only."""
+    if session:
+        events = [event for event in events if event["session_id"] == session]
     providers = sorted({event["provider_id"] for event in events})
     metrics = {}
     provenance = []
@@ -245,6 +251,8 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     ppath = os.path.expanduser(local) if local else os.getcwd()
 
     source = run_report_source(ppath, session, pid)
+    if source["status"] == "unavailable":
+        print(source["message"], file=sys.stderr)
     run_report = source["report"]
     # bash-log correlated by REAL session run-report'a (in production session_id run-report ==
     # id sessions Claude == session in bash-log); explicit --session takes precedence.

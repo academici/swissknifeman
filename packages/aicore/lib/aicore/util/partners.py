@@ -69,7 +69,7 @@ def _planner_command(env: Mapping[str, str]) -> Optional[list]:
         if found:
             _warn_once("SKM_TASK_ROOT", "set PLANNER_ROOT")
             return [sys.executable, found]
-    which = shutil.which("planner", path=env.get("PATH"))
+    which = shutil.which("planner", path=env.get("PATH", ""))
     return [which] if which else None
 
 
@@ -93,7 +93,7 @@ def partner_command(name: str, *, env: Optional[Mapping[str, str]] = None,
         found = _executable(str(Path(os.path.expanduser(root)) / "bin" / name))
         if found:
             return [found]
-    which = shutil.which(name, path=env.get("PATH"))
+    which = shutil.which(name, path=env.get("PATH", ""))
     return [which] if which else None
 
 

@@ -205,11 +205,180 @@
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*$",
           "description": "Execution scenario: the name of a run-policy profile of an execution engine, or solo for the current session."
+        },
+        "options": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationOptions",
+          "description": "Run options of the execution engine."
         }
       },
       "required": [],
       "additionalProperties": false,
       "description": "orchestration contract."
+    },
+    "orchestrationOptions": {
+      "description": "Run options of the execution engine for this scope (a copy of the engine's run-options contract; the bridge of the engine keeps the copies equal). Layers merge plan, phase, item; the more specific wins.",
+      "type": "object",
+      "properties": {
+        "stages": {
+          "description": "Route of each role in pipeline order; a more specific layer overrides the fields of the same role.",
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationStage"
+          }
+        },
+        "reviewer": {
+          "description": "Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT], such as grok/grok-4.7/high.",
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationSelector"
+        },
+        "rules": {
+          "description": "Short rules for the executor; layers append, a repeated rule is kept once.",
+          "type": "array",
+          "items": {
+            "description": "One rule, a single short sentence.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "skills": {
+          "description": "Skills to attach to roles; a more specific layer replaces the list of the role it names.",
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationSkills",
+            "description": "Skills of one role."
+          }
+        },
+        "limits": {
+          "description": "Limits of the run of the piece of work.",
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationLimits"
+        },
+        "on_blocked": {
+          "description": "What a blocked piece of work does to the run: stop the run, or report it and go on with the next piece.",
+          "type": "string",
+          "enum": [
+            "stop",
+            "report"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "orchestrationSelector": {
+      "description": "PROVIDER/MODEL[/CONTEXT][/EFFORT].",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/[0-9]+[kKmM]?)?(/(low|medium|high|xhigh|max|ultra))?$"
+    },
+    "orchestrationStage": {
+      "description": "Route of one role.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Role id.",
+          "type": "string",
+          "enum": [
+            "context-scout",
+            "executor",
+            "bounded-implementer",
+            "reviewer",
+            "triager"
+          ]
+        },
+        "provider": {
+          "description": "Provider of the role, such as claude-code, codex or grok.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "model_class": {
+          "description": "Semantic model class, resolved through the model catalog.",
+          "type": "string",
+          "enum": [
+            "economy",
+            "implementation",
+            "frontier"
+          ]
+        },
+        "model": {
+          "description": "Exact model; wins over model_class.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "effort": {
+          "description": "Reasoning effort.",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "orchestrationLimits": {
+      "description": "Limits of the run of the piece of work.",
+      "type": "object",
+      "properties": {
+        "review_rounds": {
+          "description": "Review rounds at most (the policy pack's max_rounds by default); 0 to 5.",
+          "type": "integer"
+        },
+        "corrections": {
+          "description": "Corrections after a confirmed review finding at most (the policy pack's max_corrections by default); 0 to 3.",
+          "type": "integer"
+        },
+        "check_fixes": {
+          "description": "Corrections after red acceptance checks at most; 0 to 3.",
+          "type": "integer"
+        },
+        "retries": {
+          "description": "Repeats of a role whose run failed or whose result is outside its contract (the policy pack's retries_budget by default); 0 to 5.",
+          "type": "integer"
+        },
+        "tokens_max": {
+          "description": "Input and output tokens of every role of the run together; 0 means no limit; 0 or more.",
+          "type": "integer"
+        },
+        "stage_timeout_s": {
+          "description": "Timeout of one role run in seconds; 0 keeps the launch catalog timeout; 0 or more.",
+          "type": "integer"
+        },
+        "check_timeout_s": {
+          "description": "Timeout of one acceptance check in seconds; 1 or more.",
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "orchestrationSkills": {
+      "description": "Skills of one role.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Role id.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "names": {
+          "description": "Skill names.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "description": "Skill name.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:/-]*$"
+          }
+        }
+      },
+      "required": [
+        "role",
+        "names"
+      ],
+      "additionalProperties": false
     },
     "section": {
       "type": "object",

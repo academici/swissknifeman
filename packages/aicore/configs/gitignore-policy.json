@@ -178,7 +178,25 @@
         ".swissknifeman/state/"
       ],
       "owner": "aicore.state",
-      "why": "Per-project runtime state of the modules: local, regenerated, machine-specific."
+      "why": "Per-project runtime state of the modules: local, regenerated, machine-specific. The orch conductor keeps its runs here (progress.jsonl, raw role streams with token logs, the scout cache); `orch.py doctor` warns when it is not ignored."
+    },
+    {
+      "id": "orch-conductor-reports",
+      "policy": "commit",
+      "paths": [
+        ".swissknifeman/orch/reports/"
+      ],
+      "owner": "orch conductor",
+      "why": "Observer reports of conductor runs (observer.json, observer.md): the reviewed record of a run; the raw streams stay in .swissknifeman/state/."
+    },
+    {
+      "id": "plan-role-streams",
+      "policy": "ignore",
+      "paths": [
+        "plans/*/artifacts/**/*.jsonl"
+      ],
+      "owner": "planner / orch conductor",
+      "why": "Raw role streams (review, executor) are megabytes of token logs; a plan artifact keeps only the short verdict (review-verdict.json) that points at the stream in .swissknifeman/state/."
     },
     {
       "id": "agent-pack-artifacts",

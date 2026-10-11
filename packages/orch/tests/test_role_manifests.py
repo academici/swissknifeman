@@ -9,7 +9,7 @@ from orch import contracts
 
 ORCH = Path(__file__).resolve().parents[1]
 ROLES = ORCH / "roles"
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "registrar")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
 
 
 def _manifest(role: str) -> dict:
@@ -17,7 +17,7 @@ def _manifest(role: str) -> dict:
 
 
 class RoleManifestTests(unittest.TestCase):
-    def test_exactly_five_manifests(self):
+    def test_exactly_the_known_manifests(self):
         self.assertEqual(sorted(p.stem for p in ROLES.glob("*.json")), sorted(ROLE_IDS))
 
     def test_manifests_are_valid_and_named_after_role_id(self):

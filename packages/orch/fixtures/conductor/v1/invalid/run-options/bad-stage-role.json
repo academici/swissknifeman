@@ -1,0 +1,8 @@
+{
+  "stages": [
+    {
+      "role": "registrar",
+      "model_class": "economy"
+    }
+  ]
+}

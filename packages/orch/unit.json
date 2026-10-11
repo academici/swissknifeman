@@ -10,14 +10,18 @@
     {"unit": "aicore", "range": "^0.1", "description": "Foundation: schema validator, digest, model catalog, error classes, configuration, events, plugins, state."}
   ],
   "provides": {
-    "cli": ["scripts/orch.py"],
+    "cli": ["scripts/orch.py", "scripts/conduct.py"],
     "config": "configs/config.schema.json",
     "contracts": [
       {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},
       {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha"},
-      {"id": "urn:swissknifeman:orch:work-source", "path": "schemas/work-source/v1", "version": "v1", "stability": "alpha"}
+      {"id": "urn:swissknifeman:orch:work-source", "path": "schemas/work-source/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:conductor", "path": "schemas/conductor/v1", "version": "v1", "stability": "alpha"}
     ],
     "events": ["orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused"],
+    "doctor": [
+      {"id": "orch.conductor-gitignore", "category": "config", "probe": ["scripts/orch.py", "doctor", "--json"], "output": "check-result/v1"}
+    ],
     "extension_points": [
       {"id": "work-source", "description": "Work source of orchestration runs: input orch work-source input v1, output orch work-source output v1."}
     ]

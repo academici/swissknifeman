@@ -57,7 +57,8 @@ class ListShowTests(PolicyCliCase):
         self.assertEqual((code, err), (0, ""))
         rows = json.loads(out)
         self.assertEqual([r["policy_id"] for r in rows], SHIPPED)
-        self.assertTrue(all(r["version"] == "1.0.0" and r["source"] == "shipped" and r["cases"] >= 2 for r in rows))
+        self.assertTrue(all(r["source"] == "shipped" and r["cases"] >= 2 for r in rows))
+        self.assertEqual({r["policy_id"]: r["version"] for r in rows if r["version"] != "1.0.0"}, {"full": "1.1.0"})
 
     def test_list_text(self):
         code, out, _ = self.run_cli("policy", "list")

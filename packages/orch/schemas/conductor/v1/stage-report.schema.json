@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:stage-report:v1",
+  "title": "stage-report",
+  "description": "Closed result of an executor run under the conductor: a status and the report fields of result_contract.report. A gap that needs a decision of the owner is blocked with what is missing, never a guess.",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description": "done, done with recorded deviations, or blocked.",
+      "type": "string",
+      "enum": [
+        "done",
+        "done_with_deviations",
+        "blocked"
+      ]
+    },
+    "summary": {
+      "description": "What changed and why, in a few lines.",
+      "type": "string",
+      "minLength": 1
+    },
+    "changed_paths": {
+      "description": "Every repository path created, modified or deleted.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "description": "Repository-relative path.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "checks_run": {
+      "description": "Checks that actually ran.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/check"
+      }
+    },
+    "evidence": {
+      "description": "Paths of output files and evidence documents.",
+      "type": "array",
+      "items": {
+        "description": "Repository-relative path.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "open_issues": {
+      "description": "Every surprise that matters to the plan, classified.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    }
+  },
+  "required": [
+    "status",
+    "summary",
+    "changed_paths",
+    "checks_run",
+    "evidence",
+    "open_issues"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "check": {
+      "description": "A command check with its exit, or a manual procedure with its verdict.",
+      "oneOf": [
+        {
+          "description": "Command check.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Check id.",
+              "type": "string",
+              "pattern": "^V[0-9]+$"
+            },
+            "cmd": {
+              "description": "Command as written in the input.",
+              "type": "string",
+              "minLength": 1
+            },
+            "exit": {
+              "description": "Observed exit.",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "cmd",
+            "exit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "Manual procedure.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Check id.",
+              "type": "string",
+              "pattern": "^V[0-9]+$"
+            },
+            "procedure": {
+              "description": "Procedure as written in the input.",
+              "type": "string",
+              "minLength": 1
+            },
+            "verdict": {
+              "description": "Observed verdict.",
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "procedure",
+            "verdict"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "issue": {
+      "description": "One open issue.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "What happened.",
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "description": "Class of the issue; escalation names what the owner must decide or provide.",
+          "type": "string",
+          "enum": [
+            "pending",
+            "deviation",
+            "blocker",
+            "difficulty",
+            "assumption",
+            "note",
+            "escalation"
+          ]
+        },
+        "impact": {
+          "description": "What it affects.",
+          "type": "string",
+          "minLength": 1
+        },
+        "next": {
+          "description": "What should happen next.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "text",
+        "kind"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

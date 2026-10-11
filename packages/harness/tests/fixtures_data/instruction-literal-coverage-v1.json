@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "9db83722b47940ebbc237de239949fb350029143d242dacb0729e11d1bf45c39",
+    "source_sha256": "4dab51a4d0e1dbea222b79ec8893e4b7e54da99dd946c9ed113496a0eb4bddb2",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 370
   },
@@ -1427,7 +1427,7 @@
     },
     {
       "semantic_id": "orch.identity",
-      "literal": "it starts no engine process yet."
+      "literal": "its conductor (`scripts/conduct.py`) starts the roles of a run as child processes."
     },
     {
       "semantic_id": "orch.identity",

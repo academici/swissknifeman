@@ -19,11 +19,13 @@ the policy id:
 | `scout-solo` | scout (economy), primary | off |
 | `frontend-bounded` | scout (economy), primary (frontier), bounded implementer (economy) | off |
 | `review-only` | reviewer | off |
-| `full` | optional condense (economy), primary, optional review on an independent provider | on, at most 2 rounds and 1 correction |
+| `full` (1.1.0) | optional condense (economy), primary, optional review on an independent provider, triage (implementation) | on, at most 2 rounds and 1 correction, findings triaged |
 
 `full` runs context (deterministic), condense (optional, `on_unavailable: skip`), primary, checks, review (optional),
 registrar and git. Its `on_error` table holds the default action of each failure class, `budgets` set
 `brief_max_bytes` 65536, `packer_input_max_bytes` 262144 and `stage_tokens_max` 0 (no limit), and `retries_budget.total_max` is 2.
+`review.triage` (`{"role": "triager", "model_class": "implementation"}`) makes the [conductor](conductor.md) reproduce
+every review finding before a correction; only confirmed findings get one.
 
 The files in `fixtures/exec/v1/valid/run-policy/` stay as examples of the contract; the packs are the ones that run.
 

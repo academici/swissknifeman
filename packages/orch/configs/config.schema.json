@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:config:v1",
   "title": "orch config",
-  "description": "Settings of the orch module: execution engine choice, default run-policy, work source and run-policy folders.",
+  "description": "Settings of the orch module: execution engine choice, default run-policy, work source, run-policy folders, events and the conductor.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -92,6 +92,96 @@
           "type": "boolean",
           "description": "Whether orch emits the orch.run.* events.",
           "default": true
+        }
+      }
+    },
+    "conductor": {
+      "type": "object",
+      "description": "The conductor (conduct.py): the global layer of the run options and how roles start.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Provider of every role whose stage names none.",
+          "default": "claude-code",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT].",
+          "default": "grok/grok-4.7/high",
+          "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/[0-9]+[kKmM]?)?(/(low|medium|high|xhigh|max|ultra))?$"
+        },
+        "registrar": {
+          "type": "string",
+          "description": "Actor PROVIDER/MODEL that registers outcomes in the work source.",
+          "default": "orch/conductor",
+          "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/(low|medium|high|xhigh|max|ultra))?$"
+        },
+        "rules": {
+          "type": "array",
+          "description": "Rules for the executor of every run; the options of the pack, the phase and the item append theirs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One rule."
+          }
+        },
+        "on_blocked": {
+          "type": "string",
+          "description": "What a blocked piece of work does to the run: stop it, or report it and go on.",
+          "default": "stop",
+          "enum": [
+            "stop",
+            "report"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "description": "Default limits of a run.",
+          "additionalProperties": false,
+          "properties": {
+            "tokens_max": {
+              "type": "integer",
+              "description": "Tokens of all roles of a piece of work together; 0 means no limit.",
+              "default": 0,
+              "minimum": 0
+            },
+            "stage_timeout_s": {
+              "type": "integer",
+              "description": "Timeout of one role run in seconds; 0 keeps the launch catalog timeout.",
+              "default": 0,
+              "minimum": 0
+            },
+            "check_timeout_s": {
+              "type": "integer",
+              "description": "Timeout of one acceptance check in seconds.",
+              "default": 1800,
+              "minimum": 1
+            }
+          }
+        },
+        "argv": {
+          "type": "object",
+          "description": "Command line of a role instead of the launch catalog entry, by role id ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands the conductor runs.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "array",
+              "description": "Command and arguments.",
+              "items": {
+                "type": "string",
+                "description": "One argument."
+              },
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "invocation",
+                "flags"
+              ]
+            }
+          }
         }
       }
     }

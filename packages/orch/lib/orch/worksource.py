@@ -20,7 +20,7 @@ from orch.settings import ORCH_ROOT
 
 POINT = "orch:work-source"
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "work-source" / "v1"
-OPS = ("claim", "brief", "register")
+OPS = ("claim", "brief", "register", "commit")
 _REGISTRY: list = []
 
 
@@ -36,13 +36,15 @@ class WorkSourceError(Exception):
 
 
 class WorkSource(Protocol):
-    """A work source: three operations of ``work-source/v1``, each returning its output document."""
+    """A work source: the four operations of ``work-source/v1``, each returning its output document."""
 
     def claim(self, **fields: Any) -> dict: ...
 
     def brief(self, **fields: Any) -> dict: ...
 
     def register(self, **fields: Any) -> dict: ...
+
+    def commit(self, **fields: Any) -> dict: ...
 
 
 def _registry():
@@ -120,3 +122,6 @@ class PluginWorkSource:
 
     def register(self, **fields: Any) -> dict:
         return self.call("register", fields)
+
+    def commit(self, **fields: Any) -> dict:
+        return self.call("commit", fields)

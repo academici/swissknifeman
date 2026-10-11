@@ -170,6 +170,24 @@
         "max_corrections": {
           "type": "integer",
           "description": "Maximum owning corrections; at most one."
+        },
+        "triage": {
+          "type": "object",
+          "description": "Triage of review findings before a correction: a role reproduces every finding and passes on only the confirmed ones.",
+          "properties": {
+            "role": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+              "description": "Role of the triage."
+            },
+            "model_class": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+              "description": "Requested semantic model class of the triage."
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

@@ -15,7 +15,11 @@ reducer and binding capability matrix. `orch.py prepare [--binding native|cao|cl
 configuration it was prepared with, the route and engine decisions with the candidates considered, the policy decision
 and the proof of the capability records; `orch.py explain LAUNCH_PLAN [--json]` reads it back without writing anything.
 Models come from the `model-catalog/v1` file of aicore (`--model-catalog FILE`; the default is the catalog packaged with aicore).
-Starting runs is future work; `prepare` without `--dry-run` returns `NOT_IMPLEMENTED`.
+`prepare` without `--dry-run` returns `NOT_IMPLEMENTED`; runs are started by the conductor:
+`conduct.py run --plan P --items REF…|--batch` claims pieces of work through the work source and drives each one through
+context, scout, executor, checks, review, triage, correction, registration and commit until green or an honest stop,
+with progress lines on stderr, `resume` without repeating closed steps and an observer report
+([docs/conductor.md](docs/conductor.md)). `orch.py doctor` checks that git ignores the conductor's runtime files.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
 The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
@@ -25,8 +29,9 @@ The `[orch]` configuration (engine, per-role engine, default profile, work sourc
 folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as
 versioned packs with test cases (`configs/run-policies/<id>/`): `orch.py policy list|show|test`.
 Work comes from the extension point `orch:work-source` (contract `schemas/work-source/v1`), served by the plugin
-named by `work_source`: `orch.py source claim|brief|prepare|register` claims an item for a run, stores its brief as an
-artifact, writes the run's `launch-plan.json` and registers the outcome through owner fencing and an evidence gate
+named by `work_source`: `orch.py source claim|brief|prepare|register|commit` claims an item for a run, stores its brief as
+an artifact, writes the run's `launch-plan.json`, registers the outcome through owner fencing and an evidence gate and
+commits it
 ([docs/work-source.md](docs/work-source.md)).
 
 Bridges to the partners live in the hub (`bridges/`, see its README), not in this package. `orch` does not run durable
@@ -60,6 +65,7 @@ of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks t
 - [engine-port](docs/engine-port.md)
 - [architecture](docs/architecture.md)
 - [work-source](docs/work-source.md)
+- [conductor](docs/conductor.md)
 - [conformance](docs/conformance.md)
 - [events](docs/events.md)
 - [adding-an-engine](docs/adding-an-engine.md)

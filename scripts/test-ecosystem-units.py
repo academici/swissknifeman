@@ -1108,7 +1108,8 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertEqual(self.run_script("check", "--strict").returncode, 1)
         baseline = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["violations"]
         self.assertTrue(any(k.startswith("import|packages/maind/") and k.endswith("|harness") for k in baseline))
-        self.assertTrue(any(k.startswith("import|packages/analyst/") and k.endswith("|planner") for k in baseline))
+        # analyst stays inside its boundaries since P11.2: no violation of its own is in the baseline
+        self.assertFalse(any(k.split("|")[1].startswith("packages/analyst/") for k in baseline))
 
     def test_ownership_doc_is_current(self):
         self.assertEqual(self.run_script("render", "--check").returncode, 0)

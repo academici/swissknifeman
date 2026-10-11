@@ -3049,7 +3049,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 1,
-          "intent": "Apply this source-derived instruction: `orch` is the engine-neutral orchestration module: it owns the `exec/v1` contracts, the Engine Port, run-policy packs and the launch catalog; it prepares runs and drives a work source, and it starts no engine process yet.",
+          "intent": "Apply this source-derived instruction: `orch` is the engine-neutral orchestration module: it owns the `exec/v1` and `conductor/v1` contracts, the Engine Port, run-policy packs and the launch catalog; it prepares runs and drives a work source, and its conductor (`scripts/conduct.py`) starts the roles of a run as child processes.",
           "obligations": [
             {
               "modality": "must",
@@ -3063,12 +3063,12 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
             }
           ],
           "compatibility_assertions": [
             "`orch` is the engine-neutral orchestration module",
-            "it starts no engine process yet.",
+            "its conductor (`scripts/conduct.py`) starts the roles of a run as child processes.",
             "`orch`",
             "`exec/v1`"
           ]
@@ -3093,7 +3093,7 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
             }
           ],
           "compatibility_assertions": [
@@ -3124,7 +3124,7 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
             }
           ],
           "compatibility_assertions": [
@@ -3155,7 +3155,7 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
             }
           ],
           "compatibility_assertions": [

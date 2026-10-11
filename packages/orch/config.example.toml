@@ -30,3 +30,35 @@ schema_version = 1
 [orch.events]
 # Whether orch emits the orch.run.* events. Boolean.
 # enabled = true
+
+[orch.conductor]
+# Provider of every role whose stage names none. String.
+# provider = "claude-code"
+
+# Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT]. String.
+# reviewer = "grok/grok-4.7/high"
+
+# Actor PROVIDER/MODEL that registers outcomes in the work source. String.
+# registrar = "orch/conductor"
+
+# Rules for the executor of every run; the options of the pack, the phase and the item append theirs. Array of strings.
+# rules = []
+
+# What a blocked piece of work does to the run: stop it, or report it and go on. One of: "stop", "report".
+# on_blocked = "stop"
+
+[orch.conductor.limits]
+# Tokens of all roles of a piece of work together; 0 means no limit. Integer >= 0.
+# tokens_max = 0
+
+# Timeout of one role run in seconds; 0 keeps the launch catalog timeout. Integer >= 0.
+# stage_timeout_s = 0
+
+# Timeout of one acceptance check in seconds. Integer >= 1.
+# check_timeout_s = 1800
+
+[orch.conductor.argv]
+# Command line of a role instead of the launch catalog entry, by role id ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands the conductor runs.
+# Command and arguments. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# example = []

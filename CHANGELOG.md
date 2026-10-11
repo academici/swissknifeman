@@ -4,6 +4,23 @@
 
 ### Added
 
+- **orch:** conductor `scripts/conduct.py run|resume|status|observe` (`orch.conductor`): claims pieces of work through the work
+  source and drives each one through context, scout (cached context map), executor, deterministic checks with check-evidence,
+  review (default `grok/grok-4.7/high`), triage, at most the configured corrections, registration and commit; stops only on a
+  blocker, red checks or confirmed findings after the limits, an exhausted budget, `ROUTE_UNDERSHOOT`, an unavailable provider or a
+  refusal of the source; progress lines on stderr (`--quiet`, `--json-lines`) and in `progress.jsonl`; `resume` repeats no closed
+  step; an observer report per run. New contract `conductor/v1` (`run-options`, `stage-report`, `review-findings`,
+  `triage-result`, `progress-line`), role `triager`, `[orch.conductor]` settings (`argv.<role>` machine-wide), `orch.py doctor`
+  (the conductor's runtime folder must be ignored, its reports committed) and `orch.py source commit`.
+- **orch:** `work-source/v1` gains the claim's `options` layers, the brief's `artifacts_dir` and the op `commit`; exec/v1 gains
+  `run-policy.review.triage` and the result shape `triage-result`; the `full` pack (1.1.0) triages review findings.
+- **planner:** `orchestration.options` of the plan, a phase or an item (a closed copy of orch's `run-options`).
+- **bridges:** `planner-orch` answers the run options and the scenario from `orchestration.*` fields and from orchestration overlay
+  documents (`orchestration-*`, for plan engines without the fields), names the item's artifact folder and commits through
+  `plan.py commit`.
+- **aicore:** gitignore policy entries `orch-conductor-reports` (commit) and `plan-role-streams` (ignore raw role streams in plan
+  artifacts).
+
 - **analyst:** subscriber `run-events` for `planner.item.finished`, `planner.phase.closed`, `planner.plan.closed`, `orch.run.finished` and `orch.run.refused`;
   `analyst events ingest|list` records the outcome of each event once per event id (digest of `data`, never its values), `analyst status` shows the
   count of the last 30 days; `analyst/telemetry.py` maps the dispatch events of the trace onto the span names and the metric labels of `aicore`.

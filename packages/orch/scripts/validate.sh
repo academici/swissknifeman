@@ -32,27 +32,29 @@ export SKM_AICORE_EVENTS__DELIVERY=off
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
-echo "[1/6] python compile"
+echo "[1/7] python compile"
 python3 -m compileall -q lib tests scripts || err "py_compile"
 
-echo "[2/6] bash syntax"
+echo "[2/7] bash syntax"
 for script in scripts/*.sh; do
   bash -n "$script" || err "bash -n $script"
 done
 
-echo "[3/6] required files"
+echo "[3/7] required files"
 for path in README.md scripts/orch.py scripts/test.sh scripts/validate.sh \
-            lib/orch/__init__.py lib/orch/schema.py lib/orch/contracts.py lib/orch/cli.py \
+            lib/orch/__init__.py lib/orch/schema.py lib/orch/contracts.py lib/orch/cli.py scripts/conduct.py \
             schemas/exec/v1/defs.schema.json tests/__init__.py \
             tests/test_schema_profile.py tests/test_boundaries.py tests/test_cli_validate.py; do
   [[ -f "$path" ]] || err "no file: $path"
 done
 
-echo "[4/6] schemas load"
+echo "[4/7] schemas load"
 python3 -c 'from orch.contracts import load_registry; load_registry()' \
   || err "schema registry"
+python3 -c 'from orch.conductor.contract import registry; registry()' \
+  || err "conductor schema registry"
 
-echo "[5/6] fixtures"
+echo "[5/7] fixtures"
 shopt -s nullglob
 for category in valid invalid; do
   directory="fixtures/exec/v1/$category"
@@ -70,7 +72,19 @@ for category in valid invalid; do
   done
 done
 
-echo "[6/6] tests"
+echo "[6/7] conductor fixtures"
+for category in valid invalid; do
+  for fixture in fixtures/conductor/v1/"$category"/*/*.json; do
+    kind="$(basename "$(dirname "$fixture")")"
+    status=0
+    python3 scripts/orch.py validate "$kind" "$fixture" --quiet 2>/dev/null || status=$?
+    expected=0
+    [[ "$category" == valid ]] || expected=1
+    [[ "$status" -eq "$expected" ]] || err "$fixture: exit $status, expected $expected"
+  done
+done
+
+echo "[7/7] tests"
 bash scripts/test.sh || err "unittest"
 
 if [[ "$fail" -eq 0 ]]; then

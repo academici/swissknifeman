@@ -1,0 +1,15 @@
+{
+  "status": "done",
+  "summary": "s",
+  "changed_paths": [],
+  "checks_run": [
+    {
+      "id": "V1",
+      "cmd": "true",
+      "exit": 0,
+      "verdict": "pass"
+    }
+  ],
+  "evidence": [],
+  "open_issues": []
+}

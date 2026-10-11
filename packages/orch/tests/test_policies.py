@@ -99,7 +99,8 @@ class ShippedTests(PackCase):
         condense = doc["stages"][1]
         self.assertEqual((condense["model_class"], condense["on_unavailable"]), ("economy", "skip"))
         self.assertEqual(doc["review"], {"enabled": True, "independent_provider": True, "max_rounds": 2,
-                                         "max_corrections": 1})
+                                         "max_corrections": 1,
+                                         "triage": {"role": "triager", "model_class": "implementation"}})
         self.assertEqual({k: v["action"] for k, v in doc["on_error"].items()}, DEFAULT_ACTIONS)
         self.assertEqual(doc["budgets"], {"brief_max_bytes": 65536, "packer_input_max_bytes": 262144,
                                           "stage_tokens_max": 0})

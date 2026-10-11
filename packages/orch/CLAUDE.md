@@ -5,7 +5,7 @@
 <!-- semantic:orch.validation-release -->
 <!-- instruction:orch.identity -->
 ## orch.identity
-`orch` is the engine-neutral orchestration module: it owns the `exec/v1` contracts, the Engine Port, run-policy packs and the launch catalog; it prepares runs and drives a work source, and it starts no engine process yet.
+`orch` is the engine-neutral orchestration module: it owns the `exec/v1` and `conductor/v1` contracts, the Engine Port, run-policy packs and the launch catalog; it prepares runs and drives a work source, and its conductor (`scripts/conduct.py`) starts the roles of a run as child processes.
 <!-- instruction:orch.module-boundaries -->
 ## orch.module-boundaries
 Import only `orch` and `aicore`; never name partner modules in the core: planner, skiller and harness are reached only through the bridges under the hub `bridges/` and the `orch:work-source` extension point.

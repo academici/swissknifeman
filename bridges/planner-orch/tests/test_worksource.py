@@ -201,6 +201,78 @@ class ClaimTests(Case):
         self.assertEqual(self.item("P1.3")["status"], "todo")
 
 
+class OrchestrationTests(Case):
+    """Scenario and run options of a claim: fields of the item, its phase and the plan, and overlay documents."""
+
+    def overlay(self, doc_id: str, applies_to, body: dict | str, **extra) -> None:
+        text = body if isinstance(body, str) else "```json\n" + json.dumps(body) + "\n```"
+        document = {"$schema": "urn:swissknifeman:task:plan:document:v1", "id": doc_id, "title": doc_id,
+                    "sections": [{"id": "orchestration", "title": "Orchestration", "text": text}], **extra}
+        if applies_to:
+            document["applies_to"] = applies_to
+        run(self.project, "add-document", self.plan, "--json", json.dumps(document))
+
+    def test_overlays_carry_scenario_and_options_general_first(self):
+        self.overlay("orchestration-plan", None, {"options": {"rules": ["plan rule"]}}, **{"global": True})
+        self.overlay("orchestration-p1", ["P1"], {"scenario": "full", "options": {"rules": ["phase rule"]}})
+        self.overlay("orchestration-p1-1", ["P1.1"], {"options": {"limits": {"review_rounds": 1}}})
+        answer = self.claim(items=["P1.1"])
+        self.assertEqual((answer["status"], answer["scenario"], answer["scenario_source"]),
+                         ("claimed", "full", "document:orchestration-p1"))
+        self.assertEqual(answer["options"], [
+            {"source": "document:orchestration-plan", "options": {"rules": ["plan rule"]}},
+            {"source": "document:orchestration-p1", "options": {"rules": ["phase rule"]}},
+            {"source": "document:orchestration-p1-1", "options": {"limits": {"review_rounds": 1}}}])
+
+    def test_fields_win_over_overlays_of_the_same_level(self):
+        self.overlay("orchestration-p1-1", ["P1.1"], {"scenario": "full", "options": {"rules": ["overlay"]}})
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"orchestration": {"scenario": "scout-solo", "options": {"rules": ["field"]}}}))
+        answer = self.claim(items=["P1.1"])
+        self.assertEqual((answer["scenario"], answer["scenario_source"]), ("scout-solo", "item"))
+        self.assertEqual([layer["source"] for layer in answer["options"]], ["document:orchestration-p1-1", "item:P1.1"])
+
+    def test_an_item_field_outside_the_options_contract_is_refused_by_the_planner(self):
+        done = run(self.project, "set", self.plan, "P1.1", "--json",
+                   json.dumps({"orchestration": {"options": {"budget": 1}}}), check=False)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("unexpected property 'budget'", done.stderr)
+
+    def test_a_broken_overlay_blocks_the_claim_before_start(self):
+        self.overlay("orchestration-p1", ["P1"], "not json")
+        answer = self.claim(items=["P1.1"])
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "OVERLAY_INVALID"))
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+
+    def test_other_documents_are_not_overlays(self):
+        self.overlay("notes-p1", ["P1"], {"scenario": "full"})
+        answer = self.claim(items=["P1.1"])
+        self.assertEqual((answer["scenario"], answer.get("options")), ("solo", None))
+
+
+class OptionsContractTests(unittest.TestCase):
+    """The planner keeps a copy of orch's run-options: both must accept and refuse the same documents."""
+
+    def test_the_planner_copy_equals_the_orch_contract(self):
+        def strip(node):
+            if isinstance(node, dict):
+                return {key: strip(value) for key, value in node.items() if key not in ("description", "$id",
+                                                                                        "$schema", "title")}
+            if isinstance(node, list):
+                return [strip(value) for value in node]
+            if isinstance(node, str) and node.startswith("urn:swissknifeman:task:plan:defs:v1#/$defs/orchestration"):
+                return "#/$defs/" + node.rsplit("orchestration", 1)[1].lower()
+            return node
+        orch = json.loads((ORCH / "schemas/conductor/v1/run-options.schema.json").read_text(encoding="utf-8"))
+        defs = json.loads((PLAN_PY.parents[1] / "schemas/plan/v1/defs.schema.json").read_text(encoding="utf-8"))["$defs"]
+        planner = dict(defs["orchestrationOptions"])
+        planner["$defs"] = {name: defs["orchestration" + name.capitalize()] for name in orch["$defs"]}
+        expected = {key: value for key, value in orch.items() if key not in ("$schema", "$id", "title")}
+        self.assertEqual(strip(planner), strip(expected))
+        self.assertEqual(defs["orchestration"]["properties"]["options"]["$ref"],
+                         "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationOptions")
+
+
 class BriefTests(Case):
     def brief(self, ref="P1.1") -> dict:
         return self.op(worksource.op_brief, op="brief", plan=self.plan, ref=ref, run_id="run-a")
@@ -220,6 +292,10 @@ class BriefTests(Case):
         self.assertEqual({k: again[k] for k in ("input_ref", "digest", "artifact_id")},
                          {k: first[k] for k in ("input_ref", "digest", "artifact_id")})
         self.assertEqual(len(self.item("P1.1")["artifacts"]), 1)
+
+    def test_brief_names_the_artifact_folder_of_the_item(self):
+        self.claim()
+        self.assertEqual(self.brief()["artifacts_dir"], f"plans/{self.plan}/artifacts/P1.1")
 
     def test_brief_digest_is_the_aicore_digest(self):
         self.claim()
@@ -314,6 +390,51 @@ class RegisterTests(Case):
             {"text": "the owner must choose", "kind": "escalation"}]})
         self.assertEqual((answer["outcome"], answer["gate"]["verdict"]), ("recorded", "none"))
         self.assertEqual(self.item("P1.1")["status"], "blocked")
+
+
+class CommitTests(Case):
+    def setUp(self):
+        super().setUp()
+        env = {"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull}
+        patcher = mock.patch.dict(os.environ, env)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"), ("commit.gpgsign", "false")):
+            subprocess.run(["git", "config", key, value], cwd=self.project, check=True)
+        (self.project / ".gitignore").write_text(".swissknifeman/state/\n", encoding="utf-8")  # as in a real project
+        subprocess.run(["git", "add", "-A"], cwd=self.project, check=True)
+        subprocess.run(["git", "commit", "-q", "-m", "base"], cwd=self.project, check=True)
+
+    def commit(self, paths=()) -> dict:
+        return self.op(worksource.op_commit, op="commit", plan=self.plan, ref="P1.1", run_id="run-a",
+                       attempt_id="att-run-a-P1.1", paths=list(paths))
+
+    def test_a_registered_item_is_committed_with_its_artifacts_and_a_repeat_is_a_no_op(self):
+        self.claim()
+        (self.project / "lib").mkdir(exist_ok=True)
+        (self.project / "lib/A.py").write_text("A = 1\n", encoding="utf-8")
+        artifacts = self.project / "plans" / self.plan / "artifacts" / "P1.1"
+        artifacts.mkdir(parents=True)
+        (artifacts / "stage-report.json").write_text("{}\n", encoding="utf-8")
+        self.register(evidence={"V1": self.evidence()})
+        subprocess.run(["git", "add", "-A", "ev"], cwd=self.project, check=True)
+        subprocess.run(["git", "commit", "-q", "-m", "evidence"], cwd=self.project, check=True)
+        answer = self.commit([f"plans/{self.plan}/artifacts/P1.1/"])
+        self.assertEqual(answer["outcome"], "committed", answer)
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.project, capture_output=True, text=True).stdout
+        self.assertEqual(answer["sha"], head.strip())
+        shown = subprocess.run(["git", "-c", "core.quotePath=false", "show", "--name-only", "--format=", "HEAD"],
+                               cwd=self.project,
+                               capture_output=True, text=True).stdout.split()
+        self.assertIn("lib/A.py", shown)
+        self.assertIn(f"plans/{self.plan}/artifacts/P1.1/stage-report.json", shown)
+        self.assertEqual(self.commit()["outcome"], "no-op")
+
+    def test_a_foreign_dirty_path_is_refused(self):
+        self.claim()
+        (self.project / "elsewhere.txt").write_text("x", encoding="utf-8")
+        answer = self.commit()
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "OUTSIDE_SCOPE"))
 
 
 class ProtocolTests(Case):

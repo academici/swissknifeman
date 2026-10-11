@@ -13,7 +13,7 @@ import partners  # noqa: E402
 
 ORCH = partners.find_orch_root()
 ROLES = ORCH / "roles" if ORCH else None
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "registrar")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
 PACK_ROLE = {"executor": "slice-builder", "bounded-implementer": "slice-builder", "reviewer": "reviewer"}
 ROLES_JSON = partners.agent_pack_roles()
 

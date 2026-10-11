@@ -200,7 +200,9 @@ the executor, keeps `result.started_at` and records `data.take_over.previous` (t
 an item whose `result.executor.session` is not `S` is refused with `ITEM_OWNED` under the plan lock (a repeat of
 the recorded `--attempt-id` stays a no-op).
 `orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) names the execution scenario; the context
-pack resolves it with `orchestration.scenario_source`.
+pack resolves it with `orchestration.scenario_source`. `orchestration.options` (plan, phase or item; closed:
+`stages`, `reviewer`, `rules`, `skills`, `limits`, `on_blocked`) holds the run options of the execution engine; set it
+with `set`, never by editing JSON.
 
 Optional `reads[].ref` names local plan data, including `knowledge/<id>#section`; exactly one of
 `ref` or `path` is required, with the existing `why` and `required` fields. Repository code/docs

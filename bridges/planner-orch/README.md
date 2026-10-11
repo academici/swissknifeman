@@ -174,15 +174,37 @@ Untrusted, the plugin finds the planner and orch through `planner` and `orch` on
 
 | Op | What the bridge does |
 | --- | --- |
-| `claim` | Candidate: the first of `items`, else the item this run holds (executor session `run_id`) or already closed (`result.attempt_id` = `att-<run_id>-<item>`), else the first item of the first `run-items` lane of `plan.py next <plan> --parallel 1 --json`; none → `status: none`. An attempt id outside the planner's pattern (at most 128 characters) is `blocked` `ATTEMPT_ID_INVALID` before anything is written. Then `get` (title, route), `context --stdout` (`orchestration.scenario`, `scenario_source`), `orch.py [--config <orch_config>] policy show <scenario>`, and `start <plan> <ref> --actor <P/M/E> --session <run_id> --no-scout --json`. Answer `attempt_id` = `att-<run_id>-<ref>`, `session` = `run_id`; a repeat of the same run gives the same answer, also after the item was closed by that attempt (`result.attempt_id`; no `start` then). |
+| `claim` | Candidate: the first of `items`, else the item this run holds (executor session `run_id`) or already closed (`result.attempt_id` = `att-<run_id>-<item>`), else the first item of the first `run-items` lane of `plan.py next <plan> --parallel 1 --json`; none → `status: none`. An attempt id outside the planner's pattern (at most 128 characters) is `blocked` `ATTEMPT_ID_INVALID` before anything is written. Then `get` (title, route), `context --stdout` (scenario and run options, see [Orchestration of an item](#orchestration-of-an-item)), `orch.py [--config <orch_config>] policy show <scenario>`, and `start <plan> <ref> --actor <P/M/E> --session <run_id> --no-scout --json`. Answer `attempt_id` = `att-<run_id>-<ref>`, `session` = `run_id`, `options` (the run-option layers, general first) when any; a repeat of the same run gives the same answer, also after the item was closed by that attempt (`result.attempt_id`; no `start` then). |
 | `brief` | `brief.build` in process (no plan write) → `aicore.state.blobs.put_json(..., project=<repository of the plan>)`; `plan.py add-artifact <plan> <item> --path <blob path> --role input` (a repeat is a no-op). A repeat whose brief differs only in `digest`, the `@` suffix and `provenance.source_digest` from the newest brief already declared on the item reuses that brief (declaring the brief changes the item and so the source digest). `artifact_id` = `brief-<ref with . and / as ->-<digest[:12]>`, returned to orch only (a planner artifact id names an output). |
 | `register` | `register.py <plan> <ref> --report <tmp> --status S --actor <registrar> --executed-by <worker> --attempt-id <attempt_id> --evidence V#=PATH… --owner-session <run_id> --gate evidence`; `outcome` `recorded`, `no-op` (every call was a no-op) or `refused` with the code of the guard or of the refused `plan.py` call; `gate` and `receipt` from the receipt. |
+| `commit` | `plan.py commit <plan> <ref> --role executor [--path P]… [--actor A] --json`: `committed` with `sha`; `NOTHING_TO_COMMIT` is `no-op` (a repeat after the commit); any other refusal (`OUTSIDE_SCOPE`, …) is `refused` with the planner's code. |
 
 | Answer | `reason_code` |
 | --- | --- |
-| claim `blocked` | `SCENARIO_UNKNOWN` (no run-policy pack for the scenario), `ITEM_OWNED` (held by another session; never taken over), `ATTEMPT_ID_INVALID`, or the planner's refusal of `get`, `context` or `start` |
+| claim `blocked` | `SCENARIO_UNKNOWN` (no run-policy pack for the scenario), `ITEM_OWNED` (held by another session; never taken over), `ATTEMPT_ID_INVALID`, `OVERLAY_INVALID` (an orchestration overlay that is not `{"scenario"?, "options"?}` JSON), or the planner's refusal of `get`, `context` or `start` |
 | register `refused` | `REGISTER_STALE_OWNER`, `REGISTER_EVIDENCE_MISSING`, `REGISTER_EVIDENCE_RED`, the other register codes above, or a refusal of `log`/`finish` (`CHECKS_RED`, `EVIDENCE_INVALID`, …) |
 | protocol error | `INPUT_INVALID` (not the point or an unknown op), a brief refusal of the planner (`PHASE_NOT_DETAILED`, `READ_MISSING`, …), `BRIDGE_PARTNER_UNAVAILABLE`, `AICORE_NOT_FOUND` |
+
+The `brief` answer also names `artifacts_dir` = `<plan dir>/artifacts/<ref>`: the orch conductor keeps the committed
+artifacts of the item there (stage-report, `review-verdict.json`, check evidence); the planner's scoped commit owns
+`artifacts/<item>/**`.
+
+### Orchestration of an item
+
+The claim reads the scenario and the run options from the context pack, level by level from the most specific: the
+item, its phase, the plan.
+
+- Fields: `orchestration.scenario` and `orchestration.options` of the item, phase and plan documents (a planner whose
+  schema has them; the options are a closed copy of orch's `run-options`).
+- Overlays: knowledge documents whose id starts with `orchestration-` and that have a section `orchestration` holding
+  one JSON object `{"scenario"?: name, "options"?: run-options}` (raw or in a fenced block). An overlay applies to the
+  item or phase named in its `applies_to`, or to the plan when `global`. Overlays are for plan engines that refuse the
+  fields (`unexpected property`); they are added with `plan.py add-document`.
+
+The scenario is the first one found from the item up, a field before an overlay of the same level, else the one the
+planner resolved from its configuration (`scenario_source` `config:*`); an overlay names its source
+`document:<id>`. The options become layers, general first: the plan, the phase, the item, and at each level the
+overlays before the field. orch merges them over its configuration and the run-policy pack and checks every layer.
 
 ## Finding orch
 

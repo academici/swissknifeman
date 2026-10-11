@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
   "contract_version": "exec/v1",
   "policy_id": "full",
-  "description": "Full pipeline: context, optional economy condensing, the primary stage, checks, an optional review on an independent provider, registration and a commit.",
+  "description": "Full pipeline: context, optional economy condensing, the primary stage, checks, an optional review on an independent provider with triage of its findings, registration and a commit.",
   "stages": [
     {
       "id": "context",
@@ -63,7 +63,11 @@
     "enabled": true,
     "independent_provider": true,
     "max_rounds": 2,
-    "max_corrections": 1
+    "max_corrections": 1,
+    "triage": {
+      "role": "triager",
+      "model_class": "implementation"
+    }
   },
   "retries_budget": {
     "total_max": 2
@@ -73,7 +77,7 @@
     "kind": "deterministic",
     "register": true
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "on_error": {
     "authentication": {
       "action": "stop"

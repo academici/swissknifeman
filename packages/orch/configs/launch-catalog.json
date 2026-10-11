@@ -1,5 +1,5 @@
 {
- "catalog_version": "1.0.0",
+ "catalog_version": "1.1.0",
  "launch": {
   "scout": {
    "claude-code": {
@@ -224,6 +224,50 @@
      "streaming-messages-json"
     ],
     "timeout_s": 3600,
+    "model_set": "supported"
+   }
+  },
+  "triager": {
+   "claude-code": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--disallowedTools",
+     "Edit,Write,NotebookEdit",
+     "--no-session-persistence"
+    ],
+    "timeout_s": 1800,
+    "model_set": "supported"
+   },
+   "codex": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "codex",
+     "-a",
+     "never",
+     "exec",
+     "--json",
+     "--sandbox",
+     "read-only",
+     "--model",
+     "{model}",
+     "-c",
+     "model_reasoning_effort=\"{effort}\"",
+     "-"
+    ],
+    "timeout_s": 1800,
     "model_set": "supported"
    }
   },

@@ -2,11 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:work-source:input:v1",
   "title": "work-source input",
-  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, or register its outcome.",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, or commit it.",
   "oneOf": [
     {"$ref": "#/$defs/claim"},
     {"$ref": "#/$defs/brief"},
-    {"$ref": "#/$defs/register"}
+    {"$ref": "#/$defs/register"},
+    {"$ref": "#/$defs/commit"}
   ],
   "$defs": {
     "text": {
@@ -115,6 +116,26 @@
         "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"}
       },
       "required": ["op", "plan", "ref", "run_id", "attempt_id", "status", "report", "evidence", "registrar", "executed_by"],
+      "additionalProperties": false
+    },
+    "commit": {
+      "description": "Create one commit of a registered piece of work: its changed paths and its artifacts, as the source scopes commits.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "commit"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that registered the work.", "$ref": "#/$defs/runId"},
+        "attempt_id": {"description": "Attempt that registered the work.", "$ref": "#/$defs/attemptId"},
+        "paths": {
+          "description": "Repository paths the commit owns beyond the scope of the piece of work, such as its artifact folder.",
+          "type": "array",
+          "items": {"description": "Repository-relative path.", "$ref": "#/$defs/text"}
+        },
+        "actor": {"description": "Who commits.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "plan", "ref", "run_id", "attempt_id", "paths"],
       "additionalProperties": false
     }
   }

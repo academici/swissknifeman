@@ -229,6 +229,13 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 
 ## Changelog контрактов
 
+- conductor/v1 — new contract `urn:swissknifeman:orch:conductor` (`run-options`, `stage-report`, `review-findings`,
+  `triage-result`, `progress-line`) of the [conductor](conductor.md); `orch.py validate <kind>` accepts these kinds.
+- exec/v1 — `role-manifest.result_shape` accepts `triage-result` (enum widened) and `run-policy.review` has an
+  optional `triage` (`role`, `model_class?`); existing documents remain valid.
+- work-source/v1 — optional `options` (run-option layers) of a claim, optional `artifacts_dir` of a brief, and the
+  op `commit` (`paths`, `actor?` → `committed` \| `no-op` \| `refused`, `sha?`).
+
 - work-source/v1 — new contract `urn:swissknifeman:orch:work-source` (`input`, `output`) of the extension point
   `orch:work-source`: `claim`, `brief` and `register`; exec/v1 does not change.
 - exec/v1 — no schema change: preparation now fills the optional launch-plan fields (`digests`, `config`, `modules`, `decisions`, `policy_decision`, `proof`, refusal `reason_code` and `chain`, `delivery.skills`), `stage-result` can carry `skills`, `modules`, `attempt_id` and `owner_epoch`, and `condense` is a prepared model stage; existing documents remain valid.

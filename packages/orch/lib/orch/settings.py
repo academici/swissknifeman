@@ -7,7 +7,7 @@ that change what preparation produces, so a launch-plan can record the configura
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 from pathlib import Path
 import tempfile
@@ -45,6 +45,7 @@ class Settings:
     profiles_dirs: tuple
     events_enabled: bool
     resolved: ResolvedConfig | None = None
+    conductor: Mapping[str, object] = field(default_factory=dict)
 
     def explain_text(self, key: str | None = None) -> str:
         """Where each value comes from (empty when the settings were built by hand)."""
@@ -63,6 +64,20 @@ def _dirs(resolved: ResolvedConfig) -> tuple:
     return tuple(found)
 
 
+def _conductor(resolved: ResolvedConfig) -> dict:
+    """``[orch.conductor]`` as plain data: the global layer of the run options and the role command lines."""
+    return {
+        "provider": resolved.get("conductor.provider"),
+        "reviewer": resolved.get("conductor.reviewer"),
+        "registrar": resolved.get("conductor.registrar"),
+        "rules": list(resolved.get("conductor.rules") or []),
+        "on_blocked": resolved.get("conductor.on_blocked"),
+        "limits": {key: resolved.get(f"conductor.limits.{key}")
+                   for key in ("tokens_max", "stage_timeout_s", "check_timeout_s")},
+        "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
+    }
+
+
 def load(*, project: str | Path | None = None, config_file: str | Path | None = None,
          env: Mapping[str, str] | None = None, home: str | Path | None = None,
          flags: Mapping[str, object] | None = None) -> Settings:
@@ -78,6 +93,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         profiles_dirs=_dirs(resolved),
         events_enabled=resolved.get("events.enabled"),
         resolved=resolved,
+        conductor=_conductor(resolved),
     )
 
 

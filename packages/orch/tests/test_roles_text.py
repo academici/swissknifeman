@@ -7,8 +7,8 @@ import unittest
 from orch.contracts import LIFECYCLE_PHRASES
 
 ROLES = Path(__file__).resolve().parents[1] / "roles"
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "registrar")
-WORKER_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
+WORKER_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager")
 SECTIONS = ("## You receive", "## You do", "## You never", "## You return")
 EXPORT = re.compile(r"<!-- export:(begin|end) ([\w-]+) -->")
 

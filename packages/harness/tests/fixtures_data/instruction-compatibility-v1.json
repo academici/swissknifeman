@@ -1238,7 +1238,7 @@
       ],
       "assertions": [
         "`orch` is the engine-neutral orchestration module",
-        "it starts no engine process yet.",
+        "its conductor (`scripts/conduct.py`) starts the roles of a run as child processes.",
         "`orch`",
         "`exec/v1`"
       ]

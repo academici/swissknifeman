@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:triage-result:v1",
+  "title": "triage-result",
+  "description": "Closed result of the triager: every review finding either confirmed by a reproduction, with one correction package, or rejected with a reason. A finding without a reproduction is never confirmed.",
+  "type": "object",
+  "properties": {
+    "confirmed": {
+      "description": "Findings reproduced by the triager.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/confirmed"
+      }
+    },
+    "rejected": {
+      "description": "Findings that did not reproduce or do not hold.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rejected"
+      }
+    }
+  },
+  "required": [
+    "confirmed",
+    "rejected"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "findingId": {
+      "description": "Id of a finding of the review round.",
+      "type": "string",
+      "pattern": "^F[0-9]+$"
+    },
+    "reproduction": {
+      "description": "How the failure was reproduced and what was observed.",
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "description": "Command that shows the failure.",
+          "type": "string",
+          "minLength": 1
+        },
+        "exit": {
+          "description": "Observed exit of the command.",
+          "type": "integer"
+        },
+        "observed": {
+          "description": "Observed output or state, short.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "cmd",
+        "exit",
+        "observed"
+      ],
+      "additionalProperties": false
+    },
+    "confirmed": {
+      "description": "A reproduced finding.",
+      "type": "object",
+      "properties": {
+        "finding": {
+          "$ref": "#/$defs/findingId",
+          "description": "Finding id."
+        },
+        "reproduction": {
+          "$ref": "#/$defs/reproduction",
+          "description": "The reproduction."
+        },
+        "fix": {
+          "description": "Correction package for the executor: what to change and the regression check to add.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "finding",
+        "reproduction",
+        "fix"
+      ],
+      "additionalProperties": false
+    },
+    "rejected": {
+      "description": "A finding that is not confirmed.",
+      "type": "object",
+      "properties": {
+        "finding": {
+          "$ref": "#/$defs/findingId",
+          "description": "Finding id."
+        },
+        "reason": {
+          "description": "Why it does not hold: no reproduction, outside the contract, already covered.",
+          "type": "string",
+          "minLength": 1
+        },
+        "reproduction": {
+          "$ref": "#/$defs/reproduction",
+          "description": "The attempt that did not reproduce, when one ran."
+        }
+      },
+      "required": [
+        "finding",
+        "reason"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

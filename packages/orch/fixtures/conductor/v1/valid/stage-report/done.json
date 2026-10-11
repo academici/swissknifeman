@@ -1,0 +1,31 @@
+{
+  "status": "done",
+  "summary": "Added the greet command and its test.",
+  "changed_paths": [
+    "demo/cli.py",
+    "tests/test_cli.py"
+  ],
+  "checks_run": [
+    {
+      "id": "V1",
+      "cmd": "python3 -m unittest tests.test_cli",
+      "exit": 0
+    },
+    {
+      "id": "V2",
+      "procedure": "Run demo greet Ann",
+      "verdict": "pass"
+    }
+  ],
+  "evidence": [
+    "out/V1.log"
+  ],
+  "open_issues": [
+    {
+      "text": "Assumed English output only.",
+      "kind": "assumption",
+      "impact": "localisation",
+      "next": "none"
+    }
+  ]
+}

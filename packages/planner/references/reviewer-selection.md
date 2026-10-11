@@ -24,7 +24,9 @@ An owner message in the running session that names a reviewer selector (for exam
 items of that invocation that are not finished yet. A reviewer on another provider runs as a headless
 child process: build its argv with the `launch` verb of the orchestrator bridge (`plan.py bridge list`)
 for role `reviewer`, passing the selector's exact model and effort, never the class mapping; send the
-review brief on stdin, keep the stream in a plan artifact and do not hand-edit the argv. The bridge
+review brief on stdin and do not hand-edit the argv. The raw stream (megabytes of token logs) goes under the
+ignored `.swissknifeman/state/`; the plan artifact keeps only a short `review-verdict.json` (selector,
+session, verdict, findings with their reproductions, the stream path). The bridge
 documents the read-only launch: the reviewer can read everything and run tests and commands, but the
 kernel refuses writes to the repository. Prove the route from the reviewer's own
 session record, never from the launch: model and effort from its events, context capacity from

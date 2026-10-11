@@ -27,11 +27,19 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `capabilities.stale` | `warn`, `refuse` | `warn` | all | what preparation does with a capability record past its freshness date |
 | `profiles.dirs` | array of paths | empty | defaults, machine, invocation, flags | extra folders with run-policy packs |
 | `events.enabled` | boolean | `true` | all | whether `orch.run.*` events are emitted |
+| `conductor.provider` | string | `claude-code` | all | provider of every conductor role whose stage names none |
+| `conductor.reviewer` | selector | `grok/grok-4.7/high` | all | reviewer of the conductor (`PROVIDER/MODEL[/CONTEXT][/EFFORT]`) |
+| `conductor.registrar` | actor | `orch/conductor` | all | who registers outcomes in the work source |
+| `conductor.rules` | array of strings | empty | all | executor rules of every run (the first run-options layer) |
+| `conductor.on_blocked` | `stop`, `report` | `stop` | all | what a blocked piece of work does to the run |
+| `conductor.limits.*` | integers | `tokens_max` 0, `stage_timeout_s` 0, `check_timeout_s` 1800 | all | default limits of a run |
+| `conductor.argv.<role>` | array of strings | empty | defaults, machine, invocation, flags | command line of a role instead of the launch catalog entry |
 
 `profiles.dirs` makes orch read policy files from the listed paths, so a project file, which lives in a repository
 that somebody else may control, cannot set it (`CONFIG_LAYER_FORBIDDEN`); neither can the environment. A leading `~`
 is expanded; a relative entry is refused (`PROFILES_DIR_RELATIVE`), because the folder it would be taken from
-cannot be told once a higher layer appends to the array.
+cannot be told once a higher layer appends to the array. `conductor.argv` chooses the commands the conductor runs,
+so a project file cannot set it either ([conductor](conductor.md#configuration)).
 
 ## Engine choice
 

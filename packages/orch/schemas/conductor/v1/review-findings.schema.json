@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:review-findings:v1",
+  "title": "review-findings",
+  "description": "Closed result of one review round: a verdict, findings with a concrete failure scenario, and questions kept apart from findings.",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "description": "GREEN (nothing blocks), ATTENTION (findings to address) or RED (the candidate does not meet its contract).",
+      "type": "string",
+      "enum": [
+        "GREEN",
+        "ATTENTION",
+        "RED"
+      ]
+    },
+    "findings": {
+      "description": "One entry per finding.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "questions": {
+      "description": "Uncertainties, asked as questions; never a reason for a correction.",
+      "type": "array",
+      "items": {
+        "description": "One question.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "residual_risk": {
+      "description": "Material residual risk when there are no findings.",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "verdict",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "finding": {
+      "description": "One finding.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Finding id, unique in the round: F1, F2 and so on.",
+          "type": "string",
+          "pattern": "^F[0-9]+$"
+        },
+        "severity": {
+          "description": "Severity.",
+          "type": "string",
+          "enum": [
+            "Blocker",
+            "Major",
+            "Minor",
+            "Nit"
+          ]
+        },
+        "confidence": {
+          "description": "Confidence of the reviewer.",
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "location": {
+          "description": "file:line.",
+          "type": "string",
+          "minLength": 1
+        },
+        "failure_scenario": {
+          "description": "Concrete inputs or state and the wrong outcome.",
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "description": "Correctness, security, performance, a project rule or the input contract.",
+          "type": "string",
+          "minLength": 1
+        },
+        "reproduction": {
+          "description": "Command or steps the reviewer used to observe the failure, when any.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "confidence",
+        "location",
+        "failure_scenario",
+        "basis"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

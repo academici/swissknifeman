@@ -1,0 +1,13 @@
+{
+  "status": "blocked",
+  "summary": "Stopped: the API key is needed.",
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "text": "The owner must provide the API key of the registry.",
+      "kind": "escalation"
+    }
+  ]
+}

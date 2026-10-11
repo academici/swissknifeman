@@ -1,4 +1,4 @@
-"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, explain a launch-plan, list and test run-policy packs, check engine conformance, and run the cycle of a work source (claim, brief, prepare, register)."""
+"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, explain a launch-plan, list and test run-policy packs, check engine conformance, run the cycle of a work source (claim, brief, prepare, register, commit) and diagnose the project (doctor)."""
 from __future__ import annotations
 
 import argparse
@@ -11,6 +11,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_hex
 
 from orch import adhoc, catalog, conformance, events, journal, launch, policies, render, settings
 from orch.bindings import BINDINGS, check_skills
+from orch.conductor import contract as conductor_contract
 from orch.contracts import validate
 from orch.port import PortError
 from orch.schema import SchemaProfileError
@@ -277,11 +278,80 @@ def _conformance(args: argparse.Namespace) -> int:
     return 1 if any(row["status"] == "fail" for row in rows) else 0
 
 
+# ---------------------------------------------------------------- doctor
+
+RUNTIME_PROBE = ".swissknifeman/state/orch/conductor/cnd-probe/progress.jsonl"
+REPORTS_PROBE = ".swissknifeman/orch/reports/cnd-probe/observer.md"
+
+
+def _check(check_id: str, status: str, observed: str, *, evidence=(), remediation=None) -> dict:
+    doc = {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": check_id, "status": status,
+           "category": "config", "observed": observed}
+    if evidence:
+        doc["evidence"] = list(evidence)
+    if remediation:
+        doc["remediation"] = remediation
+    return doc
+
+
+def _ignored(project: Path, relative: str) -> bool | None:
+    """Whether git ignores ``relative`` in ``project`` (``None`` when git cannot answer)."""
+    import subprocess
+    try:
+        done = subprocess.run(["git", "check-ignore", "-q", "--no-index", relative], cwd=str(project),
+                              capture_output=True, text=True)
+    except OSError:
+        return None
+    return {0: True, 1: False}.get(done.returncode)
+
+
+def doctor_checks(project: Path | None) -> list:
+    """The conductor's runtime folder must be ignored (streams, scout cache, progress); its reports must not be."""
+    if project is None or not (project / ".git").exists():
+        return [_check("orch.conductor-gitignore", "skip", "not inside a git repository")]
+    rows = []
+    runtime = _ignored(project, RUNTIME_PROBE)
+    if runtime is None:
+        rows.append(_check("orch.conductor-gitignore", "skip", "git check-ignore did not answer"))
+    elif runtime:
+        rows.append(_check("orch.conductor-gitignore", "ok", "the conductor runtime folder is ignored",
+                           evidence=[RUNTIME_PROBE]))
+    else:
+        rows.append(_check("orch.conductor-gitignore", "warn",
+                           "the conductor runtime folder is not ignored: role streams, the scout cache and "
+                           "progress.jsonl would reach git", evidence=[RUNTIME_PROBE],
+                           remediation="add `.swissknifeman/state/` to .gitignore (the shared gitignore policy "
+                                       "entry swissknifeman-state)"))
+    reports = _ignored(project, REPORTS_PROBE)
+    if reports:
+        rows.append(_check("orch.conductor-reports", "warn",
+                           "the conductor reports folder is ignored: stage-reports and observer reports would "
+                           "not be committed", evidence=[REPORTS_PROBE],
+                           remediation="remove the rule that ignores `.swissknifeman/orch/` from .gitignore"))
+    elif reports is False:
+        rows.append(_check("orch.conductor-reports", "ok", "the conductor reports folder is committed",
+                           evidence=[REPORTS_PROBE]))
+    return rows
+
+
+def _doctor(args: argparse.Namespace) -> int:
+    rows = doctor_checks(_project_root())
+    if args.json:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+    else:
+        for row in rows:
+            print(f"{row['status'].upper()}\t{row['check_id']}\t{row['observed']}")
+            if row.get("remediation"):
+                print(f"  fix: {row['remediation']}")
+    return 1 if any(row["status"] == "fail" for row in rows) else 0
+
+
 # ---------------------------------------------------------------- the cycle of a work source
 
 RUN_DOC = "run.json"
 LAUNCH_PLAN_DOC = "launch-plan.json"
 REGISTER_RECEIPT = "receipts/register.json"
+COMMIT_RECEIPT = "receipts/commit.json"
 STAGE_STATUS = {"done": "completed", "done_with_deviations": "completed", "blocked": "failed"}
 
 
@@ -471,9 +541,19 @@ def _source_register(args, current, project) -> int:
     return 0
 
 
+def _source_commit(args, current, project) -> int:
+    directory, doc = _run(args.run, project)
+    answer = _call(_source(current, project, args.config), "commit", plan=doc["plan"],
+                   plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
+                   attempt_id=doc["attempt_id"], paths=list(args.path or []), actor=args.actor)
+    journal.write_doc(directory, COMMIT_RECEIPT, answer)
+    _print(answer)
+    return 1 if answer["outcome"] == "refused" else 0
+
+
 def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
-               "register": _source_register}[args.action]
+               "register": _source_register, "commit": _source_commit}[args.action]
     try:
         project = _project_root()
         current = settings.load(project=project, config_file=args.config)  # the configuration is read once
@@ -493,7 +573,7 @@ def _source_command(args: argparse.Namespace) -> int:
 
 
 def _source_parser(verbs) -> None:
-    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register")
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
     claim.add_argument("--plan", required=True, help="collection of the work source, such as a plan id or path")
@@ -520,13 +600,18 @@ def _source_parser(verbs) -> None:
     register.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="the registrar")
     register.add_argument("--executed-by", dest="executed_by", type=_actor, metavar="P/M[/E]",
                           help="who did the work (default: the registrar)")
+    commit = actions.add_parser("commit", help="one commit of a registered run, scoped by the source")
+    commit.add_argument("--run", required=True, metavar="RUN")
+    commit.add_argument("--path", action="append", default=[], metavar="PATH",
+                        help="repository path the commit owns beyond the scope of the work (repeatable)")
+    commit.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who commits (default: the source decides)")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="orch.py")
     parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
     verbs = parser.add_subparsers(dest="verb", required=True)
-    command = verbs.add_parser("validate", help="validate an exec/v1 JSON document")
+    command = verbs.add_parser("validate", help="validate an exec/v1 or conductor/v1 JSON document")
     command.add_argument("kind")
     command.add_argument("file", type=Path)
     command.add_argument("--quiet", action="store_true", help="suppress JSON output")
@@ -590,7 +675,11 @@ def main(argv: list[str] | None = None) -> int:
     command.add_argument("--binding", choices=sorted(BINDINGS), help="only this binding (default: every binding)")
     command.add_argument("--json", action="store_true")
     _source_parser(verbs)
+    command = verbs.add_parser("doctor", help="diagnose the project: the conductor files git must ignore or keep")
+    command.add_argument("--json", action="store_true", help="check-result/v1 documents as a JSON list")
     args = parser.parse_args(argv)
+    if args.verb == "doctor":
+        return _doctor(args)
     if args.verb == "source":
         return _source_command(args)
     if args.verb == "policy":
@@ -612,6 +701,15 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as exc:
         print(f"INPUT_INVALID: {exc}", file=sys.stderr)
         return 1
+    if args.kind in conductor_contract.KINDS:  # the closed documents of the conductor (schemas/conductor/v1)
+        found = conductor_contract.problems(doc, args.kind)
+        for line in found:
+            print(f"SCHEMA_INVALID: {line}", file=sys.stderr)
+        if not args.quiet:
+            print(json.dumps([{"path": line.split(": ", 1)[0], "code": "SCHEMA_INVALID",
+                               "message": line.split(": ", 1)[-1], "level": "error"} for line in found]
+                             if found else {"valid": True}, ensure_ascii=False))
+        return 1 if found else 0
     try:
         issues = validate(doc, args.kind)
     except SchemaProfileError as exc:

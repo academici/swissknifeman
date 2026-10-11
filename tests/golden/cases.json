@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "be4dfc3bfe15",
-  "reason": "analyst events command and status line",
+  "captured_from": "6be286696593",
+  "reason": "orch conductor: doctor and source commit verbs, conductor/v1 validate kinds, triager role in the launch catalog, orch identity instruction",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

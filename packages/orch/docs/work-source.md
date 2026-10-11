@@ -17,6 +17,11 @@ choose a branch by `op`.
 | `claim` | `plan`, `plans_root?`, `items?` (candidate refs in order), `run_id`, `submission_id`, `actor` (`provider`, `model`, `effort?`), `orch_config?` (the invocation configuration of the orch command, for the source's own calls to orch) | `status` `claimed` \| `none` \| `blocked`; `ref`, `title`, `scenario`, `scenario_source`, `route`, `attempt_id`, `session` when claimed; `reason_code`, `message` when blocked |
 | `brief` | `plan`, `plans_root?`, `ref`, `unit?`, `run_id` | `input_ref` (`artifact-ref/v1`), `input_id`, `digest`, `reused`, `artifact_id` |
 | `register` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `status` (`done` \| `done_with_deviations` \| `blocked`), `report`, `evidence` (`{"V<n>": path}`), `registrar`, `executed_by` | `outcome` `recorded` \| `no-op` \| `refused`; `gate` (`verdict` `pass` \| `missing` \| `red` \| `stale` \| `none`, `checks` `{"V<n>": exit or null}`); `receipt?`; `reason_code`, `message` when refused |
+| `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?` | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
+
+A claim may also answer `options`: the run-option layers of the work, general first (`[{source, options}]`, each a
+conductor `run-options` document that orch validates). A brief may answer `artifacts_dir`: the repository folder
+where a run keeps the committed artifacts of the work (stage-report, review verdict, check evidence).
 
 `run_id` uses the characters of an attempt id (`[A-Za-z0-9._:-]`, at most 100) because the attempt id
 `att-<run_id>-<ref>` is built from it. A refusal of the source is an answer with a `reason_code`. A plugin that fails, answers an error or answers
@@ -25,8 +30,8 @@ outside the contract is a failure of the source.
 ## Client
 
 `orch.worksource.PluginWorkSource(plugin_id, *, project=None, env=None, config_file=None)` implements the
-`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, each returning the output
-document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
+`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, each returning
+the output document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
 describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and validates the answer.
 
 | Code | Meaning |
@@ -37,14 +42,15 @@ describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and va
 
 ## The cycle: `orch.py source`
 
-Between `source prepare` and `source register` a session or a person does the work; orch does not run stages in
-this version. `--config FILE` applies to every command.
+Between `source prepare` and `source register` a session, a person or the [conductor](conductor.md) does the work.
+`--config FILE` applies to every command.
 
 ```text
 orch.py source claim --plan P [--plans-root DIR] [--item REF]… --actor P/M[/E] [--submission-id SUB]
 orch.py source brief --run RUN
 orch.py source prepare --run RUN --provider P [--binding B] [--model-catalog FILE]
 orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… --actor P/M[/E] [--executed-by P/M[/E]]
+orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
 ```
 
 - `claim` derives `submission_id` = `sub-` + the first 24 hex characters of the SHA-256 of the canonical JSON
@@ -63,6 +69,8 @@ orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]�
 - `register` sends the report and the evidence, writes `receipts/register.json`, and emits
   `orch.run.stage.finished` (stage `primary`) and `orch.run.finished` when something was recorded, or
   `orch.run.refused` (step `register`). A repeat that the source records as `no-op` emits nothing.
+- `commit` asks the source for one commit of the registered work and writes `receipts/commit.json`; nothing left
+  to commit is `no-op`, a refusal exits 1.
 
 The run directory is `<project>/.swissknifeman/state/orch/runs/<run_id>/` inside a project (a git repository or a
 folder with `.swissknifeman`), else under the machine state. Exit codes: 0 ok (`claimed`, `none`, `recorded`,

@@ -21,6 +21,12 @@ class RenderError(Exception):
         self.code = code
 
 
+def load_roles(directory: str | Path | None = None) -> dict[str, dict]:
+    """Role manifests by id (file stem) from ``directory`` (default: the packaged ``roles``)."""
+    base = Path(directory) if directory else ROLES_DIR
+    return {path.stem: json.loads(path.read_text(encoding="utf-8")) for path in sorted(base.glob("*.json"))}
+
+
 def _fence(text: str, lang: str = "") -> str:
     """Fenced code block that cannot be closed by the content itself."""
     longest = max((len(run) for run in _BACKTICKS.findall(text)), default=0)

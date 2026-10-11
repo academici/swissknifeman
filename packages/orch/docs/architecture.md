@@ -5,7 +5,7 @@
 `orch` owns the `exec/v1` JSON Schemas (nine document kinds), the `exec/v1` document semantics on top of the closed-profile validator of aicore (`orch.schema` re-exports it),
 the Engine Port (Protocol, errors, run-state reducer), the binding capability matrix and capability seeds,
 role manifests and canonical role texts, and the `scripts/orch.py` CLI (`validate`, `input adhoc`,
-`render-prompt`, `prepare --dry-run`, `launch`).
+`render-prompt`, `prepare --dry-run`, `launch`, `policy`), the `[orch]` configuration schema and the shipped run-policy packs.
 
 `orch` does not own plan data or lifecycle, model execution (nothing is started yet), or environment
 installation. Partners are reached only through bridges (units of the hub, `bridges/<id>/`, outside this
@@ -35,11 +35,12 @@ engines use partner CLI/JSON APIs only
 packages/orch/
   README.md  docs/  scripts/{orch.py,ro-run.py,validate.sh,test.sh}
   schemas/exec/v1/            # defs + nine document schemas
-  lib/orch/                   # schema (aicore validator), contracts, port, discovery, catalog, render, adhoc, bindings/, cli
+  lib/orch/                   # schema (aicore validator), contracts, port, discovery, catalog, render, adhoc, settings, policies, bindings/, cli
   roles/<role>.md|json        # canonical role texts and role manifests
   bindings/matrix.json        # binding capability matrix
   bindings/capabilities/      # <binding>--<provider>.json seeds (status declared)
-  configs/                    # launch catalog
+  configs/                    # launch catalog, config.schema.json, run-policies/<id>/{policy.json,cases/}
+  config.example.toml         # generated from configs/config.schema.json
   fixtures/  tests/
 ```
 

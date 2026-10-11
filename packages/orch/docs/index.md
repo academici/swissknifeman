@@ -9,5 +9,6 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Run-policy packs](run-policies.md) — shipped policies, cases, `orch.py policy`.
 - [Events](events.md) — `orch.run.*` types, data contracts, emission rules, fixtures.
 - [Work source](work-source.md) — the `orch:work-source` port, its contract and the `orch.py source` cycle.
+- [Conformance](conformance.md) — scenario catalogue, `orch.py conformance`, write confinement.
 - [Architecture](architecture.md) — package boundaries, dependency rule, layout.
 - [Adding an engine](adding-an-engine.md) — steps to add a binding.

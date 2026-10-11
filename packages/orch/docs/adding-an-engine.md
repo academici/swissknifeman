@@ -5,7 +5,7 @@
 2. Модуль `orch/bindings/<name>.py` с классом, реализующим `EnginePort`; `prepare` вызывает `prepare_common` и добавляет проекцию.
 3. Capability seeds `bindings/capabilities/<name>--<provider>.json` (status `declared`, evidence обязателен).
 4. Столбец в `bindings/matrix.json` и таблице docs; тест матрицы требует значение для каждой capability.
-5. Добавить binding в конформанс-тест (P5.4) — тест параметризован по `BINDINGS`.
+5. Добавить binding в конформанс-тест — тест параметризован по `BINDINGS` — и в `bindings` каждого сценария `conformance/scenarios.json`; run `orch.py conformance --binding <name>`; every covered scenario passes (see [conformance.md](conformance.md)).
 6. Не трогать planner, Skiller, схемы input/policy/role: если пришлось — граница недостаточно универсальна, это дефект контракта.
 
 Capabilities per binding: see the matrix in [engine-port.md](engine-port.md) (`bindings/matrix.json`).

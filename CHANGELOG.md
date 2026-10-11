@@ -19,6 +19,8 @@
 
 ### Added
 
+- **orch:** engine conformance catalogue and command (`conformance/scenarios.json`, `orch.py conformance [--binding] [--json]`);
+  write confinement and no-MCP-bus tests.
 - **orch:** work-source port with the planner-orch plugin; claim with an owner session, briefs as content-addressed
   artifacts, registration with owner fencing and an evidence gate: contract `urn:swissknifeman:orch:work-source`
   (`schemas/work-source/v1`, `input`/`output`, ops `claim`, `brief`, `register`) and extension point `work-source` in

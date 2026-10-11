@@ -1,4 +1,4 @@
-"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, explain a launch-plan, list and test run-policy packs, and run the cycle of a work source (claim, brief, prepare, register)."""
+"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, explain a launch-plan, list and test run-policy packs, check engine conformance, and run the cycle of a work source (claim, brief, prepare, register)."""
 from __future__ import annotations
 
 import argparse
@@ -9,7 +9,7 @@ import sys
 from aicore.config import ConfigError
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import adhoc, catalog, events, journal, launch, policies, render, settings
+from orch import adhoc, catalog, conformance, events, journal, launch, policies, render, settings
 from orch.bindings import BINDINGS, check_skills
 from orch.contracts import validate
 from orch.port import PortError
@@ -256,6 +256,25 @@ def _policy(args: argparse.Namespace) -> int:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
     return 0
+
+
+def _conformance(args: argparse.Namespace) -> int:
+    try:
+        rows = conformance.run(args.binding)
+    except conformance.ConformanceError as error:
+        print(f"CONFORMANCE_INVALID: {error}", file=sys.stderr)
+        for issue in error.issues:
+            print(f"  {issue['scenario']}: {issue['message']}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(rows, ensure_ascii=False))
+    else:
+        for row in rows:
+            print(f"{row['status'].upper()}\t{row['binding']}\t{row['scenario']}" + (f"\t{row['reason']}" if row["reason"] else ""))
+            for item in row["differences"]:
+                print(f"  {item['field']}: expected {json.dumps(item['expected'], ensure_ascii=False)}, "
+                      f"got {json.dumps(item['actual'], ensure_ascii=False)}", file=sys.stderr)
+    return 1 if any(row["status"] == "fail" for row in rows) else 0
 
 
 # ---------------------------------------------------------------- the cycle of a work source
@@ -567,12 +586,17 @@ def main(argv: list[str] | None = None) -> int:
     test = actions.add_parser("test", help="run the cases of packs (all packs without an id)")
     test.add_argument("policy_id", nargs="*")
     test.add_argument("--json", action="store_true")
+    command = verbs.add_parser("conformance", help="engine conformance scenarios; covered ones run, declared ones are listed")
+    command.add_argument("--binding", choices=sorted(BINDINGS), help="only this binding (default: every binding)")
+    command.add_argument("--json", action="store_true")
     _source_parser(verbs)
     args = parser.parse_args(argv)
     if args.verb == "source":
         return _source_command(args)
     if args.verb == "policy":
         return _policy(args)
+    if args.verb == "conformance":
+        return _conformance(args)
     if args.verb == "launch":
         return _launch(args)
     if args.verb == "input":

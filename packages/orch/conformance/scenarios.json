@@ -1,0 +1,258 @@
+{
+  "schema_version": "orch-conformance/v1",
+  "scenarios": [
+    {
+      "id": "resubmit-same-submission",
+      "title": "The same submission and inputs prepare to the same run id and digest",
+      "kit": "runtime",
+      "how": "test",
+      "ref": "tests.test_conformance.ScenarioTargets.test_resubmission_keeps_run_id_and_digest",
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "crash-during-effect",
+      "title": "A stream that ends during an effect with an unknown receipt is reconciled, not repeated",
+      "kit": "runtime",
+      "how": "trace",
+      "ref": "conformance/traces/crash-during-effect.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "unknown_outcome"
+        },
+        "effect": "unknown_receipt",
+        "inputs": {
+          "stage_writes": true
+        },
+        "decision": "reconcile"
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "nonzero-after-partial-changes",
+      "title": "A failure after partial changes of a writing stage is reconciled before any retry",
+      "kit": "runtime",
+      "how": "trace",
+      "ref": "conformance/traces/nonzero-after-partial-changes.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "failed"
+        },
+        "inputs": {
+          "stage_writes": true,
+          "worktree_dirty": true
+        },
+        "decision": "reconcile"
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "stale-owner",
+      "title": "An event of an older owner epoch is refused and changes nothing",
+      "kit": "runtime",
+      "how": "trace",
+      "ref": "conformance/traces/stale-owner.jsonl",
+      "expect": {
+        "error": "STALE_EPOCH",
+        "stages": {
+          "primary": "running"
+        }
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "lock-expiry",
+      "title": "Lock expiry",
+      "kit": "runtime",
+      "how": "test",
+      "bindings": {
+        "native": "n/a",
+        "cao": "n/a",
+        "claude-only": "n/a"
+      },
+      "reason": "ownership is local and has no time-to-live; a hand-over is a take-over and fencing is the work-source bridge's concern"
+    },
+    {
+      "id": "cancel-race",
+      "title": "A stage that completes after a cancel request stays completed; only a cancelled event cancels",
+      "kit": "runtime",
+      "how": "trace",
+      "ref": "conformance/traces/cancel-race.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "completed"
+        }
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "restart-while-waiting",
+      "title": "Events of a restarted owner continue a waiting stage; a late event of the old owner is refused",
+      "kit": "runtime",
+      "how": "trace",
+      "ref": "conformance/traces/restart-while-waiting.jsonl",
+      "expect": {
+        "error": "STALE_EPOCH",
+        "stages": {
+          "primary": "running"
+        }
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "full-history-replay",
+      "title": "Replaying the full journal into a fresh reducer gives the same state",
+      "kit": "runtime",
+      "how": "test",
+      "ref": "tests.test_runstate_properties.RunStatePropertyTests.test_p1_replay_gives_equal_state",
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "unknown-version-event",
+      "title": "An event of another contract version is kept and not applied",
+      "kit": "runtime",
+      "how": "trace",
+      "ref": "conformance/traces/unknown-version-event.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "completed"
+        },
+        "foreign": 1
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "write-confinement",
+      "title": "Commands write only under the output directory and the run state directory",
+      "kit": "runtime",
+      "how": "test",
+      "ref": "tests.test_write_confinement.WriteConfinementTests.test_prepare_dry_run_writes_only_to_out",
+      "bindings": {
+        "native": "covered",
+        "cao": "covered",
+        "claude-only": "covered"
+      }
+    },
+    {
+      "id": "golden-native-claude-code-ok",
+      "title": "Golden trace native-claude-code-ok folds to completed",
+      "kit": "agent",
+      "how": "trace",
+      "ref": "fixtures/traces/native-claude-code-ok.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "completed"
+        }
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "declared",
+        "claude-only": "declared"
+      },
+      "reason": "the trace is recorded for the native binding; this binding records its own with its engine"
+    },
+    {
+      "id": "golden-native-codex-quota",
+      "title": "Golden trace native-codex-quota folds to quota_blocked",
+      "kit": "agent",
+      "how": "trace",
+      "ref": "fixtures/traces/native-codex-quota.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "quota_blocked"
+        }
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "declared",
+        "claude-only": "n/a"
+      },
+      "reason": "the trace is recorded for the native binding; the claude-only binding runs one provider"
+    },
+    {
+      "id": "golden-native-grok-unknown",
+      "title": "Golden trace native-grok-unknown folds to unknown_outcome",
+      "kit": "agent",
+      "how": "trace",
+      "ref": "fixtures/traces/native-grok-unknown.jsonl",
+      "expect": {
+        "stages": {
+          "primary": "unknown_outcome"
+        }
+      },
+      "bindings": {
+        "native": "covered",
+        "cao": "declared",
+        "claude-only": "n/a"
+      },
+      "reason": "the trace is recorded for the native binding; the claude-only binding runs one provider"
+    },
+    {
+      "id": "workspace-permissions",
+      "title": "The engine runs a stage with the permissions of its role and no more",
+      "kit": "agent",
+      "how": "test",
+      "bindings": {
+        "native": "declared",
+        "cao": "declared",
+        "claude-only": "declared"
+      },
+      "reason": "needs the execution engine (not implemented)"
+    },
+    {
+      "id": "stdout-stderr-framing",
+      "title": "Output of a stage is framed into events without mixing stdout and stderr",
+      "kit": "agent",
+      "how": "test",
+      "bindings": {
+        "native": "declared",
+        "cao": "declared",
+        "claude-only": "declared"
+      },
+      "reason": "needs the execution engine (not implemented)"
+    },
+    {
+      "id": "child-process-cleanup",
+      "title": "Child processes of a stage end with the stage",
+      "kit": "agent",
+      "how": "test",
+      "bindings": {
+        "native": "declared",
+        "cao": "declared",
+        "claude-only": "declared"
+      },
+      "reason": "needs the execution engine (not implemented)"
+    }
+  ]
+}

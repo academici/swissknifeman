@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import os
 from pathlib import Path
 import pkgutil
 import re
@@ -79,3 +80,22 @@ class BoundaryTests(unittest.TestCase):
                 for module in modules:
                     with self.subTest(file=path.name, line=node.lineno, module=module):
                         self.assertIn(module.split(".")[0], allowed)
+
+    def test_no_mcp_imports(self):
+        """MCP is a tool surface, not the event bus: neither orch nor the aicore extension layer imports it."""
+        aicore = Path(os.environ.get("AICORE_ROOT") or ROOT.parent / "aicore")
+        extension = aicore / "lib" / "aicore" / "ext"
+        self.assertTrue(extension.is_dir(), f"aicore extension layer not found at {extension}")
+        found = []
+        for base in (ROOT / "lib" / "orch", extension):
+            for path in sorted(base.rglob("*.py")):
+                for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                    if isinstance(node, ast.Import):
+                        modules = [alias.name for alias in node.names]
+                    elif isinstance(node, ast.ImportFrom):
+                        modules = [node.module or ""] + [alias.name for alias in node.names]
+                    else:
+                        continue
+                    found += [f"{path.name}:{node.lineno}: {module}" for module in modules if "mcp" in module.lower()]
+        self.assertEqual(found, [])
+

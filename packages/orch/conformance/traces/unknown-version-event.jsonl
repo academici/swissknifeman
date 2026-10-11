@@ -1,0 +1,3 @@
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":0,"ts":"2026-10-05T17:00:00Z","kind":"started"}
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v2","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":1,"ts":"2026-10-05T17:00:01Z","kind":"output","data":{"text":"Event of a later contract version."}}
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":2,"ts":"2026-10-05T17:00:02Z","kind":"completed"}

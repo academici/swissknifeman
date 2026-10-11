@@ -2,7 +2,7 @@
 
 `orch.port` is the boundary between the engine-neutral [exec/v1 contracts](contracts.md) and the
 engine bindings `native`, `cao` and `claude-only` (`BINDINGS`). It holds the protocol, its errors
-and the `RunState` reducer, with the retry table, the run journal and the effect check in `orch.retry`, `orch.journal` and `orch.effects`; bindings and `prepare_common` arrive in phase P5.3 of the orchestration-prep plan.
+and the `RunState` reducer, with the retry table, the run journal and the effect check in `orch.retry`, `orch.journal` and `orch.effects`; `prepare_common` and the bindings are in `orch.bindings`, the resume guard in `orch.resume`.
 
 Invariant: one run has one workflow owner. A binding never calls another binding; the CAO adapter does
 not start the native engine; Claude-only is a human or Claude session that receives a prompt and
@@ -23,12 +23,72 @@ returns a report.
 | `resume(run_id)` | run id, or `RESUME_REFUSED` | `NOT_IMPLEMENTED` |
 | `results(run_id)` | `{"stage_results": [...], "effect_receipts": [...]}` | `NOT_IMPLEMENTED` |
 
-`prepare` (phase P5.3) validates the input, policy and role manifests, orders stages by `depends_on`,
-enforces the minimum route of the primary stage, matches each model stage against the
-`(binding, provider)` capability record (a missing record counts as `unknown`), and resolves models only
-through the model catalog of aicore (`--model-catalog`). An unmet requirement of a `required` stage raises
-`CAPABILITY_UNSUPPORTED`; an optional stage becomes a refusal. Provider and model are never replaced
-silently.
+## Prepare
+
+`prepare_common(binding, input_doc, policy, roles, capabilities, *, provider, catalog, project=None, now=None,
+settings=None, submission_id=None, skills=None, model_catalog_doc=None, launch_catalog_doc=None,
+engine_decision=None)` is the algorithm every binding shares; the new arguments are optional. It validates the
+input, policy and role manifests, orders stages by `depends_on`, enforces the minimum route of the primary stage and
+matches each model stage (`scout`, `primary`, `bounded`, `review`, `condense`) against the `(binding, provider)`
+capability record. Models resolve only through the model catalog of aicore (`--model-catalog`). The result is a
+function of the arguments, `now` and the working directory: the same inputs from the same directory give the same
+bytes. `capability_ref`, `prompt_ref` and `profile_ref` are relative to the working directory of the `prepare` call, so
+from another directory the same plan names the same files with other relative paths.
+
+1. `digests`: `input`, `policy` (`canonical_digest`), `roles` (canonical JSON of the manifests by role id),
+   `launch_catalog`, `model_catalog`, `capabilities` (canonical JSON of the records of this binding by
+   `<binding>--<provider>`, without `_path`) and `config`.
+2. `config` is the snapshot of the `[orch]` values that influence preparation (`settings.affecting`) with its digest;
+   without `settings` the schema defaults are used. `modules` lists `aicore` and `orch` with their versions.
+3. For each model stage the candidate is the stage provider, else the `provider` argument. The candidate is checked
+   against the requirements below and for freshness. `decisions` gets `{stage_id, kind: "route", chosen, considered,
+   tie_break: "policy-order"}`; `chosen` is `<provider>/<model>` (the class when the binding cannot select a model),
+   or `none` when the stage was refused.
+4. A record is stale when `fresh_until` is before `now`. With `capabilities.stale = "warn"` the candidate stays
+   acceptable with the reason code `CAPABILITY_STALE` and `proof.warnings` names it; with `"refuse"` the stage is refused.
+5. Every refusal has a `reason_code` and a `chain`: the requested capability and its reason, then each capability named
+   by the record's `depends_on` that is itself unavailable.
+6. The engine decision (kind `binding`, stage `*`) is `engine_decision` from `settings.select_engine`; without it the
+   caller named the engine (`ENGINE_FROM_FLAG`). A missing capability never switches the engine: the stage is refused.
+7. `policy_decision` is `allow`, or `refuse` with the reason codes of the refused `required` stages;
+   `policy_digest` is `digests.policy`.
+8. `submission_id`, when given, is recorded; `KEY_REUSED` refuses one equal to the run id. `skills` (`{role_id:
+   [{name, digest}]}`, the output of the skill bridge) fills `stages[].delivery.skills`. `proof` (dry run) snapshots
+   the records that were used: `binding`, `provider`, `source`, `observed_at` (the record's `recorded_at` when it names
+   no `observed_at`), `fresh_until`, `stale`.
+9. `digest` of the plan is computed last.
+
+| Reason code | Requirement |
+| --- | --- |
+| `CAP_RECORD_MISSING` | no capability record for `(binding, provider)` |
+| `CAPABILITY_STALE` | the record is past `fresh_until` and `capabilities.stale` is `refuse` (a warning otherwise) |
+| `MODEL_SET_UNKNOWN`, `MODEL_SET_UNSUPPORTED` | the binding cannot guarantee or select a model |
+| `SKILL_DELIVERY_UNAVAILABLE` | required skills cannot be delivered |
+| `INDEPENDENT_PROVIDER` | a review would run on the primary provider |
+| `READ_ONLY_UNENFORCEABLE` | a read-only role cannot be enforced |
+| `CATALOG_UNKNOWN` | the model catalog has no class or effort entry |
+| `LAUNCH_UNKNOWN`, `LAUNCH_INVALID`, `LAUNCH_MODEL_UNSETTABLE` | the launch catalog cannot start the role with a model |
+
+An unmet requirement of a `required` stage raises `CAPABILITY_UNSUPPORTED` with the plan as `data.launch_plan`; an
+optional stage becomes a refusal. Provider and model are never replaced silently.
+
+`orch.py prepare [--binding B] [--provider P] --input I --policy POLICY --out DIR --dry-run [--submission-id ID]
+[--skills FILE] [--model-catalog FILE]` reads the `[orch]` configuration once (`--config` is the invocation layer).
+Without `--binding` the engine is `engine_by_role[<role of the primary stage>]`, else `engine`; the flag wins. Prepare
+without `--dry-run` stays `NOT_IMPLEMENTED`.
+
+`orch.py explain LAUNCH_PLAN [--json]` validates a launch-plan (exit 1 when invalid) and prints the engine and why, each
+stage with provider, model and effort, the candidates considered with reason codes, the refusals with their chain, the
+digests, the configuration values, the policy decision and the warnings. `--json` prints `{binding, decisions, stages,
+refusals, digests, config, policy_decision, warnings}`. It writes nothing.
+
+`orch.resume.verify_resume(plan, *, input_digest, policy_digest, roles_digest, config_digest, binding)` returns the
+names of the inputs that differ from the launch-plan (`input`, `policy`, `roles`, `config`, `binding`, in that order);
+an empty list allows resume. A plan that did not record a value counts as drifted. The future `resume` refuses with
+`RESUME_REFUSED` and `data.drift`.
+
+`RunState.stage_result(..., skills=None, modules=None, attempt_id=None, owner_epoch=None)` carries the skills that
+took part, the module versions, the attempt and the owner epoch into the stage-result.
 
 ## Errors
 
@@ -42,7 +102,7 @@ silently.
 | `ROLE_UNKNOWN` | a stage refers to a role without a manifest |
 | `ROUTE_UNDERSHOOT` | the primary stage class is below `input.route.minimum.class` |
 | `CAPABILITY_UNSUPPORTED` | a `required` stage needs an `unsupported` or `unknown` capability; `data.launch_plan` holds the report |
-| `RESUME_REFUSED` | input, policy, instruction or route hashes drifted before resume |
+| `RESUME_REFUSED` | input, policy, roles or config digests, or the binding, drifted before resume (`data.drift`, see `verify_resume`) |
 | `RUN_UNKNOWN` | unknown run id, or an event of another run |
 | `NOT_IMPLEMENTED` | an execution operation in Plan 1 (`run`, `watch`, `cancel`, `resume`, `results`, `prepare(dry_run=False)`) |
 | `SEQ_ORDER` | reducer: `seq` repeated with other content, or lower than the last seen |

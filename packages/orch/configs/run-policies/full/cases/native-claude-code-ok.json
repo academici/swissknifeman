@@ -1,11 +1,12 @@
 {
-  "description": "The primary stage is prepared; the optional review is dropped because it would run on the primary provider.",
+  "description": "The condense and primary stages are prepared; the optional review is dropped because it would run on the primary provider.",
   "input": "fixtures/exec/v1/valid/execution-input/plan-bound.json",
   "provider": "claude-code",
   "binding": "native",
   "expect": {
     "result": "ok",
     "stages": [
+      "condense",
       "primary"
     ],
     "refusals": [

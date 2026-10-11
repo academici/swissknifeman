@@ -4,16 +4,24 @@ Reads ``roles/<role>.json`` (or ``--manifest``; its ``skills``, else this bridge
 of this package, and asks the partner's generic resolver (``skiller resolve <skill…> --json``, as a process) for the
 transitive requirements. Nothing is installed or delivered.
 
+Each skill carries the ``digest`` of its content (``skiller describe <id> --json``, skill-descriptor/v1); when the
+partner cannot describe it the digest is absent and the diagnostic ``SKILL_DIGEST_UNKNOWN`` (warning) says so.
+
 Run as ``python3 bridges/orch-skiller/resolve_role.py (--role ID | --manifest PATH) --provider P [--binding B] [--json]``.
-Output with ``--json``: ``{"role", "provider", "skills": [{"name", "id", "bucket", "path", "required", "required_by"}],
-"delivery": {"mode", "source"}, "diagnostics": []}``. ``required`` is true for a manifest-required skill and for
-anything a required skill needs. Exit 1 on an error diagnostic.
+Output with ``--json``: ``{"role", "provider", "skills": [{"name", "id", "bucket", "path", "digest"?, "required",
+"required_by"}], "delivery": {"mode", "source"}, "diagnostics": []}``. ``required`` is true for a manifest-required
+skill and for anything a required skill needs. Exit 1 on an error diagnostic.
+
+``--all-roles --provider P [--binding B]`` resolves every role manifest of orch and prints ``{role_id: [{"name",
+"digest"}]}`` as JSON: the input of ``orch.py prepare --skills``. A skill without a digest is left out and its
+warning goes to stderr.
 """
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -22,6 +30,7 @@ from partners import require_orch_root, require_skiller
 CONTRACT_VERSION = "exec/v1"
 PROVIDERS = ("claude-code", "codex", "grok")
 BINDINGS = ("native", "cao", "claude-only")
+DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -29,6 +38,8 @@ def parser() -> argparse.ArgumentParser:
     source = p.add_mutually_exclusive_group(required=True)
     source.add_argument("--role", help="role id: roles/<id>.json of this package")
     source.add_argument("--manifest", type=Path, help="path to a role manifest")
+    source.add_argument("--all-roles", action="store_true", dest="all_roles",
+                        help="every role of orch; prints {role_id: [{name, digest}]} as JSON")
     p.add_argument("--provider", required=True, choices=PROVIDERS)
     p.add_argument("--binding", default="native", choices=BINDINGS, help="capability seed binding (default native)")
     p.add_argument("--json", action="store_true", dest="json_output")
@@ -87,6 +98,18 @@ def run_skiller(skills: list[str], provider: str) -> dict:
         raise RoleRefused("RESOLVE_FAILED", (done.stderr.strip() or f"skiller exit {done.returncode}: {error}")) from error
 
 
+def run_describe(skill_id: str) -> str | None:
+    """The content digest of a skill from ``skiller describe <id> --json``, or ``None`` when it cannot be read."""
+    launcher = require_skiller()
+    done = subprocess.run([str(launcher), "describe", skill_id, "--json"],
+                          capture_output=True, text=True, encoding="utf-8", check=False)
+    try:
+        digest = json.loads(done.stdout)["digest"]
+    except (ValueError, KeyError, TypeError):
+        return None
+    return digest if isinstance(digest, str) and DIGEST.match(digest) else None
+
+
 def required_closure(declared: dict[str, bool], found: list[dict]) -> set[str]:
     """Ids that a manifest-required skill is or (transitively) needs; ``declared`` maps requested id to ``required``."""
     required = {item["id"] for item in found if item["id"] in declared and declared[item["id"]]}
@@ -100,7 +123,9 @@ def required_closure(declared: dict[str, bool], found: list[dict]) -> set[str]:
     return required
 
 
-def resolve_role(manifest: dict, provider: str, binding: str) -> tuple[dict, bool]:
+def resolve_role(manifest: dict, provider: str, binding: str, digests: dict | None = None) -> tuple[dict, bool]:
+    """``digests`` caches ``skill id -> digest or None`` across roles."""
+    digests = digests if digests is not None else {}
     diagnostics: list[dict] = []
     wanted = manifest.get("skills") or role_skills(manifest["role_id"])
     found: list[dict] = []
@@ -113,15 +138,48 @@ def resolve_role(manifest: dict, provider: str, binding: str) -> tuple[dict, boo
         required = required_closure(declared, found)
     else:
         required = set()
-    skills = [{"name": s["name"], "id": s["id"], "bucket": s["bucket"], "path": s["path"],
-               "required": s["id"] in required, "required_by": s["required_by"]} for s in found]
+    skills = []
+    for item in found:
+        if item["id"] not in digests:
+            digests[item["id"]] = run_describe(item["id"])
+        digest = digests[item["id"]]
+        skill = {"name": item["name"], "id": item["id"], "bucket": item["bucket"], "path": item["path"]}
+        if digest is not None:
+            skill["digest"] = digest
+        else:
+            diagnostics.append({"code": "SKILL_DIGEST_UNKNOWN", "severity": "warning", "skill": item["id"],
+                                "message": f"skiller describe gave no digest for {item['id']}"})
+        skills.append({**skill, "required": item["id"] in required, "required_by": item["required_by"]})
     out = {"role": manifest["role_id"], "provider": provider, "skills": skills,
            "delivery": delivery(binding, provider, diagnostics), "diagnostics": diagnostics}
     return out, any(d.get("severity") == "error" for d in diagnostics)
 
 
+def all_roles(provider: str, binding: str) -> tuple[dict, list[dict], bool]:
+    """``({role_id: [{name, digest}]}, diagnostics, failed)`` for every role manifest of orch."""
+    cache: dict = {}
+    delivered, diagnostics, failed = {}, [], False
+    for path in sorted((require_orch_root() / "roles").glob("*.json")):
+        out, role_failed = resolve_role(load_manifest(None, path), provider, binding, cache)
+        delivered[out["role"]] = [{"name": skill["name"], "digest": skill["digest"]}
+                                  for skill in out["skills"] if "digest" in skill]
+        diagnostics.extend({**item, "role": out["role"]} for item in out["diagnostics"])
+        failed = failed or role_failed
+    return delivered, diagnostics, failed
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.all_roles:
+        try:
+            delivered, diagnostics, failed = all_roles(args.provider, args.binding)
+        except RoleRefused as error:
+            print(error, file=sys.stderr)
+            return 1
+        for diagnostic in diagnostics:
+            print(json.dumps(diagnostic, ensure_ascii=False), file=sys.stderr)
+        print(json.dumps(delivered, ensure_ascii=False, indent=2))
+        return 1 if failed else 0
     try:
         out, failed = resolve_role(load_manifest(args.role, args.manifest), args.provider, args.binding)
     except RoleRefused as error:

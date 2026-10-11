@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import tempfile
 
 from aicore.config import ResolvedConfig, resolve
 from aicore.util import digest as _digest
@@ -78,6 +79,12 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         events_enabled=resolved.get("events.enabled"),
         resolved=resolved,
     )
+
+
+def defaults() -> Settings:
+    """The settings of the schema defaults alone: no machine, project or environment layer is read."""
+    with tempfile.TemporaryDirectory(prefix="orch-defaults-") as home:
+        return load(project=None, env={}, home=home)
 
 
 def affecting(settings: Settings) -> dict:

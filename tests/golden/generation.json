@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "b848889a94cf",
-  "reason": "orch.py gained the policy verb and the global --config option",
+  "captured_from": "3391f214cca3",
+  "reason": "orch.py gains the explain verb",
   "generators": [
     {
       "id": "skiller-registry",

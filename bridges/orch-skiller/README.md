@@ -9,14 +9,19 @@ here is imported by the core), and Skiller knows nothing about orch: this bridge
 | `resolve-role` | `resolve_role.py` | orch → Skiller: a role's skill closure and its delivery mode |
 
 ```text
-python3 bridges/orch-skiller/resolve_role.py (--role ID | --manifest PATH) --provider claude-code|codex|grok [--binding native|cao|claude-only] [--json]
+python3 bridges/orch-skiller/resolve_role.py (--role ID | --manifest PATH | --all-roles) --provider claude-code|codex|grok [--binding native|cao|claude-only] [--json]
 ```
 
 - Reads `roles/<id>.json` (or `--manifest`) and `bindings/capabilities/<binding>--<provider>.json` of orch.
 - Passes the manifest's `skills[].name` to the partner; transitive requirements come back in `skills[].required_by`.
-- `--json`: `{"role", "provider", "skills": [{"name", "id", "bucket", "path", "required", "required_by"}],
+- `--json`: `{"role", "provider", "skills": [{"name", "id", "bucket", "path", "digest", "required", "required_by"}],
   "delivery": {"mode", "source"}, "diagnostics": []}`. `required` is true for a manifest-required skill and for
   anything a required skill needs. Without `--json` a short table is printed.
+- `digest` is the `sha256:` content digest of the skill from `skiller describe <id> --json` (skill-descriptor/v1). When
+  the partner cannot describe a skill, `digest` is absent and the warning `SKILL_DIGEST_UNKNOWN` (with `skill`) is
+  added; the exit code is not affected.
+- `--all-roles` resolves every role manifest of orch and prints `{role_id: [{"name", "digest"}]}` as JSON, the file
+  `orch.py prepare --skills` takes. A skill without a digest is left out; diagnostics go to stderr as JSON lines.
 - `delivery.mode` is the seed's `skill_delivery.mode`; a missing or unreadable seed gives `unknown` and a
   `DELIVERY_UNKNOWN` warning.
 - Errors are `CODE: message` on stderr, exit 1: `ROLE_UNKNOWN`, `ROLE_MANIFEST_INVALID`, `CONTRACT_VERSION`

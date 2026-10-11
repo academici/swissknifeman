@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 BRIDGE = Path(__file__).resolve().parents[1]
 if str(BRIDGE) not in sys.path:
@@ -94,10 +95,95 @@ class ResolveRole(unittest.TestCase):
         done = run("--role", "no-such-role", "--provider", "codex")
         self.assertEqual((done.returncode, done.stderr.split(":")[0]), (1, "ROLE_UNKNOWN"))
 
+    def test_every_skill_carries_the_digest_skiller_describes(self):
+        out = self.resolve("reviewer", "codex")
+        self.assertTrue(out["skills"])
+        for skill in out["skills"]:
+            with self.subTest(skill=skill["id"]):
+                described = subprocess.run([str(SKILLER), "describe", skill["id"], "--json"], capture_output=True,
+                                           text=True, encoding="utf-8", check=False)
+                self.assertEqual(skill["digest"], json.loads(described.stdout)["digest"])
+                self.assertRegex(skill["digest"], r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual([d for d in out["diagnostics"] if d["code"] == "SKILL_DIGEST_UNKNOWN"], [])
+
+    def test_all_roles_prints_name_and_digest_per_role(self):
+        done = run("--all-roles", "--provider", "codex", "--json")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        found = json.loads(done.stdout)
+        self.assertEqual(sorted(found), sorted(ROLES))
+        for role in ROLES:
+            if role != "reviewer":
+                self.assertEqual(found[role], [])
+        reviewer = self.resolve("reviewer", "codex")["skills"]
+        self.assertEqual(found["reviewer"], [{"name": s["name"], "digest": s["digest"]} for s in reviewer])
+        self.assertEqual(done.stderr, "")
+
+    def test_all_roles_excludes_a_manifest_and_a_role(self):
+        for extra in (("--role", "reviewer"), ("--manifest", "x.json")):
+            with self.subTest(extra=extra):
+                done = run("--all-roles", "--provider", "codex", *extra)
+                self.assertEqual(done.returncode, 2)
+
+    def test_all_roles_output_is_the_prepare_skills_input(self):
+        skills = json.loads(run("--all-roles", "--provider", "claude-code", "--json").stdout)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "skills.json"
+            path.write_text(json.dumps(skills), encoding="utf-8")
+            done = subprocess.run(
+                [sys.executable, str(ORCH / "scripts" / "orch.py"), "prepare", "--provider", "claude-code",
+                 "--input", str(ORCH / "fixtures" / "exec" / "v1" / "valid" / "execution-input" / "plan-bound.json"),
+                 "--policy", str(ORCH / "configs" / "run-policies" / "review-only" / "policy.json"),
+                 "--out", str(Path(tmp) / "out"), "--dry-run", "--skills", str(path)],
+                capture_output=True, text=True, encoding="utf-8", check=False, cwd=tmp)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        delivered = {stage["role"]: stage["delivery"].get("skills") for stage in json.loads(done.stdout)["stages"]}
+        self.assertEqual(delivered["reviewer"], skills["reviewer"])
+
     def test_text_output_lists_skills(self):
         done = run("--role", "reviewer", "--provider", "claude-code")
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertIn("quality/code-review  required", done.stdout)
+
+
+class DigestUnknown(unittest.TestCase):
+    """The partner cannot describe a skill: the digest is absent and a warning says so."""
+
+    def test_missing_digest_is_a_warning_not_a_failure(self):
+        sys.path.insert(0, str(BRIDGE))
+        import resolve_role
+        manifest = {"contract_version": "exec/v1", "role_id": "reviewer"}
+        with mock.patch.object(resolve_role, "run_describe", return_value=None):
+            out, failed = resolve_role.resolve_role(manifest, "codex", "native")
+        self.assertFalse(failed)
+        self.assertTrue(out["skills"])
+        self.assertTrue(all("digest" not in skill for skill in out["skills"]))
+        unknown = [d for d in out["diagnostics"] if d["code"] == "SKILL_DIGEST_UNKNOWN"]
+        self.assertEqual(sorted(d["skill"] for d in unknown), sorted(s["id"] for s in out["skills"]))
+        self.assertEqual({d["severity"] for d in unknown}, {"warning"})
+
+    def test_all_roles_leaves_a_skill_without_digest_out(self):
+        import resolve_role
+        with mock.patch.object(resolve_role, "run_describe", return_value=None):
+            delivered, diagnostics, failed = resolve_role.all_roles("codex", "native")
+        self.assertEqual((delivered["reviewer"], failed), ([], False))
+        self.assertEqual({d["code"] for d in diagnostics}, {"SKILL_DIGEST_UNKNOWN"})
+        self.assertEqual({d["role"] for d in diagnostics}, {"reviewer"})
+
+    def test_describe_is_read_once_per_skill(self):
+        import resolve_role
+        with mock.patch.object(resolve_role, "run_describe", return_value="sha256:" + "0" * 64) as describe:
+            resolve_role.all_roles("codex", "native")
+        ids = [call.args[0] for call in describe.call_args_list]
+        self.assertEqual(len(ids), len(set(ids)))
+
+    def test_describe_rejects_an_unreadable_answer(self):
+        import resolve_role
+        for stdout in ("", "not json", json.dumps({"digest": "md5:1"}), json.dumps({"id": "x"}), json.dumps([])):
+            with self.subTest(stdout=stdout):
+                done = subprocess.CompletedProcess([], 0, stdout=stdout, stderr="")
+                with mock.patch.object(resolve_role.subprocess, "run", return_value=done), \
+                        mock.patch.object(resolve_role, "require_skiller", return_value=Path("skiller")):
+                    self.assertIsNone(resolve_role.run_describe("quality/code-review"))
 
 
 class PartnerLookup(unittest.TestCase):

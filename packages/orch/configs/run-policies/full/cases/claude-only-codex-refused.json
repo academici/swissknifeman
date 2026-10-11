@@ -9,6 +9,10 @@
     "stages": [],
     "refusals": [
       {
+        "stage_id": "condense",
+        "capability": "model.set"
+      },
+      {
         "stage_id": "primary",
         "capability": "model.set"
       },

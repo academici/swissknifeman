@@ -188,8 +188,13 @@ class RunState:
                 for stage_id, stage in self._stages.items()}
 
     def stage_result(self, stage_id: str, *, role: str, requested_route: dict, input_digest: str,
-                     instructions_digest: str) -> dict:
-        """Build the skeleton stage-result of the stage's latest attempt."""
+                     instructions_digest: str, skills: list | None = None, modules: list | None = None,
+                     attempt_id: str | None = None, owner_epoch: int | None = None) -> dict:
+        """Build the skeleton stage-result of the stage's latest attempt.
+
+        ``skills`` (skillRef list), ``modules`` (moduleVersion list), ``attempt_id`` and ``owner_epoch`` are carried
+        into the result when given; the reducer does not know them, the engine that ran the attempt does.
+        """
         stage = self._stages.get(stage_id)
         if stage is None:
             raise PortError("INPUT_INVALID", f"stage {stage_id!r} has no events")
@@ -208,6 +213,10 @@ class RunState:
             "usage": _usage(stage["usage"]),
             "started_at": stage["started_at"],
         }
+        for key, value in (("skills", skills), ("modules", modules), ("attempt_id", attempt_id),
+                           ("owner_epoch", owner_epoch)):
+            if value is not None:
+                result[key] = copy.deepcopy(value)
         if stage["route_observed"] is not None:
             result["route"]["observed"] = dict(stage["route_observed"], source="event")
         if stage["errors"]:

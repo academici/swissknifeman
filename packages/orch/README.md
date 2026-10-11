@@ -9,9 +9,12 @@ the sibling `aicore` folder.
 The package supplies the `exec/v1` schemas validated by the closed-profile validator of aicore, shared `exec/v1`
 definitions, all nine document schemas and their fixtures, canonical document
 digests and a `validate` CLI. It also defines the EnginePort protocol, RunState
-reducer and binding capability matrix. `orch.py prepare --binding native|cao|claude-only --provider P --input I
---policy POLICY --out DIR --dry-run` prints a launch-plan and writes its prompt or CAO profile files into `DIR`;
-models come from the `model-catalog/v1` file of aicore (`--model-catalog FILE`; the default is the catalog packaged with aicore).
+reducer and binding capability matrix. `orch.py prepare [--binding native|cao|claude-only] --provider P --input I
+--policy POLICY --out DIR --dry-run` prints a launch-plan and writes its prompt or CAO profile files into `DIR`; without
+`--binding` the `[orch]` configuration chooses the engine. The launch-plan records the digests of every input, the
+configuration it was prepared with, the route and engine decisions with the candidates considered, the policy decision
+and the proof of the capability records; `orch.py explain LAUNCH_PLAN [--json]` reads it back without writing anything.
+Models come from the `model-catalog/v1` file of aicore (`--model-catalog FILE`; the default is the catalog packaged with aicore).
 Starting runs is future work; `prepare` without `--dry-run` returns `NOT_IMPLEMENTED`.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.

@@ -2,7 +2,8 @@
 
 ``$FAKE_ROLE_SCRIPT`` is a JSON file ``{role: [answer, …]}``; the n-th call of a role takes the n-th answer (the last
 one repeats). An answer may hold ``result`` (a JSON document put into the result block of the role), ``text`` (the
-whole answer), ``write`` (``{path: content}`` written below the working directory first), ``exit`` and ``usage``.
+whole answer), ``write`` (``{path: content}`` written below the working directory first), ``run_command`` (run the ``sh`` block of
+the prompt, the way the registrar does) , ``exit`` and ``usage``.
 Every call is counted and its prompt kept in ``$FAKE_ROLE_STATE/<role>-<n>.md``. The context-scout answers in plain
 text (the text transport); the other roles print stream-json like claude-code.
 """
@@ -27,7 +28,15 @@ for path, content in (answer.get("write") or {}).items():
     target = Path.cwd() / path
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
-if "text" in answer:
+if answer.get("run_command"):  # the registrar: run the one command of the prompt, as a model would
+    import re
+    import shlex
+    import subprocess
+    block = re.search(r"```sh\n(.*?)\n```", prompt, re.S)
+    done = subprocess.run(shlex.split(block.group(1)), capture_output=True, text=True, check=False)
+    text = f"[orch] closing\n\n```json\n{done.stdout}\n```\n" + (
+        "RECORDED" if done.returncode == 0 else f"REFUSED: {done.stderr.strip()}")
+elif "text" in answer:
     text = answer["text"]
 elif "result" in answer:
     text = f"[orch] work done\n\n```{TAGS.get(role, 'json')}\n{json.dumps(answer['result'])}\n```\n"

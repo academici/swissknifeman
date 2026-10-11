@@ -19,6 +19,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import shlex
 import subprocess
 import sys
 import time
@@ -514,6 +515,8 @@ class Conductor:
             roles.insert(0, "context-scout")
         if self._review_enabled(item):
             roles += ["reviewer", self._triage_role(item)]
+        if self._closer_named(item):
+            roles.append("registrar")
         for role in roles:
             item.routes[role] = self._route(item, role)
         self._route_minimum(item)
@@ -711,6 +714,11 @@ class Conductor:
         review = item.policy.get("review") or {}
         return bool(review.get("enabled")) and item.options["limits"]["review_rounds"] > 0
 
+    @staticmethod
+    def _closer_named(item: Item) -> bool:
+        """A model records the result (closing stage) only when a layer of the options names the registrar."""
+        return bool(opts.stage_route(item.options, "registrar"))
+
     def _triage_role(self, item: Item) -> str:
         triage = (item.policy.get("review") or {}).get("triage") or {}
         return triage.get("role") or "triager"
@@ -783,6 +791,31 @@ class Conductor:
 
     # ------------------------------------------------------------------ registration and commit
 
+    def _close(self, item: Item, args: list) -> Optional[dict]:
+        """The closing stage: a model registrar records the result with the one command built here. The conductor
+        registers the result again right after: a repeat is a no-op when the closer did it, and it records the result
+        when the closer could not (``close`` then says ``conductor`` and why), so the closing never loses a result."""
+        route = item.routes["registrar"]
+        # ``python3`` as a bare name: the launch catalog allows the registrar exactly ``python3 *orch.py source register *``.
+        argv = ["python3", str(ORCH_ROOT / "scripts" / "orch.py"), *args]
+        if self.config_file:  # an invocation config before the verb is outside that allowance: the closer is refused
+            argv[2:2] = ["--config", str(self.config_file)]
+
+        def run() -> dict:
+            prompt = prompts.closer(item=item.ref, step="close", command=shlex.join(argv))
+            try:
+                text, meta = self._role(item, "close", "registrar", prompt, None)
+            except Stop as stop:
+                if stop.code == "BUDGET_EXHAUSTED":
+                    raise
+                return {"by": "conductor", "reason_code": stop.code, "message": stop.message}
+            return {"by": "closer", "answer": text[-1500:], **meta}
+
+        found = self._step(item, "close", run, role="registrar", route=self.label(route),
+                           verdict=lambda result: "closer ran" if result["by"] == "closer"
+                           else f"closer failed ({result['reason_code']}); the conductor records")
+        return found
+
     def _finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         status = report["status"]
         write_json(item.artifacts / "stage-report.json", report)
@@ -794,11 +827,13 @@ class Conductor:
         executor = self._actor(item.routes["executor"])
         registrar = self.conductor.get("registrar") or "orch/conductor"
 
+        args = ["source", "register", "--run", item.orch_run, "--report", str(report_path), "--status", status,
+                "--actor", registrar, "--executed-by", self.label(executor)]
+        for check_id, path in sorted(evidence.items()):
+            args += ["--evidence", f"{check_id}={path}"]
+        closed = self._close(item, args) if self._closer_named(item) else None
+
         def register() -> dict:
-            args = ["source", "register", "--run", item.orch_run, "--report", str(report_path), "--status", status,
-                    "--actor", registrar, "--executed-by", self.label(executor)]
-            for check_id, path in sorted(evidence.items()):
-                args += ["--evidence", f"{check_id}={path}"]
             code, answer, err = self._orch(*args)
             if code == 3:
                 raise Stop("WORK_SOURCE_UNAVAILABLE", err or "no work source")
@@ -807,8 +842,12 @@ class Conductor:
                 raise Stop("REGISTER_REFUSED", f"{reason}: {(answer or {}).get('message') or err}")
             return {"outcome": answer["outcome"], "gate": (answer.get("gate") or {}).get("verdict")}
 
-        self._step(item, "register", register, role="registrar", route=registrar,
-                   verdict=lambda result: f"{result['outcome']} gate {result['gate']}")
+        def said(result: dict) -> str:
+            by_closer = closed is not None and closed["by"] == "closer" and result["outcome"] == "no-op"
+            note = " (recorded by the closer)" if by_closer else ""
+            return f"{result['outcome']} gate {result['gate']}{note}"
+
+        self._step(item, "register", register, role="registrar", route=registrar, verdict=said)
         # A blocked piece is committed only under on_blocked = "report" and only when it changed nothing: then its
         # records (artifacts, the source's state) are all there is, and the next piece starts on a clean tree.
         records_only = status == "blocked" and item.options["on_blocked"] == "report" \

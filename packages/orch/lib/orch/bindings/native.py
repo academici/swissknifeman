@@ -20,7 +20,7 @@ class Native(Binding):
                 raise Unmet("model.set", f"the launch catalog cannot pass a model to {base['provider']!r}",
                             "LAUNCH_MODEL_UNSETTABLE")
             argv = substitute(entry["argv"], {"model": resolved["model"], "effort": resolved.get("effort", entry["effort"]),
-                                              "cwd": self.cwd})
+                                              "cwd": self.cwd, "orch": str(launch.ORCH_ROOT)})
         except launch.LaunchError as error:
             raise Unmet("launch", str(error), error.code) from error
         _, text = render.load_role(manifest["role_id"], self.roles_dir)

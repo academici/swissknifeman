@@ -22,7 +22,7 @@ DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
                 "tokens_max": (0, None), "stage_timeout_s": (0, None), "check_timeout_s": (1, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
-MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager")
+MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
                        r"(?:/(?P<context>[0-9]+[kKmM]?))?(?:/(?P<effort>low|medium|high|xhigh|max|ultra))?$")
 _ACTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"

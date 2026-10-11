@@ -12,6 +12,11 @@
   step; an observer report per run. New contract `conductor/v1` (`run-options`, `stage-report`, `review-findings`,
   `triage-result`, `progress-line`), role `triager`, `[orch.conductor]` settings (`argv.<role>` machine-wide), `orch.py doctor`
   (the conductor's runtime folder must be ignored, its reports committed) and `orch.py source commit`.
+- **orch:** closing stage of the conductor: naming the `registrar` in `stages` of the run options (new role in `conductor/v1` `run-options`)
+  makes a model (economy, haiku) run the one `source register` command the conductor built; the conductor registers again right after
+  (a no-op when the closer recorded the result, the recording itself when the closer failed). The launch catalog runs the claude-code
+  `executor` and `triager` with a shell (`--allowedTools Bash`) under `ro-run.py` (executor writes only `{cwd}`, triager nowhere) and
+  lets the `registrar` run only `python3 *orch.py source register *`; the native binding fills `{orch}` in a launch plan.
 - **orch:** `work-source/v1` gains the claim's `options` layers, the brief's `artifacts_dir` and the op `commit`; exec/v1 gains
   `run-policy.review.triage` and the result shape `triage-result`; the `full` pack (1.1.0) triages review findings.
 - **planner:** `orchestration.options` of the plan, a phase or an item as an extension slot: the core declares the field and keeps

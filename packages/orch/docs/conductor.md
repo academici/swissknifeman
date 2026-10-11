@@ -4,7 +4,7 @@
 run-policy until it is green or stops honestly. It is shipped with orch and tuned by configuration and by the run
 options of the work; it is never rewritten for a run. The conductor itself decides nothing: it branches only on exit
 codes, on the verdicts of the closed role results (`schemas/conductor/v1`) and on the limits of the run options.
-Models are used only for the narrow roles: context scout, executor, reviewer, triager.
+Models are used only for the narrow roles: context scout, executor, reviewer, triager and, when asked for, the registrar that records the result.
 
 ```text
 conduct.py [--config FILE] run --plan P (--items REF… | --batch [--max-items N]) [--plans-root DIR]
@@ -32,7 +32,8 @@ Every step has a key and is recorded in `state.json` once it closes; the work so
 | `checks.N` | deterministic | every `acceptance`/`impact` command check, with a check-evidence file per check |
 | `review.N` | reviewer (default `grok/grok-4.7/high`) | read-only, the diff against the base and the check results; returns `review-findings` |
 | `triage.N` | triager | reproduces every finding; returns `triage-result` (confirmed with a correction package, or rejected with a reason) |
-| `register` | work source | `source register` with the report, the status and the evidence; a repeat is a no-op |
+| `close` | registrar (economy) | only when a layer of the options names the registrar in `stages`: a model runs the one `source register` command the conductor built (the launch catalog allows it exactly `python3 *orch.py source register *`) and answers with its output; it never sees the task |
+| `register` | work source | `source register` with the report, the status and the evidence; a repeat is a no-op, so after a closer it only confirms the record, and when the closer failed it records the result and `close` says `conductor` and why |
 | `commit` | work source | `source commit` with the changed paths and the artifact folder, when the pack's `git_action` is `commit` |
 
 Red checks get at most `limits.check_fixes` corrections; confirmed findings at most `limits.corrections`
@@ -76,7 +77,7 @@ effect.
 
 | Key | Meaning |
 | --- | --- |
-| `stages` | `[{role, provider?, model_class?, model?, effort?}]`, roles `context-scout`, `executor`, `bounded-implementer`, `reviewer`, `triager` |
+| `stages` | `[{role, provider?, model_class?, model?, effort?}]`, roles `context-scout`, `executor`, `bounded-implementer`, `reviewer`, `triager`, `registrar` (naming it turns the closing stage on) |
 | `reviewer` | `PROVIDER/MODEL[/CONTEXT][/EFFORT]` |
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]` |

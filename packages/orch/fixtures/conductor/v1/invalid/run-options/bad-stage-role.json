@@ -1,7 +1,7 @@
 {
   "stages": [
     {
-      "role": "registrar",
+      "role": "deterministic",
       "model_class": "economy"
     }
   ]

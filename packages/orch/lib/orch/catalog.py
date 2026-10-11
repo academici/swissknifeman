@@ -25,7 +25,7 @@ class CatalogError(ValueError):
 
 
 def substitute(argv: list[str], values: Mapping[str, str]) -> list[str]:
-    """Replace ``{model}``, ``{effort}`` and ``{cwd}``; a placeholder without a value is an error."""
+    """Replace ``{model}``, ``{effort}``, ``{cwd}`` and ``{orch}``; a placeholder without a value is an error."""
     def fill(match):
         if match[1] not in values:
             raise launch.LaunchError("LAUNCH_INVALID", f"no value for placeholder {{{match[1]}}}")

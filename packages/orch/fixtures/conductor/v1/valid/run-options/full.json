@@ -14,6 +14,10 @@
     {
       "role": "triager",
       "model_class": "implementation"
+    },
+    {
+      "role": "registrar",
+      "model_class": "economy"
     }
   ],
   "reviewer": "grok/grok-4.7/500k/high",

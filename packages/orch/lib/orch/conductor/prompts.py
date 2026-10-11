@@ -138,6 +138,23 @@ def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict,
     return "\n\n".join(part.rstrip() for part in parts) + "\n"
 
 
+def closer(*, item: str, step: str, command: str) -> str:
+    """The closing prompt: the registrar records the result with one command the conductor built, nothing else."""
+    parts = [
+        "# Closing: record the result of " + item,
+        "You are the registrar of a conductor run. The work, its checks and its review are finished and closed; you "
+        "only record the result in the work source. You never judge, repair or extend the work, never change a file "
+        "and never commit.",
+        "## Do exactly this\n\nRun this command once with Bash. Copy it character for character: change no argument, "
+        "add none, and run nothing else (every other command is denied).\n\n" + _fence(command, "sh"),
+        _PROGRESS.format(item=item, step=step),
+        "## Result\n\nAnswer with the standard output of the command in one fenced `json` block, then one last line: "
+        "`RECORDED` when the command exited 0, else `REFUSED: <the CODE: message line of its standard error>`. If it "
+        "failed, do not run it again and do not look for another way.",
+    ]
+    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+
+
 def check_correction(failed: list) -> str:
     """Correction package of red acceptance checks: each command, its exit and the tail of its output."""
     lines = []

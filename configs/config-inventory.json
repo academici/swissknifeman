@@ -490,6 +490,16 @@
       "released": false
     },
     {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "owner": "planner",
+      "consumers": [
+        "bridges/planner-orch/bridge.json",
+        "packages/planner/lib/planner/plan/extensions.py"
+      ],
+      "released": false,
+      "note": "schema of the planner's orchestration.options slot, supplied by the bridge; a literal copy of orch's conductor/v1 run-options"
+    },
+    {
       "path": "bridges/orch-skiller/role-skills.json",
       "owner": "root",
       "consumers": [

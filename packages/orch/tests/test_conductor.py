@@ -384,6 +384,59 @@ class SoloTests(ConductorCase):
         self.assertFalse((self.project / "plans/T/artifacts/W1/review-verdict.json").exists())
 
 
+class ClosingTests(ConductorCase):
+    """A layer of the options that names the registrar adds the closing stage: a model records the result."""
+
+    scenario = "full"
+    NAMED = [{"source": "phase:P1", "options": {"stages": [{"role": "registrar", "model_class": "economy"}]}}]
+
+    def setUp(self):
+        super().setUp()
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES + ("registrar",)})
+        self.set_items({"W1": {"options": self.NAMED}})
+
+    def steps(self, err: str) -> dict:
+        return self.state(err)["items"]["W1"]["steps"]
+
+    def test_the_closer_runs_the_one_command_and_the_conductor_repeats_it_as_a_no_op(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN], "registrar": [{"run_command": True}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("registrar"), 1)
+        prompt = self.prompt("registrar", 1)
+        self.assertIn("orch.py source register --run", prompt)
+        self.assertNotIn("Plan-bound", prompt)  # the closer never sees the task
+        steps = self.steps(err)
+        self.assertEqual(steps["close"]["result"]["by"], "closer")
+        self.assertEqual(steps["close"]["route"].split("/")[0], "claude-code")
+        self.assertEqual(steps["register"]["result"]["outcome"], "no-op")
+        self.assertIn("recorded by the closer", steps["register"]["verdict"])
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+        self.assertEqual([commit["ref"] for commit in self.source()["commits"]], ["W1"])
+        order = [line["stage"] for line in self.lines(err) if line["event"] == "stage.start"]
+        self.assertLess(order.index("review.1"), order.index("close"))
+        self.assertLess(order.index("close"), order.index("register"))
+
+    def test_a_closer_that_fails_leaves_the_recording_to_the_conductor(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN], "registrar": [{"exit": 3}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        steps = self.steps(err)
+        self.assertEqual(steps["close"]["result"]["by"], "conductor")
+        self.assertEqual(steps["close"]["result"]["reason_code"], "ROLE_FAILED")
+        self.assertEqual(steps["register"]["result"]["outcome"], "recorded")
+        self.assertNotIn("closer", steps["register"]["verdict"])
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def test_without_a_named_registrar_nobody_closes_but_the_conductor(self):
+        self.set_items({"W1": {}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.calls("registrar"), 0)
+        self.assertNotIn("close", self.steps(err))
+
+
 class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_writes_nothing_and_shows_routes(self):
         code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")

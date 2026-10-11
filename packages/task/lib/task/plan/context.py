@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 
-from . import edges, refs, store
+from . import edges, execution, refs, store
 from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
@@ -282,6 +282,7 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         raise PlanError("REF_UNKNOWN", f"unknown item {item_id!r}")
     from . import lifecycle, units
 
+    scenario, scenario_source = execution.scenario(plan, item_id)
     item, phase_id, mode = plan.items[item_id], item_phase(item_id), pack_mode(plan)
     related = [r["ref"] for r in item.get("related", [])]
     upstream = [copy.deepcopy(plan.items[d]) for d in dict.fromkeys([*item.get("depends_on", []), *related])
@@ -303,7 +304,8 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         "documents": [copy.deepcopy(d) for d in plan.documents.values()
                       if scope_reason(d, item_id, phase_id, mode) is not None],
         "units": [copy.deepcopy(plan.units[f"{item_id}/{u}"]) for u in units.unit_ids(plan, item_id)],
-        "orchestration": units.policy(plan, item_id), "ready_units": units.ready(plan, item_id),
+        "orchestration": {**units.policy(plan, item_id), "scenario": scenario, "scenario_source": scenario_source},
+        "ready_units": units.ready(plan, item_id),
     }
     if mode == "scoped":
         result["projection"] = {"mode": mode, "note": PROJECTION_NOTE}

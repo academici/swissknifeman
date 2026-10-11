@@ -165,6 +165,26 @@ optional owner-selected `max_parallel`. DAG scheduling uses dependencies and dis
 ownership. Sequential scheduling orders siblings. A parent waits for its children. Cycles,
 unknown dependencies/parents and unordered overlapping write sets are errors.
 
+### Execution scenario and run options
+
+Both fields are optional; a plan without them is stored, checked and scheduled exactly as before.
+
+`orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) names the execution scenario: a run-policy
+profile of an execution engine, or `solo` for the current session. The item, its phase and the plan are tried in
+that order, else `solo`; the context pack reports the result as `orchestration.scenario` and
+`orchestration.scenario_source` (`item`, `phase`, `plan` or `default`). Task stores the name and does not check it;
+the bridge that executes the scenario does.
+
+`orchestration.options` (plan, phase or item) is an extension slot: the core declares the field
+(`$ref` `urn:swissknifeman:task:plan:extension:orchestration.options:v1`) and does not know its content. The bridge of
+the execution engine supplies the schema with `extends` in its `bridge.json` (a file inside the bridge, closed
+profile, references to its own `$defs` only); the shipped execution bridge supplies its engine's run options.
+With exactly one supplier `set`, `apply`, `import` and `check` validate the options by that schema. Without a
+supplier, or with several, the field is refused with `EXTENSION_UNAVAILABLE` (`check` reports it as a `schema` error
+naming the code); a document without the field never reads a bridge. Task stores the options and does not merge
+them: the execution engine merges the layers plan → phase → item. An executor's bridge may also read orchestration
+overlay documents (`orchestration-<scope>`); a field of the same level wins over an overlay.
+
 `unit … next` returns ready units as JSON; `unit … <U#> context` returns a full JSON worker brief.
 `dispatch --agent` records the executor and writes `brief.json`. A self unit belongs to the item
 executor. State is `todo → dispatched → returned → accepted | rejected`; `rework` redispatches

@@ -143,6 +143,7 @@
                 "EVIDENCE_INVALID",
                 "EVIDENCE_REQUIRED",
                 "EVIDENCE_SUBJECT",
+                "EXTENSION_UNAVAILABLE",
                 "EXTERNAL_GATE",
                 "FIELD_NOT_ARRAY",
                 "FIELD_OWNED",

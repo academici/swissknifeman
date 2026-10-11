@@ -67,6 +67,18 @@
         }
       },
       "additionalProperties": false
+    },
+    "extends": {
+      "type": "object",
+      "description": "Extension slots of the plan schema this bridge supplies: slot name to a JSON Schema file inside the bridge (closed profile, references to its own $defs only).",
+      "properties": {
+        "orchestration.options": {
+          "type": "string",
+          "description": "Schema of orchestration.options: the run options of the execution engine this bridge connects.",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

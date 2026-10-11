@@ -4,6 +4,11 @@
 
 ### Added
 
+- **task:** опциональное расширение оркестрации плана, фазы и пункта: `orchestration.scenario` (имя run-policy;
+  `context` отдаёт `orchestration.scenario`/`scenario_source`, item → phase → plan → `solo`) и
+  `orchestration.options` — слот расширения: ядро объявляет поле, схему поставляет мост исполнителя (`extends` в
+  `bridge.json`; `bridges/orch` поставляет `run-options` дирижёра orch). Без поставщика поле отвергается кодом
+  `EXTENSION_UNAVAILABLE`; план без полей ведёт себя и проверяется как раньше.
 - **orch:** `scripts/ro-run.py` запускает команду под Landlock (Linux, без root и user namespaces):
   файловая система читается целиком, запись — только во временные каталоги, `~/.grok` и `--rw`. Роль
   `reviewer` на grok в каталоге запуска — headless `grok --prompt-file /dev/stdin` с `bypassPermissions` под

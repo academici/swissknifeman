@@ -200,6 +200,15 @@
         "max_parallel": {
           "type": "integer",
           "description": "Optional concurrent dispatch ceiling; positive when present."
+        },
+        "scenario": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Execution scenario: the name of a run-policy profile of an execution engine, or solo for the current session."
+        },
+        "options": {
+          "$ref": "urn:swissknifeman:task:plan:extension:orchestration.options:v1",
+          "description": "Run options of the execution engine: an extension slot whose schema the bridge of that engine supplies (bridge.json extends); without such a bridge the field is refused with EXTENSION_UNAVAILABLE."
         }
       },
       "required": [],

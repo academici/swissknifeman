@@ -277,8 +277,13 @@ def _issue_text(label: str, issues) -> str:
 
 
 def check_doc(doc: object, kind: str, label: str, registry: _schema.Registry | None = None) -> None:
-    """Raise ``SCHEMA_INVALID`` (with the issues attached) unless ``doc`` is a valid ``kind`` document."""
+    """Raise ``SCHEMA_INVALID`` (with the issues attached) unless ``doc`` is a valid ``kind`` document.
+
+    A field of an extension slot that no bridge supplies is refused as ``EXTENSION_UNAVAILABLE`` instead.
+    """
     issues = _schema.validate(doc, kind, registry)
+    if any(issue.code == _schema.EXTENSION_CODE for issue in issues):
+        raise PlanError("EXTENSION_UNAVAILABLE", _issue_text(label, issues), issues)
     if issues:
         raise PlanError("SCHEMA_INVALID", _issue_text(label, issues), issues)
 

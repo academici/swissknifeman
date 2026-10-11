@@ -42,6 +42,11 @@ core never names a partner. `plan.py bridge list` validates every `bridge.json` 
 unchanged; the bridge owns its output and exit code, and the dispatcher sets `TASK_ROOT`,
 `TASK_PLAN_PY` and `PYTHONPATH`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
 `BRIDGE_UNKNOWN`, `BRIDGE_VERB_UNKNOWN`.
+A bridge may supply the schema of an extension slot of the plan: `"extends": {"orchestration.options": "<schema file
+inside the bridge>"}`. `orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) is always accepted and the
+context pack resolves it as `orchestration.scenario`/`orchestration.scenario_source` (item → phase → plan → `solo`).
+`orchestration.options` is validated by the schema of its single supplier; with none (or several) writes refuse
+`EXTENSION_UNAVAILABLE` and `check` reports a `schema` error. Both fields are optional.
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor and registers its
 reports back through `plan.py` only (see the bridge's README).
 

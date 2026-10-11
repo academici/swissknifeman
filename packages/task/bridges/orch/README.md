@@ -14,6 +14,14 @@ replacing the orchestrator means adding another bridge under `bridges/`, not edi
 Run a verb through the Task dispatcher: `plan.py bridge orch <verb> [args…]`. `plan.py bridge list`
 validates `bridge.json` and lists the verbs.
 
+## Extension: `orchestration.options`
+
+`bridge.json` `extends.orchestration.options` names `schemas/run-options.schema.json`: Task validates the
+`orchestration.options` of the plan, a phase or an item by it. The file is a literal copy of orch's conductor
+contract `schemas/conductor/v1/run-options.schema.json` (`urn:swissknifeman:orch:conductor:run-options:v1`);
+`tests/test_run_options_copy.py` compares the two whenever the located orch ships the contract. orch checks the
+numeric bounds and merges the layers when it runs the item.
+
 ## brief
 
 ```text

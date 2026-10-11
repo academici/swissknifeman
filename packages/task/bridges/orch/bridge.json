@@ -12,6 +12,9 @@
     "commit": "commit.py",
     "launch": "launch.py"
   },
+  "extends": {
+    "orchestration.options": "schemas/run-options.schema.json"
+  },
   "requires": {
     "cli": "scripts/orch.py",
     "env": "SKM_ORCH_ROOT"

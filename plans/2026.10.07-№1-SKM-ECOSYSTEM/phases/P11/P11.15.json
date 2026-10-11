@@ -3,11 +3,11 @@
   "id": "P11.15",
   "title": "Review P11: независимый read-only аудит фазы на Grok 4.7",
   "status": "todo",
-  "summary": "Один независимый read-only проход Grok 4.7 (effort xhigh) по изменениям фазы P11.1–P11.14 по брифу с инвариантами фазы; доказательство маршрута из потока сессии; вердикт GREEN/RED с находками и владельцами — artifacts/P11.15/review-verdict.md и knowledge audit-p11-<дата>; продукт и план ревьюер не меняет; исправления — одна коррекция у владельцев после вердикта (вне пункта).",
+  "summary": "Один независимый read-only проход Grok 4.7 (effort xhigh) по изменениям фазы P11.1–P11.14 по брифу с инвариантами фазы; доказательство маршрута из потока сессии; вердикт GREEN/RED с находками и владельцами — artifacts/P11.15/review-verdict.json (короткий: селектор, сессия, вердикт, находки с воспроизведением, путь потока) и knowledge audit-p11-<дата>; продукт и план ревьюер не меняет; исправления — одна коррекция у владельцев после вердикта (вне пункта).",
   "why": "Запрос владельца «аудит на grok 4.7» (правило: независимое ревью — отдельный read-only пункт в конце фазы). Фаза меняет связи модулей, места конфига и состояния живых проектов и удаляет core — независимая проверка интеграции и подмены доказательств. Риск: вердикт без подтверждённого маршрута (не та модель) — пункт blocked, а не подмена своей проверкой.",
   "scope": {
     "include": [
-      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/review-brief.md, argv.json, launch.json, review-grok-4.7.stream.jsonl, review-grok-4.7.stderr, review-verdict.md",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/review-brief.md, argv.json, launch.json, review-verdict.json; поток review-grok-4.7.stream.jsonl и review-grok-4.7.stderr — в игнорируемом .swissknifeman/state/review/P11.15/",
       "knowledge audit-p11-<YYYY-MM-DD> через plan.py add-document; plan.py add-artifact; plan.py log"
     ],
     "exclude": [
@@ -57,11 +57,11 @@
     "Вердикт ревьюера записывается дословно; исполнитель пункта не дописывает своих находок в вердикт (свои наблюдения — отдельно в notes)",
     "Один проход, без субагентов; широкие проверки P11.14 переиспользуются"
   ],
-  "guidance": "Исполнитель: implementation/high (оркестратор пункта), ревьюер — Grok 4.7 xhigh.\n\nПорядок: база = коммит перед P11.1 (`git log --grep 'PLAN3.P11.1' --format=%H | tail -1` → `^`), кандидат = HEAD → бриф по knowledge/hub-p11-closure#review → запуск ro-run + grok (argv из того же раздела; `<клон>` = корень репозитория) с выводом в artifacts/P11.15 → проверка маршрута (init.model = grok-4.7, exit 0, result success) → `review-verdict.md` (дословный итог, строка маршрута) → `plan.py add-document` audit-p11-<дата> (`applies_to: [\"P11\"]`) → `plan.py add-artifact` (brief, stream, verdict) → `plan.py log P11.15` с вердиктом → finish (done при GREEN; при RED — done_with_deviations с перечнем находок и владельцев для одной коррекции).",
+  "guidance": "Исполнитель: implementation/high (оркестратор пункта), ревьюер — Grok 4.7 xhigh.\n\nПорядок: база = коммит перед P11.1 (`git log --grep 'PLAN3.P11.1' --format=%H | tail -1` → `^`), кандидат = HEAD → бриф по knowledge/hub-p11-closure#review → запуск ro-run + grok (argv из того же раздела; `<клон>` = корень репозитория) с выводом потока и stderr в .swissknifeman/state/review/P11.15/ (не в артефакт) → проверка маршрута (init.model = grok-4.7, exit 0, result success) → `artifacts/P11.15/review-verdict.json` (короткий: selector, session, verdict, findings с воспроизведением, путь потока в state; дословный итог ревьюера, строка маршрута) → `plan.py add-document` audit-p11-<дата> (`applies_to: [\"P11\"]`) → `plan.py add-artifact` (brief, argv, launch, verdict; поток в артефакт не идёт) → `plan.py log P11.15` с вердиктом → finish (done при GREEN; при RED — done_with_deviations с перечнем находок и владельцев для одной коррекции).",
   "validation": [
     {
       "id": "V1",
-      "cmd": "A=plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15; test -s $A/review-brief.md && test -s $A/review-grok-4.7.stream.jsonl && test -s $A/review-verdict.md && python3 -c 'import json, sys; a = json.load(open(sys.argv[1])); assert \"grok-4.7\" in a[\"argv\"] and a.get(\"model\") == \"grok-4.7\", a' $A/launch.json && grep -q 'grok-4.7' $A/review-grok-4.7.stream.jsonl",
+      "cmd": "A=plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15; S=.swissknifeman/state/review/P11.15; test -s $A/review-brief.md && test -s $S/review-grok-4.7.stream.jsonl && python3 -c 'import json, sys; a = json.load(open(sys.argv[1])); assert \"grok-4.7\" in a[\"argv\"] and a.get(\"model\") == \"grok-4.7\", a; v = json.load(open(sys.argv[2])); assert v.get(\"verdict\") and v.get(\"selector\") and v.get(\"session\") and v.get(\"findings\") is not None, v' $A/launch.json $A/review-verdict.json && grep -q 'grok-4.7' $S/review-grok-4.7.stream.jsonl",
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "."
@@ -75,7 +75,7 @@
     }
   ],
   "deliverables": [
-    "вердикт аудита P11 на Grok 4.7",
+    "короткий вердикт аудита P11 на Grok 4.7 (review-verdict.json)",
     "knowledge audit-p11"
   ],
   "route": {
@@ -102,5 +102,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-11T12:19:07Z"
+  "updated_at": "2026-10-11T18:46:06Z"
 }

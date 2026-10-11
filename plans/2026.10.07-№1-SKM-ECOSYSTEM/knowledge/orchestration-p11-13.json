@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "orchestration-p11-13",
+  "title": "Orchestration: P11.13 (документация)",
+  "sections": [
+    {
+      "id": "orchestration",
+      "title": "Orchestration",
+      "text": "```json\n{\n \"scenario\": \"scout-solo\"\n}\n```"
+    }
+  ],
+  "applies_to": [
+    "P11.13"
+  ]
+}

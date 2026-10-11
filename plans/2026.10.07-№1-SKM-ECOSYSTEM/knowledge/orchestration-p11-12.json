@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "orchestration-p11-12",
+  "title": "Orchestration: P11.12 (удаление core и artifex)",
+  "sections": [
+    {
+      "id": "orchestration",
+      "title": "Orchestration",
+      "text": "```json\n{\n \"options\": {\n  \"rules\": [\n   \"Удаляй только через git rm и после git grep без оставшихся ссылок на путь; генерируемое пересобирай генераторами.\"\n  ],\n  \"limits\": {\n   \"check_fixes\": 2\n  }\n }\n}\n```"
+    }
+  ],
+  "applies_to": [
+    "P11.12"
+  ]
+}

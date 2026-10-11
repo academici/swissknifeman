@@ -31,11 +31,7 @@ unset -f _aicore_ok
 # --- end aicore locator ---
 
 # lib/ — package analyst; REPO_ROOT — to be imported tests.*.
-# MONOREPO_ROOT (two levels above the package) — to import the package `core`;
-# optional: in standalone-directory layout core no, the path is not added.
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 # Tests run against a throwaway HOME; the configuration and state locations must not come from the
 # developer machine.

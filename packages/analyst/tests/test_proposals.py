@@ -226,7 +226,7 @@ class TestProposals(unittest.TestCase):
         before = {str(p) for p in self.base.rglob("*")}
 
         p1 = self._run_json(["create", "--type", "stack-pack", "--title", "General extension-point",
-                             "--summary", "s", "--target", "packages/harness/.../laravel-package"])
+                             "--summary", "s", "--target", "harness agent-pack: laravel-package"])
         self._run_json(["create", "--type", "docs", "--title", "Doc fix", "--summary", "s2"])
         self._run_json(["list"])
         self._run_json(["show", p1["id"]])

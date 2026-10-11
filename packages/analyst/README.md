@@ -24,8 +24,8 @@ provenance + validate-before-promote — is not caution, but a sufficient condit
 <project>/.claude/runs/<sid>.json          (run-report — writes SessionEnd-hook harness)
    │  analyst digest → deterministic candidate extraction (high-precision signals)
    ▼
-<project>/.claude/analyst/lessons/{ephemeral,candidate,curated,deprecated}/<id>.json  (LOCAL)
-<project>/.claude/analyst/audit.ndjson     (append-only provenance)
+<project>/.swissknifeman/analyst/lessons/{ephemeral,candidate,curated,deprecated}/<id>.json  (LOCAL)
+<project>/.swissknifeman/analyst/audit.ndjson     (append-only provenance)
    │  analyst review  → list + diff against active (Jaccard, stdlib)
    │  analyst promote <id>  → MAN confirms → state++ → audit
    ▼  (curated) → maind memory → pops up on SessionStart (memory-digest-hook)

@@ -1,12 +1,12 @@
 """Lesson Repository analyst — file store with scalars, provenance and audit.
 
 Per-project layout (LOCAL, privacy-by-directories from ECC):
-    <project>/.claude/analyst/
+    <project>/.swissknifeman/analyst/   (legacy: .swissknife/analyst, .claude/analyst)
       lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
       audit.ndjson        # append-only: who/when/that promoted (provenance)
 
 Invariants (data-integrity):
-- lesson recording - atomic (core.atomic_write_json: tmp + os.replace);
+- lesson recording - atomic (aicore.util.io.atomic_write_json: tmp + os.replace);
 - state transition - atomic re-write to a new directory + unlink old (lesson is not double);
 - audit - append-only ndjson (is not overwritten, only appended);
 - lesson carries only SCALARS (portable, deterministic); raw materials/we don't put secrets inside.
@@ -19,8 +19,10 @@ import os
 import re
 from pathlib import Path
 
-from .common import (atomic_write_json, now_iso, read_ndjson, safe_load_json,
-                     sanitize)
+from aicore.state import resolve_with_legacy
+from aicore.util.io import atomic_write_json, read_ndjson, safe_load_json
+from aicore.util.term import now_iso
+from aicore.util.text import sanitize
 
 STATES = ("ephemeral", "candidate", "curated", "deprecated")
 KINDS = ("heuristic", "procedure", "gotcha")
@@ -31,12 +33,14 @@ ACTIVE_STATES = ("curated", "candidate", "ephemeral")
 
 # ── paths ─────────────────────────────────────────────────────────────────────
 def project_dir(project_path):
-    """New human-curated analyst state; legacy Claude state remains read-only fallback."""
-    return Path(os.path.expanduser(str(project_path))) / ".swissknife" / "analyst"
-
-
-def legacy_project_dir(project_path):
-    return Path(os.path.expanduser(str(project_path))) / ".claude" / "analyst"
+    """Active analyst state of a project: `.swissknifeman/analyst`, or the first existing legacy
+    `.swissknife/analyst` / `.claude/analyst` (one warning; reads and writes stay in that place
+    until `swissknifeman upgrade` moves it). The project folder is not machine state, so SKM_HOME
+    does not hide its legacy locations."""
+    base = Path(os.path.expanduser(str(project_path)))
+    return resolve_with_legacy(base / ".swissknifeman" / "analyst",
+                               [base / ".swissknife" / "analyst", base / ".claude" / "analyst"],
+                               env={}, home=base)
 
 
 def lessons_dir(project_path):
@@ -54,7 +58,7 @@ def audit_path(project_path):
 
 
 def events_path(project_path):
-    """<project>/.claude/analyst/events.ndjson — append-only signal flow confidence.
+    """<project>/.swissknifeman/analyst/events.ndjson — append-only signal flow confidence.
     Separate from audit.ndjson (that - provenance of transitions); here are observation scalars
     (sessions_total/success, tests_total/passed), of which recompute will be restored."""
     return project_dir(project_path) / "events.ndjson"
@@ -107,16 +111,13 @@ def new_lesson(*, trigger, action, kind="heuristic", scope, session_id="",
 
 # ── read ───────────────────────────────────────────────────────────────────
 def _iter_state(project_path, state):
-    seen = set()
-    for base in (project_dir(project_path), legacy_project_dir(project_path)):
-        d = base / "lessons" / state
-        if not d.is_dir():
-            continue
-        for p in sorted(d.glob("*.json")):
-            rec = safe_load_json(p, None)
-            if isinstance(rec, dict) and rec.get("id") not in seen:
-                seen.add(rec.get("id"))
-                yield rec
+    d = lessons_dir(project_path) / state
+    if not d.is_dir():
+        return
+    for p in sorted(d.glob("*.json")):
+        rec = safe_load_json(p, None)
+        if isinstance(rec, dict):
+            yield rec
 
 
 def list_lessons(project_path, state=None):
@@ -132,12 +133,11 @@ def list_lessons(project_path, state=None):
 def find_lesson(project_path, lesson_id):
     """(lesson, state) first match by id (order STATES) or (None, None)."""
     for st in STATES:
-        for base in (project_dir(project_path), legacy_project_dir(project_path)):
-            p = base / "lessons" / st / f"{lesson_id}.json"
-            if p.is_file():
-                rec = safe_load_json(p, None)
-                if isinstance(rec, dict):
-                    return rec, st
+        p = state_dir(project_path, st) / f"{lesson_id}.json"
+        if p.is_file():
+            rec = safe_load_json(p, None)
+            if isinstance(rec, dict):
+                return rec, st
     return None, None
 
 

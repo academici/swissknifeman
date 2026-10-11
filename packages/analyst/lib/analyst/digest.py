@@ -31,7 +31,9 @@ from pathlib import Path
 
 from aicore.config import ConfigError
 
-from .common import die, parse_args, safe_load_json
+from aicore.util.cli import parse_args
+from aicore.util.io import safe_load_json
+from aicore.util.term import die
 from .pathology import detect as detect_pathologies
 from .run_reports import find_run_report
 from .lessons import (ACTIVE_STATES, add_candidate, audit_append,

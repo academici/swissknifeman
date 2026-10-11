@@ -7,7 +7,8 @@ import json
 import os
 
 from . import lessons
-from .common import die, parse_args
+from aicore.util.cli import parse_args
+from aicore.util.term import die
 
 
 def build_review(project_path, state=None):

@@ -18,7 +18,8 @@ from aicore.config import ConfigError
 
 from . import confidence as C
 from . import lessons
-from .common import die, now_iso, parse_args, parse_iso
+from aicore.util.cli import parse_args
+from aicore.util.term import die, now_iso, parse_iso
 from .settings import DEFAULT_THRESHOLDS, load_thresholds
 
 # ── numeric gates state-machine (§5) ────────────────────────────────────────

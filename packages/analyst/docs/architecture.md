@@ -8,7 +8,7 @@ invariants and data layout.
 | Module | Responsibility |
 |:--|:--|
 | `cli.py` | command manager (`COMMANDS` → `cmd_*(env, argv)`) |
-| `common.py` | `Env(BaseEnv)` (path-property: `state_dir` = `<state>/analyst`, see README Configuration, `monorepo_root`) + re-export `core` |
+| `common.py` | `Env(BaseEnv)` (path-property: `state_dir` = `<state>/analyst`, see README Configuration); no re-export, modules import from `aicore` |
 | `lessons.py` | file store: lesson outline, state-directories, atomic write, append-only `audit`/`events`, Jaccard/similar, mem0-taxonomy |
 | `digest.py` | run-report → candidates for high-precision signals; **clean extractors** + IO in `cmd_` |
 | `scan.py` | cross-project aggregator (P2): clusters → patterns in ≥N projects (namespace-isolated) + reconcile |
@@ -47,7 +47,7 @@ publication surface.
 ## Data Layout
 
 ```
-<project>/.claude/analyst/                 # per-project, LOCAL (raw remains here)
+<project>/.swissknifeman/analyst/                 # per-project, LOCAL (raw remains here)
   lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
   audit.ndjson · events.ndjson
 

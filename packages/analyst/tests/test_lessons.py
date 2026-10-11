@@ -1,7 +1,11 @@
 """Lesson repository tests: diagram, atomic write, transitions, append-only audit, Jaccard."""
+import contextlib
+import io
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from analyst import lessons
 
@@ -91,6 +95,52 @@ class TestLessons(unittest.TestCase):
         sim2 = lessons.similar_lessons(self.proj, "Laravel DDD service", "put services",
                                        threshold=0.1, exclude_id=L["id"])
         self.assertEqual(sim2, [])
+
+
+class TestProjectDir(unittest.TestCase):
+    """Project lessons live in .swissknifeman/analyst; legacy places are read and written in place."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.proj = Path(self._tmp.name)
+
+    def _lesson(self):
+        return lessons.new_lesson(trigger="trigger text", action="action text",
+                                  scope="project:test", session_id="s1")
+
+    def _save(self, legacy_stderr=None):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            path = lessons.save_lesson(self.proj, self._lesson())
+        return path, err.getvalue()
+
+    def test_new_project_uses_swissknifeman_dir(self):
+        path, err = self._save()
+        self.assertEqual(path.parent.parent.parent, self.proj / ".swissknifeman" / "analyst")
+        self.assertEqual(err, "")
+        self.assertFalse((self.proj / ".swissknife").exists() or (self.proj / ".claude").exists())
+
+    def test_legacy_dirs_stay_active_with_a_warning(self):
+        for legacy in (".swissknife", ".claude"):
+            with self.subTest(legacy=legacy), tempfile.TemporaryDirectory() as tmp:
+                self.proj = Path(tmp)
+                (self.proj / legacy / "analyst" / "lessons").mkdir(parents=True)
+                with mock.patch.dict(os.environ, {"SKM_HOME": tmp + "/skm"}):
+                    path, err = self._save()
+                self.assertTrue(str(path).startswith(str(self.proj / legacy / "analyst")), path)
+                self.assertIn("legacy location", err)
+                self.assertFalse((self.proj / ".swissknifeman").exists())
+                lesson, state = lessons.find_lesson(self.proj, self._lesson()["id"])
+                self.assertEqual(state, "ephemeral")
+
+    def test_swissknife_wins_over_claude_and_new_wins_over_both(self):
+        (self.proj / ".swissknife" / "analyst").mkdir(parents=True)
+        (self.proj / ".claude" / "analyst").mkdir(parents=True)
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(lessons.project_dir(self.proj), self.proj / ".swissknife" / "analyst")
+        (self.proj / ".swissknifeman" / "analyst").mkdir(parents=True)
+        self.assertEqual(lessons.project_dir(self.proj), self.proj / ".swissknifeman" / "analyst")
 
 
 if __name__ == "__main__":

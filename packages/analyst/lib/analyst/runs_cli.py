@@ -9,7 +9,8 @@ from dataclasses import fields
 from pathlib import Path
 
 from .codegraph import MAX_REPORTS, load_reports, scan_run_report
-from .common import die, parse_args
+from aicore.util.cli import parse_args
+from aicore.util.term import die
 from .run_reports import find_analytics_events, find_run_report_result
 
 LOOKUP_SCHEMA = "urn:swissknifeman:analyst:run-lookup:v1"

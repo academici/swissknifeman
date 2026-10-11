@@ -3,7 +3,8 @@ import json
 import os
 from pathlib import Path
 
-from .common import die, parse_args
+from aicore.util.cli import parse_args
+from aicore.util.term import die
 from .events import append_event
 from .runs import migrate_legacy, normalize
 

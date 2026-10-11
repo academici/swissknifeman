@@ -1,7 +1,7 @@
 """analyst token-report — token report on slices (model/role) + two-layer baseline.
 
 Source - `<project>/.claude/analyze/usage-trend.ndjson` (writes SessionEnd-hook run-report,
-see `packages/harness/configs/claude-code/hooks/run-report/run-report.py:_append_trend`,
+see the harness run-report hook (`_append_trend`),
 SCHEMA=2). Trend LINE Format (tested by reading the hook - not made up):
 `{ts, session, in, out, cache_read, cache_creation, by_model:{model:{in,out}},
 tools_total, files_changed, agents, wall_s, retr_chars}`.
@@ -46,8 +46,9 @@ import os
 import statistics
 from pathlib import Path
 
-from .common import (atomic_write_json, die, now_iso, parse_args,
-                     read_ndjson, safe_load_json, warn)
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_json, read_ndjson, safe_load_json
+from aicore.util.term import die, now_iso, warn
 from .run_reports import find_run_report
 
 TREND_REL = Path(".swissknife") / "analytics" / "usage-trend.ndjson"
@@ -343,16 +344,12 @@ def _print_human(rep):
 
 # ── CLI ────────────────────────────────────────────────────────────────────────────
 def _cmd_all_projects(env, sessions, by, vs_baseline, as_json):
-    """--all-projects: bypass config.json:projects[] (same registry/filter that analyst
+    """--all-projects: bypass the maind project registry (same registry/filter that analyst
     scan — reuse enabled_projects/load_projects, do not duplicate). Project without
     trend → honest line «no trend», does not stop crawling other projects."""
     from .scan import enabled_projects, load_projects
 
-    cfg = env.default_config
-    if not Path(cfg).is_file():
-        die(f"project registry not found: {cfg} — --all-projects needed config.json "
-            "(monorepo ecosystem root)")
-    projects = enabled_projects(load_projects(cfg))
+    projects = enabled_projects(load_projects())
     if not projects:
         warn("no enabled-projects in the registry")
 

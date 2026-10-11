@@ -2,16 +2,15 @@ import io
 import contextlib
 import json
 import hashlib
-import sys
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from analyst.doctor import cmd_doctor
 from analyst.events import append_event, events_path, read_events
 from analyst.runs import migrate_legacy, neutral_run_report, normalize
-
-_PLANNER_LIB = Path(__file__).resolve().parents[2] / "planner" / "lib"
 
 
 class ProviderReaderTests(unittest.TestCase):
@@ -198,43 +197,33 @@ class ProviderReaderTests(unittest.TestCase):
                       project_id="p", raw_ref="local:r")
 
 
-class DoctorPlanApiTests(unittest.TestCase):
-    """P2.4: `analyst doctor` optionally reports
-    whether `planner.plan` is importable — analyst does not depend on `planner`
-    hard, mirroring the existing optional `maind` check."""
+class DoctorPartnerTests(unittest.TestCase):
+    """`analyst doctor` reports the optional `planner` command found by `aicore.util.partners`;
+    analyst does not import `planner` and its absence does not fail the verdict."""
 
-    def _run_doctor(self):
+    def _run_doctor(self, env_vars):
         from analyst.common import Env
         env = Env("/tmp/analyst-root", "doctor", home="/tmp/fakehome")
         out = io.StringIO()
-        with contextlib.redirect_stdout(out):
+        clean = {k: v for k, v in os.environ.items()
+                 if k not in ("PLANNER_PLAN_PY", "PLANNER_ROOT", "SKM_TASK_ROOT", "SKM_MAIND_BIN",
+                              "SKM_MAIND_ROOT", "MAIND_BIN")}
+        clean["PATH"] = ""
+        with mock.patch.dict(os.environ, {**clean, **env_vars}, clear=True), \
+                contextlib.redirect_stdout(out):
             cmd_doctor(env, [])
         return out.getvalue()
 
-    def test_reports_available_when_task_lib_is_on_sys_path(self):
-        sys.path.insert(0, str(_PLANNER_LIB))
-        sys.modules.pop("planner.plan", None)
-        sys.modules.pop("planner", None)
-        try:
-            text = self._run_doctor()
-        finally:
-            sys.path.remove(str(_PLANNER_LIB))
-            sys.modules.pop("planner.plan", None)
-            sys.modules.pop("planner", None)
-        self.assertIn("✓ planner.plan", text)
+    def test_reports_planner_available_when_found(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_py = Path(tmp) / "plan.py"
+            plan_py.write_text("", encoding="utf-8")
+            text = self._run_doctor({"PLANNER_PLAN_PY": str(plan_py)})
+        self.assertIn("✓ planner (optional)", text)
 
     def test_reports_optional_and_does_not_fail_the_verdict_when_absent(self):
-        sys.modules.pop("planner.plan", None)
-        sys.modules.pop("planner", None)
-        blocked = [p for p in sys.path if p.endswith("planner/lib") or p == str(_PLANNER_LIB)]
-        for p in blocked:
-            sys.path.remove(p)
-        try:
-            text = self._run_doctor()
-        finally:
-            for p in blocked:
-                sys.path.insert(0, p)
-        self.assertIn("· planner.plan", text)
+        text = self._run_doctor({})
+        self.assertIn("· planner (optional)", text)
         self.assertIn("The environment is ready.", text)
 
 

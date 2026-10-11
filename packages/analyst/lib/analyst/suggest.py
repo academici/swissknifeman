@@ -22,8 +22,9 @@ would trigger falsely for every re-suggest.
 import hashlib
 import re
 
-from .common import (atomic_write_json, atomic_write_text, die, now_iso,
-                     parse_args, safe_load_json, warn)
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_json, atomic_write_text, safe_load_json
+from aicore.util.term import die, now_iso, warn
 
 DRAFT_SCHEMA_VERSION = 1
 RESERVED_NAME_WORDS = ("claude", "anthropic")   # official. ban in name skills Claude Code
@@ -228,16 +229,11 @@ def write_draft(env, pattern, bucket, *, force=False):
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def _resolve_bucket(env, opts):
     """bucket from --bucket or placeholder TODO. namespace→bucket NO auto-mapping
-    (namespace — insulation, bucket — topic). Returns (bucket, hint[]): hint — available
-    buckets from the registry skiller (best-effort, if reachable), to give a hint to a person."""
+    (namespace — insulation, bucket — topic). Returns (bucket, hint[]): hint is always empty —
+    analyst does not read the skiller registry; the person picks the bucket there."""
     if opts["bucket"]:
         return opts["bucket"], []
-    hint = []
-    buckets_json = env.monorepo_root / "packages" / "skiller" / "buckets.json"
-    data = safe_load_json(buckets_json, None)
-    if isinstance(data, dict):
-        hint = sorted(data.keys())
-    return "TODO", hint
+    return "TODO", []
 
 
 def _handoff_lines(env, pid, bucket, name):
@@ -248,9 +244,9 @@ def _handoff_lines(env, pid, bucket, name):
         f"  Draft: {env.state_dir / 'drafts' / pid / 'SKILL.ru.md'}",
         "  Promotion in skill - human (analyst does NOT write to skills/, DOES NOT generate EN, DOES NOT register):",
         f"    1. mkdir -p <skiller>/skills/{b}/{name}/  and move it there SKILL.ru.md (name == directory)",
-        "    2. generate EN-canon: promt packages/skiller/prompts/generate/claude-canon-from-ru.md → SKILL.md",
-        "    3. bash packages/skiller/scripts/check-translations.sh --stamp",
-        "    4. bash packages/skiller/scripts/validate.sh",
+        "    2. generate EN-canon: the skiller canon prompt (claude-canon-from-ru) → SKILL.md",
+        "    3. the skiller translation check (`skiller` repository scripts, check-translations --stamp)",
+        "    4. the skiller validation (`validate.sh` of the skiller repository)",
         "    5. skiller registry",
     ]
 
@@ -325,7 +321,7 @@ def cmd_suggest(env, argv):
         print(f"  ⚑ [{r['namespace']}] {r['pattern_id']}  · weight {r['weight']} · "
               f"name-candidate: {r['name']}  ({r['status']})")
     if bucket == "TODO":
-        tip = (", ".join(bucket_hint[:12]) + ", …") if bucket_hint else "see skiller buckets.json"
+        tip = (", ".join(bucket_hint[:12]) + ", …") if bucket_hint else "see the skiller bucket list"
         print(f"\n  bucket not specified - select by person (--bucket B). Available: {tip}")
     # handoff — based on the first draft as a sample (for --all details are identical, catalogs are their own).
     print()

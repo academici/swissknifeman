@@ -1,11 +1,15 @@
 """Tests projects.py: sync from brain (mapping, idempotency, field saving)."""
 import contextlib
 import io
+import json
 import os
+from pathlib import Path
 import tempfile
 import unittest
 from unittest import mock
 
+import aicore
+from aicore.util.schema import load_contract, validate
 from maind.config import load_config
 from maind.projects import brain_path, cmd_projects, get, listing, sync_from_brain, write_config
 from tests.fixtures import capture, make_repo, write_brain_projects, write_maind_config
@@ -115,6 +119,27 @@ class TestProjectsHealth(unittest.TestCase):
                      "--evidence-set", "sealed.json", "--json"]):
                 with self.subTest(argv=argv), self.assertRaises(SystemExit):
                     cmd_projects(env, argv)
+
+
+class TestListContract(unittest.TestCase):
+    def test_list_json_matches_projects_list_schema(self):
+        schemas = Path(__file__).resolve().parents[1] / "schemas"
+        foundation = Path(aicore.__file__).resolve().parents[2] / "schemas"
+        registry, kind = load_contract(schemas / "projects-list" / "v1",
+                                       urn_prefix="urn:swissknifeman:maind:", foundation=foundation)
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            write_maind_config(root, projects=[
+                {"id": "alpha", "name": "Alpha", "local_path": "~/a", "namespaces": ["*"],
+                 "enabled": True, "status": "active", "dependencies": ["maind"], "extra": {"k": 1}},
+                {"id": "beta", "local_path": "/b", "enabled": False}])
+            _, out = capture(cmd_projects, env, ["list", "--json"])
+            doc = json.loads(out)
+            self.assertEqual([p["id"] for p in doc], ["alpha", "beta"])
+            self.assertEqual(validate(doc, kind, registry), [])
+            self.assertTrue(validate([{"name": "no id"}], kind, registry))
+            # records mapped from the brain fallback may carry null paths
+            self.assertEqual(validate([{"id": "c", "local_path": None, "vault_path": None}], kind, registry), [])
 
 
 if __name__ == "__main__":

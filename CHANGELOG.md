@@ -4,6 +4,12 @@
 
 ### Changed
 
+- **analyst:** depends on `aicore` only (no `core` import, no `monorepo_root`/`default_config`, no re-export in `common.py`); `analyst` is standalone.
+  The cross-project registry (`scan`, `token-report --all-projects`, `sessions --project`, `workflow-scan`) is read with `maind projects list --json`
+  and fails with `PARTNER_UNAVAILABLE` without maind; `maind` and `planner` are found by `aicore.util.partners`; project lessons live in
+  `<project>/.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst` stay active with one warning); `analyst suggest` no
+  longer reads the skiller bucket list; `workflow-scan` reads planner templates from `PLANNER_ROOT`.
+- **maind:** new contract `projects-list/v1` describes the output of `maind projects list --json` (output unchanged).
 - **analyst:** run analytics moved from `core` (`runs`, `pathology`, `codegraph_telemetry` are now `analyst.run_reports`,
   `analyst.pathology`, `analyst.codegraph`); `core` no longer exports `find_run_report*`. New `analyst runs show|codegraph --json`
   with the contracts `run-lookup/v1` and `run-codegraph/v1`.

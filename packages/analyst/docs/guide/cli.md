@@ -12,7 +12,7 @@ analyst digest [--cwd | --session UUID] [--project ID] [--dry-run] [--json]
 
 Deterministically extracts candidate lessons from fresh `run-report` run on high-precision signals
 (**resolved-failure** «command crashed and then passed»; explicit **dev-loop workarounds**) →
-`.claude/analyst/lessons/ephemeral/` (LOCAL). `--dry-run`/`--json` — preview without recording.
+`.swissknifeman/analyst/lessons/ephemeral/` (LOCAL). `--dry-run`/`--json` — preview without recording.
 
 ## `analyst scan` (P2)
 
@@ -20,7 +20,7 @@ Deterministically extracts candidate lessons from fresh `run-report` run on high
 analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]
 ```
 
-Cross-project aggregator: bypasses the registry `config.json:projects[]`, reads per-project lessons,
+Cross-project aggregator: bypasses the maind project registry (`maind projects list --json`), reads per-project lessons,
 greedy-Jaccard-clusters and detects patterns that repeat in **≥N projects** (default 3),
 → draft-sentences in `<state>/analyst/suggestions/` + index `index/by_pattern/`.
 **Namespace-isolated**. Reconciliation: orphaned artifacts are removed **strictly in scope run**

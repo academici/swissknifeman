@@ -11,7 +11,9 @@ from aicore.config import ConfigError
 
 from . import lessons
 from . import recompute as R
-from .common import atomic_write_text, die, parse_args, parse_iso
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_text
+from aicore.util.term import die, parse_iso
 from .settings import DEFAULT_THRESHOLDS, load_thresholds
 
 

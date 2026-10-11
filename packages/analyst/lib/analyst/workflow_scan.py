@@ -6,31 +6,33 @@ uses a small lexical scanner; it never imports, evaluates or shells out to JS.
 """
 import hashlib
 import json
+import os
 import re
 from collections import defaultdict
 from pathlib import Path
 
-from .common import atomic_write_json, atomic_write_text, die, parse_args, safe_load_json
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_json, atomic_write_text
+from aicore.util.term import die, warn
+
+from .scan import registry_rows
 
 REPORT_VERSION = "workflow-fleet-report/v1"
 _FEATURES = ("test", "review", "verify", "gate", "commit", "max_iteration", "judge_panel")
 _META_RE = re.compile(r"\bexport\s+const\s+meta\s*=")
 
 
-def load_projects(config_path):
-    """Read the existing maind registry shape, retaining only enabled identities."""
-    doc = safe_load_json(Path(config_path), None)
-    if not isinstance(doc, dict):
-        return []
-    rows = []
-    for row in doc.get("projects") or []:
+def load_projects(rows):
+    """Keep enabled project identities from the maind registry records (contract projects-list/v1)."""
+    out = []
+    for row in rows if isinstance(rows, list) else []:
         if not isinstance(row, dict) or not isinstance(row.get("id"), str):
             continue
-        rows.append({
+        out.append({
             "id": row["id"], "enabled": bool(row.get("enabled", True)),
             "local_path": row.get("local_path") or "", "vault_path": row.get("vault_path") or "",
         })
-    return sorted((row for row in rows if row["enabled"]), key=lambda row: row["id"])
+    return sorted((row for row in out if row["enabled"]), key=lambda row: row["id"])
 
 
 def _inside(path, root):
@@ -174,8 +176,18 @@ def inventory(projects):
     return sources, missing, sorted(diagnostics, key=lambda row: row["identity"])
 
 
-def template_sources(monorepo_root):
-    root = Path(monorepo_root) / "packages" / "planner" / "workflows"
+def template_sources(env=None):
+    """Canonical workflow templates of the planner partner (``PLANNER_ROOT/workflows``).
+
+    Without the planner the list is empty and the report says so on stderr: every feature then
+    reads as not covered by a template."""
+    env = os.environ if env is None else env
+    planner_root = env.get("PLANNER_ROOT")
+    if not planner_root or not (Path(os.path.expanduser(planner_root)) / "workflows").is_dir():
+        warn("PARTNER_UNAVAILABLE: planner workflow templates not found (set PLANNER_ROOT); "
+             "template coverage is not evaluated")
+        return []
+    root = Path(os.path.expanduser(planner_root)) / "workflows"
     records = []
     for path in sorted(root.glob("wf-*.js")):
         raw = path.read_bytes()
@@ -247,12 +259,12 @@ def cmd_workflow_scan(env, argv):
         print("analyst workflow-scan [--project ID] [--output DIR|FILE.json] [--now ISO] [--json]")
         return
     if not opts["now"]: die("workflow-scan requires --now for the reproducible report")
-    projects = load_projects(env.default_config)
+    projects = load_projects(registry_rows())
     if opts["project"]:
         projects = [row for row in projects if row["id"] == opts["project"]]
         if not projects: die(f"enabled project not found: {opts['project']}")
     sources, missing, diagnostics = inventory(projects)
-    report = build_report(projects, template_sources(env.monorepo_root), sources, missing, diagnostics, opts["now"])
+    report = build_report(projects, template_sources(), sources, missing, diagnostics, opts["now"])
     if opts["output"]:
         json_path, md_path = _output_paths(opts["output"])
         atomic_write_json(json_path, report)

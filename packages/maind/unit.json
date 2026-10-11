@@ -11,6 +11,9 @@
   ],
   "provides": {
     "cli": ["bin/maind"],
+    "contracts": [
+      {"id": "urn:swissknifeman:maind:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha"}
+    ],
     "plugins": [{"name": "maind", "manifest": ".claude-plugin/plugin.json"}],
     "doctor": [
       {"id": "maind.environment", "category": "environment", "probe": ["bin/maind", "doctor"], "output": "text"}

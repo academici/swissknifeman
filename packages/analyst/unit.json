@@ -7,7 +7,7 @@
   "stability": "beta",
   "destination": "hub",
   "requires": [
-    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: util, provider, config, state, events."}
   ],
   "provides": {
     "cli": ["bin/analyst"],

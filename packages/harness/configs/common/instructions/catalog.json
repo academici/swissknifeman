@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.6.0",
+  "catalog_version": "1.7.0",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -3035,6 +3035,136 @@
       "codex_target": "packages/brain/AGENTS.md",
       "cursor_target": "packages/brain/.cursor-instructions.mdc",
       "grok_target": "packages/brain/.grok-instructions.md"
+    },
+    {
+      "id": "orch",
+      "claude_target": "packages/orch/CLAUDE.md",
+      "codex_target": "packages/orch/AGENTS.md",
+      "cursor_target": "packages/orch/.cursor-instructions.mdc",
+      "grok_target": "packages/orch/.grok-instructions.md",
+      "sections": [
+        {
+          "id": "orch.identity",
+          "scope_id": "orch",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `orch` is the engine-neutral orchestration module: it owns the `exec/v1` contracts, the Engine Port, run-policy packs and the launch catalog; it prepares runs and drives a work source, and it starts no engine process yet.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "orch.maintainer",
+              "action": "preserve",
+              "object": "orch.identity.requirements",
+              "boundary": "orch.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.orch.common",
+              "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
+              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+            }
+          ],
+          "compatibility_assertions": [
+            "`orch` is the engine-neutral orchestration module",
+            "it starts no engine process yet.",
+            "`orch`",
+            "`exec/v1`"
+          ]
+        },
+        {
+          "id": "orch.module-boundaries",
+          "scope_id": "orch",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Import only `orch` and `aicore`; never name partner modules in the core: planner, skiller and harness are reached only through the bridges under the hub `bridges/` and the `orch:work-source` extension point.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "orch.maintainer",
+              "action": "preserve",
+              "object": "orch.module-boundaries.requirements",
+              "boundary": "orch.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.orch.common",
+              "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
+              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Import only `orch` and `aicore`",
+            "the `orch:work-source` extension point.",
+            "`orch`",
+            "`aicore`",
+            "`bridges/`"
+          ]
+        },
+        {
+          "id": "orch.engineering-invariants",
+          "scope_id": "orch",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Keep Python 3.9 compatibility, English diagnostics, `PortError` codes in the order of `docs/engine-port.md`, pure `prepare` and reducer functions, and change `exec/v1` only by optional fields proven by `aicore schema compat`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "orch.maintainer",
+              "action": "preserve",
+              "object": "orch.engineering-invariants.requirements",
+              "boundary": "orch.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.orch.common",
+              "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
+              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep Python 3.9 compatibility, English diagnostics",
+            "proven by `aicore schema compat`.",
+            "`PortError`",
+            "`docs/engine-port.md`",
+            "`aicore schema compat`"
+          ]
+        },
+        {
+          "id": "orch.validation-release",
+          "scope_id": "orch",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`, then `python3 scripts/ecosystem-units.py check` and `python3 scripts/ecosystem-units.py standalone orch` from the hub root; use Russian Conventional Commit messages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "orch.maintainer",
+              "action": "preserve",
+              "object": "orch.validation-release.requirements",
+              "boundary": "orch.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.orch.common",
+              "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
+              "sha256": "ebb504db50b0d15d7c33bfddd103c109ebfc8fe1e8d82ab03dea6573f168ae0e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+            "use Russian Conventional Commit messages.",
+            "`python3 scripts/ecosystem-units.py standalone orch`"
+          ]
+        }
+      ]
     }
   ]
 }

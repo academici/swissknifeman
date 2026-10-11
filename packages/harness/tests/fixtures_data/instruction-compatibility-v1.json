@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.6.0",
+  "fixture_version": "1.7.0",
   "provenance": {
     "captured_before_renderer": true
   },
@@ -1228,6 +1228,59 @@
         "`bash scripts/test.sh`",
         "`bash scripts/validate.sh`",
         "`python3 scripts/ecosystem-units.py standalone brain`"
+      ]
+    },
+    {
+      "id": "orch.identity",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "`orch` is the engine-neutral orchestration module",
+        "it starts no engine process yet.",
+        "`orch`",
+        "`exec/v1`"
+      ]
+    },
+    {
+      "id": "orch.module-boundaries",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Import only `orch` and `aicore`",
+        "the `orch:work-source` extension point.",
+        "`orch`",
+        "`aicore`",
+        "`bridges/`"
+      ]
+    },
+    {
+      "id": "orch.engineering-invariants",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Keep Python 3.9 compatibility, English diagnostics",
+        "proven by `aicore schema compat`.",
+        "`PortError`",
+        "`docs/engine-port.md`",
+        "`aicore schema compat`"
+      ]
+    },
+    {
+      "id": "orch.validation-release",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+        "use Russian Conventional Commit messages.",
+        "`python3 scripts/ecosystem-units.py standalone orch`"
       ]
     }
   ]

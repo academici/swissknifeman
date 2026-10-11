@@ -36,7 +36,10 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Plugin response `plugin-response/v1` | `urn:swissknifeman:aicore:plugin-response:v1`, `packages/aicore/schemas/plugin-response/v1` | aicore (ext) | development | protocol `1` |
 | Plugin describe `plugin-describe/v1` | `urn:swissknifeman:aicore:plugin-describe:v1`, `packages/aicore/schemas/plugin-describe/v1` | aicore (ext) | development | protocol `1`; no cache |
 | Telemetry conventions `telemetry-conventions/v1` | `urn:swissknifeman:aicore:telemetry-conventions:v1`, `packages/aicore/schemas/telemetry-conventions/v1` | aicore (ext) | development | names only, no exporter; modules adopt them: P10, P11 ([ADR 0045](decisions/0045-telemetry-naming-conventions.md)) |
-| Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | event identity, causation, epoch, digests and proof: P10 |
+| Orchestration `exec/v1` (nine document kinds) | `urn:swissknifeman:orch:exec:<kind>:v1`, `packages/orch/schemas/exec/v1` | orch | alpha | none; minor changes only: event identity, owner epoch, key hierarchy, digests, proof and capability freshness are optional fields recorded in the contract changelog ([ADR 0060](decisions/0060-execution-protocol-fields-in-exec-v1.md)) |
+| Work source `work-source/v1` (input, output; operations `claim`, `brief`, `register`) | `urn:swissknifeman:orch:work-source:<kind>:v1`, `packages/orch/schemas/work-source/v1` | orch | alpha | the input of the extension point `orch:work-source`; the plugin of `bridges/planner-orch` writes it ([ADR 0059](decisions/0059-work-source-port-and-evidence-gate.md)) |
+| Orch event data `event-data/v1` (one document per `orch.run.*` type) | `urn:swissknifeman:orch:event-data:<type>:v1`, `packages/orch/schemas/event-data/v1` | orch | alpha | none; consumers ignore unknown fields ([ADR 0061](decisions/0061-run-policy-packs-engine-choice-and-orch-events.md)) |
+| Orch config `orch` section | `urn:swissknifeman:orch:config:v1`, `packages/orch/configs/config.schema.json` | orch | alpha | table `[orch]` of the layered config: engine, engine by role, default profile, work source, capability freshness, profile folders, events |
 | Plan `plan/v1` (plan, phase, item, decision, document, brief, bridge, evidence, log event, snapshot, read envelopes) | `urn:swissknifeman:task:plan:<kind>:v1`, `packages/planner/schemas/plan/v1` | planner | beta | none; the URNs never change; minor additions only ([ADR 0056](decisions/0056-execution-scenario-and-one-owner-per-attempt.md)) |
 | Planner config `planner` section | `urn:swissknifeman:planner:config:v1`, `packages/planner/configs/config.schema.json` | planner | beta | table `[planner]` of the layered config, plus the `plan.settings` layer ([ADR 0054](decisions/0054-planner-settings-in-the-layered-config.md)) |
 | Planner event data `event-data/v1` (one document per event type) | `urn:swissknifeman:planner:event-data:<type>:v1`, `packages/planner/schemas/event-data/v1` | planner | beta | none; consumers ignore unknown fields ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)) |
@@ -257,7 +260,8 @@ rename), so the rename itself shows no breaking change.
 The descriptor names the partner, the direction, the contract (`exec/v1`, `skiller.resolve/v1`, and so on), the
 entrypoints and the required CLI and environment variable. Only the bridge that the planner dispatches carries a
 `bridge.json`; every bridge is a hub unit with a `unit.json` (kind `bridge`, destination `hub`, `protocol` range,
-`dev.test`). The planner finds bridge directories through the `bridges.roots` setting.
+`dev.test`). The planner finds bridge directories through the `bridges.roots` setting; a bridge finds its partners by a
+variable or a command on `PATH`, never by a neighbouring path ([ADR 0058](decisions/0058-bridges-as-hub-units-and-partner-lookup.md)).
 
 ### Skills index fields, host buckets and skiller describe
 

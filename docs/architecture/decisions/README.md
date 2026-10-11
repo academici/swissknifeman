@@ -82,3 +82,9 @@ by a new record.
 | [0054](0054-planner-settings-in-the-layered-config.md) | Planner settings live in the layered `[planner]` configuration | Accepted |
 | [0055](0055-planner-events-overlays-and-external-checks.md) | Planner events, command overlays and the `planner:check` extension point | Accepted |
 | [0056](0056-execution-scenario-and-one-owner-per-attempt.md) | Execution scenario and one owner per attempt, as minor changes of `plan/v1` | Accepted |
+| [0057](0057-orch-on-the-aicore-foundation.md) | `orch` runs on the `aicore` foundation | Accepted |
+| [0058](0058-bridges-as-hub-units-and-partner-lookup.md) | Bridges are hub units; partners are found by variable or command, never by path | Accepted |
+| [0059](0059-work-source-port-and-evidence-gate.md) | The `orch:work-source` port, owner fencing and the evidence gate | Accepted |
+| [0060](0060-execution-protocol-fields-in-exec-v1.md) | Execution protocol fields in `exec/v1`, as minor changes | Accepted |
+| [0061](0061-run-policy-packs-engine-choice-and-orch-events.md) | Run-policy packs, engine choice in `[orch]` and `orch.run.*` events | Accepted |
+| [0062](0062-engine-conformance-and-non-goals.md) | Engine conformance and the non-goals of `orch` | Accepted |

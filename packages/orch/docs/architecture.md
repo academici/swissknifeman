@@ -29,6 +29,30 @@ engines use partner CLI/JSON APIs only
 - `tests/test_boundaries.py` walks `lib/orch/**/*.py` and rejects imports outside the standard library, `orch` and `aicore`, and scans the
   package for names of other packages.
 
+## Work source and bridges
+
+`orch` takes work through the extension point `orch:work-source` (contract `work-source/v1`, see [work-source.md](work-source.md)),
+served by the plugin that `[orch] work_source` names. The plugin that ships is the bridge `planner-orch` of the hub; the core
+never names it. The other bridges (`orch-skiller`, `orch-harness`) are units of the hub in `bridges/<id>/` and find their
+partners by an environment variable or a command on `PATH`, never by a neighbouring folder.
+
+## Non-goals
+
+`orch` prepares runs, drives a work source and describes engines through a port. It does not provide:
+
+- durable timers;
+- signals;
+- workflow replay;
+- compensation;
+- multi-day execution.
+
+These belong to specialised runtimes; an engine may adapt one, `orch` does not become one. Starting engine processes is not
+implemented yet: `run`, a live `watch`, `cancel`, `resume` and `results` of a binding return `NOT_IMPLEMENTED`.
+
+**MCP is a tool surface, not the event bus, not the source of truth about runs.** The journal of a run and the events of
+`aicore` are that source; `tests/test_boundaries.py::test_no_mcp_imports` rejects MCP imports in `orch` and in the `aicore`
+extension layer ([conformance.md](conformance.md)).
+
 ## Layout
 
 ```text

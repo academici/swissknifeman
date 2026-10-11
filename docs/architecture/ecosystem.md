@@ -104,6 +104,7 @@ flowchart LR
 | --- | --- | --- |
 | planner and orch | bridge `bridges/planner-orch` | work-source port plus `exec/v1` |
 | orch and skiller | bridge `bridges/orch-skiller` | role to set of skills (`skiller resolve`) |
+| orch and harness | bridge `bridges/orch-harness` | conformance of the role manifests with the agent-pack role catalog |
 | analyst to planner | read-only planner CLI | plan read API |
 | planner to brain, analyst | events | `planner.*` |
 | orch to analyst | events | `orch.run.*` |
@@ -373,8 +374,14 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   the capabilities required in run-policy; an engine without them is refused instead of silently degraded.
 - **Scenarios:** run-policy profiles in the `orch` configuration, see
   [ADR 0013](decisions/0013-orchestration-scenarios-and-prepared-brief.md).
-- **Links:** the work-source port (`next`, `brief`, `run`, `register`) is implemented by bridges
-  (`bridges/planner-orch`); `orch` emits `orch.run.*`.
+- **After P10:** `orch` imports only the standard library, `orch` and `aicore` ([ADR 0057](decisions/0057-orch-on-the-aicore-foundation.md)).
+  Partners are reached through the bridges of the hub, which find them by variable or command
+  ([ADR 0058](decisions/0058-bridges-as-hub-units-and-partner-lookup.md)).
+- **Links:** the work-source port `orch:work-source` (`claim`, `brief`, `register`) is served by the plugin of
+  `bridges/planner-orch`, with owner fencing and an evidence gate ([ADR 0059](decisions/0059-work-source-port-and-evidence-gate.md));
+  `orch` emits `orch.run.*` ([ADR 0061](decisions/0061-run-policy-packs-engine-choice-and-orch-events.md)).
+- **Does not own:** durable timers, signals, workflow replay, compensation and multi-day execution; MCP is a tool surface,
+  not the event bus ([ADR 0062](decisions/0062-engine-conformance-and-non-goals.md)).
 
 ### skiller
 
@@ -476,7 +483,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
 | P7 | `brain` skeleton, document sync and `brain-locator`, first subscriber (done) |
 | P8 | `skiller` reduced to shared skills; code on `aicore`; module skills through the host-provided `system` bucket; settings in the layered config; skill metadata and `skiller describe` (done) |
 | P9 | `planner` rename with the `task` compatibility alias, layered configuration, events, overlay slots, external plan checks, execution scenario and attempt owner, commands on `aicore` (done) |
-| P10 | `orch` and bridges: work-source port, engine choice in configuration, events |
+| P10 | `orch` on `aicore`; bridges as hub units (`bridges/`); work-source port with an evidence gate; `exec/v1` protocol fields; run-policy packs and engine choice in `[orch]`; `orch.run.*` events; engine conformance (done) |
 | P11 | hub modules (`maind`, `analyst`, `harness`) on `aicore` and new state places; `core/` and `artifex` removed |
 | P12 | hub: umbrella CLI, marketplace and plugin set, CI matrix, module documentation |
 | P13 | cutover: `swissknifeman upgrade`, upgrade guide, rehearsal, merge, tag, rollback |

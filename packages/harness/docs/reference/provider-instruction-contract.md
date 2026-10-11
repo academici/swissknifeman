@@ -7,7 +7,7 @@
 ## Purpose
 
 This contract defines one provider-neutral instruction canon for the swissknifeman root and
-its seven package scopes. `CLAUDE.md` and `AGENTS.md` are independent provider projections of
+its nine package scopes. `CLAUDE.md` and `AGENTS.md` are independent provider projections of
 the same ordered common semantic sections, followed by an explicit provider-extension
 section set. Bytes and phrasing may differ; common meaning may not.
 
@@ -26,7 +26,7 @@ The contract envelope has these stable identities:
 | Contract | `provider-instruction-contract` / `1.0.0` |
 | Artifact kind | `instruction-projection` |
 | Providers | exactly `claude-code`, `codex` |
-| Scope IDs | exactly the eight IDs in `Scopes` |
+| Scope IDs | exactly the nine IDs in `Scopes` |
 | Artifact ID | `harness.instruction-projection.<scope-id>.<provider-id>` |
 | Adapter ID | `harness.instruction.<provider-id>` |
 | Managed boundary | `managed-blocks`, exactly two ordered block IDs |
@@ -56,8 +56,9 @@ are forbidden.
 | `planner` | `packages/planner` | `packages/planner/CLAUDE.md` | `packages/planner/AGENTS.md` |
 | `artifex` | `packages/artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` |
 | `brain` | `packages/brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` |
+| `orch` | `packages/orch` | `packages/orch/CLAUDE.md` | `packages/orch/AGENTS.md` |
 
-A conforming catalog contains all and only these eight scope records and all and only the two
+A conforming catalog contains all and only these nine scope records and all and only the two
 targets per scope. Missing, extra, duplicate, aliased or discovered targets fail before
 render. `packages/<name>` is never inferred from directory contents.
 
@@ -93,6 +94,7 @@ The initial ordered common inventories are frozen as follows:
 | `planner` | `planner.identity` · `planner.command-catalog` · `planner.plan-protocol` · `planner.plan-files` · `planner.layout` · `planner.schema-ownership` · `planner.engineering-invariants` · `planner.configuration` · `planner.events-and-extensions` · `planner.validation-release` |
 | `artifex` | `artifex.identity` · `artifex.layout` · `artifex.runtime-boundaries` · `artifex.provenance` · `artifex.engineering-invariants` · `artifex.validation-release` |
 | `brain` | `brain.identity` · `brain.layout` · `brain.module-boundaries` · `brain.vault-safety` · `brain.engineering-invariants` · `brain.validation-release` |
+| `orch` | `orch.identity` · `orch.module-boundaries` · `orch.engineering-invariants` · `orch.validation-release` |
 
 The initial provider-extension inventories are:
 
@@ -106,6 +108,7 @@ The initial provider-extension inventories are:
 | `planner` | `planner.claude-code.slash-projection` · `planner.claude-code.model-pins` | empty |
 | `artifex` | `artifex.claude-code.package-scope` | `artifex.codex.package-scope` |
 | `brain` | empty | empty |
+| `orch` | empty | empty |
 
 `empty` is a normative empty ordered set, not a missing record. Its target still carries an
 extension managed block so ownership and future compatible additions remain explicit.

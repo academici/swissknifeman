@@ -1,12 +1,12 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.6.0",
+  "fixture_version": "1.7.0",
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "ddbf00468d50143b6a95d0a99dc4752eb06fb06c764588f8476dec6175913139",
+    "source_sha256": "b7b86ed614b6945c92334497088be20f70459915b3e83a373da4cefc857f03e0",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 353
+    "literal_count": 370
   },
   "literals": [
     {
@@ -1420,6 +1420,74 @@
     {
       "semantic_id": "brain.validation-release",
       "literal": "`python3 scripts/ecosystem-units.py standalone brain`"
+    },
+    {
+      "semantic_id": "orch.identity",
+      "literal": "`orch` is the engine-neutral orchestration module"
+    },
+    {
+      "semantic_id": "orch.identity",
+      "literal": "it starts no engine process yet."
+    },
+    {
+      "semantic_id": "orch.identity",
+      "literal": "`orch`"
+    },
+    {
+      "semantic_id": "orch.identity",
+      "literal": "`exec/v1`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "Import only `orch` and `aicore`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "the `orch:work-source` extension point."
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "`orch`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "`bridges/`"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "Keep Python 3.9 compatibility, English diagnostics"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "proven by `aicore schema compat`."
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "`PortError`"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "`docs/engine-port.md`"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "`aicore schema compat`"
+    },
+    {
+      "semantic_id": "orch.validation-release",
+      "literal": "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "orch.validation-release",
+      "literal": "use Russian Conventional Commit messages."
+    },
+    {
+      "semantic_id": "orch.validation-release",
+      "literal": "`python3 scripts/ecosystem-units.py standalone orch`"
     }
   ]
 }

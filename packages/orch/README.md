@@ -29,6 +29,11 @@ named by `work_source`: `orch.py source claim|brief|prepare|register` claims an 
 artifact, writes the run's `launch-plan.json` and registers the outcome through owner fencing and an evidence gate
 ([docs/work-source.md](docs/work-source.md)).
 
+Bridges to the partners live in the hub (`bridges/`, see its README), not in this package. `orch` does not run durable
+timers, signals, workflow replay, compensation or multi-day executions, and MCP is not its event bus
+([architecture](docs/architecture.md#non-goals)). Engine scenarios are compared with `orch.py conformance`
+([docs/conformance.md](docs/conformance.md)); the `orch.run.*` events are in [docs/events.md](docs/events.md).
+
 From the repository root:
 
 ```bash
@@ -54,4 +59,7 @@ of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks t
 - [contracts](docs/contracts.md)
 - [engine-port](docs/engine-port.md)
 - [architecture](docs/architecture.md)
+- [work-source](docs/work-source.md)
+- [conformance](docs/conformance.md)
+- [events](docs/events.md)
 - [adding-an-engine](docs/adding-an-engine.md)

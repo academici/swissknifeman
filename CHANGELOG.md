@@ -19,6 +19,7 @@
 
 ### Added
 
+- **orch, harness, hub:** documentation and instructions of the orchestration phase: orch on aicore; bridges in the hub; work-source port with evidence gate; exec/v1 execution protocol fields; run-policy packs and engine choice; `orch.run.*` events; engine conformance. The orch docs state the non-goals (durable timers, signals, workflow replay, compensation, multi-day execution) and that MCP is a tool surface, not the event bus; `bridges/README.md` and the bridge READMEs describe verbs and partner lookup; the harness instruction catalog (1.7.0) has the scope `orch` with four common sections and the projections `packages/orch/CLAUDE.md`, `AGENTS.md`, `.cursor-instructions.mdc` and `.grok-instructions.md`; ADR 0057–0062; the ecosystem, contracts and development pages are updated.
 - **orch:** engine conformance catalogue and command (`conformance/scenarios.json`, `orch.py conformance [--binding] [--json]`);
   write confinement and no-MCP-bus tests.
 - **orch:** work-source port with the planner-orch plugin; claim with an owner session, briefs as content-addressed

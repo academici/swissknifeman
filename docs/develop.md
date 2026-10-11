@@ -340,7 +340,7 @@ its partners through their public CLI/JSON and finds them by environment variabl
 neighbouring folder. The planner finds bridges through the `bridges.roots` setting (`.swissknifeman/config.toml` of this
 repository sets `["bridges"]`); list them with `python3 packages/planner/scripts/plan.py bridge list`
 (`planner-orch`: verbs `brief`, `register`, `register-review`, `commit`, `launch`; `orch-skiller`; `orch-harness`).
-Run the tests of every bridge with `bash scripts/test-bridges.sh`. The boundary check of `scripts/ecosystem-units.py`
+Run the tests of every bridge with `bash scripts/test-bridges.sh` (it wires the partners from the hub layout, uses a temporary `HOME` and turns event delivery off). A missing partner is `BRIDGE_PARTNER_UNAVAILABLE` (exit 3) and the conformance tests are skipped; set the variable of the partner (`PLANNER_PLAN_PY`, `SKM_ORCH_ROOT`, `SKM_SKILLER_ROOT`, `SKM_HARNESS_ROOT`) to run them against another checkout. The end-to-end checks of the work-source cycle and the events are `scripts/e2e-work-source.sh` and `scripts/e2e-plan-events.sh`; run them in a sandbox (`scripts/dev-sandbox.sh`). The boundary check of `scripts/ecosystem-units.py`
 and the planner and orch test suites enforce the rule.
 
 Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion

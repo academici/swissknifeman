@@ -9,6 +9,7 @@ from .common import Env
 from .capture import cmd_capture, cmd_migrate
 from .digest import cmd_digest
 from .doctor import cmd_doctor
+from .ecosystem_events import cmd_events
 from .ingest import cmd_ingest
 from .promote import cmd_deprecate, cmd_promote
 from .proposals import cmd_proposals
@@ -40,6 +41,7 @@ COMMANDS = {
     "runs": cmd_runs,
     "sessions": cmd_sessions,
     "doctor": cmd_doctor,
+    "events": cmd_events,
     "workflow-scan": cmd_workflow_scan,
 }
 

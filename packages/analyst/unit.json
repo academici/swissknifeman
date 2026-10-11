@@ -21,6 +21,15 @@
       {"id": "analyst.environment", "category": "environment", "probe": ["bin/analyst", "doctor"], "output": "text"}
     ]
   },
+  "subscribes": [
+    {
+      "id": "run-events",
+      "on": ["planner.item.finished", "planner.phase.closed", "planner.plan.closed", "orch.run.finished", "orch.run.refused"],
+      "run": ["bin/analyst", "events", "ingest", "--event", "-"],
+      "timeout_seconds": 30,
+      "description": "Record ecosystem run outcomes for analyst metrics."
+    }
+  ],
   "dev": {
     "test": ["bash", "scripts/test.sh"],
     "validate": ["bash", "scripts/validate.sh"]

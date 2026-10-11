@@ -2,7 +2,7 @@
 # e2e-plan-events.sh — end-to-end check of the planner events: a plan is created, run and closed, the project
 # journal receives planner.plan.created, item.started, item.finished, phase.closed and plan.closed, the subscriber
 # brain:plan-notes writes one vault note for the closed plan, and a repeat of the same finish adds neither events
-# nor a second note.
+# nor a second note. The subscriber analyst:run-events records the outcomes once per event.
 #
 # It changes the machine configuration (brain.vault_path, aicore.events.delivery), so it must run in a throwaway
 # HOME: scripts/dev-sandbox.sh run DIR -- bash scripts/e2e-plan-events.sh. It writes only inside that HOME.
@@ -23,7 +23,7 @@ fi
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 export PYTHONPATH="$AICORE_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}"
-export SKM_UNITS_PATH="$ROOT/packages/brain:$ROOT/packages/planner:$AICORE_ROOT"
+export SKM_UNITS_PATH="$ROOT/packages/brain:$ROOT/packages/planner:$ROOT/packages/analyst:$AICORE_ROOT"
 aicore() { python3 -m aicore "$@"; }
 plan() { python3 "$ROOT/packages/planner/scripts/plan.py" "$@"; }
 
@@ -87,5 +87,20 @@ plan finish "$PLAN_ID" P1.1 --status done --check V1=0 --attempt-id e2e-1 --note
 [ "$(journal_types)" = "$before_events" ] || fail "the repeated finish added events: $(journal_types)"
 [ "$(new_notes | grep -c .)" = 1 ] || fail "the repeated finish changed the notes: $(new_notes)"
 say "ok: a repeated finish adds neither events nor notes"
+
+# analyst:run-events recorded the outcomes: the closed plan exactly once, the finished item, and the repeat added nothing.
+analyst_events() { "$ROOT/packages/analyst/bin/analyst" events list --json; }
+analyst_events | python3 -c '
+import json, sys
+events = json.load(sys.stdin)["events"]
+types = [e["type"] for e in events]
+sys.exit(0 if types.count("planner.plan.closed") == 1 and types.count("planner.item.finished") == 1 else "analyst journal: %s" % types)' \
+  || fail "analyst did not record the plan events exactly once"
+aicore events status --project "$PROJECT" --json | python3 -c '
+import json, sys
+rows = [r for r in json.load(sys.stdin)["subscriptions"] if r["id"] == "analyst:run-events"]
+sys.exit(0 if rows and rows[0]["lag"] == 0 and rows[0]["dead_letters"] == 0 else "analyst:run-events is not caught up")' \
+  || fail "analyst delivery is not caught up"
+say "ok: analyst recorded the plan events once"
 
 echo "e2e plan events: OK"

@@ -10,6 +10,7 @@ import os
 from aicore.config import ConfigError
 
 from . import lessons
+from .ecosystem_events import status_summary
 from . import recompute as R
 from aicore.util.cli import parse_args
 from aicore.util.io import atomic_write_text
@@ -88,6 +89,7 @@ def cmd_status(env, argv):
         st = build_status(ppath, load_thresholds(ppath))
     except ConfigError as err:
         die(str(err))
+    st["ecosystem_events"] = status_summary(env)
     if opts["json"]:
         print(json.dumps(st, ensure_ascii=False, indent=2))
         return
@@ -100,7 +102,10 @@ def cmd_status(env, argv):
           + ("  → forwarded: analyst promote --retry-failed" if st["promote_failed"] else ""))
     print(f"  events:        {st['events']}")
     print(f"  last digest:    {st['last_digest'] or '—'}")
-    print(f"  last recompute: {st['last_recompute'] or '—'}\n")
+    print(f"  last recompute: {st['last_recompute'] or '—'}")
+    eco = st["ecosystem_events"]
+    print(f"  ecosystem events: {eco['total']} (last {eco['days']} days)"
+          + "".join(f"\n    {kind:<24}{n}" for kind, n in sorted(eco["by_type"].items())) + "\n")
 
 
 # ── compact ─────────────────────────────────────────────────────────────────

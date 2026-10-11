@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "464d9b3267b2",
-  "reason": "analyst capture-surfaces instruction names the new project lessons location",
+  "captured_from": "be4dfc3bfe15",
+  "reason": "analyst events command and status line",
   "generators": [
     {
       "id": "skiller-registry",

@@ -13,5 +13,6 @@ analyst status — 0 lesson(ov)
   events:        0
   last digest:    —
   last recompute: —
+  ecosystem events: 0 (last 30 days)
 --- stderr ---
 

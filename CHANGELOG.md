@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- **analyst:** subscriber `run-events` for `planner.item.finished`, `planner.phase.closed`, `planner.plan.closed`, `orch.run.finished` and `orch.run.refused`;
+  `analyst events ingest|list` records the outcome of each event once per event id (digest of `data`, never its values), `analyst status` shows the
+  count of the last 30 days; `analyst/telemetry.py` maps the dispatch events of the trace onto the span names and the metric labels of `aicore`.
+
 ### Changed
 
 - **analyst:** depends on `aicore` only (no `core` import, no `monorepo_root`/`default_config`, no re-export in `common.py`); `analyst` is standalone.

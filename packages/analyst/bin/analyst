@@ -16,6 +16,7 @@
 #   token-report  token report on usage-trend.ndjson + rolling/pinned baseline
 #                 (--sessions N | --by model|role | --vs-baseline | --baseline set --note "...")
 #   runs      read-only JSON of a project's run reports: `runs show|codegraph --project DIR [--json]`
+#   events    ecosystem run outcomes: `events ingest --event -|FILE` (subscriber of planner.* and orch.run.*), `events list [--type T] [--since ISO] [--json]`
 #   sessions  weekly medians first_turn_overhead from the living jsonl-session transcripts
 #             (--project ID | --weeks N | --json)
 #   doctor    environment diagnostics
@@ -59,7 +60,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "analyst $sha ($REPO_ROOT)"
     exit 0 ;;
-  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|runs|sessions|doctor|workflow-scan) ;;
+  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|runs|events|sessions|doctor|workflow-scan) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

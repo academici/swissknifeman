@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.3",
   "title": "analyst: подписчик событий planner.* и orch.run.* (analyst events), имена spans и меток телеметрии (R11, E37)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "unit.json analyst объявляет подписку run-events; analyst events ingest записывает исход события (без копии data) идемпотентно по event_id; analyst events list и счётчики в status; контрактные фикстуры потребителя; e2e plan events проверяет запись analyst; analyst/telemetry.py связывает события Unified Agent Trace с именами spans aicore и проверяет метки метрик.",
   "why": "D77; архитектура §9 (analyst подписывается на planner.* и orch.run.*), отложено из P10 (knowledge/orch-p10#deferred); E37, R11 (имена телеметрии; P6 сделал соглашение, analyst переходит в P11). Риски: (1) повторная доставка — идемпотентность по event_id под flock (тест); (2) секреты в data событий — в журнал идёт только digest (E30); (3) поля data производителей — по их схемам, сверка test-event-contracts.",
   "scope": {
@@ -166,6 +166,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:22:03Z"
+  "result": {
+    "started_at": "2026-10-11T15:16:37Z",
+    "finished_at": "2026-10-11T15:48:05Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "f3b08a72-f274-4929-b851-5214046693bd"
+    },
+    "notes": "analyst run-events subscriber, events ingest/list, status line, telemetry.py, fixtures, e2e; grok-4.7 review: 1 bug fixed",
+    "deviations": [
+      "stdout status protocol; launcher and 3 goldens updated"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T15:48:05Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T15:48:05Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T15:48:05Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T15:48:05Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T15:48:05Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T15:48:05Z"
 }

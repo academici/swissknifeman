@@ -100,6 +100,9 @@ docs/orch/
 .swissknifeman/task-terminal/
 .swissknifeman/terminal-admission/
 .swissknifeman/state/
+# Raw role streams (review, executor) are megabytes of token logs: they live in .swissknifeman/state/; a plan
+# artifact keeps only the short review-verdict.json (gitignore policy entry plan-role-streams).
+plans/*/artifacts/**/*.jsonl
 
 # Local-only working documents (never tracked)
 /roadmap/

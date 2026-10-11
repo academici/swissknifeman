@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D77",
+  "title": "analyst подписан на planner.* и orch.run.*; запись исходов без копии data; имена spans и меток по соглашению aicore",
+  "date": "2026-10-11",
+  "status": "accepted",
+  "question": "Что делает analyst как подписчик событий (архитектура §9) и как переходит на соглашение телеметрии (R11, E37)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Подписка run-events (planner.item.finished, planner.phase.closed, planner.plan.closed, orch.run.finished, orch.run.refused) → bin/analyst events ingest --event -: проверка конверта, строка {event_id, type, occurred_at, source, project, subject, outcome, data_digest} в журнал analyst под flock, идемпотентно по event_id, без копии data; analyst events list и счётчики в status; фикстуры потребителя для test-event-contracts; e2e plan events проверяет запись. telemetry.py: соответствие DISPATCH_EVENTS → spans aicore и проверка меток метрик metric_label_problems; закрытые форматы не расширяются; экспорт OTel не делается.",
+      "pros": "Реальный потребитель событий с минимальным хранением; секреты из data не попадают в журнал"
+    }
+  ],
+  "context": "knowledge/hub-p11-analyst#events и #telemetry; orch-p10 deferred: подписчик analyst — P11; D48.",
+  "decision": "A — Подписка run-events (planner.item.finished, planner.phase.closed, planner.plan.closed, orch.run.finished, orch.run.refused) → bin/analyst events ingest --event -: проверка конверта, строка {event_id, type, occurred_at, source, project, subject, outcome, data_digest} в журнал analyst под flock, идемпотентно по event_id, без копии data; analyst events list и счётчики в status; фикстуры потребителя для test-event-contracts; e2e plan events проверяет запись. telemetry.py: соответствие DISPATCH_EVENTS → spans aicore и проверка меток метрик metric_label_problems; закрытые форматы не расширяются; экспорт OTel не делается.",
+  "rationale": "Архитектура §9 (orch → analyst событиями), E37, R11, E30.",
+  "applies_to": [
+    "P11.3",
+    "P11.13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.15",
+  "title": "Review P11: независимый read-only аудит фазы на Grok 4.7",
+  "status": "todo",
+  "summary": "Один независимый read-only проход Grok 4.7 (effort xhigh) по изменениям фазы P11.1–P11.14 по брифу с инвариантами фазы; доказательство маршрута из потока сессии; вердикт GREEN/RED с находками и владельцами — artifacts/P11.15/review-verdict.md и knowledge audit-p11-<дата>; продукт и план ревьюер не меняет; исправления — одна коррекция у владельцев после вердикта (вне пункта).",
+  "why": "Запрос владельца «аудит на grok 4.7» (правило: независимое ревью — отдельный read-only пункт в конце фазы). Фаза меняет связи модулей, места конфига и состояния живых проектов и удаляет core — независимая проверка интеграции и подмены доказательств. Риск: вердикт без подтверждённого маршрута (не та модель) — пункт blocked, а не подмена своей проверкой.",
+  "scope": {
+    "include": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/review-brief.md, argv.json, launch.json, review-grok-4.7.stream.jsonl, review-grok-4.7.stderr, review-verdict.md",
+      "knowledge audit-p11-<YYYY-MM-DD> через plan.py add-document; plan.py add-artifact; plan.py log"
+    ],
+    "exclude": [
+      "правки продукта и плана ревьюером",
+      "исправление находок (одна коррекция владельцами после вердикта)",
+      "повтор широких проверок P11.14"
+    ]
+  },
+  "depends_on": [
+    "P11.14"
+  ],
+  "decisions": [
+    "D74",
+    "D76"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11-closure#review",
+      "why": "бриф, запуск (argv), доказательство маршрута, вердикт; образцы прошлых брифов — artifacts/P10.10 плана (review-brief.md, argv.json)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#e1e2",
+      "why": "строки сверки для брифа",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-p10-2026-10-11",
+      "why": "образец документа аудита фазы",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/**",
+      "change": "create"
+    },
+    {
+      "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/audit-p11-*.json",
+      "change": "create",
+      "note": "через plan.py add-document"
+    }
+  ],
+  "rules": [
+    "Ревьюер только читает: продукт и план не меняются (git status продукта пуст после пункта); команды ревьюера пишут только во временный каталог",
+    "Маршрут: модель grok-4.7, effort xhigh; подтверждение — событие init потока и argv; без подтверждения — blocked",
+    "Вердикт ревьюера записывается дословно; исполнитель пункта не дописывает своих находок в вердикт (свои наблюдения — отдельно в notes)",
+    "Один проход, без субагентов; широкие проверки P11.14 переиспользуются"
+  ],
+  "guidance": "Исполнитель: implementation/high (оркестратор пункта), ревьюер — Grok 4.7 xhigh.\n\nПорядок: база = коммит перед P11.1 (`git log --grep 'PLAN3.P11.1' --format=%H | tail -1` → `^`), кандидат = HEAD → бриф по knowledge/hub-p11-closure#review → запуск ro-run + grok (argv из того же раздела; `<клон>` = корень репозитория) с выводом в artifacts/P11.15 → проверка маршрута (init.model = grok-4.7, exit 0, result success) → `review-verdict.md` (дословный итог, строка маршрута) → `plan.py add-document` audit-p11-<дата> (`applies_to: [\"P11\"]`) → `plan.py add-artifact` (brief, stream, verdict) → `plan.py log P11.15` с вердиктом → finish (done при GREEN; при RED — done_with_deviations с перечнем находок и владельцев для одной коррекции).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "A=plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15; test -s $A/review-brief.md && test -s $A/review-grok-4.7.stream.jsonl && test -s $A/review-verdict.md && python3 -c 'import json, sys; a = json.load(open(sys.argv[1])); assert \"grok-4.7\" in a[\"argv\"] and a.get(\"model\") == \"grok-4.7\", a' $A/launch.json && grep -q 'grok-4.7' $A/review-grok-4.7.stream.jsonl",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "ls plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/audit-p11-*.json >/dev/null && test -z \"$(git status --porcelain -- packages bridges scripts configs docs .github CLAUDE.md AGENTS.md)\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "вердикт аудита P11 на Grok 4.7",
+    "knowledge audit-p11"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "xhigh",
+    "provider": "grok",
+    "model": "grok-4.7"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "implementation",
+      "model": "grok-4.7",
+      "note": "Запрос владельца: «аудит на grok 4.7»",
+      "provider": "grok",
+      "effort": "xhigh"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:19:07Z"
+}

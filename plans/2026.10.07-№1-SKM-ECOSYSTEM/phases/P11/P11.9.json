@@ -1,0 +1,254 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.9",
+  "title": "harness: режимы хуков в [harness.hooks] и .swissknifeman/hooks.env; maind ставит режим памяти через harness; safe-dirs в месте конфига; policy_profile в [harness]; бэкапы; константы lock",
+  "status": "todo",
+  "summary": "Схема и пример конфига harness; флаги harness hooks пишут проектный конфиг и регенерируют закоммиченный .swissknifeman/hooks.env (harness hooks sync|show); все хуки читают hooks.env, затем наследный env.ini; env.ini новым кодом не пишутся; maind onboard, sync, health читают и ставят режим памяти через harness; safe-dirs.json в <config>/harness с одинаковой лестницей в harness и хуке; policy_profile из [harness]; *.bak → aicore.state.backup; путь lock — константы.",
+  "why": "D72, D5; архитектура §5.3 (*.env.ini, safe-dirs.json, *.bak). Жёсткие риски: (1) хук безопасности safe-dirs fail-closed и выбирает тот же файл, что harness (тест паритета); (2) свежий клон проекта получает режимы из закоммиченного кармана, а проект без кармана — прежнее поведение через env.ini; (3) хуки установлены в ~/.claude/hooks и в проекты без aicore — чтение кармана простым разбором строк; (4) maind без harness — чтение кармана и env.ini, запись — skip.",
+  "scope": {
+    "include": [
+      "packages/harness/configs/config.schema.json, config.example.toml, unit.json provides.config, configs/config-inventory.json",
+      "lib/harness/hooks_env.py, hooks.py (писатели и читатели), подкоманды hooks sync|show и схема hooks-state/v1",
+      "скрипты хуков и их копии в agent-packs: чтение кармана",
+      "maind: health.py, provision/onboard.py, provision/sync.py (memory, agent-router)",
+      "safedirs.py, хук auto-approve/lib/safedirs.py, git mv safe-dirs.example.json → packages/harness/configs/",
+      "settings_audit.py, settings.py (policy_profile, бэкапы); константы lock в hooks.py, instructions.py",
+      "packages/aicore/configs/gitignore-policy.json (hooks.env), тесты aicore gitignore",
+      "тесты harness и maind, CHANGELOG корня и maind"
+    ],
+    "exclude": [
+      "глобальные ~/.claude/hooks/<hook>/env.ini (умолчания машины)",
+      "перенос значений живых проектов (P13)",
+      "doctor harness.hooks-env (P11.11)"
+    ]
+  },
+  "depends_on": [
+    "P11.8"
+  ],
+  "decisions": [
+    "D72",
+    "D67",
+    "D5"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-harness#hooks",
+      "why": "схема, карман, читатели, писатели, maind, gitignore",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-harness#state",
+      "why": "safe-dirs, policy_profile, бэкапы, блокировки",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/hooks.py",
+      "why": "писатели и читатели env.ini (строки — knowledge/hub-p11#facts)",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/safedirs.py",
+      "why": "лестница safe-dirs в harness",
+      "required": true
+    },
+    {
+      "path": "packages/harness/configs/claude-code/hooks/auto-approve/lib/safedirs.py",
+      "why": "лестница safe-dirs в хуке",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/configs/gitignore-policy.json",
+      "why": "записи hook-modes и provider-locks",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/harness/configs/config.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/config.example.toml",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/configs/safe-dirs.example.json",
+      "change": "create"
+    },
+    {
+      "path": "safe-dirs.example.json",
+      "change": "delete",
+      "note": "git mv в packages/harness/configs/"
+    },
+    {
+      "path": "packages/harness/lib/harness/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/configs/claude-code/hooks/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/configs/claude-code/agent-packs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/configs/cursor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/schemas/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/health.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/provision/onboard.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/provision/sync.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/configs/gitignore-policy.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/**",
+      "change": "any",
+      "note": "ссылки на safe-dirs.example.json"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Новый код не пишет ни одного <hook>.env.ini и *.bak; наследные файлы не удаляются",
+    "Хуки (shell и python в configs/) не импортируют harness и aicore"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: перечень хуков и ключей (`grep -rn \"env.ini\" packages/harness/lib packages/harness/configs`) → схема harness + пример + inventory → `hooks_env.py` + тесты → писатели в `hooks.py` (конфиг проекта через `edit_layer_file` + sync) и подкоманды `hooks sync|show` + схема `hooks-state/v1` → читатели в `hooks.py` и скриптах хуков (и копиях в agent-packs) → maind (memory, agent-router) через партнёра harness → gitignore-политика aicore → safe-dirs (harness и хук, тест паритета, git mv примера) → policy_profile → бэкапы → константы lock → тесты → CHANGELOG → V1–V6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/harness/scripts/test.sh && bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "test -f packages/harness/configs/config.schema.json && test -f packages/harness/config.example.toml && test -f packages/harness/configs/safe-dirs.example.json && test ! -e safe-dirs.example.json && ! grep -rn 'backup_file' packages/harness/lib && ! grep -rn 'provider-artifacts.lock.json' packages/harness/lib && ! grep -nE 'write_text\\(.*\\.env\\.ini' packages/harness/lib/harness/hooks.py && ! grep -n 'env.ini' packages/maind/lib/maind/provision/onboard.py && grep -q 'hooks.env' packages/aicore/configs/gitignore-policy.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/test-config-inventory.py && bash scripts/test-integration.sh && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "{ python3 scripts/ecosystem-units.py check --strict --json || true; } | python3 -c 'import json,sys; v=[k for k in (x[\"key\"] for x in json.load(sys.stdin)[\"violations\"]) if k.split(\"|\")[1].startswith(\"packages/harness/\")]; print(\"\\n\".join(v)); sys.exit(1 if v else 0)' && { python3 scripts/ecosystem-units.py check --strict --json || true; } | python3 -c 'import json,sys; v=[k for k in (x[\"key\"] for x in json.load(sys.stdin)[\"violations\"]) if k.split(\"|\")[1].startswith(\"packages/maind/\")]; print(\"\\n\".join(v)); sys.exit(1 if v else 0)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "[harness.hooks] и .swissknifeman/hooks.env",
+    "safe-dirs в месте конфига",
+    "policy_profile в [harness]"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:18:33Z"
+}

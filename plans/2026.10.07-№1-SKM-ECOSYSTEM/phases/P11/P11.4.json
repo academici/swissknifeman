@@ -1,0 +1,207 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.4",
+  "title": "maind на aicore: импорты, слой реэкспорта, обёртки; партнёры вместо SIBLINGS-путей; хранилище через brain vault --json; skiller profiles --json",
+  "status": "todo",
+  "summary": "maind импортирует только себя и aicore (кроме импорта harness — до P11.8); SIBLINGS удалён — skiller, harness ищутся через aicore.util.partners, внешний CLI хранилища — внутри пути хранилища от brain vault --json; профили skiller — новой командой skiller profiles --json; skilldoc без пути skiller; тесты без импорта skiller; нарушения maind, кроме связи с harness, = 0.",
+  "why": "D2, D67, D49 (переход maind на brain vault — P11). Риски: (1) run_capability и sync._agent_pack_run при отсутствии партнёра должны давать прежний skip, а не падение; (2) MAIND_*_BIN живых машин продолжают работать как первая ступень с предупреждением; (3) MAIND_BRAIN_VAULT maind больше не читает — проверить, что brain vault --json его учитывает (D49), иначе путь хранилища пропадёт.",
+  "scope": {
+    "include": [
+      "lib/, tests/ maind: импорты core → aicore; common.py, blocks.py, http.py без реэкспорта",
+      "bin/maind, scripts/test.sh без MONOREPO_ROOT",
+      "constants.SIBLINGS → aicore.util.partners в provision/orchestrate.py и provision/sync.py",
+      "projects.brain_path через brain vault --json; вызывающие обрабатывают отсутствие",
+      "packages/skiller: команда skiller profiles --json, схема profiles-list/v1, тест",
+      "provision/skilldoc.py и тесты test_skilldoc, test_doctor, test_config без путей и импорта skiller",
+      "unit.json maind requires description, CHANGELOG корня и maind"
+    ],
+    "exclude": [
+      "импорт harness в deploy/sync/workspace/provider_deploy (P11.8)",
+      "конфиг узла и места состояния (P11.5)",
+      "topology (P11.6)",
+      "doctor и порог Python (P11.11)"
+    ]
+  },
+  "depends_on": [
+    "P11.1"
+  ],
+  "decisions": [
+    "D67",
+    "D2",
+    "D49"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-maind#aicore",
+      "why": "дизайн пункта по шагам",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-analyst#partners",
+      "why": "API поиска партнёров",
+      "required": true
+    },
+    {
+      "ref": "knowledge/skiller-p8#aicore",
+      "why": "образец перевода модуля на aicore",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/common.py",
+      "why": "реэкспорт core и Env",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/provision/orchestrate.py",
+      "why": "run_capability и SIBLINGS",
+      "required": true
+    },
+    {
+      "path": "packages/brain/lib/brain/cli.py",
+      "why": "вывод brain vault --json",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/maind/lib/maind/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/bin/maind",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/**",
+      "change": "any",
+      "note": "команда profiles"
+    },
+    {
+      "path": "packages/skiller/schemas/profiles-list/v1/profiles-list.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай (skiller help), с причиной"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Связь maind → harness в процессе (provision/deploy, sync, workspace, provider_deploy) в этом пункте не меняется — только импорты core и SIBLINGS"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок (knowledge/hub-p11-maind#aicore п.1–9): импорты core → реэкспорт → обёртки → `skiller profiles --json` (skiller: команда, схема, тест; golden `skiller-help` при изменении справки) → SIBLINGS → partners (orchestrate, sync) → brain_path → skilldoc и тесты → `python3 scripts/ecosystem-units.py baseline --update` → CHANGELOG → V1–V6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "! grep -rnE '^\\s*(from\\s+core(\\.|\\s)|import\\s+core\\b)|MONOREPO_ROOT' packages/maind/lib packages/maind/bin packages/maind/scripts packages/maind/tests --exclude=test_boundary.py && ! grep -rn 'SIBLINGS\\|MAIND_BRAIN_VAULT' packages/maind/lib",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "{ python3 scripts/ecosystem-units.py check --strict --json || true; } | python3 -c 'import json,sys; v=[k for k in (x[\"key\"] for x in json.load(sys.stdin)[\"violations\"]) if k.split(\"|\")[1].startswith(\"packages/maind/\") and k.split(\"|\")[2] != \"harness\"]; print(\"\\n\".join(v)); sys.exit(1 if v else 0)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "bash scripts/test-integration.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "maind на aicore (без связи с harness)",
+    "skiller profiles --json"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:18:19Z"
+}

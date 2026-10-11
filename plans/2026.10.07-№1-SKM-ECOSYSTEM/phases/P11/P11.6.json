@@ -1,0 +1,198 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.6",
+  "title": "Реестры машины: topology из skiller в maind (maind topology), реестр подключённых проектов skiller в aicore.state, skiller list --json, skills maind через команды",
+  "status": "todo",
+  "summary": "git mv topology.py в maind, команда maind topology show|init с файлом <state>/maind/topology.json и наследным ~/.swissknifeman/topology.json; skiller topology — псевдоним через maind; реестр skiller — <state>/skiller/projects.json с пофайловым наследием; skiller list --json; skills и агент maind читают карту через maind topology show --json и skiller list --json; строки ownership topology/listing/state сняты.",
+  "why": "D70; карта P2 (skiller/{topology,listing,state} → maind) уточнена решением. Риски: (1) наследный каталог ~/.swissknifeman общий для нескольких модулей — наследие пофайловое, не каталогом; (2) skiller integrate и живые пользователи skiller topology — псевдоним с предупреждением; (3) skills не раздувают бюджет первого хода.",
+  "scope": {
+    "include": [
+      "git mv packages/skiller/lib/skiller/topology.py → packages/maind/lib/maind/topology.py, правки, команда maind topology, тесты",
+      "skiller: псевдоним topology, integrate.py, common.Env.state_dir и реестр, listing --json со схемой projects-list/v1, тесты",
+      "skills maind: local-topology, cross-project-coordinator, shared-memory, agents/code-coordinator.md",
+      "configs/ecosystem-units.json (ownership topology, listing, state), render, CHANGELOG корня и maind"
+    ],
+    "exclude": [
+      "перенос значений (P13)",
+      "удаление aicore.util.paths.state_dir (P11.12)"
+    ]
+  },
+  "depends_on": [
+    "P11.5"
+  ],
+  "decisions": [
+    "D70",
+    "D67"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-maind#registries",
+      "why": "дизайн пункта",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/topology.py",
+      "why": "переносимый код",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/state.py",
+      "why": "реестр подключённых проектов",
+      "required": true
+    },
+    {
+      "path": "packages/maind/skills/local-topology/SKILL.md",
+      "why": "чтение карты skills",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/lib/skiller/topology.py",
+      "change": "delete",
+      "note": "git mv в maind"
+    },
+    {
+      "path": "packages/maind/lib/maind/topology.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/maind/lib/maind/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/skills/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/agents/code-coordinator.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/schemas/projects-list/v1/projects-list.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": ".claude/skills/**",
+      "change": "any",
+      "note": "проекции skiller registry, если меняются"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "maind-help, skiller-help — с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Наследные ступени ~/.swissknifeman — пофайловые (topology.json, projects.json)",
+    "Тексты skills — английские, краткие; бюджет первого хода не растёт"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: git mv topology.py → правки и команда `maind topology` → тесты (перенести из skiller) → skiller: псевдоним, integrate, реестр в aicore.state, `list --json` + схема → skills и агент maind → `skiller registry` при необходимости проекций → `configs/ecosystem-units.json`: удалить три строки ownership (topology перенесён; listing и state остаются в skiller по D70, `plan.py log`) → `python3 scripts/ecosystem-units.py render` → golden `maind-help`/`skiller-help` при изменении → CHANGELOG → V1–V5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "test ! -e packages/skiller/lib/skiller/topology.py && test -f packages/maind/lib/maind/topology.py && test -f packages/skiller/schemas/projects-list/v1/projects-list.schema.json && ! grep -rn 'swissknifeman/topology.json\\|swissknifeman/projects.json' packages/maind/skills packages/maind/agents && ! grep -rn 'paths import state_dir\\|util\\.paths\\.state_dir' packages/skiller/lib packages/maind/lib packages/analyst/lib && ! grep -n 'skiller/lib/skiller/\\(topology\\|listing\\|state\\)' configs/ecosystem-units.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "bash scripts/test-integration.sh && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "{ python3 scripts/ecosystem-units.py check --strict --json || true; } | python3 -c 'import json,sys; v=[k for k in (x[\"key\"] for x in json.load(sys.stdin)[\"violations\"]) if k.split(\"|\")[1].startswith(\"packages/maind/\") and k.split(\"|\")[2] != \"harness\"]; print(\"\\n\".join(v)); sys.exit(1 if v else 0)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "maind topology",
+    "реестр skiller в aicore.state, skiller list --json"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:18:25Z"
+}

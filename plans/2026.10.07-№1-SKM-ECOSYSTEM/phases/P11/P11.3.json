@@ -1,0 +1,171 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.3",
+  "title": "analyst: подписчик событий planner.* и orch.run.* (analyst events), имена spans и меток телеметрии (R11, E37)",
+  "status": "todo",
+  "summary": "unit.json analyst объявляет подписку run-events; analyst events ingest записывает исход события (без копии data) идемпотентно по event_id; analyst events list и счётчики в status; контрактные фикстуры потребителя; e2e plan events проверяет запись analyst; analyst/telemetry.py связывает события Unified Agent Trace с именами spans aicore и проверяет метки метрик.",
+  "why": "D77; архитектура §9 (analyst подписывается на planner.* и orch.run.*), отложено из P10 (knowledge/orch-p10#deferred); E37, R11 (имена телеметрии; P6 сделал соглашение, analyst переходит в P11). Риски: (1) повторная доставка — идемпотентность по event_id под flock (тест); (2) секреты в data событий — в журнал идёт только digest (E30); (3) поля data производителей — по их схемам, сверка test-event-contracts.",
+  "scope": {
+    "include": [
+      "packages/analyst/unit.json subscribes, lib/analyst/ecosystem_events.py, команда events в cli, analyst status",
+      "фикстуры packages/analyst/tests/fixtures/events/<type>/valid-1.json, тесты",
+      "lib/analyst/telemetry.py и tests/test_telemetry.py",
+      "scripts/e2e-plan-events.sh (проверка analyst), CHANGELOG"
+    ],
+    "exclude": [
+      "экспорт OpenTelemetry (D48)",
+      "изменение закрытых форматов unified-agent-trace/v1 и reliability-metrics-digest/v1"
+    ]
+  },
+  "depends_on": [
+    "P11.2"
+  ],
+  "decisions": [
+    "D77",
+    "D48"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-analyst#events",
+      "why": "подписка, команда, журнал, фикстуры, e2e",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-analyst#telemetry",
+      "why": "соответствие spans и метки метрик",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#telemetry",
+      "why": "соглашение имён spans и атрибутов aicore",
+      "required": false
+    },
+    {
+      "path": "packages/brain/unit.json",
+      "why": "образец subscribes",
+      "required": true
+    },
+    {
+      "path": "scripts/e2e-plan-events.sh",
+      "why": "регистрация подписчика и проверки e2e",
+      "required": true
+    },
+    {
+      "path": "packages/analyst/lib/analyst/trace.py",
+      "why": "DISPATCH_EVENTS",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "строки реестра для фазы: R11, R15 — что принято и проверка при аудите",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/analyst/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/analyst/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "scripts/e2e-plan-events.sh",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай (analyst help), с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "В журнал analyst не копируются значения data события — только перечисленные поля и digest"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: сверить поля data в `packages/planner/schemas/event-data/v1` и `packages/orch/schemas/event-data/v1` → `ecosystem_events.py` (ingest, list) и команда `events` → фикстуры потребителя (5 типов) → `python3 scripts/test-event-contracts.py` → `unit.json` subscribes → `analyst status` → `telemetry.py` и тест → e2e `scripts/e2e-plan-events.sh` (в песочнице) → golden `analyst-help` при изменении справки (`python3 scripts/golden.py capture --only analyst-help --reason \"analyst events command\"`) → CHANGELOG → V1–V5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/analyst/scripts/test.sh && bash packages/analyst/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/test-event-contracts.py && python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 -c 'import json; u=json.load(open(\"packages/analyst/unit.json\")); s=[x for x in u.get(\"subscribes\", []) if x[\"id\"] == \"run-events\"]; assert s and set(s[0][\"on\"]) == {\"planner.item.finished\", \"planner.phase.closed\", \"planner.plan.closed\", \"orch.run.finished\", \"orch.run.refused\"}, s' && test -f packages/analyst/lib/analyst/telemetry.py && test -f packages/analyst/lib/analyst/ecosystem_events.py && for t in planner.item.finished planner.phase.closed planner.plan.closed orch.run.finished orch.run.refused; do test -f packages/analyst/tests/fixtures/events/$t/valid-1.json || exit 1; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/e2e-plan-events.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строка e2e plan events: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "подписчик analyst run-events",
+    "analyst events ingest|list",
+    "analyst/telemetry.py"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:22:03Z"
+}

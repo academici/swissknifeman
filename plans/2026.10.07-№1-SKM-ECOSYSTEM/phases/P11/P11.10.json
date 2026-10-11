@@ -1,0 +1,148 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.10",
+  "title": "MCP-сервер maind: поддерживаемые версии и согласование, tools_digest и maind mcp tools, conformance с официальным SDK как необязательной dev-зависимостью (R31)",
+  "status": "todo",
+  "summary": "mcp.py: SUPPORTED_PROTOCOL_VERSIONS и согласование в initialize (неподдерживаемая версия → версия сервера); tools_digest по канону aicore и команда maind mcp tools [--json]; conformance-тест с официальным Python SDK (пропуск без него, пин в requirements-dev.txt); рантайм SDK не импортирует.",
+  "why": "D75, R31 (АДАПТИРОВАН, фаза P11): сейчас initialize возвращает версию клиента без сверки. Риски: (1) объявить ревизию, чьё обязательное поведение сервер не выполняет (batch в 2025-03-26) — список по умолчанию консервативный, расширение только после проверки changelog по первоисточнику; (2) conformance не должен требовать pip в рантайме и живого демона памяти.",
+  "scope": {
+    "include": [
+      "packages/maind/lib/maind/mcp.py и команда mcp tools",
+      "tests/test_mcp.py, tests/test_mcp_conformance.py, requirements-dev.txt",
+      "golden maind-help при изменении справки, CHANGELOG корня и maind"
+    ],
+    "exclude": [
+      "CI-шаг conformance с установленным SDK (P12)",
+      "doctor maind.mcp (P11.11)",
+      "R46, R57 (отклонено и отложено)"
+    ]
+  },
+  "depends_on": [
+    "P11.9"
+  ],
+  "decisions": [
+    "D75",
+    "D35"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-maind#mcp",
+      "why": "дизайн пункта",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/mcp.py",
+      "why": "initialize, tools/list",
+      "required": true
+    },
+    {
+      "path": "packages/maind/tests/test_mcp_runtime.py",
+      "why": "как сервер поднимается в тестах без демона",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-execution#register",
+      "why": "строки реестра для фазы: R31 (и R32 без изменений) — что принято и проверка при аудите",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/maind/lib/maind/mcp.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/**",
+      "change": "any",
+      "note": "команда mcp tools"
+    },
+    {
+      "path": "packages/maind/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/requirements-dev.txt",
+      "change": "create"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "maind-help — с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Ревизия MCP добавляется в список только после проверки её changelog по первоисточнику; ссылка и вывод — plan.py log"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: проверить changelog ревизий новее 2024-11-05 (маршрут исследований `perplexity-web`, затем первоисточник modelcontextprotocol.io) на обязательное поведение stdio-сервера с одними tools → `SUPPORTED_PROTOCOL_VERSIONS`, `initialize` → `tools_digest` и `maind mcp tools` → тесты → conformance-тест и `requirements-dev.txt` (пин версии SDK по PyPI на дату пункта) → прогон conformance локально во временном venv, если SDK доступен (результат — в notes) → golden → CHANGELOG → V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "grep -q 'SUPPORTED_PROTOCOL_VERSIONS' packages/maind/lib/maind/mcp.py && test -f packages/maind/tests/test_mcp_conformance.py && test -f packages/maind/requirements-dev.txt && ! grep -rnE '^\\s*(import\\s+mcp\\b|from\\s+mcp(\\.|\\s))' packages/maind/lib",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "согласование версии MCP",
+    "tools_digest",
+    "conformance-тест"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "optional",
+    "status": "pending",
+    "notes": "changelog ревизий MCP после 2024-11-05: обязательное поведение stdio-сервера с одними tools"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:21:58Z"
+}

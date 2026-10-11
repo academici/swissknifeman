@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D68",
+  "title": "Аналитика запусков из core — в analyst; потребители читают её командой analyst runs … --json",
+  "date": "2026-10-11",
+  "status": "accepted",
+  "question": "Куда переносятся core/runs.py, pathology.py, codegraph_telemetry.py и как maind analyze и сканер codegraph получают отчёты запусков?",
+  "options": [
+    {
+      "id": "A",
+      "text": "git mv в packages/analyst/lib/analyst/{run_reports,pathology,codegraph}.py (имя runs.py занято); новая команда analyst runs show|codegraph --json с контрактами run-lookup/v1 и run-codegraph/v1; maind analyze и codegraph_usage вызывают её через aicore.util.partners и деградируют без analyst (источник run-report unavailable, confidence low). skiller quality/analyze.py и audit.py не сливаются с читателями analyst (отложено с триггером).",
+      "pros": "Карта P2 исполняется как записано; один владелец формата отчёта запуска"
+    },
+    {
+      "id": "B",
+      "text": "Формат отчёта запуска и поиск — в aicore как общий контракт.",
+      "cons": "Расширение aicore без нужды: производитель (хук harness) пишет файл, читает analyst; maind — потребитель анализа, а не формата"
+    },
+    {
+      "id": "C",
+      "text": "Перенести maind analyze целиком в analyst.",
+      "cons": "analyze сводит health maind, журнал Bash и git — тянет maind в analyst обратной связью"
+    }
+  ],
+  "context": "knowledge/hub-p11#facts: потребители вне analyst — maind common, analysis/analyze.py, codegraph_usage.py; карта P2: core/{runs,pathology,codegraph_telemetry} → analyst, P11.",
+  "decision": "A — git mv в packages/analyst/lib/analyst/{run_reports,pathology,codegraph}.py (имя runs.py занято); новая команда analyst runs show|codegraph --json с контрактами run-lookup/v1 и run-codegraph/v1; maind analyze и codegraph_usage вызывают её через aicore.util.partners и деградируют без analyst (источник run-report unavailable, confidence low). skiller quality/analyze.py и audit.py не сливаются с читателями analyst (отложено с триггером).",
+  "rationale": "Архитектура §7 analyst (аналитика запусков из core); D31 (окно shim до P11).",
+  "applies_to": [
+    "P11.1",
+    "P11.2",
+    "P11.13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

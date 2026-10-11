@@ -1,0 +1,230 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.8",
+  "title": "maind ↔ harness без импорта: проекция MCP в aicore.provider.mcp; JSON-команды harness (mcp catalog, profiles resolve, hooks codex-lifecycle, instructions scopes); deploy, sync и workspace maind через них; путь lock из константы aicore; standalone maind",
+  "status": "todo",
+  "summary": "Чистая проекция MCP переезжает в aicore.provider.mcp (источники lock передаёт вызывающий); harness отдаёт каталог, биндинги, источники, разрешение профиля, фрагмент и проверку codex-lifecycle и список scope инструкций JSON-командами с контрактами; maind deploy, sync, workspace и provider_deploy вызывают их через aicore.util.partners и без harness пропускают шаги провайдеров с PARTNER_UNAVAILABLE; байты провайдерных файлов и записи lock не меняются (тесты равенства); нарушения maind = 0; standalone maind = pass.",
+  "why": "D71, D67; последние нарушения maind (импорт harness 13, пути harness 40+) и fail standalone. Жёсткие риски: (1) записи lock (sources, identity) и байты .codex/config.toml, .cursor/mcp.json, .grok/config.toml живых проектов не должны измениться — фикстура «до» снимается до правки, тест равенства «после»; (2) транзакции D108/D104 (rollback, bootstrap transfer) остаются в процессе maind — меняется только источник данных; (3) тексты ошибок HARNESS_* — часть поведения, сохраняются; (4) отсутствие harness — skip, а не падение deploy.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/provider/mcp.py и тесты; harness/mcp.py — тонкие обёртки",
+      "harness: команды mcp catalog, profiles resolve, hooks codex-lifecycle fragment|validate, instructions scopes; схемы packages/harness/schemas/*/v1, provides.contracts, тесты",
+      "maind: provision/deploy.py, provider_deploy.py, provision/sync.py, provision/workspace.py; константа LOCK_RELATIVE_PATH",
+      "тесты maind с поддельным harness (фикстуры packages/maind/tests/fixtures/harness/*.json) и тесты равенства байтов",
+      "configs/ecosystem-units.json (foundation_free += maind, ownership рендереров harness), baseline, CHANGELOG корня и maind"
+    ],
+    "exclude": [
+      "рендереры профиля harness (остаются, D71)",
+      "режимы хуков (P11.9)",
+      "MCP-сервер maind (P11.10)"
+    ]
+  },
+  "depends_on": [
+    "P11.7"
+  ],
+  "decisions": [
+    "D71",
+    "D67",
+    "D72"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-maind#harness",
+      "why": "дизайн пункта: перенос проекции, команды harness, переход maind, тесты равенства",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-analyst#partners",
+      "why": "run_partner_json",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/mcp.py",
+      "why": "переносимые функции проекции",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/provider_deploy.py",
+      "why": "D108, D104, проекция и lock",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/provision/deploy.py",
+      "why": "_harness_configs и вызовы проекции",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/provision/sync.py",
+      "why": "инструкции через harness.instructions",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/provision/workspace.py",
+      "why": "разрешение профиля",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/provider/mcp.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/provider/test_mcp.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/lib/harness/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/schemas/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/bin/harness",
+      "change": "modify",
+      "note": "справка"
+    },
+    {
+      "path": "packages/maind/lib/maind/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "harness-help — с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Фикстуры «до» (план артефакта MCP по провайдерам, байты провайдерных файлов и записи lock на временном проекте) снимаются до любой правки кода и коммитятся вместе с тестом равенства",
+    "В коде aicore нет путей и меток harness: источники и имя адаптера передаёт вызывающий"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: снять фикстуры «до» (временный проект; `plan_mcp_artifact` для codex, cursor, grok; результат deploy провайдеров) → `aicore/provider/mcp.py` + тесты → harness `mcp.py` на aicore + тест равенства → команды harness и схемы (`mcp-catalog/v1`, `profile-resolution/v1`, `codex-lifecycle/v1`, `instruction-scopes/v1`) + тесты → maind deploy/provider_deploy/sync/workspace через `run_partner_json` → фикстуры поддельного harness, сценарии без harness → тест равенства байтов maind → `! grep` импорта harness и `sys.path.insert` в lib maind → `standalone.foundation_free` += maind → `python3 scripts/ecosystem-units.py standalone maind` → `--update-baseline`, `baseline --update` → удалить строки ownership рендереров harness (D71) → `render` → CHANGELOG → V1–V7.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/harness/scripts/test.sh && bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "{ python3 scripts/ecosystem-units.py check --strict --json || true; } | python3 -c 'import json,sys; v=[k for k in (x[\"key\"] for x in json.load(sys.stdin)[\"violations\"]) if k.split(\"|\")[1].startswith(\"packages/maind/\")]; print(\"\\n\".join(v)); sys.exit(1 if v else 0)' && python3 scripts/ecosystem-units.py standalone maind",
+      "expect": "exit 0; standalone maind: pass",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "test -f packages/aicore/lib/aicore/provider/mcp.py && ! grep -rnE '^\\s*(from|import)\\s+harness\\b|sys\\.path\\.insert' packages/maind/lib && ! grep -rn 'provider-artifacts.lock.json' packages/maind/lib && ! grep -rn 'packages/harness' packages/maind/lib packages/maind/tests",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "bash scripts/test-integration.sh && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.provider.mcp",
+    "JSON-команды harness для maind",
+    "maind без импорта harness, standalone pass"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:18:31Z"
+}

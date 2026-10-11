@@ -1,0 +1,212 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.13",
+  "title": "Документация модулей хаба: docs и README maind, analyst, harness, aicore; инструкции через каталог harness; ecosystem, contracts, develop; ADR 0063–0071; CHANGELOG",
+  "status": "todo",
+  "summary": "Документация по knowledge/hub-p11#docs: ADR 0063–0071 (D67–D77) и индекс; docs и README maind, analyst, harness, aicore по факту кода; секции инструкций модулей и корня через каталог harness и генератор; docs/architecture/{ecosystem,contracts}.md, docs/develop.md; итоговая строка CHANGELOG.",
+  "why": "D24: архитектура и решения рядом с кодом; потребители P12/P13 и upgrade guide опираются на README и ADR. Риски: расхождение документа и кода (имена, коды, пути) — сверка по коду; утечка ID плана и домашних путей (hygiene); рост бюджета первого хода от секций инструкций.",
+  "scope": {
+    "include": [
+      "docs/architecture/decisions/0063–0071 и README.md каталога",
+      "packages/{maind,analyst,harness}/docs/**, README.md; packages/aicore/README.md",
+      "каталог инструкций harness (секции maind.*, analyst.*, harness.*, root.*) и генератор",
+      "docs/architecture/{ecosystem,contracts,index}.md, docs/develop.md, docs-sync",
+      "CHANGELOG.md, packages/maind/CHANGELOG.md"
+    ],
+    "exclude": [
+      "новый код"
+    ]
+  },
+  "depends_on": [
+    "P11.12"
+  ],
+  "decisions": [
+    "D67",
+    "D68",
+    "D69",
+    "D70",
+    "D71",
+    "D72",
+    "D73",
+    "D74",
+    "D75",
+    "D76",
+    "D77"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#docs",
+      "why": "состав документации, номера и имена ADR",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#upgrade",
+      "why": "наследные ступени для разделов совместимости",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-instructions#instructions",
+      "why": "как менять секции инструкций",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/0062-engine-conformance-and-non-goals.md",
+      "why": "формат ADR",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/analyst/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/**",
+      "change": "any"
+    },
+    {
+      "path": "CLAUDE.md",
+      "change": "modify"
+    },
+    {
+      "path": "AGENTS.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/CLAUDE.md",
+      "change": "any"
+    },
+    {
+      "path": "packages/*/AGENTS.md",
+      "change": "any"
+    },
+    {
+      "path": "packages/*/.cursor-instructions.mdc",
+      "change": "any"
+    },
+    {
+      "path": "packages/*/.grok-instructions.md",
+      "change": "any"
+    },
+    {
+      "path": ".swissknifeman/provider-artifacts.lock.json",
+      "change": "any",
+      "note": "генератор инструкций"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Каждое имя команды, ключа, кода ошибки и пути в документации сверено с кодом",
+    "Секции инструкций — только через каталог harness и генератор; бюджет первого хода не выше 16K или с вердиктом владельца выше 23K (root.claude-code.context-budget)"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: ADR 0063–0071 (+ индекс README) → docs и README модулей → aicore README → секции инструкций и генератор (`harness instructions check` без дрейфа) → `docs/architecture/*`, `docs/develop.md` → `bash scripts/docs-sync.sh` → `skiller budget --first-turn` (и `--with-plugins`; результат в notes) → CHANGELOG (итог фазы) → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "for n in 0063 0064 0065 0066 0067 0068 0069 0070 0071; do ls docs/architecture/decisions/$n-*.md >/dev/null || exit 1; grep -q \"$n\" docs/architecture/decisions/README.md || exit 1; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/ecosystem-units.py render --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/harness/scripts/test.sh && bash packages/maind/scripts/validate.sh && bash packages/analyst/scripts/validate.sh && bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "ADR 0063–0071",
+    "docs и README модулей хаба",
+    "инструкции модулей по факту кода"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T12:18:45Z"
+}

@@ -65,13 +65,13 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_72_common_28_extension_100_total_and_thirty_two_targets(self):
+    def test_exact_76_common_28_extension_104_total_and_thirty_six_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (72, 28, 100))
+        self.assertEqual((common, extensions, common + extensions), (76, 28, 104))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(

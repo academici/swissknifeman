@@ -29,9 +29,9 @@ from core.provider.lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.6.0"
+CATALOG_VERSION = "1.7.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
-SCOPES = ("root", "skiller", "harness", "maind", "analyst", "planner", "artifex", "brain")
+SCOPES = ("root", "skiller", "harness", "maind", "analyst", "planner", "artifex", "brain", "orch")
 _SCOPE_TARGET_KEYS = {
     "claude-code": "claude_target",
     "codex": "codex_target",
@@ -79,6 +79,11 @@ TARGETS = {
         "cursor": "packages/brain/.cursor-instructions.mdc",
         "grok": "packages/brain/.grok-instructions.md",
     },
+    "orch": {
+        "claude-code": "packages/orch/CLAUDE.md", "codex": "packages/orch/AGENTS.md",
+        "cursor": "packages/orch/.cursor-instructions.mdc",
+        "grok": "packages/orch/.grok-instructions.md",
+    },
 }
 COMMON_IDS = {
     "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
@@ -112,6 +117,8 @@ COMMON_IDS = {
     "brain": ("brain.identity", "brain.layout", "brain.module-boundaries",
               "brain.vault-safety", "brain.engineering-invariants",
               "brain.validation-release"),
+    "orch": ("orch.identity", "orch.module-boundaries", "orch.engineering-invariants",
+             "orch.validation-release"),
 }
 # Root common is on demand for every provider except these ids: they are projected to every root
 # target, so the rule reaches any agent that opens the repository (the first-turn budget gates additions).

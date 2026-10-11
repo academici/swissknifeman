@@ -12,8 +12,9 @@ Generated from the validated D86 catalog.
 | `planner` | `packages/planner/CLAUDE.md` | `packages/planner/AGENTS.md` | `packages/planner/.cursor-instructions.mdc` | `packages/planner/.grok-instructions.md` | 10 | 2 | 0 | 0 | 0 |
 | `artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` | `packages/artifex/.cursor-instructions.mdc` | `packages/artifex/.grok-instructions.md` | 6 | 1 | 1 | 0 | 0 |
 | `brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` | `packages/brain/.cursor-instructions.mdc` | `packages/brain/.grok-instructions.md` | 6 | 0 | 0 | 0 | 0 |
+| `orch` | `packages/orch/CLAUDE.md` | `packages/orch/AGENTS.md` | `packages/orch/.cursor-instructions.mdc` | `packages/orch/.grok-instructions.md` | 4 | 0 | 0 | 0 | 0 |
 
-The frozen inventory contains 72 common and 28 provider-extension IDs (100 total) across exactly 32 targets.
+The frozen inventory contains 76 common and 28 provider-extension IDs (104 total) across exactly 36 targets.
 
 ## Public API
 

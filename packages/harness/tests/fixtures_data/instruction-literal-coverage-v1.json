@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "b7b86ed614b6945c92334497088be20f70459915b3e83a373da4cefc857f03e0",
+    "source_sha256": "9db83722b47940ebbc237de239949fb350029143d242dacb0729e11d1bf45c39",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 370
   },
@@ -1043,11 +1043,11 @@
     },
     {
       "semantic_id": "analyst.claude-code.capture-surfaces",
-      "literal": "Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`."
+      "literal": "Claude Code capture reads project lessons from `.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst`), run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`."
     },
     {
       "semantic_id": "analyst.claude-code.capture-surfaces",
-      "literal": "`.claude/analyst`"
+      "literal": "`.swissknifeman/analyst`"
     },
     {
       "semantic_id": "analyst.claude-code.capture-surfaces",

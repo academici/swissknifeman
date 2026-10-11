@@ -2188,7 +2188,7 @@
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 1,
-          "intent": "Apply this source-derived instruction: Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
+          "intent": "Apply this source-derived instruction: Claude Code capture reads project lessons from `.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst`), run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
           "obligations": [
             {
               "modality": "must",
@@ -2202,12 +2202,12 @@
             {
               "source_id": "instruction.fragment.analyst.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/analyst/claude-code.md",
-              "sha256": "afed4e76fc5f0ef2b49057d6b5f95656b0a6d7e12c1b9927b82938bd85eb8f43"
+              "sha256": "034490936c26e969d44f19815fa009e3379364ab2473fb3e0d7a8d66b33d6256"
             }
           ],
           "compatibility_assertions": [
-            "Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
-            "`.claude/analyst`",
+            "Claude Code capture reads project lessons from `.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst`), run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
+            "`.swissknifeman/analyst`",
             "`.claude/runs`",
             "`~/.claude/projects/<encoded-cwd>/*.jsonl`"
           ]
@@ -2232,7 +2232,7 @@
             {
               "source_id": "instruction.fragment.analyst.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/analyst/claude-code.md",
-              "sha256": "afed4e76fc5f0ef2b49057d6b5f95656b0a6d7e12c1b9927b82938bd85eb8f43"
+              "sha256": "034490936c26e969d44f19815fa009e3379364ab2473fb3e0d7a8d66b33d6256"
             }
           ],
           "compatibility_assertions": [

@@ -895,8 +895,8 @@
         "claude-code"
       ],
       "assertions": [
-        "Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
-        "`.claude/analyst`",
+        "Claude Code capture reads project lessons from `.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst`), run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
+        "`.swissknifeman/analyst`",
         "`.claude/runs`",
         "`~/.claude/projects/<encoded-cwd>/*.jsonl`"
       ]

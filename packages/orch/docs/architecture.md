@@ -33,7 +33,7 @@ engines use partner CLI/JSON APIs only
 
 `orch` takes work through the extension point `orch:work-source` (contract `work-source/v1`, see [work-source.md](work-source.md)),
 served by the plugin that `[orch] work_source` names. The plugin that ships is the bridge `planner-orch` of the hub; the core
-never names it. The other bridges (`orch-skiller`, `orch-harness`) are units of the hub in `bridges/<id>/` and find their
+never names it. The other bridges (role-to-skills resolution and the agent-pack role conformance) are units of the hub in `bridges/<id>/` and find their
 partners by an environment variable or a command on `PATH`, never by a neighbouring folder.
 
 ## Non-goals

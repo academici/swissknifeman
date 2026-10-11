@@ -168,16 +168,16 @@
       "provider": "claude",
       "target": ".claude/skills/planner-development-philosophy/SKILL.md",
       "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md",
-      "canonical_sha256": "40520d5d164d05d94770ea05f14d8cbda4137311eddafc7f0d96ecdf73df2327",
-      "rendered_sha256": "90894709d3cf202d0d6acc5343e2fcdeb15368125612b93a20cd064068280b53"
+      "canonical_sha256": "4196a3a4ce495410fe2efd246b5bc509a918bc3c391fbeb538d71d1946b0c18d",
+      "rendered_sha256": "db7ec737303ef123a7f80ae97933bee798ea6355ccd0020a499f0996e260606b"
     },
     {
       "identity": "planner-development-philosophy",
       "provider": "codex",
       "target": ".agents/skills/planner-development-philosophy/SKILL.md",
       "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md",
-      "canonical_sha256": "40520d5d164d05d94770ea05f14d8cbda4137311eddafc7f0d96ecdf73df2327",
-      "rendered_sha256": "90894709d3cf202d0d6acc5343e2fcdeb15368125612b93a20cd064068280b53"
+      "canonical_sha256": "4196a3a4ce495410fe2efd246b5bc509a918bc3c391fbeb538d71d1946b0c18d",
+      "rendered_sha256": "db7ec737303ef123a7f80ae97933bee798ea6355ccd0020a499f0996e260606b"
     },
     {
       "identity": "project-tooling-runbook",

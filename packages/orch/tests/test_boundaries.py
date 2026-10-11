@@ -26,6 +26,8 @@ FORBIDDEN = (
 # docs/research/ is a verbatim historical record of the design research; it names partners by nature.
 SKIPPED_DIRS = ("docs/research/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
+# Generated instruction projections (harness instruction catalog); their boundary sentence names the partners once.
+GENERATED_INSTRUCTIONS = {"CLAUDE.md", "AGENTS.md", ".cursor-instructions.mdc", ".grok-instructions.md"}
 
 
 class BoundaryTests(unittest.TestCase):
@@ -34,7 +36,7 @@ class BoundaryTests(unittest.TestCase):
         for path in sorted(ROOT.rglob("*")):
             relative = path.relative_to(ROOT).as_posix()
             parts = path.relative_to(ROOT).parts
-            if (not path.is_file() or relative in {"CHANGELOG.md", SELF}
+            if (not path.is_file() or relative in GENERATED_INSTRUCTIONS | {"CHANGELOG.md", SELF}
                     or relative.startswith(SKIPPED_DIRS) or SKIPPED_PARTS & set(parts)
                     or any(pair == (".claude", "runs") for pair in zip(parts, parts[1:]))):
                 continue

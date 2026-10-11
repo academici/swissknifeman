@@ -15,7 +15,10 @@
   "rationale": "E1; большая часть инвариантов уже в packages/orch/docs/engine-port.md (one workflow owner, AFTER_TERMINAL, unknown_outcome, end of stream ≠ success) — добавляются недостающие поля и правила.",
   "applies_to": [
     "P9.5",
-    "P10"
+    "P10.4",
+    "P10.6",
+    "P10.8",
+    "P10.10"
   ],
   "actor": {
     "provider": "anthropic",

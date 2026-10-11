@@ -21,7 +21,7 @@
   "applies_to": [
     "P5",
     "P8.5",
-    "P10"
+    "P10.8"
   ],
   "actor": {
     "provider": "anthropic",

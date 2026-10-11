@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D65",
+  "title": "Сценарии — пакеты политик run-policy в orch; конфиг [orch]: движок, движок по роли, источник работы; отказ при нехватке возможностей; события orch.run.*",
+  "date": "2026-10-10",
+  "status": "accepted",
+  "question": "Где живут сценарии оркестрации (D16) и как выбирается движок без тихой деградации; что orch испускает?",
+  "options": [
+    {
+      "id": "A",
+      "text": "packages/orch/configs/run-policies/<id>/policy.json (run-policy с version) + cases/*.json (ожидаемые стадии, отказы и решение для входа-фикстуры); поставляются solo, scout-solo, frontend-bounded, review-only, full (пять стадий D16 с необязательными condense и review); дополнительные каталоги — orch.profiles.dirs (только машина); orch.py policy list|show|test. Конфиг orch: configs/config.schema.json ($id urn:swissknifeman:orch:config:v1) — engine (native|cao|claude-only, умолчание native), engine_by_role (роль → движок), default_profile (solo), work_source (planner-orch), capabilities.stale (warn|refuse, умолчание warn), profiles.dirs, events.enabled; config.example.toml генерирует aicore. prepare читает конфиг один раз, пишет config digest и значения влияющих ключей в launch-plan (R28); движок без обязательной возможности стадии → CAPABILITY_UNSUPPORTED с цепочкой причин, другой движок не подставляется. События: orch.run.started, orch.run.stage.finished, orch.run.finished, orch.run.refused — схемы packages/orch/schemas/event-data/v1, фикстуры производителя, испускание через aicore.ext.events после записи журнала run в CLI orch.py source и prepare (refused).",
+      "pros": "Сценарий проверяем тестами пакета; выбор движка явный и объяснимый"
+    },
+    {
+      "id": "B",
+      "text": "Профили в конфиге TOML пользователя",
+      "cons": "run-policy — JSON-контракт exec/v1 со схемой и семантикой; дублирование формата"
+    }
+  ],
+  "context": "Профили run-policy сейчас — только фикстуры (solo, scout-solo, frontend-bounded, review-only). E57: пакеты политик — версионированные артефакты с тестами; R27: структурное решение политики. Архитектура §7: orch.engine: native|cao|claude-only, переопределение по роли; требуемые возможности → отказ. planner передаёт имя сценария (D60). Движок исполнения — вне плана: run/watch/cancel/resume привязок остаются NOT_IMPLEMENTED.",
+  "decision": "A — packages/orch/configs/run-policies/<id>/policy.json (run-policy с version) + cases/*.json (ожидаемые стадии, отказы и решение для входа-фикстуры); поставляются solo, scout-solo, frontend-bounded, review-only, full (пять стадий D16 с необязательными condense и review); дополнительные каталоги — orch.profiles.dirs (только машина); orch.py policy list|show|test. Конфиг orch: configs/config.schema.json ($id urn:swissknifeman:orch:config:v1) — engine (native|cao|claude-only, умолчание native), engine_by_role (роль → движок), default_profile (solo), work_source (planner-orch), capabilities.stale (warn|refuse, умолчание warn), profiles.dirs, events.enabled; config.example.toml генерирует aicore. prepare читает конфиг один раз, пишет config digest и значения влияющих ключей в launch-plan (R28); движок без обязательной возможности стадии → CAPABILITY_UNSUPPORTED с цепочкой причин, другой движок не подставляется. События: orch.run.started, orch.run.stage.finished, orch.run.finished, orch.run.refused — схемы packages/orch/schemas/event-data/v1, фикстуры производителя, испускание через aicore.ext.events после записи журнала run в CLI orch.py source и prepare (refused).",
+  "rationale": "D16, D20, D21; E57, R27, R28; архитектура §7 orch.",
+  "applies_to": [
+    "P10.7",
+    "P10.8",
+    "P10.9",
+    "P10.10",
+    "P10.12",
+    "P10.13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

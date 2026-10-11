@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D63",
+  "title": "Порт «источник работы»: точка расширения orch:work-source через aicore.ext.plugins; claim с владельцем, бриф-артефакт, evidence-gate",
+  "date": "2026-10-10",
+  "status": "accepted",
+  "question": "Как orch получает работу из planner и регистрирует результат (порт next → brief → run → register, D3, D16), и как защищены владение, повтор и закрытие?",
+  "options": [
+    {
+      "id": "A",
+      "text": "orch объявляет extension_point work-source и контракт urn:swissknifeman:orch:work-source:v1 (schemas/work-source/v1: input.schema.json, output.schema.json; op claim | brief | register). Мост planner-orch — плагин этой точки (extension.json). claim: пункт из filter.items или из структурного вывода next --parallel; сценарий пункта сверяется с профилями orch (orch.py policy show, D60) — неизвестный → status blocked SCENARIO_UNKNOWN; захват = plan.py start --actor <route> --session <run_id>; ITEM_OWNED → blocked без авто-take-over; attempt_id = att-<run_id>-<ref> детерминирован, повтор claim тем же run_id — тот же ответ. brief: execution-input (brief.py) кладётся в aicore.state.blobs (project) как canonical JSON, artifact-ref/v1 в ответе, plan.py add-artifact --role input --id brief-<digest12> (повтор — no-op), повтор при неизменных входах переиспользует blob. register: fencing — result.executor.session пункта = owner.run_id, иначе REGISTER_STALE_OWNER и ничего не пишется; evidence-gate — для done и done_with_deviations каждый acceptance-чек пункта имеет файл check-evidence (exit), заявления checks_run без файла не засчитываются → REGISTER_EVIDENCE_MISSING, exit ≠ 0 → REGISTER_EVIDENCE_RED; далее прежняя регистрация (idempotent по attempt_id). CLI register моста получает флаг --gate evidence (порт всегда передаёт его; прямой вызов без флага — прежнее поведение). orch: lib/orch/worksource.py (Protocol + PluginWorkSource через aicore.ext.plugins), ключ конфига orch.work_source (id плагина, умолчание planner-orch), CLI orch.py source claim|brief|register, события orch.run.* (D65).",
+      "pros": "Регистрация — командой из конфига (D3) с манифестом и describe; владение и закрытие решает код по данным planner, а не мнение модели (D16)."
+    },
+    {
+      "id": "B",
+      "text": "orch вызывает plan.py bridge planner-orch напрямую по пути из конфига orch",
+      "cons": "Второй механизм регистрации процессов рядом с aicore.ext.plugins; нет describe и манифеста до запуска"
+    }
+  ],
+  "context": "aicore.ext.plugins (D45): регистрация [aicore.plugins.<id>] manifest (только машина), манифест extension/v1 до запуска, describe, очищенное окружение, permissions.env, invoke_one(point). planner уже имеет ITEM_OWNED и --take-over (D60), идемпотентный finish по --attempt-id, проверку acceptance в finish (CHECKS_MISSING, CHECKS_RED) и check-evidence файлы. Внешние предпосылки — research/P10-perplexity.md (Q1: claim, а не peek; токен попытки; опоздавшее завершение отклоняется; токен не защищает внешние эффекты).",
+  "decision": "A — orch объявляет extension_point work-source и контракт urn:swissknifeman:orch:work-source:v1 (schemas/work-source/v1: input.schema.json, output.schema.json; op claim | brief | register). Мост planner-orch — плагин этой точки (extension.json). claim: пункт из filter.items или из структурного вывода next --parallel; сценарий пункта сверяется с профилями orch (orch.py policy show, D60) — неизвестный → status blocked SCENARIO_UNKNOWN; захват = plan.py start --actor <route> --session <run_id>; ITEM_OWNED → blocked без авто-take-over; attempt_id = att-<run_id>-<ref> детерминирован, повтор claim тем же run_id — тот же ответ. brief: execution-input (brief.py) кладётся в aicore.state.blobs (project) как canonical JSON, artifact-ref/v1 в ответе, plan.py add-artifact --role input --id brief-<digest12> (повтор — no-op), повтор при неизменных входах переиспользует blob. register: fencing — result.executor.session пункта = owner.run_id, иначе REGISTER_STALE_OWNER и ничего не пишется; evidence-gate — для done и done_with_deviations каждый acceptance-чек пункта имеет файл check-evidence (exit), заявления checks_run без файла не засчитываются → REGISTER_EVIDENCE_MISSING, exit ≠ 0 → REGISTER_EVIDENCE_RED; далее прежняя регистрация (idempotent по attempt_id). CLI register моста получает флаг --gate evidence (порт всегда передаёт его; прямой вызов без флага — прежнее поведение). orch: lib/orch/worksource.py (Protocol + PluginWorkSource через aicore.ext.plugins), ключ конфига orch.work_source (id плагина, умолчание planner-orch), CLI orch.py source claim|brief|register, события orch.run.* (D65).",
+  "rationale": "D3, D16, D21 (E04, E25), D45; research/P10-perplexity.md Q1.",
+  "applies_to": [
+    "P10.10",
+    "P10.12",
+    "P10.13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

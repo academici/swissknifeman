@@ -1,0 +1,189 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.13",
+  "title": "Закрытие фазы: широкий прогон, standalone orch, мосты, e2e источника работы и событий, conformance, совместимость контрактов, бюджет первого хода, сверка E1 и E2, push",
+  "status": "done_with_deviations",
+  "summary": "Широкий прогон по knowledge/orch-p10#checks; standalone --baseline; bash scripts/test-bridges.sh; e2e work-source и plan-events в песочнице; orch.py conformance; aicore schema compat против origin/ecosystem-split; golden, гигиена, docs-impact; skiller budget --first-turn; сверка каждой строки knowledge/orch-p10#e1e2 с кодом (отчёт в notes); push в origin ecosystem-split.",
+  "why": "Правило плана: конец фазы — тесты и проверки автономности зелёные, сверка реестров E1/E2, push. Риск: красное в соседних модулях после переноса мостов и смены валидатора orch — чинится в этом пункте у владельца (dev-режим).",
+  "scope": {
+    "include": [
+      "запуск проверок и исправление красного у владельца",
+      "CHANGELOG.md (итог фазы — если не дописан в P10.12)",
+      "configs/ecosystem-baseline.json (standalone)"
+    ],
+    "exclude": [
+      "новая функциональность"
+    ]
+  },
+  "depends_on": [
+    "P10.12"
+  ],
+  "decisions": [
+    "D61",
+    "D62",
+    "D63",
+    "D64",
+    "D65",
+    "D66"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/review-e1-contracts#register",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e1-contracts (Тезисы)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-contracts#inventory",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e1-contracts (Инвентаризация контрактов (E13))",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-execution#register",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e1-execution (Тезисы)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-extensions#register",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e1-extensions (Тезисы)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-skills#register",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e1-skills (Тезисы)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-deferred#register",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e2-deferred (Тезисы)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-execution#register",
+      "why": "сверка закрытия: тезисы фазы в реестре review-e2-execution (Тезисы)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "**",
+      "change": "any",
+      "note": "исправления красного у владельца"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Каждая строка таблицы e1e2 подтверждена кодом или тестом; неподтверждённое — исправить или plan.py log с решением",
+    "push — только после зелёного широкого прогона: git push origin ecosystem-split"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: широкий прогон (§checks, абзац «Широкий прогон P10.13») → `python3 scripts/ecosystem-units.py standalone --baseline` → e2e в песочнице: `scripts/e2e-work-source.sh`, `scripts/e2e-plan-events.sh` → `orch.py conformance` по трём привязкам → `aicore schema compat` → `skiller budget --first-turn` (и `--with-plugins`; цель 16K, предупреждение 23K — правило root.claude-code.context-budget) → сверка e1e2 построчно (в notes finish — таблица «тезис: где в коде/тест») → `git push origin ecosystem-split` → finish.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "set -e; bash packages/aicore/scripts/test.sh; bash packages/aicore/scripts/validate.sh; bash packages/brain/scripts/test.sh; bash packages/brain/scripts/validate.sh; PYTHONPATH=. python3 -m unittest discover -s core/tests; for m in harness maind orch analyst; do bash packages/$m/scripts/test.sh; done; bash packages/orch/scripts/validate.sh; bash packages/analyst/scripts/validate.sh; bash packages/maind/scripts/validate.sh; bash packages/harness/scripts/validate.sh; bash scripts/test-bridges.sh; for t in scripts/test-*.py; do python3 \"$t\"; done; bash scripts/test-bootstrap-machine.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p10-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p10-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone --baseline && python3 scripts/ecosystem-units.py standalone orch && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p10-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash scripts/e2e-work-source.sh && bash scripts/e2e-plan-events.sh'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строки e2e work source: OK и e2e plan events: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split && git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
+      "expect": "exit 0; для exec/v1 нет ломающих изменений",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "фаза P10 закрыта: проверки зелёные, push"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-11T09:38:54Z",
+    "finished_at": "2026-10-11T10:56:23Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "cea22213-7ca0-4eb3-819c-d20b2d1dfc9d"
+    },
+    "notes": "E1/E2 table verified line by line against tests: E04 bridges/planner-orch test_worksource + test_port STALE_EPOCH; E08 test_boundaries; E09/R32 test_write_confinement; E10/R20 test_retry; E11 test_prepare_proof; E19 bridge test_worksource; E21 test_contracts_protocol; E23/E24/E25 test_contracts_identity/protocol/runstate_properties; E26/E56 test_prepare_proof; E38 identity/worksource; E44 test-event-contracts.py; E54/E55 test_cli_prepare; E57 test_policies; E59 test_conformance; R09 protocol; R22 test_port/journal; R24 test_boundaries no_mcp; R25 runstate_properties; R28/R29 test_cli_prepare; D34 no ORCH_ROUTING; D41 test_prepare. Budget first-turn 1930 (target 16000), with plugins 2294. Conformance: covered pass, declared with reason.",
+    "deviations": [
+      "V4 golden check lists only owner-dirty files (two planner-development-philosophy SKILL.md, bootstrap/publication-lock.json); units check, render, standalone, hygiene green"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T10:56:23Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T10:56:23Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T10:56:23Z"
+      },
+      {
+        "id": "V4",
+        "exit": 1,
+        "at": "2026-10-11T10:56:23Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T10:56:23Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-11T10:56:23Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T10:56:23Z"
+}

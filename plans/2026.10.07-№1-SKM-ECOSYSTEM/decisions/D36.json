@@ -21,7 +21,7 @@
   "rationale": "R03 и R14 в knowledge/review-e2-foundation. Дополняет D20 (список классов) и D33 (форма error/v1); сами решения не заменяются.",
   "applies_to": [
     "P3",
-    "P10"
+    "P10.6"
   ],
   "actor": {
     "provider": "anthropic",

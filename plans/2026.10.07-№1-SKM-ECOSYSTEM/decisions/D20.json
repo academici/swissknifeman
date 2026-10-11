@@ -15,7 +15,9 @@
   "rationale": "E1 E10/E29/E21 переведены на наши модули; PLAN2 DECISIONS §5.3 уже различает quota/auth и сбой задачи. Дополнено D36: к списку классов добавлен context_limit.",
   "applies_to": [
     "P3",
-    "P10"
+    "P10.5",
+    "P10.6",
+    "P10.8"
   ],
   "actor": {
     "provider": "anthropic",

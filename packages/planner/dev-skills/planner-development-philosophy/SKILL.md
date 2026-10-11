@@ -1,7 +1,7 @@
 ---
 name: planner-development-philosophy
 bucket: repository-bootstrap
-version: 0.5.0
+version: 0.6.0
 description: "Guardrails for keeping planner plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/planner planning, validation, audit, close, retry, or budget policy."
 when_to_use: "Use for swissknifeman plan authoring and planner workflow-policy changes."
 risk: read
@@ -75,6 +75,15 @@ Before writing a new plan, establish:
 Keep plans detailed enough for cold start, but do not make every item repeat the phase context.
 Prefer a small number of meaningful items over artificial micro-items, and prefer a new phase only
 when it creates a real integration or authority boundary.
+
+Plans are executed by agents, so item fields (`summary`, `why`, `scope`, `rules`, `guidance`,
+`validation`) carry only technical facts: paths, names, error codes, commands, invariants and named
+hard risks. Put rationale, rejected alternatives, research and worked examples into knowledge
+documents or artifacts, and let items reach them through section reads (`knowledge/<id>#<section>`)
+instead of binding whole documents to a phase. Write dense plain technical prose or JSON, never a
+private shorthand: a registrar or the owner must be able to check what the text states. Keep
+mandatory constraints verbatim; only optional background may be condensed, with a reference to its
+source.
 
 Do not prebuild speculative machinery. Record an unmeasured idea in a roadmap note with a trigger. Turn
 it into plan scope only after the trigger occurs or the owner explicitly prioritizes it.

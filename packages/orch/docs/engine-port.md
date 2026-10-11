@@ -161,7 +161,7 @@ from an error/v1 record or the terminal event kind (`class_of`), never from mess
    quota and rate_limit retry after a wait; model_unavailable, provider_internal, transport and timeout
    retry; context_limit replans; unknown_outcome reconciles;
 2. `unknown_outcome` of a writing stage is always `reconcile` (`UNKNOWN_OUTCOME_WRITE`); of a read-only
-   stage it follows the policy or retries (`UNKNOWN_OUTCOME_READ_ONLY`);
+   stage it is always `retry` (`UNKNOWN_OUTCOME_READ_ONLY`), subject to the budgets in rule 4;
 3. a repeating action (`retry`, `retry_after`, `fallback_route`) of a writing stage with a dirty worktree
    or an unresolved receipt becomes `reconcile` (`PARTIAL_CHANGES`);
 4. a repeating action is `stop` (`BUDGET_EXHAUSTED`) when `attempts_used` (including the failed one)

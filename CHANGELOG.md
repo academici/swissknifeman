@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- **orch:** `unknown_outcome` стадии без права записи выбирает `retry` даже при конфликтующем
+  `on_error` (в том числе в пакете `full`); лимиты повторов сохраняются, пишущая стадия требует `reconcile`.
+- **hub:** golden-дайджесты проекций `planner-development-philosophy` и bootstrap publication lock
+  обновлены после изменения канонического skill.
 - **aicore:** `SKM_<MODULE>_ROOT` locates a module's folder and is no longer reported as an unknown configuration
   variable (`CONFIG_ENV_UNKNOWN`) unless the module's schema has a top-level key `root`.
 - **planner:** `--config` передаётся в доставку событий aicore вместе с настройками подписок и плагинов;

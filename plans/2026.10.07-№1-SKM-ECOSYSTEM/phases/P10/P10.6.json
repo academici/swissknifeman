@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.6",
   "title": "Reducer, повторы, журнал и эффекты: event_id и STALE_EPOCH, событие неизвестной версии, property-тесты; retry.decide и таблица действий; журнал run и watch(run_id, after_seq); effects.check перед эффектом",
-  "status": "done_with_deviations",
+  "status": "done",
   "summary": "RunState: дедупликация по event_id (EVENT_CONFLICT), fencing owner_epoch (STALE_EPOCH), событие чужой contract_version сохраняется и не применяется, error/v1 в ошибках стадии; property-тесты stdlib с seed; lib/orch/retry.py (class_of, decide, DEFAULT_ACTIONS); lib/orch/journal.py (run_dir, append_event, read_events(after_seq), write_doc/read_doc); EnginePort.watch(run_id, after_seq=None); lib/orch/effects.py (check, record) — повторная проверка предусловия.",
   "why": "D21, D20, D64; E23, E24, R20, R21, R22, R25, R27. Это модель конкурентности и целостности исполнения (knowledge/orch-p10-contracts#invariants I1, I4–I7): ошибка здесь даёт повтор эффекта или потерю исхода. Жёсткие риски: (1) дедупликация по event_id и по seq противоречат — порядок проверок фиксирован в §reducer; (2) отклонённое событие частично меняет состояние — полная проверка до изменения, свойство P5/P7; (3) повтор после частичных изменений без reconcile — правило 3 decide и тест R20; (4) журнал без блокировки при двух писателях — flock, тест конфликта.",
   "scope": {
@@ -168,30 +168,27 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-10T18:02:05Z",
-    "finished_at": "2026-10-10T18:56:15Z",
+    "started_at": "2026-10-11T12:26:08Z",
+    "finished_at": "2026-10-11T12:37:37Z",
     "executor": {
-      "provider": "claude-code",
-      "model": "claude-sonnet-5-5",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
       "effort": "high",
-      "session": "85c0b7a4-fa47-4883-9885-deee6bef3260"
+      "session": "01a12ae3-a34a-7021-a56e-992129fdb2ca"
     },
-    "notes": "Reducer with event_id dedup, owner_epoch fencing, foreign events, error/v1 in stage errors; retry.decide and DEFAULT_ACTIONS; run journal with flock, watch(after_seq); effects.check/record; property tests P1-P8 (200 seeds, 3.6 s). grok-4.7 review: 2 findings confirmed and fixed (torn-body duplicate in journal, stage_result error aliasing). Hard risk: concurrency/data integrity — task:review recommended.",
-    "deviations": [
-      "Journal: seq clash is SEQ_ORDER, event_id clash EVENT_CONFLICT (as in the reducer and I4); reducer: only a present different contract_version is foreign, a missing one is INPUT_INVALID; failed event with error/v1 adds a stage error record; property tests memoize validation per distinct event to stay under 5 s"
-    ],
+    "notes": "Audit F1 fixed; independent Grok 4.7/xhigh correction review GREEN (session 8cc6e8fb-5d99-469d-8562-920e80d9776e). orch validate includes full test.sh, 449 tests; V2 targeted property/retry/journal/effects 56 tests and assertions GREEN with explicit . in PYTHONPATH under PYTHONSAFEPATH. Documentation updated. Evidence: knowledge/audit-p10-fixes-2026-10-11#checks. Owner requested combined final correction commit and push.",
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-10T18:56:15Z"
+        "at": "2026-10-11T12:37:37Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-10T18:56:15Z"
+        "at": "2026-10-11T12:37:37Z"
       }
     ]
   },
-  "updated_at": "2026-10-10T18:56:15Z"
+  "updated_at": "2026-10-11T12:37:37Z"
 }

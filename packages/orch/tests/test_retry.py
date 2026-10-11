@@ -53,8 +53,30 @@ class RetryTableTests(unittest.TestCase):
             self.assertIn("UNKNOWN_OUTCOME_WRITE", decision.reason_codes)
 
     def test_unknown_outcome_of_a_read_only_stage_is_retried(self):
-        decision = decide(inputs("unknown_outcome"), {})
-        self.assertEqual((decision.action, decision.reason_codes[-1]), ("retry", "UNKNOWN_OUTCOME_READ_ONLY"))
+        policies = [{}] + [{"on_error": {"unknown_outcome": {"action": action}}} for action in retry.ACTIONS]
+        for policy in policies:
+            with self.subTest(policy=policy):
+                decision = decide(inputs("unknown_outcome"), policy)
+                self.assertEqual((decision.action, decision.reason_codes[-1]),
+                                 ("retry", "UNKNOWN_OUTCOME_READ_ONLY"))
+
+    def test_full_policy_unknown_outcome_follows_the_stage_write_authority(self):
+        policy = json.loads((ROOT / "configs/run-policies/full/policy.json").read_text(encoding="utf-8"))
+        self.assertEqual(policy["on_error"]["unknown_outcome"]["action"], "reconcile")
+        for writes, action, reason in ((False, "retry", "UNKNOWN_OUTCOME_READ_ONLY"),
+                                      (True, "reconcile", "UNKNOWN_OUTCOME_WRITE")):
+            with self.subTest(stage_writes=writes):
+                decision = decide(inputs("unknown_outcome", stage_writes=writes), policy)
+                self.assertEqual((decision.action, decision.reason_codes), (action, ("ACTION_FROM_POLICY", reason)))
+
+    def test_read_only_unknown_outcome_retry_still_obeys_budgets(self):
+        policy = {"on_error": {"unknown_outcome": {"action": "reconcile", "max": 1}}}
+        for override in ({"stage_retries_max": 0}, {"budget_left": 0}, {"attempts_used": 2}):
+            with self.subTest(override=override):
+                decision = decide(inputs("unknown_outcome", **override), policy)
+                self.assertEqual(decision.action, "stop")
+                self.assertEqual(decision.reason_codes,
+                                 ("ACTION_FROM_POLICY", "UNKNOWN_OUTCOME_READ_ONLY", "BUDGET_EXHAUSTED"))
 
     def test_partial_changes_of_a_writing_stage_need_reconcile(self):  # R20
         for flag in ("worktree_dirty", "receipt_unresolved"):

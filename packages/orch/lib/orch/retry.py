@@ -78,7 +78,7 @@ def decide(inputs: RetryInputs, policy: dict) -> RetryDecision:
         # The request may have been executed: a writing stage is never repeated without reconciliation.
         if inputs.stage_writes:
             return RetryDecision("reconcile", tuple(reasons + ["UNKNOWN_OUTCOME_WRITE"]))
-        action = action if configured is not None else "retry"
+        action = "retry"
         reasons.append("UNKNOWN_OUTCOME_READ_ONLY")
     if action in _REPEATING and inputs.stage_writes and (inputs.worktree_dirty or inputs.receipt_unresolved):
         return RetryDecision("reconcile", tuple(reasons + ["PARTIAL_CHANGES"]))

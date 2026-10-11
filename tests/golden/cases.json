@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "6fcff64fca56",
-  "reason": "orch instruction scope",
+  "captured_from": "21a27d6d1614",
+  "reason": "Refresh bootstrap projection digests after the canonical planner-development-philosophy 0.6.0 update",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

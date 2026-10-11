@@ -251,26 +251,32 @@ class OrchestrationTests(Case):
 
 
 class OptionsContractTests(unittest.TestCase):
-    """The planner keeps a copy of orch's run-options: both must accept and refuse the same documents."""
+    """The bridge supplies the planner's ``orchestration.options`` slot with a literal copy of orch's run-options."""
 
-    def test_the_planner_copy_equals_the_orch_contract(self):
-        def strip(node):
-            if isinstance(node, dict):
-                return {key: strip(value) for key, value in node.items() if key not in ("description", "$id",
-                                                                                        "$schema", "title")}
-            if isinstance(node, list):
-                return [strip(value) for value in node]
-            if isinstance(node, str) and node.startswith("urn:swissknifeman:task:plan:defs:v1#/$defs/orchestration"):
-                return "#/$defs/" + node.rsplit("orchestration", 1)[1].lower()
-            return node
+    def test_the_supplied_schema_is_the_orch_contract(self):
+        manifest = json.loads((_BRIDGE / "bridge.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["extends"], {"orchestration.options": "schemas/run-options.schema.json"})
+        supplied = json.loads((_BRIDGE / manifest["extends"]["orchestration.options"]).read_text(encoding="utf-8"))
         orch = json.loads((ORCH / "schemas/conductor/v1/run-options.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(supplied, orch)
+
+    def test_the_planner_declares_a_slot_and_keeps_no_copy(self):
         defs = json.loads((PLAN_PY.parents[1] / "schemas/plan/v1/defs.schema.json").read_text(encoding="utf-8"))["$defs"]
-        planner = dict(defs["orchestrationOptions"])
-        planner["$defs"] = {name: defs["orchestration" + name.capitalize()] for name in orch["$defs"]}
-        expected = {key: value for key, value in orch.items() if key not in ("$schema", "$id", "title")}
-        self.assertEqual(strip(planner), strip(expected))
         self.assertEqual(defs["orchestration"]["properties"]["options"]["$ref"],
-                         "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestrationOptions")
+                         "urn:swissknifeman:task:plan:extension:orchestration.options:v1")
+        self.assertEqual([name for name in defs if name.startswith("orchestration")], ["orchestration"])
+
+    def test_without_the_bridge_the_planner_refuses_the_options_and_keeps_the_scenario(self):
+        project = Path(tempfile.mkdtemp(prefix="ws-no-bridge-"))
+        self.addCleanup(shutil.rmtree, project, True)
+        shutil.copytree(Template.build(), project, dirs_exist_ok=True)
+        plan = next((project / "plans").iterdir()).name
+        with mock.patch.dict(os.environ, {"SKM_PLANNER_BRIDGES__ROOTS": "[]"}):
+            done = run(project, "--output", "json", "set", plan, "P1.1", "--json",
+                       json.dumps({"orchestration": {"options": {"rules": ["r"]}}}), check=False)
+            self.assertEqual(json.loads(done.stdout)["error"]["code"], "EXTENSION_UNAVAILABLE")
+            run(project, "set", plan, "P1.1", "--json", json.dumps({"orchestration": {"scenario": "full"}}))
+            self.assertEqual(run(project, "check", plan).returncode, 0)
 
 
 class BriefTests(Case):

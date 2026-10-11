@@ -194,12 +194,15 @@ artifacts of the item there (stage-report, `review-verdict.json`, check evidence
 The claim reads the scenario and the run options from the context pack, level by level from the most specific: the
 item, its phase, the plan.
 
-- Fields: `orchestration.scenario` and `orchestration.options` of the item, phase and plan documents (a planner whose
-  schema has them; the options are a closed copy of orch's `run-options`).
+- Fields: `orchestration.scenario` and `orchestration.options` of the item, phase and plan documents. The options are
+  the planner's extension slot `orchestration.options`: this bridge supplies its schema (`bridge.json` `extends` →
+  `schemas/run-options.schema.json`, a literal copy of orch's `schemas/conductor/v1/run-options.schema.json`;
+  `OptionsContractTests` keep them equal), so `set` and `check` refuse options outside orch's contract. A planner that
+  does not find this bridge among its `bridges.roots` refuses the options with `EXTENSION_UNAVAILABLE`.
 - Overlays: knowledge documents whose id starts with `orchestration-` and that have a section `orchestration` holding
   one JSON object `{"scenario"?: name, "options"?: run-options}` (raw or in a fenced block). An overlay applies to the
-  item or phase named in its `applies_to`, or to the plan when `global`. Overlays are for plan engines that refuse the
-  fields (`unexpected property`); they are added with `plan.py add-document`.
+  item or phase named in its `applies_to`, or to the plan when `global`. Overlays are the fallback for plan engines
+  that refuse the fields (`unexpected property`, `EXTENSION_UNAVAILABLE`); they are added with `plan.py add-document`.
 
 The scenario is the first one found from the item up, a field before an overlay of the same level, else the one the
 planner resolved from its configuration (`scenario_source` `config:*`); an overlay names its source

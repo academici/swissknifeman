@@ -139,7 +139,10 @@ cannot set it. The tests use it to put fake providers in place of the real CLIs.
 
 ## Plan engines without `orchestration.options`
 
-A plan engine whose item schema has no `orchestration.scenario`/`orchestration.options` refuses those fields in `set`
-and `check`. The planner bridge then reads the scenario and the options from orchestration overlay documents
-(`add-document`, id `orchestration-<scope>`, section `orchestration` holding `{"scenario"?, "options"?}`, applying to a
-phase, an item or, with `global`, the plan). A field of the same level wins over an overlay once the engine knows it.
+The planner declares `orchestration.options` as an extension slot and keeps no copy of this contract: the planner
+bridge supplies `run-options` to it (`extends` in its `bridge.json`), so `set` and `check` validate the options by
+this schema. A plan engine without the slot refuses the fields with `unexpected property`; a planner that does not find
+the bridge refuses the options with `EXTENSION_UNAVAILABLE` and still keeps `orchestration.scenario`. The planner
+bridge then reads the scenario and the options from orchestration overlay documents (`add-document`, id
+`orchestration-<scope>`, section `orchestration` holding `{"scenario"?, "options"?}`, applying to a phase, an item or,
+with `global`, the plan). A field of the same level wins over an overlay.

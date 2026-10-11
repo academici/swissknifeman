@@ -14,7 +14,10 @@
   (the conductor's runtime folder must be ignored, its reports committed) and `orch.py source commit`.
 - **orch:** `work-source/v1` gains the claim's `options` layers, the brief's `artifacts_dir` and the op `commit`; exec/v1 gains
   `run-policy.review.triage` and the result shape `triage-result`; the `full` pack (1.1.0) triages review findings.
-- **planner:** `orchestration.options` of the plan, a phase or an item (a closed copy of orch's `run-options`).
+- **planner:** `orchestration.options` of the plan, a phase or an item as an extension slot: the core declares the field and keeps
+  no copy of its schema; a bridge supplies it (`extends` in `bridge.json`; `planner-orch` supplies orch's `run-options`). Without a
+  supplier the field is refused with `EXTENSION_UNAVAILABLE`; plans without the field are unchanged. The same plan is valid for
+  the Task engine of the base checkout, which gained the same slot.
 - **bridges:** `planner-orch` answers the run options and the scenario from `orchestration.*` fields and from orchestration overlay
   documents (`orchestration-*`, for plan engines without the fields), names the item's artifact folder and commits through
   `plan.py commit`.

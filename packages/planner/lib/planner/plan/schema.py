@@ -3,6 +3,10 @@
 Supports exactly the keywords in ``SUPPORTED_KEYWORDS``; any other keyword in a schema file fails
 closed with ``SchemaProfileError`` at load time. Validation collects every issue instead of stopping at the
 first one.
+
+A ``$ref`` to an id under ``EXTENSION_PREFIX`` names an extension slot: the engine declares the field, a bridge
+supplies its schema (``extends`` of ``bridge.json``, see ``extensions``). A slot without a supplier is an
+``extension`` issue, never a crash.
 """
 from __future__ import annotations
 
@@ -18,6 +22,9 @@ KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "doc
          "read-neighborhood", "read-catalog", "read-commits", "read-ready")
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
                "min_length", "one_of", "ref")
+EXTENSION_PREFIX = f"{SCHEMA_URN_PREFIX}extension:"
+# Issue code of an extension slot without a usable supplier; engine-only, outside the shared closed profile.
+EXTENSION_CODE = "extension"
 SUPPORTED_KEYWORDS = frozenset({
     "$schema", "$id", "$defs", "$ref", "title", "description", "type", "enum", "const", "properties",
     "required", "additionalProperties", "items", "minItems", "uniqueItems", "minLength", "pattern", "oneOf",
@@ -33,6 +40,10 @@ class SchemaProfileError(ValueError):
 
 class RefError(LookupError):
     """A ``$ref`` that the registry cannot resolve."""
+
+
+class ExtensionUnavailable(RefError):
+    """An extension slot that no bridge supplies (or whose supplied schema is unusable)."""
 
 
 class ValidationIssue(NamedTuple):
@@ -58,6 +69,9 @@ class Registry:
         document, _, fragment = ref.partition("#")
         owner = document or base_id
         node: Any = self._schemas.get(owner)
+        if node is None and owner.startswith(EXTENSION_PREFIX):
+            from . import extensions  # late: extensions reads bridge manifests, which are validated here
+            node = extensions.schema_for(owner)
         if node is None:
             raise RefError(f"unknown schema {owner!r} in $ref {ref!r}")
         if fragment:
@@ -102,6 +116,8 @@ def load_registry(schema_dir: Path | None = None) -> Registry:
 
 def clear_registry_cache() -> None:
     _cache.clear()
+    from . import extensions
+    extensions.clear_cache()
 
 
 def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -> None:
@@ -183,6 +199,8 @@ def _check(reg: Registry, schema: dict, base: str, value: Any, pointer: str, out
     if "$ref" in schema:
         try:
             target, owner = reg.resolve(schema["$ref"], base)
+        except ExtensionUnavailable as exc:
+            add(EXTENSION_CODE, str(exc))
         except RefError as exc:
             add("ref", str(exc))
         else:

@@ -178,12 +178,15 @@ session. When an item has none, the phase, the plan, `orchestration.by_class.<ro
 the result as `orchestration.scenario` and `orchestration.scenario_source`. Planner stores the name and does not check it
 against engine profiles.
 
-`orchestration.options` (plan, phase or item) holds the run options of the execution engine: `stages` (role routes),
-`reviewer` (`PROVIDER/MODEL[/CONTEXT][/EFFORT]`), `rules` (short executor rules), `skills` (`[{role, names}]`), `limits`
-and `on_blocked`. The object is closed and is a copy of the engine's run-options contract (the engine's bridge keeps
-the copies equal); the engine checks the numeric bounds. Planner stores the options and does not merge them; the
-bridge hands the plan, phase and item layers to the engine, which merges them over its configuration and the
-run-policy profile, the most specific layer winning.
+`orchestration.options` (plan, phase or item) holds the run options of the execution engine. It is an extension
+slot: the core declares the field (`$ref` `urn:swissknifeman:task:plan:extension:orchestration.options:v1`) and keeps
+no copy of its content. The bridge of the execution engine supplies the schema with `extends` in its `bridge.json` (a
+file inside the bridge, closed profile, references to its own `$defs` only). With exactly one supplier among the
+bridge roots, `set`, `apply`, `import` and `check` validate the options by that schema. Without a supplier, or with
+several, the field is refused with `EXTENSION_UNAVAILABLE` (`check` reports it as a `schema` error naming the code); a
+document without the field never reads a bridge, and both fields stay optional. Planner stores the options and does
+not merge them; the bridge hands the plan, phase and item layers to the engine, which checks the numeric bounds and
+merges them over its configuration and the run-policy profile, the most specific layer winning.
 
 The owner of an attempt is `result.executor.session`. `start` of an item that is in progress under another session
 fails with `ITEM_OWNED`; `start --take-over` hands the attempt over and the `start` event records the previous executor.

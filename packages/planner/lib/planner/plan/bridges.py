@@ -4,7 +4,8 @@ The core knows no partner by name. A bridge is found by scanning the bridge root
 ``bridges.roots`` setting (a relative path is taken from the project root, a leading ``~`` is expanded), then the
 built-in ``<planner>/bridges`` when it exists. The first root that holds a name wins. A manifest is validated against
 the ``bridge`` schema kind, and a verb runs the declared script with the bridge's own arguments. The bridge's output
-and exit code pass through unchanged.
+and exit code pass through unchanged. A bridge may also supply the schema of an extension slot of the plan
+(``extends``, see ``extensions``).
 """
 from __future__ import annotations
 
@@ -80,6 +81,10 @@ def load(directory: Path) -> dict:
         entry = (base / target).resolve()
         if not entry.is_relative_to(base) or not entry.is_file():
             raise _invalid(path, f"entrypoint {verb!r} is not a file inside the bridge: {target}")
+    for slot, target in (manifest.get("extends") or {}).items():
+        supplied = (base / target).resolve()
+        if Path(target).is_absolute() or not supplied.is_relative_to(base) or not supplied.is_file():
+            raise _invalid(path, f"extends {slot!r} is not a file inside the bridge: {target}")
     return manifest
 
 

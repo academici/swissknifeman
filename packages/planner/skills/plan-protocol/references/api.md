@@ -45,6 +45,8 @@ to the project root when the bridge is inside it).
 unchanged; the bridge owns its output and exit code, and the dispatcher sets `PLANNER_ROOT`,
 `PLANNER_PLAN_PY`, `PYTHONPATH` and, when the foundation is found, `AICORE_ROOT`. Global options are not forwarded. Refusals: `BRIDGE_INVALID`,
 `BRIDGE_UNKNOWN`, `BRIDGE_VERB_UNKNOWN`.
+A bridge may supply the schema of an extension slot of the plan: `"extends": {"orchestration.options": "<schema file
+inside the bridge>"}`; the file follows the closed profile and refers only to its own `$defs`.
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor and registers its
 reports back through `plan.py` only (see the bridge's README).
 
@@ -200,9 +202,10 @@ the executor, keeps `result.started_at` and records `data.take_over.previous` (t
 an item whose `result.executor.session` is not `S` is refused with `ITEM_OWNED` under the plan lock (a repeat of
 the recorded `--attempt-id` stays a no-op).
 `orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) names the execution scenario; the context
-pack resolves it with `orchestration.scenario_source`. `orchestration.options` (plan, phase or item; closed:
-`stages`, `reviewer`, `rules`, `skills`, `limits`, `on_blocked`) holds the run options of the execution engine; set it
-with `set`, never by editing JSON.
+pack resolves it with `orchestration.scenario_source`. `orchestration.options` (plan, phase or item) holds the run
+options of the execution engine; its schema comes from the single bridge that `extends` the slot, and without one
+writes refuse `EXTENSION_UNAVAILABLE` and `check` reports a `schema` error. Both fields are optional; set them with
+`set`, never by editing JSON.
 
 Optional `reads[].ref` names local plan data, including `knowledge/<id>#section`; exactly one of
 `ref` or `path` is required, with the existing `why` and `required` fields. Repository code/docs

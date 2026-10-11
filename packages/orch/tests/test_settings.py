@@ -1,0 +1,178 @@
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import tempfile
+import unittest
+
+from aicore.config import ConfigError
+
+from orch import contracts, settings
+from orch.settings import SettingsError
+
+
+class SettingsCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.home = self.root / "home"
+        self.project = self.root / "project"
+        (self.home / "skm" / "config").mkdir(parents=True)
+        (self.project / ".swissknifeman").mkdir(parents=True)
+        self.env = {"SKM_HOME": str(self.home / "skm"), "HOME": str(self.home)}
+
+    def machine(self, text: str) -> None:
+        (self.home / "skm" / "config" / "config.toml").write_text("schema_version = 1\n" + text, encoding="utf-8")
+
+    def project_file(self, text: str) -> None:
+        (self.project / ".swissknifeman" / "config.toml").write_text("schema_version = 1\n" + text, encoding="utf-8")
+
+    def config_file(self, text: str) -> Path:
+        path = self.root / "invocation.toml"
+        path.write_text("schema_version = 1\n" + text, encoding="utf-8")
+        return path
+
+    def load(self, **kwargs) -> settings.Settings:
+        kwargs.setdefault("env", self.env)
+        kwargs.setdefault("home", self.home)
+        return settings.load(**kwargs)
+
+
+class LoadTests(SettingsCase):
+    def test_defaults(self):
+        found = self.load()
+        self.assertEqual((found.engine, found.default_profile, found.work_source), ("native", "solo", "planner-orch"))
+        self.assertEqual((found.engine_by_role, found.capabilities_stale), ({}, "warn"))
+        self.assertEqual((found.profiles_dirs, found.events_enabled), ((), True))
+
+    def test_the_project_layer_overrides_the_machine_layer(self):
+        self.machine('[orch]\nengine = "cao"\ndefault_profile = "full"\n')
+        self.project_file('[orch]\nengine = "claude-only"\n[orch.engine_by_role]\nreviewer = "native"\n')
+        found = self.load(project=self.project)
+        self.assertEqual((found.engine, found.default_profile), ("claude-only", "full"))
+        self.assertEqual(found.engine_by_role, {"reviewer": "native"})
+        self.assertIn("project", found.explain_text("engine"))
+
+    def test_the_environment_beats_the_files(self):
+        self.project_file('[orch]\nengine = "claude-only"\n')
+        found = self.load(project=self.project, env={**self.env, "SKM_ORCH_ENGINE": "cao"})
+        self.assertEqual(found.engine, "cao")
+
+    def test_the_config_file_beats_the_environment(self):
+        path = self.config_file('[orch]\nengine = "claude-only"\n')
+        found = self.load(config_file=path, env={**self.env, "SKM_ORCH_ENGINE": "cao"})
+        self.assertEqual(found.engine, "claude-only")
+
+    def test_an_unknown_engine_is_refused(self):
+        self.machine('[orch]\nengine = "tmux"\n')
+        with self.assertRaises(ConfigError):
+            self.load()
+
+    def test_profile_folders_from_the_project_are_refused(self):
+        self.project_file('[orch.profiles]\ndirs = ["/tmp/elsewhere"]\n')
+        with self.assertRaises(ConfigError) as raised:
+            self.load(project=self.project)
+        self.assertEqual(raised.exception.code, "CONFIG_LAYER_FORBIDDEN")
+
+    def test_profile_folders_from_the_environment_are_refused(self):
+        with self.assertRaises(ConfigError) as raised:
+            self.load(env={**self.env, "SKM_ORCH_PROFILES__DIRS": '["/tmp/elsewhere"]'})
+        self.assertEqual(raised.exception.code, "CONFIG_LAYER_FORBIDDEN")
+
+    def test_profile_folders_from_the_machine_file_expand_the_home_folder(self):
+        self.machine('[orch.profiles]\ndirs = ["~/packs", "/opt/packs"]\n')
+        previous = os.environ.get("HOME")
+        os.environ["HOME"] = str(self.home)
+        self.addCleanup(lambda: os.environ.__setitem__("HOME", previous) if previous else os.environ.pop("HOME"))
+        found = self.load()
+        self.assertEqual(found.profiles_dirs, (self.home / "packs", Path("/opt/packs")))
+
+    def test_a_relative_profile_folder_is_refused(self):
+        path = self.config_file('[orch.profiles]\ndirs = ["packs"]\n')
+        with self.assertRaises(SettingsError) as raised:
+            self.load(config_file=path)
+        self.assertEqual(raised.exception.code, "PROFILES_DIR_RELATIVE")
+
+    def test_an_appended_folder_cannot_retarget_a_relative_one_of_a_lower_layer(self):
+        self.machine('[orch.profiles]\ndirs = ["team-policies"]\n')
+        path = self.config_file('[orch]\n_append = {"profiles.dirs" = ["/opt/extra"]}\n')
+        with self.assertRaises(SettingsError) as raised:
+            self.load(config_file=path)
+        self.assertEqual(raised.exception.code, "PROFILES_DIR_RELATIVE")
+
+    def test_an_appended_absolute_folder_follows_the_lower_one(self):
+        self.machine('[orch.profiles]\ndirs = ["/opt/a"]\n')
+        path = self.config_file('[orch]\n_append = {"profiles.dirs" = ["/opt/b"]}\n')
+        self.assertEqual(self.load(config_file=path).profiles_dirs, (Path("/opt/a"), Path("/opt/b")))
+
+
+class DigestTests(SettingsCase):
+    def test_the_digest_follows_the_values_that_affect_preparation(self):
+        base = settings.digest(self.load())
+        self.assertRegex(base, r"^[0-9a-f]{64}$")
+        self.assertEqual(base, settings.digest(self.load()))
+        for text in ('engine = "cao"', 'default_profile = "full"', "capabilities.stale"):
+            with self.subTest(text=text):
+                if text == "capabilities.stale":
+                    path = self.config_file('[orch.capabilities]\nstale = "refuse"\n')
+                else:
+                    path = self.config_file(f"[orch]\n{text}\n")
+                self.assertNotEqual(base, settings.digest(self.load(config_file=path)))
+        path = self.config_file('[orch.engine_by_role]\nreviewer = "cao"\n')
+        self.assertNotEqual(base, settings.digest(self.load(config_file=path)))
+
+    def test_the_digest_ignores_the_other_keys(self):
+        base = settings.digest(self.load())
+        path = self.config_file('[orch]\nwork_source = "other"\n[orch.events]\nenabled = false\n')
+        changed = self.load(config_file=path)
+        self.assertEqual(changed.work_source, "other")
+        self.assertEqual(base, settings.digest(changed))
+
+    def test_affecting_lists_exactly_the_affecting_keys(self):
+        self.assertEqual(sorted(settings.affecting(self.load())),
+                         ["capabilities.stale", "default_profile", "engine", "engine_by_role"])
+
+
+class SelectEngineTests(SettingsCase):
+    def select(self, role="reviewer", **kwargs):
+        path = self.config_file('[orch]\nengine = "native"\n[orch.engine_by_role]\nreviewer = "cao"\n')
+        return settings.select_engine(self.load(config_file=path), role, **kwargs)
+
+    def test_the_configured_engine_is_the_default(self):
+        binding, decision = self.select("executor")
+        self.assertEqual(binding, "native")
+        self.assertEqual(decision["considered"],
+                         [{"candidate": "native", "accepted": True, "reason_codes": ["ENGINE_FROM_CONFIG"]}])
+
+    def test_the_role_table_beats_the_default(self):
+        binding, decision = self.select()
+        self.assertEqual(binding, "cao")
+        self.assertEqual(decision["considered"][0]["reason_codes"], ["ENGINE_FROM_ROLE"])
+        self.assertEqual(decision["considered"][1],
+                         {"candidate": "native", "accepted": False, "reason_codes": ["ENGINE_OVERRIDDEN"]})
+
+    def test_the_flag_beats_everything(self):
+        binding, decision = self.select(flag="claude-only", stage_id="review")
+        self.assertEqual(binding, "claude-only")
+        self.assertEqual((decision["stage_id"], decision["kind"], decision["chosen"]),
+                         ("review", "binding", "claude-only"))
+        self.assertEqual([c["candidate"] for c in decision["considered"]], ["claude-only", "cao", "native"])
+
+    def test_the_decision_is_a_valid_launch_plan_decision(self):
+        _, decision = self.select(flag="cao")
+        path = Path(__file__).resolve().parents[1] / "fixtures" / "exec" / "v1" / "valid" / "launch-plan"
+        plan = json.loads((path / "dry-run-proof.json").read_text(encoding="utf-8"))
+        plan["decisions"] = [decision]
+        plan["digest"] = contracts.canonical_digest(plan)
+        self.assertEqual([i for i in contracts.validate(plan, "launch-plan") if i.level == "error"], [])
+
+    def test_an_unknown_flag_engine_is_refused_not_replaced(self):
+        with self.assertRaises(SettingsError) as raised:
+            self.select(flag="tmux")
+        self.assertEqual(raised.exception.code, "ENGINE_UNKNOWN")
+
+
+if __name__ == "__main__":
+    unittest.main()

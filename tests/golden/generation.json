@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "26078af911af",
-  "reason": "planner instruction sections: reference and literal coverage regenerated",
+  "captured_from": "b848889a94cf",
+  "reason": "orch.py gained the policy verb and the global --config option",
   "generators": [
     {
       "id": "skiller-registry",

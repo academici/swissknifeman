@@ -1,4 +1,4 @@
-"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run."""
+"""Command line: validate exec/v1 documents, read the launch catalog, create ad-hoc input, render prompts, prepare a dry run, list and test run-policy packs."""
 from __future__ import annotations
 
 import argparse
@@ -6,7 +6,9 @@ import json
 from pathlib import Path
 import sys
 
-from orch import adhoc, catalog, launch, render
+from aicore.config import ConfigError
+
+from orch import adhoc, catalog, launch, policies, render, settings
 from orch.bindings import BINDINGS
 from orch.contracts import validate
 from orch.port import PortError
@@ -78,8 +80,7 @@ def _prepare(args: argparse.Namespace) -> int:
         if not args.dry_run:
             raise PortError("NOT_IMPLEMENTED", "prepare only supports --dry-run in this version")
         input_doc, policy = _load_json(args.input), _load_json(args.policy)
-        directory = Path(args.roles_dir) if args.roles_dir else render.ROLES_DIR
-        roles = {path.stem: _load_json(path) for path in sorted(directory.glob("*.json"))}
+        roles = render.load_roles(args.roles_dir)
         engine = BINDINGS[args.binding](args.out, catalog=catalog.Catalog.load(args.model_catalog),
                                         roles_dir=args.roles_dir)
         plan = engine.prepare(input_doc, policy, roles, provider=args.provider, dry_run=True)
@@ -93,12 +94,61 @@ def _prepare(args: argparse.Namespace) -> int:
     except (catalog.CatalogError, launch.LaunchError) as error:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
+    except (OSError, ValueError) as error:  # an unreadable role manifest
+        print(f"INPUT_INVALID: {error}", file=sys.stderr)
+        return 1
     print(json.dumps(plan, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _project_root() -> Path | None:
+    """The project the working directory belongs to: a git repository or a folder with ``.swissknifeman``."""
+    from aicore.state import find_project_root
+    root = find_project_root(Path.cwd())
+    return root if (root / ".git").exists() or (root / ".swissknifeman").is_dir() else None
+
+
+def _policy(args: argparse.Namespace) -> int:
+    try:
+        current = settings.load(project=_project_root(), config_file=args.config)
+        if args.action == "list":
+            rows = [policies.describe(policy_id, current) for policy_id in policies.discover(current)]
+            if args.json:
+                print(json.dumps(rows, ensure_ascii=False))
+            else:
+                for row in rows:
+                    print(f"{row['policy_id']}\t{row['version']}\t{row['cases']} cases\t{row['source']}\t{row['description']}")
+        elif args.action == "show":
+            print(json.dumps(policies.load(args.policy_id, current), ensure_ascii=False, indent=2))
+        else:
+            ids = args.policy_id or list(policies.discover(current))
+            rows = [row for policy_id in ids for row in policies.run_cases(policy_id, current)]
+            if args.json:
+                print(json.dumps(rows, ensure_ascii=False))
+            else:
+                for row in rows:
+                    print(f"{row['status'].upper()}\t{row['policy_id']}\t{row['case'] or '-'}")
+                    for item in row["differences"]:
+                        print(f"  {item['field']}: expected {json.dumps(item['expected'], ensure_ascii=False)}, "
+                              f"got {json.dumps(item['actual'], ensure_ascii=False)}", file=sys.stderr)
+            return 1 if any(row["status"] != "pass" for row in rows) else 0
+    except policies.PolicyError as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        for issue in error.issues:
+            print(f"  {issue['code']}: {issue['path'] or '/'} {issue['message']}", file=sys.stderr)
+        return 1
+    except ConfigError as error:
+        print(f"CONFIG_INVALID: {error}", file=sys.stderr)
+        return 1
+    except settings.SettingsError as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="orch.py")
+    parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
     verbs = parser.add_subparsers(dest="verb", required=True)
     command = verbs.add_parser("validate", help="validate an exec/v1 JSON document")
     command.add_argument("kind")
@@ -143,7 +193,18 @@ def main(argv: list[str] | None = None) -> int:
     command.add_argument("--model-catalog", type=Path, dest="model_catalog", metavar="FILE",
                          help="model-catalog/v1 file (default: the catalog packaged with aicore)")
     command.add_argument("--roles-dir", type=Path)
+    command = verbs.add_parser("policy", help="run-policy packs: list, show, test")
+    actions = command.add_subparsers(dest="action", required=True)
+    listing = actions.add_parser("list", help="every pack with version, case count and source")
+    listing.add_argument("--json", action="store_true")
+    show = actions.add_parser("show", help="the run-policy of a pack as JSON")
+    show.add_argument("policy_id")
+    test = actions.add_parser("test", help="run the cases of packs (all packs without an id)")
+    test.add_argument("policy_id", nargs="*")
+    test.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.verb == "policy":
+        return _policy(args)
     if args.verb == "launch":
         return _launch(args)
     if args.verb == "input":

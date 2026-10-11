@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:config:v1",
+  "title": "orch config",
+  "description": "Settings of the orch module: execution engine choice, default run-policy, work source and run-policy folders.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "engine": {
+      "type": "string",
+      "description": "Execution engine used when neither a flag nor engine_by_role names one.",
+      "default": "native",
+      "enum": [
+        "native",
+        "cao",
+        "claude-only"
+      ]
+    },
+    "engine_by_role": {
+      "type": "object",
+      "description": "Execution engine by role id; a role that is not listed uses the engine key.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "string",
+          "description": "Engine of the role.",
+          "enum": [
+            "native",
+            "cao",
+            "claude-only"
+          ]
+        }
+      }
+    },
+    "default_profile": {
+      "type": "string",
+      "description": "Run-policy used when the scenario of a task names none.",
+      "default": "solo",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "work_source": {
+      "type": "string",
+      "description": "Id of the plugin of the extension point orch:work-source that supplies the work.",
+      "default": "planner-orch",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "capabilities": {
+      "type": "object",
+      "description": "Capability records of the engines.",
+      "additionalProperties": false,
+      "properties": {
+        "stale": {
+          "type": "string",
+          "description": "What preparation does with a capability record that is past its freshness date: warn and go on, or refuse.",
+          "default": "warn",
+          "enum": [
+            "warn",
+            "refuse"
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Run-policy packs beyond the ones shipped with orch.",
+      "additionalProperties": false,
+      "properties": {
+        "dirs": {
+          "type": "array",
+          "description": "Extra folders with run-policy packs (one folder per policy id): absolute paths or paths starting with ~. Machine-wide: a project file cannot set it, because it makes orch read files from the listed paths.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One folder."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "Events of orch runs.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether orch emits the orch.run.* events.",
+          "default": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "contract_version": "exec/v1",
+  "policy_id": "full",
+  "description": "Full pipeline: context, optional economy condensing, the primary stage, checks, an optional review on an independent provider, registration and a commit.",
+  "stages": [
+    {
+      "id": "context",
+      "kind": "context",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "condense",
+      "kind": "condense",
+      "role": "context-scout",
+      "required": false,
+      "model_class": "economy",
+      "on_unavailable": "skip",
+      "limits": {
+        "input_tokens_max": 60000,
+        "output_tokens_max": 8000
+      }
+    },
+    {
+      "id": "primary",
+      "kind": "primary",
+      "role": "executor",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "checks",
+      "kind": "checks",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "review",
+      "kind": "review",
+      "role": "reviewer",
+      "required": false,
+      "on_unavailable": "skip"
+    },
+    {
+      "id": "registrar",
+      "kind": "registrar",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "git",
+      "kind": "git",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    }
+  ],
+  "review": {
+    "enabled": true,
+    "independent_provider": true,
+    "max_rounds": 2,
+    "max_corrections": 1
+  },
+  "retries_budget": {
+    "total_max": 2
+  },
+  "git_action": "commit",
+  "finalize": {
+    "kind": "deterministic",
+    "register": true
+  },
+  "version": "1.0.0",
+  "on_error": {
+    "authentication": {
+      "action": "stop"
+    },
+    "authorization": {
+      "action": "stop"
+    },
+    "invalid_request": {
+      "action": "stop"
+    },
+    "content_policy": {
+      "action": "stop"
+    },
+    "quota": {
+      "action": "retry_after"
+    },
+    "rate_limit": {
+      "action": "retry_after"
+    },
+    "model_unavailable": {
+      "action": "retry"
+    },
+    "provider_internal": {
+      "action": "retry"
+    },
+    "transport": {
+      "action": "retry"
+    },
+    "timeout": {
+      "action": "retry"
+    },
+    "context_limit": {
+      "action": "replan"
+    },
+    "unknown": {
+      "action": "stop"
+    },
+    "unknown_outcome": {
+      "action": "reconcile"
+    }
+  },
+  "budgets": {
+    "brief_max_bytes": 65536,
+    "packer_input_max_bytes": 262144,
+    "stage_tokens_max": 0
+  }
+}

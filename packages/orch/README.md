@@ -18,6 +18,9 @@ claude-code, codex and grok by model class, never by model; `argv` builds a comm
 The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
 writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; `{orch}` in an argv is this package root.
 Incompatible versions return `CONTRACT_VERSION` before schema validation.
+The `[orch]` configuration (engine, per-role engine, default profile, work source, capability freshness, pack
+folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as
+versioned packs with test cases (`configs/run-policies/<id>/`): `orch.py policy list|show|test`.
 
 From the repository root:
 
@@ -39,6 +42,8 @@ of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks t
 ## Docs
 
 - [index](docs/index.md)
+- [configuration](docs/configuration.md)
+- [run-policies](docs/run-policies.md)
 - [contracts](docs/contracts.md)
 - [engine-port](docs/engine-port.md)
 - [architecture](docs/architecture.md)

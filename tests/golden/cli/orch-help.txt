@@ -1,17 +1,20 @@
 exit: 0
 --- stdout ---
-usage: orch.py [-h] {validate,launch,input,render-prompt,prepare} ...
+usage: orch.py [-h] [--config FILE]
+               {validate,launch,input,render-prompt,prepare,policy} ...
 
 positional arguments:
-  {validate,launch,input,render-prompt,prepare}
+  {validate,launch,input,render-prompt,prepare,policy}
     validate            validate an exec/v1 JSON document
     launch              read the launch catalog (role x provider)
     input               create an execution-input without a plan
     render-prompt       role prompt for a Claude-only run (Markdown)
     prepare             launch-plan of a run; --dry-run writes projection
                         files only
+    policy              run-policy packs: list, show, test
 
 options:
   -h, --help            show this help message and exit
+  --config FILE         configuration file of the invocation layer
 --- stderr ---
 

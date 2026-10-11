@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.7",
   "title": "Конфиг [orch] и выбор движка; пакеты политик run-policy с version и cases; orch.py policy list|show|test",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "configs/config.schema.json orch (engine, engine_by_role, default_profile, work_source, capabilities.stale, profiles.dirs, events.enabled), unit.json provides.config, config.example.toml (генератор aicore); lib/orch/settings.py (load, affecting, digest, select_engine); configs/run-policies/<id>/{policy.json, cases/*.json} для solo, scout-solo, frontend-bounded, review-only, full; lib/orch/policies.py (discover, load, run_cases); CLI orch.py policy и глобальный --config.",
   "why": "D65, D16, D20; E57, R28, архитектура §7 (orch.engine, переопределение по роли, отказ без тихой деградации). Жёсткие риски: (1) машинные ключи (profiles.dirs) из проекта — исполнение чужих путей: слои x-skm-layers и тест; (2) имя каталога пакета ≠ policy_id — неоднозначность сценария: POLICY_INVALID; (3) затенение пакета — предупреждение, первый побеждает.",
   "scope": {
@@ -180,12 +180,36 @@
   },
   "result": {
     "started_at": "2026-10-11T02:36:30Z",
+    "finished_at": "2026-10-11T03:20:26Z",
     "executor": {
       "provider": "claude-code",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "57a0e7c4-4a7c-451c-9548-637186042982"
-    }
+    },
+    "notes": "[orch] config schema, settings (load, affecting, digest, select_engine), five run-policy packs with cases, policies (discover, load, run_cases), orch.py --config and policy list|show|test, docs, CHANGELOG. Review grok/grok-4.7/high: one finding confirmed and fixed (relative profiles.dirs refused).",
+    "deviations": [
+      "V3 is green on HEAD plus this item's changes in a clean worktree; in the working tree golden.py check is red only for owner-dirty files (planner-development-philosophy SKILL.md x2, publication-lock.json)",
+      "aicore config example generator fixed for map sample entries (outside item scope)",
+      "frontend-bounded pack uses role bounded-implementer instead of the fixture role frontend"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T03:20:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T03:20:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T03:20:26Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-11T02:36:30Z"
+  "updated_at": "2026-10-11T03:20:26Z"
 }

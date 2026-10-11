@@ -1,0 +1,32 @@
+# orch configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[orch]
+# Execution engine used when neither a flag nor engine_by_role names one. One of: "native", "cao", "claude-only".
+# engine = "native"
+
+# Run-policy used when the scenario of a task names none. String.
+# default_profile = "solo"
+
+# Id of the plugin of the extension point orch:work-source that supplies the work. String.
+# work_source = "planner-orch"
+
+[orch.engine_by_role]
+# Execution engine by role id; a role that is not listed uses the engine key.
+# Engine of the role. One of: "native", "cao", "claude-only".
+# example = "native"
+
+[orch.capabilities]
+# What preparation does with a capability record that is past its freshness date: warn and go on, or refuse. One of: "warn", "refuse".
+# stale = "warn"
+
+[orch.profiles]
+# Extra folders with run-policy packs (one folder per policy id): absolute paths or paths starting with ~. Machine-wide: a project file cannot set it, because it makes orch read files from the listed paths. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# dirs = []
+
+[orch.events]
+# Whether orch emits the orch.run.* events. Boolean.
+# enabled = true

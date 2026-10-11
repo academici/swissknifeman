@@ -464,7 +464,15 @@ schema_version = 1
         with tempfile.TemporaryDirectory() as tmp:
             pattern = "^[a-z]+:[a-z]+$"
             schema = config.load_module_schema(schema_with({"things": a_map(pattern)}, Path(tmp)), "maps")
-            self.assertIn('# "module:example" = []', example.render(schema))
+            self.assertIn('# "module:example" = <string>', example.render(schema))
+
+    def test_a_sample_entry_of_an_enum_leaf_shows_the_first_option(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            entry = {"type": "string", "description": "An engine.", "enum": ["alpha", "beta"]}
+            node = {"type": "object", "description": "A map.", "additionalProperties": False,
+                    "patternProperties": {"^[a-z]+$": entry}}
+            schema = config.load_module_schema(schema_with({"things": node}, Path(tmp)), "maps")
+            self.assertIn('# example = "alpha"', example.render(schema))
 
 
 class TestAicoreSchema(Workspace):

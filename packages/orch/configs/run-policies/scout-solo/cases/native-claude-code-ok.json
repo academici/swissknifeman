@@ -1,0 +1,15 @@
+{
+  "description": "Every model stage of scout-solo is prepared on the native engine with claude-code.",
+  "input": "fixtures/exec/v1/valid/execution-input/plan-bound.json",
+  "provider": "claude-code",
+  "binding": "native",
+  "expect": {
+    "result": "ok",
+    "stages": [
+      "scout",
+      "primary"
+    ],
+    "refusals": [],
+    "policy_decision": "allow"
+  }
+}

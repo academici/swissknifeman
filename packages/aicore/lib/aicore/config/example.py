@@ -77,6 +77,18 @@ def _example_name(spec: MapSpec, source: str) -> str:
                       file=source, key=".".join(spec.key))
 
 
+def _sample_value(leaf: Leaf) -> str:
+    """The value written in a sample entry: the default, else a placeholder shaped like the entry."""
+    if leaf.has_default:
+        return toml_edit.render_value(leaf.default)
+    if leaf.type == "array":
+        return "[]"
+    options = (leaf.node or {}).get("enum")
+    if options:
+        return toml_edit.render_value(options[0])
+    return f"<{leaf.type}>"
+
+
 def _map_block(schema: ModuleSchema, spec: MapSpec) -> List[str]:
     """An empty table for the map, then a commented sample entry (its leaves with their defaults)."""
     name = _example_name(spec, schema.source)
@@ -85,7 +97,7 @@ def _map_block(schema: ModuleSchema, spec: MapSpec) -> List[str]:
         template = spec.value_leaf
         lines = _leaf_lines(replace(template, key=spec.key + (name,)))
         block.extend(lines[:-1])  # the sample line below is written with the entry name as the key
-        shown = toml_edit.render_value(template.default) if template.has_default else "[]"
+        shown = _sample_value(template)
         block.append(f"# {toml_edit.render_key(name)} = {shown}")
         return block
     block.append(f"# [{_header(schema, spec.key + (name,))}]")

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-run-started:v1",
+  "title": "orch.run.started",
+  "description": "A run was claimed from a work source and is about to be prepared.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "submission_id": {
+      "type": "string",
+      "pattern": "^sub-[A-Za-z0-9._-]{1,120}$",
+      "description": "Idempotency key of the submission."
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$",
+      "description": "Id of the attempt that owns the run."
+    },
+    "source": {
+      "type": "object",
+      "description": "Work source and the reference of the work.",
+      "properties": {
+        "plugin": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Id of the work-source plugin."
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Reference of the work inside its source."
+        }
+      },
+      "required": [
+        "plugin",
+        "ref"
+      ],
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Run-policy scenario of the run."
+    }
+  },
+  "required": [
+    "run_id",
+    "submission_id",
+    "attempt_id",
+    "source",
+    "scenario"
+  ],
+  "additionalProperties": false
+}

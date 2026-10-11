@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-run-refused:v1",
+  "title": "orch.run.refused",
+  "description": "A submission was refused before or while a run was registered.",
+  "type": "object",
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "pattern": "^sub-[A-Za-z0-9._-]{1,120}$",
+      "description": "Idempotency key of the submission."
+    },
+    "step": {
+      "type": "string",
+      "enum": [
+        "claim",
+        "prepare",
+        "register"
+      ],
+      "description": "Step that refused."
+    },
+    "reason_codes": {
+      "type": "array",
+      "description": "Stable upper-case reason codes of the refusal, in order.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+      }
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run, when one existed."
+    },
+    "ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference of the work inside its source."
+    },
+    "policy_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Run-policy that decided."
+    },
+    "binding": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Engine binding that was asked."
+    }
+  },
+  "required": [
+    "submission_id",
+    "step",
+    "reason_codes"
+  ],
+  "additionalProperties": false
+}

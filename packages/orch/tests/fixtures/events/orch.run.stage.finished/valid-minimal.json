@@ -1,0 +1,16 @@
+{
+  "data": {
+    "attempt": 1,
+    "run_id": "run-1",
+    "stage_id": "primary",
+    "status": "completed"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-run-stage-finished:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "run-1",
+  "time": "2026-10-11T04:30:00.000Z",
+  "type": "orch.run.stage.finished"
+}

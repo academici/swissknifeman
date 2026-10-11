@@ -13,8 +13,10 @@
     "cli": ["scripts/orch.py"],
     "config": "configs/config.schema.json",
     "contracts": [
-      {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"}
-    ]
+      {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha"}
+    ],
+    "events": ["orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused"]
   },
   "dev": {
     "test": ["bash", "scripts/test.sh"],

@@ -7,5 +7,6 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Engine Port](engine-port.md) — operations, run states, binding capability matrix.
 - [Configuration](configuration.md) — the `[orch]` section, layers, engine choice, digest.
 - [Run-policy packs](run-policies.md) — shipped policies, cases, `orch.py policy`.
+- [Events](events.md) — `orch.run.*` types, data contracts, emission rules, fixtures.
 - [Architecture](architecture.md) — package boundaries, dependency rule, layout.
 - [Adding an engine](adding-an-engine.md) — steps to add a binding.

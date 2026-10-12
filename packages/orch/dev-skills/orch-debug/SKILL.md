@@ -63,6 +63,13 @@ package, and leaves a record that a later reviewer can audit. Never activate it 
 - A chronological journal of actions and decisions of the observer, written when they are made.
 - At the end of the run: a prompt for the reviewer model that links these files and lists the open questions.
 
+## Editing this skill
+
+The projections (`.claude/skills/orch-debug`, `.agents/skills/orch-debug`, `bootstrap/publication-lock.json`) are generated.
+After a change to `SKILL.md`: `bash packages/skiller/bin/skiller registry`, then `python3 scripts/golden.py check`; when it
+reports the generated files as not in the digests, `python3 scripts/golden.py capture --only skiller-registry --reason "..."`
+and commit those goldens with the skill (a red `golden.py check` turns the acceptance check of every following item red).
+
 ## Where things are
 
 - Findings and tables: `docs/orch-*-run-findings.md`; observer journal: `docs/orch-*-observer-journal.md`.

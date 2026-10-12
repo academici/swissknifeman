@@ -9,6 +9,7 @@ reported verdict, produced by the executor. ``live`` checks are not run by the c
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
@@ -77,20 +78,21 @@ def _relative(path: Path, project: Path) -> str:
 
 
 def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: Path, timeout_s: int,
-               evidence_prefix: str, report: dict | None = None, executor: dict | None = None) -> list:
+               evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
+               parallel: int = 1) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
-    stage-report (the source of a manual procedure's verdict); ``executor`` its actor.
+    stage-report (the source of a manual procedure's verdict); ``executor`` its actor. ``parallel`` command checks run at
+    the same time (they must not share files; the order of the rows does not change).
     """
     project = Path(project)
     candidate = {"head": head(project), "dirty_digest": dirty_digest(project)}
     subject = subject_of(input_doc)
     reported = {row["id"]: row for row in (report or {}).get("checks_run", [])}
-    rows = []
-    for check in (input_doc.get("acceptance") or {}).get("checks", []):
-        if check.get("kind") not in RUN_KINDS:
-            continue
+    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in RUN_KINDS]
+
+    def run_one(check: dict) -> dict:
         check_id = check["id"]
         started = _utc()
         row = {"id": check_id, "kind": check["kind"]}
@@ -121,8 +123,7 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
             row.update(procedure=check.get("procedure", ""), verdict=verdict, green=verdict == "pass")
             if verdict is None:  # nothing observed: no evidence is invented
                 row["evidence"] = None
-                rows.append(row)
-                continue
+                return row
             doc.update(procedure={"procedure": check.get("procedure", "")}, verdict=verdict,
                        observation=f"reported by the executor: {verdict}",
                        producer={"kind": "executor", **({"actor": executor} if executor else {})})
@@ -132,9 +133,13 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
             raise ValueError(f"check-evidence of {check_id} is outside exec/v1: {issues[0].message}")
         target = Path(evidence_dir) / f"{check_id}.json"
         target.parent.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+        temporary = target.with_name(f".{target.name}.{os.getpid()}.{check_id}.tmp")
         temporary.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         os.replace(temporary, target)
         row["evidence"] = _relative(target, project)
-        rows.append(row)
-    return rows
+        return row
+
+    if parallel > 1 and len(wanted) > 1:
+        with ThreadPoolExecutor(max_workers=min(parallel, len(wanted))) as pool:
+            return list(pool.map(run_one, wanted))  # map keeps the order of the input
+    return [run_one(check) for check in wanted]

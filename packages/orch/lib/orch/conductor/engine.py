@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
@@ -346,10 +347,14 @@ class Conductor:
         report = self._execute(item, 1, scout_text, "")
         if report["status"] == "blocked":
             return self._finish(item, report, None)
-        round_no, rows = 1, self._run_checks(item, 1, report)
+        overlap = self._review_enabled(item) and item.options["checks"]["overlap_review"]
+        round_no = 1
+        rows = self._checks_then_review(item, report) if overlap else self._run_checks(item, 1, report)
         state = item.state
         state.setdefault("check_fixes_used", 0)
         state.setdefault("corrections_used", 0)
+        state.setdefault("check_fixes_at", [])   # rounds that got a correction: a resume walks the closed rounds again,
+        state.setdefault("corrections_at", [])   # so a counter that only counts up would count them twice
         rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
         if report["status"] == "blocked":
             return self._finish(item, report, rows)
@@ -367,12 +372,16 @@ class Conductor:
                 if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                     break
                 triage = dict(triage, confirmed=major)
-                if review_round >= limits["review_rounds"] or state["corrections_used"] >= limits["corrections"]:
+                replayed = review_round in state["corrections_at"]
+                if not replayed and (review_round >= limits["review_rounds"]
+                                     or len(state["corrections_at"]) >= limits["corrections"]):
                     ids = ", ".join(entry["finding"] for entry in major)
                     return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
                                         f"confirmed review findings {ids} remain after {review_round} review "
                                         f"round(s) and {state['corrections_used']} correction(s)"), rows)
-                state["corrections_used"] += 1
+                if not replayed:
+                    state["corrections_at"].append(review_round)
+                state["corrections_used"] = len(state["corrections_at"])
                 round_no += 1
                 report = self._execute(item, round_no, scout_text, prompts.review_correction(findings, triage))
                 if report["status"] == "blocked":
@@ -389,11 +398,14 @@ class Conductor:
         state, limit = item.state, item.options["limits"]["check_fixes"]
         while not all(row["green"] for row in rows):
             red = [row for row in rows if not row["green"]]
-            if state["check_fixes_used"] >= limit:
+            replayed = round_no in state["check_fixes_at"]
+            if not replayed and len(state["check_fixes_at"]) >= limit:
                 names = ", ".join(row["id"] for row in red)
                 return rows, self._blocked(report, "CHECKS_RED", f"acceptance checks {names} stay red after "
                                                                  f"{state['check_fixes_used']} correction(s)"), round_no
-            state["check_fixes_used"] += 1
+            if not replayed:
+                state["check_fixes_at"].append(round_no)
+            state["check_fixes_used"] = len(state["check_fixes_at"])
             round_no += 1
             report = self._execute(item, round_no, scout_text, prompts.check_correction(red))
             if report["status"] == "blocked":
@@ -723,6 +735,7 @@ class Conductor:
         def run() -> dict:
             prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                       rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir,
+                                      targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                       skills=item.options["skills"].get("executor", []))
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
@@ -732,25 +745,49 @@ class Conductor:
                            verdict=lambda result: result["report"]["status"])
         return found["report"]
 
-    def _run_checks(self, item: Item, number: int, report: dict) -> list:
+    def _compute_checks(self, item: Item, number: int, report: dict) -> list:
+        """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
+        try:
+            return checks_mod.run_checks(
+                item.input_doc, project=self.project, evidence_dir=item.artifacts / "evidence",
+                log_dir=item.directory / "checks" / str(number),
+                timeout_s=item.options["limits"]["check_timeout_s"],
+                evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
+                executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"])
+        except (RuntimeError, ValueError, OSError) as error:
+            raise Stop("CHECKS_FAILED", str(error)) from None
+
+    def _run_checks(self, item: Item, number: int, report: dict, computed=None) -> list:
+        """The step ``checks.N``; ``computed`` is a future of the rows started earlier (the overlap with the review)."""
         key = f"checks.{number}"
 
         def run() -> list:
-            try:
-                return checks_mod.run_checks(
-                    item.input_doc, project=self.project, evidence_dir=item.artifacts / "evidence",
-                    log_dir=item.directory / "checks" / str(number),
-                    timeout_s=item.options["limits"]["check_timeout_s"],
-                    evidence_prefix=f"{self.run_id}:{item.ref}:{key}", report=report,
-                    executor=self._actor(item.routes["executor"]))
-            except (RuntimeError, ValueError, OSError) as error:
-                raise Stop("CHECKS_FAILED", str(error)) from None
+            return computed.result() if computed is not None else self._compute_checks(item, number, report)
 
         def said(rows: list) -> str:
             red = [row["id"] for row in rows if not row["green"]]
             return "green" if not red else "red " + ",".join(red)
 
         return self._step(item, key, run, verdict=said)
+
+    def _checks_then_review(self, item: Item, report: dict) -> list:
+        """Round 1 with ``checks.overlap_review``: the checks run while the review reads the candidate. When the checks
+        are red the review read a candidate that is about to change: its step is dropped and made again later."""
+        steps = item.state.setdefault("steps", {})
+        if steps.get("checks.1", {}).get("status") == "done" or steps.get("review.1", {}).get("status") == "done":
+            return self._run_checks(item, 1, report)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            computed = pool.submit(self._compute_checks, item, 1, report)
+            try:
+                self._review(item, 1, [], pending=True)
+            finally:
+                computed.exception()  # wait for the checks before the pool closes, whatever the review did
+        rows = self._run_checks(item, 1, report, computed=computed)
+        if not all(row["green"] for row in rows):
+            steps.pop("review.1", None)
+            self.progress.emit("info", item=item.ref, message="the checks are red: the parallel review is dropped "
+                                                               "and repeated after the correction")
+        return rows
 
     def _review_enabled(self, item: Item) -> bool:
         review = item.policy.get("review") or {}
@@ -765,7 +802,7 @@ class Conductor:
         triage = (item.policy.get("review") or {}).get("triage") or {}
         return triage.get("role") or "triager"
 
-    def _review(self, item: Item, number: int, rows: list) -> dict:
+    def _review(self, item: Item, number: int, rows: list, pending: bool = False) -> dict:
         route = item.routes["reviewer"]
         key = f"review.{number}"
 
@@ -775,7 +812,8 @@ class Conductor:
                                       diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
                                       pre_final=number > 1 and item.options["review"]["pre_final"],
                                       min_severity=item.options["review"]["correct_min_severity"],
-                                      roles_dir=self.roles_dir, skills=item.options["skills"].get("reviewer", []))
+                                      roles_dir=self.roles_dir, skills=item.options["skills"].get("reviewer", []),
+                                      checks_pending=pending)
             findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems)
             return {"findings": findings, **meta}
 

@@ -101,17 +101,31 @@ def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, skills=()) -
     return _head("context-scout", input_doc, roles_dir, list(skills)) + "\n" + _PROGRESS.format(item=item, step=step)
 
 
+_TARGETED_TESTS = """\
+## Verification
+
+This replaces the instruction above to run every acceptance check yourself. Run only the tests that cover the code
+you changed: the test files of the changed modules and the single commands that
+name them. Do not run the acceptance checks of the input as a whole, repository-wide suites, or the suites of modules
+you did not touch: the conductor runs every acceptance check itself right after your report, and a full run here only
+repeats it. List in `checks_run` only the commands you really ran.
+"""
+
+
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
-             role: str = "executor", roles_dir=None, skills=()) -> str:
+             role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = False) -> str:
     parts = [_head(role, input_doc, roles_dir, list(skills))]
     if scout_text:
         parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
                      + _fence(scout_text, "text"))
+    if targeted_tests:
+        parts.append(_TARGETED_TESTS)
     if rules:
         parts.append("## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))
     if correction:
         parts.append("## Correction\n\nYour previous attempt is in the working tree. Make exactly this correction, "
-                     "inside the same scope, then run the acceptance checks again.\n\n" + _fence(correction, "text"))
+                     "inside the same scope" + (" and re-run the tests of what you touched" if targeted_tests
+                                                    else ", then run the acceptance checks again") + ".\n\n" + _fence(correction, "text"))
     parts.append(_PROGRESS.format(item=item, step=step))
     parts.append("## Result\n\n" + _STAGE_REPORT)
     return "\n\n".join(part.rstrip() for part in parts) + "\n"
@@ -128,13 +142,16 @@ lower findings and do not report them. If there is no such finding, the verdict 
 
 
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
-             roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major") -> str:
+             roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
+             checks_pending: bool = False) -> str:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
     parts = [_head("reviewer", input_doc, roles_dir, list(skills)),
              f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the candidate is the working tree "
              "(uncommitted changes, untracked files included). Read files as you need; do not change anything.",
              *([_PRE_FINAL.format(floor=min_severity)] if pre_final else []),
-             "Acceptance checks run by the conductor on this candidate:\n\n" + summary,
+             ("Acceptance checks run by the conductor on this candidate:\n\n" + summary) if not checks_pending else
+             "The conductor runs the acceptance checks on this candidate at the same time; their result is not known yet "
+             "and is not your concern: review the candidate itself.",
              "Diff against the base:\n\n" + _fence(diff or "(no tracked changes; see the untracked files)", "diff"),
              _PROGRESS.format(item=item, step=step),
              "## Result\n\n" + _REVIEW_FINDINGS]

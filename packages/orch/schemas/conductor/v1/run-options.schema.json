@@ -37,6 +37,26 @@
       "description": "Limits of the run of the piece of work.",
       "$ref": "#/$defs/limits"
     },
+    "checks": {
+      "description": "How the acceptance checks of a piece of work are run; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
+          "type": "integer"
+        },
+        "executor_runs_checks": {
+          "description": "When false (default) the executor is told to run only the tests that cover the code it changed, because the conductor runs every acceptance check right after its report; true lets it run the checks itself.",
+          "type": "boolean"
+        },
+        "overlap_review": {
+          "description": "The checks of round 1 run while the first review reads the candidate; red checks drop that review and it is repeated after the correction. Default false.",
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
     "review": {
       "description": "How review findings are handled; a more specific layer overrides the keys it names.",
       "type": "object",

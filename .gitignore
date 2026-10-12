@@ -29,7 +29,7 @@ packages/*/docs/.vitepress/cache/
 .claude/analyst/**/*.ndjson
 settings.local.json.bak
 MERGE-PLAN.snapshots/
-# Private node config maind (paths to all projects); sample — config.example.json
+# Private legacy node config maind (paths to all projects); sample — packages/maind/configs/registry.example.json
 config.json
 # review-gate: sample check_command/checks[] — preset repository source of truth
 # (mechanically-local instance lives outside the repo, V ~/.claude/hooks/review-gate/), Not
@@ -100,6 +100,8 @@ docs/orch/
 .swissknifeman/task-terminal/
 .swissknifeman/terminal-admission/
 .swissknifeman/state/
+# Conductor output (observer reports of every run): generated, never an artifact of a plan item
+.swissknifeman/orch/
 # Raw role streams (review, executor) are megabytes of token logs: they live in .swissknifeman/state/; a plan
 # artifact keeps only the short review-verdict.json (gitignore policy entry plan-role-streams).
 plans/*/artifacts/**/*.jsonl

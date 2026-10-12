@@ -1,6 +1,7 @@
 """Tests constants.py: set invariants/ports/scope'ov (protection against desync)."""
 import json
 import unittest
+from pathlib import Path
 
 from maind import constants as c
 
@@ -44,21 +45,21 @@ class TestConstants(unittest.TestCase):
 
     def test_tracked_templates_pin_serena_same_as_source(self):
         # F1 (P5.5, D115/D116): versionable policy templates code_graph are required to bear
-        # same REF, what constants.SERENA_SRC — otherwise fresh installation (install.sh
-        # `cp config.example.json → config.json`) rolls out unpinned politics.
+        # same REF, what constants.SERENA_SRC — otherwise a fresh installation rolls out
+        # unpinned politics. The policy lives in the defaults of the [maind] settings schema.
         if find_monorepo_root is None:
             self.skipTest("core.repo not available (standalone-package layout)")
         root = find_monorepo_root(__file__)
         if root is None:
             self.skipTest("monorepo root not found (standalone-package layout)")
 
-        with open(root / "config.example.json", encoding="utf-8") as f:
-            cfg_example = json.load(f)
-        code_graph = cfg_example["code_graph"]
+        schema_path = Path(__file__).resolve().parents[1] / "configs" / "config.schema.json"
+        with open(schema_path, encoding="utf-8") as f:
+            code_graph = json.load(f)["properties"]["code_graph"]["properties"]
         for field in ("args", "index_args"):
-            values = [a for a in code_graph[field] if a.startswith("git+")]
+            values = [a for a in code_graph[field]["default"] if a.startswith("git+")]
             self.assertEqual(values, [c.SERENA_SRC],
-                              f"config.example.json code_graph.{field} is not pinned on "
+                              f"config.schema.json code_graph.{field} is not pinned on "
                               f"constants.SERENA_SRC ({c.SERENA_SRC!r}): {values!r}")
 
         with open(root / ".mcp.json.example", encoding="utf-8") as f:

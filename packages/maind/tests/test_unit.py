@@ -3,6 +3,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from maind.common import Env, load_json_db
 from aicore.util.io import atomic_write_json
@@ -13,17 +14,48 @@ from aicore.util.text import sanitize
 
 class TestEnvPaths(unittest.TestCase):
     def test_paths(self):
-        env = Env("/srv/maind", home="/h")
-        self.assertEqual(env.state_dir, Path("/h/.maind"))
-        self.assertEqual(env.agents_db, Path("/h/.maind/agents.json"))
-        self.assertEqual(env.projects_db, Path("/h/.maind/projects.json"))
-        self.assertEqual(env.data_dir, Path("/srv/maind/data"))
-        self.assertEqual(env.graph_db, Path("/srv/maind/data/graph.db"))
-        self.assertEqual(env.memory_pidfile, Path("/srv/maind/data/agentmemory.pid"))
-        self.assertEqual(env.memory_config,
-                         Path("/srv/maind/config/memory/iii-config.yaml"))
-        # config.json in root monorepo; standalone (no packages/ nearby) → himself root
-        self.assertEqual(env.default_config, Path("/srv/maind/config.json"))
+        with mock.patch.dict(os.environ, {}, clear=False):
+            for name in ("SKM_HOME", "XDG_STATE_HOME", "XDG_DATA_HOME"):
+                os.environ.pop(name, None)
+            env = Env("/srv/maind", home="/h")
+            # aicore.state places (XDG defaults under the home directory)
+            self.assertEqual(env.state_dir, Path("/h/.local/state/swissknifeman/maind"))
+            self.assertEqual(env.agents_db, Path("/h/.local/state/swissknifeman/maind/agents.json"))
+            self.assertEqual(env.registry_file,
+                             Path("/h/.local/state/swissknifeman/maind/registry.json"))
+            self.assertEqual(env.data_dir, Path("/h/.local/share/swissknifeman/maind"))
+            self.assertEqual(env.graph_db, Path("/h/.local/share/swissknifeman/maind/graph.db"))
+            self.assertEqual(env.memory_pidfile,
+                             Path("/h/.local/share/swissknifeman/maind/agentmemory.pid"))
+            self.assertEqual(env.memory_config,
+                             Path("/srv/maind/config/memory/iii-config.yaml"))
+            self.assertFalse(hasattr(env, "projects_db"))
+            # legacy node file: config.json in root monorepo; standalone (no packages/ nearby)
+            # → himself root
+            self.assertEqual(env.legacy_node_config, Path("/srv/maind/config.json"))
+            self.assertEqual(env.example_config, Path("/srv/maind/configs/registry.example.json"))
+
+    def test_skm_home_moves_state_and_data(self):
+        with mock.patch.dict(os.environ, {"SKM_HOME": "/iso"}):
+            env = Env("/srv/maind", home="/h")
+            self.assertEqual(env.state_dir, Path("/iso/state/maind"))
+            self.assertEqual(env.data_dir, Path("/iso/data/maind"))
+
+    def test_legacy_places_used_until_new_ones_exist(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home, root = Path(tmp) / "home", Path(tmp) / "maind"
+            (home / ".maind").mkdir(parents=True)
+            (root / "data").mkdir(parents=True)
+            env = Env(root, home=home)
+            with mock.patch.dict(os.environ, {}, clear=False):
+                for name in ("SKM_HOME", "XDG_STATE_HOME", "XDG_DATA_HOME"):
+                    os.environ.pop(name, None)
+                self.assertEqual(env.state_dir, home / ".maind")
+                self.assertEqual(env.data_dir, root / "data")
+                self.assertEqual(env.agents_db, home / ".maind" / "agents.json")
+                new_state = home / ".local/state/swissknifeman/maind"
+                new_state.mkdir(parents=True)
+                self.assertEqual(env.state_dir, new_state)   # the new place wins once it exists
 
 
 class TestParseArgs(unittest.TestCase):

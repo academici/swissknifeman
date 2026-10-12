@@ -14,7 +14,7 @@ graph TD
   subgraph hub["maind hub (this package)"]
     M["agent-memory daemon<br/>Node · 4111/4112<br/>buckets: project:&lt;id&gt; · ns:&lt;name&gt; · global"]
     G["data/graphs/*<br/>federation: graph per project + _index.db"]
-    R["~/.maind<br/>agents.json · projects.json"]
+    R["&lt;state&gt;/maind<br/>registry.json · agents.json"]
     MCP["maind mcp<br/>stdio JSON-RPC · 11 tools"]
   end
   brain -->|MCP/HTTP, ns project:brain| hub
@@ -34,8 +34,8 @@ flowchart LR
   cli --> mem["memory.py"] & gr["graph.py + federation.py"] & ag["agents.py"] & pr["projects.py"] & mcp["mcp.py"]
   mem -->|HTTP| daemon["agent-memory (Node)"]
   gr -->|node-link JSON| db[("data/graphs/&lt;id&gt;.db + _index.db")]
-  ag -->|atomic JSON| aj[("~/.maind/agents.json")]
-  pr -->|reads/writes| cfg[("config.json")]
+  ag -->|atomic JSON| aj[("&lt;state&gt;/maind/agents.json")]
+  pr -->|reads/writes| cfg[("registry.json + [maind] settings")]
   mcp --> mem & gr & ag & pr
 ```
 
@@ -45,10 +45,11 @@ flowchart LR
 - **Graph** (`graph.py` + `federation.py`) — stdlib property-graph (BFS-neighbors, shortest
   path, subgraph, statistics), persistent in node-link JSON; layout - federation (graph on
   project + `_index.db`). Built from the sources of truth (`derive.py`), not from a manual take.
-- **Agents** (`agents.py`) — registry in `~/.maind/agents.json`; state is derived from
+- **Agents** (`agents.py`) — registry in `<state>/maind/agents.json`; state is derived from
   age heartbeat and liveliness pid.
-- **Projects** (`projects.py`) — `config.json` (superset brain `.projects.json`;
-  legacy-name `.maind.json` is still being picked up), sync from brain.
+- **Projects** (`projects.py`) — the fleet registry `registry.json` (superset brain `.projects.json`;
+  the legacy `config.json`/`.maind.json` is read and written until `swissknifeman upgrade`),
+  sync from brain. Settings come from the `[maind]` table of the layered config.
 - **MCP** (`mcp.py`) — posts all this as stdio JSON-RPC server for external agents.
 
 ## Three graph layers
@@ -82,12 +83,13 @@ transfer without harm to others) when idle read-facade.
 |:--|:--|:--|
 | code | `composer.json` + path-repos, `package.json` | `project ─requires→ package`, `package ─provided_by→ project`, cross `project ─depends_on→ project` |
 | doc | Brain frontmatter `uses/used_by` (**read-only**) | `project ─uses→ project` |
-| override | `<repo>/.maind.graph.json` | declared `relates_to`/… (runtime/API) |
+| override | `[maind.graph.links]` of the project config (legacy `<repo>/.maind.graph.json`) | declared `relates_to`/… (runtime/API) |
 | skills | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
 
 The truth of the connections remains in composer/Brain — `_index.db` only a regenerated cache. Config fields
 project (`dependencies`/`agents`) are not materialized by the graph; manual connections are announced via
-`<repo>/.maind.graph.json` (plan `override`).
+`[maind.graph.links.<project>]` in the project's `.swissknifeman/config.toml` (plan `override`;
+the legacy `<repo>/.maind.graph.json` is read with a warning while that table is absent).
 
 ## Namespaces: connection isolation
 

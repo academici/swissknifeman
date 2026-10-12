@@ -15,10 +15,11 @@ from pathlib import Path
 
 from aicore.util.http import HTTPUnauthorizedError
 
-from aicore.util.io import atomic_write_json, atomic_write_text, backup_file
+from aicore.util.io import atomic_write_json, atomic_write_text
 from aicore.util.block import content_hash, upsert_block
 from aicore.util.term import die, warn
 from aicore.util.cli import parse_args
+from .common import save_backup
 from .config import load_config
 from .mcpconfig import check_hygiene
 from .memory import auth_headers, resolve_secret
@@ -226,7 +227,7 @@ def apply_health_doc(env, config, project, mode, dry):
         return _result(pid, "health-doc", state, False, dry, "CLAUDE.md")
     if not dry:
         if claude.is_file():
-            backup_file(claude)
+            save_backup(claude)
         atomic_write_text(claude, new_text)
     return _result(pid, "health-doc", state, True, dry, "CLAUDE.md")
 
@@ -283,7 +284,7 @@ def _remove_script_hook(project, dry, *, name, script_rel, event, marker, detail
         changed = True
     if changed and not dry:
         if existed:
-            backup_file(settings_path)
+            save_backup(settings_path)
             atomic_write_json(settings_path, settings)
         script_path.unlink(missing_ok=True)
     return _result(pid, name, "stale" if changed else "fresh", changed, dry, detail)
@@ -325,7 +326,7 @@ def _apply_script_hook(env, project, mode, dry, *, name, template, script_rel, d
     if not dry:
         script_path.parent.mkdir(parents=True, exist_ok=True)
         if script_path.is_file():
-            backup_file(script_path)
+            save_backup(script_path)
         atomic_write_text(script_path, script)
         script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         merged, changed = _merge_session_hook(settings, command, event=event, marker=marker)
@@ -333,7 +334,7 @@ def _apply_script_hook(env, project, mode, dry, *, name, template, script_rel, d
             changed = True
         if changed:
             if settings_path.is_file():
-                backup_file(settings_path)
+                save_backup(settings_path)
             atomic_write_json(settings_path, merged)
     return _result(pid, name, state, True, dry, detail)
 
@@ -396,7 +397,7 @@ def revert_memory_hook(env, config, project, dry):
     if settings.pop("autoMemoryEnabled", None) is not None:
         changed = True
     if changed and not dry and existed:
-        backup_file(settings_path)
+        save_backup(settings_path)
         atomic_write_json(settings_path, settings)
     return _result(pid, "memory-hook", "stale" if changed else "fresh", changed, dry,
                    "native restored")
@@ -417,7 +418,7 @@ def configure_manual_memory(env, config, project, dry):
     if native_changed and not dry:
         settings["autoMemoryEnabled"] = False
         if existed:
-            backup_file(settings_path)
+            save_backup(settings_path)
         atomic_write_json(settings_path, settings)
     if native_changed:
         result["changed"] = not dry

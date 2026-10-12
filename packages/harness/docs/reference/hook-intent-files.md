@@ -4,8 +4,8 @@
 THIS tree): not scattered local configs and not a duplicate node config mAInd. File
 `~/.swissknifeman/config.json` audit assumption was not confirmed: there is no `config.json`
 at all - yes `projects.json`/`topology.json`/`memory/` (fleet register), and node config template
-maind — root `config.example.json` (keys `node`/`memory`/`graph`/`agents`/`namespaces`/
-`projects`/`mcp`/`observability`) — another item, merging them would mean breaking the working one
+maind — the `[maind]` settings (`config.example.toml` of maind: `node`/`memory`/`graph`/`agents`/`mcp`/`observability`)
+and the fleet registry (`configs/registry.example.json`: `namespaces`/`projects`/`mcp.servers`) — another item, merging them would mean breaking the working one
 mechanism for the sake of eliminating duplication that does not exist (P5.3, `research/05-p5-hygiene-model.md`,
 `findings/P5-hygiene-surfaces-2026-07-31.md` §4).
 

@@ -29,7 +29,6 @@ def make_repo(tmp):
     root = tmp / "maind"
     home = tmp / "home"
     (root / "config" / "memory").mkdir(parents=True, exist_ok=True)
-    (root / "data").mkdir(parents=True, exist_ok=True)
     home.mkdir(parents=True, exist_ok=True)
     (root / "config" / "memory" / "iii-config.yaml").write_text(
         MINIMAL_III_CONFIG, encoding="utf-8")

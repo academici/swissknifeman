@@ -144,9 +144,9 @@ class TestDeploy(unittest.TestCase):
             with mock.patch.object(deploy, "load_config", return_value=(cfg, None)), \
                     mock.patch.object(deploy, "health", return_value=True), \
                     mock.patch.object(deploy, "deploy_project", return_value=result), \
-                    mock.patch.object(deploy, "write_config") as write_config:
+                    mock.patch.object(deploy, "write_registry") as write_registry:
                 deploy.cmd_deploy(env, ["--project", "flexcrm"])
-            write_config.assert_not_called()
+            write_registry.assert_not_called()
 
     def test_claude_only_dry_run_reports_bootstrap_not_selected(self):
         with tempfile.TemporaryDirectory() as tmp:

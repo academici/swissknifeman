@@ -37,6 +37,20 @@
 
 ### Changed
 
+- **maind:** the node config is split by writer. Settings (`node`, `memory`, `graph`, `code_graph`, agent timings, `integrations`, `mcp`
+  policy, `observability`) are the `[maind]` table of the layered config (schema `configs/config.schema.json`, generated
+  `config.example.toml`); the fleet registry (projects, namespaces, agent definitions, MCP servers, providers, role packs) is
+  `<state>/maind/registry.json`, written only by `projects.write_registry`. The legacy node file (`config.json`, `.maind.json`) is read
+  until `swissknifeman upgrade` with one `MAIND_LEGACY_CONFIG` warning: its settings while no `[maind]` table is set (an extra layer),
+  its registry while there is no `registry.json` (writes then go back into the legacy file; with a `registry.json` the legacy file is
+  never changed). State is `<state>/maind` and data `<data>/maind` (`aicore.state`; `~/.maind` and `<module>/data` are used while the
+  new places are empty); manual project links are `[maind.graph.links.<project>]` (legacy `.maind.graph.json`, warning
+  `MAIND_LEGACY_GRAPH_LINKS`); backups go to `.swissknifeman/backups/` instead of `*.bak`; `config.example.json` is now
+  `packages/maind/configs/registry.example.json`.
+- **aicore:** the config schema gains `providers` (`contract_version`, `selection.<provider>.enabled`, project layer) and provider
+  config sources may name the carrier `.swissknifeman/config.toml`; maind reads the project provider selection from
+  `[aicore.providers]` (legacy `.swissknife.json#/providers` with `MAIND_LEGACY_PROVIDERS`) and the one-off D108 deployment writes to the
+  active carrier (the bytes of the legacy file are unchanged).
 - **analyst:** depends on `aicore` only (no `core` import, no `monorepo_root`/`default_config`, no re-export in `common.py`); `analyst` is standalone.
   The cross-project registry (`scan`, `token-report --all-projects`, `sessions --project`, `workflow-scan`) is read with `maind projects list --json`
   and fails with `PARTNER_UNAVAILABLE` without maind; `maind` and `planner` are found by `aicore.util.partners`; project lessons live in

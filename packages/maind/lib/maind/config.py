@@ -1,8 +1,19 @@
-"""Node config maind: config.json at the root of the monorepo (primary; legacy .maind.json
-is picked up by the same resolver) + fallback on legacy .projects.json (brain).
+"""Node config maind, built from two sources of different writers.
 
-Validation - on stdlib (without jsonschema): declarative type maps + difflib-tips,
-as in swissknifeman/config.py. load_config returns (config, source) for compatibility;
+Settings (node, memory, graph, code_graph, agents timings, integrations, mcp policy,
+observability) are the ``[maind]`` table of the layered aicore configuration
+(``configs/config.schema.json``). The fleet registry (projects, namespaces, agent definitions,
+MCP servers, provider selection, role packs) is machine-written state:
+``<state>/maind/registry.json``, written only by ``projects.write_registry``.
+
+The legacy node file (``config.json`` at the monorepo root, or ``.maind.json``) is read until the
+new places exist: its settings are an extra layer while no ``[maind]`` table is set in any file
+layer, its registry keys are the registry while there is no registry.json (and are written back
+to it); one warning per process, no silent migration. Fallback below both: legacy
+``.projects.json`` (brain), read-only.
+
+Validation of the registry and of the legacy file - on stdlib (without jsonschema):
+declarative type maps + difflib-tips. load_config returns (config, source);
 Config.load(env) — wrapper over the same, encapsulates path/source/save and access to sections,
 to change the config logic in one place. Config — subclass dict (old access
 config["projects"] continues to work)."""
@@ -16,6 +27,10 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+from aicore.config import ConfigError, ExtraLayer, edit_layer_file, load_module_schema, resolve
+from aicore.config.toml_edit import TomlEditError
+from aicore.config.units import foundation_root
+from aicore.state import find_project_root, machine_config_file, project_config_file
 from aicore.provider.manifest import default_manifest_path
 from aicore.provider.values import ConfigSource
 from aicore.provider.config import (
@@ -30,6 +45,15 @@ from .constants import (CODE_GRAPH_DEFAULTS, DIGEST_BUDGET_CHARS, DIGEST_ITEM_MA
                         HEARTBEAT_DEFAULT_MS, LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS,
                         MEMORY_HTTP_PORT, MEMORY_STREAM_PORT, PERPLEXITY_WEB_DEFAULTS,
                         SERVICE_NAME)
+
+UNIT_ROOT = Path(__file__).resolve().parents[2]
+SETTINGS_SCHEMA = UNIT_ROOT / "configs" / "config.schema.json"
+REGISTRY_VERSION = 1
+
+# Carriers of the project-level provider selection: the project layer's [aicore.providers]
+# table, and the legacy .swissknife.json#/providers read (and written) until it is moved.
+PROJECT_LEGACY_CARRIER = ".swissknife.json"
+PROJECT_TOML_CARRIER = ".swissknifeman/config.toml"
 
 # project.id hits scope-memory token `[[s:project:<id>]]` (memory.mark_scope) and in
 # name namespace — therefore we limit it to a safe alphabet, otherwise special characters (']', space,
@@ -128,6 +152,19 @@ def _check_section(cfg_file, section, value, types, enums=None):
             warn(f"{cfg_file}: unknown key {section}.{k} (ignored)")
 
 
+def validate_memory_client(config, cfg_file):
+    """memory.role='client' needs a remote memory.url (the client never raises its own daemon)."""
+    mem = config.get("memory") or {}
+    if mem.get("role") == "client":
+        url = mem.get("url")
+        if not url:
+            die(f"{cfg_file}: memory.role='client' requires memory.url (memory host address) — "
+                f"client does not raise its daemon (D27)")
+        if _is_loopback_url(url):
+            die(f"{cfg_file}: memory.role='client' — memory.url='{url}' indicates loopback; "
+                f"client must specify the memory HOST address, not its own daemon")
+
+
 def validate_config(config, cfg_file):
     """Throws die on schema error. Unknown top keys are fatal (with hint);
     unknown attachments - warning."""
@@ -152,15 +189,7 @@ def validate_config(config, cfg_file):
                     "stream_port": int, "data_dir": str, "url": str, "digest": dict,
                     "role": str, "secret_file": str, "bind_host": str},
                    {"role": MEMORY_ROLES})
-    mem = config.get("memory") or {}
-    if mem.get("role") == "client":
-        url = mem.get("url")
-        if not url:
-            die(f"{cfg_file}: memory.role='client' requires memory.url (memory host address) — "
-                f"client does not raise its daemon (D27)")
-        if _is_loopback_url(url):
-            die(f"{cfg_file}: memory.role='client' — memory.url='{url}' indicates loopback; "
-                f"client must specify the memory HOST address, not its own daemon")
+    validate_memory_client(config, cfg_file)
     _check_section(cfg_file, "graph", config.get("graph", {}),
                    {"enabled": bool, "adapter": str, "persist": bool,
                     "persist_path": str, "store_layout": str})
@@ -361,35 +390,238 @@ def load_brain_projects(path):
     return [map_brain_project(bp) for bp in data.get("projects", [])]
 
 
-# ── priority loading ──────────────────────────────────────────────────
-def load_config(env):
-    """Returns (config, source). Priority: config.json (root monorepo;
-    linked-worktree config.json (read-only, same Git common-dir only) → legacy
-    .maind.json is picked up by the same resolver env.default_config) →
-    legacy .projects.json (brain, read-only, with warning) → empty config."""
-    primary = env.config_read_path
-    if primary.is_file():
-        try:
-            config = json.loads(primary.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            die(f"{primary}: broken JSON: {e}")
-        validate_config(config, primary)
-        return merge_defaults(config), ("linked-worktree-config"
-                                        if primary != env.default_config else primary.name)
+# ── settings and registry: the split of the node document ──────────────────
+# Sections that maind only reads (the [maind] table); agents and mcp are mixed: their
+# registry part is named in _MIXED_REGISTRY.
+SETTINGS_SECTIONS = ("node", "memory", "graph", "code_graph", "agents", "integrations", "mcp",
+                     "observability")
+REGISTRY_TOP = ("projects", "namespaces", "providers", "role_packs")
+_MIXED_REGISTRY = {"agents": "definitions", "mcp": "servers"}
 
-    legacy = env.root / ".projects.json"
-    if legacy.is_file():
-        warn("config.json not found - reading legacy .projects.json (brain) in mode "
+
+def split_node_document(doc):
+    """(settings, registry) of a node document in the legacy shape (keys ``_*`` are dropped)."""
+    settings, registry = {}, {}
+    for section in SETTINGS_SECTIONS:
+        value = doc.get(section)
+        if isinstance(value, dict):
+            inner = _MIXED_REGISTRY.get(section)
+            settings[section] = {k: v for k, v in value.items() if k != inner}
+            if inner and inner in value:
+                registry[section] = {inner: value[inner]}
+    for key in REGISTRY_TOP:
+        if key in doc:
+            registry[key] = doc[key]
+    return settings, registry
+
+
+def registry_of(config):
+    """The registry keys of a loaded config (what ``write_registry`` stores)."""
+    _settings, registry = split_node_document(config)
+    return copy.deepcopy(registry)
+
+
+_settings_schema = None
+
+
+def settings_schema():
+    """The checked schema of the ``[maind]`` table (loaded once)."""
+    global _settings_schema
+    if _settings_schema is None:
+        _settings_schema = load_module_schema(SETTINGS_SCHEMA, "maind")
+    return _settings_schema
+
+
+def _prune(schema, node, path=()):
+    """The part of a legacy settings tree the schema knows (unknown keys and nulls are dropped)."""
+    out = {}
+    for key, value in node.items():
+        if value is None or not isinstance(key, str):
+            continue
+        kind = schema.classify(path + (key,))
+        if kind in ("table", "map", "entry"):
+            if isinstance(value, dict):
+                sub = _prune(schema, value, path + (key,))
+                if sub:
+                    out[key] = sub
+        elif kind == "leaf":
+            out[key] = value
+    return out
+
+
+_warned_legacy = set()
+
+
+def _warn_legacy(path, parts, ignored=False):
+    """One MAIND_LEGACY_CONFIG warning per process and legacy file."""
+    key = (str(path), tuple(parts), ignored)
+    if key in _warned_legacy:
+        return
+    _warned_legacy.add(key)
+    if not parts:
+        warn(f"MAIND_LEGACY_CONFIG: the settings in {path} are ignored because [maind] is set "
+             f"(swissknifeman upgrade removes the legacy file)")
+        return
+    targets = {"settings": "[maind]", "registry": "registry.json"}
+    warn(f"MAIND_LEGACY_CONFIG: reading {' and '.join(parts)} from {path}; "
+         f"move {'them' if len(parts) > 1 else 'it'} to {' and '.join(targets[p] for p in parts)} "
+         f"(swissknifeman upgrade)"
+         + ("; its settings are ignored because [maind] is set" if ignored else ""))
+
+
+def _read_json_document(path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        die(f"{path}: broken JSON: {e}")
+    except OSError as e:
+        die(f"{path}: cannot read: {e.strerror or e}")
+
+
+def read_registry_file(path):
+    """The registry keys of a registry.json (validated; ``schema_version`` is checked and dropped)."""
+    doc = _read_json_document(path)
+    if not isinstance(doc, dict):
+        die(f"{path}: registry root must be an object")
+    version = doc.pop("schema_version", REGISTRY_VERSION)
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+        die(f"{path}: schema_version must be a whole number of at least 1")
+    if version > REGISTRY_VERSION:
+        die(f"{path}: schema_version {version} was written by a newer maind (this one reads "
+            f"{REGISTRY_VERSION}); upgrade")
+    validate_config(doc, path)
+    return {k: v for k, v in doc.items() if not k.startswith("_")}
+
+
+def write_settings(env, values):
+    """Set ``{dotted key: value}`` of the ``[maind]`` table in the machine config file (comments and
+    other tables stay). A key that cannot be written is reported and left for the person to set."""
+    path = machine_config_file(home=env.home)
+    for key, value in values.items():
+        try:
+            edit_layer_file(path, "maind", key, value, schema=settings_schema(), layer="machine",
+                            home=env.home)
+        except (ConfigError, TomlEditError) as exc:
+            warn(f"cannot write maind.{key} to {path}: {exc}; set it with "
+                 f"`swissknifeman config set maind.{key} <value>`")
+
+
+def _own_project(project):
+    """The project root whose ``.swissknifeman/config.toml`` is the project layer, or None."""
+    if project is not None:
+        return project
+    root = find_project_root(os.getcwd())
+    return root if project_config_file(root).is_file() else None
+
+
+def _has_file_settings(resolved):
+    """True when a file layer (machine or project) sets a ``[maind]`` key of the node settings."""
+    return any(entry.layer in ("machine", "project") and not entry.key.startswith("graph.links")
+               for entry in resolved.explain())
+
+
+def resolve_settings(env, legacy=None, *, project=None):
+    """(resolved ``[maind]`` settings, legacy settings used, legacy settings ignored).
+
+    ``legacy`` is ``(path, settings dict)`` of the legacy node file or None."""
+    schema = settings_schema()
+    root = _own_project(project)
+
+    def run(extra=()):
+        try:
+            return resolve("maind", schema=schema, project=root, extra_layers=extra, home=env.home)
+        except ConfigError as exc:
+            die(f"maind settings: {exc}")
+
+    resolved = run()
+    if legacy is None:
+        return resolved, False, False
+    path, doc = legacy
+    data = _prune(schema, _normalize_legacy_settings(doc))
+    if _has_file_settings(resolved):
+        return resolved, False, bool(data)
+    if not data:
+        return resolved, False, False
+    return run((ExtraLayer("legacy-node-config", data, file=str(path)),)), True, False
+
+
+def _normalize_legacy_settings(doc):
+    """Legacy values the schema does not take as they are (retired graph adapters)."""
+    out = copy.deepcopy(doc)
+    graph = out.get("graph")
+    if isinstance(graph, dict) and graph.get("adapter") in LEGACY_GRAPH_ADAPTERS:
+        graph["adapter"] = "federation"
+    return out
+
+
+def _settings_dict(resolved):
+    settings = resolved.as_dict()
+    graph = settings.get("graph")
+    if isinstance(graph, dict):
+        graph.pop("links", None)        # per-project links belong to derive, not to the node
+    if not settings.get("integrations"):
+        settings.pop("integrations", None)
+    code_graph = settings.get("code_graph")
+    if isinstance(code_graph, dict) and not code_graph.get("language_by_type"):
+        code_graph.pop("language_by_type", None)
+    return settings
+
+
+def config_available(env):
+    """True when a registry source exists (registry.json or the legacy node file)."""
+    return env.registry_file.is_file() or env.config_read_path.is_file()
+
+
+# ── priority loading ──────────────────────────────────────────────────
+def load_config(env, *, project=None):
+    """Returns (config, source). Registry source: registry.json ("config") → legacy node file
+    ("legacy:<file>"; the linked-worktree file is read-only: "linked-worktree-config") → legacy
+    .projects.json (brain, read-only, with warning: "brain-fallback") → empty ("empty").
+    Settings: the ``[maind]`` table of the layers; the legacy node file only while no layer sets one."""
+    legacy_path = env.config_read_path
+    legacy_path = legacy_path if legacy_path.is_file() else None
+    legacy_doc = None
+    if legacy_path is not None:
+        legacy_doc = _read_json_document(legacy_path)
+        validate_config(legacy_doc, legacy_path)
+    registry_file = env.registry_file
+    uses = []
+
+    if registry_file.is_file():
+        registry, source = read_registry_file(registry_file), "config"
+    elif legacy_doc is not None:
+        registry = split_node_document(legacy_doc)[1]
+        source = ("linked-worktree-config" if legacy_path != env.legacy_node_config
+                  else f"legacy:{legacy_path.name}")
+        uses.append("registry")
+    elif (env.root / ".projects.json").is_file():
+        warn("registry.json not found - reading legacy .projects.json (brain) in mode "
              "read-only; run `maind migrate from-brain .projects.json` for "
              "permanent configuration")
-        config = {
-            "projects": load_brain_projects(legacy),
-            "integrations": {"brain": {"enabled": True, "projects_sync": True,
-                                       "sync_direction": "import"}},
-        }
-        return merge_defaults(config), "brain-fallback"
+        registry, source = {"projects": load_brain_projects(env.root / ".projects.json")}, "brain-fallback"
+    else:
+        registry, source = {}, "empty"
 
-    return merge_defaults({}), "empty"
+    legacy_settings = None
+    if legacy_doc is not None:
+        legacy_settings = (legacy_path, split_node_document(legacy_doc)[0])
+    resolved, used, ignored = resolve_settings(env, legacy_settings, project=project)
+    if used:
+        uses.insert(0, "settings")
+    if uses or ignored:
+        _warn_legacy(legacy_path, uses, ignored)
+
+    config = _settings_dict(resolved)
+    if source == "brain-fallback":
+        config.setdefault("integrations", {}).setdefault(
+            "brain", {"enabled": True, "projects_sync": True, "sync_direction": "import"})
+    for key, value in copy.deepcopy(registry).items():
+        if isinstance(value, dict) and isinstance(config.get(key), dict):
+            config[key].update(value)
+        else:
+            config[key] = value
+    validate_memory_client(config, "maind settings")
+    return merge_defaults(config), source
 
 
 # ── wrapper over the config ─────────────────────────────────────────────────────
@@ -397,35 +629,42 @@ class Config(dict):
     """Lightweight wrapper for the node config. Subclass dict — old access
     (`cfg["projects"]`, `cfg.get(...)`, `cfg.items()`) works without changes.
     Top: load/save, origin (path/source) and section accessors -
-    single point where the config logic lives (file name resolution, validation, migration).
+    single point where the config logic lives (sources, validation, migration).
 
     Usage:
-        cfg = Config.load(env)          # reads env.default_config (config.json)
+        cfg = Config.load(env)          # settings ([maind]) + registry (registry.json)
         cfg.projects                    # list of projects (or [])
         cfg.project("corex")            # project record by id or None
-        cfg.save(env)                   # atomic-write back
+        cfg.save(env)                   # atomic-write the registry back
     """
 
     def __init__(self, data=None, *, source="empty", path=None):
         super().__init__(data or {})
-        self.source = source        # origin: "config.json"|".maind.json"|"brain-fallback"|"empty"
-        self.path = path            # Path, read from (None for empty/fallback)
+        # origin: "config"|"legacy:<file>"|"linked-worktree-config"|"brain-fallback"|"empty"
+        self.source = source
+        self.path = path            # Path of the registry source read (None for empty/fallback)
 
     @classmethod
-    def load(cls, env):
-        """Read node config via common resolver (config.json at the root of the monorepo,
-        with legacy-fallback). Returns Config with filled source/path."""
-        data, source = load_config(env)
-        path = env.config_read_path if source not in ("brain-fallback", "empty") else None
+    def load(cls, env, *, project=None):
+        """Read settings and registry (legacy node file as fallback). Returns Config with
+        filled source/path."""
+        data, source = load_config(env, project=project)
+        if source == "config":
+            path = env.registry_file
+        elif source.startswith("legacy:") or source == "linked-worktree-config":
+            path = env.config_read_path
+        else:
+            path = None
         return cls(data, source=source, path=path)
 
     def save(self, env):
-        """Atomic-writing the config back (via single writer projects.write_config).
-        Before writing - schema validation (Config — subclass dict, direct mutations outside could
-        violate invariants): do not write something that is obviously corrupted state."""
-        validate_config(self, str(self.path) if self.path else "in-memory")
-        from .projects import write_config
-        write_config(env, self)
+        """Atomic-writing of the registry (via single writer projects.write_registry).
+        Before writing - schema validation of the registry keys (Config — subclass dict, direct
+        mutations outside could violate invariants): do not write something that is obviously
+        corrupted state. Settings are not written: a person changes them in config.toml."""
+        validate_config(registry_of(self), str(self.path) if self.path else "in-memory")
+        from .projects import write_registry
+        write_registry(env, self)
 
     # ── section accessors (filtering logic/searches are kept here) ──────────────
     @property
@@ -443,9 +682,9 @@ class Config(dict):
         return provider_config_layers(self, project_id)
 
     def resolve_provider_config(self, catalog, project_id, *, project_config=None,
-                                operation=None):
-        return resolve_provider_config(self, catalog, project_id,
-                                       project_config=project_config, operation=operation)
+                                operation=None, project_carrier=PROJECT_LEGACY_CARRIER):
+        return resolve_provider_config(self, catalog, project_id, project_config=project_config,
+                                       operation=operation, project_carrier=project_carrier)
 
     @property
     def namespaces(self):
@@ -470,15 +709,43 @@ def provider_config_layers(config, project_id):
     return default_layer, tuple(matches)
 
 
+_aicore_schema = None
+
+
+def aicore_schema():
+    """The checked schema of the ``[aicore]`` table (owner of ``providers.selection``)."""
+    global _aicore_schema
+    if _aicore_schema is None:
+        _aicore_schema = load_module_schema(foundation_root() / "configs" / "config.schema.json",
+                                            "aicore")
+    return _aicore_schema
+
+
+def toml_project_providers(root):
+    """The ``[aicore.providers]`` table of ``<root>/.swissknifeman/config.toml`` as a provider
+    layer (``contract_version`` + ``selection``), or None when the project layer sets no selection.
+    Raises :class:`aicore.config.ConfigError` for an invalid file."""
+    root = Path(root)
+    if not project_config_file(root).is_file():
+        return None
+    resolved = resolve("aicore", schema=aicore_schema(), project=root)
+    providers = resolved.get("providers") or {}
+    return providers if providers.get("selection") else None
+
+
 def resolve_provider_config(config, catalog: ProviderConfigCatalog | None, project_id, *,
-                            project_config=None, operation=None) -> ResolvedProviderConfig:
-    """Thin maind carrier adapter; fleet/project precedence is owned by core."""
+                            project_config=None, operation=None,
+                            project_carrier=PROJECT_LEGACY_CARRIER) -> ResolvedProviderConfig:
+    """Thin maind carrier adapter; fleet/project precedence is owned by core.
+    ``project_carrier`` names where ``project_config`` was read: the legacy ``.swissknife.json``
+    (``/providers``) or the project layer ``[aicore.providers]`` (``/aicore/providers``)."""
     if catalog is None:
         manifest_path = default_manifest_path()
         catalog = provider_config_catalog(load_provider_manifest(manifest_path))
     defaults, projects = provider_config_layers(config, project_id)
+    pointer = "/aicore/providers" if project_carrier == PROJECT_TOML_CARRIER else "/providers"
     project_layer = None if project_config is None else ProviderConfigLayer(
-        ConfigSource("project", f"project:{project_id}", ".swissknife.json", "/providers"), project_config)
+        ConfigSource("project", f"project:{project_id}", project_carrier, pointer), project_config)
     return resolve_shared_provider_config(catalog=catalog, operation=operation, project=project_layer,
                                           fleet_project=projects, fleet_defaults=defaults)
 

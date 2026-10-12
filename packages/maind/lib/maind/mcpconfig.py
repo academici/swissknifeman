@@ -2,14 +2,15 @@
 
 Provisioning maind adds his MCP-servers into the project, NOT overwriting others (for example
 laravel-boost). Merge is idempotent (restarting does not change anything), before recording -
-.bak. This is the most security-sensitive primitive - isolated and covered with tests."""
+a backup under .swissknifeman/backups. This is the most security-sensitive primitive - isolated and covered with tests."""
 import json
 import os
 import subprocess
 from pathlib import Path
 
-from aicore.util.io import atomic_write_json, backup_file
+from aicore.util.io import atomic_write_json
 from aicore.util.term import warn
+from .common import save_backup
 
 EXAMPLE_SUFFIX = ".example"
 
@@ -73,7 +74,7 @@ def write_mcp(path, data, *, dry=False, backup=True):
               + json.dumps(data, ensure_ascii=False, indent=2))
         return
     if backup and path.exists():
-        backup_file(path)
+        save_backup(path)
     atomic_write_json(path, data)
 
 

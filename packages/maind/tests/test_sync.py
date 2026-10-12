@@ -117,12 +117,12 @@ class TestProviderContexts(unittest.TestCase):
             }
             with mock.patch("maind.provision.deploy.deploy_project", return_value=result), \
                     mock.patch("maind.provision.deploy.mark_deployed") as mark_deployed, \
-                    mock.patch("maind.projects.write_config") as write_config:
+                    mock.patch("maind.projects.write_registry") as write_registry:
                 rows = sync._mcp_run(env, config, [context], "auto", False)
             self.assertEqual(rows[0]["status"], "failed")
             self.assertEqual(rows[0]["provider_aggregate"], "green")
             mark_deployed.assert_not_called()
-            write_config.assert_not_called()
+            write_registry.assert_not_called()
 
     def test_mcp_repair_mode_reaches_provider_deploy(self):
         with tempfile.TemporaryDirectory() as tmp:

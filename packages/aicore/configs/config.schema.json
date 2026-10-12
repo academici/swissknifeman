@@ -134,6 +134,39 @@
           "description": "Overlay files of the slot; a relative path is resolved from the folder of the config file that lists it."
         }
       }
+    },
+    "providers": {
+      "type": "object",
+      "description": "Provider selection of the project: which provider surfaces (Claude Code, Codex, ...) are rolled out into it. Read from the project layer; the owner of the form is aicore.provider.",
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "type": "string",
+          "pattern": "^1\\.[0-9]+\\.[0-9]+$",
+          "default": "1.0.0",
+          "description": "Version of the provider configuration contract the section is written for.",
+          "x-skm-layers": ["project"]
+        },
+        "selection": {
+          "type": "object",
+          "description": "Provider selection by provider id.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "Selection of one provider.",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Roll the provider surfaces out into the project.",
+                  "x-skm-layers": ["project"]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

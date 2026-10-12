@@ -20,7 +20,7 @@ Node-memory daemon and documentation build.
                  │  agent-memory daemon (Node, 4111/4112)             │
    maind start ─▶│   buckets: project:<id> · ns:<name> · global          │
                  │  data/graphs/*  (graph per project + _index.db, stdlib)│
-                 │  ~/.maind/  agents.json · projects.json             │
+                 │  <state>/maind/  registry.json · agents.json        │
                  │  maind mcp  (stdio JSON-RPC: 11 tools)              │
                  └───────▲────────────▲────────────▲──────────────────┘
             MCP/HTTP     │            │            │
@@ -46,7 +46,7 @@ Through the hub they go **three independent binding mechanisms**, all work accor
 
 ```bash
 git clone <repo> maind && cd maind
-./install.sh                       # symlink ~/.local/bin/maind + directory ~/.maind
+./install.sh                       # symlink ~/.local/bin/maind
 maind doctor                       # environment check
 
 # Memory (optional, needed Node):
@@ -83,14 +83,24 @@ maind projects list
 
 ---
 
-## Config `config.json`
+## Config: settings and registry
 
-Main node config - `config.json` **at the root of the monorepo** (not in package maind; resolver
-goes up to the directory with `packages/`). Legacy-name `.maind.json` is still being picked up.
-Superset `.projects.json` from `brain`. If there is no config, maind reads legacy `.projects.json`
-in mode read-only (with migration warning).
-Full diagram - in [config.example.json](config.example.json). Key sections: `node`,
-`memory`, `graph`, `agents`, `projects[]`, `integrations`, `mcp`, `observability`.
+The node config has two parts with different writers:
+
+- **Settings** (what a person edits: `node`, `memory`, `graph`, `code_graph`, `agents` timings,
+  `integrations`, `mcp` policy, `observability`) — the `[maind]` table of the layered config (the
+  machine `config.toml`, the project's `.swissknifeman/config.toml`, `SKM_MAIND_*` variables).
+  Schema `configs/config.schema.json`; every key with its default is in
+  [config.example.toml](config.example.toml).
+- **Registry** (what maind writes: `projects[]`, `namespaces`, `agents.definitions`, `mcp.servers`,
+  `providers`, `role_packs`) — `<state>/maind/registry.json`, written only by maind. Template:
+  [configs/registry.example.json](configs/registry.example.json). Superset `.projects.json` from `brain`.
+
+Until `swissknifeman upgrade` moves the values, the legacy node file (`config.json` at the root of
+the monorepo, or `.maind.json`) is read with one `MAIND_LEGACY_CONFIG` warning: its settings while no
+`[maind]` table is set, its registry while there is no `registry.json` (maind then writes the
+registry back into that file). If there is no config at all, maind reads legacy `.projects.json` in
+mode read-only (with migration warning).
 
 ## Memory (scopes)
 

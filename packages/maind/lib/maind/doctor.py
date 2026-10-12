@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from aicore.util.cli import parse_args
+from .config import config_available
 from .memory import auth_headers, check_auth, health, resolve_ports, resolve_secret
 
 
@@ -267,7 +268,7 @@ def cmd_doctor(env, argv):
     if opts["audit"]:
         from .analysis.audit import run_audit
         config = {}
-        if env.default_config.exists():
+        if config_available(env):
             try:
                 from .config import load_config
                 config, _ = load_config(env)
@@ -279,7 +280,7 @@ def cmd_doctor(env, argv):
     # --context: read-only fleet-first move footprint aggregation (subprocess → skiller)
     if opts["context"]:
         config = {}
-        if env.default_config.exists():
+        if config_available(env):
             try:
                 from .config import load_config
                 config, _ = load_config(env)
@@ -290,7 +291,7 @@ def cmd_doctor(env, argv):
 
     if opts["gitignore_drift"]:
         config = {}
-        if env.default_config.exists():
+        if config_available(env):
             try:
                 from .config import load_config
                 config, _ = load_config(env)
@@ -344,9 +345,9 @@ def cmd_doctor(env, argv):
         writable = False
     check(writable, f"{env.state_dir} is writable")
 
-    # .maind.json: validated via load_config (die catch so as not to interrupt doctor)
+    # node config (registry + settings): validated via load_config (die catch so as not to interrupt doctor)
     config = None
-    if env.default_config.exists():
+    if config_available(env):
         try:
             from .config import load_config
             config, source = load_config(env)
@@ -356,8 +357,8 @@ def cmd_doctor(env, argv):
     else:
         legacy = env.root / ".projects.json"
         suffix = (" (yes legacy .projects.json — maind migrate from-brain)"
-                  if legacy.exists() else " (create from config.example.json)")
-        check(True, "config.json missing" + suffix)
+                  if legacy.exists() else " (copy configs/registry.example.json)")
+        check(True, "registry missing" + suffix)
 
     if config:
         _skill_drift_report(env, config, detail=opts.get("skill_drift"))

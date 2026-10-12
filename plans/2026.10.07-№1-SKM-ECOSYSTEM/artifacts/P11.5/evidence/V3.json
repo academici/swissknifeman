@@ -1,14 +1,14 @@
 {
   "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
   "contract_version": "exec/v1",
-  "evidence_id": "cnd-20261012T083119Z-89d77b:P11.5:checks.1:V3",
+  "evidence_id": "cnd-20261012T083119Z-89d77b:P11.5:checks.2:V3",
   "check_id": "V3",
   "subject": "PLAN3.P11.5",
   "candidate": {
-    "head": "458230db8d33e02ff5855fd6acc063f64824b9f7",
-    "dirty_digest": "c00b036300b3abfc7ead026c03c4ddd81dc50340ba19f97b426acf7ff84db4c7"
+    "head": "ad49bc3226e2bba64f00036f0765a210e2719db0",
+    "dirty_digest": "813e690dbe43c2a3a569763fd9618fcc6edb3e0095b108acfa09ef3f4d0e8376"
   },
-  "started_at": "2026-10-12T09:46:06Z",
+  "started_at": "2026-10-12T10:52:58Z",
   "procedure": {
     "cmd": "test -f packages/maind/configs/config.schema.json && test -f packages/maind/config.example.toml && test -f packages/maind/configs/registry.example.json && test ! -e config.example.json && python3 -c 'import json; u=json.load(open(\"packages/maind/unit.json\")); assert u[\"provides\"].get(\"config\") == \"configs/config.schema.json\"' && ! grep -rn 'backup_file' packages/maind/lib",
     "cwd": "."
@@ -17,5 +17,5 @@
   "producer": {
     "kind": "engine"
   },
-  "finished_at": "2026-10-12T09:46:06Z"
+  "finished_at": "2026-10-12T10:52:58Z"
 }

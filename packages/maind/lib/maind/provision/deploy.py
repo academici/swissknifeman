@@ -1,7 +1,7 @@
 """maind deploy — provisioning: roll out MCP-hub servers for projects («clone network»).
 
 From config.json enter in MCP-config of each project hub servers (agent-memory + maind),
-with scope project:<id>. Non-destructive merger (mcpconfig: upsert + .bak), idempotent, opt-in.
+with scope project:<id>. Non-destructive merger (mcpconfig: upsert + a backup under .swissknifeman/backups), idempotent, opt-in.
 The daemon is not required - we write the client config even when the daemon is turned off (with warning).
 Code graph (engine Serena) optional: --with-code (legacy --with-graphify), and only if the binary
 engine is installed in PATH (otherwise warn-and-skip). Politics - from section code_graph config."""
@@ -19,18 +19,21 @@ from aicore.artifacts.lock import apply_plan
 from .. import codegraph, pplxweb
 from aicore.util.term import die, now_iso, warn
 from aicore.util.cli import parse_args
-from ..config import load_config, resolve_provider_config
+from aicore.config import ConfigError
+from ..config import (PROJECT_LEGACY_CARRIER, PROJECT_TOML_CARRIER, load_config,
+                      resolve_provider_config, toml_project_providers)
 from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
                         merge_server, reconcile_gitignore, remove_server,
                         write_example, write_mcp)
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
-from ..projects import listing, write_config
+from ..projects import listing, write_registry
 from ..provider_deploy import (generate_conformance_report, plan_provider_artifacts,
                                plan_provider_deploy,
                                plan_d104_bootstrap_transfer, project_provider_preflight,
                                bootstrap_transfer_projection, plan_d108_operation,
-                               apply_d108_operation, SemanticServer, semantic_servers)
+                               apply_d108_operation, SemanticServer, semantic_servers,
+                               warn_legacy_providers)
 
 
 @dataclass(frozen=True)
@@ -63,11 +66,30 @@ def _harness_configs(env):
 
 
 def _load_project_provider_config(project):
-    """Load the exact registered root's regular project provider carrier."""
+    """Load the project provider selection from its active carrier.
+
+    Returns ``(providers, carrier)``: the ``[aicore.providers]`` table of the project layer when it
+    sets a selection, else the legacy regular ``.swissknife.json#/providers`` of the exact
+    registered root (one MAIND_LEGACY_PROVIDERS warning), else ``(None, <legacy carrier>)``."""
     local_path = project.get("local_path")
     if not local_path:
-        return None
-    carrier = Path(os.path.expanduser(local_path)) / ".swissknife.json"
+        return None, PROJECT_LEGACY_CARRIER
+    root = Path(os.path.expanduser(local_path))
+    try:
+        from_toml = toml_project_providers(root)
+    except ConfigError as exc:
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_INVALID") from exc
+    if from_toml is not None:
+        return from_toml, PROJECT_TOML_CARRIER
+    providers = _load_legacy_project_providers(root)
+    if providers is not None:
+        warn_legacy_providers(root / PROJECT_LEGACY_CARRIER)
+    return providers, PROJECT_LEGACY_CARRIER
+
+
+def _load_legacy_project_providers(root):
+    """Load the exact registered root's regular legacy project provider carrier."""
+    carrier = root / PROJECT_LEGACY_CARRIER
     try:
         carrier_stat = carrier.lstat()
     except FileNotFoundError:
@@ -108,9 +130,10 @@ def provider_projection_context(env, config, project):
     harness_lib = str(harness_root / "lib")
     ensure_harness_importable(harness_lib)
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    project_config = _load_project_provider_config(project)
+    project_config, project_carrier = _load_project_provider_config(project)
     resolved = resolve_provider_config(
-        config, None, project["id"], project_config=project_config)
+        config, None, project["id"], project_config=project_config,
+        project_carrier=project_carrier)
     if resolved.selection is None:
         codes = ",".join(item.code for item in resolved.diagnostics)
         raise ValueError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")
@@ -383,7 +406,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
 
 
 def mark_deployed(config, project_id, result):
-    """Mark project deployed in config.json (caller saves via write_config)."""
+    """Mark project deployed in the registry (caller saves via write_registry)."""
     proj = get_project(config, project_id)
     if proj is None:
         return config
@@ -466,7 +489,7 @@ def cmd_deploy(env, argv):
             config_changed = True
 
     if not opts["dry_run"] and config_changed:
-        write_config(env, config)
+        write_registry(env, config)
 
     if opts["json"]:
         print(json.dumps(results, ensure_ascii=False, indent=2))

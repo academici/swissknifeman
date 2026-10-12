@@ -69,10 +69,11 @@ def _apply_managed_skill(env, config, project, mode, dry, *, label, template, sk
     state = "fresh" if all(item == "fresh" for item in states) else (
         "stale" if "stale" in states else "absent")
     if not dry:
-        from aicore.util.io import atomic_write_text, backup_file
+        from aicore.util.io import atomic_write_text
+        from ..common import save_backup
         for _skill_path, target in selected:
             if target.is_file():
-                backup_file(target)
+                save_backup(target)
             atomic_write_text(target, content)
     detail = ",".join(str(skill_path) for skill_path in skill_paths)
     return _result(pid, label, state, bool(selected), dry, detail)

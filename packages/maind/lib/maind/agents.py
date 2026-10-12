@@ -1,4 +1,4 @@
-"""Hub agent registry: register/heartbeat/list/kill/reap (~/.maind/agents.json).
+"""Hub agent registry: register/heartbeat/list/kill/reap (<state>/maind/agents.json).
 
 State is derived at read time from heartbeat age, configured interval, and PID
 liveness. The persisted file therefore contains facts only."""

@@ -13,7 +13,7 @@ from unittest.mock import patch
 from maind import health
 from maind.common import Env
 from maind.config import load_config
-from maind.projects import write_config
+from maind.projects import write_registry
 from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
@@ -90,7 +90,7 @@ class TestReport(unittest.TestCase):
                 os.chdir(cwd0)
             self.assertEqual(json.loads(output)["id"], "swissknifeman")
             primary_before = (primary / "config.json").read_bytes()
-            write_config(env, config)
+            write_registry(env, config)
             self.assertEqual((primary / "config.json").read_bytes(), primary_before)
             self.assertTrue((linked / "config.json").is_file())
 

@@ -34,7 +34,7 @@ scripts/validate.sh      # py_compile + bash -n + JSON + tests (what drives CI)
 
 - Style - `unittest`; fixtures in `tests/fixtures.py` (`make_repo` gives isolated `Env`
   with temporary HOME). Each new module `lib/maind/X.py` is followed by `tests/test_X.py`.
-- Tests do not touch the real node/demon/`~/.maind` — everything is in temporary directories.
+- Tests do not touch the real node/demon or its state directory — everything is in temporary directories.
 
 ## Pull Request
 

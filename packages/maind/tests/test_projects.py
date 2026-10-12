@@ -12,7 +12,7 @@ import aicore
 from aicore.util.partners import PartnerUnavailable
 from aicore.util.schema import load_contract, validate
 from maind.config import load_config
-from maind.projects import brain_path, cmd_projects, get, listing, sync_from_brain, write_config
+from maind.projects import brain_path, cmd_projects, get, listing, sync_from_brain, write_registry
 from tests.fixtures import capture, make_repo, write_brain_projects, write_maind_config
 
 
@@ -25,7 +25,7 @@ class TestSync(unittest.TestCase):
                  "dependencies": ["maind"], "type": "obsidian-vault"}])
             bpath = write_brain_projects(root)
             cfg, source = load_config(env)
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             cfg, stats = sync_from_brain(env, cfg, bpath)
             self.assertEqual(stats["added"], 1)    # swiss-knife-man — new
             self.assertEqual(stats["updated"], 1)  # brain — updated
@@ -57,15 +57,15 @@ class TestSync(unittest.TestCase):
             self.assertEqual(docs["visibility"], "private")   # brain won (owner-of-fact)
             self.assertIn("public→private", buf.getvalue())   # warning was
 
-    def test_write_config_roundtrip(self):
+    def test_write_registry_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
             cfg, source = load_config(env)        # empty
             self.assertEqual(source, "empty")
             cfg, _ = sync_from_brain(env, cfg, write_brain_projects(root))
-            write_config(env, cfg)
+            write_registry(env, cfg)
             cfg2, source2 = load_config(env)
-            self.assertEqual(source2, "config.json")  # .maind.json takes priority
+            self.assertEqual(source2, "config")      # the registry was created: no legacy file
             self.assertTrue(get(cfg2, "brain"))
             self.assertEqual(len(listing(env, cfg2)), 2)
 

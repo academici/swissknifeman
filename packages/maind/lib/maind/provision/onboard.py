@@ -17,7 +17,7 @@ from ..config import load_config
 from .deploy import deploy_project, mark_deployed
 from .orchestrate import run_capability
 from ..projects import get as get_project
-from ..projects import write_config
+from ..projects import write_registry
 
 
 def _infer_type(path):
@@ -44,7 +44,7 @@ def _register_namespaces(config, namespaces):
 
 
 def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
-    """(config, project, created). New path → record synthesis (+ write_config, if not dry).
+    """(config, project, created). New path → record synthesis (+ write_registry, if not dry).
     namespaces default - general `axioma` + yours `<id>` (several per project).
     At the same time registers these namespaces in the general registry `config["namespaces"]`, if there are any
     not yet (dict-registry, setdefault — idempotent, metadata is not overwritten)."""
@@ -81,7 +81,7 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     config["projects"] = list(config.get("projects") or []) + [proj]
     _register_namespaces(config, proj_namespaces)
     if not dry:
-        write_config(env, config)
+        write_registry(env, config)
     return config, proj, True
 
 
@@ -105,7 +105,7 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
         if _register_namespaces(config, proj["namespaces"]):
             changed = True
         if changed and not dry:
-            write_config(env, config)
+            write_registry(env, config)
     wrote = False
     lp = proj.get("local_path")
     mode = {"maind": "maind", "manual": "manual", "native": "off",
@@ -198,7 +198,7 @@ def onboard(env, config, project_or_path, opts):
     if want_code and not (proj.get("code") or proj.get("graphify")):
         proj["code"] = True
         if not dry:
-            write_config(env, config)
+            write_registry(env, config)
     # Reuse the same P6 project context for deployment and instruction provisioning.
     from .sync import contexts, run_sync_contexts
     project_context = contexts(env, config, [proj])[0]
@@ -217,7 +217,7 @@ def onboard(env, config, project_or_path, opts):
                                 f"({', '.join(res['servers'])})"})
         if not dry:
             config = mark_deployed(config, proj["id"], res)
-            write_config(env, config)
+            write_registry(env, config)
 
     # Root and package instruction semantics are intentionally owned only by frozen P5.
     # Onboard supplies its already-effective context and explicit repair choice, then reports

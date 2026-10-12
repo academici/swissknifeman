@@ -493,7 +493,7 @@ class TestProviderDeploy(unittest.TestCase):
             operation = plan_d108_operation(root, config, "swissknifeman", servers,
                                             harness_configs=harness, expected_root=root)
             apply_d108_operation(root, operation)
-            (root / ".swissknife.json").write_text('{"foreign":true}\n', encoding="utf-8")
+            operation.carrier.path.write_text('{"foreign":true}\n', encoding="utf-8")
             before = {path.relative_to(root): path.read_bytes()
                       for path in root.rglob("*") if path.is_file()}
             with patch("maind.provider_deploy.rollback_chained_bootstrap_transfer") as rollback:

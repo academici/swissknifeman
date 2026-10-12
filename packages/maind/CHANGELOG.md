@@ -10,6 +10,23 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 - **Skills and agent:** the plugin `maind` 0.5.0 ships the skills `local-topology`, `swissknifeman-locator`, `cross-project-coordinator` and `shared-memory` and the agent `code-coordinator` (moved from the `system` bucket of skiller), and a Codex plugin manifest.
 
 ### Changed
+- **Config split:** settings are the `[maind]` table of the layered config (`configs/config.schema.json`, `config.example.toml`), the
+  fleet registry is `<state>/maind/registry.json` (single writer `projects.write_registry`, previous file kept under the state
+  `backups/`); `Config.load` returns the same dictionary as before. The legacy node file (`config.json`, `.maind.json`) is read until
+  `swissknifeman upgrade` with one `MAIND_LEGACY_CONFIG` warning (settings: an extra layer while no `[maind]` table is set; registry:
+  while there is no `registry.json`, and then written back to that file). `Config.source` is `config`, `legacy:<file>`,
+  `linked-worktree-config`, `brain-fallback` or `empty`. `maind migrate from-brain` writes `registry.json` and the node settings into
+  the machine config.
+- **Places:** `Env.state_dir` is `<state>/maind` and `Env.data_dir` `<data>/maind` (`aicore.state`; `~/.maind` and `<module>/data` are used
+  with one warning while the new places do not exist); `Env.projects_db` is removed (it was unused); `default_config` is now
+  `legacy_node_config`; `install.sh` no longer creates `~/.maind`.
+- **Graph links:** `derive` reads `[maind.graph.links.<project>]` (`type`, `plane`, `note`) from the project's `.swissknifeman/config.toml`;
+  `<repo>/.maind.graph.json` is read with `MAIND_LEGACY_GRAPH_LINKS` while the project config has no `[maind.graph]` table.
+- **Provider selection of a project:** read from `[aicore.providers]` of `.swissknifeman/config.toml`, else the legacy
+  `.swissknife.json#/providers` (warning `MAIND_LEGACY_PROVIDERS`); the one-off D108 deployment writes to the active carrier (a legacy
+  file keeps its bytes, a new project gets the TOML table).
+- **Backups:** files maind replaces are copied to `<project>/.swissknifeman/backups/<stamp>/` (rotated) instead of `*.bak` next to them.
+- **Template:** `config.example.json` moved to `configs/registry.example.json` (registry keys only).
 - **aicore:** maind imports `aicore` directly; `maind.blocks` and `maind.http` are removed, `maind.common` re-exports nothing but its own
   `Env` and `load_json_db`; `bin/maind` and `scripts/test.sh` no longer add the monorepo root.
 - **Neighbors:** skiller and harness are found through `aicore.util.partners` instead of `constants.SIBLINGS` (old `MAIND_SKM_BIN`,

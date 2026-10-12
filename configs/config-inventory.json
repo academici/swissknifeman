@@ -3,7 +3,6 @@
   "_doc": "Every config has one owner and at least one consumer. Checked by scripts/test-config-inventory.py (CI hygiene). Decisions: plan PLAN2 knowledge configs-p11.",
   "scope": [
     "configs/*.json",
-    "config.example.json",
     ".codex/config.toml.example",
     ".grok/config.toml.example",
     "packages/*/configs/*.json",
@@ -65,6 +64,19 @@
       "note": "planner thresholds, defaults of new plans and items, review loop policies, view templates, orchestration scenarios, events and external checks in [planner]"
     },
     {
+      "path": "packages/maind/configs/config.schema.json",
+      "owner": "maind",
+      "consumers": [
+        "packages/maind/lib/maind/config.py",
+        "packages/maind/lib/maind/derive.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "maind node settings in [maind] (node, memory, graph and its links, code graph policy, agent timings, integrations, mcp policy, observability); generated config.example.toml"
+    },
+    {
       "path": "packages/aicore/configs/config.schema.json",
       "owner": "aicore",
       "consumers": [
@@ -74,7 +86,7 @@
         "scripts/ecosystem-units.py"
       ],
       "released": false,
-      "note": "aicore extension settings: events, subscriptions, plugins, overlays"
+      "note": "aicore settings: events, subscriptions, plugins, overlays and the provider selection of a project"
     },
     {
       "path": ".codex/config.toml.example",
@@ -97,8 +109,8 @@
       "note": "sample"
     },
     {
-      "path": "config.example.json",
-      "owner": "root",
+      "path": "packages/maind/configs/registry.example.json",
+      "owner": "maind",
       "consumers": [
         "packages/maind/install.sh",
         "packages/maind/lib/maind/common.py",
@@ -106,7 +118,7 @@
         "packages/maind/lib/maind/projects.py"
       ],
       "released": true,
-      "note": "template of the root config.json"
+      "note": "template of the fleet registry (registry.json) that maind writes"
     },
     {
       "path": "configs/config-inventory.json",

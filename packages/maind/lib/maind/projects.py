@@ -1,18 +1,20 @@
 """Node project registry (superset brain .projects.json).
 
-Reading - from config (config.json or brain-fallback). Write - only write_config
-(sole writer config.json). sync_from_brain is idempotent and preserves
+Reading - from the config (registry.json, the legacy node file or brain-fallback). Write - only
+write_registry (sole writer of the registry). sync_from_brain is idempotent and preserves
 maind-only fields (skills/tags/dependencies/agents/repo)."""
 import json
 import os
 import subprocess
 from pathlib import Path
 
+from aicore.state import backup
 from aicore.util.io import atomic_write_json
 from aicore.util.partners import PartnerError, PartnerUnavailable, run_partner_json
 from aicore.util.term import die, warn
 from aicore.util.cli import parse_args
-from .config import load_brain_projects, load_config, normalize_docs_folders
+from .config import (REGISTRY_VERSION, load_brain_projects, load_config, normalize_docs_folders,
+                     registry_of)
 from .namespaces import in_namespace, namespaces_of
 
 # Fields that are updated from brain with sync (rest - maind-only, save).
@@ -88,7 +90,7 @@ def _warn_visibility_changes(pid, cur_folders, inc_folders):
 
 def sync_from_brain(env, config, brain_path):
     """Import/updating projects from brain .projects.json. Idempotent, merges by
-    id. Returns (config, stats); config NOT recorded (does this write_config).
+    id. Returns (config, stats); config NOT recorded (does this write_registry).
     Directory Source of Truth/visibility — frontmatter control-notes Brain → `.projects.json`;
     maind only reflects them (brain-fields are overwritten). When changing visibility existing
     project - warn (protection against sync from a bad cache; see `_warn_visibility_changes`)."""
@@ -117,13 +119,57 @@ def sync_from_brain(env, config, brain_path):
     return config, {"added": added, "updated": updated, "total": len(existing)}
 
 
-def write_config(env, config):
-    """Sole writer config.json (atomic). _version is entered as the first key.
-    mode=0o600: config.json holds node secrets (integration tokens) — should not be
-    world-readable even for a short recording window."""
-    out = {"_version": str(config.get("_version", "1"))}
-    out.update({k: v for k, v in config.items() if k != "_version"})
-    atomic_write_json(env.default_config, out, mode=0o600)
+def write_registry(env, config, *, new_file=False):
+    """Sole writer of the fleet registry (atomic, mode 0o600), into ONE active source:
+    registry.json when it exists or when there is no legacy node file; otherwise the legacy node
+    file (the whole document is kept, only the registry keys change), so nothing migrates
+    silently. ``new_file`` forces registry.json. Only the registry keys of ``config`` are written;
+    settings belong to the ``[maind]`` table."""
+    registry = registry_of(config)
+    legacy_read = env.config_read_path
+    if not new_file and not env.registry_file.is_file() and legacy_read.is_file():
+        _write_legacy_registry(env, legacy_read, registry)
+        return env.legacy_node_config
+    path = env.registry_file
+    existing = {}
+    if path.is_file():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            existing = {}
+        if not isinstance(existing, dict):
+            existing = {}
+    out = {"schema_version": REGISTRY_VERSION}
+    out.update({k: v for k, v in existing.items()
+                if k != "schema_version" and k not in registry})
+    out.update({k: v for k, v in registry.items() if k == "projects" or v})
+    if path.is_file():
+        backup(path, home=env.home)
+    atomic_write_json(path, out, mode=0o600)
+    return path
+
+
+def _write_legacy_registry(env, read_path, registry):
+    """Registry keys back into the legacy node document (read from ``read_path``, written to the
+    isolated ``legacy_node_config``); settings and unknown keys stay as they are."""
+    try:
+        doc = json.loads(read_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        die(f"{read_path}: cannot update the legacy node config: {e}")
+    out = {"_version": str(doc.get("_version", "1"))}
+    out.update({k: v for k, v in doc.items() if k != "_version"})
+    for key, value in registry.items():
+        if key in ("agents", "mcp"):
+            section = dict(out.get(key) or {})
+            for inner, inner_value in value.items():
+                if inner in section or inner_value:
+                    section[inner] = inner_value
+            out[key] = section
+        elif key in out or value or key == "projects":
+            out[key] = value
+    if read_path.is_file():
+        backup(read_path, home=env.home)
+    atomic_write_json(env.legacy_node_config, out, mode=0o600)
 
 
 def brain_path(config):
@@ -259,8 +305,8 @@ def _cmd_list(env, argv):
         print(json.dumps(projects, ensure_ascii=False, indent=2))
         return
     if not projects:
-        print("no projects - create config.json from config.example.json "
-              "or `maind projects sync --from brain`")
+        print("no projects - copy configs/registry.example.json to the registry "
+              "or run `maind projects sync --from brain`")
         return
     print(f"Projects ({len(projects)}, source: {source}):")
     for p in projects:
@@ -319,13 +365,13 @@ def _cmd_sync(env, argv):
     if src == "brain":
         path = opts["path"] or brain_path(config)
         if not path:
-            die("brain vault not found: set integrations.brain.path in config.json "
+            die("brain vault not found: set integrations.brain.path in the [maind] config "
                 "or configure the vault with the brain module")
         config, stats = sync_from_brain(env, config, path)
-        write_config(env, config)
+        written = write_registry(env, config)
         print(f"Sync from brain ({path}): +{stats['added']} new, "
               f"~{stats['updated']} updated, total {stats['total']}. "
-              f"Recorded in {env.default_config.name}")
+              f"Recorded in {written.name}")
     elif src == "swissknifeman":
         from .derive import derive_all
         stats = derive_all(env, config)

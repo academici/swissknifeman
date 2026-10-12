@@ -251,11 +251,13 @@ What each service file is today, who writes it and where it ends up:
 | `<project>/.swissknifeman-manifest.json`, `.swissknifeman-codex-links.json` | skiller | `.swissknifeman/state/` |
 | `<project>/.claude/{auto-approve,memory,review-gate}.env.ini` | harness, maind | sections `hooks.auto_approve`, `memory.mode`, `hooks.review_gate` of the project config; shell hooks read the generated `.swissknifeman/state/hooks.env`, which is not edited by hand |
 | `*.bak`, `*.provider-artifact.bak` next to files | core.io, harness, maind, skiller | `.swissknifeman/backups/<ts>/` with rotation |
-| `<project>/.maind.json`, `.maind.graph.json` | maind | sections `maind` and `graph` of the project config |
+| `<project>/.maind.graph.json` | maind | table `[maind.graph.links.<project>]` of the project config (done in P11; the legacy file is read with a warning until upgrade) |
 | `<project>/.claude/agent-pack.lock.json` | harness | `.swissknifeman/state/agent-packs.lock.json` |
 | `~/.swissknifeman/{topology,projects}.json` | skiller | `~/.local/state/swissknifeman/` |
-| `~/.maind/{projects,agents}.json` | maind | `~/.local/state/swissknifeman/` |
-| `config.json`, `safe-dirs.json` in the repository root (machine-specific, ignored by git) | maind, harness | `~/.config/swissknifeman/config.toml` |
+| `~/.maind/{projects,agents}.json`, `<module>/data` | maind | `~/.local/state/swissknifeman/maind/` and `~/.local/share/swissknifeman/maind/` (done in P11; the legacy places are used with a warning until upgrade) |
+| `config.json` (also `.maind.json`) in the repository root (machine-specific, ignored by git) | maind | settings: table `[maind]` of `~/.config/swissknifeman/config.toml`; fleet registry (projects, namespaces, agent definitions, MCP servers, providers, role packs): `~/.local/state/swissknifeman/maind/registry.json` (done in P11; the legacy file is read, and the registry written back to it, until upgrade) |
+| `safe-dirs.json` in the repository root (machine-specific, ignored by git) | harness | `~/.config/swissknifeman/config.toml` |
+| `<project>/.swissknife.json#/providers` | aicore.provider, maind | table `[aicore.providers.selection.<provider>]` of the project config (done in P11; the legacy carrier is read with a warning until upgrade) |
 | `~/.claude/hooks/*` (global hooks) | harness | stay (a Claude surface) but are installed from the harness catalog with a lock file |
 | `~/.local/bin/*` symlinks into the working copy | `install.sh` | created by `swissknifeman install`; the registry of installed modules lives in state |
 

@@ -29,7 +29,7 @@ install.sh            # umbrella installer (delegates install.sh packages)
   `pyrightconfig.json` (`extraPaths`: repo root `.` + `packages/*/lib`) — resolve works «from
   boxes», without pip. PyCharm: mark `.` and `packages/*/lib` like *Sources Root*.
 - **`.mcp.json` and `config.json` machine-specific** (absolute paths) and do not commit
-  (`.gitignore`); templates - `.mcp.json.example` / `config.example.json`. Real `.mcp.json` for
+  (`.gitignore`); templates - `.mcp.json.example` / `packages/maind/configs/registry.example.json`. Real `.mcp.json` for
   of this repo generates `maind` (sync/deploy).
 
 ## Development prerequisites

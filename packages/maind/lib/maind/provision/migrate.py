@@ -1,6 +1,7 @@
 """Migrate into maind from Brain projects or agent-memory configuration.
 
-from-brain builds config.json and materializes the graph. from-agentmemory
+from-brain builds the registry (registry.json), the node settings in the machine config and
+materializes the graph. from-agentmemory
 copies iii-config.yaml with service_name maind without modifying its source.
 """
 import re
@@ -8,8 +9,8 @@ from pathlib import Path
 
 from aicore.util.term import confirm, die
 from aicore.util.cli import parse_args
-from ..config import load_brain_projects, merge_defaults
-from ..projects import write_config
+from ..config import load_brain_projects, merge_defaults, write_settings
+from ..projects import write_registry
 
 
 def cmd_migrate(env, argv):
@@ -30,24 +31,32 @@ def _from_brain(env, argv):
     opts, pos = parse_args(argv, {"--force": "bool"}, max_pos=1)
     if not pos:
         die("specify the path to brain .projects.json: maind migrate from-brain <path>")
-    if env.default_config.exists() and not opts["force"]:
-        die(f"{env.default_config.name} already exists - overwrite with -- onlyforce")
+    existing = env.registry_file if env.registry_file.is_file() else (
+        env.config_read_path if env.config_read_path.is_file() else None)
+    if existing is not None and not opts["force"]:
+        die(f"{existing} already exists - overwrite with --force")
     projects = load_brain_projects(pos[0])
+    settings = {
+        "node.id": "hub", "node.name": "Academici Hub", "node.role": "primary",
+        "integrations.brain.enabled": True, "integrations.brain.projects_sync": True,
+        "integrations.brain.sync_direction": "import",
+        "integrations.brain.path": str(Path(pos[0]).expanduser()),
+    }
     config = merge_defaults({
-        "_version": "1",
         "node": {"id": "hub", "name": "Academici Hub", "role": "primary"},
         "projects": projects,
         "integrations": {"brain": {"enabled": True, "projects_sync": True,
                                    "sync_direction": "import",
                                    "path": str(Path(pos[0]).expanduser())}},
     })
-    write_config(env, config)
+    written = write_registry(env, config, new_file=True)
+    write_settings(env, settings)
     # Materialize graph stores and index from sources of truth.
     from ..derive import derive_all
     stats = derive_all(env, config)
     nodes = sum(s["nodes"] for s in stats)
     print(f"imported from brain: {len(projects)} projects → "
-          f"{env.default_config.name} + graph ({nodes} nodes in {len(stats)} store)")
+          f"{written.name} + graph ({nodes} nodes in {len(stats)} store)")
 
 
 def _from_agentmemory(env, argv):

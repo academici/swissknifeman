@@ -6,10 +6,10 @@
 maind migrate from-brain ~/Vaults/Brain/.projects.json [--force]
 ```
 
-Collects `config.json` (in root monorepo; legacy-name `.maind.json` is still being picked up)
-from brain-project cache (real diagram brain is mapped to the format maind), prescribes
-`integrations.brain` and **materializes the graph** (projects as nodes). Refused
-overwrite existing `config.json` without `--force`.
+Collects the registry `registry.json` from brain-project cache (real diagram brain is mapped to the
+format maind), sets the node and `integrations.brain` settings in the `[maind]` table of the machine
+config and **materializes the graph** (projects as nodes). Refused overwrite of an existing registry
+(or legacy `config.json`) without `--force`.
 
 ## From agent-memory (daemon config)
 

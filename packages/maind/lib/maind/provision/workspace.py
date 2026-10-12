@@ -15,9 +15,10 @@ import os
 from pathlib import Path
 
 from ..harness_path import ensure_harness_importable
-from aicore.util.io import atomic_write_json, backup_file
+from aicore.util.io import atomic_write_json
 from aicore.util.term import die
 from aicore.util.cli import parse_args
+from ..common import save_backup
 from ..config import load_config
 
 DEFAULT_MODE = "acceptEdits"
@@ -147,7 +148,7 @@ def sync(env, config, *, allow=True, mode=True, dry=False, backup=True):
     }
     if not dry and changed:
         if backup:
-            backup_file(path)
+            save_backup(path, project=env.root)
         atomic_write_json(path, merged)
     return result
 

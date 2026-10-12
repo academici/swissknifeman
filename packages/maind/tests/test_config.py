@@ -144,7 +144,7 @@ class TestProviderConfig(unittest.TestCase):
             before = path.read_bytes()
             loaded, source = load_config(env)
             result = resolve_provider_config(loaded, catalog(), "alpha")
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             self.assertEqual(path.read_bytes(), before)
             self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
 
@@ -165,7 +165,7 @@ class TestProviderConfig(unittest.TestCase):
             loaded, source = load_config(env)
             result = resolve_provider_config(loaded, catalog(), "alpha")
 
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
             self.assertEqual({path: path.read_bytes() for path in sentinels}, before)
 
@@ -186,7 +186,7 @@ class TestPrecedence(unittest.TestCase):
             write_maind_config(root)
             write_brain_projects(root)  # is present, but .maind.json takes priority
             cfg, source = load_config(env)
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             self.assertEqual(cfg["projects"][0]["id"], "alpha")
 
     def test_brain_fallback(self):

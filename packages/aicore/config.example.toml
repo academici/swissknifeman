@@ -65,3 +65,16 @@ schema_version = 1
 # Instruction overlays by slot <module>:<slot>: files added to the slot, in layer order.
 # Overlay files of the slot; a relative path is resolved from the folder of the config file that lists it. Array of strings.
 # "module:example" = []
+
+[aicore.providers]
+# Version of the provider configuration contract the section is written for. String.
+# Allowed in layers: project.
+# contract_version = "1.0.0"
+
+[aicore.providers.selection]
+# Provider selection by provider id.
+# [aicore.providers.selection.example]
+
+# Roll the provider surfaces out into the project. Boolean.
+# Allowed in layers: project.
+# enabled = <boolean>

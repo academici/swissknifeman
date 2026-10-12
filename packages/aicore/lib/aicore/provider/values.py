@@ -13,7 +13,8 @@ from typing import Protocol
 
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _SOURCE_KINDS = frozenset({"operation", "project", "fleet-project", "fleet-defaults", "legacy"})
-_SOURCE_CARRIERS = frozenset({"operation", ".swissknife.json", "config.json", "legacy"})
+_SOURCE_CARRIERS = frozenset({"operation", ".swissknife.json", ".swissknifeman/config.toml", "config.json",
+                              "legacy"})
 
 
 class ProviderId(str, Enum):

@@ -7,6 +7,11 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from aicore.state import backup as _backup
+from aicore.state import data_dir as _data_dir
+from aicore.state import find_project_root
+from aicore.state import resolve_with_legacy
+from aicore.state import state_dir as _state_dir
 from aicore.util.env import BaseEnv
 from aicore.util.io import load_json_db as _core_load_json_db
 from aicore.util.repo import find_monorepo_root
@@ -17,25 +22,32 @@ DB_VERSION = 1
 @dataclass(frozen=True)
 class Env(BaseEnv):
     """Launch context maind: core (root/cmd/home) — from BaseEnv; here only
-    path-property node (~/.maind, root/data, config)."""
+    path-property node (state and data in the aicore.state places, the legacy node file)."""
 
-    # ── user state (~/.maind) ──────────────────────────────────
+    # ── machine state (aicore.state; legacy ~/.maind) ──────────────────────
     @property
     def state_dir(self):
-        return self.home / ".maind"
+        """``<state>/maind`` (registry.json, agents.json, memory-backups/). An existing
+        legacy ``~/.maind`` is used, with one warning, until the new place exists."""
+        return resolve_with_legacy(_state_dir("maind", home=self.home),
+                                   [self.home / ".maind"], home=self.home)
 
     @property
-    def projects_db(self):
-        return self.state_dir / "projects.json"
+    def registry_file(self):
+        """Fleet registry written by maind (``projects.write_registry``)."""
+        return self.state_dir / "registry.json"
 
     @property
     def agents_db(self):
         return self.state_dir / "agents.json"
 
-    # ── runtime-node data (root/data, gitignored) ────────────────────────
+    # ── runtime-node data (aicore.state; legacy <module>/data) ───────────────
     @property
     def data_dir(self):
-        return self.root / "data"
+        """``<data>/maind`` (graph.db, graphs/, agentmemory.pid and .log). An existing
+        legacy ``<module>/data`` is used, with one warning, until the new place exists."""
+        return resolve_with_legacy(_data_dir("maind", home=self.home),
+                                   [self.root / "data"], home=self.home)
 
     @property
     def graph_db(self):
@@ -62,22 +74,23 @@ class Env(BaseEnv):
 
     @property
     def monorepo_root(self):
-        """Monorepo root - directory with `packages/`/`core/` above package. Node config
-        (`config.json`) is generic and can be found here. Fallback: himself root (standalone)."""
+        """Monorepo root - directory with `packages/`/`core/` above package. Only the lookup of
+        the legacy node file uses it. Fallback: himself root (standalone)."""
         return find_monorepo_root(self.root) or self.root
 
     @property
-    def default_config(self):
-        """Node config. Canonically - `config.json` at the root of the monorepo. Reverse
-        compatibility: if it is not there, but the old one is there `.maind.json` (in the root or
-        package) — take it (migration without breaking existing installations)."""
+    def legacy_node_config(self):
+        """Legacy node file; removed by ``swissknifeman upgrade``. `config.json` at the root of the
+        monorepo; the older `.maind.json` (in the root or the package) is taken when it is missing.
+        It still serves as the settings and registry source until a ``[maind]`` table or a
+        registry.json exists. Returns the path where it would be (it may not exist)."""
         root_cfg = self.monorepo_root / "config.json"
         if root_cfg.exists():
             return root_cfg
         for legacy in (self.monorepo_root / ".maind.json", self.root / ".maind.json"):
             if legacy.exists():
                 return legacy
-        return root_cfg  # default path for entry/hints - new
+        return root_cfg
 
     @property
     def linked_worktree_config(self):
@@ -86,9 +99,9 @@ class Env(BaseEnv):
         An isolated linked worktree intentionally has no copied machine-local
         ``config.json``.  It may read the primary worktree's carrier only when
         both worktrees resolve to the same Git common directory.  Writers keep
-        using ``default_config`` and therefore never mutate the primary carrier.
+        using ``legacy_node_config`` and therefore never mutate the primary carrier.
         """
-        if self.default_config.exists():
+        if self.legacy_node_config.exists():
             return None
         try:
             result = subprocess.run(
@@ -104,7 +117,7 @@ class Env(BaseEnv):
             return None
         primary_root = common_dir.parent
         candidate = primary_root / "config.json"
-        if not candidate.is_file() or candidate == self.default_config:
+        if not candidate.is_file() or candidate == self.legacy_node_config:
             return None
         try:
             primary_common = subprocess.run(
@@ -119,22 +132,27 @@ class Env(BaseEnv):
 
     @property
     def config_read_path(self):
-        """Read carrier, keeping ``default_config`` as the isolated write target."""
-        return (self.default_config if self.default_config.is_file()
-                else self.linked_worktree_config or self.default_config)
+        """Read carrier of the legacy node file, keeping ``legacy_node_config`` as the isolated
+        write target."""
+        return (self.legacy_node_config if self.legacy_node_config.is_file()
+                else self.linked_worktree_config or self.legacy_node_config)
 
     @property
     def example_config(self):
-        """Config template - `config.example.json` at the root of the monorepo (with legacy-fallback)."""
-        root_ex = self.monorepo_root / "config.example.json"
-        if root_ex.exists():
-            return root_ex
-        legacy = self.monorepo_root / ".maind.example.json"
-        return legacy if legacy.exists() else root_ex
+        """Registry template shipped with the module (``configs/registry.example.json``)."""
+        return self.root / "configs" / "registry.example.json"
 
     @property
     def env_file(self):
         return self.root / ".env"
+
+
+def save_backup(path, *, project=None):
+    """Copy ``path`` into the aicore.state backup tree (``<project>/.swissknifeman/backups/<stamp>/``,
+    rotated) before the file is replaced. ``project`` defaults to the project root of the file."""
+    path = Path(path)
+    root = project if project is not None else find_project_root(path.parent)
+    return _backup(path, project=root)
 
 
 # ── JSON-storage (persistent read with recovery - aicore) ───────────

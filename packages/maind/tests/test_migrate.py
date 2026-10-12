@@ -1,4 +1,5 @@
 """Tests migrate.py: from-brain (config+graph, overwrite protection), from-agentmemory."""
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,10 +15,15 @@ class TestMigrate(unittest.TestCase):
             root, env = make_repo(tmp)
             bpath = write_brain_projects(root)
             capture(cmd_migrate, env, ["from-brain", str(bpath)])
-            self.assertTrue(env.default_config.exists())
+            self.assertTrue(env.registry_file.exists())
+            self.assertFalse(env.legacy_node_config.exists())
             cfg, source = load_config(env)
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "config")
             self.assertIn("brain", [p["id"] for p in cfg["projects"]])
+            # the node settings went to the [maind] table of the machine config, not the registry
+            self.assertEqual(cfg["node"]["id"], "hub")
+            self.assertEqual(cfg["integrations"]["brain"]["path"], str(bpath))
+            self.assertNotIn("node", json.loads(env.registry_file.read_text(encoding="utf-8")))
             # derive → federation: index collected (and not a single one legacy graph.db)
             self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
 

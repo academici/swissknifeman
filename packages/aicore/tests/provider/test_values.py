@@ -57,6 +57,12 @@ class TestProviderDomain(unittest.TestCase):
         with self.assertRaises(ValueError):
             ProviderDiagnostic(DiagnosticSeverity.INFO, "", "/", self.source)
 
+    def test_project_layer_config_file_is_an_accepted_carrier(self):
+        source = ConfigSource("project", "project:demo", ".swissknifeman/config.toml", "/aicore/providers")
+        self.assertEqual(source.carrier, ".swissknifeman/config.toml")
+        with self.assertRaises(ValueError):
+            ConfigSource("project", "project:demo", ".swissknifeman/other.toml", "/aicore/providers")
+
     def test_exports_match_the_approved_public_surface(self):
         expected = {
             "ProviderId", "SupportLevel", "DiagnosticSeverity", "CapabilityId",

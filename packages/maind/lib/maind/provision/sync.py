@@ -177,7 +177,7 @@ def _mcp_run(env, config, projects, mode, dry):
     """MCP-hub servers (agent-memory + maind [+ code graph/Serena]) in project configs."""
     from .deploy import deploy_project, mark_deployed, provider_operation_green
     from ..mcp_parity import repair_settings_duplicates
-    from ..projects import write_config
+    from ..projects import write_registry
     results, applied = [], False
     for context in projects:
         p = context.project if isinstance(context, ProjectContext) else context
@@ -211,7 +211,7 @@ def _mcp_run(env, config, projects, mode, dry):
                                changed=changed, detail=detail, provider_aggregate=aggregate,
                                bootstrap_transfer=res.get("bootstrap_transfer")))
     if applied:
-        write_config(env, config)
+        write_registry(env, config)
     return results
 
 
@@ -996,7 +996,7 @@ def generate_instruction_conformance(env, output_path):
         onboard_config["projects"].append({"id": "swissknifeman", "name": "Swissknifeman",
                                             "enabled": True, "local_path": str(
                                                 Path(__file__).resolve().parents[5])})
-        atomic_write_json(isolated_env.default_config, onboard_config)
+        atomic_write_json(isolated_env.legacy_node_config, onboard_config)
         worktree_root = Path(__file__).resolve().parents[5]
         sibling_bins = {
             "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",

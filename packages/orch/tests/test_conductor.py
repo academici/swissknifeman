@@ -326,6 +326,18 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(item["status"], "done")
         self.assertTrue(any("not reviewed again" in i["text"] for i in item["report"]["open_issues"]))
 
+    def test_the_audit_after_a_correction_is_scoped_to_the_corrected_findings(self):
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [FINDING, GREEN], "triager": [triage]})
+        self.assertEqual(self.run_items("W1")[0], 0)
+        self.assertNotIn("Scope of this round", self.prompt("reviewer", 1))
+        second = self.prompt("reviewer", 2)
+        self.assertIn("Scope of this round", second)
+        self.assertIn("F1 (Major, out/W1.txt:1)", second)
+        self.assertIn("correction asked: write done", second)
+
     def test_a_confirmed_minor_finding_is_deferred_to_the_plan_without_a_correction(self):
         minor = {"result": {"verdict": "ATTENTION", "findings": [dict(FINDING["result"]["findings"][0], severity="Minor")]}}
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,

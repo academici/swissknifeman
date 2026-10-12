@@ -154,14 +154,23 @@ lower findings and do not report them. If there is no such finding, the verdict 
 """
 
 
+def _corrected_scope(corrected) -> str:
+    lines = [f"- {item.get('id')} ({item.get('severity', '-')}, {item.get('location', '-')}): "
+             f"{item.get('failure_scenario', '')[:300]} — correction asked: {item.get('fix', '')[:300]}" for item in corrected]
+    return ("## Scope of this round\n\nThe whole change was reviewed in the previous round. Do not audit it again. Check, in this "
+            "order: (1) each defect below is really fixed (read the files at the given locations); (2) the correction "
+            "introduced no new defect of the severity floor in the lines it touched.\n\n" + "\n".join(lines))
+
+
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
              roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
-             checks_pending: bool = False) -> str:
+             checks_pending: bool = False, corrected=()) -> str:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
     parts = [_head("reviewer", input_doc, roles_dir, list(skills)),
              f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the candidate is the working tree "
              "(uncommitted changes, untracked files included). Read files as you need; do not change anything.",
              *([_PRE_FINAL.format(floor=min_severity)] if pre_final else []),
+             *([_corrected_scope(corrected)] if corrected else []),
              ("Acceptance checks run by the conductor on this candidate:\n\n" + summary) if not checks_pending else
              "The conductor runs the acceptance checks on this candidate at the same time; their result is not known yet "
              "and is not your concern: review the candidate itself.",

@@ -837,13 +837,24 @@ class Conductor:
         triage = (item.policy.get("review") or {}).get("triage") or {}
         return triage.get("role") or "triager"
 
+    @staticmethod
+    def _corrected(item: Item, previous: int) -> list:
+        """The confirmed findings of review round ``previous`` that the correction after it had to fix."""
+        steps = item.state.get("steps", {})
+        findings = ((steps.get(f"review.{previous}") or {}).get("result") or {}).get("findings") or {}
+        triage = ((steps.get(f"triage.{previous}") or {}).get("result") or {}).get("triage") or {}
+        by_id = {found.get("id"): found for found in findings.get("findings", [])}
+        return [dict(by_id.get(entry["finding"], {}), id=entry["finding"], fix=entry.get("fix", ""))
+                for entry in triage.get("confirmed", [])]
+
     def _review(self, item: Item, number: int, rows: list, pending: bool = False) -> dict:
         route = item.routes["reviewer"]
         key = f"review.{number}"
 
         def run() -> dict:
             base = item.state["steps"]["brief"]["result"]["base"]
-            prompt = prompts.reviewer(item.input_doc, item=item.ref, step=key, base=base,
+            corrected = self._corrected(item, number - 1) if number > 1 and item.options["review"]["audit_scope"] == "corrected" else []
+            prompt = prompts.reviewer(item.input_doc, item=item.ref, step=key, base=base, corrected=corrected,
                                       diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
                                       pre_final=number > 1 and item.options["review"]["pre_final"],
                                       min_severity=item.options["review"]["correct_min_severity"],

@@ -82,6 +82,11 @@
           "type": "string",
           "enum": ["Blocker", "Major", "Minor", "Nit"]
         },
+        "audit_scope": {
+          "description": "What a review round after a correction reads: `corrected` (default) only the confirmed findings of the previous round and the lines their correction touched; `full` the whole change again.",
+          "type": "string",
+          "enum": ["corrected", "full"]
+        },
         "final_correction": {
           "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan says so) instead of blocking with REVIEW_LIMIT. Default false.",
           "type": "boolean"

@@ -9,7 +9,7 @@ Models are used only for the narrow roles: context scout, executor, reviewer, tr
 ```text
 conduct.py [--config FILE] run --plan P (--items REF… | --batch [--max-items N]) [--plans-root DIR]
            [--options FILE] [--dry-run [--scenario S]] [--quiet | --json-lines] [--model-catalog FILE]
-conduct.py [--config FILE] resume --run RUN [--quiet | --json-lines]
+conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
 conduct.py status [--run RUN] [--json]
 conduct.py observe [--run RUN] [--follow]
 ```
@@ -73,7 +73,7 @@ run goes on; a blocked piece with changes stops the run, because its partial wor
 
 ### Resume
 
-`resume --run RUN` runs the same loop again. A closed step returns its recorded result and prints `stage.skip`; a
+`resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`): the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; every earlier step and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. A closed step returns its recorded result and prints `stage.skip`; a
 piece that closed (done or blocked) is not claimed again; a piece that stopped half-way continues on its own working
 tree. The configuration of the run is read again, so a fixed provider or a corrected `[orch.conductor.argv]` takes
 effect.

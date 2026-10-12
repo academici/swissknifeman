@@ -179,7 +179,7 @@ class Conductor:
                                                                      f"batch, at most {max_items or 'all'}"))
         return self._loop()
 
-    def resume(self, run_id: str) -> int:
+    def resume(self, run_id: str, retry=()) -> int:
         directory = runs_root(self.project) / run_id
         run_doc, state = read_json(directory / RUN_FILE), read_json(directory / STATE_FILE)
         if run_doc is None or state is None:
@@ -187,11 +187,35 @@ class Conductor:
         if run_doc.get("config_file") and not self.config_file:
             self.config_file = Path(run_doc["config_file"])
         self._open(run_id, run_doc, state)
+        for ref in retry:
+            self._retry(ref)
         state["status"] = "running"
         state["resumes"] = state.get("resumes", 0) + 1
         self._save()
         self.progress.emit("run.resume", message=f"resume {state['resumes']}")
         return self._loop()
+
+    def _retry(self, ref: str) -> None:
+        """Take a blocked piece back into the run: the steps from the executor round that reported ``blocked`` on (and the
+        closing steps after it) are repeated, everything before them is kept — the work in the tree is not thrown away."""
+        item = self.state["items"].get(ref)
+        if not item or item.get("outcome") != "blocked":
+            raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
+        steps = item.get("steps", {})
+        # the state file is sorted by key, so the order of the steps is the order of their ``ended`` stamps
+        blocked = min((key for key in steps if key.startswith("executor.") and
+                       (((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked")),
+                      key=lambda key: steps[key].get("ended", ""), default=None)
+        if blocked is None:
+            raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round that reported blocked")
+        since = steps[blocked].get("ended", "")
+        for key in [key for key in steps if key == blocked or key in ("close", "register", "commit")
+                    or steps[key].get("ended", "") > since]:
+            steps.pop(key)
+        for key in ("outcome", "stop", "partial"):
+            item.pop(key, None)
+        self._save()
+        self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated")
 
     # ------------------------------------------------------------------ the loop over pieces of work
 
@@ -372,6 +396,13 @@ class Conductor:
                 self._defer_minor(item, findings, minor)
                 if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                     break
+                if review_round in state.get("combined_done", []):  # corrected together with the red checks
+                    if review_round >= limits["review_rounds"]:
+                        self._defer_note(item, f"findings of review round {review_round} were corrected together with the "
+                                               "red checks; the correction was not reviewed again")
+                        break
+                    review_round += 1
+                    continue
                 triage = dict(triage, confirmed=major)
                 at_limit = review_round >= limits["review_rounds"]
                 final = at_limit and item.options["review"]["final_correction"]  # correct, but audit no more
@@ -418,7 +449,15 @@ class Conductor:
                 state["check_fixes_at"].append(round_no)
             state["check_fixes_used"] = len(state["check_fixes_at"])
             round_no += 1
-            report = self._execute(item, round_no, scout_text, prompts.check_correction(red))
+            text, combined = prompts.check_correction(red), state.get("combined")
+            if combined:  # the finished review's confirmed findings are corrected in the same round
+                text += "\n\n" + combined["text"]
+                if combined["review"] not in state.setdefault("combined_done", []):
+                    state["combined_done"].append(combined["review"])
+                if combined["review"] not in state["corrections_at"]:
+                    state["corrections_at"].append(combined["review"])
+                state["corrections_used"] = len(state["corrections_at"])
+            report = self._execute(item, round_no, scout_text, text)
             if report["status"] == "blocked":
                 return rows, report, round_no
             rows = (self._checks_then_review(item, report, round_no, review_no) if review_no is not None
@@ -832,10 +871,28 @@ class Conductor:
                 computed.exception()  # wait for the checks before the pool closes, whatever the review did
         rows = self._run_checks(item, checks_no, report, computed=computed)
         if not all(row["green"] for row in rows):
-            steps.pop(f"review.{review_no}", None)
-            self.progress.emit("info", item=item.ref, message="the checks are red: the parallel review is dropped "
-                                                               "and repeated after the correction")
+            if steps.get(f"review.{review_no}", {}).get("status") == "done":
+                self._carry_review(item, review_no)
+            else:
+                steps.pop(f"review.{review_no}", None)
+                self.progress.emit("info", item=item.ref, message="the checks are red: the parallel review is dropped "
+                                                                   "and repeated after the correction")
         return rows
+
+    def _carry_review(self, item: Item, review_no: int) -> None:
+        """The review finished before the red checks: keep it. Its confirmed findings at the floor go into the same
+        correction as the red checks (one executor round, not two), and the next audit is the pre-final one."""
+        findings = item.state["steps"][f"review.{review_no}"]["result"]["findings"]
+        major = []
+        if findings["findings"]:
+            triage = self._triage(item, review_no, findings)
+            major, minor = self._split_confirmed(item, findings, triage)
+            self._defer_minor(item, findings, minor)
+            if major:
+                item.state["combined"] = {"review": review_no,
+                                          "text": prompts.review_correction(findings, dict(triage, confirmed=major))}
+        self.progress.emit("info", item=item.ref, message=f"the checks are red but review {review_no} is done: its "
+                                                          f"{len(major)} finding(s) to correct go into the same correction")
 
     def _review_enabled(self, item: Item) -> bool:
         review = item.policy.get("review") or {}

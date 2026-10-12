@@ -291,9 +291,28 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(len(cancelled), 1, err)
         self.assertEqual(self.calls("reviewer"), 2)
 
+    def test_a_finished_review_is_kept_when_slow_checks_turn_red(self):
+        slow = {"id": "V1", "cmd": "sleep 2; test -f out/W1.txt", "expect": "exit 0", "kind": "acceptance"}
+        self.set_items({"W1": {"checks": [slow], "options": [{"source": "item:W1", "options": {
+            "checks": {"parallel": 1, "overlap_review": True}}}]}})
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
+        fixed = {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}
+        self.script({"executor": [{"result": report("W1")}, fixed], "reviewer": [FINDING, GREEN], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        # one correction round for the red check AND the finding; the review is not repeated, only the pre-final audit runs
+        self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (2, 2, 1))
+        correction = self.prompt("executor", 2)
+        self.assertIn("These acceptance checks are red", correction)
+        self.assertIn("write done", correction)
+        self.assertIn("Pre-final audit", self.prompt("reviewer", 2))
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
     def test_red_checks_drop_the_overlapping_review_and_repeat_it_after_the_correction(self):
         self.overlapping()
-        self.script({"executor": [{"result": report("W1")}, executor_ok("W1")], "reviewer": [GREEN, GREEN]})
+        self.script({"executor": [{"result": report("W1")}, executor_ok("W1")],
+                     "reviewer": [dict(GREEN, sleep=5), GREEN]})  # slow: the red check cancels it before it finishes
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 2))
@@ -493,6 +512,24 @@ class StopTests(ConductorCase):
         verdict = [line for line in self.lines(err) if line.get("stage") == "register" and line["event"] == "stage.end"]
         self.assertTrue(verdict[0]["verdict"].startswith("no-op"), verdict)
         self.assertEqual([commit["ref"] for commit in self.source()["commits"]], ["W1"])
+
+    def test_a_blocked_piece_can_be_retried_from_its_blocked_round(self):
+        blocked = report("W1", "blocked", open_issues=[{"text": "needs a path outside the write set", "kind": "escalation"}])
+        self.script({"executor": [{"result": blocked}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        doc = self.source()
+        doc["items"]["W1"]["status"] = "todo"  # the source reopened it
+        self.state_file.write_text(json.dumps(doc), encoding="utf-8")
+        code, _, err = self.conduct("resume", "--run", self.run_dir(err).name, "--retry", "W1", "--json-lines")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        skipped = [line["stage"] for line in self.lines(err) if line["event"] == "stage.skip"]
+        self.assertIn("scout", skipped)
+        started = [line["stage"] for line in self.lines(err) if line["event"] == "stage.start"]
+        self.assertNotIn("scout", started)  # only the blocked round and what follows is repeated
+        self.assertIn("executor.1", started)
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_a_resume_does_not_count_the_closed_correction_rounds_again(self):
         repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}

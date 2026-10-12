@@ -69,6 +69,9 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     resume = verbs.add_parser("resume", help="continue a stopped run; closed steps are not repeated")
     resume.add_argument("--run", required=True, metavar="RUN")
+    resume.add_argument("--retry", nargs="+", default=[], metavar="ITEM",
+                        help="also continue these blocked pieces: their steps from the blocked executor round on are "
+                             "repeated (the source must have reopened them); finished steps are kept")
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     for sub in (run, resume):
         quiet = sub.add_mutually_exclusive_group()
@@ -139,7 +142,7 @@ def main(argv: list | None = None) -> int:
         if args.verb == "run":
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.batch, max_items=args.max_items, options_file=args.options)
-        return conductor.resume(args.run)
+        return conductor.resume(args.run, retry=args.retry)
     except engine.Stop as stop:
         print(f"{stop.code}: {stop.message}", file=sys.stderr)
         return 1

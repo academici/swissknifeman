@@ -376,6 +376,10 @@ class Conductor:
                 rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
+                if not self._needs_rereview(findings, triage):
+                    self.progress.emit("info", item=item.ref, message="only minor findings were corrected; "
+                                                                       "no further review round")
+                    break
                 review_round += 1
         return self._finish(item, report, rows)
 
@@ -395,6 +399,14 @@ class Conductor:
                 return rows, report, round_no
             rows = self._run_checks(item, round_no, report)
         return rows, report, round_no
+
+    @staticmethod
+    def _needs_rereview(findings: dict, triage: dict) -> bool:
+        """A corrected round is reviewed again only when a confirmed finding was more than minor."""
+        confirmed = {entry["finding"] for entry in triage["confirmed"]}
+        minor = ("minor", "nit", "info", "low")
+        return any(str(found.get("severity", "")).lower() not in minor
+                   for found in findings["findings"] if found.get("id") in confirmed)
 
     @staticmethod
     def _blocked(report: dict, code: str, text: str) -> dict:

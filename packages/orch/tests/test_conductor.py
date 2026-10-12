@@ -255,6 +255,18 @@ class CorrectionTests(ConductorCase):
         self.assertIn("triage_reproduction", verdict["rounds"][0]["findings"][0])
         self.assertEqual((self.project / "out/W1.txt").read_text(), "done\n")
 
+    def test_a_corrected_minor_finding_is_not_reviewed_again(self):
+        minor = {"result": {"verdict": "ATTENTION", "findings": [dict(FINDING["result"]["findings"][0], severity="Minor")]}}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "write done"}],
+                             "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [minor], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (2, 1, 1))
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
     def test_finding_that_does_not_reproduce_is_rejected_without_a_correction(self):
         triage = {"result": {"confirmed": [], "rejected": [{"finding": "F1", "reason": "the file is as specified",
                                                             "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,

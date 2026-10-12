@@ -6,6 +6,7 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 ## [Unreleased]
 
 ### Added
+- **maind:** the MCP server negotiates the protocol version: `initialize` returns the requested version when it is in `SUPPORTED_PROTOCOL_VERSIONS` (`2025-06-18`, `2024-11-05`), otherwise the newest supported one (it used to echo the client's version). `maind mcp tools [--json]` prints the tool list and its `tools_digest` (contract `mcp-tools/v1`). An optional conformance test runs the server against the official MCP Python SDK (`packages/maind/requirements-dev.txt`, skipped without it; the runtime never imports the SDK).
 - **Hook modes through harness:** the memory and agent-router modes of a project are read from `harness hooks show --json`
   (`settings.hooks.<hook>`), then from the committed `.swissknifeman/hooks.env`, then from the legacy `.claude/*.env.ini` (the last two
   are read directly when harness is missing). `maind onboard` sets the memory mode with `harness hooks --memory <mode>` and no longer

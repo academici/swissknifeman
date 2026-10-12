@@ -4,6 +4,7 @@
 
 ### Added
 
+- **maind:** the MCP server negotiates the protocol version: `initialize` returns the requested version when it is in `SUPPORTED_PROTOCOL_VERSIONS` (`2025-06-18`, `2024-11-05`), otherwise the newest supported one (it used to echo the client's version). `maind mcp tools [--json]` prints the tool list and its `tools_digest` (contract `mcp-tools/v1`). An optional conformance test runs the server against the official MCP Python SDK (`packages/maind/requirements-dev.txt`, skipped without it; the runtime never imports the SDK).
 - **harness, aicore, maind:** hook modes live in the project configuration. harness gets a config schema (`[harness.hooks.<hook>]`
   with `providers.<id>` overrides, allowed in the machine layer as user defaults and in the project layer, and `policy_profile`
   under `[harness]`; `harness hooks sync` renders only the keys set in the project file; `config.example.toml` is generated) and

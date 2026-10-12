@@ -41,6 +41,21 @@ def call(env, config, name, arguments=None, req_id=1):
         "params": {"name": name, "arguments": arguments or {}}})
 
 
+class TestToolsContract(unittest.TestCase):
+    def test_tools_json_matches_mcp_tools_schema(self):
+        from aicore.util.schema import load_contract, validate
+        schemas = Path(__file__).resolve().parents[1] / "schemas"
+        foundation = Path(aicore.__file__).resolve().parents[2] / "schemas"
+        registry, kind = load_contract(schemas / "mcp-tools" / "v1",
+                                       urn_prefix="urn:swissknifeman:maind:", foundation=foundation)
+        import contextlib
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            mcp.cmd_mcp(None, ["tools", "--json"])
+        doc = json.loads(out.getvalue())
+        self.assertEqual(validate(doc, kind, registry), [])
+        self.assertTrue(validate({"tools": []}, kind, registry))
+
+
 class TestDispatch(unittest.TestCase):
     def test_initialize(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -67,12 +82,47 @@ class TestDispatch(unittest.TestCase):
             self.assertLessEqual(len(tool["description"].encode("utf-8")), 2048,
                                  f"{tool['name']}: description exceeds 2048 bytes")
 
-    def test_protocol_version_echo(self):
+    def _init_version(self, params):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            r = mcp.dispatch(env, cfg(), {"jsonrpc": "2.0", "id": 1, "method": "initialize",
-                                          "params": {"protocolVersion": "2025-03-26"}})
-            self.assertEqual(r["result"]["protocolVersion"], "2025-03-26")
+            req = {"jsonrpc": "2.0", "id": 1, "method": "initialize"}
+            if params is not None:
+                req["params"] = params
+            return mcp.dispatch(env, cfg(), req)["result"]["protocolVersion"]
+
+    def test_supported_version_is_returned(self):
+        self.assertEqual(mcp.PROTOCOL_VERSION, mcp.SUPPORTED_PROTOCOL_VERSIONS[0])
+        for version in mcp.SUPPORTED_PROTOCOL_VERSIONS:
+            self.assertEqual(self._init_version({"protocolVersion": version}), version)
+
+    def test_unsupported_version_gets_server_version(self):
+        for version in ("1999-01-01", "2025-03-26"):
+            self.assertEqual(self._init_version({"protocolVersion": version}),
+                             mcp.PROTOCOL_VERSION)
+
+    def test_missing_version_gets_server_version(self):
+        self.assertEqual(self._init_version(None), mcp.PROTOCOL_VERSION)
+        self.assertEqual(self._init_version({}), mcp.PROTOCOL_VERSION)
+
+    def test_tools_digest_stable_and_sensitive(self):
+        digest = mcp.tools_digest()
+        self.assertRegex(digest, r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual(digest, mcp.tools_digest())
+        changed = [dict(t) for t in mcp.TOOLS]
+        changed[0]["description"] += " changed"
+        self.assertNotEqual(digest, mcp.tools_digest(changed))
+
+    def test_mcp_tools_command(self):
+        import contextlib
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            mcp.cmd_mcp(None, ["tools", "--json"])
+        data = json.loads(out.getvalue())
+        self.assertEqual(data["tools_digest"], mcp.tools_digest())
+        self.assertEqual([t["name"] for t in data["tools"]], [t["name"] for t in mcp.TOOLS])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            mcp.cmd_mcp(None, ["tools"])
+        self.assertIn(mcp.tools_digest(), out.getvalue())
+        self.assertIn(mcp.TOOLS[0]["name"], out.getvalue())
 
     def test_initialized_no_response(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -521,7 +571,7 @@ class TestConformance(unittest.TestCase):
                 env={**os.environ, "PYTHONPATH": os.pathsep.join(pp)})
             msgs = [
                 {"jsonrpc": "2.0", "id": 1, "method": "initialize",
-                 "params": {"protocolVersion": "2025-03-26"}},
+                 "params": {"protocolVersion": "2024-11-05"}},
                 {"jsonrpc": "2.0", "method": "notifications/initialized"},
                 {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
                 {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
@@ -540,7 +590,7 @@ class TestConformance(unittest.TestCase):
                     if "id" in m:
                         by_id[m["id"]] = m
             self.assertEqual(by_id[1]["result"]["serverInfo"]["name"], "maind")
-            self.assertEqual(by_id[1]["result"]["protocolVersion"], "2025-03-26")
+            self.assertEqual(by_id[1]["result"]["protocolVersion"], "2024-11-05")
             self.assertEqual(len(by_id[2]["result"]["tools"]), 11)
             self.assertIsInstance(json.loads(by_id[3]["result"]["content"][0]["text"]), list)
             self.assertIn(4, by_id)                              # ping replied

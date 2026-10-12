@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.10",
   "title": "MCP-сервер maind: поддерживаемые версии и согласование, tools_digest и maind mcp tools, conformance с официальным SDK как необязательной dev-зависимостью (R31)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "mcp.py: SUPPORTED_PROTOCOL_VERSIONS и согласование в initialize (неподдерживаемая версия → версия сервера); tools_digest по канону aicore и команда maind mcp tools [--json]; conformance-тест с официальным Python SDK (пропуск без него, пин в requirements-dev.txt); рантайм SDK не импортирует.",
   "why": "D75, R31 (АДАПТИРОВАН, фаза P11): сейчас initialize возвращает версию клиента без сверки. Риски: (1) объявить ревизию, чьё обязательное поведение сервер не выполняет (batch в 2025-03-26) — список по умолчанию консервативный, расширение только после проверки changelog по первоисточнику; (2) conformance не должен требовать pip в рантайме и живого демона памяти.",
   "scope": {
@@ -91,6 +91,24 @@
     {
       "path": "packages/maind/CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/maind/docs/guide/mcp.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/schemas/mcp-tools/v1/mcp-tools.schema.json",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/b55e44f9b452ca6cdea3ffdbff1bd7025c61349eb574b042e6effba86fd9949d",
+      "role": "input"
     }
   ],
   "rules": [
@@ -143,6 +161,49 @@
     "status": "pending",
     "notes": "changelog ревизий MCP после 2024-11-05: обязательное поведение stdio-сервера с одними tools"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:21:58Z"
+  "result": {
+    "started_at": "2026-10-12T19:52:11Z",
+    "finished_at": "2026-10-12T20:11:51Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-d215902060150eb0202d940c-P11.10",
+    "notes": "mcp.py: SUPPORTED_PROTOCOL_VERSIONS=(2025-06-18, 2024-11-05), PROTOCOL_VERSION=[0]; initialize returns requested version if supported else server's; capabilities tools.listChanged=false; tools_digest() via aicore canonical_json_bytes+sha256_tagged; `maind mcp tools [--json]`. New contract mcp-tools/v1 (schema + unit.json provides.contracts + test). tests/test_mcp.py updated (echo tests replaced with supported/unsupported/missing/digest/command/schema tests). tests/test_mcp_conformance.py (official SDK client over bin/maind mcp, tmp HOME, skips without SDK) and requirements-dev.txt (mcp==1.30.0). docs/guide/mcp.md and both CHANGELOGs updated. Targeted runs: python3 -m unittest tests.test_mcp (47 OK) and conformance module (skipped, SDK absent); ecosystem-units check, render --check, public-hygiene exit 0; grep for SDK import in maind/lib empty. 2025-06-18 changelog checked at modelcontextprotocol.io/specification/2025-06-18/changelog.\nChanged: packages/maind/lib/maind/mcp.py, packages/maind/tests/test_mcp.py, packages/maind/tests/test_mcp_conformance.py, packages/maind/requirements-dev.txt, packages/maind/schemas/mcp-tools/v1/mcp-tools.schema.json, packages/maind/unit.json, packages/maind/docs/guide/mcp.md, packages/maind/CHANGELOG.md, CHANGELOG.md",
+    "deviations": [
+      "SDK pin is mcp==1.30.0 (latest 1.x, 2026-09-07), not the newest PyPI release 2.3.0 (2026-10-02): the 2.x API could not be checked and I used the known 1.x client API. mcp requires Python >=3.10 while maind is 3.9, so the dependency is dev-only and noted in the file.",
+      "Added contract schema packages/maind/schemas/mcp-tools/v1 and a unit.json provides.contracts entry (rule 11 for the new --json output); not named in the item's include list but inside write_set. The `aicore schema compat` check was not run."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T20:11:51Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.10/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T20:11:51Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.10/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T20:11:51Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.10/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.10/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.10/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.10/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-12T20:11:51Z"
 }

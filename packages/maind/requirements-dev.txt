@@ -1,0 +1,4 @@
+# Optional development dependency: used only by tests/test_mcp_conformance.py, which skips
+# without it. The maind runtime never imports the SDK (stdlib-only server).
+# Needs Python >= 3.10, unlike maind itself (3.9).
+mcp==1.30.0

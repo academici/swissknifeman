@@ -41,6 +41,19 @@ class Env(BaseEnv):
     def agents_db(self):
         return self.state_dir / "agents.json"
 
+    @property
+    def topology_file(self):
+        """Machine topology map: ``<state>/maind/topology.json``. The legacy
+        ``~/.swissknifeman/topology.json`` is used, with one warning, until the new file exists
+        (file by file: that directory also holds other modules' files). While the maind state
+        is still the legacy ``~/.maind``, a new map is kept there: creating ``<state>/maind``
+        would silently switch the active state dir away from the fleet registry."""
+        new = _state_dir("maind", home=self.home) / "topology.json"
+        legacy = self.home / ".swissknifeman" / "topology.json"
+        if not new.exists() and not legacy.exists() and self.state_dir != new.parent:
+            return self.state_dir / "topology.json"
+        return resolve_with_legacy(new, [legacy], home=self.home)
+
     # ── runtime-node data (aicore.state; legacy <module>/data) ───────────────
     @property
     def data_dir(self):

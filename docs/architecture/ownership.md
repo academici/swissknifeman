@@ -32,7 +32,4 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | `packages/harness/lib/harness/cursor_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
 | `packages/harness/lib/harness/grok_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
 | `packages/harness/lib/harness/provider_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
-| `packages/skiller/lib/skiller/listing.py` | skiller | maind | - | P11 | fixed | - |
-| `packages/skiller/lib/skiller/state.py` | skiller | maind | - | P11 | fixed | - |
-| `packages/skiller/lib/skiller/topology.py` | skiller | maind | - | P11 | fixed | - |
 | `scripts/ecosystem-units.py` | scripts (hub root) | aicore | unit | P12 | hypothesis | becomes the aicore unit check |

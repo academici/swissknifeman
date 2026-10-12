@@ -29,7 +29,7 @@ Walk linked projects to find what's duplicated/diverging across repos and propos
 
 ## Principles
 
-- **Discovery.** Nodes and projects from topology (see `local-topology`): `~/.swissknifeman/topology.json` (`projects_base`/`brain`/`swissknifeman`) + `~/.swissknifeman/projects.json`. Brain gives doc-level links.
+- **Discovery.** Nodes and projects from topology (see `local-topology`): `maind topology show --json` (`projects_base`/`brain`/`swissknifeman`) + `skiller list --json`. Brain gives doc-level links.
 - **Exclusions & `.gitignore`.** List only git-tracked files — `git -C <proj> ls-files` respects `.gitignore`/`.git/info/exclude`/global ignore by construction; never read vendor/generated. Non-git tree → base hardcoded exclusion list. Never read secrets (`.env*`, `*.pem`, `*.key`, `**/secrets/**`). Details in `agents/code-coordinator.md`.
 - **Criteria (seven types):** dup · divergence · drift (from registry) · copy-vs-dep · convention · docs · dep-skew. Don't reinvent single-repo criteria — take from `quality/`: `tech-debt-audit` (git-churn, impact×effort, ≤30%-of-capacity-on-debt rule), `code-review` (P0–P3), `code-simplifier` (dups/abstractions), `refactoring-plan` (Strangler Fig / Branch by Abstraction for extraction).
 - **Discipline.** Evidence (`file:line` in each project, fragments adjacent); named extraction target; impact×effort priority and cap (~10 findings); no silent truncation.
@@ -66,7 +66,7 @@ Prioritized report: findings (type, `file:line` per project, unification, impact
 ## Links
 
 - `agents/code-coordinator.md` — read-only cross-project analysis agent (Claude Code plugin channel only).
-- `local-topology` (system bucket) — resolves nodes and projects via `~/.swissknifeman/topology.json`.
+- `local-topology` (system bucket) — resolves nodes and projects via `maind topology show --json`.
 - `quality/tech-debt-audit`, `quality/refactoring-plan`, `quality/code-simplifier`, `quality/code-review` — criteria and extraction strategies.
 - `laravel-architecture/laravel-subagents` — pattern of dispatching concerns to Explore subagents (return findings, not file bodies).
 - `shared-memory` (system bucket) — where to record cross-project findings (dups, divergence, shared-package candidates) so other projects in the group see them.

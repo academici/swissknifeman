@@ -23,7 +23,7 @@ from .release_attestation import cmd_attest, cmd_version
 from .delivery import cmd_deliver
 from .skillset import cmd_init, cmd_sync
 from .status import cmd_status
-from .topology import cmd_topology
+from .topology_alias import cmd_topology
 from .update import cmd_update
 from .vendor import cmd_vendor
 

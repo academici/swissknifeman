@@ -5,14 +5,13 @@ import subprocess
 import sys
 from dataclasses import dataclass
 
-from aicore.util.env import HOME, BaseEnv
-from aicore.util.paths import state_dir
+from aicore.util.env import BaseEnv
+from aicore.state import resolve_with_legacy
+from aicore.state import state_dir as _state_dir
 from aicore.util.term import warn
 
 from .host import host_command, load_host
 
-STATE_DIR = state_dir(HOME)
-DB_FILE = STATE_DIR / "projects.json"
 DB_VERSION = 1
 # CONFIG_KEYS lives HERE named (it is taken by both gates synchronous with the circuit -
 # doctor.py and tests/test_schema.py — and documentation), but the value is from 2026-08-02
@@ -36,19 +35,21 @@ HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 @dataclass(frozen=True)
 class Env(BaseEnv):
     """Launch context swissknifeman: core (root/cmd/home) — from BaseEnv;
-    here only path-property registry (state ~/.swissknifeman)."""
+    here only path-property registry (state in the aicore.state place)."""
 
     @property
     def state_dir(self):
-        return state_dir(self.home)
+        """``<state>/skiller`` (the connected-projects registry)."""
+        return _state_dir("skiller", home=self.home)
 
     @property
     def db_file(self):
-        return self.state_dir / "projects.json"
-
-    @property
-    def topology_file(self):
-        return self.state_dir / "topology.json"
+        """Connected-projects registry ``<state>/skiller/projects.json``. The legacy
+        ``~/.swissknifeman/projects.json`` is used, with one warning, until the new file
+        exists (file by file: that directory also holds other modules' files)."""
+        return resolve_with_legacy(self.state_dir / "projects.json",
+                                   [self.home / ".swissknifeman" / "projects.json"],
+                                   home=self.home)
 
 
 def host_command_text(env, name, *args):

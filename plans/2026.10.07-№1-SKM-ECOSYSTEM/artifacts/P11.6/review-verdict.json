@@ -1,0 +1,100 @@
+{
+  "item": "P11.6",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "A machine whose maind state is still ~/.maind (agents.json, memory-backups/, and, when that file was the active fleet source, registry.json) has no <state>/maind directory and no ~/.swissknifeman/topology.json. maind topology init (or the skiller topology alias) calls save_topology, which mkdir's the parent of <state>/maind/topology.json. Env.state_dir then resolves to that new directory because it exists. The next maind process reads <state>/maind/agents.json and <state>/maind/registry.json, which were never written, so maind agents shows an empty registry and a fleet that lived only in ~/.maind/registry.json disappears. The files remain under ~/.maind. No warning is printed on the switch. Phase rule 5 forbids a silent move: the legacy directory stays active until the new place already exists.",
+          "id": "F1",
+          "location": "packages/maind/lib/maind/topology.py:57",
+          "reproduction": "In a temporary HOME with SKM_HOME unset, resolve_with_legacy(state_dir('maind'), [~/.maind]) returned ~/.maind while registry.json and agents.json were files there. After Path(state_dir('maind')/'topology.json').parent.mkdir, the same call returned <state>/maind. Those two files were not present in the new directory and were still present under ~/.maind.",
+          "severity": "Blocker",
+          "triage_reproduction": {
+            "cmd": "HOME=$T/h (with ~/.maind/{registry,agents}.json, SKM_HOME unset) python3: Env(...).state_dir; topology.save_topology(env, {...}); Env(...).state_dir; registry_file.exists()",
+            "exit": 0,
+            "observed": "before: ~/.maind; after save_topology: ~/.local/state/swissknifeman/maind; registry_file.exists() False while ~/.maind/registry.json still exists, so the fleet registry silently disappears from the active state dir"
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A stage report whose checks_run is [{\"id\": \"unit-tests\", \"cmd\": \"bash test.sh\", \"exit\": 0}] used to fail as ROLE_OUTPUT_INVALID. heal_report now strips that row, appends a note to open_issues, and the conductor accepts the report. The same diff edits packages/orch/lib/orch/conductor/prompts.py, packages/orch/tests/test_conductor.py, and docs/orch-p11-run-findings.md. Those paths are outside the P11.6 write set, and the plan log records no deviation.",
+          "id": "F2",
+          "location": "packages/orch/lib/orch/conductor/engine.py:654",
+          "reproduction": "Read of the diff: Conductor calls heal_report before contract.problems for kind stage-report (engine.py:654). test_a_checks_run_entry_with_a_foreign_id_does_not_fail_the_report expects exit 0. Not executed.",
+          "severity": "Major"
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a1303f-8228-7fc1-a7f6-8bda8a7ec9f2",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261012T114141Z-703c13/P11.6/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1"
+        ],
+        "rejected": [
+          {
+            "finding": "F2",
+            "reason": "The orch change is not part of the P11.6 candidate working tree. packages/orch, docs/orch-p11-run-findings.md are unmodified in git status. The heal_report edit sits in HEAD commit a09be843, merged from the orch-checks branch on top of base 550152a8 and already in history. The item did not make it, so it is not a defect of this candidate and needs no deviation entry."
+          }
+        ],
+        "session": "05959757-53b4-4672-8534-5a87074cab7b"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A home with neither <state>/skiller/projects.json nor ~/.swissknifeman/projects.json runs packages/skiller/install.sh. Lines 95–97 mkdir ~/.swissknifeman and write an empty projects.json there. Env.db_file then calls resolve_with_legacy, sees that legacy file, and keeps it as the write target. skiller connect stores the project only in ~/.swissknifeman/projects.json; <state>/skiller/projects.json is never created. The registry the contract places in aicore.state stays unused for every install that seeds the old file.",
+          "id": "F1",
+          "location": "packages/skiller/install.sh:96",
+          "reproduction": "Not executed. Read install.sh:95–97 and common.py:46–52 against aicore.state.resolve_with_legacy (legacy exists and the new file does not → return the legacy path).",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "T=$(mktemp -d); mkdir -p $T/.swissknifeman; printf '{\"version\":1,\"projects\":[]}' > $T/.swissknifeman/projects.json; HOME=$T PYTHONPATH=packages/aicore/lib:packages/skiller/lib python3 -c \"import pathlib; from skiller.common import Env; print(Env(root=pathlib.Path('packages/skiller'),home=pathlib.Path('$T')).db_file)\"",
+            "exit": 0,
+            "observed": "prints $T/.swissknifeman/projects.json, with a legacy-location warning; the new <state>/skiller/projects.json is not used. install.sh:95-97 creates exactly that seeded legacy file when none exists."
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "A home with no ~/.swissknifeman/topology.json runs maind topology init. The map is written to <state>/maind/topology.json, or to ~/.maind/topology.json while that directory is still the active state dir. The memory hook's topo_node_path reads only $HOME/.swissknifeman/topology.json (MEM_TOPO, line 54) and returns empty, so brain, swissknifeman and projects_base fall through to the weak defaults. The same split hits the connected-project list: harness safe-dirs --all-projects (safedirs.py:179) and the auto-approve hook (auto-approve/lib/safedirs.py:81) open only ~/.swissknifeman/projects.json. After a connect on a machine that never had that file, the registry is at <state>/skiller/projects.json and those readers see no projects. Before this move, skiller topology init and the registry write were exactly the paths those readers open.",
+          "id": "F2",
+          "location": "packages/harness/configs/claude-code/hooks/memory/lib/common.sh:54",
+          "reproduction": "Not executed. Read maind/common.py:45–55 and topology.py:54–59 for the write path, and common.sh:54–66, safedirs.py:179, auto-approve/lib/safedirs.py:78–85 for the reads.",
+          "severity": "Major"
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "01a1309d-3b31-7bf0-9545-3dcab90b640d",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261012T114141Z-703c13/P11.6/streams/review.2.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1"
+        ],
+        "rejected": [
+          {
+            "finding": "F2",
+            "reason": "The readers are in packages/harness (memory hook common.sh, harness safedirs.py, auto-approve hook safedirs.py). That is outside this item's write set, and the plan scopes the harness-side lookup change to the harness item, per hub-p11-harness. D70 also fixes the maind and skiller side as the new place with a legacy fallback. The legacy file stays readable and is not migrated until upgrade. The finding is a cross-module follow-up, not a defect of this item's contract."
+          }
+        ],
+        "session": "0fde3958-28bb-4d8e-adde-ba7372726095"
+      },
+      "verdict": "ATTENTION"
+    }
+  ],
+  "run": "cnd-20261012T114141Z-703c13",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

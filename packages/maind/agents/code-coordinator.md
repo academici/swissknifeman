@@ -19,10 +19,10 @@ no - make a wide pass through all types, but keep the volume (lost and found).
 
 ## Project discovery
 
-1. Read `~/.swissknifeman/topology.json` (`jq`): nodes `projects_base`,
+1. Run `maind topology show --json`: nodes `projects_base`,
    `brain`, `swissknifeman`.
 2. Candidates = git-repositories under `projects_base` ∪ entries
-   `~/.swissknifeman/projects.json` (`.projects[].path`). Dedup by absolute path.
+   of `skiller list --json` (`.projects[].path`). Dedup by absolute path.
 3. Use the passed list if it exists; otherwise - candidates (but no more,
    than is reasonable in one pass; if there are a lot of them, say so and take them
    passed subset or most related).

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # install.sh installs the skiller CLI (formerly swissknifeman).
 #
-# It creates <bin-dir>/skiller -> <repo>/bin/skiller and the ~/.swissknifeman
-# state directory. connect/vendor/update maintain projects.json.
+# It creates <bin-dir>/skiller -> <repo>/bin/skiller. connect/vendor/update
+# maintain the project registry (projects.json) in the skiller state directory.
 #
 # The umbrella install.sh owns the `swissknifeman` alias, so rerunning this
 # installer never replaces the root router. Standalone installs expose `skiller` only.
@@ -92,9 +92,8 @@ done
 command -v python3 >/dev/null 2>&1 || \
   echo "WARN: python3 not found - CLI will require it at startup" >&2
 
-mkdir -p "$BIN_DIR" "$HOME/.swissknifeman"
-[[ -f "$HOME/.swissknifeman/projects.json" ]] || \
-  printf '{\n  "version": 1,\n  "projects": []\n}\n' > "$HOME/.swissknifeman/projects.json"
+mkdir -p "$BIN_DIR"
+# The project registry is created by skiller on first connect (<state>/skiller/projects.json).
 
 # We install a symlink, silently replacing YOURS (old clone or former name swissknifeman);
 # we don't touch someone else's file without --force/confirmation.

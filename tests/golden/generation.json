@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "f4b260a1bb83",
-  "reason": "skiller profiles command listed in usage",
+  "captured_from": "550152a82dea",
+  "reason": "topology moved to maind; skiller list --json",
   "generators": [
     {
       "id": "skiller-registry",

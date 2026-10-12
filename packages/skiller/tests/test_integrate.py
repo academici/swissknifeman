@@ -73,7 +73,7 @@ class IntegrateCase(unittest.TestCase):
         self.assertTrue(any(k.endswith("@swissknifeman")
                             for k in settings.get("enabledPlugins", {})))
         # registered in projects.json (in tmp home, not real)
-        db = json.loads((self.env.home / ".swissknifeman" / "projects.json").read_text())
+        db = json.loads(self.env.db_file.read_text())
         self.assertTrue(any(p["path"] == str(self.proj) for p in db["projects"]))
 
     # --- skills channel (connect vs vendor) ---------------------------------
@@ -101,7 +101,7 @@ class IntegrateCase(unittest.TestCase):
                              json.loads(settings.read_text()))
         # registered as channel=vendor
         db = json.loads(
-            (self.env.home / ".swissknifeman" / "projects.json").read_text())
+            self.env.db_file.read_text())
         rec = next(p for p in db["projects"] if p["path"] == str(self.proj))
         self.assertEqual(rec["channel"], "vendor")
 

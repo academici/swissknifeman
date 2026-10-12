@@ -1,9 +1,9 @@
-"""topology — global local environment map (~/.swissknifeman/topology.json).
+"""topology — global local environment map (<state>/maind/topology.json).
 
 Three hub nodes: brain (docs-hub), swissknifeman (skills-hub), projects_base
-(workspace). The config lives in $HOME, machine-specific (like .projects.json y
-Brain) and is NOT committed to projects. Team reads/creates it; distributed skill
-the local-topology skill explains the schema and resolves nodes using this file.
+(workspace). The file is machine-specific and is NOT committed to projects. The legacy
+~/.swissknifeman/topology.json is read (one warning) until the new file exists. The
+local-topology skill explains the schema and reads it through `maind topology show --json`.
 
 Subcommands:
   init   interactively collect the config (auto-detect defaults, prompt for each node)
@@ -11,15 +11,16 @@ Subcommands:
 """
 import json
 import os
-import shutil
 import sys
 
-from aicore.util.repo import find_repo_root
-
+from aicore.state import backup
 from aicore.util.cli import parse_flags
 from aicore.util.io import atomic_write_json
+from aicore.util.repo import find_repo_root
 from aicore.util.term import die, now_iso, warn
-from .state import load_db
+
+from .config import Config
+from .projects import brain_path
 
 TOPOLOGY_VERSION = 1
 
@@ -42,7 +43,7 @@ def load_topology(env, quiet=False):
     except json.JSONDecodeError:
         if not quiet:
             warn(f"{f} damaged (invalid JSON) — recreate: "
-                 "skiller topology init")
+                 "maind topology init")
         return None
     if data.get("version", 1) > TOPOLOGY_VERSION:
         die(f"{f} is overwritten by a newer version swissknifeman — update the registry "
@@ -51,20 +52,19 @@ def load_topology(env, quiet=False):
 
 
 def save_topology(env, data):
-    """Atomic record with backup of existing *.json.bak."""
-    env.state_dir.mkdir(parents=True, exist_ok=True)
+    """Atomic record into the active file, after a backup of the existing one."""
     f = env.topology_file
-    if f.exists():
-        shutil.copy2(f, f.with_suffix(".json.bak"))
-    atomic_write_json(f, data)   # tmp+os.replace with cleanup .tmp (core.io)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    backup(f, home=env.home)
+    atomic_write_json(f, data)
 
 
 # --- detection ----------------------------------------------------------------
 def detect_projects_base(env):
-    """Common ancestor of paths from projects.json; otherwise default ~/projects."""
+    """Common ancestor of the fleet projects' local paths; otherwise default ~/projects."""
     try:
-        paths = [p["path"] for p in load_db(env).get("projects", [])
-                 if p.get("path")]
+        paths = [os.path.expanduser(p["local_path"])
+                 for p in Config.load(env).projects if p.get("local_path")]
         if len(paths) >= 2:
             common = os.path.commonpath(paths)
             if common and common != os.sep:
@@ -75,8 +75,12 @@ def detect_projects_base(env):
 
 
 def detect_brain(env):
-    """Conventional path ~/Vaults/Brain — is offered as default."""
-    return str(env.home / "Vaults" / "Brain")
+    """The vault the node knows about, else the conventional ~/Vaults/Brain."""
+    try:
+        found = brain_path(Config.load(env))
+    except (OSError, ValueError):
+        found = None
+    return found or str(env.home / "Vaults" / "Brain")
 
 
 def _norm(path):
@@ -106,7 +110,10 @@ def _show_data(data):
 def _cmd_show(env, as_json):
     data = load_topology(env)
     if data is None:
-        print("The topology is not configured. Create: skiller topology init")
+        if as_json:
+            print(json.dumps({"version": TOPOLOGY_VERSION, "nodes": {}}))
+        else:
+            print("The topology is not configured. Create: maind topology init")
         return
     if as_json:
         print(json.dumps(data, indent=2, ensure_ascii=False))
@@ -154,7 +161,7 @@ def cmd_topology(env, argv):
         "--projects-base": "str", "--yes": "bool",
     })
     if opts["help"]:
-        print("skiller topology <init|show> [--json] [--brain PATH] "
+        print("maind topology <init|show> [--json] [--brain PATH] "
               "[--swissknifeman PATH] [--projects-base PATH] [--yes]")
         return
     if sub == "init":

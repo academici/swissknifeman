@@ -88,7 +88,7 @@ opt-in to SessionStart digest. Per-project: `maind onboard <id> --memory manual|
 ## Links
 
 - `~/.claude/hooks/memory/` — the hook (`memory.sh`, `env.ini`, `config.json`, `modes/`, `CREDITS.md`).
-- `local-topology` (system bucket) — member resolution via `~/.swissknifeman/topology.json`.
+- `local-topology` (system bucket) — member resolution via `maind topology show --json`.
 - `cross-project-coordinator` (system bucket) — source of cross-project findings (dups/divergences/shared-package candidates) worth `remember` for the group.
 - `general/session-handoff` — adjacent: one-off context handoff between sessions, vs shared-memory = persistent shared group store.
 - Install hook files: `harness hooks --global` (harness package).

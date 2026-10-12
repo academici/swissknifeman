@@ -21,9 +21,9 @@
 #   eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
 #   analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
 #   bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
-#   list      registered projects (~/.swissknifeman/projects.json)
+#   list      registered projects (<state>/skiller/projects.json; --prune, --json)
 #   profiles  project-type profiles delivered with skiller (read-only; --json)
-#   topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+#   topology  alias of `maind topology` (the map moved to maind)
 #   release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
 #             (opt --dry-run; does NOT tag/does not push - prints the command)
 #

@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "f4b260a1bb83",
-  "reason": "skiller profiles command listed in usage",
+  "captured_from": "550152a82dea",
+  "reason": "topology moved to maind; skiller list --json",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

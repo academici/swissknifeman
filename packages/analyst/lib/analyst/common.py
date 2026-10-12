@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from aicore.state import resolve_with_legacy
 from aicore.state import state_dir as aicore_state_dir
 from aicore.util.env import BaseEnv
-from aicore.util.paths import state_dir
 
 
 @dataclass(frozen=True)
@@ -23,7 +22,7 @@ class Env(BaseEnv):
         directory (``aicore.state``; under ``SKM_HOME`` when set). An existing legacy
         ``~/.swissknifeman/analyst`` is used, with one warning, until it is moved."""
         return resolve_with_legacy(aicore_state_dir("analyst", home=self.home),
-                                   [state_dir(self.home, "analyst")], home=self.home)
+                                   [self.home / ".swissknifeman" / "analyst"], home=self.home)
 
 
 def project_path_from_opts(env, opts):

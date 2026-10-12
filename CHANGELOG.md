@@ -4,6 +4,7 @@
 
 ### Added
 
+- **maind, skiller:** machine registries. `maind topology show|init [--json]` (moved from `skiller topology`, which stays an alias with one `SKILLER_TOPOLOGY_MOVED` warning) keeps the map in `<state>/maind/topology.json`; the legacy `~/.swissknifeman/topology.json` is read file by file with one warning until `swissknifeman upgrade`. The connected-projects registry of skiller moves to `<state>/skiller/projects.json` (legacy `~/.swissknifeman/projects.json` read the same way); new `skiller list --json` (contract `projects-list/v1`). The skills `local-topology`, `cross-project-coordinator`, `shared-memory` and the agent `code-coordinator` read the map through `maind topology show --json` and `skiller list --json`.
 - **orch:** conductor `scripts/conduct.py run|resume|status|observe` (`orch.conductor`): claims pieces of work through the work
   source and drives each one through context, scout (cached context map), executor, deterministic checks with check-evidence,
   review (default `grok/grok-4.7/high`), triage, at most the configured corrections, registration and commit; stops only on a

@@ -21,7 +21,8 @@ PATH_TOKEN = re.compile(rf"packages/({PACKAGE_NAMES})\b")
 CODE_TOKENS = (
     ("C1", PATH_TOKEN),
     ("C2", re.compile(rf"^\s*(from|import)\s+({PARTNER_NAMES})\b")),
-    ("C3", re.compile(r"\b(orch|harness|maind|analyst|artifex)\b")),
+    # maind is a declared partner: `skiller topology` is an alias reaching it by process.
+    ("C3", re.compile(r"\b(orch|harness|analyst|artifex)\b")),
     ("C4", re.compile(r"[\"']planner[\"']|/planner:")),
     ("C5", re.compile(rf"\.\./({PARTNER_NAMES})\b")),
     ("C6", re.compile(r"find_monorepo_root|sibling_bin")),
@@ -123,7 +124,7 @@ class BoundaryScannerTests(unittest.TestCase):
         samples = {
             "C1": "packages/skiller/lib/module.py",
             "C2": "  from planner.module import value",
-            "C3": "use maind CLI",
+            "C3": "use harness CLI",
             "C4": "plugin = 'planner'",
             "C5": "../planner/commands",
             "C6": "root = find_monorepo_root(path)",
@@ -164,7 +165,7 @@ class BoundaryScannerTests(unittest.TestCase):
         lines = ("from core.paths import find_repo_root", "import core",
                  "$REPO_ROOT/core/provider.py", "packages/core",
                  "packages/vitest", "packages/plannerboard", "orchestration",
-                 "harnessing", "Maind", "planner:plan-run", "task = 'example'")
+                 "harnessing", "Maind", "maind topology", "planner:plan-run", "task = 'example'")
         self.write("lib/module.py", "\n".join(lines))
         self.assertEqual(violations(self.root), {})
 
@@ -205,7 +206,7 @@ class BoundaryScannerTests(unittest.TestCase):
 
     def test_allowlist_skips_whole_file_and_retains_other_failures(self):
         self.write("lib/module.py", "harness\npackages/planner")
-        self.write("lib/new.py", "maind")
+        self.write("lib/new.py", "orch")
         self.allow({"lib/module.py": "P8.5: delegate through host commands"})
         errors = boundary_errors(self.root)
         self.assertEqual(len(errors), 1)

@@ -2,7 +2,7 @@
 name: local-topology
 bucket: system
 version: 0.1.0
-description: Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, projects base) and navigation between projects, their code and docs. Read from ~/.swissknifeman/topology.json
+description: Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, projects base) and navigation between projects, their code and docs. Read through `maind topology show --json`
 risk: read
 persona: architect
 tags: [topology, architecture, navigation, meta, cross-project]
@@ -27,9 +27,9 @@ Linked along two lines (docs and skills/hooks):
 | **Projects base** (`workspace`) | Where code lives | Directory with all project repos (arbitrary structure) |
 
 - Nodes don't know each other directly — topology config (below) links them.
-- Brain finds projects via `repo:` frontmatter in its notes; swissknifeman via `~/.swissknifeman/projects.json`.
+- Brain finds projects via `repo:` frontmatter in its notes; swissknifeman via `skiller list --json`.
 
-## Node resolution: `~/.swissknifeman/topology.json`
+## Node resolution: `maind topology show --json`
 
 Sole source of truth for node locations. Schema:
 
@@ -46,40 +46,30 @@ Sole source of truth for node locations. Schema:
 }
 ```
 
-Read paths (`jq`):
+Read paths:
 
 ```bash
-# all nodes
-jq -r '.nodes | to_entries[] | "\(.key)\t\(.value.path)\t(\(.value.role))"' \
-  ~/.swissknifeman/topology.json
-
-# single node
-jq -r '.nodes.brain.path'         ~/.swissknifeman/topology.json
-jq -r '.nodes.projects_base.path' ~/.swissknifeman/topology.json
-```
-
-Or via CLI:
-
-```bash
-skiller topology show
-skiller topology show --json
+maind topology show                # all nodes, readable
+maind topology show --json         # all nodes
+maind topology show --json | jq -r '.nodes.brain.path'
+maind topology show --json | jq -r '.nodes.projects_base.path'
 ```
 
 **No file** → topology not set up on this machine. Create interactively (asks paths to Brain vault, swissknifeman, projects base; auto-detects defaults):
 
 ```bash
-skiller topology init
+maind topology init
 ```
 
-Or reach a specific node **without** the map: per-node locators resolve their node via `maind`/`$HOME` even when `topology.json` is absent — `brain-locator` (node `docs-hub`) and `swissknifeman-locator` (node `skills-hub`).
+Or reach a specific node **without** the map: per-node locators resolve their node via `maind`/`$HOME` even when the map is absent — `brain-locator` (node `docs-hub`) and `swissknifeman-locator` (node `skills-hub`).
 
 ## Navigation
 
 **Neighboring project (code).** `projects_base` → project dir. Projects known to swissknifeman:
 
 ```bash
-jq -r '.projects[].path' ~/.swissknifeman/projects.json   # connected to registry
-ls "$(jq -r '.nodes.projects_base.path' ~/.swissknifeman/topology.json)"
+skiller list --json | jq -r '.projects[].path'   # connected to registry
+ls "$(maind topology show --json | jq -r '.nodes.projects_base.path')"
 ```
 
 **Any project's docs.** Brain is the single point. Docs live both in repo (`<repo>/docs`, `<repo>/docs-public`) and mirrored in vault; `brain` keeps them in sync:
@@ -102,16 +92,16 @@ Connect a new project to skill distribution: `skiller connect` (Claude Code, plu
 
 ## Principles
 
-- **Map is read-only.** This skill explains the scheme and reads `topology.json`; it does **not** mutate nodes or rewrite config. Create/edit config only via `skiller topology init`.
-- **Paths are machine-specific.** `topology.json` lives in `$HOME`, not in repo; per-machine (like Brain's `.projects.json`). Don't commit it into projects.
+- **Map is read-only.** This skill explains the scheme and reads the map; it does **not** mutate nodes or rewrite config. Create/edit it only via `maind topology init`.
+- **Paths are machine-specific.** The map lives in the machine state, not in repo; per-machine (like Brain's `.projects.json`). Don't commit it into projects.
 - **Nodes are autonomous.** Brain and swissknifeman work without the map; map just gives agents a shared point to see the scheme and hop between nodes.
 
 ## Checklist
 
-- [ ] Read `~/.swissknifeman/topology.json` (or suggested `topology init` if absent)
+- [ ] Read `maind topology show --json` (or suggested `maind topology init` if absent)
 - [ ] Used real node paths, not hardcoded
 - [ ] For docs — went through Brain (`brain status/sync`), didn't edit mirrors by hand
-- [ ] Didn't commit `topology.json` into project
+- [ ] Didn't commit the map into project
 
 ## Links
 

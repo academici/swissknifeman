@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.6",
   "title": "Реестры машины: topology из skiller в maind (maind topology), реестр подключённых проектов skiller в aicore.state, skiller list --json, skills maind через команды",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "git mv topology.py в maind, команда maind topology show|init с файлом <state>/maind/topology.json и наследным ~/.swissknifeman/topology.json; skiller topology — псевдоним через maind; реестр skiller — <state>/skiller/projects.json с пофайловым наследием; skiller list --json; skills и агент maind читают карту через maind topology show --json и skiller list --json; строки ownership topology/listing/state сняты.",
   "why": "D70; карта P2 (skiller/{topology,listing,state} → maind) уточнена решением. Риски: (1) наследный каталог ~/.swissknifeman общий для нескольких модулей — наследие пофайловое, не каталогом; (2) skiller integrate и живые пользователи skiller topology — псевдоним с предупреждением; (3) skills не раздувают бюджет первого хода.",
   "scope": {
@@ -128,6 +128,28 @@
     {
       "path": "packages/maind/CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/bin/maind",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/bin/skiller",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/317ddc53b706ed020a9f1913b7737f577b229e2df9caa848a90bcb59efee81ad",
+      "role": "input"
     }
   ],
   "rules": [
@@ -193,6 +215,62 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:18:25Z"
+  "result": {
+    "started_at": "2026-10-12T11:41:43Z",
+    "finished_at": "2026-10-12T15:25:53Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-99cd33bb96757825767de96d-P11.6",
+    "notes": "F1 fixed: packages/skiller/install.sh no longer creates ~/.swissknifeman or seeds ~/.swissknifeman/projects.json; header comment updated. skiller creates <state>/skiller/projects.json on first write. New test test_install_does_not_seed_the_legacy_registry in packages/skiller/tests/test_install.py runs install.sh with a temp HOME and asserts no legacy projects.json. It then saves via Env.db_file and asserts the file lands in <state>/skiller/projects.json. Targeted run: python3 -m unittest tests.test_install tests.test_integrate tests.test_registry_state in packages/skiller with tmp HOME, 67 tests OK.\nChanged: packages/skiller/install.sh, packages/skiller/tests/test_install.py",
+    "deviations": [
+      "packages/skiller/install.sh is outside scope.write_set; edited as the correction directs."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T15:25:53Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T15:25:53Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T15:25:53Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T15:25:53Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T15:25:53Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V5.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.6/evidence/V5.json"
+    ]
+  },
+  "updated_at": "2026-10-12T15:26:21Z"
 }

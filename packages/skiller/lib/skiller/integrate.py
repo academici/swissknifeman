@@ -16,6 +16,8 @@ import sys
 
 from .common import apply_permissions, host_command_text, host_install_suffix
 from aicore.util.cli import parse_flags
+from aicore.util.partners import (PartnerError, PartnerUnavailable, require_partner,
+                                  run_partner_json)
 from aicore.util.term import die, warn
 from .host import host_command
 from .config import (autodetect, load_config, load_profile, resolve_profile_name,
@@ -24,7 +26,6 @@ from .connect import do_connect
 from .vendor import do_vendor
 from .skillset import do_sync
 from .hub import generate_hub
-from .topology import cmd_topology
 
 # Channels for publishing skills in the project (skills only; memory/graph — separately).
 SKILLS_CHANNELS = ("connect", "vendor", "skip")
@@ -145,14 +146,22 @@ def _add_unique(lst, names):
 # --- blocks -------------------------------------------------------------------
 def _block_prereqs(env, dry, interactive):
     print("\n[0] Prerequisites (machine-level, one-time)")
-    topo = env.home / ".swissknifeman" / "topology.json"
-    if topo.exists():
+    try:
+        topo = run_partner_json("maind", ["topology", "show", "--json"])
+    except PartnerUnavailable:
+        topo = None
+        print("  ✗ no topology (maind not found) — coordinator and memory resolve "
+              "nodes from weak defaults")
+    except PartnerError:
+        topo = None
+        print("  ✗ topology unreadable (maind topology show failed)")
+    if topo and topo.get("nodes"):
         print("  ✓ topology configured")
-    else:
-        print("  ✗ no ~/.swissknifeman/topology.json — coordinator and memory without "
-              "it is resolved by nodes based on weak defaults")
-        if not dry and interactive and _yn("  Run topology init now?", False):
-            cmd_topology(env, ["init"])
+    elif topo is not None:
+        print("  ✗ no topology — coordinator and memory resolve nodes from weak "
+              "defaults")
+        if not dry and interactive and _yn("  Run maind topology init now?", False):
+            subprocess.run(require_partner("maind") + ["topology", "init"])
     hooks = env.home / ".claude" / "hooks"
     have = all((hooks / d).exists() for d in ("notify", "auto-approve", "memory"))
     if have:

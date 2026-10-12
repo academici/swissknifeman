@@ -119,6 +119,25 @@ class InstallScriptCase(unittest.TestCase):
     def lines(self, path):
         return path.read_text(encoding="utf-8").splitlines()
 
+    def test_install_does_not_seed_the_legacy_registry(self):
+        import sys
+        result = self.run_installer()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((self.home / ".swissknifeman" / "projects.json").exists())
+
+        sys.path.insert(0, str(PACKAGE_ROOT / "lib"))
+        try:
+            from skiller.common import Env
+            from skiller.state import save_db
+            env = Env(root=PACKAGE_ROOT, home=self.home)
+            save_db(env, {"version": 1, "projects": []})
+            self.assertEqual(env.db_file, env.state_dir / "projects.json")
+            self.assertTrue((env.state_dir / "projects.json").exists())
+            self.assertFalse((self.home / ".swissknifeman" / "projects.json").exists())
+        finally:
+            sys.path.remove(str(PACKAGE_ROOT / "lib"))
+
     def test_default_install_adds_core_and_host_command_plugins(self):
         result = self.run_installer()
 

@@ -356,7 +356,7 @@ class Conductor:
         state.setdefault("corrections_used", 0)
         state.setdefault("check_fixes_at", [])   # rounds that got a correction: a resume walks the closed rounds again,
         state.setdefault("corrections_at", [])   # so a counter that only counts up would count them twice
-        rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
+        rows, report, round_no = self._green(item, rows, report, round_no, scout_text, 1 if overlap else None)
         if report["status"] == "blocked":
             return self._finish(item, report, rows)
         if self._review_enabled(item):
@@ -390,7 +390,8 @@ class Conductor:
                     return self._finish(item, report, rows)
                 rows = (self._checks_then_review(item, report, round_no, review_round + 1) if overlap and not final
                         else self._run_checks(item, round_no, report))
-                rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
+                rows, report, round_no = self._green(item, rows, report, round_no, scout_text,
+                                                     review_round + 1 if overlap and not final else None)
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
                 if final:
@@ -401,8 +402,10 @@ class Conductor:
                 review_round += 1
         return self._finish(item, report, rows)
 
-    def _green(self, item: Item, rows: list, report: dict, round_no: int, scout_text: str) -> tuple:
-        """Correct red checks within ``check_fixes``; a red result after the limit blocks the piece of work."""
+    def _green(self, item: Item, rows: list, report: dict, round_no: int, scout_text: str,
+               review_no: Optional[int] = None) -> tuple:
+        """Correct red checks within ``check_fixes``; a red result after the limit blocks the piece of work. With
+        ``review_no`` (``checks.overlap_review``) the checks of a correction run while review ``review_no`` reads it."""
         state, limit = item.state, item.options["limits"]["check_fixes"]
         while not all(row["green"] for row in rows):
             red = [row for row in rows if not row["green"]]
@@ -418,7 +421,8 @@ class Conductor:
             report = self._execute(item, round_no, scout_text, prompts.check_correction(red))
             if report["status"] == "blocked":
                 return rows, report, round_no
-            rows = self._run_checks(item, round_no, report)
+            rows = (self._checks_then_review(item, report, round_no, review_no) if review_no is not None
+                    else self._run_checks(item, round_no, report))
         return rows, report, round_no
 
     def _split_confirmed(self, item: Item, findings: dict, triage: dict) -> tuple:
@@ -861,7 +865,7 @@ class Conductor:
         key = f"review.{number}"
 
         def run() -> dict:
-            base = item.state["steps"]["brief"]["result"]["base"]
+            base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
             corrected = self._corrected(item, number - 1) if number > 1 and item.options["review"]["audit_scope"] == "corrected" else []
             prompt = prompts.reviewer(item.input_doc, item=item.ref, step=key, base=base, corrected=corrected,
                                       diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
@@ -885,7 +889,7 @@ class Conductor:
         key = f"triage.{number}"
 
         def run() -> dict:
-            base = item.state["steps"]["brief"]["result"]["base"]
+            base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
             prompt = prompts.triager(item.input_doc, item=item.ref, step=key, base=base, findings=findings,
                                      roles_dir=self.roles_dir, skills=item.options["skills"].get(role, []))
             triage, meta = self._role(item, key, role, prompt, "triage-result",

@@ -297,7 +297,7 @@ class CorrectionTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 2))
-        self.assertNotIn("at the same time", self.prompt("reviewer", 2))
+        self.assertIn("at the same time", self.prompt("reviewer", 2))  # the repeated review overlaps the checks again
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_red_after_the_correction_limit_blocks_and_stops(self):

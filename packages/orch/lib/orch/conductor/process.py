@@ -27,7 +27,7 @@ class RoleRun:
     text: str = ""
     session: Optional[str] = None
     model: Optional[str] = None
-    usage: dict = field(default_factory=lambda: {"input": 0, "output": 0})
+    usage: dict = field(default_factory=lambda: {"input": 0, "cached": 0, "output": 0})
     duration_s: float = 0.0
     raw: Optional[str] = None
     error: Optional[str] = None
@@ -46,20 +46,20 @@ def available(argv: list) -> bool:
 
 def _usage(found: object) -> dict:
     if not isinstance(found, dict):
-        return {"input": 0, "output": 0}
-    total_in = sum(int(found.get(key) or 0) for key in ("input_tokens", "cache_read_input_tokens",
-                                                        "cache_creation_input_tokens", "cached_input_tokens")
-                   if isinstance(found.get(key), int))
-    total_out = int(found.get("output_tokens") or 0) if isinstance(found.get("output_tokens"), int) else 0
-    return {"input": total_in, "output": total_out}
+        return {"input": 0, "cached": 0, "output": 0}
+    def count(*keys: str) -> int:
+        return sum(found[key] for key in keys if isinstance(found.get(key), int))
+    # ``cached`` (cache reads) is reported apart: it re-counts the whole context each turn and is not spend
+    return {"input": count("input_tokens", "cache_creation_input_tokens"),
+            "cached": count("cache_read_input_tokens", "cached_input_tokens"), "output": count("output_tokens")}
 
 
 def parse_stream(transport: str, data: str) -> dict:
     """``{text, session, model, usage, is_error}`` of a captured stdout."""
     if transport == "text":
-        return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "output": 0},
+        return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
                 "is_error": False}
-    found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "output": 0}, "is_error": False}
+    found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False}
     messages = []
     for raw in data.splitlines():
         try:
@@ -85,7 +85,7 @@ def parse_stream(transport: str, data: str) -> dict:
                 messages.append(item["text"])
         elif kind == "turn.completed":
             usage = _usage(doc.get("usage"))
-            found["usage"] = {key: found["usage"][key] + usage[key] for key in usage}
+            found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
     if not found["text"] and messages:
         found["text"] = messages[-1]
     return found

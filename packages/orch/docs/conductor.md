@@ -55,7 +55,7 @@ The conductor stops only on:
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start (an optional scout is skipped instead) |
-| `BUDGET_EXHAUSTED` | the tokens of the piece passed `limits.tokens_max` |
+| `BUDGET_EXHAUSTED` | the fresh input and output tokens of the piece (cache reads are reported as `cached` and not counted) passed `limits.tokens_max` |
 | `ROLE_FAILED`, `TIMEOUT`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after `limits.retries` |
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |

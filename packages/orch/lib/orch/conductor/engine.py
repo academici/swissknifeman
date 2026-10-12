@@ -620,12 +620,13 @@ class Conductor:
     def _tokens(self, item: Item, usage: dict) -> None:
         for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
                        item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
-            for key in ("input", "output"):
+            for key in ("input", "cached", "output"):
                 bucket[key] = bucket.get(key, 0) + int(usage.get(key, 0))
 
     def _budget(self, item: Item) -> None:
         limit = item.options["limits"].get("tokens_max") or 0
-        used = sum(item.state.get("tokens", {}).values())
+        tokens = item.state.get("tokens", {})
+        used = int(tokens.get("input", 0)) + int(tokens.get("output", 0))  # cache reads are not spend
         if limit and used > limit:
             self._save()
             raise Stop("BUDGET_EXHAUSTED", f"{item.ref} used {used} tokens of {limit}")

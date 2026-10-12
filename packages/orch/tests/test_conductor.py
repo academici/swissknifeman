@@ -355,6 +355,13 @@ class StopTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "BUDGET_EXHAUSTED")), err)
 
+    def test_cache_reads_are_not_counted_against_the_budget(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": {"tokens_max": 500}}}]}})
+        usage = {"input_tokens": 100, "cache_read_input_tokens": 90000, "output_tokens": 10}
+        self.script({"executor": [dict(executor_ok("W1"), usage=usage)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+
     def test_output_outside_the_contract_is_repeated_then_stops(self):
         self.script({"executor": [{"text": "no block here"}, executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")

@@ -493,6 +493,15 @@ class StopTests(ConductorCase):
         code, _, err = self.run_items("W2")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROLE_OUTPUT_INVALID")), err)
 
+    def test_a_checks_run_entry_with_a_foreign_id_does_not_fail_the_report(self):
+        foreign = report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": 0},
+                                           {"id": "unit-tests", "cmd": "bash test.sh", "exit": 0}])
+        self.script({"executor": [dict(executor_ok("W1"), result=foreign)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor")), (0, 1), err)
+        issues = self.source()["items"]["W1"]["report"]["open_issues"]
+        self.assertTrue(any("unit-tests" in issue["text"] for issue in issues), issues)
+
     def test_every_stage_has_its_own_repeats(self):
         self.script({"executor": [{"text": "no block here"}, executor_ok("W1")],
                      "reviewer": [{"text": "no block here"}, GREEN]})

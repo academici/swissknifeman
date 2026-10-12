@@ -650,6 +650,8 @@ class Conductor:
             doc = None
             if problem is None and kind:
                 doc, error = prompts.json_block(run.text, kind)
+                if kind == "stage-report" and not error:
+                    doc = heal_report(doc)
                 issues = [error] if error else contract.problems(doc, kind)
                 if not issues and extra:
                     issues = extra(doc)
@@ -960,6 +962,23 @@ class Conductor:
 
             self._step(item, "commit", commit, verdict=lambda result: f"{result['outcome']} {result.get('sha') or ''}".strip())
         return status
+
+
+def heal_report(report: dict) -> dict:
+    """A ``checks_run`` entry whose id is not a check id of the input (``V1``…) is moved to a ``note`` issue instead of
+    failing the whole report: the conductor runs every acceptance check itself and never reads such an entry."""
+    rows = report.get("checks_run")
+    if not isinstance(rows, list):
+        return report
+    kept = [row for row in rows if not isinstance(row, dict) or re.fullmatch(r"V[0-9]+", str(row.get("id", "")))]
+    foreign = [row for row in rows if row not in kept]
+    if not foreign:
+        return report
+    cmds = "; ".join(f"{row.get('id')}: {row.get('cmd') or row.get('procedure') or '-'} → "
+                     f"{row.get('exit', row.get('verdict', '-'))}" for row in foreign)
+    note = {"text": f"commands the executor ran outside the acceptance checks: {cmds}"[:900], "kind": "note",
+            "impact": "none", "next": "none"}
+    return dict(report, checks_run=kept, open_issues=list(report.get("open_issues") or []) + [note])
 
 
 def report_problems(report: dict) -> list:

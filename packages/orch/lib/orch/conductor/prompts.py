@@ -108,7 +108,8 @@ This replaces the instruction above to run every acceptance check yourself. Run 
 you changed: the test files of the changed modules and the single commands that
 name them. Do not run the acceptance checks of the input as a whole, repository-wide suites, or the suites of modules
 you did not touch: the conductor runs every acceptance check itself right after your report, and a full run here only
-repeats it. List in `checks_run` only the commands you really ran.
+repeats it. `checks_run` lists acceptance checks only, under their own ids (`V1`…); name the targeted test commands
+you ran in `summary` instead.
 """
 
 

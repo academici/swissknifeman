@@ -627,7 +627,9 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             validate_route(p.items[item_id].get("route") or {}, actor, item_id)
         from . import context  # context imports this module for scheduling
 
-        missing = [f"{i}: {path}" for i in requested for path in context.missing_reads(p, i)]
+        # An item already in progress passed this check at its first start; its own work may have moved a read.
+        missing = [f"{i}: {path}" for i in requested if status_of(p, i) != "in_progress"
+                   for path in context.missing_reads(p, i)]
         if missing:
             raise PlanError("READ_MISSING", f"required read(s) missing — {'; '.join(missing)}")
         # Resolve inputs before any lifecycle state is written.

@@ -194,6 +194,16 @@ class JsonContextTests(test_lifecycle.LifeCase):
         self.refused("HUMAN_VIEW", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
         self.assertEqual(self.load().items["P1.1"]["status"], "todo")
 
+    def test_an_item_in_progress_may_start_again_after_its_own_work_moved_a_read(self):
+        (self.root / "artifacts").mkdir()
+        path = self.root / "artifacts" / "input.json"
+        path.write_text("{}")
+        force_patch(self.root, "P1.1", {"reads": [{"path": "@plan/artifacts/input.json", "why": "needed", "required": True}]})
+        lifecycle.start(self.root, ["P1.1"], test_lifecycle.OPUS)
+        path.unlink()
+        lifecycle.start(self.root, ["P1.1"], test_lifecycle.OPUS)  # a repeated claim of the same run
+        self.assertEqual(self.load().items["P1.1"]["status"], "in_progress")
+
     def test_missing_required_input_is_refused_without_mutation(self):
         force_patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "needed", "required": True}]})
         self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))

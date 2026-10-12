@@ -61,12 +61,25 @@ def _plan_dir(plan: store.Plan) -> str:
         return plan.root.as_posix()
 
 
+def _has_float(value) -> bool:
+    if isinstance(value, float):
+        return True
+    if isinstance(value, dict):
+        return any(_has_float(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_has_float(item) for item in value)
+    return False
+
+
 def _read(plan: store.Plan, entry: dict, inline: bool) -> dict:
     """Existing files get ``sha256`` of their bytes; ``inline`` adds the full UTF-8 text when no content is attached."""
     entry = copy.deepcopy(entry)
     if not isinstance(entry.get("path"), str):
         raise PlanError("REF_UNRESOLVED", f"read ref {entry.get('ref')!r} has no readable source path")
     entry.pop("ref", None)  # exec/v1 reads are closed and path-based; the ref only lives in the context pack
+    if "content" in entry and _has_float(entry["content"]):
+        # canonical JSON (the input digest) has no floats: a schema with ``"default": 0.6`` travels as its JSON text
+        entry["content"] = json.dumps(entry["content"], ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     target = context._resolve(plan, entry["path"]) if entry.get("exists") else None
     if target is None or not target.is_file():
         return entry

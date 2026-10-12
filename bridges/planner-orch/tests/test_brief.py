@@ -56,6 +56,17 @@ class BriefCase(test_lifecycle.LifeCase):
         return brief.build(self.load(), item, **kwargs)
 
 
+class FloatContentTests(unittest.TestCase):
+    def test_a_read_with_float_content_becomes_json_text_so_the_digest_can_be_computed(self):
+        entry = {"path": "schema.json", "why": "w", "required": True, "exists": False,
+                 "content": {"b": {"default": 0.6}, "a": [1, 0.95]}}
+        read = brief._read(None, entry, False)
+        self.assertEqual(read["content"], '{"a":[1,0.95],"b":{"default":0.6}}')
+        brief.canonical_digest({"reads": [read]})  # no floats left
+        plain = {"path": "x", "exists": False, "content": {"n": 1}}
+        self.assertEqual(brief._read(None, plain, False)["content"], {"n": 1})
+
+
 class MappingTests(BriefCase):
     def test_item_fields_follow_the_mapping_table(self):
         doc = self.brief()

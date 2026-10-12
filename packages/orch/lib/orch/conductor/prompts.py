@@ -113,6 +113,18 @@ you ran in `summary` instead.
 """
 
 
+def _conductor_commands(input_doc: dict) -> str:
+    """The acceptance commands the conductor itself runs after the report: the executor must not run them (or whole
+    suites that contain them); a full run of them by the executor measured 30–50% of its step."""
+    commands = [str(check.get("cmd")).strip().splitlines()[0][:200]
+                for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("cmd")]
+    if not commands:
+        return ""
+    return ("\nThe conductor runs these commands itself right after your report; do not run them, nor the whole suites "
+            "they start (run single test files of what you changed instead):\n"
+            + "\n".join(f"- `{command}`" for command in commands) + "\n")
+
+
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = False) -> str:
     parts = [_head(role, input_doc, roles_dir, list(skills))]
@@ -120,7 +132,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
                      + _fence(scout_text, "text"))
     if targeted_tests:
-        parts.append(_TARGETED_TESTS)
+        parts.append(_TARGETED_TESTS + _conductor_commands(input_doc))
     if rules:
         parts.append("## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))
     if correction:

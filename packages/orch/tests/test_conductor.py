@@ -230,6 +230,8 @@ class CorrectionTests(ConductorCase):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W1")[0], 0)
         self.assertIn("This replaces the instruction above to run every acceptance check yourself", self.prompt("executor", 1))
+        self.assertIn("The conductor runs these commands itself", self.prompt("executor", 1))
+        self.assertIn("`test -f out/W1.txt`", self.prompt("executor", 1))
         self.set_items({"W2": {"options": [{"source": "item:W2", "options": {"checks": {"executor_runs_checks": True}}}]}})
         self.script({"executor": [executor_ok("W2")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W2")[0], 0)

@@ -249,6 +249,19 @@ class CorrectionTests(ConductorCase):
         verdicts = {line["stage"]: line.get("verdict") for line in self.lines(err) if line["event"] == "stage.end"}
         self.assertEqual(verdicts["checks.1"], "green")
 
+    def test_checks_overlap_the_review_after_a_correction_too(self):
+        self.overlapping()
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [FINDING, GREEN], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.calls("reviewer"), 2)
+        self.assertIn("at the same time", self.prompt("reviewer", 2))
+        self.assertIn("Pre-final audit", self.prompt("reviewer", 2))
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
     def test_red_checks_drop_the_overlapping_review_and_repeat_it_after_the_correction(self):
         self.overlapping()
         self.script({"executor": [{"result": report("W1")}, executor_ok("W1")], "reviewer": [GREEN, GREEN]})

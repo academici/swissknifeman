@@ -349,7 +349,7 @@ class Conductor:
             return self._finish(item, report, None)
         overlap = self._review_enabled(item) and item.options["checks"]["overlap_review"]
         round_no = 1
-        rows = self._checks_then_review(item, report) if overlap else self._run_checks(item, 1, report)
+        rows = self._checks_then_review(item, report, 1, 1) if overlap else self._run_checks(item, 1, report)
         state = item.state
         state.setdefault("check_fixes_used", 0)
         state.setdefault("corrections_used", 0)
@@ -386,7 +386,8 @@ class Conductor:
                 report = self._execute(item, round_no, scout_text, prompts.review_correction(findings, triage))
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
-                rows = self._run_checks(item, round_no, report)
+                rows = (self._checks_then_review(item, report, round_no, review_round + 1) if overlap
+                        else self._run_checks(item, round_no, report))
                 rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
@@ -770,21 +771,22 @@ class Conductor:
 
         return self._step(item, key, run, verdict=said)
 
-    def _checks_then_review(self, item: Item, report: dict) -> list:
-        """Round 1 with ``checks.overlap_review``: the checks run while the review reads the candidate. When the checks
-        are red the review read a candidate that is about to change: its step is dropped and made again later."""
+    def _checks_then_review(self, item: Item, report: dict, checks_no: int, review_no: int) -> list:
+        """With ``checks.overlap_review`` the checks of a round run while the review of that candidate reads it. When the
+        checks are red the review read a candidate that is about to change: its step is dropped and made again later."""
         steps = item.state.setdefault("steps", {})
-        if steps.get("checks.1", {}).get("status") == "done" or steps.get("review.1", {}).get("status") == "done":
-            return self._run_checks(item, 1, report)
+        if steps.get(f"checks.{checks_no}", {}).get("status") == "done" \
+                or steps.get(f"review.{review_no}", {}).get("status") == "done":
+            return self._run_checks(item, checks_no, report)
         with ThreadPoolExecutor(max_workers=1) as pool:
-            computed = pool.submit(self._compute_checks, item, 1, report)
+            computed = pool.submit(self._compute_checks, item, checks_no, report)
             try:
-                self._review(item, 1, [], pending=True)
+                self._review(item, review_no, [], pending=True)
             finally:
                 computed.exception()  # wait for the checks before the pool closes, whatever the review did
-        rows = self._run_checks(item, 1, report, computed=computed)
+        rows = self._run_checks(item, checks_no, report, computed=computed)
         if not all(row["green"] for row in rows):
-            steps.pop("review.1", None)
+            steps.pop(f"review.{review_no}", None)
             self.progress.emit("info", item=item.ref, message="the checks are red: the parallel review is dropped "
                                                                "and repeated after the correction")
         return rows

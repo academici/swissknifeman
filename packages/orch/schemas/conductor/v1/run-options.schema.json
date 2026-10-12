@@ -50,7 +50,7 @@
           "type": "boolean"
         },
         "overlap_review": {
-          "description": "The checks of round 1 run while the first review reads the candidate; red checks drop that review and it is repeated after the correction. Default false.",
+          "description": "The checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated after the correction. Default false.",
           "type": "boolean"
         }
       },

@@ -160,6 +160,30 @@
     {
       "path": "packages/maind/CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/maind/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/install.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/maind-requirements.md",
+      "change": "modify"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/hook-intent-files.md",
+      "change": "modify"
+    },
+    {
+      "path": ".gitignore",
+      "change": "modify"
     }
   ],
   "rules": [
@@ -227,5 +251,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-11T12:18:22Z"
+  "updated_at": "2026-10-12T08:21:06Z"
 }

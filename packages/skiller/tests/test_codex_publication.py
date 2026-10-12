@@ -269,15 +269,15 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         from skiller.host import load_host
         self.config = load_repository_bootstrap_config(self.repo_root, load_host(self.package_root))
 
-    def test_config_names_exactly_fourteen_sorted_unique_identities(self):
+    def test_config_names_exactly_the_declared_sorted_unique_identities(self):
         identities = [row["identity"] for row in self.config["identities"]]
-        self.assertEqual(len(identities), 14)
+        self.assertEqual(len(identities), 15)
         self.assertEqual(identities, sorted(identities))
-        self.assertEqual(len(set(identities)), 14)
+        self.assertEqual(len(set(identities)), 15)
 
-    def test_renders_exactly_28_class_a_projections_byte_identical_shape(self):
+    def test_renders_exactly_the_declared_class_a_projections_byte_identical_shape(self):
         artifacts = build_repository_bootstrap_publication(self.env)
-        self.assertEqual(len(artifacts), 29)  # 28 class-A + 1 lock
+        self.assertEqual(len(artifacts), 31)  # 30 class-A (2 per identity) + 1 lock
         by_provider = {}
         lock_artifact = None
         for artifact in artifacts:
@@ -291,7 +291,7 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         self.assertIsNotNone(lock_artifact)
         self.assertEqual(lock_artifact.target, self.repo_root / self.config["lock_path"])
         lock_data = json.loads(lock_artifact.managed_bytes)
-        self.assertEqual(len(lock_data["records"]), 28)  # class-A only
+        self.assertEqual(len(lock_data["records"]), 30)  # class-A only
         for artifact in artifacts:
             if artifact.provider == "lock":
                 continue
@@ -306,11 +306,11 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
             self.assertIn(f"canonical: {record['canonical']}", body)
             self.assertIn("## Provenance (root-bootstrap, P1.2)", canonical_body)
 
-    def test_targets_are_exactly_the_declared_28_and_globally_unique(self):
+    def test_targets_are_exactly_the_declared_and_globally_unique(self):
         artifacts = build_repository_bootstrap_publication(self.env)
         targets = [item.target for item in artifacts if item.provider != "lock"]
-        self.assertEqual(len(targets), 28)  # class-A only
-        self.assertEqual(len(set(targets)), 28)
+        self.assertEqual(len(targets), 30)  # class-A only
+        self.assertEqual(len(set(targets)), 30)
         expected = set()
         for row in self.config["identities"]:
             identity = row["identity"]

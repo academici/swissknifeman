@@ -17,7 +17,7 @@ from orch.conductor import contract
 
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
                   "stage_timeout_s": 0, "stage_idle_timeout_s": 1800, "check_timeout_s": 1800}
-DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True}
+DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False}
 CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first

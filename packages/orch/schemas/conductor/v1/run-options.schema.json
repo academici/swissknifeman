@@ -66,6 +66,10 @@
           "type": "string",
           "enum": ["Blocker", "Major", "Minor", "Nit"]
         },
+        "final_correction": {
+          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan says so) instead of blocking with REVIEW_LIMIT. Default false.",
+          "type": "boolean"
+        },
         "pre_final": {
           "description": "A review round after a correction is a pre-final audit that looks only for findings of correct_min_severity or higher. Default true.",
           "type": "boolean"

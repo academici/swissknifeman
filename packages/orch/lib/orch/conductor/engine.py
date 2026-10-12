@@ -372,13 +372,14 @@ class Conductor:
                 if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                     break
                 triage = dict(triage, confirmed=major)
+                at_limit = review_round >= limits["review_rounds"]
+                final = at_limit and item.options["review"]["final_correction"]  # correct, but audit no more
                 replayed = review_round in state["corrections_at"]
-                if not replayed and (review_round >= limits["review_rounds"]
-                                     or len(state["corrections_at"]) >= limits["corrections"]):
+                if not replayed and ((at_limit and not final) or len(state["corrections_at"]) >= limits["corrections"]):
                     ids = ", ".join(entry["finding"] for entry in major)
                     return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
                                         f"confirmed review findings {ids} remain after {review_round} review "
-                                        f"round(s) and {state['corrections_used']} correction(s)"), rows)
+                                        f"round(s) and {len(state['corrections_at'])} correction(s)"), rows)
                 if not replayed:
                     state["corrections_at"].append(review_round)
                 state["corrections_used"] = len(state["corrections_at"])
@@ -386,11 +387,16 @@ class Conductor:
                 report = self._execute(item, round_no, scout_text, prompts.review_correction(findings, triage))
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
-                rows = (self._checks_then_review(item, report, round_no, review_round + 1) if overlap
+                rows = (self._checks_then_review(item, report, round_no, review_round + 1) if overlap and not final
                         else self._run_checks(item, round_no, report))
                 rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
+                if final:
+                    ids = ", ".join(entry["finding"] for entry in major)
+                    self._defer_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
+                                           "review round the limit allows; the correction was not reviewed again")
+                    break
                 review_round += 1
         return self._finish(item, report, rows)
 
@@ -424,6 +430,14 @@ class Conductor:
         corrected = [entry for entry in triage["confirmed"] if severity.get(entry["finding"], 0) <= floor]
         deferred = [entry for entry in triage["confirmed"] if severity.get(entry["finding"], 0) > floor]
         return corrected, deferred
+
+    @staticmethod
+    def _defer_note(item: Item, text: str) -> None:
+        note = {"text": text, "kind": "note", "impact": "the correction is checked by the acceptance checks only",
+                "next": "a reviewer of the phase may look at it"}
+        deferred = item.state.setdefault("deferred_minors", [])
+        if note not in deferred:
+            deferred.append(note)
 
     @staticmethod
     def _defer_minor(item: Item, findings: dict, minor: list) -> None:

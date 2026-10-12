@@ -300,6 +300,20 @@ class CorrectionTests(ConductorCase):
         self.assertIn("triage_reproduction", verdict["rounds"][0]["findings"][0])
         self.assertEqual((self.project / "out/W1.txt").read_text(), "done\n")
 
+    def test_the_last_round_corrects_without_another_review_when_final_correction_is_on(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "limits": {"review_rounds": 1}, "review": {"final_correction": True}}}]}})
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [FINDING], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 1))
+        item = self.source()["items"]["W1"]
+        self.assertEqual(item["status"], "done")
+        self.assertTrue(any("not reviewed again" in i["text"] for i in item["report"]["open_issues"]))
+
     def test_a_confirmed_minor_finding_is_deferred_to_the_plan_without_a_correction(self):
         minor = {"result": {"verdict": "ATTENTION", "findings": [dict(FINDING["result"]["findings"][0], severity="Minor")]}}
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,

@@ -89,7 +89,7 @@ effect.
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]` |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `executor_runs_checks` (default false: the executor is told to run only the tests of the code it changed) |
-| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`) |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `final_correction` (default `false`: on the last allowed round the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
 | `limits` | `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3), `retries` (0–5), `tokens_max`, `stage_timeout_s` (ceiling on a whole role run, off by default for streaming roles), `stage_idle_timeout_s` (default 1800: a streaming role is stopped only when its output is silent that long), `check_timeout_s` |
 | `on_blocked` | `stop` or `report` |
 

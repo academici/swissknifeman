@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.5",
   "title": "maind: конфиг узла — настройки [maind] и реестр флота в состоянии; ~/.maind и data в местах aicore.state; связи графа в конфиге проекта; провайдеры проекта в [aicore.providers]; бэкапы",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Схема и пример конфига maind; Config.load собирает настройки из aicore.config и реестр из <state>/maind/registry.json в прежний словарь; наследный узловой config.json читается (настройки — ExtraLayer, реестр — чтение и запись) с одним предупреждением, пока нет нового; Env.state_dir и data_dir — aicore.state с наследием; .maind.graph.json → [maind.graph.links]; .swissknife.json#/providers → [aicore.providers.selection]; *.bak → aicore.state.backup; config.example.json хаба → registry.example.json maind.",
   "why": "D69, D72, D5; архитектура §5.3 (config.json, .maind*.json, ~/.maind, *.bak). Жёсткие риски: (1) живые машины работают на корневом config.json — до upgrade ничего не должно сломаться и ничего не должно мигрировать молча (тесты наследного пути на копии формы реального файла); (2) реестр пишется только в один активный источник (тест: при наличии registry.json наследный файл не меняется); (3) D108 пишет провайдеров в активный носитель — байты наследного .swissknife.json при наследном пути прежние; (4) схема aicore не выражает массивы объектов — такие ключи только в реестре.",
   "scope": {
@@ -186,6 +186,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/5818db59ee546a4fc8548428f22a7a95e5ec3ed46209d92ac06f57d466d0a5ef",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
     "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
@@ -250,6 +256,13 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-12T08:21:06Z"
+  "result": {
+    "started_at": "2026-10-12T08:31:20Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "session": "run-3eaa60a5ed52a6b5632529d8"
+    }
+  },
+  "updated_at": "2026-10-12T08:31:23Z"
 }

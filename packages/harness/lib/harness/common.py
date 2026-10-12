@@ -1,11 +1,7 @@
 """Internal documentation."""
 from dataclasses import dataclass
 
-from core import (  # noqa: F401
-    HOME, BaseEnv, atomic_write_text, backup_file, confirm, die,
-    find_monorepo_root, now_iso, parse_args, parse_flags, run_cmd,
-    safe_load_json, sanitize, warn,
-)
+from aicore.util.env import BaseEnv
 
 
 @dataclass(frozen=True)

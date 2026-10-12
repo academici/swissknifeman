@@ -3,10 +3,11 @@ import json
 import os
 import subprocess
 import sys
+import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-PLAN_SCRIPT = REPO_ROOT / "packages" / "planner" / "scripts" / "plan.py"
+from aicore.util.partners import partner_command
+
 ACTOR = "claude-code/claude-opus-5-5/high"
 DATE = "2026.10.05"
 
@@ -18,9 +19,26 @@ _DETAIL = {
 }
 
 
+def planner_argv():
+    """argv prefix of the planner partner; the calling test is skipped when it is not found."""
+    argv = partner_command("planner")
+    if argv is None:
+        raise unittest.SkipTest("planner partner not found (set PLANNER_ROOT or PLANNER_PLAN_PY)")
+    return argv
+
+
+def require_planner_root():
+    """Skip the calling test when the driver cannot find the planner root either."""
+    from harness.run import task_paths
+    try:
+        task_paths.planner_root()
+    except task_paths.PlannerUnavailable as exc:
+        raise unittest.SkipTest(str(exc)) from exc
+
+
 def run_plan(*args, plans_root=None, expect=0):
     """Run one `plan.py` verb; `plans_root` is appended as `--plans-root`."""
-    argv = [sys.executable, str(PLAN_SCRIPT), *args]
+    argv = [*planner_argv(), *args]
     if plans_root is not None:
         argv += ["--plans-root", str(plans_root)]
     # Fixture plans must not start event delivery: it runs after the call and would move journal cursors the test
@@ -38,6 +56,7 @@ def write_plan(root, *, codename="FIXTURE", items, design="detailed", phase="P1"
     `items` is a list of `(status, route)`; status is one of `todo, in_progress, done,
     done_with_deviations, blocked`, route is `(class, effort)` or None to keep the default.
     """
+    require_planner_root()
     plans = Path(root) / "plans"
     run_plan("new", "--codename", codename, "--title", "Harness fixture", "--actor", ACTOR,
              "--message", "Fixture for harness tests.", "--date", DATE, plans_root=plans)

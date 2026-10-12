@@ -151,12 +151,11 @@ def pre_launch_verdict(queue_item):
     }
 
 
-def verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, *, monorepo_root=None,
-            timeout=60):
+def verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, *, timeout=60):
     """Verdict of one run from its outcome, git closure, plan check and item JSON."""
     plan_dir = Path(plan_dir)
     try:
-        planner = task_paths.planner_root(plan_dir.resolve(), monorepo_root=monorepo_root)
+        planner = task_paths.planner_root()
     except task_paths.PlannerUnavailable as exc:
         raise GateUnavailable(str(exc)) from exc
 

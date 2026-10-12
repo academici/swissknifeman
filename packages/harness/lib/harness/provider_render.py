@@ -8,8 +8,15 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ProviderId, plan_artifact_render, sha256_digest)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity,
+    ArtifactRenderRequest,
+    ArtifactSource,
+    ArtifactTarget,
+    plan_artifact_render,
+    sha256_digest,
+)
+from aicore.provider.values import ProviderId
 
 from .cursor_render import render_cursor_cli_json
 from .grok_render import grok_profile_target, render_grok_config_toml

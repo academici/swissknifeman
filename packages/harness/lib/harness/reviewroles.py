@@ -1,16 +1,17 @@
 """Internal documentation."""
 import hashlib
 import json
+import os
+import shutil
 import sys
 from pathlib import Path
 
-from core import safe_load_json
+from aicore.util.io import safe_load_json
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 _COMMON_DIR = _PACKAGE_ROOT / "configs" / "common" / "agent-packs"
 _REVIEW_ROLES = _COMMON_DIR / "review-roles.json"
 _ROLES_JSON = _COMMON_DIR / "roles.json"
-_SKILLS_JSON = _PACKAGE_ROOT.parent / "skiller" / "skills.json"
 
 REQUIRED_SECTIONS = ("criteria", "verdict_gates", "project_overrides", "output")
 
@@ -171,16 +172,32 @@ def check_dimensions(data):
     return v
 
 
+def skills_index_path():
+    """`skills.json` of the skiller partner (`SKM_SKILLER_ROOT`, then the `skiller` command on PATH), or None."""
+    candidates = []
+    if os.environ.get("SKM_SKILLER_ROOT"):
+        candidates.append(Path(os.path.expanduser(os.environ["SKM_SKILLER_ROOT"])))
+    found = shutil.which("skiller")
+    if found:
+        candidates.append(Path(found).resolve().parent.parent)
+    for root in candidates:
+        if (root / "skills.json").is_file():
+            return root / "skills.json"
+    return None
+
+
 def check_skills(data, roles_canon=None, skills_index=None):
     """Internal documentation."""
     v = []
     if roles_canon is None:
         roles_canon = safe_load_json(_ROLES_JSON, default={})
     if skills_index is None:
-        if not _SKILLS_JSON.is_file():
-            return [Violation("skills", "skill index not available: "
-                               f"{_SKILLS_JSON} not found (standalone-package layout)")]
-        raw = safe_load_json(_SKILLS_JSON, default={})
+        index_path = skills_index_path()
+        if index_path is None:
+            print("PARTNER_UNAVAILABLE: skiller not found (set SKM_SKILLER_ROOT or put skiller on PATH); "
+                  "skills of reviewer roles are not checked", file=sys.stderr)
+            return []
+        raw = safe_load_json(index_path, default={})
         skills_index = {s.get("name") for s in raw.get("skills", []) if isinstance(s, dict)}
     known_packs = set(_roles_by_pack(data))
     for r in roles_canon.get("roles", []):

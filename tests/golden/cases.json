@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "550152a82dea",
-  "reason": "topology moved to maind; skiller list --json",
+  "captured_from": "6002a942db90",
+  "reason": "instruction catalog 1.8.0 (scope targets as data) and the Cursor routing rule generated from the aicore model catalog",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

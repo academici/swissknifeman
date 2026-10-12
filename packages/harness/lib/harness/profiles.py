@@ -5,9 +5,9 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
-from core.provider.manifest import default_manifest_path
-from core import (DiagnosticSeverity, EffectiveProvider, ProviderCapabilityManifest,
-                  ProviderId, load_provider_manifest, support_for)
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.manifest import ProviderCapabilityManifest, load_provider_manifest, support_for
+from aicore.provider.values import DiagnosticSeverity, EffectiveProvider, ProviderId
 
 
 _PROFILE_IDS = ("observe", "workspace-contained", "trusted-full-access")

@@ -3,10 +3,11 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 FAKE_CLAUDE = Path(__file__).resolve().parent / "fixtures_data" / "run" / "fake-claude"
 
+from aicore.provider.models import ModelCatalogError, load_model_catalog, select_effort, select_model
 from harness.run import worker
 
 
@@ -15,7 +16,7 @@ class BuildArgvTest(unittest.TestCase):
         argv = worker.build_argv(
             "2026.07.31-DEMO-PLAN", "P4.3",
             model_class="implementation", effort="medium",
-            monorepo_root=REPO_ROOT, claude_bin="/usr/bin/fake-claude")
+            claude_bin="/usr/bin/fake-claude")
         self.assertEqual(argv, [
             "/usr/bin/fake-claude", "-p", "/planner:plan-run 2026.07.31-DEMO-PLAN P4.3",
             "--output-format", "json", "--model", "sonnet", "--effort", "medium",
@@ -26,14 +27,26 @@ class BuildArgvTest(unittest.TestCase):
             worker.build_argv(
                 "2026.07.31-DEMO-PLAN", "P4.3",
                 model_class="not-a-class", effort="medium",
-                monorepo_root=REPO_ROOT, claude_bin="/usr/bin/fake-claude")
+                claude_bin="/usr/bin/fake-claude")
 
-    def test_missing_routing_carrier_is_worker_unavailable(self):
-        with self.assertRaises(worker.WorkerUnavailable):
-            worker.build_argv(
-                "2026.07.31-DEMO-PLAN", "P4.3",
-                model_class="implementation", effort="medium",
-                monorepo_root="/definitely/not/a/monorepo/root", claude_bin="/usr/bin/fake-claude")
+    def test_selectors_come_from_the_aicore_model_catalog(self):
+        catalog = load_model_catalog()
+        argv = worker.build_argv("P", "P1.1", model_class="frontier", effort="xhigh",
+                                 claude_bin="/usr/bin/fake-claude")
+        self.assertEqual(argv[argv.index("--model") + 1], select_model(catalog, "claude-code", "frontier"))
+        self.assertEqual(argv[argv.index("--effort") + 1], select_effort(catalog, "claude-code", "xhigh"))
+
+    def test_unknown_class_names_the_model_catalog(self):
+        with self.assertRaisesRegex(worker.WorkerUnavailable, "model catalog: no class selector 'nope'"):
+            worker.build_argv("P", "P1.1", model_class="nope", effort="medium",
+                              claude_bin="/usr/bin/fake-claude")
+
+    def test_unreadable_model_catalog_is_worker_unavailable(self):
+        with mock.patch.object(worker, "load_model_catalog",
+                               side_effect=ModelCatalogError("", "unreadable", "gone")):
+            with self.assertRaisesRegex(worker.WorkerUnavailable, "model catalog not available"):
+                worker.build_argv("P", "P1.1", model_class="implementation", effort="medium",
+                                  claude_bin="/usr/bin/fake-claude")
 
 
 class RunOutcomeTest(unittest.TestCase):
@@ -41,7 +54,7 @@ class RunOutcomeTest(unittest.TestCase):
         return worker.run(
             "2026.07.31-DEMO-PLAN", "P4.3",
             model_class="implementation", effort="medium",
-            monorepo_root=REPO_ROOT, claude_bin=str(FAKE_CLAUDE / fixture_name),
+            claude_bin=str(FAKE_CLAUDE / fixture_name),
             timeout=timeout)
 
     def test_success_envelope_is_ok(self):
@@ -86,7 +99,7 @@ class RunOutcomeTest(unittest.TestCase):
             with self.assertRaises(worker.WorkerUnavailable):
                 worker.run("2026.07.31-DEMO-PLAN", "P4.3",
                           model_class="implementation", effort="medium",
-                          monorepo_root=REPO_ROOT, claude_bin=None)
+                          claude_bin=None)
         finally:
             if env_backup is None:
                 os.environ.pop(worker.CLAUDE_BIN_ENV, None)

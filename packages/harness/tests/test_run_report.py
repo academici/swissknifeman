@@ -10,7 +10,6 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parents[1]
 
-sys.path.insert(0, str(PKG.parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.hooks import block_run_report

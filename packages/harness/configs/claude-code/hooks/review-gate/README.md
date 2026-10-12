@@ -36,7 +36,7 @@ harness (`checks/<name>.sh`); machine announces ONLY dialing and per-check mode:
 | Code | Verification | Default mode | What it does |
 |:--|:--|:--|:--|
 | G1 | `generated-assets` | `strict` | diff touches header file `swissknifeman:generated` → violation (edit belongs to the pack, is being edited override-file) |
-| G2 | `plan-check` | `strict` | diff touched `plans/<ID>/` with a `plan.json` → run `packages/planner/scripts/plan.py check`; errors → violation (plan dirs without `plan.json` are skipped) |
+| G2 | `plan-check` | `strict` | diff touched `plans/<ID>/` with a `plan.json` → run `plan.py check` (found through `PLANNER_PLAN_PY`, `PLANNER_ROOT` or `planner` on PATH; skipped when none); errors → violation (plan dirs without `plan.json` are skipped) |
 | W1 | `tests-touched` | `warn` | diff touches `packages/*/lib/**` without `packages/*/tests/**` (heuristics - there are legal exceptions, so there are always `warn`, never `strict`) |
 
 Unknown name in `checks[]` — apparent configuration error (the dispatcher prints it and

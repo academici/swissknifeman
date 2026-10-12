@@ -1,6 +1,7 @@
 """P2.2 — multi-surface Codex lifecycle dispatcher and class A observer bindings."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -8,10 +9,10 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core.provider.manifest import default_manifest_path
-from core import ProviderId, load_provider_manifest, support_for
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.manifest import load_provider_manifest, support_for
+from aicore.provider.values import ProviderId
 from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload, plan_lifecycle,
                            render_codex_hook_handler, render_codex_hooks)
 from harness.profiles import load_catalog
@@ -132,8 +133,12 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
             self.assertFalse((Path(home) / ".claude/logs/bash-commands.jsonl").exists())
 
     def test_run_report_parses_transcript_when_available(self):
-        project = str(PACKAGE.parents[1])
-        with tempfile.TemporaryDirectory() as scratch:
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch, \
+                tempfile.TemporaryDirectory() as home:
+            # the handler finds the shared report library in the installed hook folder of the user
+            installed = Path(home) / ".claude/hooks/run-report"
+            installed.mkdir(parents=True)
+            shutil.copyfile(PACKAGE / "configs/claude-code/hooks/run-report/_lib.py", installed / "_lib.py")
             handler = self._write_handler(scratch)
             transcript = Path(scratch) / "transcript.jsonl"
             transcript.write_text("\n".join([
@@ -147,14 +152,14 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
             payload = {"session_id": "s1", "cwd": project, "model": "gpt-5.6-terra",
                       "hook_event_name": "SessionEnd", "reason": "other",
                       "transcript_path": str(transcript)}
-            result = _run_handler(handler, "lifecycle.run-report", payload)
+            result = _run_handler(handler, "lifecycle.run-report", payload,
+                                  env={**os.environ, "HOME": home})
             self.assertEqual(result.returncode, 0)
             record = json.loads((Path(project) / ".codex/runs/s1.json").read_text(encoding="utf-8"))
             self.assertEqual(record["schema"], 2)
             self.assertEqual(record["provider_id"], "codex")
             self.assertEqual(record["codegraph"]["find_symbol"]["calls"], 1)
             self.assertTrue((Path(project) / ".codex/runs/.gitignore").is_file())
-            (Path(project) / ".codex/runs/s1.json").unlink(missing_ok=True)
 
     def test_run_report_stub_without_transcript(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:

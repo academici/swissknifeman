@@ -72,11 +72,11 @@ def _classify(status, phase_detailed, route, route_error):
     return True, None, None
 
 
-def queue(plan_dir, phase_id, *, monorepo_root=None):
+def queue(plan_dir, phase_id):
     """Queue of the phase items: drivable ones, refusals by name, terminal items dequeued."""
     plan_dir = Path(plan_dir)
     try:
-        planner = task_paths.planner_root(plan_dir.resolve(), monorepo_root=monorepo_root)
+        planner = task_paths.planner_root()
     except task_paths.PlannerUnavailable as exc:
         return _degraded(plan_dir, phase_id, (
             f"{exc} (standalone-layout): driver refuses to drive, not silent"))

@@ -1,12 +1,13 @@
 """Queue of a phase through the planner plan API (`plan.py show|next --json`)."""
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from harness.run import plan_reader
-from packages.harness.tests.plan_fixture import write_plan
+from tests.plan_fixture import write_plan
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 MEDIUM = ("implementation", "medium")
 
 
@@ -19,7 +20,7 @@ class QueueTest(unittest.TestCase):
             items=[("todo", MEDIUM), ("done", MEDIUM), ("in_progress", ("frontier", "high"))])
 
     def test_order_terminal_exclusion_and_drivable_items(self):
-        result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
+        result = plan_reader.queue(self.plan, "P1")
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         self.assertEqual([it["item_id"] for it in result["items"]], ["P1.1", "P1.3"])
         self.assertEqual([e["item_id"] for e in result["excluded_terminal"]], ["P1.2"])
@@ -35,7 +36,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(result["items"][1]["route"], {"model_class": "frontier", "effort": "high"})
 
     def test_next_form_is_the_semantic_next_of_the_plan(self):
-        result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
+        result = plan_reader.queue(self.plan, "P1")
         self.assertEqual(result["next_form"]["kind"], "run-items")
         self.assertTrue(result["next_form"]["declaring_line"].startswith("run-items: planner:plan-run "))
         for item in result["items"]:
@@ -46,7 +47,7 @@ class RefusalTest(unittest.TestCase):
     def _queue(self, **kwargs):
         with tempfile.TemporaryDirectory() as tmp:
             plan, _ = write_plan(tmp, **kwargs)
-            return plan_reader.queue(plan, "P1", monorepo_root=REPO_ROOT)
+            return plan_reader.queue(plan, "P1")
 
     def test_blocked_item_is_not_drivable(self):
         result = self._queue(items=[("todo", MEDIUM), ("blocked", MEDIUM)])
@@ -84,20 +85,24 @@ class RefusalTest(unittest.TestCase):
 
 
 class DegradedTest(unittest.TestCase):
-    def test_monorepo_root_not_found_is_degraded_not_empty(self):
+    def test_planner_not_found_is_degraded_not_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = Path(tmp) / "STANDALONE"
             plan_dir.mkdir()
-            result = plan_reader.queue(plan_dir, "P1")
+            env = {k: v for k, v in os.environ.items()
+                   if k not in ("PLANNER_ROOT", "PLANNER_PLAN_PY", "SKM_TASK_ROOT")}
+            env["PATH"] = tmp
+            with mock.patch.dict(os.environ, env, clear=True):
+                result = plan_reader.queue(plan_dir, "P1")
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
-        self.assertTrue(result["degraded_reasons"])
+        self.assertIn("PLANNER_UNAVAILABLE", " ".join(result["degraded_reasons"]))
 
     def test_missing_plan_json_is_degraded_not_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = Path(tmp) / "BROKEN"
             plan_dir.mkdir(parents=True)
-            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+            result = plan_reader.queue(plan_dir, "P1")
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
         self.assertTrue(result["degraded_reasons"])
@@ -105,7 +110,7 @@ class DegradedTest(unittest.TestCase):
     def test_unknown_phase_is_degraded(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan, _ = write_plan(tmp, items=[("todo", MEDIUM)])
-            result = plan_reader.queue(plan, "P7", monorepo_root=REPO_ROOT)
+            result = plan_reader.queue(plan, "P7")
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
 

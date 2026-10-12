@@ -7,16 +7,15 @@ from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from harness.provider_audit import (ProviderAuditReport, audit_package, audited_paths,
                                     render_operator_reference,
                                     _map_diagnostics)
 from harness.profiles import load_catalog, resolve_profile
 from harness.mcp import load_mcp_catalog
 from harness.hooks import LifecycleRequest, plan_lifecycle
-from core.provider.manifest import default_manifest_path
-from core import (EffectiveProvider, ProviderId, ProviderManifestError,
-                  load_provider_manifest)
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.manifest import ProviderManifestError, load_provider_manifest
+from aicore.provider.values import EffectiveProvider, ProviderId
 
 PACKAGE = Path(__file__).resolve().parents[1]
 

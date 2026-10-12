@@ -3,10 +3,18 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ProviderId, plan_artifact_render, sha256_digest)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity,
+    ArtifactRenderRequest,
+    ArtifactSource,
+    ArtifactTarget,
+    plan_artifact_render,
+    sha256_digest,
+)
+from aicore.provider.values import ProviderId
 
-from .common import die, parse_flags, warn
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
 from .settings import write_json
 
 

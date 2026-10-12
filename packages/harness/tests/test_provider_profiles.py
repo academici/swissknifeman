@@ -5,11 +5,10 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import (ArtifactActionKind, EffectiveProvider, ProviderId, apply_plan, plan_artifact_lock,
-                  serialize_lock)
-from core.provider.lock import artifact_dry_run
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.values import EffectiveProvider, ProviderId
+from aicore.artifacts.lock import artifact_dry_run
 from harness.profiles import load_catalog, resolve_profile
 from harness.provider_render import plan_profile_artifact, render_profile
 

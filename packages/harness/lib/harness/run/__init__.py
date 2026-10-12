@@ -5,9 +5,10 @@ import json
 import uuid
 from pathlib import Path
 
-from core import find_monorepo_root
+from aicore.util.repo import find_monorepo_root
 
-from ..common import die, parse_args
+from aicore.util.cli import parse_args
+from aicore.util.term import die
 from . import plan_reader
 from . import worker
 from . import gate
@@ -33,15 +34,18 @@ RUN_USAGE = (
 
 
 def _resolve_plan_dir(env, opts, plan_id):
-    monorepo_root = find_monorepo_root(env.root)
-    if monorepo_root is None:
-        die("monorepo root not found - package `task` not available (standalone-layout)")
-        return None, None
-    plans_root = Path(opts["plans_root"]) if opts["plans_root"] else monorepo_root / "plans"
-    return monorepo_root, plans_root / plan_id
+    if opts["plans_root"]:
+        plans_root = Path(opts["plans_root"])
+    else:
+        repo_root = find_monorepo_root(env.root)
+        if repo_root is None:
+            die("repository root not found - pass --plans-root")
+            return None
+        plans_root = repo_root / "plans"
+    return plans_root / plan_id
 
 
-def _dry_run_argv(plan_id, item, *, monorepo_root, claude_bin):
+def _dry_run_argv(plan_id, item, *, claude_bin):
     """Internal documentation."""
     if not item["drivable"]:
         return None, None
@@ -50,19 +54,17 @@ def _dry_run_argv(plan_id, item, *, monorepo_root, claude_bin):
     route = item["route"]
     try:
         argv = worker.build_argv(plan_id, item["item_id"], model_class=route["model_class"],
-                                 effort=route["effort"], monorepo_root=monorepo_root,
-                                 claude_bin=claude_bin)
+                                 effort=route["effort"], claude_bin=claude_bin)
     except worker.WorkerUnavailable as exc:
         return None, str(exc)
     return argv, None
 
 
-def _print_dry_run(queue, plan_id, phase_id, *, monorepo_root, as_json):
+def _print_dry_run(queue, plan_id, phase_id, *, as_json):
     claude_bin = worker.resolve_claude_bin()
     items = []
     for item in queue["items"]:
-        argv, argv_error = _dry_run_argv(plan_id, item, monorepo_root=monorepo_root,
-                                         claude_bin=claude_bin)
+        argv, argv_error = _dry_run_argv(plan_id, item, claude_bin=claude_bin)
         items.append({**item, "argv": argv, "argv_error": argv_error})
     payload = {
         "mode": "dry-run", "plan_id": plan_id, "phase_id": phase_id,
@@ -95,8 +97,8 @@ def _print_dry_run(queue, plan_id, phase_id, *, monorepo_root, as_json):
         print(f"  [TERMINAL] {excl['item_id']} — status={excl['status']!r}")
 
 
-def _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir, *, limit, timeout):
-    queue = plan_reader.queue(plan_dir, phase_id, monorepo_root=monorepo_root)
+def _run_wave(env, opts, plan_id, phase_id, plan_dir, *, limit, timeout):
+    queue = plan_reader.queue(plan_dir, phase_id)
     if queue["degraded"]:
         die(f"queue unavailable: {'; '.join(queue['degraded_reasons'])}")
         return None
@@ -114,21 +116,19 @@ def _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir, *, limit, t
             verdict = gate.pre_launch_verdict(item)
             jrec = journal.maybe_write(
                 plan_dir, item_id, run_id=run_id, pre_launch=True,
-                refusal_detail=item.get("refusal_detail"), monorepo_root=monorepo_root)
+                refusal_detail=item.get("refusal_detail"))
             records.append({"item_id": item_id, "verdict": verdict["verdict"],
                             "outcome": None, "wrote_driver_line": jrec is not None,
                             "verdict_detail": verdict})
         else:
             before = gate.snapshot_before(plan_dir)
             outcome = worker.run(plan_id, item_id, model_class=item["route"]["model_class"],
-                                 effort=item["route"]["effort"], monorepo_root=monorepo_root,
-                                 timeout=timeout)
-            verdict = gate.verdict(plan_id, item_id, phase_id, plan_dir, before, outcome,
-                                   monorepo_root=monorepo_root)
+                                 effort=item["route"]["effort"], timeout=timeout)
+            verdict = gate.verdict(plan_id, item_id, phase_id, plan_dir, before, outcome)
             item_status = (verdict["raw"]["item_after"] or {}).get("status")
             jrec = journal.maybe_write(
                 plan_dir, item_id, run_id=run_id, pre_launch=False, outcome=outcome,
-                item_status=item_status, monorepo_root=monorepo_root)
+                item_status=item_status)
             records.append({"item_id": item_id, "verdict": verdict["verdict"],
                             "outcome": outcome, "wrote_driver_line": jrec is not None,
                             "verdict_detail": verdict})
@@ -190,18 +190,16 @@ def cmd_run(env, argv):
             die(f"--timeout expects number of seconds, received: {opts['timeout']!r}")
             return
 
-    monorepo_root, plan_dir = _resolve_plan_dir(env, opts, plan_id)
-    if monorepo_root is None:
+    plan_dir = _resolve_plan_dir(env, opts, plan_id)
+    if plan_dir is None:
         return
 
     if opts["dry_run"]:
-        queue = plan_reader.queue(plan_dir, phase_id, monorepo_root=monorepo_root)
-        _print_dry_run(queue, plan_id, phase_id, monorepo_root=monorepo_root,
-                       as_json=opts["json"])
+        queue = plan_reader.queue(plan_dir, phase_id)
+        _print_dry_run(queue, plan_id, phase_id, as_json=opts["json"])
         return
 
-    result = _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir,
-                       limit=limit, timeout=timeout)
+    result = _run_wave(env, opts, plan_id, phase_id, plan_dir, limit=limit, timeout=timeout)
     if result is None:
         return
     run_id, records = result

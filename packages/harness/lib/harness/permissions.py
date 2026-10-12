@@ -2,7 +2,8 @@
 import subprocess
 import sys
 
-from .common import die, parse_flags, warn
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):

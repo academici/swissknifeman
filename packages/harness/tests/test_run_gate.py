@@ -1,16 +1,17 @@
 """Verdict table of `harness/run/gate.py` over a real git repo and a v3 plan."""
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "packages" / "harness" / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from harness.run import gate  # noqa: E402
-from packages.harness.tests.plan_fixture import ACTOR, run_plan, write_plan  # noqa: E402
+from tests.plan_fixture import ACTOR, run_plan, write_plan  # noqa: E402
 
 PHASE_ID = "P1"
 ITEM_ID = "P1.1"
@@ -76,10 +77,9 @@ class GateVerdictTest(unittest.TestCase):
         self.repo = _Repo(self._tmp.name)
         self.before = self.repo.snapshot()
 
-    def _verdict(self, outcome=None, *, before=None, monorepo_root=REPO_ROOT):
+    def _verdict(self, outcome=None, *, before=None):
         return gate.verdict(self.repo.plan_id, ITEM_ID, PHASE_ID, self.repo.plan_dir,
-                            before or self.before, outcome or _ok_outcome(),
-                            monorepo_root=monorepo_root)
+                            before or self.before, outcome or _ok_outcome())
 
     def _closed(self, status="done", *extra):
         self.repo.commit_scope()
@@ -197,16 +197,26 @@ class GateVerdictTest(unittest.TestCase):
     def test_unreadable_item_is_red(self):
         self._closed("done")
         result = gate.verdict(self.repo.plan_id, "P1.9", PHASE_ID, self.repo.plan_dir,
-                              self.before, _ok_outcome(), monorepo_root=REPO_ROOT)
+                              self.before, _ok_outcome())
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("item-fields-unavailable", result["signals_matched"])
 
     def test_degraded_plan_api_is_not_green(self):
         self._closed("done")
-        with tempfile.TemporaryDirectory() as empty:
-            result = self._verdict(monorepo_root=empty)
+        with tempfile.TemporaryDirectory() as broken:
+            (Path(broken) / "scripts").mkdir()
+            (Path(broken) / "scripts" / "plan.py").write_text("raise SystemExit(3)\n", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"PLANNER_ROOT": broken}):
+                result = self._verdict()
         self.assertNotEqual(result["verdict"], gate.GREEN)
         self.assertEqual(result["lint_class"], "degraded")
+
+    def test_planner_not_found_raises_gate_unavailable(self):
+        self._closed("done")
+        with mock.patch.object(gate.task_paths, "planner_root",
+                               side_effect=gate.task_paths.PlannerUnavailable("PLANNER_UNAVAILABLE: x")):
+            with self.assertRaises(gate.GateUnavailable):
+                self._verdict()
 
     def test_totality_default_is_red(self):
         signals = {

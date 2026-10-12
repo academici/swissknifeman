@@ -95,11 +95,9 @@ sys.exit(1 if bad else 0)
 PY
 
 echo "[7/12] package import + tests"
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import harness.cli" \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "import harness.cli" \
   || err "lib/harness not imported"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "
 import sys
 from harness.agentpacks import do_doctor
 from harness.common import Env
@@ -107,32 +105,41 @@ sys.exit(do_doctor(Env('$REPO_ROOT', 'validate')))" || err "agent-packs integrit
 scripts/test.sh || err "tests"
 
 echo "[8/12] generated provider instructions reference"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" \
   python3 scripts/generate-provider-instructions.py --check \
   || err "generated provider instructions reference"
 
 echo "[9/12] role registry review"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.reviewroles --check \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -m harness.reviewroles --check \
   || err "role registry review (role-bindings.json)"
 
+# The hub gates read the checkout around the module (generated files of the hub, its committed rules); in a
+# standalone copy there is none and they are skipped.
+HUB_AROUND=0
+[[ "$REPO_ROOT/../../packages/harness" -ef "$REPO_ROOT" && -d "$REPO_ROOT/../../.cursor/rules" ]] && HUB_AROUND=1
+
 echo "[10/12] instruction drift (28 projections)"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.instructions --check \
-  || err "instruction drift (harness instructions check)"
+if [[ "$HUB_AROUND" -eq 1 ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -m harness.instructions --check \
+    || err "instruction drift (harness instructions check)"
+else
+  echo "  instruction drift: no hub checkout around the module (standalone layout) — gate skipped"
+fi
 
 echo "[11/12] rules Cursor (.cursor/rules/*.mdc as directory projection)"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 scripts/render-cursor-rules.py --check \
+if [[ "$HUB_AROUND" -eq 1 ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 scripts/render-cursor-rules.py --check \
     || err "rules Cursor disagreed with the instructions catalog"
 else
-  echo "  rules Cursor: core/ not found (standalone-layout) — gate skipped"
+  echo "  rules Cursor: no hub checkout around the module (standalone layout) — gate skipped"
 fi
 
 echo "[12/12] execution policy (execution-policy)"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 -m harness.execpolicy --check \
+if [[ "$HUB_AROUND" -eq 1 ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -m harness.execpolicy --check \
     || err "execution policy (execution-policy)"
 else
-  echo "  execution policy: core/ not found (standalone-layout) — gate skipped"
+  echo "  execution policy: no hub checkout around the module (standalone layout) — gate skipped"
 fi
 
 echo ""

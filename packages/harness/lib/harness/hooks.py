@@ -8,12 +8,24 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, DiagnosticSeverity, ProviderId,
-                  apply_plan, artifact_dry_run, plan_artifact_lock,
-                  plan_artifact_render, render_artifact_projection, sha256_digest)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity,
+    ArtifactRenderRequest,
+    ArtifactSource,
+    ArtifactTarget,
+    plan_artifact_render,
+    sha256_digest,
+)
+from aicore.artifacts.lock import (
+    apply_plan,
+    artifact_dry_run,
+    plan_artifact_lock,
+    render_artifact_projection,
+)
+from aicore.provider.values import DiagnosticSeverity, ProviderId
 
-from .common import die, parse_flags, warn
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
 from .profiles import (HarnessDiagnostic, ProfileCatalog, default_catalog_path,
                        load_catalog)
 from .settings import (add_hook, load_settings, set_setting_key, set_swissknife,
@@ -1211,14 +1223,15 @@ def plan_cursor_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path:
 
 
 _CODEX_ROUTER_CATALOG_PATH = ("packages/harness/configs/claude-code/hooks/"
-                              "agent-router/config.json")
+                              "agent-router/config.json")  # hub-relative identifier recorded in locks
+_CODEX_ROUTER_CATALOG_FILE = (Path(__file__).resolve().parents[2]
+                              / "configs/claude-code/hooks/agent-router/config.json")
 
 
 def _codex_router_catalog():
     """Read the same catalog `~/.claude/hooks/agent-router/config.json` uses and project
     its command names into Codex's own bare invocation form (`planner:x`, not `/planner:x`)."""
-    root = Path(__file__).resolve().parents[4]
-    catalog = json.loads((root / _CODEX_ROUTER_CATALOG_PATH).read_text(encoding="utf-8"))
+    catalog = json.loads(_CODEX_ROUTER_CATALOG_FILE.read_text(encoding="utf-8"))
     commands = [{"name": entry["name"].replace("/planner:", "planner:", 1),
                 "weight": entry.get("weight", 1), "keywords": entry["keywords"]}
                for entry in catalog.get("commands", [])]
@@ -2073,7 +2086,7 @@ def plan_claude_shaped_lifecycle_artifacts(plan: LifecycleRenderPlan, *, binding
     source = ArtifactSource(f"harness.{name}.lifecycle-bindings",
                             f"packages/harness/configs/{name}/hooks/lifecycle-context-bindings.json",
                             sha256_digest(Path(bindings_path).read_bytes()))
-    router_path = Path(__file__).resolve().parents[4] / _CODEX_ROUTER_CATALOG_PATH
+    router_path = _CODEX_ROUTER_CATALOG_FILE
     router_source = ArtifactSource("harness.codex.router-catalog",
                                    _CODEX_ROUTER_CATALOG_PATH,
                                    sha256_digest(router_path.read_bytes()))

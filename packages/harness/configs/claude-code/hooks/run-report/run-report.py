@@ -137,30 +137,17 @@ def _append_trend(cwd, sid, report):
 
 
 def _analyst_bin():
-    """Internal documentation."""
+    """Partner lookup (hook-side copy of aicore.util.partners): ANALYST_BIN (deprecated) -> SKM_ANALYST_BIN
+    -> SKM_ANALYST_ROOT/bin/analyst -> PATH; None when not found."""
     import shutil
-    env_bin = os.environ.get("ANALYST_BIN")
-    if env_bin and os.access(env_bin, os.X_OK):
-        return env_bin
-    found = shutil.which("analyst")
-    if found:
-        return found
-    candidates = []
-    topo = Path(os.path.expanduser("~/.swissknifeman/topology.json"))
-    try:
-        nodes = (json.loads(topo.read_text(encoding="utf-8")) or {}).get("nodes") or {}
-        skm = nodes.get("swissknifeman")
-        base = skm.get("path") if isinstance(skm, dict) else skm
-        if base:
-            candidates.append(Path(os.path.expanduser(base)) / "packages/analyst/bin/analyst")
-    except Exception:
-        pass
-    candidates.append(Path(os.path.expanduser(
-        "~/projects/packages/swissknifeman/packages/analyst/bin/analyst")))
-    for c in candidates:
-        if c.is_file() and os.access(c, os.X_OK):
-            return str(c)
-    return None
+    candidates = [os.environ.get("ANALYST_BIN"), os.environ.get("SKM_ANALYST_BIN")]
+    root = os.environ.get("SKM_ANALYST_ROOT")
+    if root:
+        candidates.append(os.path.join(os.path.expanduser(root), "bin", "analyst"))
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
+    return shutil.which("analyst")
 
 
 def _run_digest(cwd, sid):

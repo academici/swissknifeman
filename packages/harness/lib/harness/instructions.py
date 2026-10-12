@@ -13,78 +13,38 @@ import re
 import sys
 from typing import Mapping
 
-from core.cli import parse_args
+from aicore.util.cli import parse_args
 from aicore.content.budget import CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT, estimate_tokens  # noqa: F401 (re-export)
-from core.io import atomic_write_text
-from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
-from core.provider.projection import load_projection_catalog, project_common_instructions
-from core.provider.artifact import (
+from aicore.util.io import atomic_write_text
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from aicore.provider.projection import load_projection_catalog, project_common_instructions
+from aicore.artifacts.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
     canonical_json_bytes, plan_artifact_render, sha256_digest,
 )
-from core.provider.lock import (
+from aicore.artifacts.lock import (
     ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
     parse_lock, plan_artifact_lock, serialize_lock,
 )
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.7.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
-SCOPES = ("root", "skiller", "harness", "maind", "analyst", "planner", "artifex", "brain", "orch")
-_SCOPE_TARGET_KEYS = {
-    "claude-code": "claude_target",
-    "codex": "codex_target",
-    "cursor": "cursor_target",
-    "grok": "grok_target",
-}
-TARGETS = {
-    "root": {
-        "claude-code": "CLAUDE.md", "codex": "AGENTS.md",
-        "cursor": ".cursor/rules/swissknifeman-instructions.mdc",
-        "grok": ".grok/rules/swissknifeman-instructions.md",
-    },
-    "skiller": {
-        "claude-code": "packages/skiller/CLAUDE.md", "codex": "packages/skiller/AGENTS.md",
-        "cursor": "packages/skiller/.cursor-instructions.mdc",
-        "grok": "packages/skiller/.grok-instructions.md",
-    },
-    "harness": {
-        "claude-code": "packages/harness/CLAUDE.md", "codex": "packages/harness/AGENTS.md",
-        "cursor": "packages/harness/.cursor-instructions.mdc",
-        "grok": "packages/harness/.grok-instructions.md",
-    },
-    "maind": {
-        "claude-code": "packages/maind/CLAUDE.md", "codex": "packages/maind/AGENTS.md",
-        "cursor": "packages/maind/.cursor-instructions.mdc",
-        "grok": "packages/maind/.grok-instructions.md",
-    },
-    "analyst": {
-        "claude-code": "packages/analyst/CLAUDE.md", "codex": "packages/analyst/AGENTS.md",
-        "cursor": "packages/analyst/.cursor-instructions.mdc",
-        "grok": "packages/analyst/.grok-instructions.md",
-    },
-    "planner": {
-        "claude-code": "packages/planner/CLAUDE.md", "codex": "packages/planner/AGENTS.md",
-        "cursor": "packages/planner/.cursor-instructions.mdc",
-        "grok": "packages/planner/.grok-instructions.md",
-    },
-    "artifex": {
-        "claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md",
-        "cursor": "packages/artifex/.cursor-instructions.mdc",
-        "grok": "packages/artifex/.grok-instructions.md",
-    },
-    "brain": {
-        "claude-code": "packages/brain/CLAUDE.md", "codex": "packages/brain/AGENTS.md",
-        "cursor": "packages/brain/.cursor-instructions.mdc",
-        "grok": "packages/brain/.grok-instructions.md",
-    },
-    "orch": {
-        "claude-code": "packages/orch/CLAUDE.md", "codex": "packages/orch/AGENTS.md",
-        "cursor": "packages/orch/.cursor-instructions.mdc",
-        "grok": "packages/orch/.grok-instructions.md",
-    },
-}
+
+
+def _frozen_catalog_head():
+    """(catalog_version, scope ids, target paths by scope) of the packaged catalog, the owner of this data."""
+    path = Path(__file__).resolve().parents[2] / "configs/common/instructions/catalog.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        scopes = value["scopes"]
+        return (value["catalog_version"], tuple(scope["id"] for scope in scopes),
+                {scope["id"]: dict(scope["targets"]) for scope in scopes})
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise RuntimeError(f"INSTRUCTION_CATALOG_UNREADABLE: {path.name}: {error}") from error
+
+
+CATALOG_VERSION, SCOPES, TARGETS = _frozen_catalog_head()
 COMMON_IDS = {
     "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
              "root.cli-routing", "root.shared-core", "root.marketplace",
@@ -352,7 +312,26 @@ def package_root() -> Path:
 
 
 def repository_root() -> Path:
+    """Hub checkout around this module (the default target of the CLI); meaningless in a standalone copy."""
     return Path(__file__).resolve().parents[4]
+
+
+_PACKAGE_PREFIX = "packages/harness/"
+
+
+def package_file(hub_relative: str) -> Path:
+    """Package-owned file named by its hub-relative identifier (`packages/harness/<rest>`), in any layout."""
+    if not hub_relative.startswith(_PACKAGE_PREFIX):
+        raise ValueError(f"not a harness file: {hub_relative}")
+    return package_root() / hub_relative[len(_PACKAGE_PREFIX):]
+
+
+def _identifier(path: Path) -> str:
+    """Hub-relative identifier of a file: package files are `packages/harness/<rest>` wherever the package lives."""
+    try:
+        return _PACKAGE_PREFIX + path.relative_to(package_root()).as_posix()
+    except ValueError:
+        return path.relative_to(repository_root()).as_posix()
 
 
 def catalog_path() -> Path:
@@ -431,12 +410,13 @@ def validate_catalog(value: object) -> tuple[InstructionDiagnostic, ...]:
         scope = scopes[scope_index]
         if scope.get("id") != scope_id:
             continue
-        expected_fields = {"id", "sections", *(_SCOPE_TARGET_KEYS[p] for p in PROVIDERS)}
-        if set(scope) != expected_fields:
+        targets = scope.get("targets")
+        if (set(scope) != {"id", "sections", "targets"} or not isinstance(targets, dict)
+                or set(targets) != set(PROVIDERS)):
             diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
                                      expected="scope record fields", observed=_shape(scope)))
             continue
-        observed_targets = tuple(scope[_SCOPE_TARGET_KEYS[p]] for p in PROVIDERS)
+        observed_targets = tuple(targets[p] for p in PROVIDERS)
         expected_targets = tuple(TARGETS[scope_id][p] for p in PROVIDERS)
         if observed_targets != expected_targets:
             diagnostics.append(_diag("INSTRUCTION_TARGET_SET_MISMATCH", scope_id=scope_id,
@@ -1089,7 +1069,7 @@ def _validate_record(record: dict, scope_id: str, diagnostics: list[InstructionD
                                  observation="provenance-invalid",
                                  expected=expected_fragment, observed=_display(sources)))
     else:
-        source_path = repository_root() / expected_fragment
+        source_path = package_file(expected_fragment)
         expected_hash = sha256_digest(source_path.read_bytes()).removeprefix("sha256:")
         if sources[0]["sha256"] != expected_hash:
             diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID", scope_id=scope_id,
@@ -1165,7 +1145,7 @@ def _validate_fragments(scope_id: str, sections: list, diagnostics: list) -> Non
     by_id = {item.get("id"): item for item in sections if isinstance(item, dict)}
     for provider in (None,) + PROVIDERS:
         expected_ids = COMMON_IDS[scope_id] if provider is None else EXTENSION_IDS[(scope_id, provider)]
-        path = repository_root() / _fragment_relative(scope_id, provider)
+        path = package_file(_fragment_relative(scope_id, provider))
         try:
             text = path.read_text(encoding="utf-8")
         except OSError as error:
@@ -1297,7 +1277,7 @@ def _literal_coverage_source_text(source: object) -> str:
     """Read the provenance source (repository-relative path). Patchable by name from tests."""
     if not isinstance(source, str):
         raise ValueError("provenance.source must be a string")
-    return (repository_root() / source).read_text(encoding="utf-8")
+    return package_file(source).read_text(encoding="utf-8")
 
 
 def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, ...]:
@@ -1573,17 +1553,14 @@ def _instruction_observation_corrections(root: Path, plan_value: ArtifactPlan,
 
 
 def _source(source_id: str, path: Path) -> ArtifactSource:
-    return ArtifactSource(source_id, path.relative_to(repository_root()).as_posix(),
-                          sha256_digest(path.read_bytes()))
+    return ArtifactSource(source_id, _identifier(path), sha256_digest(path.read_bytes()))
 
 
 def _catalog_source(value: dict[str, object]) -> ArtifactSource:
     path = catalog_path()
     raw = path.read_bytes()
     content = raw if json.loads(raw) == value else canonical_json_bytes(value)
-    return ArtifactSource("instruction.catalog",
-                          path.relative_to(repository_root()).as_posix(),
-                          sha256_digest(content))
+    return ArtifactSource("instruction.catalog", _identifier(path), sha256_digest(content))
 
 
 def _fragment_relative(scope_id: str, provider_id: str | None) -> str:
@@ -1604,8 +1581,8 @@ def _fragment_body(text: str, semantic_id: str) -> str:
 def fragment_section(scope_id: str, provider_id: str | None, semantic_id: str, *,
                      root: Path | None = None) -> str:
     """Body of one catalog section, so a projection never restates the text itself."""
-    base = repository_root() if root is None else Path(root)
-    path = base / _fragment_relative(scope_id, provider_id)
+    relative = _fragment_relative(scope_id, provider_id)
+    path = package_file(relative) if root is None else Path(root) / relative
     body = _fragment_body(path.read_text(encoding="utf-8"), semantic_id)
     if not body:
         raise ValueError(f"HARNESS_INSTRUCTION_FRAGMENT_MISSING:{semantic_id}")

@@ -10,19 +10,18 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from harness.hooks import (LifecycleRequest, plan_lifecycle, render_codex_hook_handler,
                            render_cursor_hook_handler)
 from harness.lifecycle_plan_guard_core import MESSAGE, generated_plan_file, plan_guard_hit
 from harness.profiles import load_catalog
-from core import ProviderId
+from aicore.provider.values import ProviderId
+from aicore.util.partners import partner_command
 
 PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
 GUARD = PACKAGE / "configs/claude-code/hooks/plan-guard/plan-guard.py"
 REGEN = PACKAGE / "configs/claude-code/hooks/plan-regen/plan-regen.py"
-PLAN_CLI = ROOT / "packages/planner/scripts/plan.py"
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
 CODEX_BINDINGS = PACKAGE / "configs/codex/hooks/lifecycle-context-bindings.json"
 CURSOR_BINDINGS = PACKAGE / "configs/cursor/hooks/lifecycle-context-bindings.json"
@@ -177,13 +176,17 @@ class PlanRegenTests(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
         (self.root / "plans").mkdir()
+        planner = partner_command("planner")
+        if planner is None or len(planner) != 2:
+            self.skipTest("planner partner (plan.py) not found (set PLANNER_ROOT or PLANNER_PLAN_PY)")
+        plan_cli = planner[1]
         created = subprocess.run(
-            [sys.executable, str(PLAN_CLI), "new", "--codename", "DEMO", "--title", "Demo",
+            [sys.executable, plan_cli, "new", "--codename", "DEMO", "--title", "Demo",
              "--actor", "claude-code/x/high", "--message", "m"],
             cwd=self.root, text=True, capture_output=True)
         self.assertEqual(created.returncode, 0, created.stderr)
         self.plan = next((self.root / "plans").iterdir())
-        self.env = {**os.environ, "TASK_PLAN_CLI": str(PLAN_CLI)}
+        self.env = {**os.environ, "PLANNER_PLAN_PY": plan_cli}
         (self.root / ".claude").mkdir()
 
     def _payload(self, path):

@@ -6,7 +6,10 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .common import die, find_monorepo_root, parse_args, safe_load_json, warn
+from aicore.util.cli import parse_args
+from aicore.util.io import safe_load_json
+from aicore.util.repo import find_monorepo_root
+from aicore.util.term import die, warn
 from .settings import load_settings, remove_permission_rules, write_json
 
 SUBCOMMANDS = ("init", "list", "add", "remove", "prune-ask", "delete")

@@ -12,8 +12,8 @@ except ModuleNotFoundError:  # Python 3.9/3.10 compatibility
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from core import ProviderId
-from core import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.values import ProviderId
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
 from harness.mcp import (block_mcp, load_mcp_catalog, plan_mcp_artifact,
                          plan_mcp_projection, render_mcp_projection)
 import tests.fixtures as fx

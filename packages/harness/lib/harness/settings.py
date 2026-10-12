@@ -1,7 +1,8 @@
 """Internal documentation."""
 import json
 
-from .common import atomic_write_text, backup_file, die
+from aicore.util.io import atomic_write_text, backup_file
+from aicore.util.term import die
 
 
 def write_json(path, data, dry):

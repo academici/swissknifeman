@@ -30,8 +30,10 @@ def _plan_dir(path):
 
 
 def _plan_cli(cwd):
-    explicit = os.environ.get("TASK_PLAN_CLI")
-    candidates = ([Path(explicit)] if explicit else []) + [
+    explicit = os.environ.get("TASK_PLAN_CLI") or os.environ.get("PLANNER_PLAN_PY")
+    root = os.environ.get("PLANNER_ROOT")
+    candidates = ([Path(explicit)] if explicit else []) + (
+        [Path(root) / "scripts" / "plan.py"] if root else []) + [
         Path(cwd) / "packages" / "planner" / "scripts" / "plan.py"]
     return next((item for item in candidates if item.is_file()), None)
 

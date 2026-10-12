@@ -38,6 +38,14 @@
 
 ### Changed
 
+- **harness:** imports only itself and `aicore` (no `core`, no root-layout path logic in `bin/harness` and the runners; standalone copy passes). The
+  legacy `harness run` driver takes model and effort selectors from the aicore model catalog and finds the planner through
+  `PLANNER_ROOT`, `SKM_TASK_ROOT` (deprecated), `PLANNER_PLAN_PY` or `planner` on `PATH` (no neighbouring-folder or monorepo step; a missing
+  planner is `PLANNER_UNAVAILABLE`). The managed Cursor routing rule is generated from the aicore model catalog and no longer lists
+  per-command routes. The instruction catalog (1.8.0) carries each scope's `targets` per provider as data and `harness.instructions.SCOPES`,
+  `TARGETS` and `CATALOG_VERSION` are computed from it. The `memory` (maind), `review-gate` (plan-check) and `run-report` (analyst) hooks find
+  their partners through `SKM_<P>_BIN`, `SKM_<P>_ROOT` or `PATH` (`PLANNER_PLAN_PY`, `PLANNER_ROOT` for the planner); `MAIND_BIN` stays a
+  deprecated alias with a `MAIND_BIN_DEPRECATED` warning.
 - **maind:** the node config is split by writer. Settings (`node`, `memory`, `graph`, `code_graph`, agent timings, `integrations`, `mcp`
   policy, `observability`) are the `[maind]` table of the layered config (schema `configs/config.schema.json`, generated
   `config.example.toml`); the fleet registry (projects, namespaces, agent definitions, MCP servers, providers, role packs) is

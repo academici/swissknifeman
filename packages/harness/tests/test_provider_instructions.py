@@ -7,15 +7,14 @@ import tempfile
 import unittest
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
-from core.provider.artifact import sha256_digest
-from core.provider.lock import serialize_lock
+from aicore.artifacts.artifact import sha256_digest
+from aicore.artifacts.lock import serialize_lock
 from harness.instructions import (
     CATALOG_VERSION, COMMON_IDS, CONTRACT_VERSION, DIAGNOSTIC_CODES, EXTENSION_IDS,
     PROVIDERS, ROOT_PINNED_COMMON_IDS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
-    adopt_instructions, apply_instructions, check_instructions, load_catalog,
+    adopt_instructions, apply_instructions, check_instructions, load_catalog, package_file,
     plan_instructions, repair_instructions,
 )
 
@@ -246,10 +245,11 @@ class PublicOperationTests(unittest.TestCase):
     def test_missing_package_agents_is_structured_non_green(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
+            package_scope = next(scope for scope in SCOPES if scope != "root")
             result = check_instructions(request(
-                "check", root, scope_ids=("analyst",), provider_ids=("codex",)))
+                "check", root, scope_ids=(package_scope,), provider_ids=("codex",)))
         self.assertEqual(len(result.targets), 1)
-        self.assertEqual(result.targets[0].target_path, "packages/analyst/AGENTS.md")
+        self.assertEqual(result.targets[0].target_path, TARGETS[package_scope]["codex"])
         self.assertEqual(result.targets[0].observation, "missing")
         self.assertEqual(diagnostic_codes(result), ("INSTRUCTION_TARGET_MISSING",))
 
@@ -452,7 +452,7 @@ class PublicOperationTests(unittest.TestCase):
                 tuple(item["source_id"] for item in record["canonical_sources"]),
                 tuple(sorted(item["source_id"] for item in record["canonical_sources"])))
             for source in record["canonical_sources"]:
-                source_path = Path(__file__).resolve().parents[3] / source["path"]
+                source_path = package_file(source["path"])
                 self.assertEqual(source["hash"], sha256_digest(source_path.read_bytes()))
             self.assertEqual(
                 record["capability_requirements"],

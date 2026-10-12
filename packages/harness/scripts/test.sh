@@ -28,8 +28,5 @@ AICORE_LIB="$AICORE_ROOT/lib"
 unset -f _aicore_ok
 # --- end aicore locator ---
 
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-
-PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s "$REPO_ROOT/tests" -t "$REPO_ROOT" "$@"

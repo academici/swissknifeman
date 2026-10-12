@@ -12,10 +12,10 @@ import json
 from pathlib import Path
 import tempfile
 
-from core.provider.manifest import default_manifest_path
-from core import (ArtifactActionKind, EffectiveProvider, ProviderId, SupportLevel,
-                  apply_plan, load_provider_manifest, plan_artifact_lock,
-                  serialize_lock, support_for)
+from aicore.provider.manifest import default_manifest_path
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.manifest import load_provider_manifest, support_for
+from aicore.provider.values import EffectiveProvider, ProviderId, SupportLevel
 from .agentpacks import (cursor_consumer_targets, load_claude_role_bindings,
                          load_cursor_agent_consumer_mapping, plan_agent_artifact,
                          semantic_agent_roles)

@@ -7,9 +7,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from aicore.util.partners import partner_command
+
 PKG = Path(__file__).resolve().parents[1]
 RG_SRC = PKG / "configs" / "claude-code" / "hooks" / "review-gate"
-PLANNER_SRC = PKG.parents[1] / "packages" / "planner"
 
 
 def _run(cmd, cwd):
@@ -122,13 +123,12 @@ class TestPlanLintCheck(unittest.TestCase):
         self.repo = self.tmp / "repo"
         self.repo.mkdir()
         _init_repo(self.repo)
-        shutil.copytree(PLANNER_SRC, self.repo / "packages" / "planner",
-                        ignore=shutil.ignore_patterns("__pycache__", "tests", "adapters", "runtime", "docs"))
+        self.planner = partner_command("planner")
+        if self.planner is None:
+            self.skipTest("planner partner not found (set PLANNER_ROOT or PLANNER_PLAN_PY)")
         (self.repo / "plans").mkdir()
-        _run(["git", "add", "."], self.repo)
-        _run(["git", "commit", "-q", "-m", "planner"], self.repo)
         created = subprocess.run(
-            ["python3", str(self.repo / "packages/planner/scripts/plan.py"), "new", "--codename", "DEMO",
+            [*self.planner, "new", "--codename", "DEMO",
              "--title", "Demo", "--actor", "claude-code/x/high", "--message", "m"],
             cwd=self.repo, capture_output=True, text=True)
         self.assertEqual(created.returncode, 0, created.stderr)
@@ -154,6 +154,16 @@ class TestPlanLintCheck(unittest.TestCase):
         (other / "notes.md").write_text("not a v3 plan\n")
         rc, _, err = _run_hook(self.hookdir, self.repo, self.state_dir, "s3", "a3")
         self.assertEqual((rc, err.strip()), (0, ""))
+
+    def test_planner_not_found_skips_the_check_with_a_note(self):
+        if shutil.which("planner", path="/usr/bin:/bin"):
+            self.skipTest("a planner command is installed in the system path")
+        env = {k: v for k, v in os.environ.items() if k not in ("PLANNER_ROOT", "PLANNER_PLAN_PY")}
+        env["PATH"] = "/usr/bin:/bin"
+        proc = subprocess.run(["bash", str(self.hookdir / "checks" / "plan-check.sh")], cwd=self.repo,
+                              env=env, capture_output=True, text=True, timeout=30)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("plan-check: planner not found (set PLANNER_ROOT)", proc.stderr)
 
 
 if __name__ == "__main__":

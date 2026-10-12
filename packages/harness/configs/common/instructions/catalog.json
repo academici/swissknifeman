@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.7.0",
+  "catalog_version": "1.8.0",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -13,8 +13,12 @@
   "scopes": [
     {
       "id": "root",
-      "claude_target": "CLAUDE.md",
-      "codex_target": "AGENTS.md",
+      "targets": {
+        "claude-code": "CLAUDE.md",
+        "codex": "AGENTS.md",
+        "cursor": ".cursor/rules/swissknifeman-instructions.mdc",
+        "grok": ".grok/rules/swissknifeman-instructions.md"
+      },
       "sections": [
         {
           "id": "root.ecosystem-identity",
@@ -949,14 +953,16 @@
             "explicitly read each applicable package guide"
           ]
         }
-      ],
-      "cursor_target": ".cursor/rules/swissknifeman-instructions.mdc",
-      "grok_target": ".grok/rules/swissknifeman-instructions.md"
+      ]
     },
     {
       "id": "skiller",
-      "claude_target": "packages/skiller/CLAUDE.md",
-      "codex_target": "packages/skiller/AGENTS.md",
+      "targets": {
+        "claude-code": "packages/skiller/CLAUDE.md",
+        "codex": "packages/skiller/AGENTS.md",
+        "cursor": "packages/skiller/.cursor-instructions.mdc",
+        "grok": "packages/skiller/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "skiller.identity",
@@ -1293,14 +1299,16 @@
             "`hub.py`"
           ]
         }
-      ],
-      "cursor_target": "packages/skiller/.cursor-instructions.mdc",
-      "grok_target": "packages/skiller/.grok-instructions.md"
+      ]
     },
     {
       "id": "harness",
-      "claude_target": "packages/harness/CLAUDE.md",
-      "codex_target": "packages/harness/AGENTS.md",
+      "targets": {
+        "claude-code": "packages/harness/CLAUDE.md",
+        "codex": "packages/harness/AGENTS.md",
+        "cursor": "packages/harness/.cursor-instructions.mdc",
+        "grok": "packages/harness/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "harness.identity",
@@ -1666,14 +1674,16 @@
             "the safe-dirs allowlist is machine-owned and its verdict is fail-closed"
           ]
         }
-      ],
-      "cursor_target": "packages/harness/.cursor-instructions.mdc",
-      "grok_target": "packages/harness/.grok-instructions.md"
+      ]
     },
     {
       "id": "maind",
-      "claude_target": "packages/maind/CLAUDE.md",
-      "codex_target": "packages/maind/AGENTS.md",
+      "targets": {
+        "claude-code": "packages/maind/CLAUDE.md",
+        "codex": "packages/maind/AGENTS.md",
+        "cursor": "packages/maind/.cursor-instructions.mdc",
+        "grok": "packages/maind/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "maind.identity",
@@ -1943,14 +1953,16 @@
             "`.claude/settings.local.json`"
           ]
         }
-      ],
-      "cursor_target": "packages/maind/.cursor-instructions.mdc",
-      "grok_target": "packages/maind/.grok-instructions.md"
+      ]
     },
     {
       "id": "analyst",
-      "claude_target": "packages/analyst/CLAUDE.md",
-      "codex_target": "packages/analyst/AGENTS.md",
+      "targets": {
+        "claude-code": "packages/analyst/CLAUDE.md",
+        "codex": "packages/analyst/AGENTS.md",
+        "cursor": "packages/analyst/.cursor-instructions.mdc",
+        "grok": "packages/analyst/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "analyst.identity-human-gate",
@@ -2240,14 +2252,16 @@
             "`/analyst:*`"
           ]
         }
-      ],
-      "cursor_target": "packages/analyst/.cursor-instructions.mdc",
-      "grok_target": "packages/analyst/.grok-instructions.md"
+      ]
     },
     {
       "id": "planner",
-      "claude_target": "packages/planner/CLAUDE.md",
-      "codex_target": "packages/planner/AGENTS.md",
+      "targets": {
+        "claude-code": "packages/planner/CLAUDE.md",
+        "codex": "packages/planner/AGENTS.md",
+        "cursor": "packages/planner/.cursor-instructions.mdc",
+        "grok": "packages/planner/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "planner.identity",
@@ -2606,14 +2620,16 @@
             "`plan-run`"
           ]
         }
-      ],
-      "cursor_target": "packages/planner/.cursor-instructions.mdc",
-      "grok_target": "packages/planner/.grok-instructions.md"
+      ]
     },
     {
       "id": "artifex",
-      "claude_target": "packages/artifex/CLAUDE.md",
-      "codex_target": "packages/artifex/AGENTS.md",
+      "targets": {
+        "claude-code": "packages/artifex/CLAUDE.md",
+        "codex": "packages/artifex/AGENTS.md",
+        "cursor": "packages/artifex/.cursor-instructions.mdc",
+        "grok": "packages/artifex/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "artifex.identity",
@@ -2843,12 +2859,16 @@
             "`codex -C packages/artifex`"
           ]
         }
-      ],
-      "cursor_target": "packages/artifex/.cursor-instructions.mdc",
-      "grok_target": "packages/artifex/.grok-instructions.md"
+      ]
     },
     {
       "id": "brain",
+      "targets": {
+        "claude-code": "packages/brain/CLAUDE.md",
+        "codex": "packages/brain/AGENTS.md",
+        "cursor": "packages/brain/.cursor-instructions.mdc",
+        "grok": "packages/brain/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "brain.identity",
@@ -3030,18 +3050,16 @@
             "`python3 scripts/ecosystem-units.py standalone brain`"
           ]
         }
-      ],
-      "claude_target": "packages/brain/CLAUDE.md",
-      "codex_target": "packages/brain/AGENTS.md",
-      "cursor_target": "packages/brain/.cursor-instructions.mdc",
-      "grok_target": "packages/brain/.grok-instructions.md"
+      ]
     },
     {
       "id": "orch",
-      "claude_target": "packages/orch/CLAUDE.md",
-      "codex_target": "packages/orch/AGENTS.md",
-      "cursor_target": "packages/orch/.cursor-instructions.mdc",
-      "grok_target": "packages/orch/.grok-instructions.md",
+      "targets": {
+        "claude-code": "packages/orch/CLAUDE.md",
+        "codex": "packages/orch/AGENTS.md",
+        "cursor": "packages/orch/.cursor-instructions.mdc",
+        "grok": "packages/orch/.grok-instructions.md"
+      },
       "sections": [
         {
           "id": "orch.identity",

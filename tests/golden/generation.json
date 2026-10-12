@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "550152a82dea",
-  "reason": "topology moved to maind; skiller list --json",
+  "captured_from": "6002a942db90",
+  "reason": "instruction catalog 1.8.0 (scope targets as data) and the Cursor routing rule generated from the aicore model catalog",
   "generators": [
     {
       "id": "skiller-registry",
@@ -50,7 +50,7 @@
       ],
       "cwd": "packages/harness",
       "env": {
-        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}"
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
       },
       "outputs": [
         ".cursor/rules/*.mdc",
@@ -67,7 +67,7 @@
       ],
       "cwd": "packages/harness",
       "env": {
-        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}"
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
       },
       "outputs": [
         "packages/harness/docs/reference/provider-instructions.md",
@@ -83,7 +83,7 @@
       ],
       "cwd": "packages/harness",
       "env": {
-        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}"
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
       },
       "outputs": [
         ".cursor/rules/*.mdc"
@@ -99,7 +99,7 @@
       ],
       "cwd": "packages/harness",
       "env": {
-        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}"
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
       },
       "outputs": [],
       "note": "validator of execution-policy: it writes nothing, only the exit code is compared"
@@ -114,7 +114,7 @@
       ],
       "cwd": "packages/harness",
       "env": {
-        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}"
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
       },
       "outputs": [],
       "note": "validator of the role registry: it writes nothing, only the exit code is compared"
@@ -198,7 +198,7 @@
     ".cursor/rules/swissknifeman-launch.mdc": "28879cba56d068d7a2aee70075882b2d05eafc76c16f515b37334a57db6b1866",
     ".cursor/rules/swissknifeman-observer.mdc": "89b05eeeb14c14a754f9e312985601c34565f55f326a2e8787a0ebe1d1f1a87f",
     ".cursor/rules/swissknifeman-packages.mdc": "e33abaca3f65746ecdb01e1b2948db955528aa9955f807d73158da955a2034da",
-    ".cursor/rules/swissknifeman-router.mdc": "ee7a15648bf0d4c9d4b1ee6f2dc38e47133c959f16aa3f735195259621675c39",
+    ".cursor/rules/swissknifeman-router.mdc": "e3be1b179d98ca3956b76517663327ea42a9370bb51de337d9755ef017795b97",
     ".grok/rules/swissknifeman-instructions.md": "d7450cad926742183bf3557e8d574fd8bbae9b81e0b5742b167a6ebce2012354",
     "bootstrap/publication-lock.json": "e6114492de71dd6a6ae7de55590e156ed5c1f885fc701d6c0065ef71a99a3b67",
     "docs/provider-support.md": "2e1d793c251c5b077020617804c67e7143608ac59c7271abdf634ca826724999",

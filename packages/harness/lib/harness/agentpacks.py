@@ -10,10 +10,20 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ProviderId, plan_artifact_render, sha256_digest)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity,
+    ArtifactRenderRequest,
+    ArtifactSource,
+    ArtifactTarget,
+    plan_artifact_render,
+    sha256_digest,
+)
+from aicore.provider.values import ProviderId
 
-from .common import die, parse_flags, safe_load_json, sanitize, warn
+from aicore.util.cli import parse_flags
+from aicore.util.io import safe_load_json
+from aicore.util.term import die, warn
+from aicore.util.text import sanitize
 from .settings import add_hook, load_settings, write_json, write_text
 
 LOCK_REL = ".claude/agent-pack.lock.json"
@@ -387,7 +397,7 @@ def write_lock(target, lock, dry):
         print(f"  [dry-run] would update {lp}")
         return
     lp.parent.mkdir(parents=True, exist_ok=True)
-    from core import atomic_write_json
+    from aicore.util.io import atomic_write_json
     atomic_write_json(lp, lock)
     print(f"  lock: {lp}")
 
@@ -1256,7 +1266,7 @@ def write_codex_roles_lock(target, lock, dry):
         print(f"  [dry-run] would update {lp}")
         return
     lp.parent.mkdir(parents=True, exist_ok=True)
-    from core import atomic_write_json
+    from aicore.util.io import atomic_write_json
     atomic_write_json(lp, lock)
     print(f"  lock: {lp}")
 

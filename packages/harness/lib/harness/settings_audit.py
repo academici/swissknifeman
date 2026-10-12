@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from core import safe_load_json
+from aicore.util.io import safe_load_json
 
 
 # lib/harness/settings_audit.py → <package>/configs/claude-code/settings-keys.json.

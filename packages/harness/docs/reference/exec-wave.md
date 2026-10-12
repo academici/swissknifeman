@@ -18,8 +18,9 @@ the worker physically could not. The driver does not make decisions - he produce
 - **`worker`** starts ONE item process `claude -p "/planner:plan-run
   &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` under timeout (default 1800s),
   strictly one worker at a time (serial wave - parallel fan-out on
-  common codebase does not start). Model selectors/effort are taken from
-  `packages/planner/configs/command-routing.json`.
+  common codebase does not start). Model selectors/effort are taken from the aicore model
+  catalog. The planner is found through `PLANNER_ROOT`, `SKM_TASK_ROOT` (deprecated),
+  `PLANNER_PLAN_PY` or the `planner` command on `PATH`; none found is `PLANNER_UNAVAILABLE`.
 - **`gate`** gives a verdict `GREEN`/`ATTENTION`/`RED` from four sources:
   run outcome class, `plan.py check` (errors RED, warnings ATTENTION), git
   closing (`<SHA to>..HEAD` commits and the uncommitted remainder outside the plan directory),

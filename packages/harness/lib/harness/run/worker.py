@@ -7,9 +7,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from core.provider.errors import ErrorClass, classify_failure
-
-from . import task_paths
+from aicore.provider.errors import ErrorClass, classify_failure
+from aicore.provider.models import ModelCatalogError, load_model_catalog, select_effort, select_model
+from aicore.provider.projection import load_projection_catalog
 
 
 OUTCOME_OK = "ok"
@@ -26,6 +26,7 @@ CLAUDE_BIN_ENV = "SKM_CLAUDE_BIN"
 
 PROVIDER_ID = "claude-code"
 WORKER_COMMAND_ID = "planner:plan-run"
+_INVOCATION_TEMPLATES = {"slash": "/{command_id} {arguments}"}
 
 
 
@@ -51,46 +52,36 @@ def resolve_claude_bin():
     return shutil.which("claude")
 
 
-def _load_routing_config(planner):
-    path = task_paths.routing_in(planner)
+def _command_template():
+    """Slash-command invocation template of the provider, from the aicore projection catalog."""
     try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as exc:
-        return None, f"{path} is not readable: {exc}"
-    try:
-        return json.loads(text), None
-    except json.JSONDecodeError as exc:
-        return None, f"{path} not JSON: {exc}"
+        spec = load_projection_catalog().providers.get(PROVIDER_ID)
+    except (OSError, ValueError) as exc:
+        return None, f"projection catalog not readable: {exc}"
+    style = spec.command_invocation.style if spec is not None else None
+    template = _INVOCATION_TEMPLATES.get(style)
+    if template is None:
+        return None, f"no invocation style for {PROVIDER_ID!r}: {style!r}"
+    return template, None
 
 
-def _first(selectors):
-    return selectors[0] if isinstance(selectors, list) and selectors else None
-
-
-def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin):
+def build_argv(plan_id, item_id, *, model_class, effort, claude_bin):
     """Internal documentation."""
     try:
-        planner = task_paths.planner_root(monorepo_root=monorepo_root)
-    except task_paths.PlannerUnavailable as exc:
-        raise WorkerUnavailable(f"routing media not available: {exc}") from exc
-    routing, reason = _load_routing_config(planner)
-    if routing is None:
-        raise WorkerUnavailable(f"routing media not available: {reason}")
-
-    mapping = ((routing.get("mappings") or {}).get(PROVIDER_ID)) or {}
-    model_selector = _first((mapping.get("class_selectors") or {}).get(model_class))
-    effort_selector = _first((mapping.get("effort_selectors") or {}).get(effort))
-    template = (mapping.get("invocation_binding") or {}).get("template")
-
+        catalog = load_model_catalog()
+    except ModelCatalogError as exc:
+        raise WorkerUnavailable(f"model catalog not available: {exc}") from exc
+    model_selector = select_model(catalog, PROVIDER_ID, model_class)
+    effort_selector = select_effort(catalog, PROVIDER_ID, effort)
     if model_selector is None:
         raise WorkerUnavailable(
-            f"command-routing.json: no class selector {model_class!r} for {PROVIDER_ID!r}")
+            f"model catalog: no class selector {model_class!r} for {PROVIDER_ID!r}")
     if effort_selector is None:
         raise WorkerUnavailable(
-            f"command-routing.json: no selector effort {effort!r} for {PROVIDER_ID!r}")
-    if not template:
-        raise WorkerUnavailable(
-            f"command-routing.json: no invocation_binding.template for {PROVIDER_ID!r}")
+            f"model catalog: no selector effort {effort!r} for {PROVIDER_ID!r}")
+    template, reason = _command_template()
+    if template is None:
+        raise WorkerUnavailable(f"model catalog: no invocation template: {reason}")
 
     invocation = template.format(command_id=WORKER_COMMAND_ID, arguments=f"{plan_id} {item_id}")
     return [claude_bin, "-p", invocation, "--output-format", "json",
@@ -164,20 +155,14 @@ def _classify_envelope(proc, argv, client_version):
                     raw_stdout=raw[:2000], exit_code=proc.returncode, envelope=envelope)
 
 
-def run(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin=None,
-        timeout=DEFAULT_TIMEOUT):
+def run(plan_id, item_id, *, model_class, effort, claude_bin=None, timeout=DEFAULT_TIMEOUT):
     """Internal documentation."""
-    try:
-        task_paths.planner_root(monorepo_root=monorepo_root)
-    except task_paths.PlannerUnavailable as exc:
-        raise WorkerUnavailable(f"{exc} (command-routing.json not available)") from exc
-
     resolved_bin = claude_bin or resolve_claude_bin()
     if resolved_bin is None:
         raise WorkerUnavailable(f"client binary not found (env {CLAUDE_BIN_ENV} → PATH)")
 
     argv = build_argv(plan_id, item_id, model_class=model_class, effort=effort,
-                      monorepo_root=monorepo_root, claude_bin=resolved_bin)
+                      claude_bin=resolved_bin)
     client_version = _capture_client_version(resolved_bin)
 
     try:

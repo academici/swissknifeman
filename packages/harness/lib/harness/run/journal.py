@@ -97,9 +97,9 @@ def _build_argv(*, plan_dir, item_id, run_id, event_type, note, planner,
     return argv
 
 
-def _resolve_planner_root(monorepo_root, plan_dir):
+def _resolve_planner_root():
     try:
-        return task_paths.planner_root(Path(plan_dir).resolve(), monorepo_root=monorepo_root)
+        return task_paths.planner_root()
     except task_paths.PlannerUnavailable as exc:
         raise JournalUnavailable(f"{exc} (process CLI log not available)") from exc
 
@@ -124,8 +124,7 @@ def _build_note(run_id, category, *, outcome=None, refusal_detail=None):
 
 
 def maybe_write(plan_dir, item_id, *, run_id, pre_launch=False,
-                refusal_detail=None, outcome=None, item_status=None, monorepo_root=None,
-                timeout=30):
+                refusal_detail=None, outcome=None, item_status=None, timeout=30):
     """Internal documentation."""
     if not run_id:
         raise ValueError("run_id is required for the driver line (discriminator IR2)")
@@ -136,7 +135,7 @@ def maybe_write(plan_dir, item_id, *, run_id, pre_launch=False,
 
     event_type = _EVENT_TYPE[category]
     note = _build_note(run_id, category, outcome=outcome, refusal_detail=refusal_detail)
-    planner = _resolve_planner_root(monorepo_root, plan_dir)
+    planner = _resolve_planner_root()
     argv = _build_argv(
         plan_dir=plan_dir, item_id=item_id, run_id=run_id, event_type=event_type, note=note,
         planner=planner,

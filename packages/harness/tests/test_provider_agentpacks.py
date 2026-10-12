@@ -12,9 +12,8 @@ except ModuleNotFoundError:  # Python 3.9/3.10 compatibility
     tomllib = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
 from harness.agentpacks import (agent_model_trace, compare_agent_inventory, cursor_consumer_target,
                                 expected_agent_inventory,
                                 cursor_consumer_targets, load_claude_role_bindings,

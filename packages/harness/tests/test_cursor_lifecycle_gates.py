@@ -10,10 +10,10 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core.provider.manifest import default_manifest_path
-from core import ProviderId, load_provider_manifest, support_for
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.manifest import load_provider_manifest, support_for
+from aicore.provider.values import ProviderId
 from harness.hooks import LifecycleRequest, plan_lifecycle, render_cursor_hook_handler, render_cursor_hooks
 from harness.profiles import load_catalog
 

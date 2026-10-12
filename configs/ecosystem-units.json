@@ -45,11 +45,14 @@
   ],
   "path_suffixes": [".py", ".sh", ".js", ".mjs", ".json", ".toml", ".yml", ".yaml"],
   "path_allow": [
-    {"path": "packages/aicore/configs/provider-capabilities.json", "reason": "evidence[].source are pointers to the documents and checks of other modules, kept as data of the manifest; no code reads them as paths"}
+    {"path": "packages/aicore/configs/provider-capabilities.json", "reason": "evidence[].source are pointers to the documents and checks of other modules, kept as data of the manifest; no code reads them as paths"},
+    {"path": "packages/harness/configs/common/instructions/catalog.json", "reason": "hub instruction catalog: the target paths of module instruction files are data the hub generator writes; harness code names no module"},
+    {"path": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json", "reason": "snapshot of the hub instruction catalog"},
+    {"path": "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json", "reason": "snapshot of the hub instruction catalog"}
   ],
   "standalone": {
     "foundation_paths": ["core"],
-    "foundation_free": ["skiller", "planner", "orch", "analyst"],
+    "foundation_free": ["skiller", "planner", "orch", "analyst", "harness"],
     "unset_env": ["PYTHONPATH", "SKILLER_HOST_CONFIG"],
     "timeout_s": 1800
   },

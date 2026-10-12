@@ -6,9 +6,8 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import EffectiveProvider, ProviderId
+from aicore.provider.values import EffectiveProvider, ProviderId
 from harness.cursor_render import (assert_rule_frontmatter, check_cursor_rules,
                                    plan_cursor_rules, render_cursor_cli_json,
                                    render_cursor_rules)
@@ -19,6 +18,8 @@ REPO = Path(__file__).resolve().parents[3]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
 BINDINGS = PACKAGE / "configs/cursor/config/profile-bindings.json"
 FRAGMENT = "packages/harness/configs/common/instructions/root/cursor.md"
+FRAGMENT_FILE = PACKAGE / FRAGMENT.removeprefix("packages/harness/")
+HUB_RULES = REPO / ".cursor/rules"
 
 
 def effective():
@@ -99,17 +100,19 @@ class CursorProviderConformanceTests(unittest.TestCase):
 class CursorRuleProjectionTests(unittest.TestCase):
     """Committed Cursor rules are generated projections, not hand-maintained copies."""
 
+    @unittest.skipUnless(HUB_RULES.is_dir() and (REPO / FRAGMENT).is_file(),
+                         "the hub checkout with the committed rules is not around this module")
     def test_committed_rules_match_the_catalog(self):
         self.assertEqual(check_cursor_rules(REPO), ())
 
     def test_every_rule_body_is_quoted_from_the_fragment(self):
-        fragment = (REPO / FRAGMENT).read_text(encoding="utf-8")
+        fragment = FRAGMENT_FILE.read_text(encoding="utf-8")
         catalog_rules = {
             ".cursor/rules/swissknifeman-core.mdc",
             ".cursor/rules/swissknifeman-launch.mdc",
             ".cursor/rules/swissknifeman-packages.mdc",
         }
-        for path, content in plan_cursor_rules(REPO).items():
+        for path, content in plan_cursor_rules().items():
             assert_rule_frontmatter(path, content)
             if path not in catalog_rules:
                 continue
@@ -140,7 +143,7 @@ class CursorRuleProjectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             (root / Path(FRAGMENT).parent).mkdir(parents=True)
-            source = REPO / FRAGMENT
+            source = FRAGMENT_FILE
             edited = source.read_text(encoding="utf-8").replace(
                 "Name the intended workspace", "Name the CANARY workspace")
             (root / FRAGMENT).write_text(edited, encoding="utf-8")
@@ -151,7 +154,7 @@ class CursorRuleProjectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             (root / Path(FRAGMENT).parent).mkdir(parents=True)
-            shutil.copyfile(REPO / FRAGMENT, root / FRAGMENT)
+            shutil.copyfile(FRAGMENT_FILE, root / FRAGMENT)
             for path, content in plan_cursor_rules(root).items():
                 target = root / path
                 target.parent.mkdir(parents=True, exist_ok=True)

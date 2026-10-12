@@ -6,7 +6,8 @@ import sys
 from pathlib import Path
 
 from .agentpacks import list_packs
-from .common import die, parse_flags
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 from .mcp import available_mcp
 
 

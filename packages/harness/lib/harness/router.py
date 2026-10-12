@@ -2,9 +2,9 @@
 import re
 from pathlib import Path
 
-from core import parse_frontmatter
+from aicore.util.text import parse_frontmatter
 
-from .common import parse_flags
+from aicore.util.cli import parse_flags
 from .settings import write_json
 
 

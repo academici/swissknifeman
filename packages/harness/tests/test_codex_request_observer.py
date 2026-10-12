@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-from core.provider.request_lifecycle import status
+from aicore.provider.request_lifecycle import status
 
 
 class CodexRequestObserverLauncherTests(unittest.TestCase):

@@ -267,6 +267,18 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(verdict["rounds"][0]["triage"]["rejected"][0]["finding"], "F1")
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
+    def test_a_deviation_survives_a_review_limit_block_and_registers(self):
+        deviation = {"text": "touched a file outside the write set", "kind": "deviation", "impact": "none", "next": "none"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "fix it"}],
+                             "rejected": []}}
+        done = dict(executor_ok("W1"), result=report("W1", "done_with_deviations", open_issues=[deviation]))
+        self.script({"executor": [done, done], "reviewer": [FINDING], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        issues = self.source()["items"]["W1"]["report"]["open_issues"]
+        self.assertTrue(any(i["text"].startswith("deviation: touched") for i in issues), issues)
+
     def test_findings_after_the_review_limit_block(self):
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                               "observed": "ok"}, "fix": "fix it"}],

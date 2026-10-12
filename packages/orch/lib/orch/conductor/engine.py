@@ -826,6 +826,9 @@ class Conductor:
         body = {key: value for key, value in report.items() if key != "status"}
         if status != "blocked":
             body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]
+        else:  # a blocked registration takes no deviation issue (the register verb pairs it with done_with_deviations)
+            body["open_issues"] = [dict(issue, kind="difficulty", text=f"deviation: {issue['text']}")
+                                   if issue["kind"] == "deviation" else issue for issue in body["open_issues"]]
         report_path = write_json(item.directory / "register-report.json", body)
         evidence = {row["id"]: row["evidence"] for row in rows or [] if row.get("evidence") and row["kind"] == "acceptance"}
         executor = self._actor(item.routes["executor"])

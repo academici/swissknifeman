@@ -196,8 +196,8 @@ class Conductor:
         return self._loop()
 
     def _retry(self, ref: str) -> None:
-        """Take a blocked piece back into the run: the steps from the executor round that reported ``blocked`` on (and the
-        closing steps after it) are repeated, everything before them is kept — the work in the tree is not thrown away."""
+        """Take a blocked piece back into the run: the input is built again from the (amended) plan, and the steps from the executor round that reported ``blocked`` on
+        (and the closing steps after it) are repeated; the earlier rounds are kept and the work in the tree is not thrown away."""
         item = self.state["items"].get(ref)
         if not item or item.get("outcome") != "blocked":
             raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
@@ -209,7 +209,9 @@ class Conductor:
         if blocked is None:
             raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round that reported blocked")
         since = steps[blocked].get("ended", "")
-        for key in [key for key in steps if key == blocked or key in ("close", "register", "commit")
+        # the input is built again too: the plan was amended (that is why the piece was blocked and reopened), and the
+        # executor must see the amended write set, not the one of the first brief
+        for key in [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
                     or steps[key].get("ended", "") > since]:
             steps.pop(key)
         for key in ("outcome", "stop", "partial"):

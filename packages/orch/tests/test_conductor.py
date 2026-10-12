@@ -524,10 +524,8 @@ class StopTests(ConductorCase):
         code, _, err = self.conduct("resume", "--run", self.run_dir(err).name, "--retry", "W1", "--json-lines")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertEqual(self.calls("executor"), 2)
-        skipped = [line["stage"] for line in self.lines(err) if line["event"] == "stage.skip"]
-        self.assertIn("scout", skipped)
         started = [line["stage"] for line in self.lines(err) if line["event"] == "stage.start"]
-        self.assertNotIn("scout", started)  # only the blocked round and what follows is repeated
+        self.assertIn("brief", started)  # the input is built again from the amended plan
         self.assertIn("executor.1", started)
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 

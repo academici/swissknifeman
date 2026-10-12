@@ -13,6 +13,7 @@ from aicore.artifacts.artifact import (
     ArtifactRenderRequest,
     ArtifactSource,
     ArtifactTarget,
+    canonical_json_bytes,
     plan_artifact_render,
     sha256_digest,
 )
@@ -2072,6 +2073,84 @@ def validate_d104_codex_lifecycle_composition(document: bytes, *, memory_command
         raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
 
 
+CODEX_LIFECYCLE_SCHEMA = "urn:swissknifeman:harness:codex-lifecycle:v1"
+_D104_FRAGMENT_SOURCE_ID = "harness.d104.observer-fragment"
+_D104_FRAGMENT_SOURCE_PATH = "packages/harness/lib/harness/hooks.py"
+
+
+def d104_observer_fragment(configs: Path) -> CodexLifecycleFragment:
+    """The native Codex observer registration and handler, planned from the package configs."""
+    configs = Path(configs)
+    lifecycle = plan_lifecycle(
+        load_catalog(configs / "common" / "profile-catalog.json"),
+        provider_id=ProviderId.CODEX,
+        requests=(LifecycleRequest("context.observer", True),), trusted=True,
+        codex_bindings_path=configs / "codex/hooks/lifecycle-context-bindings.json")
+    return codex_d104_observer_fragment(lifecycle)
+
+
+def codex_lifecycle_fragment_document(configs: Path) -> dict:
+    """The JSON form of the observer fragment (contract `codex-lifecycle/v1`)."""
+    fragment = d104_observer_fragment(configs)
+    return {
+        "$schema": CODEX_LIFECYCLE_SCHEMA,
+        "fragment": {
+            "target_path": fragment.target_path, "event": fragment.event,
+            "group": fragment.group, "handler": fragment.handler_bytes.decode("utf-8"),
+            "handler_sha256": sha256_digest(fragment.handler_bytes),
+            "source": {
+                "id": _D104_FRAGMENT_SOURCE_ID, "path": _D104_FRAGMENT_SOURCE_PATH,
+                "sha256": sha256_digest(canonical_json_bytes({
+                    "event": fragment.event, "group": fragment.group,
+                    "handler_sha256": sha256_digest(fragment.handler_bytes)})),
+            },
+        },
+    }
+
+
+def codex_lifecycle_validation_document(configs: Path, document: bytes, memory_command: str) -> dict:
+    """Validate a composed hooks document against the observer fragment; a refusal is data."""
+    fragment = d104_observer_fragment(configs)
+    try:
+        validate_d104_codex_lifecycle_composition(document, memory_command=memory_command,
+                                                  fragment=fragment)
+    except ValueError as error:
+        return {"$schema": CODEX_LIFECYCLE_SCHEMA, "ok": False, "code": str(error)}
+    return {"$schema": CODEX_LIFECYCLE_SCHEMA, "ok": True, "code": None}
+
+
+def cmd_codex_lifecycle(env, argv):
+    """`harness hooks codex-lifecycle fragment|validate --json` — D104 composition inputs."""
+    usage = ("harness hooks codex-lifecycle fragment --json\n"
+             "harness hooks codex-lifecycle validate --document FILE --memory-command CMD --json")
+    if not argv or argv[0] in ("-h", "--help"):
+        print(usage)
+        return
+    verb, rest = argv[0], argv[1:]
+    configs = Path(env.root) / "configs"
+    if verb == "fragment":
+        opts = parse_flags(rest, {"--json": "bool"})
+        if not opts["json"]:
+            die(usage)
+        try:
+            print(json.dumps(codex_lifecycle_fragment_document(configs), ensure_ascii=False))
+        except ValueError as error:
+            die(str(error))
+        return
+    if verb == "validate":
+        opts = parse_flags(rest, {"--document": "str", "--memory-command": "str", "--json": "bool"})
+        if not (opts["document"] and opts["memory_command"] and opts["json"]):
+            die(usage)
+        try:
+            document = Path(opts["document"]).expanduser().read_bytes()
+        except OSError as error:
+            die(f"{opts['document']}: {error}")
+        print(json.dumps(codex_lifecycle_validation_document(
+            configs, document, opts["memory_command"]), ensure_ascii=False))
+        return
+    die(f"unknown codex-lifecycle subcommand: {verb} (fragment|validate)")
+
+
 def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
     """Use the P2 artifact seam for registration and its generated consumer handler."""
     return plan_claude_shaped_lifecycle_artifacts(plan, bindings_path=bindings_path)
@@ -2614,6 +2693,8 @@ def block_plan_regen(target, mode, settings_file, dry):
 
 
 def cmd_hooks(env, argv):
+    if argv and argv[0] == "codex-lifecycle":
+        return cmd_codex_lifecycle(env, argv[1:])
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
         "--router": "str", "--run-report": "str", "--pack-guard": "str",

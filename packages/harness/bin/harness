@@ -7,6 +7,7 @@
 #   permissions  pour in permissions-presets in .claude/settings*.json (alias: apply)
 #                [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 #   mcp          pour in MCP-presets in .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
+#                catalog --json [--provider ID]: catalog, bindings and lock sources for a consumer
 #   hooks        enable project hooks / install hook files globally
 #                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--run-report on|off] [--output-style lean|off] [--file F] [--global] [--dry-run]
 #   router       generate feature catalog intent-router in .claude/agent-router.config.json
@@ -23,6 +24,7 @@
 #                owner-gated adoption, drift gate): <plan|check|adopt|apply|repair>
 #                [--target P] [--scope a,b] [--provider a,b] [--authorize a,b]
 #                [--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] [--json]
+#   profiles     resolve --provider ID --profile ID --target-scope S [--trusted] --json
 #   doctor       environment diagnostics (presets, script, hook files in ~/.claude)
 #   version      version (git SHA) and package path
 set -euo pipefail
@@ -52,7 +54,7 @@ if [[ ! -d "$REPO_ROOT/lib/harness" || ! -d "$REPO_ROOT/configs/claude-code" ]];
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,27p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,29p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -63,7 +65,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "harness $sha ($REPO_ROOT)"
     exit 0 ;;
-  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|run|instructions|doctor) ;;
+  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|run|instructions|profiles|doctor) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

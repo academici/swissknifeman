@@ -242,9 +242,11 @@ class InstructionTargetResult:
     block_ids: tuple[str, ...]
     diagnostics: tuple[InstructionDiagnostic, ...]
     changed: bool
+    # Digest of the drifted target; a repair names it. Present only on managed-drift targets.
+    observed_hash: str | None = None
 
     def as_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "artifact_id": self.artifact_id, "scope_id": self.scope_id,
             "provider_id": self.provider_id, "target_path": self.target_path,
             "ordered_semantic_ids": list(self.ordered_semantic_ids),
@@ -254,6 +256,9 @@ class InstructionTargetResult:
             "diagnostics": [item.as_dict() for item in self.diagnostics],
             "changed": self.changed,
         }
+        if self.observed_hash is not None:
+            value["observed_hash"] = self.observed_hash
+        return value
 
 
 @dataclass(frozen=True)
@@ -1432,7 +1437,8 @@ def _target_result(projection: InstructionProjection, action,
         projection.common_ids + projection.extension_ids, observation,
         action.action.value, projection.result.provenance.source_hash,
         projection.result.provenance.rendered_hash, marker_ids, block_ids,
-        diagnostics, changed)
+        diagnostics, changed,
+        action.observed_hash if observation == "managed-drift" else None)
 
 
 def _completed_write(request: InstructionRequest, fresh: InstructionOperationResult,
@@ -1743,6 +1749,15 @@ def _print_report(result: InstructionOperationResult) -> None:
               f"material in skill or path-scoped rule", file=sys.stderr)
 
 
+INSTRUCTION_SCOPES_SCHEMA = "urn:swissknifeman:harness:instruction-scopes:v1"
+
+
+def scopes_document() -> dict:
+    """The instruction scopes in catalog order (contract `instruction-scopes/v1`)."""
+    return {"$schema": INSTRUCTION_SCOPES_SCHEMA, "scopes": list(SCOPES),
+            "catalog_version": CATALOG_VERSION, "contract_version": CONTRACT_VERSION}
+
+
 def cmd_instructions(env, argv):
     """`harness instructions <plan|check|adopt|apply|repair>` — operator surface over
     the D86 instruction-projection mechanism (see module docstring/contract)."""
@@ -1752,12 +1767,19 @@ def cmd_instructions(env, argv):
         "--preimage-dir": "str", "--observed-hash": "str", "--json": "bool",
     }, max_pos=1)
     if opts["help"] or not positional:
-        print("harness instructions <plan|check|adopt|apply|repair> [--target P] "
+        print("harness instructions scopes --json\n"
+              "harness instructions <plan|check|adopt|apply|repair> [--target P] "
               "[--scope a,b] [--provider a,b] [--authorize a,b] "
               "[--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] "
               "[--observed-hash path=hash,...] [--json]")
         return
     operation = positional[0]
+    if operation == "scopes":
+        if not opts["json"]:
+            print("harness instructions scopes --json", file=sys.stderr)
+            sys.exit(2)
+        print(json.dumps(scopes_document(), ensure_ascii=False))
+        return
     handler = _OPERATIONS.get(operation)
     if handler is None:
         print(f"harness instructions: unknown operation {operation}", file=sys.stderr)

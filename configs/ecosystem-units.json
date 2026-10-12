@@ -52,7 +52,7 @@
   ],
   "standalone": {
     "foundation_paths": ["core"],
-    "foundation_free": ["skiller", "planner", "orch", "analyst", "harness"],
+    "foundation_free": ["skiller", "planner", "orch", "analyst", "harness", "maind"],
     "unset_env": ["PYTHONPATH", "SKILLER_HOST_CONFIG"],
     "timeout_s": 1800
   },
@@ -60,9 +60,6 @@
     {"path": "core/__init__.py", "target": "aicore", "subsystem": "shim", "phase": "P11", "confidence": "fixed", "note": "transitional alias package; deleted with core/"},
     {"path": "core/tests/test_shim.py", "target": "aicore", "subsystem": "shim", "phase": "P11", "confidence": "fixed", "note": "deleted with core/"},
     {"path": "packages/artifex/", "target": "retired", "phase": "P11", "confidence": "fixed", "note": "module is retired and not scanned by the boundary check"},
-    {"path": "packages/harness/lib/harness/cursor_render.py", "target": "aicore", "subsystem": "provider", "phase": "P11", "confidence": "hypothesis", "note": "rendering part; see the harness architecture section"},
-    {"path": "packages/harness/lib/harness/grok_render.py", "target": "aicore", "subsystem": "provider", "phase": "P11", "confidence": "hypothesis", "note": "rendering part; see the harness architecture section"},
-    {"path": "packages/harness/lib/harness/provider_render.py", "target": "aicore", "subsystem": "provider", "phase": "P11", "confidence": "hypothesis", "note": "rendering part; see the harness architecture section"},
     {"path": "scripts/ecosystem-units.py", "target": "aicore", "subsystem": "unit", "phase": "P12", "confidence": "hypothesis", "note": "becomes the aicore unit check"}
   ]
 }

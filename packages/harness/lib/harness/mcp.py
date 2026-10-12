@@ -1,16 +1,11 @@
 """Internal documentation."""
 import json
-from dataclasses import dataclass
 from pathlib import Path
 
-from aicore.artifacts.artifact import (
-    ArtifactAdapterIdentity,
-    ArtifactRenderRequest,
-    ArtifactSource,
-    ArtifactTarget,
-    plan_artifact_render,
-    sha256_digest,
-)
+from aicore.artifacts.artifact import ArtifactSource, sha256_digest
+from aicore.provider import mcp as projection
+from aicore.provider.mcp import (McpProjection, McpServer, parse_mcp_catalog,
+                                 render_mcp_projection)
 from aicore.provider.values import ProviderId
 
 from aicore.util.cli import parse_flags
@@ -60,11 +55,14 @@ def block_mcp(env, target, servers, dry):
 
 
 def cmd_mcp(env, argv):
+    if argv and argv[0] == "catalog":
+        return cmd_mcp_catalog(env, argv[1:])
     opts = parse_flags(argv, {
         "--target": "str", "--mcp": "str", "--list": "bool", "--dry-run": "bool",
     })
     if opts["help"]:
-        print("harness mcp [--target P] [--mcp name1,name2] [--list] [--dry-run]")
+        print("harness mcp [--target P] [--mcp name1,name2] [--list] [--dry-run]\n"
+              "harness mcp catalog --json [--provider ID]")
         return
     if opts["list"]:
         for name in available_mcp(env):
@@ -77,49 +75,15 @@ def cmd_mcp(env, argv):
               parse_mcp_flag(opts["mcp"]), opts["dry_run"])
 
 
-# deliberately keeps this seam small. The legacy functions above own the
-# Claude merge/write behaviour; the records below are immutable planning data
-# for both providers and never infer one provider's output from another.
-@dataclass(frozen=True)
-class McpServer:
-    id: str
-    transport: str
-    capability_id: str
-    secret_refs: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class McpProjection:
-    provider_id: ProviderId
-    target_scope: str
-    target_path: str
-    servers: tuple[tuple[str, dict], ...]
-    secret_refs: tuple[str, ...]
+# The projection itself is pure and lives in aicore.provider.mcp; this module keeps the Claude
+# merge/write CLI above and the harness-owned catalog locations below (they are lock data).
+_CATALOG_LABEL = "harness.mcp.catalog"
+_CATALOG_RELPATH = "packages/harness/configs/common/mcp/catalog.json"
 
 
 def load_mcp_catalog(path: Path) -> tuple[McpServer, ...]:
     """Load the common, value-free MCP inventory in its declared order."""
-    value = json.loads(Path(path).read_text(encoding="utf-8"))
-    if not isinstance(value, dict) or set(value) != {"catalog_version", "servers"}:
-        raise ValueError("HARNESS_CATALOG_MISMATCH")
-    rows = value["servers"]
-    if value["catalog_version"] != "1.0.0" or not isinstance(rows, list):
-        raise ValueError("HARNESS_VERSION_UNSUPPORTED")
-    result = []
-    for row in rows:
-        if not isinstance(row, dict) or set(row) != {"id", "transport", "capability_id", "secret_refs"}:
-            raise ValueError("HARNESS_CATALOG_MISMATCH")
-        if (not isinstance(row["id"], str) or not row["id"]
-                or row["transport"] not in {"http", "stdio"}
-                or not isinstance(row["capability_id"], str)
-                or not isinstance(row["secret_refs"], list)
-                or len(set(row["secret_refs"])) != len(row["secret_refs"])):
-            raise ValueError("HARNESS_CATALOG_MISMATCH")
-        result.append(McpServer(row["id"], row["transport"], row["capability_id"],
-                                tuple(row["secret_refs"])))
-    if not result or len({item.id for item in result}) != len(result):
-        raise ValueError("HARNESS_CATALOG_MISMATCH")
-    return tuple(result)
+    return parse_mcp_catalog(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
 def plan_mcp_projection(catalog: tuple[McpServer, ...], *, provider_id: ProviderId,
@@ -127,92 +91,74 @@ def plan_mcp_projection(catalog: tuple[McpServer, ...], *, provider_id: Provider
     """Return one independent native projection, without writing a target or lock."""
     if not trusted:
         raise ValueError("HARNESS_TRUST_REQUIRED")
-    ids = {server.id for server in catalog}
-    if len(set(selected)) != len(selected) or set(selected) - ids:
-        raise ValueError("HARNESS_CATALOG_MISMATCH")
-    projection = json.loads(Path(bindings_path).read_text(encoding="utf-8"))
-    if (not isinstance(projection, dict)
-            or set(projection) != {"binding_version", "provider_id", "target_scope",
-                                   "target_path", "servers"}
-            or projection["binding_version"] != "1.0.0"
-            or projection["provider_id"] != provider_id.value):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    if (not isinstance(projection["target_scope"], str)
-            or not isinstance(projection["target_path"], str)
-            or not isinstance(projection["servers"], dict)):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    rendered = []
-    for server_id in selected:
-        record = projection["servers"].get(server_id)
-        if not isinstance(record, dict):
-            raise ValueError("HARNESS_MAPPING_MISSING")
-        server = next(server for server in catalog if server.id == server_id)
-        _validate_secret_references(server, record)
-        rendered.append((server_id, record))
-    refs = tuple(sorted({ref for server_id in selected for server in catalog
-                         if server.id == server_id for ref in server.secret_refs}))
-    return McpProjection(provider_id, projection["target_scope"], projection["target_path"],
-                         tuple(rendered), refs)
+    return projection.plan_mcp_projection(
+        catalog, provider_id=provider_id,
+        bindings=json.loads(Path(bindings_path).read_text(encoding="utf-8")),
+        selected=selected, trusted=trusted)
 
 
-def _validate_secret_references(server, record):
-    """Only declared placeholder references may cross the projection boundary."""
-    if "secret_value" in record:
-        raise ValueError("HARNESS_SECRET_VALUE_EXPOSED")
-    env = record.get("env", {})
-    if not isinstance(env, dict):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    expected = {"${" + ref.upper().replace("-", "_") + "}" for ref in server.secret_refs}
-    observed = set()
-    for value in env.values():
-        if not isinstance(value, str) or not value.startswith("${") or not value.endswith("}"):
-            raise ValueError("HARNESS_SECRET_VALUE_EXPOSED")
-        observed.add(value)
-    if observed != expected:
-        raise ValueError("HARNESS_SECRET_REFERENCE_MISSING")
+def mcp_sources(provider_id: ProviderId, *, catalog_path: Path, bindings_path: Path):
+    """The catalog and bindings records a Codex/Cursor/Grok MCP artifact is locked against."""
+    name = provider_id.value
+    return (
+        ArtifactSource(_CATALOG_LABEL, _CATALOG_RELPATH,
+                       sha256_digest(Path(catalog_path).read_bytes())),
+        ArtifactSource(f"harness.{name}.mcp-bindings",
+                       f"packages/harness/configs/{name}/mcp/bindings.json",
+                       sha256_digest(Path(bindings_path).read_bytes())),
+    )
 
 
 def plan_mcp_artifact(plan: McpProjection, *, catalog_path: Path, bindings_path: Path):
-    """Codex/Cursor MCP is a P2 whole-file artifact; Claude keeps its merge-only writer."""
-    if plan.provider_id not in (ProviderId.CODEX, ProviderId.CURSOR, ProviderId.GROK):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    name = plan.provider_id.value
-    binding_label = f"harness.{name}.mcp-bindings"
-    binding_relpath = f"packages/harness/configs/{name}/mcp/bindings.json"
-    sources = (
-        ArtifactSource("harness.mcp.catalog", "packages/harness/configs/common/mcp/catalog.json",
-                       sha256_digest(Path(catalog_path).read_bytes())),
-        ArtifactSource(binding_label, binding_relpath,
-                       sha256_digest(Path(bindings_path).read_bytes())),
-    )
-    identity = ArtifactAdapterIdentity(f"harness.{plan.provider_id.value}.mcp", "1.0.0",
-                                       plan.provider_id, "1.0.0", ())
-    return plan_artifact_render(ArtifactRenderRequest(
-        f"harness.{plan.provider_id.value}.mcp." + ".".join(server_id for server_id, _ in plan.servers),
-        sources,
-        ArtifactTarget(plan.target_path, ("whole-file", ())), identity, (),
-        {"target_scope": plan.target_scope, "server_ids": [server_id for server_id, _ in plan.servers],
-         "secret_refs": list(plan.secret_refs)},
-        lambda _request: render_mcp_projection(plan)))
+    """Codex/Cursor/Grok MCP is a whole-file artifact; Claude keeps its merge-only writer."""
+    return projection.plan_mcp_artifact(
+        plan, sources=mcp_sources(plan.provider_id, catalog_path=catalog_path,
+                                  bindings_path=bindings_path),
+        adapter_id=f"harness.{plan.provider_id.value}.mcp")
 
 
-def render_mcp_projection(plan: McpProjection) -> bytes:
-    """Serialize only the named projection.  Claude retains its merge-only writer."""
-    if plan.provider_id in (ProviderId.CLAUDE_CODE, ProviderId.CURSOR):
-        return (json.dumps({"mcpServers": dict(plan.servers)}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    # Codex and Grok share [mcp_servers.<id>] TOML.
-    lines = []
-    for server_id, binding in plan.servers:
-        lines.append(f"[mcp_servers.{server_id}]")
-        for field in ("url", "command"):
-            if field in binding:
-                lines.append(f'{field} = {json.dumps(binding[field], ensure_ascii=False)}')
-        if "args" in binding:
-            lines.append("args = " + json.dumps(binding["args"], ensure_ascii=False))
-        if "env" in binding:
-            env = binding["env"]
-            lines.append("env = {" + ", ".join(
-                f"{json.dumps(key, ensure_ascii=False)} = {json.dumps(value, ensure_ascii=False)}"
-                for key, value in sorted(env.items())) + "}")
-        lines.append("")
-    return ("\n".join(lines)).encode("utf-8")
+MCP_CATALOG_SCHEMA = "urn:swissknifeman:harness:mcp-catalog:v1"
+
+
+def _source_record(source: ArtifactSource) -> dict:
+    return {"id": source.source_id, "path": source.path, "sha256": source.content_hash}
+
+
+def mcp_catalog_document(configs: Path, provider_ids=None) -> dict:
+    """The catalog, per-provider bindings and lock source records, as one JSON document."""
+    configs = Path(configs)
+    catalog_path = configs / "common" / "mcp" / "catalog.json"
+    parse_mcp_catalog(json.loads(catalog_path.read_text(encoding="utf-8")))
+    available = sorted(path.parent.parent.name for path in configs.glob("*/mcp/bindings.json"))
+    wanted = available if provider_ids is None else list(provider_ids)
+    unknown = sorted(set(wanted) - set(available))
+    if unknown:
+        raise ValueError(f"HARNESS_MAPPING_MISSING: no MCP bindings for {', '.join(unknown)}")
+    document = {"$schema": MCP_CATALOG_SCHEMA,
+                "catalog": json.loads(catalog_path.read_text(encoding="utf-8")),
+                "bindings": {}, "sources": {"bindings": {}}, "adapters": {}}
+    for name in wanted:
+        bindings_path = configs / name / "mcp" / "bindings.json"
+        catalog_source, bindings_source = mcp_sources(
+            ProviderId(name), catalog_path=catalog_path, bindings_path=bindings_path)
+        document["bindings"][name] = json.loads(bindings_path.read_text(encoding="utf-8"))
+        document["sources"]["catalog"] = _source_record(catalog_source)
+        document["sources"]["bindings"][name] = _source_record(bindings_source)
+        document["adapters"][name] = f"harness.{name}.mcp"
+    return document
+
+
+def cmd_mcp_catalog(env, argv):
+    """`harness mcp catalog --json [--provider ID]` — data for a consumer that renders MCP itself."""
+    opts = parse_flags(argv, {"--json": "bool", "--provider": "str"})
+    if opts["help"]:
+        print("harness mcp catalog --json [--provider ID]")
+        return
+    if not opts["json"]:
+        die("harness mcp catalog needs --json")
+    try:
+        document = mcp_catalog_document(Path(env.root) / "configs",
+                                        [opts["provider"]] if opts["provider"] else None)
+    except (ValueError, OSError) as error:
+        die(str(error))
+    print(json.dumps(document, ensure_ascii=False))

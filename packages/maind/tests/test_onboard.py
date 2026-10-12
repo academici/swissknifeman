@@ -10,6 +10,7 @@ import maind.provision.onboard as onb
 from maind.config import load_config
 from maind.projects import get
 from tests.fixtures import make_repo
+from tests.harness_partner import RealHarnessCase
 
 
 def _seed_config(root, projects=None):
@@ -44,30 +45,6 @@ class TestOnboard(unittest.TestCase):
                 self.assertEqual(names["graph"], "ok")
             finally:
                 onb.run_capability = orig
-
-    def test_onboard_runs_instruction_provisioner_and_accepts_explicit_repair(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root, env = make_repo(tmp)
-            _seed_config(root)
-            project = Path(tmp) / "instruction-project"
-            for pkg in ("skiller", "maind", "harness"):
-                (project / "packages" / pkg).mkdir(parents=True)
-            config, _ = load_config(env)
-            onb.onboard(env, config, str(project), {
-                "skip_skills": True, "yes": True, "dry": False,
-                "memory": "off", "repair": False,
-            })
-            (project / "CLAUDE.md").write_text(
-                (project / "CLAUDE.md").read_text(encoding="utf-8").replace("#", "# drifted", 1),
-                encoding="utf-8")
-            config, _ = load_config(env)
-            report = onb.onboard(env, config, str(project), {
-                "skip_skills": True, "yes": True, "dry": False,
-                "memory": "off", "repair": True,
-            })
-            step = next(item for item in report["steps"] if item["name"] == "instructions")
-            self.assertEqual(step["status"], "ok")
-            self.assertTrue((project / "CLAUDE.md").is_file())
 
     def test_onboard_reuses_one_provider_context_for_deploy_and_instructions(self):
         import maind.provision.deploy as deploy
@@ -253,6 +230,34 @@ class TestOnboard(unittest.TestCase):
                 self.assertIsNone(get(cfg2, "d"))                    # not registered
             finally:
                 onb.run_capability = orig
+
+
+class TestOnboardInstructions(RealHarnessCase):
+    """Instruction operations are harness's: this test needs the real partner (integration runner)."""
+
+    def test_onboard_runs_instruction_provisioner_and_accepts_explicit_repair(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            project = Path(tmp) / "instruction-project"
+            for pkg in ("skiller", "maind", "harness"):
+                (project / "packages" / pkg).mkdir(parents=True)
+            config, _ = load_config(env)
+            onb.onboard(env, config, str(project), {
+                "skip_skills": True, "yes": True, "dry": False,
+                "memory": "off", "repair": False,
+            })
+            (project / "CLAUDE.md").write_text(
+                (project / "CLAUDE.md").read_text(encoding="utf-8").replace("#", "# drifted", 1),
+                encoding="utf-8")
+            config, _ = load_config(env)
+            report = onb.onboard(env, config, str(project), {
+                "skip_skills": True, "yes": True, "dry": False,
+                "memory": "off", "repair": True,
+            })
+            step = next(item for item in report["steps"] if item["name"] == "instructions")
+            self.assertEqual(step["status"], "ok")
+            self.assertTrue((project / "CLAUDE.md").is_file())
 
 
 if __name__ == "__main__":

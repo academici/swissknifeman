@@ -11,6 +11,12 @@
   ],
   "provides": {
     "cli": ["bin/harness"],
+    "contracts": [
+      {"id": "urn:swissknifeman:harness:mcp-catalog", "path": "schemas/mcp-catalog/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:profile-resolution", "path": "schemas/profile-resolution/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:codex-lifecycle", "path": "schemas/codex-lifecycle/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:instruction-scopes", "path": "schemas/instruction-scopes/v1", "version": "v1", "stability": "alpha"}
+    ],
     "plugins": [{"name": "harness", "manifest": ".claude-plugin/plugin.json"}],
     "doctor": [
       {"id": "harness.environment", "category": "environment", "probe": ["bin/harness", "doctor"], "output": "text"}

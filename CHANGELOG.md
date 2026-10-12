@@ -4,6 +4,15 @@
 
 ### Added
 
+- **aicore, harness, maind:** maind no longer imports harness or names its paths. The pure MCP projection (`McpServer`, `McpProjection`,
+  `parse_mcp_catalog`, `plan_mcp_projection`, `plan_mcp_artifact`, `render_mcp_projection`) is `aicore.provider.mcp`: it takes parsed
+  documents and the caller's artifact sources, so harness's `mcp.py` keeps only the CLI and thin wrappers with the same lock labels and
+  paths. harness gains the JSON commands `mcp catalog --json`, `profiles resolve --json`, `hooks codex-lifecycle fragment|validate --json`
+  and `instructions scopes --json` (contracts `mcp-catalog/v1`, `profile-resolution/v1`, `codex-lifecycle/v1`,
+  `instruction-scopes/v1`); an instruction result gains `observed_hash` on managed-drift targets. maind deploy, sync, workspace and
+  provider deploy call them through `aicore.util.partners`; without harness the provider steps are skipped with `PARTNER_UNAVAILABLE`
+  and the hub servers still deploy. The provider-file bytes and lock records are unchanged (equality tests against a capture taken
+  before the change), and maind passes the standalone check.
 - **maind, skiller:** machine registries. `maind topology show|init [--json]` (moved from `skiller topology`, which stays an alias with one `SKILLER_TOPOLOGY_MOVED` warning) keeps the map in `<state>/maind/topology.json`; the legacy `~/.swissknifeman/topology.json` is read file by file with one warning until `swissknifeman upgrade`. The connected-projects registry of skiller moves to `<state>/skiller/projects.json` (legacy `~/.swissknifeman/projects.json` read the same way); new `skiller list --json` (contract `projects-list/v1`). The skills `local-topology`, `cross-project-coordinator`, `shared-memory` and the agent `code-coordinator` read the map through `maind topology show --json` and `skiller list --json`.
 - **orch:** conductor `scripts/conduct.py run|resume|status|observe` (`orch.conductor`): claims pieces of work through the work
   source and drives each one through context, scout (cached context map), executor, deterministic checks with check-evidence,

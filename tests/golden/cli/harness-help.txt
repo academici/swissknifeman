@@ -8,6 +8,7 @@ Commands (run from the consuming project / with --target):
   permissions  pour in permissions-presets in .claude/settings*.json (alias: apply)
                [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
   mcp          pour in MCP-presets in .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
+               catalog --json [--provider ID]: catalog, bindings and lock sources for a consumer
   hooks        enable project hooks / install hook files globally
                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--run-report on|off] [--output-style lean|off] [--file F] [--global] [--dry-run]
   router       generate feature catalog intent-router in .claude/agent-router.config.json
@@ -24,6 +25,7 @@ Commands (run from the consuming project / with --target):
                owner-gated adoption, drift gate): <plan|check|adopt|apply|repair>
                [--target P] [--scope a,b] [--provider a,b] [--authorize a,b]
                [--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] [--json]
+  profiles     resolve --provider ID --profile ID --target-scope S [--trusted] --json
   doctor       environment diagnostics (presets, script, hook files in ~/.claude)
   version      version (git SHA) and package path
 --- stderr ---

@@ -19,20 +19,23 @@ from maind.graph import cmd_graph
 from maind.mcp import TOOLS
 from tests.fixtures import make_repo, write_maind_config
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]  # .../packages/maind/tests → repo root
+_PACKAGE = Path(__file__).resolve().parents[1]  # the maind package, in the hub and standalone alike
+_HUB = _PACKAGE.parents[1]
 
-_ECOSYSTEM_MCP_TEMPLATE = (_REPO_ROOT / "packages" / "maind" / "templates" / "skills"
-                           / "ecosystem-mcp" / "SKILL.md")
-_BOOTSTRAP_SKILLS = _REPO_ROOT / "bootstrap" / "skills"
+_ECOSYSTEM_MCP_TEMPLATE = _PACKAGE / "templates" / "skills" / "ecosystem-mcp" / "SKILL.md"
+_BOOTSTRAP_SKILLS = _HUB / "bootstrap" / "skills"
 _LOCAL_SKILLS = {
     # Root-bootstrap projections under .claude/skills/ are thin pointer stubs (Class-A
     # projection design, P1.2) — no copied body, so the caveat
     # phrase is checked against the canonical source they point back at.
-    "maind-overview": _REPO_ROOT / "packages" / "maind" / "dev-skills" / "maind-overview" / "SKILL.md",
-    "cross-project-optimizer": _BOOTSTRAP_SKILLS / "cross-project-optimizer" / "SKILL.md",
-    "ecosystem-integration": _BOOTSTRAP_SKILLS / "ecosystem-integration" / "SKILL.md",
+    "maind-overview": _PACKAGE / "dev-skills" / "maind-overview" / "SKILL.md",
 }
-_MEMORY_DOC = _REPO_ROOT / "packages" / "maind" / "docs" / "guide" / "memory.md"
+if _BOOTSTRAP_SKILLS.is_dir():  # skills of the hub itself; a standalone copy of maind has none
+    _LOCAL_SKILLS.update({
+        "cross-project-optimizer": _BOOTSTRAP_SKILLS / "cross-project-optimizer" / "SKILL.md",
+        "ecosystem-integration": _BOOTSTRAP_SKILLS / "ecosystem-integration" / "SKILL.md",
+    })
+_MEMORY_DOC = _PACKAGE / "docs" / "guide" / "memory.md"
 
 
 def _run(fn, env, argv):

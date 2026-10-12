@@ -243,3 +243,61 @@ def _validate_capability_manifest(catalog: ProfileCatalog,
             if declared is not None and support.level.value not in declared:
                 raise ValueError(f"HARNESS_CAPABILITY_MANIFEST_INVALID:{provider.value}:"
                                  f"{capability_id}:level-mismatch")
+
+
+PROFILE_RESOLUTION_SCHEMA = "urn:swissknifeman:harness:profile-resolution:v1"
+
+
+def resolution_document(resolution: ProfileResolution) -> dict:
+    """The JSON form of one profile resolution (contract `profile-resolution/v1`)."""
+    profile = resolution.profile
+    return {
+        "$schema": PROFILE_RESOLUTION_SCHEMA,
+        "provider_id": resolution.provider_id.value,
+        "profile": None if profile is None else {"id": profile.id, "intent": profile.intent},
+        "target_scope": resolution.target_scope,
+        "operation_id": resolution.operation_id,
+        "target_identity": resolution.target_identity,
+        "green": resolution.green,
+        "diagnostics": [{
+            "severity": item.severity.value, "code": item.code,
+            "provider_id": item.provider_id.value, "profile_id": item.profile_id,
+            "surface_id": item.surface_id, "target_scope": item.target_scope, "path": item.path,
+            "required": item.required, "observed": item.observed, "message": item.message,
+            "next_action": item.next_action,
+        } for item in resolution.diagnostics],
+    }
+
+
+def cmd_profiles(env, argv):
+    """`harness profiles resolve ... --json` — fail-closed profile resolution for one provider."""
+    from aicore.util.cli import parse_flags
+    from aicore.util.term import die
+    usage = ("harness profiles resolve --provider ID --profile ID --target-scope S [--trusted] "
+             "[--disabled] [--operation-id X] [--target-identity X] [--origin X] --json")
+    if not argv or argv[0] in ("-h", "--help"):
+        print(usage)
+        return
+    if argv[0] != "resolve":
+        die(f"unknown profiles subcommand: {argv[0]} (resolve)")
+    opts = parse_flags(argv[1:], {
+        "--provider": "str", "--profile": "str", "--target-scope": "str", "--trusted": "bool",
+        "--disabled": "bool", "--operation-id": "str", "--target-identity": "str",
+        "--origin": "str", "--json": "bool"})
+    if opts["help"]:
+        print(usage)
+        return
+    if not (opts["provider"] and opts["profile"] and opts["target_scope"] and opts["json"]):
+        die(usage)
+    try:
+        provider = ProviderId(opts["provider"])
+        catalog = load_catalog(default_catalog_path(env))
+    except ValueError as error:
+        die(str(error))
+    resolution = resolve_profile(
+        catalog, provider_id=provider, profile_id=opts["profile"],
+        target_scope=opts["target_scope"], trusted=opts["trusted"],
+        operation_id=opts["operation_id"] or None, target_identity=opts["target_identity"] or None,
+        origin=opts["origin"] or "operation",
+        effective_provider=EffectiveProvider(provider, not opts["disabled"]))
+    print(json.dumps(resolution_document(resolution), ensure_ascii=False))

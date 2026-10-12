@@ -1107,7 +1107,8 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertEqual(self.run_script("check").returncode, 0)
         self.assertEqual(self.run_script("check", "--strict").returncode, 1)
         baseline = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["violations"]
-        self.assertTrue(any(k.startswith("import|packages/maind/") and k.endswith("|harness") for k in baseline))
+        # maind reaches harness only through its JSON commands: no violation of its own is in the baseline
+        self.assertFalse(any(k.split("|")[1].startswith("packages/maind/") for k in baseline))
         # analyst stays inside its boundaries since P11.2: no violation of its own is in the baseline
         self.assertFalse(any(k.split("|")[1].startswith("packages/analyst/") for k in baseline))
 

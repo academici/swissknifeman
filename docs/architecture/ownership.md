@@ -29,7 +29,4 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 | `core/__init__.py` | core (hub root) | aicore | shim | P11 | fixed | transitional alias package; deleted with core/ |
 | `core/tests/test_shim.py` | core (hub root) | aicore | shim | P11 | fixed | deleted with core/ |
 | `packages/artifex/` | artifex | retired | - | P11 | fixed | module is retired and not scanned by the boundary check |
-| `packages/harness/lib/harness/cursor_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
-| `packages/harness/lib/harness/grok_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
-| `packages/harness/lib/harness/provider_render.py` | harness | aicore | provider | P11 | hypothesis | rendering part; see the harness architecture section |
 | `scripts/ecosystem-units.py` | scripts (hub root) | aicore | unit | P12 | hypothesis | becomes the aicore unit check |

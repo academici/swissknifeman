@@ -6,6 +6,13 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 ## [Unreleased]
 
 ### Added
+- **Harness link:** `maind.harness_link` reaches harness only through its JSON commands (`mcp catalog`, `profiles resolve`,
+  `hooks codex-lifecycle fragment|validate`, `instructions scopes|plan|check|apply|repair`) found by `aicore.util.partners`
+  (`SKM_HARNESS_BIN`, `SKM_HARNESS_ROOT`, PATH; `MAIND_HARNESS_BIN` still works with one `MAIND_HARNESS_BIN_DEPRECATED` warning). The MCP
+  projection comes from `aicore.provider.mcp`. `maind deploy`, `sync` (instructions), `workspace` trust and the provider conformance
+  report use them; without harness those steps are skipped with `PARTNER_UNAVAILABLE` (trust stays non-green) and the hub servers still
+  deploy. `plan_d108_operation`, `plan_d104_bootstrap_transfer` and `generate_conformance_report` no longer take the harness
+  configuration folder. The provider files and lock records are byte for byte what they were.
 - **Topology:** `maind topology show|init [--json]` and `<state>/maind/topology.json` (legacy `~/.swissknifeman/topology.json` read file by file with one warning; `*.bak` copies go through `aicore.state.backup`; defaults come from the fleet registry and the known vault). `skiller topology` is an alias. Skills `local-topology`, `cross-project-coordinator`, `shared-memory` and the agent `code-coordinator` read the map through `maind topology show --json` and `skiller list --json`.
 - **Contract:** `projects-list/v1` (`schemas/projects-list/v1`) describes `maind projects list --json`; the output itself is unchanged.
 - **Skills and agent:** the plugin `maind` 0.5.0 ships the skills `local-topology`, `swissknifeman-locator`, `cross-project-coordinator` and `shared-memory` and the agent `code-coordinator` (moved from the `system` bucket of skiller), and a Codex plugin manifest.

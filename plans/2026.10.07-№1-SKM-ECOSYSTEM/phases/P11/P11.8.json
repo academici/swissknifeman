@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.8",
   "title": "maind ↔ harness без импорта: проекция MCP в aicore.provider.mcp; JSON-команды harness (mcp catalog, profiles resolve, hooks codex-lifecycle, instructions scopes); deploy, sync и workspace maind через них; путь lock из константы aicore; standalone maind",
-  "status": "todo",
+  "status": "done",
   "summary": "Чистая проекция MCP переезжает в aicore.provider.mcp (источники lock передаёт вызывающий); harness отдаёт каталог, биндинги, источники, разрешение профиля, фрагмент и проверку codex-lifecycle и список scope инструкций JSON-командами с контрактами; maind deploy, sync, workspace и provider_deploy вызывают их через aicore.util.partners и без harness пропускают шаги провайдеров с PARTNER_UNAVAILABLE; байты провайдерных файлов и записи lock не меняются (тесты равенства); нарушения maind = 0; standalone maind = pass.",
   "why": "D71, D67; последние нарушения maind (импорт harness 13, пути harness 40+) и fail standalone. Жёсткие риски: (1) записи lock (sources, identity) и байты .codex/config.toml, .cursor/mcp.json, .grok/config.toml живых проектов не должны измениться — фикстура «до» снимается до правки, тест равенства «после»; (2) транзакции D108/D104 (rollback, bootstrap transfer) остаются в процессе maind — меняется только источник данных; (3) тексты ошибок HARNESS_* — часть поведения, сохраняются; (4) отсутствие harness — skip, а не падение deploy.",
   "scope": {
@@ -145,6 +145,16 @@
     {
       "path": "packages/maind/CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/1bc2f1c5acc90d3e9a0ceddff551c6cf6bd7cdf1d2e35e083ab7331cb7f18647",
+      "role": "input"
     }
   ],
   "rules": [
@@ -225,6 +235,76 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:18:31Z"
+  "result": {
+    "started_at": "2026-10-12T16:41:14Z",
+    "finished_at": "2026-10-12T18:35:08Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-79b8402ede03bb015b0986c9-P11.8",
+    "notes": "F1 fixed: removed home-path literals from packages/maind/tests/harness_equality.py (prefix assembled at runtime, token @PINNED_PACKAGES@ in the D108 preimage) and from fixtures/harness-link-before-v1.json (prefix replaced by the token, no re-snapshot needed); test_harness_link_equality.normalized() maps the prefix to the token, so bytes stay equal to the original capture. Ran tests.test_harness_link_equality and tests.test_harness_link (31 OK, 7 skipped) with tmp HOME/SKM_HOME. scripts/public-hygiene.py exits 0 with both files added via git add -N (index change reverted).\nChanged: packages/maind/tests/harness_equality.py, packages/maind/tests/fixtures/harness-link-before-v1.json, packages/maind/tests/test_harness_link_equality.py",
+    "pending": [
+      "Both fixed files are still untracked in the working tree; the coordinator must add them to the commit (I only used git add -N to test hygiene and then reset it)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V6.json"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-12T18:35:08Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V7.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V5.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V6.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.8/evidence/V7.json"
+    ]
+  },
+  "updated_at": "2026-10-12T18:35:08Z"
 }

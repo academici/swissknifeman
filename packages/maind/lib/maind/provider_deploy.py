@@ -1,7 +1,8 @@
 """Provider-aware, caller-owned MCP deployment planning.
 
-mAInd owns semantic server selection; harness owns provider target, trust validation and
-serialization through its immutable MCP projection API.
+mAInd owns semantic server selection; ``aicore.provider.mcp`` owns the pure projection and its
+serialization; harness supplies the catalog, bindings and the Codex observer fragment through its
+JSON commands (``harness_link``).
 """
 from __future__ import annotations
 
@@ -11,19 +12,19 @@ from types import MappingProxyType
 from pathlib import Path
 import json
 import re
-import sys
 import tempfile
 
-from .harness_path import ensure_harness_importable
+from . import harness_link
 from .config import (PROJECT_LEGACY_CARRIER, PROJECT_TOML_CARRIER, aicore_schema,
                      toml_project_providers)
 from aicore.provider.manifest import default_manifest_path
 from aicore.artifacts.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
     canonical_json_bytes, plan_artifact_render, sha256_digest)
+from aicore.provider.mcp import McpProjection, render_mcp_projection
 from aicore.artifacts.lock import (
-    ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation,
-    apply_plan, plan_artifact_lock, replace_owner_records, parse_lock,
+    LOCK_RELATIVE_PATH, ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan,
+    DriftObservation, apply_plan, plan_artifact_lock, replace_owner_records, parse_lock,
     plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run,
     ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer)
 from aicore.provider.values import (
@@ -316,7 +317,7 @@ def _rollback_project_carrier(plan):
         atomic_write_text(plan.path, plan.before.decode("utf-8"))
 
 
-def _d108_planned_projections(config, project_id, carrier, harness_configs):
+def _d108_planned_projections(config, project_id, carrier):
     """Render the one closed D108 Claude+Codex P5 base tuple from its carrier."""
     selected = resolve_effective_providers(config, None, project_id,
                                            project_config=carrier.providers,
@@ -324,15 +325,7 @@ def _d108_planned_projections(config, project_id, carrier, harness_configs):
     expected = (ProviderId.CLAUDE_CODE, ProviderId.CODEX)
     if selected != expected:
         raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
-    harness_configs = Path(harness_configs)
-    harness_lib = str(harness_configs.parent / "lib")
-    ensure_harness_importable(harness_lib)
-    from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    catalog = load_mcp_catalog(harness_configs / "common/mcp/catalog.json")
-    return tuple(plan_mcp_projection(
-        catalog, provider_id=provider,
-        bindings_path=harness_configs / provider.value / "mcp/bindings.json",
-        selected=(), trusted=True) for provider in expected)
+    return harness_link.base_projections(expected)
 
 
 def _d108_unchanged_mcp_artifact(root, deploy):
@@ -358,21 +351,20 @@ def _d108_unchanged_mcp_artifact(root, deploy):
     return ProviderDeployPlan(tuple(rows)), mcp
 
 
-def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
-                        expected_root=None):
+def plan_d108_operation(root, config, project_id, servers, *, expected_root=None):
     """Construct every D108 component before returning any writer-capable plan."""
     carrier = plan_project_carrier(root, config, project_id, expected_root=expected_root)
     selected = resolve_effective_providers(config, None, project_id,
                                            project_config=carrier.providers,
                                            project_carrier=carrier.carrier)
     deploy = plan_provider_deploy(
-        _d108_planned_projections(config, project_id, carrier, harness_configs),
+        _d108_planned_projections(config, project_id, carrier),
         servers, selected=selected)
     if not deploy.green:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     deploy, mcp = _d108_unchanged_mcp_artifact(root, deploy)
-    transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness_configs)
-    lock = Path(root) / ".swissknifeman/provider-artifacts.lock.json"
+    transfer = plan_d104_bootstrap_transfer(root)
+    lock = Path(root) / LOCK_RELATIVE_PATH
     lock_bytes = lock.read_bytes() if lock.exists() else None
     artifacts = transfer.artifacts + (mcp,)
     if transfer.managed_post_apply:
@@ -507,27 +499,15 @@ def _d104_memory_registration(preimage, *, observer_group=None):
     return group, hook["command"], len(groups) == 2
 
 
-def _d104_observer_fragment(harness_configs):
-    """Obtain P5's public native fragment without importing its implementation details."""
-    harness_configs = Path(harness_configs)
-    harness_lib = str(harness_configs.parent / "lib")
-    ensure_harness_importable(harness_lib)
-    from harness.hooks import (LifecycleRequest, codex_d104_observer_fragment,
-                               plan_lifecycle)
-    from harness.profiles import load_catalog
-
-    lifecycle = plan_lifecycle(
-        load_catalog(harness_configs / "common" / "profile-catalog.json"),
-        provider_id=ProviderId.CODEX,
-        requests=(LifecycleRequest("context.observer", True),), trusted=True,
-        codex_bindings_path=harness_configs / "codex/hooks/lifecycle-context-bindings.json")
+def _d104_observer_fragment():
+    """Obtain P5's public native fragment through its JSON command."""
     try:
-        return codex_d104_observer_fragment(lifecycle)
-    except ValueError as error:
+        return harness_link.observer_fragment()
+    except (ValueError, harness_link.PartnerError) as error:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
 
 
-def plan_d104_bootstrap_transfer(root, *, harness_configs):
+def plan_d104_bootstrap_transfer(root):
     """Compose the exact D104 native Codex pair and ask P2 for its closed admission.
 
     This is intentionally separate from ordinary provider deployment: callers use it only
@@ -537,30 +517,24 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
     root = Path(root)
     existing_path = root / ".codex/hooks.json"
     preimage = existing_path.read_bytes()
-    fragment = _d104_observer_fragment(harness_configs)
+    fragment = _d104_observer_fragment()
     memory_group, memory_command, managed_post_apply = _d104_memory_registration(
         preimage, observer_group=fragment.group)
-    from harness.hooks import validate_d104_codex_lifecycle_composition
     preimage_value = json.loads(preimage.decode("utf-8"))
     merged_hooks = dict(preimage_value["hooks"])
     merged_hooks["SessionStart"] = [memory_group, fragment.group]
     document = (json.dumps({"hooks": merged_hooks},
                            ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     try:
-        validate_d104_codex_lifecycle_composition(
-            document, memory_command=memory_command, fragment=fragment)
-    except ValueError as error:
+        harness_link.validate_codex_lifecycle(document, memory_command)
+    except (ValueError, harness_link.PartnerError) as error:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
 
     preimage_hash = sha256_digest(preimage)
     sources = (
         ArtifactSource("maind.d104.memory-preimage", ".codex/hooks.json",
                        _BOOTSTRAP_CANONICAL_PREIMAGE if managed_post_apply else preimage_hash),
-        ArtifactSource("harness.d104.observer-fragment",
-                       "packages/harness/lib/harness/hooks.py",
-                       sha256_digest(canonical_json_bytes({
-                           "event": fragment.event, "group": fragment.group,
-                           "handler_sha256": sha256_digest(fragment.handler_bytes)}))),
+        fragment.source,
     )
     identity = ArtifactAdapterIdentity("maind.d104.bootstrap-transfer", "1.0.0",
                                        ProviderId.CODEX, "1.0.0", ())
@@ -579,7 +553,7 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
         preimage_hash,
         ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
         "harness.codex.lifecycle.handler")
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     plan = plan_bootstrap_transfer(root, (hooks, handler),
                                    lock_bytes=lock_path.read_bytes() if lock_path.exists() else None,
                                    admission=admission)
@@ -601,7 +575,6 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
                          disabled=(), secret_values=(), manifest_path=None,
                          excluded_server_ids_by_provider=None):
     """Project caller-owned descriptors through P5-owned target/serialization records."""
-    from harness.mcp import McpProjection, render_mcp_projection
     manifest_path = Path(manifest_path) if manifest_path is not None else (
         default_manifest_path())
     try:
@@ -701,17 +674,10 @@ def write_conformance_report(path, plan):
     atomic_write_text(Path(path), conformance_report(plan))
 
 
-def generate_conformance_report(harness_configs, output_path):
+def generate_conformance_report(output_path):
     """Generate the fixed P6 semantic inventory through P5 projections only."""
-    harness_lib = str(Path(harness_configs).parent / "lib")
-    ensure_harness_importable(harness_lib)
-    from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    root = Path(harness_configs)
-    catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
-    bases = tuple(plan_mcp_projection(
-        catalog, provider_id=provider,
-        bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
-        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
+    bases = harness_link.base_projections(
+        (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
     plan = plan_provider_deploy(bases, semantic_servers(
         maind={"command": "maind"},
         codegraph={"command": "uvx", "args": ["serena"]},
@@ -726,7 +692,7 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=
         return {"mode": "check", "severity": "error", "plan": None,
                 "diagnostics": deploy_plan.diagnostics}
     root = Path(root)
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
     artifacts = tuple(row.artifact for row in deploy_plan.results if row.artifact is not None)
     extra_artifacts = tuple(extra_artifacts)
@@ -756,7 +722,7 @@ def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
     root = Path(root)
     if not root.is_absolute() or root != root.resolve() or not root.is_dir():
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ROOT_INVALID")
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     if lock_path.is_symlink() or lock_path.exists() and not lock_path.is_file():
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_UNSAFE")
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None

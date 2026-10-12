@@ -8,6 +8,7 @@ from .hooks import cmd_hooks
 from .instructions import cmd_instructions
 from .mcp import cmd_mcp
 from .permissions import cmd_permissions
+from .profiles import cmd_profiles
 from .router import cmd_router
 from .run import cmd_run
 from .safedirs import cmd_safedirs
@@ -22,6 +23,7 @@ COMMANDS = {
     "agent-packs": cmd_agent_packs,
     "safe-dirs": cmd_safedirs,
     "instructions": cmd_instructions,
+    "profiles": cmd_profiles,
     "doctor": cmd_doctor,
     "wf": cmd_wf,
     "run": cmd_run,

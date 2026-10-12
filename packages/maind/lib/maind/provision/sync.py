@@ -21,9 +21,11 @@ from pathlib import Path
 
 from aicore.util.term import die, warn
 from aicore.util.cli import parse_args
+from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock, serialize_lock
 from aicore.util.io import safe_load_json
 from aicore.util.partners import (PartnerError, PartnerUnavailable, partner_command,
                                   run_partner_json)
+from .. import harness_link
 from ..config import load_config
 from ..namespaces import in_namespace
 from ..projects import get as get_project
@@ -304,31 +306,28 @@ def _instructions_applicable(context):
 
 def _instruction_scope_ids(context):
     """Return root plus real, non-symlink swissknifeman package directories in catalog order."""
-    from harness.instructions import SCOPES
+    scopes = harness_link.instruction_scopes()["scopes"]
     root = context.path
-    return tuple(scope_id for scope_id in SCOPES
+    return tuple(scope_id for scope_id in scopes
                  if scope_id == "root" or (
                      (candidate := root / "packages" / scope_id).is_dir()
                      and not candidate.is_symlink()))
 
 
-def _instruction_request(context, operation_id, *, authorized=(), observed=()):
-    """Construct only the frozen public P5 request; maind never reads its catalog/markers."""
-    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, InstructionRequest
-    return InstructionRequest(
-        CONTRACT_VERSION, CATALOG_VERSION, operation_id, _instruction_scope_ids(context),
-        context.effective_provider_ids, str(context.path),
-        (("provider-context", context.id),),
-        (("authority", "maind-sync-explicit-targets"),), tuple(authorized),
-        tuple(observed), "adjacent-backup" if operation_id == "repair" else None)
+def _instruction_call(context, operation, *, authorized=(), observed=(), scope_ids=None):
+    """Run one public harness instruction operation for the project; maind never reads its catalog."""
+    return harness_link.run_instructions(
+        operation, context.path,
+        scope_ids=_instruction_scope_ids(context) if scope_ids is None else scope_ids,
+        provider_ids=context.effective_provider_ids, authorized=authorized, observed=observed)
 
 
 def _instruction_aggregate(operation):
     """Preserve P5 target observations as provider-tagged rows without reclassifying them."""
     rows = []
-    for provider_id in operation.request.provider_ids:
+    for provider_id in operation.provider_ids:
         targets = [target for target in operation.targets if target.provider_id == provider_id]
-        diagnostics = [diagnostic.code for target in targets for diagnostic in target.diagnostics]
+        diagnostics = [code for target in targets for code in target.diagnostics]
         rows.append({"provider_id": provider_id,
                      "status": "planned" if not diagnostics else "failed",
                      "required": True, "diagnostic": ",".join(diagnostics) or None})
@@ -336,13 +335,11 @@ def _instruction_aggregate(operation):
 
 
 def _instruction_run(env, config, projects, mode, dry):
-    """Provision root plus applicable real package scopes through frozen harness.instructions.
+    """Provision root plus applicable real package scopes through the harness instruction commands.
 
     The plan is always obtained first.  The only write authority supplied to harness is the
     exact target set returned by that plan; mAInd neither parses nor renders instructions.
     """
-    from harness.instructions import (apply_instructions, check_instructions,
-                                      plan_instructions, repair_instructions)
     results = []
     for context in projects:
         if not isinstance(context, ProjectContext) or not context.exists:
@@ -354,26 +351,25 @@ def _instruction_run(env, config, projects, mode, dry):
             results.append(_result("instructions", context.id, "skip", state="n-a",
                                    detail="only umbrella-monorepo swissknifeman"))
             continue
-        planned = plan_instructions(_instruction_request(context, "plan"))
-        paths = tuple(action.target_path for action in (planned.artifact_plan.actions
-                                                         if planned.artifact_plan else ())
-                      if getattr(action.action, "value", action.action) != "noop")
+        try:
+            planned = _instruction_call(context, "plan")
+        except PartnerUnavailable as error:
+            warn(str(error))
+            results.append(_result("instructions", context.id, "skip", state="absent",
+                                   detail="harness not available"))
+            continue
+        paths = planned.writable_paths()
         operation = planned
         # P5 classifies missing/stale targets as diagnostics in the no-write plan; its
-        # apply API is the sole authority that decides whether those planned paths may write.
-        if not dry and planned.artifact_plan is not None:
+        # apply command is the sole authority that decides whether those planned paths may write.
+        if not dry and planned.planned:
             if mode == "repair":
-                observed = tuple((action.target_path, action.observed_hash)
-                                 for action in planned.artifact_plan.actions
-                                 if getattr(action.observation, "value", action.observation)
-                                 == "managed-drift")
-                operation = repair_instructions(_instruction_request(
-                    context, "repair", authorized=paths, observed=observed))
+                operation = _instruction_call(context, "repair", authorized=paths,
+                                              observed=planned.drift_hashes())
             elif paths:
-                operation = apply_instructions(_instruction_request(
-                    context, "apply" if mode == "install" else "update", authorized=paths))
+                operation = _instruction_call(context, "apply", authorized=paths)
             else:
-                operation = check_instructions(_instruction_request(context, "check"))
+                operation = _instruction_call(context, "check")
         aggregate = _instruction_aggregate(operation)
         changed = any(target.changed for target in operation.targets)
         status = "dry" if dry else ("ok" if operation.green else "failed")
@@ -828,8 +824,7 @@ def generate_instruction_conformance(env, output_path):
             # The public result carries the target count; the harness checker is consumed by
             # rerunning its public check operation through the same provisioner context.
             context = contexts(env, config, [project])[0]
-            from harness.instructions import check_instructions
-            checked = check_instructions(_instruction_request(context, "check"))
+            checked = _instruction_call(context, "check")
             common, own = _instruction_semantics(checked)
             first_target = root / ("AGENTS.md" if first["providers"][0]["provider_id"] == "codex"
                                    else "CLAUDE.md")
@@ -849,10 +844,10 @@ def generate_instruction_conformance(env, output_path):
                                      and checked.green
                                      and all(row["status"] != "failed"
                                              for row in first["providers"] + second["providers"])
-                                     and len(health["provider_trust"]) == len(checked.request.provider_ids)
+                                     and len(health["provider_trust"]) == len(checked.provider_ids)
                                      and common >= 0 and own >= 0 else "RED"})
             semantic_result = (f"semantic IDs={common}; single-provider projection; public checker GREEN"
-                               if len(checked.request.provider_ids) == 1 else
+                               if len(checked.provider_ids) == 1 else
                                f"common parity IDs={common}; provider-own extensions={own}; public checker GREEN")
             checks.append({"name": f"{label}: harness semantic parity/extensions",
                            "result": semantic_result})
@@ -905,39 +900,37 @@ def generate_instruction_conformance(env, output_path):
                                 "claude-code": {"enabled": True}, "codex": {"enabled": True}}}}
         contract_config = _conformance_config(contract_project)
         contract_context = contexts(env, contract_config, [contract_project])[0]
-        from harness.instructions import (apply_instructions, load_catalog, plan_instructions,
-                                          repair_instructions)
-        request = _instruction_request(contract_context, "plan")
-        missing = plan_instructions(replace(request, scope_ids=()))
-        duplicate = plan_instructions(replace(request, scope_ids=("root", "root")))
+        # An unknown scope and a repeated scope are the closed scope-set violations the command can express.
+        missing = _instruction_call(contract_context, "plan", scope_ids=("no-such-scope",))
+        duplicate = _instruction_call(contract_context, "plan", scope_ids=("root", "root"))
         checks.append({"name": "missing/duplicate instruction scope",
                        "result": "INSTRUCTION_SCOPE_INVALID"
-                       if all(any(item.code == "INSTRUCTION_SCOPE_INVALID" for item in value.diagnostics)
+                       if all("INSTRUCTION_SCOPE_INVALID" in value.diagnostics
                               for value in (missing, duplicate)) else "RED"})
 
-        created = plan_instructions(request)
-        targets = tuple(action.target_path for action in created.artifact_plan.actions)
-        applied = apply_instructions(replace(request, operation_id="apply",
-                                             authorized_target_paths=targets))
-        changed_catalog = copy.deepcopy(load_catalog())
-        changed_catalog["scopes"][0]["sections"][0]["intent"] += " Contract-derived stale source."
-        stale = plan_instructions(request, catalog=changed_catalog)
+        created = _instruction_call(contract_context, "plan")
+        applied = _instruction_call(contract_context, "apply", authorized=created.writable_paths())
+        # A stale source is a lock record whose recorded source no longer matches the catalog:
+        # forge exactly that in the temporary root and ask harness to plan again.
+        lock_path = contract_root / LOCK_RELATIVE_PATH
+        genuine_lock = lock_path.read_bytes()
+        forged = parse_lock(genuine_lock)
+        lock_path.write_bytes(serialize_lock(replace(forged, records=(
+            replace(forged.records[0], source_hash="sha256:" + "0" * 64),) + forged.records[1:])))
+        stale = _instruction_call(contract_context, "plan")
+        lock_path.write_bytes(genuine_lock)
         checks.append({"name": "stale source hash",
                        "result": "INSTRUCTION_STALE_SOURCE"
-                       if any(item.code == "INSTRUCTION_STALE_SOURCE" for item in stale.diagnostics)
+                       if "INSTRUCTION_STALE_SOURCE" in stale.diagnostics
                        else "RED"})
 
         target = contract_root / "AGENTS.md"
         target.write_bytes(b"outside-before\n" + target.read_bytes().replace(
             b"<!-- semantic:", b"<!-- local:", 1) + b"\noutside-after\n")
-        drift = plan_instructions(request)
-        action = next(item for item in drift.artifact_plan.actions
-                      if item.target_path == "AGENTS.md")
+        drift = _instruction_call(contract_context, "plan")
         partial = _instruction_aggregate(drift)
-        repaired = repair_instructions(replace(
-            request, operation_id="repair", authorized_target_paths=("AGENTS.md",),
-            observed_hashes=(("AGENTS.md", action.observed_hash),),
-            preimage_destination="adjacent-backup"))
+        repaired = _instruction_call(contract_context, "repair", authorized=("AGENTS.md",),
+                                     observed=drift.drift_hashes())
         checks.append({"name": "managed drift repair only managed block",
                        "result": "non-green then repair GREEN; outside bytes preserved"
                        if applied.green and not partial.green and repaired.green
@@ -960,23 +953,7 @@ def generate_instruction_conformance(env, output_path):
         dual_config = _conformance_config(dual)
         dual_context = contexts(env, dual_config, [dual])[0]
         prepared = run_sync(env, dual_config, [dual], only="instructions", mode="auto")[0]
-        worktree_root = Path(__file__).resolve().parents[5]
-        sibling_bins = {
-            "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
-            "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
-        }
-        if not all(path.is_file() for path in sibling_bins.values()):
-            raise RuntimeError("MAIND_CONFORMANCE_SIBLING_BIN_MISSING")
-        previous_environment = {name: os.environ.get(name) for name in sibling_bins}
-        os.environ.update({name: str(path) for name, path in sibling_bins.items()})
-        try:
-            matrix_results = run_sync_contexts(env, dual_config, [dual_context], dry=True)
-        finally:
-            for name, previous in previous_environment.items():
-                if previous is None:
-                    os.environ.pop(name, None)
-                else:
-                    os.environ[name] = previous
+        matrix_results = run_sync_contexts(env, dual_config, [dual_context], dry=True)
         matrix = provisioner_provider_matrix(matrix_results, dual_context.effective_provider_ids)
         checks.append({"name": "independent provisioner/provider matrix",
                        "result": f"{len(matrix)} explicit support/activation/diagnostic rows"
@@ -993,29 +970,15 @@ def generate_instruction_conformance(env, output_path):
         isolated_env.home.mkdir()
         onboard_config = _conformance_config({"id": "onboard", "name": "Onboard", "type": "node-package",
                                                "enabled": True, "status": "active", "local_path": str(onboard_root)})
+        hub_root = base / "swissknifeman"
+        hub_root.mkdir()
+        _seed_umbrella_layout(hub_root)
         onboard_config["projects"].append({"id": "swissknifeman", "name": "Swissknifeman",
-                                            "enabled": True, "local_path": str(
-                                                Path(__file__).resolve().parents[5])})
+                                            "enabled": True, "local_path": str(hub_root)})
         atomic_write_json(isolated_env.legacy_node_config, onboard_config)
-        worktree_root = Path(__file__).resolve().parents[5]
-        sibling_bins = {
-            "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
-            "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
-        }
-        if not all(path.is_file() for path in sibling_bins.values()):
-            raise RuntimeError("MAIND_CONFORMANCE_SIBLING_BIN_MISSING")
-        previous_environment = {name: os.environ.get(name) for name in sibling_bins}
-        os.environ.update({name: str(path) for name, path in sibling_bins.items()})
-        try:
-            report = onboard(isolated_env, copy.deepcopy(onboard_config), str(onboard_root),
-                             {"skip_skills": True, "yes": True, "dry": True,
-                              "memory": "off", "repair": False})
-        finally:
-            for name, previous in previous_environment.items():
-                if previous is None:
-                    os.environ.pop(name, None)
-                else:
-                    os.environ[name] = previous
+        report = onboard(isolated_env, copy.deepcopy(onboard_config), str(onboard_root),
+                         {"skip_skills": True, "yes": True, "dry": True,
+                          "memory": "off", "repair": False})
         critical_steps = {step["name"]: step["status"] for step in report["steps"]}
         checks.append({"name": "public onboard critical environment/instruction operations",
                        "result": "GREEN" if all(critical_steps.get(name) in ("ok", "dry")

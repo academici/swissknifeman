@@ -9,14 +9,13 @@ import json
 import os
 import shutil
 import stat
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..harness_path import ensure_harness_importable
 from aicore.provider.values import ProviderId
-from aicore.artifacts.lock import apply_plan
-from .. import codegraph, pplxweb
+from aicore.artifacts.lock import LOCK_RELATIVE_PATH, apply_plan
+from aicore.util.partners import PartnerUnavailable
+from .. import codegraph, harness_link, pplxweb
 from aicore.util.term import die, now_iso, warn
 from aicore.util.cli import parse_args
 from aicore.config import ConfigError
@@ -55,14 +54,6 @@ def provider_operation_green(result):
 def _provider_projections(env, config, project):
     """Legacy compatibility projection over the public one-resolution seam."""
     return provider_projection_context(env, config, project).projections
-
-
-def _harness_configs(env):
-    """Resolve the sibling public harness configuration root for a P6 projection."""
-    harness_root = Path(env.root).parent / "harness"
-    if not harness_root.is_dir():
-        harness_root = Path(__file__).resolve().parents[3].parent / "harness"
-    return harness_root / "configs"
 
 
 def _load_project_provider_config(project):
@@ -126,10 +117,6 @@ def _load_legacy_project_providers(root):
 
 def provider_projection_context(env, config, project):
     """Public P6 seam: one effective-provider resolution and P5 projections."""
-    harness_root = _harness_configs(env).parent
-    harness_lib = str(harness_root / "lib")
-    ensure_harness_importable(harness_lib)
-    from harness.mcp import load_mcp_catalog, plan_mcp_projection
     project_config, project_carrier = _load_project_provider_config(project)
     resolved = resolve_provider_config(
         config, None, project["id"], project_config=project_config,
@@ -141,11 +128,12 @@ def provider_projection_context(env, config, project):
     providers = tuple(row.provider_id for row in effective_providers)
     if not providers:
         raise ValueError("MAIND_PROVIDER_DISABLED")
-    catalog = load_mcp_catalog(harness_root / "configs/common/mcp/catalog.json")
-    projections = tuple(plan_mcp_projection(
-        catalog, provider_id=provider,
-        bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
-        selected=(), trusted=True) for provider in providers)
+    try:
+        projections = harness_link.base_projections(providers)
+    except PartnerUnavailable as error:
+        # No harness: the provider steps are skipped, the legacy hub servers still deploy.
+        warn(str(error))
+        projections = ()
     return ProviderProjectionContext(providers, effective_providers, projections)
 
 
@@ -238,6 +226,13 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         warn(f"project '{pid}': path not found - {project_path}")
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
+    if provider_projections is not None or d108:
+        if not harness_link.available():
+            warn(f"project '{pid}': PARTNER_UNAVAILABLE: harness not found (set SKM_HARNESS_ROOT "
+                 f"or put harness on PATH) — provider projection skipped")
+            provider_projections, d108 = None, False
+        elif provider_projections is not None and not provider_projections:
+            provider_projections = None      # no projections: reported where they were requested
     provider_plan = None
     provider_changed = False
     bootstrap_transfer = None
@@ -250,7 +245,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             d108_root = project_path.resolve()
             operation = plan_d108_operation(
                 d108_root, config, pid, inventory,
-                harness_configs=_harness_configs(env), expected_root=d108_root)
+                expected_root=d108_root)
             provider_plan = operation.deploy
             bootstrap_transfer = operation.transfer
             bootstrap_projection = bootstrap_transfer_projection("admitted", bootstrap_transfer)
@@ -281,15 +276,14 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         has_codex = any(projection.provider_id.value == "codex"
                         for projection in provider_projections)
         bootstrap_root = project_path / ".codex/hooks.json"
-        bootstrap_lock = project_path / ".swissknifeman/provider-artifacts.lock.json"
+        bootstrap_lock = project_path / LOCK_RELATIVE_PATH
         bootstrap_handler = project_path / ".codex/hooks/lifecycle.py"
         # A completed transfer has both its lock and handler, so second-run behavior stays
         # on the ordinary managed path. Every incomplete candidate still asks the P2 oracle.
         if not d108 and has_codex and bootstrap_root.is_file() and (
                 not bootstrap_lock.exists() or not bootstrap_handler.is_file()):
             try:
-                bootstrap_transfer = plan_d104_bootstrap_transfer(
-                    project_path, harness_configs=_harness_configs(env))
+                bootstrap_transfer = plan_d104_bootstrap_transfer(project_path)
             except ValueError:
                 bootstrap_projection = bootstrap_transfer_projection(
                     "refused", diagnostic="MAIND_PROVIDER_DEPLOY_REFUSED")
@@ -451,8 +445,10 @@ def cmd_deploy(env, argv):
                                 "--dry-run": "bool", "--json": "bool",
                                 "--conformance": "str", "--repair": "bool"})
     if opts["conformance"]:
-        harness_configs = Path(env.root).parent / "harness/configs"
-        plan = generate_conformance_report(harness_configs, opts["conformance"])
+        try:
+            plan = generate_conformance_report(opts["conformance"])
+        except PartnerUnavailable as error:
+            die(str(error))
         print(f"provider deploy conformance: {len(plan.results)} provider rows")
         return
     config, _src = load_config(env)

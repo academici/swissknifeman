@@ -1,16 +1,15 @@
 """P6.2 public temporary-root conformance for provider provisioning."""
-from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
-import os
 import subprocess
 import tempfile
-import unittest
 
+from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock, serialize_lock
 from maind.doctor import provider_trust_report
 from maind.health import health_report
 from maind.provision import sync
 from maind.provision.onboard import _unmet_steps
+from tests.harness_partner import FakeHarnessCase, RealHarnessCase
 from tests.test_sync import _ensure_umbrella_packages, _setup
 
 
@@ -39,7 +38,9 @@ EXPECTED_MATRIX_CLASSES = (
 )
 
 
-class TestProviderProvisionConformance(unittest.TestCase):
+class TestProviderProvisionConformance(RealHarnessCase):
+    """Needs the real harness: instructions are its operations (integration runner)."""
+
     def test_sync_health_and_doctor_cover_legacy_codex_and_dual_targets(self):
         cases = (
             ("legacy-claude", None, ("CLAUDE.md",)),
@@ -76,14 +77,6 @@ class TestProviderProvisionConformance(unittest.TestCase):
                 self.assertEqual(len(doctor), len(names))
                 self.assertTrue(all(not row["green"] for row in doctor))  # untrusted is non-green
 
-    def test_unknown_provider_fails_before_sync_writes(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, root = _setup(tmp)
-            _providers(config, {"unsupported-provider": {"enabled": True}})
-            with self.assertRaises(ValueError):
-                sync.run_sync(env, config, config["projects"], only="instructions")
-            self.assertFalse((root / "CLAUDE.md").exists())
-
     def test_independent_provisioner_provider_matrix_is_complete_and_honest(self):
         """The oracle is test-owned, never copied from PROVISIONERS or rendered rows."""
         with tempfile.TemporaryDirectory() as tmp:
@@ -91,40 +84,13 @@ class TestProviderProvisionConformance(unittest.TestCase):
             _ensure_umbrella_packages(root)
             _providers(config, {"claude-code": {"enabled": True}, "codex": {"enabled": True}})
             context = sync.contexts(env, config, config["projects"])[0]
-            repo_root = Path(__file__).resolve().parents[3]
-            sibling_environment = {
-                "MAIND_HARNESS_BIN": repo_root / "packages/harness/bin/harness",
-                "SKM_HARNESS_BIN": repo_root / "packages/harness/bin/harness",
-            }
-            for source_path in sibling_environment.values():
-                self.assertTrue(source_path.is_file(), source_path)
-            previous_environment = {
-                name: os.environ.get(name) for name in sibling_environment
-            }
-            missing_environment = {
-                name for name in sibling_environment if name not in os.environ
-            }
-            os.environ.update({
-                name: str(path) for name, path in sibling_environment.items()
-            })
-            try:
-                prepared = sync.run_sync(
-                    env, config, config["projects"], only="instructions", mode="auto"
-                )[0]
-                self.assertEqual(prepared["status"], "ok", prepared)
-                rows = sync.provisioner_provider_matrix(
-                    sync.run_sync_contexts(env, config, [context], dry=True),
-                    context.effective_provider_ids)
-            finally:
-                for name in missing_environment:
-                    os.environ.pop(name, None)
-                for name, value in previous_environment.items():
-                    if name not in missing_environment:
-                        os.environ[name] = value
-            for name, value in previous_environment.items():
-                self.assertEqual(name in os.environ, name not in missing_environment)
-                if name not in missing_environment:
-                    self.assertEqual(os.environ[name], value)
+            prepared = sync.run_sync(
+                env, config, config["projects"], only="instructions", mode="auto"
+            )[0]
+            self.assertEqual(prepared["status"], "ok", prepared)
+            rows = sync.provisioner_provider_matrix(
+                sync.run_sync_contexts(env, config, [context], dry=True),
+                context.effective_provider_ids)
         expected = tuple(
             {"provisioner": provisioner, "provider_id": provider_id,
              "support": support, "activation": activation, "diagnostic": diagnostic}
@@ -150,37 +116,31 @@ class TestProviderProvisionConformance(unittest.TestCase):
             _ensure_umbrella_packages(root)
             _providers(config, {"claude-code": {"enabled": True}, "codex": {"enabled": True}})
             context = sync.contexts(env, config, config["projects"])[0]
-            from harness.instructions import (apply_instructions, load_catalog, plan_instructions,
-                                              repair_instructions)
-            request = sync._instruction_request(context, "plan")
+            missing = sync._instruction_call(context, "plan", scope_ids=("no-such-scope",))
+            duplicate = sync._instruction_call(context, "plan", scope_ids=("root", "root"))
+            self.assertIn("INSTRUCTION_SCOPE_INVALID", missing.diagnostics)
+            self.assertIn("INSTRUCTION_SCOPE_INVALID", duplicate.diagnostics)
 
-            missing = plan_instructions(replace(request, scope_ids=()))
-            duplicate = plan_instructions(replace(request, scope_ids=("root", "root")))
-            self.assertIn("INSTRUCTION_SCOPE_INVALID", {item.code for item in missing.diagnostics})
-            self.assertIn("INSTRUCTION_SCOPE_INVALID", {item.code for item in duplicate.diagnostics})
-
-            created = plan_instructions(request)
-            targets = tuple(action.target_path for action in created.artifact_plan.actions)
-            applied = apply_instructions(replace(request, operation_id="apply",
-                                                 authorized_target_paths=targets))
+            created = sync._instruction_call(context, "plan")
+            applied = sync._instruction_call(context, "apply", authorized=created.writable_paths())
             self.assertTrue(applied.green)
 
-            changed = deepcopy(load_catalog())
-            changed["scopes"][0]["sections"][0]["intent"] += " Contract-derived stale source."
-            stale = plan_instructions(request, catalog=changed)
-            self.assertTrue(any(item.observation == "stale-source" for item in stale.targets))
-            self.assertIn("INSTRUCTION_STALE_SOURCE", {item.code for item in stale.diagnostics})
+            lock_path = root / LOCK_RELATIVE_PATH
+            genuine = lock_path.read_bytes()
+            forged = parse_lock(genuine)
+            lock_path.write_bytes(serialize_lock(replace(forged, records=(
+                replace(forged.records[0], source_hash="sha256:" + "0" * 64),) + forged.records[1:])))
+            stale = sync._instruction_call(context, "plan")
+            lock_path.write_bytes(genuine)
+            self.assertTrue(any(row.observation == "stale-source" for row in stale.targets))
+            self.assertIn("INSTRUCTION_STALE_SOURCE", stale.diagnostics)
 
             target = root / "AGENTS.md"
             target.write_bytes(b"outside-before\n" + target.read_bytes().replace(
                 b"<!-- semantic:", b"<!-- local:", 1) + b"\noutside-after\n")
-            drift = plan_instructions(request)
-            action = next(item for item in drift.artifact_plan.actions
-                          if item.target_path == "AGENTS.md")
-            repaired = repair_instructions(replace(
-                request, operation_id="repair", authorized_target_paths=("AGENTS.md",),
-                observed_hashes=(("AGENTS.md", action.observed_hash),),
-                preimage_destination="adjacent-backup"))
+            drift = sync._instruction_call(context, "plan")
+            repaired = sync._instruction_call(context, "repair", authorized=("AGENTS.md",),
+                                              observed=drift.drift_hashes())
             self.assertTrue(repaired.green)
             self.assertTrue(target.read_bytes().startswith(b"outside-before\n"))
             self.assertTrue(target.read_bytes().endswith(b"\noutside-after\n"))
@@ -236,3 +196,13 @@ class TestProviderProvisionConformance(unittest.TestCase):
                                 for row in instruction_rows), instruction_rows)
             self.assertIn("| public onboard critical environment/instruction operations | GREEN |",
                           generated)
+
+
+class TestProviderProvisionRefusals(FakeHarnessCase):
+    def test_unknown_provider_fails_before_sync_writes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, root = _setup(tmp)
+            _providers(config, {"unsupported-provider": {"enabled": True}})
+            with self.assertRaises(ValueError):
+                sync.run_sync(env, config, config["projects"], only="instructions")
+            self.assertFalse((root / "CLAUDE.md").exists())

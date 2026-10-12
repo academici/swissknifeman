@@ -14,7 +14,7 @@
      "--effort",
      "{effort}",
      "--tools",
-     "",
+     "Read,Grep,Glob",
      "--no-session-persistence"
     ],
     "timeout_s": 300,

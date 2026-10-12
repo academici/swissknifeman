@@ -10,7 +10,7 @@ import unittest
 from orch import launch
 
 ROOT = Path(__file__).resolve().parents[1]
-CLAUDE_SCOUT = ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "", "--no-session-persistence"]
+CLAUDE_SCOUT = ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "Read,Grep,Glob", "--no-session-persistence"]
 CODEX_SCOUT = ["codex", "-a", "never", "exec", "--sandbox", "read-only", "--model", "gpt-5.6-luna", "-c",
                'model_reasoning_effort="low"', "--ephemeral", "-"]
 

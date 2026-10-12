@@ -37,6 +37,22 @@
       "description": "Limits of the run of the piece of work.",
       "$ref": "#/$defs/limits"
     },
+    "instructions": {
+      "description": "Which instructions a role process sees; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "isolate_roles": {
+          "description": "Roles that start without the project instructions of their provider (for Claude Code: the repository CLAUDE.md and the project memory), so that each role gets only the instructions of its own prompt. Default none.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar"]
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
     "checks": {
       "description": "How the acceptance checks of a piece of work are run; a more specific layer overrides the keys it names.",
       "type": "object",

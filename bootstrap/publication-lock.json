@@ -148,6 +148,22 @@
       "rendered_sha256": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f"
     },
     {
+      "identity": "orch-debug",
+      "provider": "claude",
+      "target": ".claude/skills/orch-debug/SKILL.md",
+      "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
+      "canonical_sha256": "f543276be97f390b12af146ba3dedb011f961d0625cb256427cc02b9efb6bc05",
+      "rendered_sha256": "5e6c879e1e8040a93f2db7fd34f2fc490f93d20afce4120604730af5343b4221"
+    },
+    {
+      "identity": "orch-debug",
+      "provider": "codex",
+      "target": ".agents/skills/orch-debug/SKILL.md",
+      "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
+      "canonical_sha256": "f543276be97f390b12af146ba3dedb011f961d0625cb256427cc02b9efb6bc05",
+      "rendered_sha256": "5e6c879e1e8040a93f2db7fd34f2fc490f93d20afce4120604730af5343b4221"
+    },
+    {
       "identity": "package-architecture",
       "provider": "claude",
       "target": ".claude/skills/package-architecture/SKILL.md",

@@ -13,7 +13,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-from core.http import HTTPUnauthorizedError
+from aicore.util.http import HTTPUnauthorizedError
 from maind import memory_policy as policy
 
 from maind import memory

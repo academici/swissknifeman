@@ -5,7 +5,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from .common import parse_args
+from aicore.util.cli import parse_args
 from .memory import auth_headers, check_auth, health, resolve_ports, resolve_secret
 
 
@@ -126,7 +126,7 @@ def _channel_hygiene_report(env, config, detail):
 def _gitignore_drift(config, only=None):
     """Verification of each enabled-project with map `configs/gitignore-policy.json` (read-only):
     what should be in the .gitignore, and what to commit. Returns [(project_id, findings)]."""
-    from core.gitignore_policy import PolicyError, check_project, load_policy
+    from aicore.state.gitignore import PolicyError, check_project, load_policy
 
     from .federation import _enabled_projects
     policy = load_policy()
@@ -148,7 +148,7 @@ def _gitignore_drift(config, only=None):
 def _gitignore_drift_report(config, detail, *, only=None, as_json=False, block=False):
     """detail=False: one summary-line for default doctor. detail=True
     (--gitignore-drift): by project breakdown, --json, --block (ready lines .gitignore)."""
-    from core.gitignore_policy import PolicyError, recommended_block
+    from aicore.state.gitignore import PolicyError, recommended_block
     try:
         rows = _gitignore_drift(config, only)
     except PolicyError as exc:

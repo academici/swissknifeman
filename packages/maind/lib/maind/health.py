@@ -13,10 +13,12 @@ import os
 import stat
 from pathlib import Path
 
-from core.http import HTTPUnauthorizedError
+from aicore.util.http import HTTPUnauthorizedError
 
-from .common import (atomic_write_json, atomic_write_text, backup_file,
-                     content_hash, die, parse_args, upsert_block, warn)
+from aicore.util.io import atomic_write_json, atomic_write_text, backup_file
+from aicore.util.block import content_hash, upsert_block
+from aicore.util.term import die, warn
+from aicore.util.cli import parse_args
 from .config import load_config
 from .mcpconfig import check_hygiene
 from .memory import auth_headers, resolve_secret

@@ -6,7 +6,8 @@ copies iii-config.yaml with service_name maind without modifying its source.
 import re
 from pathlib import Path
 
-from ..common import confirm, die, parse_args
+from aicore.util.term import confirm, die
+from aicore.util.cli import parse_args
 from ..config import load_brain_projects, merge_defaults
 from ..projects import write_config
 

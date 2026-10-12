@@ -5,14 +5,12 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skiller" / "lib"))
 
 from maind.config import (load_config, map_brain_project, merge_defaults,
-                          provider_config_layers, resolve_provider_config,
-                          validate_config)
-from core import (CapabilityId, CapabilitySupport, NativeExtension, NativeExtensionId,
-                  ProviderConfigCatalog, ProviderId, SupportLevel, effective_projection)
-from skiller.config import resolve_provider_config as resolve_skiller_provider_config
+                          resolve_provider_config, validate_config)
+from aicore.provider.values import CapabilityId, NativeExtensionId, ProviderId, SupportLevel
+from aicore.provider.config import (
+    CapabilitySupport, NativeExtension, ProviderConfigCatalog)
 from tests.fixtures import make_repo, write_brain_projects, write_maind_config
 
 
@@ -138,17 +136,6 @@ class TestProviderConfig(unittest.TestCase):
         validate_config(cfg, "x")
         result = resolve_provider_config(cfg, catalog(), "demo")
         self.assertTrue(dict((x.provider_id.value, x.enabled) for x in result.effective)["codex"])
-
-    def test_skiller_and_maind_adapters_match_on_identical_layers(self):
-        providers = config({"codex": {"enabled": True}})
-        fleet = {"providers": {"defaults": config({"codex": {"enabled": False}})},
-                 "projects": [{"id": "demo"}]}
-        maind_result = resolve_provider_config(fleet, catalog(), "demo", project_config=providers)
-        skiller_result = resolve_skiller_provider_config(
-            {"providers": providers}, catalog(), project_id="demo",
-            fleet_defaults=provider_config_layers(fleet, "demo")[0])
-        self.assertEqual(effective_projection(maind_result), effective_projection(skiller_result))
-        self.assertEqual(maind_result.diagnostics, skiller_result.diagnostics)
 
     def test_legacy_carriers_load_and_resolve_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp:

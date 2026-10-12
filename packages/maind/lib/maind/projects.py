@@ -8,7 +8,10 @@ import os
 import subprocess
 from pathlib import Path
 
-from .common import atomic_write_json, die, parse_args, warn
+from aicore.util.io import atomic_write_json
+from aicore.util.partners import PartnerError, PartnerUnavailable, run_partner_json
+from aicore.util.term import die, warn
+from aicore.util.cli import parse_args
 from .config import load_brain_projects, load_config, normalize_docs_folders
 from .namespaces import in_namespace, namespaces_of
 
@@ -124,8 +127,9 @@ def write_config(env, config):
 
 
 def brain_path(config):
-    """Where to look brain .projects.json: integrations.brain.path → vault project brain
-    → env `MAIND_BRAIN_VAULT` → default ~/Vaults/Brain."""
+    """Where the vault with the brain project registry lives, or None when unknown:
+    integrations.brain.path → vault of the project 'brain' → the vault reported by
+    `brain vault --json` (the brain module owns the vault ladder)."""
     integ = (config.get("integrations") or {}).get("brain") or {}
     p = integ.get("path") or integ.get("local_path")
     if p:
@@ -133,7 +137,16 @@ def brain_path(config):
     for proj in config.get("projects") or []:
         if proj.get("id") == "brain" and proj.get("vault_path"):
             return proj["vault_path"]
-    return os.path.expanduser(os.environ.get("MAIND_BRAIN_VAULT") or "~/Vaults/Brain")
+    try:
+        info = run_partner_json("brain", ["vault", "--json"], timeout=30)
+    except (PartnerUnavailable, PartnerError) as exc:
+        warn(str(exc))
+        return None
+    path = info.get("path") if isinstance(info, dict) else None
+    if not path:
+        warn("PARTNER_BAD_OUTPUT: brain vault printed no vault path")
+        return None
+    return os.path.expanduser(path)
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
@@ -305,6 +318,9 @@ def _cmd_sync(env, argv):
     config, _src = load_config(env)
     if src == "brain":
         path = opts["path"] or brain_path(config)
+        if not path:
+            die("brain vault not found: set integrations.brain.path in config.json "
+                "or configure the vault with the brain module")
         config, stats = sync_from_brain(env, config, path)
         write_config(env, config)
         print(f"Sync from brain ({path}): +{stats['added']} new, "

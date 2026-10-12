@@ -17,7 +17,7 @@ _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from maind.common import Env  # noqa: E402
+from maind.common import Env
 
 MINIMAL_III_CONFIG = "workers:\n  - name: iii-http\n    config:\n      port: 4111\n"
 

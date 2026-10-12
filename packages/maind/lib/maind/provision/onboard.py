@@ -9,8 +9,10 @@ import os
 import sys
 from pathlib import Path
 
-from ..common import (detect_project_type, die, docs_visibility_for, parse_args,
-                     sanitize)
+from aicore.util.project import detect_project_type, docs_visibility_for
+from aicore.util.term import die
+from aicore.util.cli import parse_args
+from aicore.util.text import sanitize
 from ..config import load_config
 from .deploy import deploy_project, mark_deployed
 from .orchestrate import run_capability

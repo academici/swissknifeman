@@ -13,9 +13,9 @@ import json
 import os
 from pathlib import Path
 
-from core import parse_frontmatter
+from aicore.util.text import parse_frontmatter
 
-from .common import warn
+from aicore.util.term import warn
 from .federation import rebuild_index, store_path
 from .graph import Graph
 from .namespaces import link_allowed

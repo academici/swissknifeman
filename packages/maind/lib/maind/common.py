@@ -1,26 +1,15 @@
-"""General utilities maind: environment (Env), atomic JSON, JSON-DB, backup.
+"""maind environment (Env) and the node JSON database helper.
 
-Verbatim common with swissknifeman/brain code (die/warn/now_iso/confirm/sanitize +
-core Env, parse_args, run_cmd, atomic/safe JSON) moved to general core; HTTP-client
-moved to `maind.http`, managed markdown-block - in `maind.blocks` (re-export below
-for backward compatibility of imports `from .common import ...`)."""
+Shared primitives (die/warn/atomic JSON/HTTP/blocks, ...) live in ``aicore``; modules
+import them from there directly."""
 import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-# General core (connects via PYTHONPATH launcher/test.sh). Re-export for
-# package modules, which historically take these names from .common.
-from core import (  # noqa: F401
-    HOME, BaseEnv, atomic_write_json, atomic_write_text, backup_file, confirm,
-    detect_project_type, die, docs_visibility_for, find_monorepo_root,
-    now_iso, parse_args, parse_iso, pid_alive, read_ndjson,
-    read_ndjson_iter, run_cmd, safe_load_json, sanitize, warn,
-)
-from core import load_json_db as _core_load_json_db
-# Dedicated modules - re-export for the sake of `from .common import ...` (back-compat).
-from .blocks import content_hash, managed_block, upsert_block  # noqa: F401
-from .http import http_get_json, http_post_json, ping  # noqa: F401
+from aicore.util.env import BaseEnv
+from aicore.util.io import load_json_db as _core_load_json_db
+from aicore.util.repo import find_monorepo_root
 
 DB_VERSION = 1
 
@@ -148,20 +137,8 @@ class Env(BaseEnv):
         return self.root / ".env"
 
 
-# die/warn/now_iso/confirm/sanitize — from general core (re-export above).
-
-
-# parse_args — from general core (re-export above); used to be duplicated here
-# (superset parse_flags with positional, style brain).
-
-
-# backup_file — from general core (re-export above); was previously duplicated here.
-# managed_block/upsert_block/content_hash — in maind.blocks (re-export above).
-# http_get_json/http_post_json/ping — in maind.http (re-export above).
-
-
-# ── JSON-storage (atomic write + persistent read - general core) ───────────
+# ── JSON-storage (persistent read with recovery - aicore) ───────────
 def load_json_db(path, default):
-    """JSON-Node database with recovery - general core.load_json_db (broken → backup
+    """JSON-Node database with recovery - aicore.util.io.load_json_db (broken → backup
     .corrupt.<date> + warn + deepcopy(default); version > DB_VERSION → die)."""
     return _core_load_json_db(path, default, max_version=DB_VERSION)

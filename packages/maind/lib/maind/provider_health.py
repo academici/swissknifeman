@@ -17,13 +17,9 @@ import re
 import subprocess
 from typing import Callable
 
-from core.provider.health import (
-    HEALTH_CONTRACT_VERSION,
-    HealthEvidence,
-    HealthRequirement,
-    evaluate_fleet,
-    evaluate_project,
-)
+from aicore.provider.health import (
+    HEALTH_CONTRACT_VERSION, HealthEvidence, HealthRequirement, evaluate_fleet,
+    evaluate_project)
 
 from .probe import provider_health_probe
 

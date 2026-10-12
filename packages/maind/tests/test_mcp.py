@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import aicore
 from maind import mcp
 from maind import memory as memory_mod
 from maind.config import merge_defaults
@@ -506,13 +507,8 @@ class TestConformance(unittest.TestCase):
 
     def test_real_spawn_handshake(self):
         repo = Path(__file__).resolve().parents[1]
-        # Package `core` lies in <monorepo>/core (two levels above the package); to
-        # `from core import ...` worked during real spawn, in PYTHONPATH needed
-        # ROOT monorepo. standalone-layout: directory core no - the path is not added.
-        monorepo = repo.parents[1]
-        pp = [str(repo / "lib")]
-        if (monorepo / "core").is_dir():
-            pp.append(str(monorepo))
+        # The child needs maind and aicore on PYTHONPATH (the launcher normally adds them).
+        pp = [str(repo / "lib"), str(Path(aicore.__file__).resolve().parents[1])]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "node"
             (root / "config" / "memory").mkdir(parents=True)

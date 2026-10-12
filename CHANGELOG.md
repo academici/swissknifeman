@@ -32,6 +32,8 @@
 - **analyst:** subscriber `run-events` for `planner.item.finished`, `planner.phase.closed`, `planner.plan.closed`, `orch.run.finished` and `orch.run.refused`;
   `analyst events ingest|list` records the outcome of each event once per event id (digest of `data`, never its values), `analyst status` shows the
   count of the last 30 days; `analyst/telemetry.py` maps the dispatch events of the trace onto the span names and the metric labels of `aicore`.
+- **skiller:** `skiller profiles [--json]` prints the project-type profiles delivered with skiller; the contract `profiles-list/v1`
+  (`{"$schema", "profiles": {<id>: <document>}}`) lets other modules read the catalog without knowing skiller's folders.
 
 ### Changed
 
@@ -47,6 +49,12 @@
 - **aicore:** `aicore.util.partners` finds a partner module's command (`SKM_<NAME>_BIN`, `SKM_<NAME>_ROOT`, `PATH`) and reads its
   JSON output (`PARTNER_UNAVAILABLE`, `PARTNER_FAILED`, `PARTNER_BAD_OUTPUT`).
 - **hub:** `scripts/test-integration.sh` runs the analyst, maind and harness tests with every partner wired from the hub layout.
+- **maind:** runs on `aicore` only: no `core` imports, no re-export layer (`maind.blocks` and `maind.http` removed; `maind.common`
+  keeps `Env` and `load_json_db`), launcher and test runner without the monorepo root. Neighbors are found through
+  `aicore.util.partners` (`SKM_<NAME>_BIN`, `SKM_<NAME>_ROOT`, `PATH`; the old `MAIND_SKM_BIN` and `MAIND_HARNESS_BIN` still win with a
+  `*_DEPRECATED` warning, `MAIND_BRAIN_BIN` too); `constants.SIBLINGS` is gone. A missing neighbor prints `PARTNER_UNAVAILABLE` and the
+  step is skipped as before. Agent-pack profiles come from `skiller profiles --json`; the vault comes from `brain vault --json`
+  (`MAIND_BRAIN_VAULT` is read by brain only), and a missing vault skips the brain step.
 
 ### Fixed
 

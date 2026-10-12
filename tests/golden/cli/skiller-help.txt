@@ -17,6 +17,7 @@ Commands (are run from the consuming project, the root is looked up from CWD):
   analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
   bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
   list      registered projects (~/.swissknifeman/projects.json)
+  profiles  project-type profiles delivered with skiller (read-only; --json)
   topology  local environment map (init|show) — ~/.swissknifeman/topology.json
   release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
             (opt --dry-run; does NOT tag/does not push - prints the command)

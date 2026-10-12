@@ -18,10 +18,12 @@ import time
 from pathlib import Path
 from urllib.parse import quote
 
-from core.http import HTTPUnauthorizedError
+from aicore.util.http import HTTPUnauthorizedError
 
-from .common import (die, http_get_json, http_post_json, parse_args, pid_alive,
-                     ping, warn)
+from aicore.util.term import die, warn
+from aicore.util.http import http_get_json, http_post_json, ping
+from aicore.util.cli import parse_args
+from aicore.util.proc import pid_alive
 from .config import load_config
 from . import memory_policy as policy
 from .constants import (DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS, DIGEST_MIN_TAIL_CHARS,

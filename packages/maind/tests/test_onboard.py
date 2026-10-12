@@ -1,7 +1,9 @@
 """Tests onboard — chain register → integrate → deploy → seed (standalone-safe)."""
+import os
 import json
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import maind.provision.onboard as onb
@@ -155,7 +157,10 @@ class TestOnboard(unittest.TestCase):
             proj_dir = Path(tmp) / "p"
             proj_dir.mkdir()
             config, _ = load_config(env)
-            report = onb.onboard(env, config, str(proj_dir), {"yes": True, "dry": False})
+            with mock.patch.dict(os.environ, {"PATH": str(Path(tmp) / "none")}):
+                for var in ("SKM_SKILLER_BIN", "SKM_SKILLER_ROOT", "MAIND_SKM_BIN"):
+                    os.environ.pop(var, None)
+                report = onb.onboard(env, config, str(proj_dir), {"yes": True, "dry": False})
             names = {s["name"]: s["status"] for s in report["steps"]}
             self.assertEqual(names["skills"], "skipped")
             self.assertEqual(names["deploy"], "ok")

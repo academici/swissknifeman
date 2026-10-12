@@ -19,9 +19,12 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..common import die, parse_args, safe_load_json, warn
+from aicore.util.term import die, warn
+from aicore.util.cli import parse_args
+from aicore.util.io import safe_load_json
+from aicore.util.partners import (PartnerError, PartnerUnavailable, partner_command,
+                                  run_partner_json)
 from ..config import load_config
-from ..constants import SIBLINGS
 from ..namespaces import in_namespace
 from ..projects import get as get_project
 from ..projects import listing
@@ -399,24 +402,38 @@ def _ecosystem_skill_run(env, config, projects, mode, dry):
     return [apply_ecosystem_skill(env, config, p, mode, dry) for p in projects]
 
 
-def _skiller_profiles_dir(config):
-    """Profile catalog skiller (<repo>/packages/skiller/profiles) or None.
-    Root repo resolution - same as orchestrate._sibling_bin (project 'swissknifeman')."""
-    spec = SIBLINGS["swissknifeman"]
-    proj = get_project(config, spec["project_id"])
-    root = proj.get(spec["path_key"]) if proj else None
-    if not root:
-        return None
-    d = Path(os.path.expanduser(root)) / "packages" / "skiller" / "profiles"
-    return d if d.is_dir() else None
+_PROFILES_CACHE = {}
+
+
+def _skiller_profiles(config):
+    """Profile catalog of skiller {id: document} from `skiller profiles --json`, or {} when
+    skiller is not available (agent packs then come only from the project and its roles).
+    One call per distinct skiller launcher per process."""
+    argv = partner_command("skiller", legacy_env=("MAIND_SKM_BIN",))
+    key = tuple(argv) if argv else None
+    if key in _PROFILES_CACHE:
+        return _PROFILES_CACHE[key]
+    profiles = {}
+    try:
+        doc = run_partner_json("skiller", ["profiles", "--json"],
+                               legacy_env=("MAIND_SKM_BIN",), timeout=60)
+        found = doc.get("profiles") if isinstance(doc, dict) else None
+        if not isinstance(found, dict):
+            raise PartnerError("PARTNER_BAD_OUTPUT: skiller profiles printed no profiles object")
+        profiles = found
+    except (PartnerUnavailable, PartnerError) as exc:
+        warn(str(exc))
+    _PROFILES_CACHE[key] = profiles
+    return profiles
 
 
 def _profile_for(config, project):
     """Profile skiller by project.type (dict) or {}."""
-    pdir, ptype = _skiller_profiles_dir(config), project.get("type")
-    if not pdir or not ptype:
+    ptype = project.get("type")
+    if not ptype:
         return {}
-    return safe_load_json(pdir / f"{ptype}.json", default={}) or {}
+    profile = _skiller_profiles(config).get(ptype)
+    return profile if isinstance(profile, dict) else {}
 
 
 def _resolve_agent_pack(config, project):
@@ -588,7 +605,7 @@ def _gitignore_run(env, config, projects, mode, dry):
     Runs last so files written earlier in the same sync are visible. Every mode
     appends missing patterns; nothing is removed and `git rm --cached` is not run.
     """
-    from core.gitignore_policy import PolicyError, apply_recommendations
+    from aicore.state.gitignore import PolicyError, apply_recommendations
     results = []
     for context in projects:
         project = context.project if isinstance(context, ProjectContext) else context
@@ -784,7 +801,8 @@ def _instruction_semantics(operation):
 
 def generate_instruction_conformance(env, output_path):
     """Generate the temporary-root matrix through public mAInd APIs only."""
-    from ..common import Env, atomic_write_json, atomic_write_text
+    from ..common import Env
+    from aicore.util.io import atomic_write_json, atomic_write_text
     from dataclasses import replace
     from ..doctor import provider_trust_report
     from ..health import health_report
@@ -944,7 +962,6 @@ def generate_instruction_conformance(env, output_path):
         prepared = run_sync(env, dual_config, [dual], only="instructions", mode="auto")[0]
         worktree_root = Path(__file__).resolve().parents[5]
         sibling_bins = {
-            "MAIND_SKM_BIN": worktree_root / "packages/skiller/bin/skiller",
             "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
             "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
         }
@@ -982,7 +999,6 @@ def generate_instruction_conformance(env, output_path):
         atomic_write_json(isolated_env.default_config, onboard_config)
         worktree_root = Path(__file__).resolve().parents[5]
         sibling_bins = {
-            "MAIND_SKM_BIN": worktree_root / "packages/skiller/bin/skiller",
             "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
             "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
         }

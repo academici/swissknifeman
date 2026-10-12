@@ -13,19 +13,22 @@ import json
 import re
 import sys
 
-from core.provider.manifest import default_manifest_path
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ArtifactAction, ArtifactActionKind, ArtifactLock,
-                  ArtifactPlan, CapabilityId, CapabilityRequirement, DriftObservation,
-                  ProviderId, SupportLevel, canonical_json_bytes, apply_plan,
-                  load_provider_manifest, plan_artifact_lock, plan_artifact_render,
-                  replace_owner_records,
-                  parse_lock, provider_config_catalog,
-                  plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
-                  ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
-                  support_for)
-from core.provider.lock import artifact_doctor, rollback_chained_bootstrap_transfer
-from .common import atomic_write_text
+from .harness_path import ensure_harness_importable
+from aicore.provider.manifest import default_manifest_path
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
+    canonical_json_bytes, plan_artifact_render, sha256_digest)
+from aicore.artifacts.lock import (
+    ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation,
+    apply_plan, plan_artifact_lock, replace_owner_records, parse_lock,
+    plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run,
+    ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer)
+from aicore.provider.values import (
+    CapabilityId, CapabilityRequirement, ProviderId, SupportLevel)
+from aicore.provider.manifest import (
+    load_provider_manifest, provider_config_catalog, support_for)
+from aicore.artifacts.lock import artifact_doctor, rollback_chained_bootstrap_transfer
+from aicore.util.io import atomic_write_text
 
 
 _BOOTSTRAP_CANONICAL_PREIMAGE = "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
@@ -219,7 +222,7 @@ def apply_project_carrier(plan):
     if not isinstance(plan, ProjectCarrierPlan):
         raise TypeError("project carrier plan required")
     plan.path.parent.mkdir(parents=True, exist_ok=True)
-    from core import atomic_write_text
+    from aicore.util.io import atomic_write_text
     atomic_write_text(plan.path, plan.after.decode("utf-8"))
 
 
@@ -230,7 +233,7 @@ def _rollback_project_carrier(plan):
     if plan.before is None:
         plan.path.unlink()
     elif plan.changed:
-        from core import atomic_write_text
+        from aicore.util.io import atomic_write_text
         atomic_write_text(plan.path, plan.before.decode("utf-8"))
 
 
@@ -243,8 +246,7 @@ def _d108_planned_projections(config, project_id, carrier, harness_configs):
         raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
     harness_configs = Path(harness_configs)
     harness_lib = str(harness_configs.parent / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
+    ensure_harness_importable(harness_lib)
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
     catalog = load_mcp_catalog(harness_configs / "common/mcp/catalog.json")
     return tuple(plan_mcp_projection(
@@ -428,8 +430,7 @@ def _d104_observer_fragment(harness_configs):
     """Obtain P5's public native fragment without importing its implementation details."""
     harness_configs = Path(harness_configs)
     harness_lib = str(harness_configs.parent / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
+    ensure_harness_importable(harness_lib)
     from harness.hooks import (LifecycleRequest, codex_d104_observer_fragment,
                                plan_lifecycle)
     from harness.profiles import load_catalog
@@ -622,8 +623,7 @@ def write_conformance_report(path, plan):
 def generate_conformance_report(harness_configs, output_path):
     """Generate the fixed P6 semantic inventory through P5 projections only."""
     harness_lib = str(Path(harness_configs).parent / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
+    ensure_harness_importable(harness_lib)
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
     root = Path(harness_configs)
     catalog = load_mcp_catalog(root / "common/mcp/catalog.json")

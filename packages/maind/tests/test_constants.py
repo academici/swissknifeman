@@ -5,7 +5,7 @@ import unittest
 from maind import constants as c
 
 try:
-    from core.repo import find_monorepo_root
+    from aicore.util.repo import find_monorepo_root
 except ImportError:
     find_monorepo_root = None
 

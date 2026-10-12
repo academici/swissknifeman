@@ -8,7 +8,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from .common import atomic_write_json, backup_file, warn
+from aicore.util.io import atomic_write_json, backup_file
+from aicore.util.term import warn
 
 EXAMPLE_SUFFIX = ".example"
 

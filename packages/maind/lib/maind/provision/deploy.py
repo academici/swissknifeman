@@ -13,9 +13,12 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import ProviderId, apply_plan
+from ..harness_path import ensure_harness_importable
+from aicore.provider.values import ProviderId
+from aicore.artifacts.lock import apply_plan
 from .. import codegraph, pplxweb
-from ..common import die, now_iso, parse_args, warn
+from aicore.util.term import die, now_iso, warn
+from aicore.util.cli import parse_args
 from ..config import load_config, resolve_provider_config
 from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
                         merge_server, reconcile_gitignore, remove_server,
@@ -103,8 +106,7 @@ def provider_projection_context(env, config, project):
     """Public P6 seam: one effective-provider resolution and P5 projections."""
     harness_root = _harness_configs(env).parent
     harness_lib = str(harness_root / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
+    ensure_harness_importable(harness_lib)
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
     project_config = _load_project_provider_config(project)
     resolved = resolve_provider_config(

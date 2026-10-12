@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.4",
   "title": "maind на aicore: импорты, слой реэкспорта, обёртки; партнёры вместо SIBLINGS-путей; хранилище через brain vault --json; skiller profiles --json",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "maind импортирует только себя и aicore (кроме импорта harness — до P11.8); SIBLINGS удалён — skiller, harness ищутся через aicore.util.partners, внешний CLI хранилища — внутри пути хранилища от brain vault --json; профили skiller — новой командой skiller profiles --json; skilldoc без пути skiller; тесты без импорта skiller; нарушения maind, кроме связи с harness, = 0.",
   "why": "D2, D67, D49 (переход maind на brain vault — P11). Риски: (1) run_capability и sync._agent_pack_run при отсутствии партнёра должны давать прежний skip, а не падение; (2) MAIND_*_BIN живых машин продолжают работать как первая ступень с предупреждением; (3) MAIND_BRAIN_VAULT maind больше не читает — проверить, что brain vault --json его учитывает (D49), иначе путь хранилища пропадёт.",
   "scope": {
@@ -133,6 +133,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/9539dedee16f7cf2a793fa5124b885252e2846e92b6f5cda141edeb702d9416a",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
     "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
@@ -202,6 +208,69 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:18:19Z"
+  "result": {
+    "started_at": "2026-10-12T03:23:37Z",
+    "finished_at": "2026-10-12T04:15:40Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-f5d463e8a8cfd701a5095a4d-P11.4",
+    "notes": "maind is on aicore: core imports, re-export layer, MONOREPO_ROOT, SIBLINGS and MAIND_BRAIN_VAULT are gone from lib/bin/scripts/tests. Partners are found through aicore.util.partners. skiller profiles --json is added with its schema and test. Docs, CHANGELOGs, baseline and goldens are updated. The work was already in the tree at the start of this run, so I made no new edits; I re-verified it.\nChanged: CHANGELOG.md, configs/ecosystem-baseline.json, packages/maind/CHANGELOG.md, packages/maind/bin/maind, packages/maind/lib/maind/**, packages/maind/scripts/test.sh, packages/maind/tests/**, packages/maind/unit.json, packages/skiller/bin/skiller, packages/skiller/lib/skiller/cli.py, packages/skiller/lib/skiller/profiles_list.py, packages/skiller/schemas/profiles-list/v1/profiles-list.schema.json, packages/skiller/tests/test_profiles_list.py, packages/skiller/unit.json, tests/golden/cases.json, tests/golden/generation.json, tests/golden/cli/skiller-help.txt, tests/golden/cli/skiller-unknown-subcommand.txt\nEvidence: /tmp/p114/maind.txt, /tmp/p114/validate.txt, /tmp/p114/skiller.txt, /tmp/p114/integ.txt, /tmp/p114/skv.txt",
+    "deviations": [
+      "The work pre-existed in the working tree (a prior partial run); this run only verified it and ran the checks. Provider-docs failure aside, nothing else was red. The harness link in maind (provider_deploy, deploy, sync, workspace) is untouched as scoped (P11.8); a transitional helper maind/harness_path.py exists for it."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T04:15:40Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T04:15:40Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T04:15:40Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T04:15:40Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T04:15:40Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T04:15:40Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V6.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V5.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.4/evidence/V6.json"
+    ]
+  },
+  "updated_at": "2026-10-12T04:15:40Z"
 }

@@ -16,7 +16,8 @@ import sys
 from pathlib import Path
 
 from ..analyst_source import run_lookup
-from ..common import parse_args, read_ndjson_iter, run_cmd
+from aicore.util.cli import parse_args, run_cmd
+from aicore.util.io import read_ndjson_iter
 from ..config import load_config
 from ..health import _target
 

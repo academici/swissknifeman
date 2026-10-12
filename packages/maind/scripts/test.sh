@@ -31,11 +31,7 @@ unset -f _aicore_ok
 # --- end aicore locator ---
 
 # lib/ contains maind and REPO_ROOT exposes tests.fixtures.
-# MONOREPO_ROOT exposes core when this package runs inside the monorepo; standalone
-# layouts do not add a nonexistent core path.
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 # Dev clone (PLAN3 D13): tests run against a throwaway HOME, never the real one; the entry-point
 # guard refuses CLI runs that reach the real HOME.

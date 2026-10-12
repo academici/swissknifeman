@@ -11,7 +11,9 @@ import os
 from collections import Counter, deque
 from pathlib import Path
 
-from .common import atomic_write_json, die, parse_args
+from aicore.util.io import atomic_write_json
+from aicore.util.term import die
+from aicore.util.cli import parse_args
 from .constants import EDGE_TYPES, GRAPH_VERSION, NODE_TYPES
 
 

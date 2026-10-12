@@ -16,13 +16,15 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-from core.provider.manifest import default_manifest_path
-from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
-                  ResolvedProviderConfig,
-                  load_provider_manifest, provider_config_catalog,
-                  resolve_provider_config as resolve_shared_provider_config)
-from .common import (detect_project_type, die, docs_visibility_for, sanitize,
-                     warn)
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.values import ConfigSource
+from aicore.provider.config import (
+    ProviderConfigCatalog, ProviderConfigLayer, ResolvedProviderConfig,
+    resolve_provider_config as resolve_shared_provider_config)
+from aicore.provider.manifest import load_provider_manifest, provider_config_catalog
+from aicore.util.project import detect_project_type, docs_visibility_for
+from aicore.util.term import die, warn
+from aicore.util.text import sanitize
 from .constants import (CODE_GRAPH_DEFAULTS, DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS,
                         DIGEST_SHARED_MAX, EMIT_EXAMPLE_DEFAULT, GRAPH_ADAPTERS,
                         HEARTBEAT_DEFAULT_MS, LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS,

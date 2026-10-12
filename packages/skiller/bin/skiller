@@ -22,6 +22,7 @@
 #   analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
 #   bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
 #   list      registered projects (~/.swissknifeman/projects.json)
+#   profiles  project-type profiles delivered with skiller (read-only; --json)
 #   topology  local environment map (init|show) — ~/.swissknifeman/topology.json
 #   release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
 #             (opt --dry-run; does NOT tag/does not push - prints the command)
@@ -60,7 +61,7 @@ if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/skiller" ]]; then
 fi
 
 usage() {
-  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,33p'
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,34p'
 }
 
 CMD="${1:-help}"
@@ -69,7 +70,7 @@ CMD="${1:-help}"
 case "$CMD" in
   -h|--help|help) usage; exit 0 ;;
   validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
-  connect|vendor|integrate|update|init|sync|lock|resolve|describe|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release|attest|version|deliver) ;;
+  connect|vendor|integrate|update|init|sync|lock|resolve|describe|status|budget|eval|analyze-run|bucket-audit|list|profiles|registry|doctor|topology|release|attest|version|deliver) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

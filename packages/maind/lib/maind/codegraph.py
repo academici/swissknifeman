@@ -14,7 +14,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .common import atomic_write_text, warn
+from aicore.util.io import atomic_write_text
+from aicore.util.term import warn
 from .constants import CODE_GRAPH_DEFAULTS, SERENA_SCHEMA_FIELDS, SERENA_SRC
 
 SERENA_CONFIG = Path(".serena") / "project.yml"

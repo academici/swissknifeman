@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261012T032335Z-ebcfc7:P11.4:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P11.4",
+  "candidate": {
+    "head": "f4b260a1bb832bbec5a96c0d77386792fa663446",
+    "dirty_digest": "f75b9b8c5a9647c7a9035c7abd071a682153c3f152fac94254b57740aac6e417"
+  },
+  "started_at": "2026-10-12T03:56:55Z",
+  "procedure": {
+    "cmd": "! grep -rnE '^\\s*(from\\s+core(\\.|\\s)|import\\s+core\\b)|MONOREPO_ROOT' packages/maind/lib packages/maind/bin packages/maind/scripts packages/maind/tests --exclude=test_boundary.py && ! grep -rn 'SIBLINGS\\|MAIND_BRAIN_VAULT' packages/maind/lib",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-12T03:56:55Z"
+}

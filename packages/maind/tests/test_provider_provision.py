@@ -93,7 +93,6 @@ class TestProviderProvisionConformance(unittest.TestCase):
             context = sync.contexts(env, config, config["projects"])[0]
             repo_root = Path(__file__).resolve().parents[3]
             sibling_environment = {
-                "MAIND_SKM_BIN": repo_root / "packages/skiller/bin/skiller",
                 "MAIND_HARNESS_BIN": repo_root / "packages/harness/bin/harness",
                 "SKM_HARNESS_BIN": repo_root / "packages/harness/bin/harness",
             }

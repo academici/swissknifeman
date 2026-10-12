@@ -11,7 +11,7 @@ import sys
 from . import agents as agents_mod
 from . import memory as memory_mod
 from . import projects as projects_mod
-from .common import parse_args
+from aicore.util.cli import parse_args
 from .config import load_config
 
 PROTOCOL_VERSION = "2024-11-05"

@@ -52,9 +52,12 @@ class SettingsDimCase(unittest.TestCase):
     def test_settings_status_unavailable_when_harness_missing(self):
         os.environ.pop("MAIND_HARNESS_BIN", None)
         p = _make_project(self.tmp)
-        # config without project entry swissknifeman → _sibling_bin die() → SystemExit → unavailable
-        row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
-                                  ("settings",), self.code_st, config={})
+        # no harness launcher anywhere → PARTNER_UNAVAILABLE → SystemExit → unavailable
+        with mock.patch.dict(os.environ, {"PATH": str(self.tmp)}):
+            os.environ.pop("SKM_HARNESS_BIN", None)
+            os.environ.pop("SKM_HARNESS_ROOT", None)
+            row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
+                                      ("settings",), self.code_st, config={})
         self.assertEqual(row["settings"], "unavailable")
 
     def test_settings_status_broken_stdout_is_unavailable_no_traceback(self):

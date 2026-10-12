@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261012T032335Z-ebcfc7:P11.4:checks.1:V3",
+  "check_id": "V3",
+  "subject": "PLAN3.P11.4",
+  "candidate": {
+    "head": "f4b260a1bb832bbec5a96c0d77386792fa663446",
+    "dirty_digest": "f75b9b8c5a9647c7a9035c7abd071a682153c3f152fac94254b57740aac6e417"
+  },
+  "started_at": "2026-10-12T03:56:55Z",
+  "procedure": {
+    "cmd": "{ python3 scripts/ecosystem-units.py check --strict --json || true; } | python3 -c 'import json,sys; v=[k for k in (x[\"key\"] for x in json.load(sys.stdin)[\"violations\"]) if k.split(\"|\")[1].startswith(\"packages/maind/\") and k.split(\"|\")[2] != \"harness\"]; print(\"\\n\".join(v)); sys.exit(1 if v else 0)'",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-12T03:56:59Z"
+}

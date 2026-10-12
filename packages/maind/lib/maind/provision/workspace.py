@@ -14,7 +14,10 @@ import json
 import os
 from pathlib import Path
 
-from ..common import atomic_write_json, backup_file, die, parse_args
+from ..harness_path import ensure_harness_importable
+from aicore.util.io import atomic_write_json, backup_file
+from aicore.util.term import die
+from aicore.util.cli import parse_args
 from ..config import load_config
 
 DEFAULT_MODE = "acceptEdits"
@@ -168,8 +171,7 @@ def provider_trust(context, *, trusted, profile_id="workspace-contained",
     harness_root = Path(__file__).resolve().parents[3].parent / "harness"
     import sys
     harness_lib = str(harness_root / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
+    ensure_harness_importable(harness_lib)
     from harness.profiles import load_catalog, resolve_profile
     catalog = load_catalog(harness_root / "configs/common/profile-catalog.json")
     rows = []

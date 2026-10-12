@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "6be286696593",
-  "reason": "orch conductor: doctor and source commit verbs, conductor/v1 validate kinds, triager role in the launch catalog, orch identity instruction",
+  "captured_from": "f4b260a1bb83",
+  "reason": "skiller profiles command listed in usage",
   "generators": [
     {
       "id": "skiller-registry",

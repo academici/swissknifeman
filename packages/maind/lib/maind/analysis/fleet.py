@@ -20,7 +20,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from ..common import die, parse_args, warn
+from aicore.util.term import die, warn
+from aicore.util.cli import parse_args
 from ..config import load_config
 from ..federation import federated_graph, graph_disabled
 from ..namespaces import group_scopes, namespaces_of, private_scope

@@ -3,14 +3,18 @@ import unittest
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
+from maind.harness_path import ensure_harness_importable
 
-from core.provider.manifest import default_manifest_path
-from core import (ArtifactActionKind, ArtifactAdapterIdentity,
-                  ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
-                  ConfigSource, ProviderConfigCatalog,
-                  ProviderConfigLayer, ProviderId, apply_plan, canonical_json_bytes,
-                  parse_lock, plan_artifact_lock, plan_artifact_render, sha256_digest)
+ensure_harness_importable(Path(__file__).resolve().parents[2] / "harness/lib")
+
+from aicore.provider.manifest import default_manifest_path
+from aicore.artifacts.lock import (
+    ArtifactActionKind, apply_plan, parse_lock, plan_artifact_lock)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
+    canonical_json_bytes, plan_artifact_render, sha256_digest)
+from aicore.provider.values import ConfigSource, ProviderId
+from aicore.provider.config import ProviderConfigCatalog, ProviderConfigLayer
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
@@ -92,7 +96,7 @@ class TestProviderDeploy(unittest.TestCase):
     def skiller_artifact(body=b"managed skill\n"):
         return plan_artifact_render(ArtifactRenderRequest(
             "skiller.codex.connect.a123", (ArtifactSource(
-                "skiller.test", "packages/skiller/test", sha256_digest(body)),),
+                "skiller.test", "skills/test", sha256_digest(body)),),
             ArtifactTarget(".agents/skills/test/SKILL.md", ("whole-file", ())),
             ArtifactAdapterIdentity("skiller.test", "1.0.0", ProviderId.CODEX,
             "1.0.0", ()), (), {}, lambda _request: body))

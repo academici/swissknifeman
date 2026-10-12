@@ -9,6 +9,7 @@ import unittest
 from unittest import mock
 
 import aicore
+from aicore.util.partners import PartnerUnavailable
 from aicore.util.schema import load_contract, validate
 from maind.config import load_config
 from maind.projects import brain_path, cmd_projects, get, listing, sync_from_brain, write_config
@@ -70,23 +71,43 @@ class TestSync(unittest.TestCase):
 
 
 class TestBrainPath(unittest.TestCase):
-    def test_config_path_wins_over_env(self):
-        os.environ["MAIND_BRAIN_VAULT"] = "/env/vault"
-        try:
-            cfg = {"integrations": {"brain": {"path": "/cfg/vault"}}}
+    def test_config_path_wins_over_partner(self):
+        cfg = {"integrations": {"brain": {"path": "/cfg/vault"}}}
+        with mock.patch("maind.projects.run_partner_json") as run:
             self.assertEqual(brain_path(cfg), "/cfg/vault")
-        finally:
-            del os.environ["MAIND_BRAIN_VAULT"]
+        run.assert_not_called()
 
-    def test_env_override_before_default(self):
-        os.environ["MAIND_BRAIN_VAULT"] = "/env/vault"
-        try:
-            self.assertEqual(brain_path({}), "/env/vault")
-        finally:
-            del os.environ["MAIND_BRAIN_VAULT"]
+    def test_project_vault_path_before_partner(self):
+        cfg = {"projects": [{"id": "brain", "vault_path": "/proj/vault"}]}
+        with mock.patch("maind.projects.run_partner_json") as run:
+            self.assertEqual(brain_path(cfg), "/proj/vault")
+        run.assert_not_called()
 
-    def test_default_fallback(self):
-        self.assertEqual(brain_path({}), os.path.expanduser("~/Vaults/Brain"))
+    def test_vault_comes_from_brain_vault_json(self):
+        with mock.patch("maind.projects.run_partner_json",
+                        return_value={"path": "/partner/vault", "source": "config"}) as run:
+            self.assertEqual(brain_path({}), "/partner/vault")
+        self.assertEqual(run.call_args[0][:2], ("brain", ["vault", "--json"]))
+
+    def test_old_vault_variable_is_not_read(self):
+        with mock.patch.dict(os.environ, {"MAIND_BRAIN_VAULT": "/env/vault"}), \
+                mock.patch("maind.projects.run_partner_json",
+                           return_value={"path": "/partner/vault"}):
+            self.assertEqual(brain_path({}), "/partner/vault")
+
+    def test_missing_partner_gives_none_with_message(self):
+        err = PartnerUnavailable("PARTNER_UNAVAILABLE: brain not found "
+                                 "(set SKM_BRAIN_ROOT or put brain on PATH)")
+        with mock.patch("maind.projects.run_partner_json", side_effect=err), \
+                contextlib.redirect_stderr(io.StringIO()) as stderr:
+            self.assertIsNone(brain_path({}))
+        self.assertIn("PARTNER_UNAVAILABLE", stderr.getvalue())
+
+    def test_partner_without_path_gives_none(self):
+        with mock.patch("maind.projects.run_partner_json", return_value={"path": None}), \
+                contextlib.redirect_stderr(io.StringIO()) as stderr:
+            self.assertIsNone(brain_path({}))
+        self.assertIn("PARTNER_BAD_OUTPUT", stderr.getvalue())
 
 
 class TestProjectsHealth(unittest.TestCase):

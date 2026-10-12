@@ -1,4 +1,6 @@
 """Tests sync.py (fan-out + providers mcp/graph/memory-hook) and common.managed_block."""
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -9,12 +11,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from core import ProviderId
+from aicore.provider.values import ProviderId
 from maind.provider_deploy import ProviderDeployPlan, ProviderDeployResult
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
 from maind.provision import sync
-from maind.common import managed_block, upsert_block
+from aicore.util.block import managed_block, upsert_block
 from maind.config import load_config
 from maind.mcpconfig import has_server
 from tests.fixtures import make_repo, write_maind_config
@@ -262,6 +264,51 @@ class TestProviderContexts(unittest.TestCase):
             self.assertTrue(restored.endswith("\nlocal footer\n"))
 
 
+class TestSkillerProfiles(unittest.TestCase):
+    """Profile catalog comes from `skiller profiles --json`; no skiller means no profile packs."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+        patcher = mock.patch.dict(os.environ, {"PATH": str(self.tmp / "none")})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        for var in ("SKM_SKILLER_BIN", "SKM_SKILLER_ROOT", "MAIND_SKM_BIN"):
+            os.environ.pop(var, None)
+        sync._PROFILES_CACHE.clear()
+        self.addCleanup(sync._PROFILES_CACHE.clear)
+
+    def _skiller(self, output, rc=0):
+        path = self.tmp / "skiller"
+        path.write_text(f"#!/bin/sh\necho '{output}'\nexit {rc}\n", encoding="utf-8")
+        path.chmod(0o755)
+        os.environ["SKM_SKILLER_BIN"] = str(path)
+
+    def test_profile_pack_and_answers_from_partner(self):
+        self._skiller(json.dumps({"profiles": {"node-package": {
+            "agent_pack": ["node", "_common"], "model_tiers": {"reviewer": "opus"}}}}))
+        project = {"id": "p", "type": "node-package"}
+        self.assertEqual(sync._resolve_agent_pack({}, project), ["node", "_common"])
+        self.assertEqual(sync._profile_answers({}, project), ["--answer", "MODEL_REVIEWER=opus"])
+
+    def test_missing_skiller_means_no_profile(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(sync._resolve_agent_pack({}, {"id": "p", "type": "node-package"}), [])
+        self.assertIn("PARTNER_UNAVAILABLE", err.getvalue())
+
+    def test_failing_skiller_means_no_profile(self):
+        self._skiller("", rc=3)
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(sync._profile_for({}, {"id": "p", "type": "node-package"}), {})
+        self.assertIn("PARTNER_FAILED", err.getvalue())
+
+    def test_unknown_type_has_no_profile(self):
+        self._skiller(json.dumps({"profiles": {"node-package": {"agent_pack": "x"}}}))
+        self.assertEqual(sync._profile_for({}, {"id": "p", "type": "other"}), {})
+
+
 class TestRoleAgentPacks(unittest.TestCase):
     """Option C: project.roles → config.role_packs[role], additive to the profile pack."""
     CFG = {"role_packs": {"tech-lead": "role-tech-lead", "solo-founder": "role-founder"}}
@@ -393,7 +440,7 @@ class TestSync(unittest.TestCase):
         # (when the binary is available); without a flag - no. We mock up the binary for those present.
         from maind.provision import deploy
         orig = deploy.shutil.which
-        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        deploy.shutil.which = lambda name, *a, **k: f"/usr/bin/{name}"
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 env, config, proj = _setup(tmp)

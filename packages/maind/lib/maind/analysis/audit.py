@@ -236,7 +236,7 @@ def run_audit(env, config, dim, as_json=False):
     dims = DIMS if dim in (None, "", "all") else (dim,)
     bad = [d for d in dims if d not in DIMS]
     if bad:
-        from ..common import die
+        from aicore.util.term import die
         die(f"--audit: {', '.join(bad)} (available: {', '.join(DIMS)}, all)")
     code_st = codegraph.settings(config)
     projs = listing(env, config)

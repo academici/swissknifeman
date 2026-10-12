@@ -14,6 +14,7 @@ from .quality.audit import cmd_bucket_audit
 from .quality.eval import cmd_eval
 from .integrate import cmd_integrate
 from .listing import cmd_list
+from .profiles_list import cmd_profiles
 from .lock import cmd_lock
 from .registry import cmd_registry
 from .resolve import cmd_resolve
@@ -40,6 +41,7 @@ COMMANDS = {
     "analyze-run": cmd_analyze_run,
     "eval": cmd_eval,
     "list": cmd_list,
+    "profiles": cmd_profiles,
     "registry": cmd_registry,
     "resolve": cmd_resolve,
     "describe": cmd_describe,

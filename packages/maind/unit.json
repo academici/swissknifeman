@@ -18,7 +18,12 @@
     ],
     "plugins": [{"name": "maind", "manifest": ".claude-plugin/plugin.json"}],
     "doctor": [
-      {"id": "maind.environment", "category": "environment", "probe": ["bin/maind", "doctor"], "output": "text"}
+      {"id": "maind.environment", "category": "environment", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.config", "category": "config", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.registry", "category": "state", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.memory", "category": "integration", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.mcp", "category": "integration", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.health", "category": "integration", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"}
     ]
   },
   "dev": {

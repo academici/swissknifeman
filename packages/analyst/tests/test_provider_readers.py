@@ -219,12 +219,13 @@ class DoctorPartnerTests(unittest.TestCase):
             plan_py = Path(tmp) / "plan.py"
             plan_py.write_text("", encoding="utf-8")
             text = self._run_doctor({"PLANNER_PLAN_PY": str(plan_py)})
-        self.assertIn("✓ planner (optional)", text)
+        self.assertIn("analyst.partners", text)
+        self.assertNotIn("skip analyst.partners", text)
 
     def test_reports_optional_and_does_not_fail_the_verdict_when_absent(self):
         text = self._run_doctor({})
-        self.assertIn("· planner (optional)", text)
-        self.assertIn("The environment is ready.", text)
+        self.assertNotIn("fail ", text)
+        self.assertIn("analyst.partners", text)
 
 
 if __name__ == "__main__":

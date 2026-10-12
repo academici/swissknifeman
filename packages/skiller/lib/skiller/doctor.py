@@ -10,6 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from aicore import MIN_PYTHON
 from aicore.config import ConfigError
 from .common import DB_VERSION, host_command_text, host_install_suffix
 from aicore.util.cli import parse_flags
@@ -980,7 +981,8 @@ def cmd_doctor(env, argv):
             issues += 1
 
     print(f"skiller doctor (registry: {root})")
-    check(sys.version_info >= (3, 8), f"python3 {sys.version.split()[0]}")
+    floor = ".".join(str(part) for part in MIN_PYTHON)
+    check(sys.version_info >= tuple(MIN_PYTHON), f"python3 {sys.version.split()[0]} (>= {floor})")
 
     link = Path(os.path.expanduser("~/.local/bin/skiller"))
     resolved = Path(os.path.realpath(link)) if link.exists() else None

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.11",
   "title": "Doctor модулей хаба по контракту check-result/v1: doctor --json у maind, analyst, harness; provides.doctor; порог Python из aicore.MIN_PYTHON; maind health --plan-repair и --apply-repair; редактирование секретов; tools_digest",
-  "status": "todo",
+  "status": "done",
   "summary": "maind, analyst, harness печатают doctor --json как список check-result/v1 и текстовые строки <status> <check_id>: <observed>; unit.json объявляет проверки с output check-result/v1; порог Python во всех doctor (вкл. skiller) — aicore.MIN_PYTHON; maind health делится на --plan-repair (чтение) и --apply-repair, --fix — псевдоним; doctor ничего не пишет (тест снимка); секреты не печатаются (тест SENTINEL); maind.mcp печатает tools_digest; harness.hooks-env с repair.",
   "why": "D74, D25, E28, E30, R15/D35, R31; knowledge/hub-p11#e1e2. Риски: (1) существующие ключи doctor (maind --skills, --gitignore-drift, --context) не ломаются; (2) probe с побочным эффектом (mkdir state_dir в doctor maind) — проверка записи без создания постоянных файлов или в временном файле с удалением, тест снимка; (3) значения секретов в evidence.",
   "scope": {
@@ -144,6 +144,24 @@
     {
       "path": "packages/maind/CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/maind/bin/maind",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/docs/guide/cli.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/docs/guide/health.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/f2e23301b71cfd364b3e8754cecb7d09510811f9b30f8360ab20f53bb0cff4ff",
+      "role": "input"
     }
   ],
   "rules": [
@@ -222,6 +240,73 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:22:01Z"
+  "result": {
+    "started_at": "2026-10-12T20:12:59Z",
+    "finished_at": "2026-10-12T21:31:26Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-99eec097d57934621dac479e-P11.11",
+    "notes": "Corrected F1 (maind.config now reports legacy settings ignored because [maind] is set, distinct from settings read from legacy) and F2 (harness.safe-dirs separates wrong location from leftover legacy files, with a remove-legacy remediation). Regression tests added in maind and harness test_doctor_contract. Targeted runs: maind tests.test_doctor_contract + tests.test_doctor (29 OK); harness tests.test_doctor_contract (7 OK).\nChanged: packages/maind/lib/maind/doctor.py, packages/maind/tests/test_doctor_contract.py, packages/harness/lib/harness/doctor.py, packages/harness/tests/test_doctor_contract.py",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V6.json"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-12T21:31:26Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V7.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V5.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V6.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.11/evidence/V7.json"
+    ]
+  },
+  "updated_at": "2026-10-12T21:31:26Z"
 }

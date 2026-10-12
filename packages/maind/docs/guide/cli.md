@@ -40,7 +40,7 @@ maind namespaces [--json]              # namespace-ecosystem groups and their me
 maind deploy [--project ID | --all] [--with-code] [--dry-run]   # MCP-hub servers (= sync --only mcp)
 maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,memory,memory-hook,health-hook,health-doc,ecosystem-skill] \
            [--mode install|update|auto] [--dry-run] [--json]        # roll out controlled artifacts
-maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck project connection with the hub
+maind health [--cwd | --project ID] [--plan-repair | --apply-repair] [--strict] [--json]     # healthcheck project connection with the hub
 maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # trust Claude to ecosystem projects
 maind workspace status [--json]
 maind run <project> <capability> [-- args]   # pull command brain / swissknifeman

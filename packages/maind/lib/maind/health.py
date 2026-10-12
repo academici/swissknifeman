@@ -1,7 +1,8 @@
 """maind health — client healthcheck project connection with the hub (memory + maind MCP).
 
 Run FROM the project (--cwd) or by id (--project). DOES NOT block: always prints status
-connected|partial|standalone and tips. --fix picks up memory and adds MCP-servers.
+connected|partial|standalone and tips. --plan-repair shows (read-only) what --apply-repair would do:
+pick up memory and add MCP-servers. --fix is a deprecated alias of --apply-repair.
 
 Here are the delivery providers «priority №1» to projects (are called from sync):
 - health-doc  — managed block priority-block.md in <project>/CLAUDE.md (idempotent, by hash);
@@ -517,28 +518,74 @@ def configure_manual_memory(env, config, project, dry):
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
+FIX_DEPRECATED = "MAIND_HEALTH_FIX_DEPRECATED: use --apply-repair"
+
+
+def plan_repair(env, config, rep):
+    """The repair steps for a health report (read-only): the same steps ``--apply-repair`` performs."""
+    hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
+    if rep["status"] == "connected" and not hygiene_fixable:
+        return []
+    actions = []
+    if not rep["memory_daemon"]:
+        _, _, url = resolve_ports(env, config)
+        actions.append({"kind": "start-memory", "target": url,
+                        "detail": "start the memory daemon (maind start --only memory)"})
+    actions.append({"kind": "sync-mcp", "target": rep["id"],
+                    "detail": f"add the maind MCP servers (maind sync --only mcp --project {rep['id']})"})
+    return actions
+
+
+def apply_repair(env, config, project, rep):
+    """Perform the steps of ``plan_repair``."""
+    actions = plan_repair(env, config, rep)
+    for action in actions:
+        if action["kind"] == "start-memory":
+            try:
+                from .memory import start as mem_start
+                mem_start(env, config)
+            except SystemExit as e:
+                warn(f"failed to raise memory: {e}")
+        elif action["kind"] == "sync-mcp":
+            from .provision.sync import run_sync
+            run_sync(env, config, [project], only="mcp")
+    return bool(actions)
+
+
 def cmd_health(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--cwd": "bool", "--fix": "bool",
+                                "--plan-repair": "bool", "--apply-repair": "bool",
                                 "--strict": "bool", "--json": "bool", "--deep": "bool"})
     if opts["help"]:
-        print("maind health [--project ID | --cwd] [--fix] [--strict] [--deep] [--json]")
+        print("maind health [--project ID | --cwd] [--plan-repair | --apply-repair] [--strict] [--deep] [--json]\n"
+              "  --plan-repair   show what --apply-repair would do (read-only)\n"
+              "  --apply-repair  start memory and add the MCP servers when the project is not connected\n"
+              "  --fix           deprecated alias of --apply-repair")
         return
+    if opts["fix"]:
+        warn(FIX_DEPRECATED)
+    do_apply = opts["apply_repair"] or opts["fix"]
+    if opts["plan_repair"] and do_apply:
+        die("--plan-repair cannot be combined with --apply-repair")
     config, _src = load_config(env)
     project = _target(env, config, opts)
     from .provision.sync import contexts
     context = contexts(env, config, [project])[0]
     rep = health_report(env, config, project, provider_context=context, deep=opts["deep"])
 
-    hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
-    if opts["fix"] and (rep["status"] != "connected" or hygiene_fixable):
-        if not rep["memory_daemon"]:
-            try:
-                from .memory import start as mem_start
-                mem_start(env, config)
-            except SystemExit as e:
-                warn(f"failed to raise memory: {e}")
-        from .provision.sync import run_sync
-        run_sync(env, config, [project], only="mcp")
+    if opts["plan_repair"]:
+        actions = plan_repair(env, config, rep)
+        if opts["json"]:
+            print(json.dumps({"project": rep["id"], "actions": actions}, ensure_ascii=False, indent=2))
+        else:
+            print(f"maind health repair plan — project:{rep['id']}")
+            for action in actions:
+                print(f"  {action['kind']} {action['target']}: {action['detail']}")
+            if not actions:
+                print("  nothing to repair")
+        return
+
+    if do_apply and apply_repair(env, config, project, rep):
         rep = health_report(env, config, project, provider_context=context, deep=opts["deep"])
 
     if opts["json"]:

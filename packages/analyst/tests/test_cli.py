@@ -31,7 +31,7 @@ class TestCli(unittest.TestCase):
                 main(["/tmp/root", "doctor"])
             except SystemExit:
                 pass
-        self.assertIn("analyst doctor", out.getvalue())
+        self.assertIn("analyst.environment", out.getvalue())
 
     def test_workflow_scan_registered(self):
         self.assertIn("workflow-scan", COMMANDS)

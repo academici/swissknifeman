@@ -21,7 +21,10 @@
     ],
     "plugins": [{"name": "harness", "manifest": ".claude-plugin/plugin.json"}],
     "doctor": [
-      {"id": "harness.environment", "category": "environment", "probe": ["bin/harness", "doctor"], "output": "text"}
+      {"id": "harness.environment", "category": "environment", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "harness.hooks", "category": "integration", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "harness.hooks-env", "category": "config", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "harness.safe-dirs", "category": "state", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"}
     ]
   },
   "dev": {

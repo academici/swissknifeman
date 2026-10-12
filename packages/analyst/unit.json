@@ -18,7 +18,9 @@
       {"id": "urn:swissknifeman:analyst:run-codegraph", "path": "schemas/run-codegraph/v1", "version": "v1", "stability": "alpha"}
     ],
     "doctor": [
-      {"id": "analyst.environment", "category": "environment", "probe": ["bin/analyst", "doctor"], "output": "text"}
+      {"id": "analyst.environment", "category": "environment", "probe": ["bin/analyst", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "analyst.partners", "category": "integration", "probe": ["bin/analyst", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "analyst.events", "category": "state", "probe": ["bin/analyst", "doctor", "--json"], "output": "check-result/v1"}
     ]
   },
   "subscribes": [

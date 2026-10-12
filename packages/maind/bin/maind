@@ -14,7 +14,7 @@
 #   namespaces namespace-ecosystem groups and their member projects
 #   deploy    roll out MCP-hub servers for projects (--project X | --all)
 #   sync      roll out controlled artifacts: --only ... (--project|--namespace|--all)
-#   health    healthcheck project connection with the hub: --cwd | --project X [--fix]
+#   health    healthcheck project connection with the hub: --cwd | --project X [--plan-repair|--apply-repair]
 #   workspace single trust Claude to ecosystem projects: sync | status
 #   run       execute the command of the neighboring package: run <proj> <cap> (--list)
 #   fleet     cross-project layer: manifest | duplicates | similar

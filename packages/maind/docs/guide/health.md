@@ -10,7 +10,8 @@ tips.
 maind health --cwd                 # from the project directory (match by local_path)
 maind health --project flexcrm     # by id
 maind health --project flexcrm --json
-maind health --cwd --fix           # increase memory + add MCP-servers
+maind health --cwd --plan-repair   # show the repair steps (read-only)
+maind health --cwd --apply-repair  # increase memory + add MCP-servers
 maind health --project flexcrm --strict   # exit 1, if not connected (for CI)
 ```
 
@@ -33,7 +34,9 @@ Example output:
     → no agentmemory MCP in the project → maind sync --only mcp --project flexcrm
 ```
 
-`--fix` increases memory (if lying) and executes `sync --only mcp` for the project, then repeats the report.
+`--plan-repair` prints the steps (`--json`: `{"project", "actions": [{"kind", "target", "detail"}]}`) and changes nothing.
+`--apply-repair` increases memory (if lying) and executes `sync --only mcp` for the project, then repeats the report.
+`--fix` is a deprecated alias of `--apply-repair` (warning `MAIND_HEALTH_FIX_DEPRECATED`).
 
 ## Delivery «priority №1» to projects
 

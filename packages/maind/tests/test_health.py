@@ -512,3 +512,58 @@ class TestRetiredFeatureHook(unittest.TestCase):
             remaining = json.loads(settings.read_text())["hooks"]["SessionEnd"][0]["hooks"]
             self.assertEqual(remaining, [{"type": "command", "command": "bash foreign.sh"}])
             self.assertFalse(sync._feature_log_hook_run(env, config, [project], "auto", False)[0]["changed"])
+
+
+class TestRepairSplit(unittest.TestCase):
+    """--plan-repair reads, --apply-repair acts, --fix is a deprecated alias of --apply-repair."""
+
+    def _run(self, env, *args):
+        import contextlib
+        import io
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            _, out = capture(health.cmd_health, env, ["--project", "flexcrm", *args])
+        return out, err.getvalue()
+
+    def test_plan_repair_lists_actions_and_changes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _, proj = _setup(tmp, memory_url="http://127.0.0.1:9")
+            before = sorted(str(p) for p in Path(tmp).rglob("*"))
+            with patch("maind.provision.sync.run_sync") as sync, patch("maind.memory.start") as start:
+                out, _ = self._run(env, "--plan-repair", "--json")
+            plan = json.loads(out)
+            self.assertEqual(plan["project"], "flexcrm")
+            self.assertEqual([a["kind"] for a in plan["actions"]], ["start-memory", "sync-mcp"])
+            self.assertTrue(all({"kind", "target", "detail"} <= set(a) for a in plan["actions"]))
+            sync.assert_not_called()
+            start.assert_not_called()
+            self.assertEqual(sorted(str(p) for p in Path(tmp).rglob("*")), before)
+
+    def test_plan_repair_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, *_ = _setup(tmp, memory_url="http://127.0.0.1:9")
+            out, _ = self._run(env, "--plan-repair")
+            self.assertIn("sync-mcp flexcrm", out)
+
+    def test_apply_repair_runs_the_planned_steps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, *_ = _setup(tmp, memory_url="http://127.0.0.1:9")
+            with patch("maind.provision.sync.run_sync") as sync, patch("maind.memory.start") as start:
+                _, err = self._run(env, "--apply-repair", "--json")
+            sync.assert_called_once()
+            start.assert_called_once()
+            self.assertNotIn("MAIND_HEALTH_FIX_DEPRECATED", err)
+
+    def test_fix_is_an_alias_with_one_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, *_ = _setup(tmp, memory_url="http://127.0.0.1:9")
+            with patch("maind.provision.sync.run_sync") as sync, patch("maind.memory.start"):
+                _, err = self._run(env, "--fix", "--json")
+            sync.assert_called_once()
+            self.assertEqual(err.count("MAIND_HEALTH_FIX_DEPRECATED: use --apply-repair"), 1)
+
+    def test_plan_and_apply_are_exclusive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, *_ = _setup(tmp)
+            with self.assertRaises(SystemExit):
+                self._run(env, "--plan-repair", "--apply-repair")

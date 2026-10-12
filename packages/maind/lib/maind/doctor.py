@@ -5,9 +5,169 @@ import shutil
 import sys
 from pathlib import Path
 
+from aicore import MIN_PYTHON
 from aicore.util.cli import parse_args
 from .config import config_available
 from .memory import auth_headers, check_auth, health, resolve_ports, resolve_secret
+
+
+RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
+
+
+def _result(check_id, status, observed, *, category, evidence=None, remediation=None, repair=None):
+    doc = {"$schema": RESULT_SCHEMA, "check_id": check_id, "status": status,
+           "category": category, "observed": observed}
+    if evidence:
+        doc["evidence"] = evidence
+    if remediation:
+        doc["remediation"] = remediation
+    if repair:
+        doc["repair"] = repair
+    return doc
+
+
+def _can_write(path):
+    """True when ``path`` (or its nearest existing parent, when it does not exist yet) is writable.
+    Looks at permissions only: nothing is created, written or removed."""
+    probe = Path(path)
+    while not probe.exists() and probe != probe.parent:
+        probe = probe.parent
+    return probe.is_dir() and os.access(str(probe), os.W_OK | os.X_OK)
+
+
+def _load_quietly(env):
+    """(config, source, warnings, error): ``load_config`` with its warnings and ``die`` captured."""
+    import contextlib
+    import io
+    from .config import load_config
+    captured = io.StringIO()
+    try:
+        with contextlib.redirect_stderr(captured):
+            config, source = load_config(env)
+    except SystemExit:
+        lines = [l.strip() for l in captured.getvalue().splitlines() if l.strip()]
+        return None, None, [], (lines[-1] if lines else "invalid configuration")
+    return config, source, [l.strip() for l in captured.getvalue().splitlines() if l.strip()], None
+
+
+def _environment_result(env):
+    floor = ".".join(str(part) for part in MIN_PYTHON)
+    agentmemory = env.root / "node_modules" / ".bin" / "agentmemory"
+    evidence = [f"python3 {sys.version.split()[0]}", f"state_dir: {env.state_dir}",
+                "node: " + ("found" if shutil.which("node") else "not found"),
+                "agentmemory: " + ("installed" if agentmemory.exists() else "not installed")]
+    if sys.version_info < tuple(MIN_PYTHON):
+        return _result("maind.environment", "fail", f"python3 {sys.version.split()[0]} is older than {floor}",
+                       category="environment", evidence=evidence, remediation=f"Install python3 >= {floor}.")
+    if not _can_write(env.state_dir):
+        return _result("maind.environment", "fail", f"the state directory {env.state_dir} cannot be created or written",
+                       category="environment", evidence=evidence, remediation=f"Make {env.state_dir} writable.")
+    return _result("maind.environment", "ok", f"python3 >= {floor}, state directory {env.state_dir} is writable",
+                   category="environment", evidence=evidence)
+
+
+def _config_results(env):
+    """(config check, registry check, loaded config or None)."""
+    config, source, notices, error = _load_quietly(env)
+    if error:
+        fail = "the node configuration is invalid: " + error
+        return (_result("maind.config", "fail", fail, category="config",
+                        remediation="Fix the named file or run: aicore config explain maind"),
+                _result("maind.registry", "fail", fail, category="state", remediation="Fix the named file."),
+                None)
+    legacy_notices = [n for n in notices if "MAIND_LEGACY_CONFIG" in n]
+    if any("ignored because [maind] is set" in n for n in legacy_notices):
+        config_check = _result("maind.config", "warn",
+                               "legacy node file settings are ignored because [maind] is set", category="config",
+                               evidence=legacy_notices,
+                               remediation="Run: swissknifeman upgrade (removes the legacy file)")
+    elif any("reading settings" in n for n in legacy_notices):
+        config_check = _result("maind.config", "warn", "settings are read from the legacy node file", category="config",
+                               evidence=legacy_notices, remediation="Run: swissknifeman upgrade")
+    else:
+        config_check = _result("maind.config", "ok", "the [maind] settings resolve", category="config")
+    if source == "empty":
+        registry_check = _result("maind.registry", "skip", "no registry source exists yet", category="state")
+    elif source != "config":
+        registry_check = _result("maind.registry", "warn", f"the registry is read from a legacy source ({source})",
+                                 category="state", remediation="Run: swissknifeman upgrade")
+    else:
+        registry_check = _result("maind.registry", "ok",
+                                 f"registry.json is valid ({len(config.get('projects') or [])} projects)",
+                                 category="state", evidence=[f"path: {env.registry_file}"])
+    return config_check, registry_check, config
+
+
+def _memory_result(env, config):
+    if config is None:
+        return _result("maind.memory", "skip", "the configuration was not loaded", category="integration")
+    http_port, stream_port, url = resolve_ports(env, config)
+    evidence = [f"url: {url}", f"ports: http {http_port}, stream {stream_port}"]
+    if not health(url):
+        return _result("maind.memory", "warn", f"the memory daemon does not respond at {url}", category="integration",
+                       evidence=evidence, remediation="Run: maind start --only memory")
+    headers = auth_headers(resolve_secret(env, config))
+    if headers and check_auth(url, headers) is False:
+        return _result("maind.memory", "warn", "the memory daemon responds but rejects the configured secret",
+                       category="integration", evidence=evidence,
+                       remediation="Check memory.secret_file or AGENTMEMORY_SECRET.")
+    return _result("maind.memory", "ok", f"the memory daemon responds at {url}", category="integration",
+                   evidence=evidence)
+
+
+def _mcp_result():
+    from . import mcp
+    try:
+        digest = mcp.tools_digest()
+    except Exception as error:  # a broken tool table must not break the doctor
+        return _result("maind.mcp", "fail", f"the MCP server cannot describe its tools: {type(error).__name__}",
+                       category="integration", remediation="Reinstall maind.")
+    return _result("maind.mcp", "ok", f"the MCP server describes {len(mcp.TOOLS)} tools", category="integration",
+                   evidence=[f"tools_digest={digest}",
+                             "protocol_versions=" + ",".join(mcp.SUPPORTED_PROTOCOL_VERSIONS)])
+
+
+def _health_result(env, config):
+    check = "maind.health"
+    if config is None:
+        return _result(check, "skip", "the configuration was not loaded", category="integration")
+    from . import projects as projects_mod
+    try:
+        project = projects_mod.match_cwd(env, config)
+    except Exception:
+        project = None
+    if project is None:
+        return _result(check, "skip", "the current directory is not a registered project", category="integration")
+    from .health import health_report
+    try:
+        report = health_report(env, config, project)
+    except (Exception, SystemExit) as error:
+        return _result(check, "warn", f"the health of {project['id']} cannot be determined: {type(error).__name__}",
+                       category="integration")
+    if report["status"] == "connected":
+        return _result(check, "ok", f"project {report['id']} is connected", category="integration")
+    pid = report["id"]
+    return _result(check, "warn", f"project {pid} is {report['status']}", category="integration",
+                   evidence=list(report["hints"]),
+                   remediation=f"Run: maind health --project {pid} --plan-repair, then --apply-repair",
+                   repair={"plan": ["bin/maind", "health", "--project", pid, "--plan-repair"],
+                           "apply": ["bin/maind", "health", "--project", pid, "--apply-repair"]})
+
+
+def run_checks(env):
+    """The doctor checks as ``check-result/v1`` documents. Nothing is written."""
+    config_check, registry_check, config = _config_results(env)
+    return [_environment_result(env), config_check, registry_check, _memory_result(env, config),
+            _mcp_result(), _health_result(env, config)]
+
+
+def render_lines(results):
+    lines = []
+    for doc in results:
+        lines.append(f"{doc['status']} {doc['check_id']}: {doc['observed']}")
+        if doc.get("remediation"):
+            lines.append(f"  remediation: {doc['remediation']}")
+    return lines
 
 
 def provider_trust_report(env, config):
@@ -249,7 +409,8 @@ def cmd_doctor(env, argv):
                                 "--context": "bool", "--provider-trust": "bool",
                                 "--gitignore-drift": "bool", "--project": "str", "--block": "bool"})
     if opts["help"]:
-        print("maind doctor [--quiet] — checking the host environment\n"
+        print("maind doctor [--quiet] [--json] — checking the host environment; --json prints a list of "
+              "check-result/v1 documents (maind.environment, .config, .registry, .memory, .mcp, .health)\n"
               "maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json] — "
               "fleet-audit of optimizations by project (read-only)\n"
               "maind doctor --skill-drift — project-by-design drift breakdown "
@@ -313,8 +474,16 @@ def cmd_doctor(env, argv):
                 print(f"  {row['project_id']} {row['provider_id']}: " + ("ok" if row["green"] else ", ".join(row["diagnostics"])))
         return
 
+    if opts["json"]:
+        results = run_checks(env)
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+        if any(doc["status"] == "fail" for doc in results):
+            sys.exit(1)
+        return
+
     quiet = opts["quiet"]
     issues = 0
+    check_lines = [] if quiet else render_lines(run_checks(env))  # first: legacy warnings are printed once
 
     def check(ok, label, hint=""):
         nonlocal issues
@@ -325,7 +494,8 @@ def cmd_doctor(env, argv):
             print(f"  [{mark}] {label}" + (f" — {hint}" if hint and not ok else ""))
 
     print(f"maind doctor (node: {env.root})")
-    check(sys.version_info >= (3, 8), f"python3 {sys.version.split()[0]}")
+    floor = ".".join(str(part) for part in MIN_PYTHON)
+    check(sys.version_info >= tuple(MIN_PYTHON), f"python3 {sys.version.split()[0]} (>= {floor})")
     check(shutil.which("node") is not None, "node in PATH",
           "agent-memory — Node-daemon; install Node.js")
 
@@ -335,14 +505,7 @@ def cmd_doctor(env, argv):
     check(env.memory_config.is_file(), "config/memory/iii-config.yaml in place",
           "maind migrate from-agentmemory <path to .agentmemory>")
 
-    try:
-        env.state_dir.mkdir(parents=True, exist_ok=True)
-        probe = env.state_dir / ".write-probe"
-        probe.write_text("", encoding="utf-8")
-        probe.unlink()
-        writable = True
-    except OSError:
-        writable = False
+    writable = _can_write(env.state_dir)
     check(writable, f"{env.state_dir} is writable")
 
     # node config (registry + settings): validated via load_config (die catch so as not to interrupt doctor)
@@ -385,6 +548,11 @@ def cmd_doctor(env, argv):
             print(f"  [info] memory {url} — {detail}")
         print(f"  [info] ports: http :{http_port}, stream :{stream_port} "
               "(override via .env AGENTMEMORY_PORT/STREAM_PORT)")
+
+    if not quiet:
+        print()
+        for line in check_lines:
+            print(line)
 
     print(f"\n{'All checks passed.' if issues == 0 else f'Problems: {issues}'}")
     if issues:

@@ -161,6 +161,19 @@ crossed path marketplace, status of vendor skills, SHA registry.
 Table of registered projects with status `ok|missing`. Entries never
 are not deleted automatically - only explicit `--prune`.
 
+### `skiller profiles [--json]`
+
+Read-only list of the project-type profiles delivered with skiller
+(`profiles/*.json`). `--json` prints one document with the schema
+`urn:swissknifeman:skiller:profiles-list:v1`.
+
+### `skiller topology`
+
+Deprecated alias of `maind topology`: the machine topology map moved to maind.
+The alias prints `SKILLER_TOPOLOGY_MOVED` to stderr and runs the maind command
+found on `PATH` (or through `SKM_MAIND_ROOT`); without maind it exits with
+`PARTNER_UNAVAILABLE`.
+
 ### `skiller analyze-run [--last | --session ID] [--project DIR] [--json] [--store]`
 
 Post-run analysis of the run JSONL-logs Claude Code (deterministic, no waste

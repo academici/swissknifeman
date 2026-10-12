@@ -107,25 +107,33 @@ class SafedirsCliCase(unittest.TestCase):
         out = run(self.env, ["prune-ask", "--global", "--target", str(proj)])
         self.assertIn("not found", out)
 
-    def test_init_migrates_legacy_home_config(self):
-
-
+    def test_init_writes_the_new_place_and_leaves_the_legacy_file_alone(self):
         os.environ.pop("SKM_SAFE_DIRS_CONFIG")
-        repo = self.tmp / "repo"
-        (repo / "packages" / "fakepkg").mkdir(parents=True)
-        (repo / "core").mkdir()
-        env = Env(repo / "packages" / "fakepkg", "safe-dirs", home=self.home)
+        skm_home = self.tmp / "skm"
+        env = Env(PKG, "safe-dirs", home=self.home)
+        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(skm_home)}), \
+                unittest.mock.patch("harness.safedirs.find_monorepo_root", lambda _root: None):
+            out = run(env, ["init"])
+        created = skm_home / "config" / "harness" / "safe-dirs.json"
+        self.assertTrue(created.is_file(), out)
+        self.assertEqual(json.loads(created.read_text(encoding="utf-8"))["version"], 1)
+        self.assertFalse((self.home / ".swissknifeman" / "safe-dirs.json").exists())
+
+    def test_the_first_existing_file_of_the_ladder_is_active_for_every_command(self):
+        os.environ.pop("SKM_SAFE_DIRS_CONFIG")
         legacy = self.home / ".swissknifeman" / "safe-dirs.json"
-        legacy.write_text(json.dumps({"version": 1, "dirs": ["~/projects"],
-                                      "include_registered_projects": True,
-                                      "exclude": [], "protect_git": True,
-                                      "allow_globs": True}), encoding="utf-8")
-        out = run(env, ["init"])
-        self.assertIn("migrated from legacy", out)
-        moved = json.loads((repo / "safe-dirs.json").read_text(encoding="utf-8"))
-        self.assertEqual(moved["dirs"], ["~/projects"])
-        self.assertFalse(legacy.exists())
-        self.assertTrue(legacy.with_suffix(".json.migrated").exists())
+        legacy.write_text(json.dumps({"version": 1, "dirs": [], "include_registered_projects": False}),
+                          encoding="utf-8")
+        skm_home = self.tmp / "skm"
+        env = Env(PKG, "safe-dirs", home=self.home)
+        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(skm_home)}), \
+                unittest.mock.patch("harness.safedirs.find_monorepo_root", lambda _root: None):
+            self.assertIn("already exists", run(env, ["init"]))
+            run(env, ["add", str(self.home / "projects")])
+        self.assertEqual(json.loads(legacy.read_text(encoding="utf-8"))["dirs"],
+                         [str(self.home / "projects")])
+        self.assertFalse((skm_home / "config" / "harness" / "safe-dirs.json").exists())
+        self.assertFalse(legacy.with_suffix(".json.migrated").exists())
 
     def test_prune_ask_all_projects_via_registry(self):
         proj = self.tmp / "reg-proj"

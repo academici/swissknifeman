@@ -4,6 +4,22 @@
 
 ### Added
 
+- **harness, aicore, maind:** hook modes live in the project configuration. harness gets a config schema (`[harness.hooks.<hook>]`
+  with `providers.<id>` overrides, allowed in the machine layer as user defaults and in the project layer, and `policy_profile`
+  under `[harness]`; `harness hooks sync` renders only the keys set in the project file; `config.example.toml` is generated) and
+  `harness hooks sync|show [--target P] [--json] [--dry-run]` (contract `hooks-state/v1`). The flags of `harness hooks` (Claude, and
+  `--provider codex|cursor|grok`) no longer write `<hook>.env.ini`: they set the key in `.swissknifeman/config.toml` and regenerate the
+  committed carrier `.swissknifeman/hooks.env` (`<HOOK>_<KEY>[__<PROVIDER>]=value`, new gitignore-policy entry `hook-modes-carrier`).
+  Every hook reads the carrier first, then the legacy `env.ini` of a project that has no carrier, then its own default; the hooks
+  parse the carrier as plain lines and import neither harness nor aicore. `--memory` accepts `maind` and `manual`. `maind onboard`,
+  `sync` and `health` read the memory and router modes through `harness hooks show` (carrier and `env.ini` without harness) and set the
+  memory mode through `harness hooks --memory` (skipped with `PARTNER_UNAVAILABLE` without harness). `safe-dirs.json` moves to
+  `<config>/harness/safe-dirs.json` (`SKM_HOME` isolates it) with one ladder shared by `harness safe-dirs` and the auto-approve hook (the
+  hub-root file and `~/.swissknifeman/safe-dirs.json` remain as legacy rungs; `init` no longer moves the legacy file); the example moves to
+  `packages/harness/configs/safe-dirs.example.json`. `policy_profile` is read from `[harness]` (the `.swissknife.json` key still works
+  with one `HARNESS_LEGACY_POLICY_PROFILE` warning). Harness settings writers keep the replaced file through `aicore.state.backup`
+  instead of `*.bak`, and the provider-artifacts lock path comes from `aicore.artifacts.lock.LOCK_RELATIVE_PATH`. The generated
+  Cursor and Codex/Grok dispatchers and the agent-pack `review-gate.sh` read the carrier, so their bytes changed.
 - **aicore, harness, maind:** maind no longer imports harness or names its paths. The pure MCP projection (`McpServer`, `McpProjection`,
   `parse_mcp_catalog`, `plan_mcp_projection`, `plan_mcp_artifact`, `render_mcp_projection`) is `aicore.provider.mcp`: it takes parsed
   documents and the caller's artifact sources, so harness's `mcp.py` keeps only the CLI and thin wrappers with the same lock labels and

@@ -1,4 +1,6 @@
 """Internal documentation."""
+import contextlib
+import io
 import json
 import sys
 import tempfile
@@ -10,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.common import Env
 from harness.settings_audit import (
-    build_context, effective_config, load_layers, run_checks, run_cursor_checks,
-    _load_vscode_layer,
+    build_context, effective_config, load_layers, resolve_profile_state, run_checks,
+    run_cursor_checks, _load_vscode_layer,
 )
 
 
@@ -349,11 +351,44 @@ class SettingsAuditPolicyProfileCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def _declare(self, name):
-        _write(self.target / ".swissknife.json", {"policy_profile": name})
+        config = self.target / ".swissknifeman" / "config.toml"
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text(f'schema_version = 1\n\n[harness]\npolicy_profile = "{name}"\n', encoding="utf-8")
 
     def _run(self):
         return run_checks(build_context(self.env, self.target))
 
+
+    def test_declaration_is_read_from_the_project_configuration(self):
+        self._declare("max-permissive")
+        state = resolve_profile_state(self.env, self.target)
+        self.assertEqual(state.name, "max-permissive")
+        self.assertIsNotNone(state.profile)
+
+    def test_legacy_swissknife_json_is_read_with_one_warning(self):
+        _write(self.target / ".swissknife.json", {"policy_profile": "base"})
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            first = resolve_profile_state(self.env, self.target)
+            second = resolve_profile_state(self.env, self.target)
+        self.assertEqual((first.name, second.name), ("base", "base"))
+        self.assertEqual(err.getvalue().count("HARNESS_LEGACY_POLICY_PROFILE"), 1)
+        self.assertIn("[harness]", err.getvalue())
+
+    def test_the_configuration_wins_over_the_legacy_key_without_a_warning(self):
+        _write(self.target / ".swissknife.json", {"policy_profile": "base"})
+        self._declare("max-permissive")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            state = resolve_profile_state(self.env, self.target)
+        self.assertEqual(state.name, "max-permissive")
+        self.assertEqual(err.getvalue(), "")
+
+    def test_hints_point_at_the_project_configuration(self):
+        findings = _findings_by_id(self._run(), 4)
+        self.assertIn("`policy_profile` under `[harness]`", findings[0].hint)
+        self._declare("no-such-profile")
+        self.assertIn("[harness]", _findings_by_id(self._run(), 4)[0].hint)
 
     def test_profile_matches_no_findings(self):
         self._declare("max-permissive")
@@ -718,7 +753,9 @@ class SettingsAuditFourthCheckVscodeCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def _declare(self, name):
-        _write(self.target / ".swissknife.json", {"policy_profile": name})
+        config = self.target / ".swissknifeman" / "config.toml"
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text(f'schema_version = 1\n\n[harness]\npolicy_profile = "{name}"\n', encoding="utf-8")
 
     def _run(self):
         return run_checks(build_context(self.env, self.target))

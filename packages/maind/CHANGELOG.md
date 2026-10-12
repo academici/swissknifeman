@@ -6,6 +6,11 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 ## [Unreleased]
 
 ### Added
+- **Hook modes through harness:** the memory and agent-router modes of a project are read from `harness hooks show --json`
+  (`settings.hooks.<hook>`), then from the committed `.swissknifeman/hooks.env`, then from the legacy `.claude/*.env.ini` (the last two
+  are read directly when harness is missing). `maind onboard` sets the memory mode with `harness hooks --memory <mode>` and no longer
+  writes `memory.env.ini`; without harness the write is skipped with `PARTNER_UNAVAILABLE` (`memory_env_skipped` in the report). `health`
+  and `sync` (memory-hook, router-config) use the same readers.
 - **Harness link:** `maind.harness_link` reaches harness only through its JSON commands (`mcp catalog`, `profiles resolve`,
   `hooks codex-lifecycle fragment|validate`, `instructions scopes|plan|check|apply|repair`) found by `aicore.util.partners`
   (`SKM_HARNESS_BIN`, `SKM_HARNESS_ROOT`, PATH; `MAIND_HARNESS_BIN` still works with one `MAIND_HARNESS_BIN_DEPRECATED` warning). The MCP

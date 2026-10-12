@@ -158,8 +158,8 @@ class BlockPackGuardCase(unittest.TestCase):
 
     def test_strict_writes_envini_and_registers(self):
         run(block_pack_guard, self.proj, "strict", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "pack-guard.env.ini").read_text().strip(), "MODE=strict")
+        self.assertEqual(fx.configured(self.proj, "pack_guard", "mode"), "strict")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         matchers = sorted(e.get("matcher") for e in s["hooks"]["PreToolUse"])
         self.assertEqual(matchers, ["Edit", "MultiEdit", "NotebookEdit", "Write"])
@@ -168,8 +168,8 @@ class BlockPackGuardCase(unittest.TestCase):
 
     def test_off_no_hook(self):
         run(block_pack_guard, self.proj, "off", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "pack-guard.env.ini").read_text().strip(), "MODE=off")
+        self.assertEqual(fx.configured(self.proj, "pack_guard", "mode"), "off")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_idempotent(self):

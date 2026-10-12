@@ -28,6 +28,20 @@ def real_env(tmp):
     return Env(PACKAGE_ROOT, "test", home=home)
 
 
+def configured(project, hook, key, provider=None):
+    """A `[harness.hooks]` key of the project configuration (a provider override when `provider` is given)."""
+    from harness import hooks_env
+    table = hooks_env.project_settings(project).get("hooks", {}).get(hook, {})
+    if provider:
+        table = table.get("providers", {}).get(provider, {})
+    return table.get(key)
+
+
+def env_ini_files(project):
+    """Legacy mode files under the project; new code writes none."""
+    return sorted(str(path.relative_to(project)) for path in Path(project).rglob("*.env.ini"))
+
+
 def make_project(tmp, name="proj"):
     p = tmp / name
     p.mkdir(parents=True, exist_ok=True)

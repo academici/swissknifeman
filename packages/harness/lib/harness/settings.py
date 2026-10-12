@@ -1,15 +1,26 @@
 """Internal documentation."""
 import json
 
-from aicore.util.io import atomic_write_text, backup_file
+from pathlib import Path
+
+from aicore.state import backup, find_project_root
+from aicore.util.io import atomic_write_text
 from aicore.util.term import die
+
+
+def backup_before_write(path):
+    """Keep the file about to be replaced: in the project's backups, or in the machine state outside one."""
+    path = Path(path)
+    root = find_project_root(path.parent)
+    inside = (root / ".git").exists() or (root / ".swissknifeman").is_dir()
+    return backup(path, project=root if inside else None)
 
 
 def write_json(path, data, dry):
     if dry:
         print(f"  [dry-run] would write {path}")
         return
-    backup_file(path)
+    backup_before_write(path)
     atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     print(f"  written: {path}")
 
@@ -18,7 +29,7 @@ def write_text(path, text, dry):
     if dry:
         print(f"  [dry-run] would write {path} ({text!r})")
         return
-    backup_file(path)
+    backup_before_write(path)
     atomic_write_text(path, text)
     print(f"  written: {path}")
 

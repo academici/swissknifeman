@@ -23,7 +23,7 @@ from aicore.artifacts.artifact import (
     canonical_json_bytes, plan_artifact_render, sha256_digest,
 )
 from aicore.artifacts.lock import (
-    ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
+    LOCK_RELATIVE_PATH, ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
     parse_lock, plan_artifact_lock, serialize_lock,
 )
 
@@ -660,7 +660,7 @@ def adopt_instructions(request: InstructionRequest, *,
     } for target_path, _target, _raw, _spans, pre_image_hash, pre_image_relative in written}
     projections = {item.target_path: item for item in _projections(
         value, request.scope_ids, request.provider_ids, adoption_hints=hints)}
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     try:
         existing_lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
                          else ArtifactLock(1, ()))
@@ -708,7 +708,7 @@ def rollback_adoption(root: Path, target_path: str) -> bytes:
     record exists or the pre-image no longer matches its recorded hash.
     """
     root = _absolute_root(Path(root))
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     try:
         lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
                 else ArtifactLock(1, ()))
@@ -753,7 +753,7 @@ def plan(root: Path, *, repairs: tuple[str, ...] = (),
     result = _observe(request, value, repairs=repairs)
     if result.artifact_plan is None:
         raise InstructionValidationError(result.diagnostics)
-    lock_path = Path(request.target_root) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = Path(request.target_root) / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     projections = _projections(value, request.scope_ids, request.provider_ids,
                                adoption_hints=_adoption_hints(lock_bytes))
@@ -849,7 +849,7 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
 def _observe(request: InstructionRequest, value: dict[str, object], *,
              repairs: tuple[str, ...] = ()) -> InstructionOperationResult:
     root = Path(request.target_root)
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     projections = _projections(value, request.scope_ids, request.provider_ids,
                                adoption_hints=_adoption_hints(lock_bytes))

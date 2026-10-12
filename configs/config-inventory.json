@@ -26,6 +26,29 @@
       "note": "analyst thresholds, schema defaults and generated config.example.toml"
     },
     {
+      "path": "packages/harness/configs/config.schema.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks_env.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "harness hook modes in [harness.hooks] (rendered to the committed .swissknifeman/hooks.env) and policy_profile"
+    },
+    {
+      "path": "packages/harness/configs/safe-dirs.example.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/safedirs.py"
+      ],
+      "released": false,
+      "note": "template of the safe-dirs list that `harness safe-dirs init` copies to <config>/harness/safe-dirs.json"
+    },
+    {
       "path": "packages/brain/configs/config.schema.json",
       "owner": "brain",
       "consumers": [

@@ -68,6 +68,31 @@ elif args[:2] == ["profiles", "resolve"]:
         if document["profile"]:
             document["profile"]["id"] = profile
     emit("profile-resolution-" + name + ".json", patch)
+elif args[:2] == ["hooks", "show"]:
+    root = Path(option("--target"))
+    carrier = {{}}
+    try:
+        for line in (root / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8").splitlines():
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                carrier[key] = value
+    except OSError:
+        pass
+    modes = {{}}
+    if "MEMORY_MODE" in carrier:
+        modes["memory"] = {{"mode": carrier["MEMORY_MODE"]}}
+    if "AGENT_ROUTER_POLICY" in carrier:
+        modes["agent_router"] = {{"policy": carrier["AGENT_ROUTER_POLICY"]}}
+    print(json.dumps({{"$schema": "urn:swissknifeman:harness:hooks-state:v1", "project": str(root),
+                      "settings": {{"hooks": modes}} if modes else {{}}, "hooks_env": carrier,
+                      "legacy": [], "stale": False}}))
+elif args[0] == "hooks" and "--memory" in args:
+    # Like the real command: the mode goes to the project carrier (the fake keeps no TOML).
+    root = Path(option("--target")) / ".swissknifeman"
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "hooks.env").write_text("# fake harness\\nMEMORY_MODE=" + option("--memory") + "\\n",
+                                    encoding="utf-8")
+    print("memory: mode " + option("--memory"))
 else:
     print("fake harness: unsupported command: " + " ".join(args), file=sys.stderr)
     sys.exit(2)

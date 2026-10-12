@@ -14,7 +14,7 @@ including with old `POLICY=propose` and `POLICY=auto_dispatch`.
 
 Default `POLICY=off`. Old values `propose`/`auto_dispatch` save
 optional only non-planner hints; automatic start planner is no more.
-Per-project override: `.claude/agent-router.env.ini`; directory:
+Per-project override: `[harness.hooks.agent_router] policy` in `.swissknifeman/config.toml` (rendered to `AGENT_ROUTER_POLICY` in `.swissknifeman/hooks.env`; the legacy `.claude/agent-router.env.ini` is still read); directory:
 `.claude/agent-router.config.json`.
 
 ```bash

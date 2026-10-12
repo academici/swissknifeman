@@ -47,9 +47,8 @@ class BlockRouterCase(unittest.TestCase):
 
     def test_writes_envini_and_registers_both_hooks(self):
         run(block_router, self.proj, "propose", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "agent-router.env.ini").read_text().strip(),
-            "POLICY=propose")
+        self.assertEqual(fx.configured(self.proj, "agent_router", "policy"), "propose")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         self.assertIn("UserPromptSubmit", s["hooks"])
         self.assertIn("SessionStart", s["hooks"])
@@ -60,9 +59,8 @@ class BlockRouterCase(unittest.TestCase):
 
     def test_off_no_hooks(self):
         run(block_router, self.proj, "off", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "agent-router.env.ini").read_text().strip(),
-            "POLICY=off")
+        self.assertEqual(fx.configured(self.proj, "agent_router", "policy"), "off")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_idempotent_no_dupes(self):

@@ -2,9 +2,11 @@
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
@@ -101,14 +103,27 @@ class SettingsCase(unittest.TestCase):
         run(write_json, f, {"a": 1}, True)
         self.assertFalse(f.exists())
 
-    def test_write_json_creates_and_backups(self):
-        f = self.tmp / "x.json"
+    def test_write_json_creates_and_keeps_the_old_copy_in_the_project_backups(self):
+        (self.tmp / ".git").mkdir()
+        f = self.tmp / ".claude" / "x.json"
         run(write_json, f, {"a": 1}, False)
         self.assertEqual(json.loads(f.read_text())["a"], 1)
+        self.assertFalse((self.tmp / ".swissknifeman" / "backups").exists())
 
         run(write_json, f, {"a": 2}, False)
-        self.assertTrue(Path(f"{f}.bak").exists())
         self.assertEqual(json.loads(f.read_text())["a"], 2)
+        self.assertFalse(Path(f"{f}.bak").exists())
+        copies = sorted((self.tmp / ".swissknifeman" / "backups").glob("*/.claude/x.json"))
+        self.assertEqual([json.loads(path.read_text())["a"] for path in copies], [1])
+
+    def test_write_json_outside_a_project_keeps_the_copy_in_the_machine_state(self):
+        skm = self.tmp / "skm"
+        f = self.tmp / "loose" / "x.json"
+        run(write_json, f, {"a": 1}, False)
+        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(skm)}):
+            run(write_json, f, {"a": 2}, False)
+        self.assertFalse(Path(f"{f}.bak").exists())
+        self.assertEqual(len(list((skm / "state" / "backups").glob("*/**/x.json"))), 1)
 
     def test_write_text_dry_and_real(self):
         f = self.tmp / "t.txt"

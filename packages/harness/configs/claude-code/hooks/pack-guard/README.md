@@ -30,13 +30,13 @@ pack control → pass (exit 0), never blocks «just in case».
 | File | Role |
 |:--|:--|
 | `pack-guard.py` | PreToolUse-hook: stdin → solution for lock → exit 0/2 (+ stderr-message) |
-| `env.ini` | `MODE` (off/warn/strict). Per-project override in `.claude/pack-guard.env.ini` |
+| `env.ini` | `MODE` (off/warn/strict). Per-project override: `[harness.hooks.pack_guard] mode` in `.swissknifeman/config.toml` (carrier `.swissknifeman/hooks.env`; the legacy `.claude/pack-guard.env.ini` is still read) |
 
 ## Installation / enable
 
 ```bash
 harness hooks --global                              # copies the hook to ~/.claude/hooks/pack-guard/
-harness hooks --target . --pack-guard strict         # include in the project (env.ini + registration PreToolUse)
+harness hooks --target . --pack-guard strict         # include in the project (config + hooks.env + registration PreToolUse)
 harness hooks --target . --pack-guard off            # turn off (kill-switch, hook remains registered but inactive)
 ```
 

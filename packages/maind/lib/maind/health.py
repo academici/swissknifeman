@@ -11,6 +11,8 @@ import copy
 import json
 import os
 import stat
+import subprocess
+import sys
 from pathlib import Path
 
 from aicore.util.http import HTTPUnauthorizedError
@@ -19,6 +21,8 @@ from aicore.util.io import atomic_write_json, atomic_write_text
 from aicore.util.block import content_hash, upsert_block
 from aicore.util.term import die, warn
 from aicore.util.cli import parse_args
+from aicore.util.partners import PartnerError, PartnerUnavailable, require_partner, run_partner_json
+from . import harness_link
 from .common import save_backup
 from .config import load_config
 from .mcpconfig import check_hygiene
@@ -60,19 +64,104 @@ def _render(env, relpath, subst):
 
 
 # ── memory and hook mode test ───────────────────────────────────────────────
-def hook_memory_mode(project):
-    """MODE from <project>/.claude/memory.env.ini (memory hook mode) or None.
-    Source of Truth «intentions» project memory - read and health, and sync (memory-hook)."""
+def project_root(project):
+    """Local path of a registered project, or None."""
     lp = project.get("local_path")
-    if not lp:
+    return Path(os.path.expanduser(lp)) if lp else None
+
+
+def hooks_state(root):
+    """``harness hooks show --json`` of a project, or None without harness (or when it refuses)."""
+    try:
+        document = run_partner_json(harness_link.PARTNER,
+                                    ["hooks", "show", "--target", str(root), "--json"],
+                                    legacy_env=harness_link.LEGACY_ENV, timeout=harness_link.TIMEOUT)
+    except (PartnerError, PartnerUnavailable):
         return None
-    f = Path(os.path.expanduser(lp)) / ".claude" / "memory.env.ini"
-    if not f.is_file():
+    return document if isinstance(document, dict) else None
+
+
+def _carrier(root, name):
+    """Value of ``name`` in the committed carrier .swissknifeman/hooks.env (Claude key first)."""
+    try:
+        text = (Path(root) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except (OSError, ValueError):
         return None
-    for line in f.read_text(encoding="utf-8").splitlines():
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            found[key.strip()] = value.strip()
+    return found.get(name + "__CLAUDE_CODE", found.get(name)) or None
+
+
+def _legacy_value(path, key):
+    """``key`` of a legacy per-project ini file (read only), or None."""
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except (OSError, ValueError):
+        return None
+    for line in lines:
         s = line.strip()
-        if s.startswith("MODE="):
+        if s.startswith(key + "="):
             return s.split("=", 1)[1].split("#")[0].strip().strip("\"'")
+    return None
+
+
+def hook_setting(project, hook, key, carrier_name, legacy_file, legacy_key):
+    """One hook setting of a project: harness (the project configuration), the committed carrier,
+    then the legacy ini file. Without harness the last two are read directly."""
+    root = project_root(project)
+    if root is None:
+        return None
+    state = hooks_state(root)
+    if state is not None:
+        value = (((state.get("settings") or {}).get("hooks") or {}).get(hook) or {}).get(key)
+        if value:
+            return str(value)
+    return _carrier(root, carrier_name) or _legacy_value(root / ".claude" / legacy_file, legacy_key)
+
+
+def hook_memory_mode(project):
+    """Memory hook mode of a project (``settings.hooks.memory.mode`` through harness, else the
+    carrier, else the legacy memory ini) or None. Source of truth for the memory intent of a
+    project: read by health and by sync (memory-hook)."""
+    return hook_setting(project, "memory", "mode", "MEMORY_MODE", "memory.env.ini", "MODE")
+
+
+def set_hook_memory_mode(project, mode):
+    """Set the memory mode through ``harness hooks --memory <mode>``.
+
+    Returns ``(status, detail)``: ``ok`` or ``failed``; ``skip`` with the ``PARTNER_UNAVAILABLE``
+    message when harness is not found.
+    """
+    root = project_root(project)
+    if root is None:
+        return "skip", "no path"
+    try:
+        argv = require_partner(harness_link.PARTNER, legacy_env=harness_link.LEGACY_ENV)
+    except PartnerUnavailable as error:
+        print(str(error), file=sys.stderr)
+        return "skip", str(error)
+    done = subprocess.run(argv + ["hooks", "--target", str(root), "--memory", mode],
+                          capture_output=True, text=True, timeout=harness_link.TIMEOUT, check=False)
+    if done.returncode != 0:
+        tail = (done.stderr.strip().splitlines() or [""])[-1]
+        return "failed", f"harness hooks exited {done.returncode}: {tail}"
+    return "ok", mode
+
+
+def hook_router_policy(project):
+    """Agent-router policy of a project, or None. A legacy ini file without a POLICY line counts as
+    an enabled router (the empty string), as before."""
+    policy = hook_setting(project, "agent_router", "policy", "AGENT_ROUTER_POLICY",
+                          "agent-router.env.ini", "POLICY")
+    if policy:
+        return policy
+    root = project_root(project)
+    if root is not None and (root / ".claude" / "agent-router.env.ini").is_file():
+        return ""
     return None
 
 

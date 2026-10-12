@@ -27,11 +27,35 @@ def _report_root(cwd):
     return cwd
 
 
+def _carrier(cwd, key):
+    """Value of `key` in the committed carrier .swissknifeman/hooks.env (provider key first)."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except Exception:
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            found[k.strip()] = v.strip()
+    return found.get(key + "__CLAUDE_CODE", found.get(key))
+
+
 def _read_enabled(cwd):
     """Internal documentation."""
     enabled, keep, digest = True, _DEFAULT_KEEP, True
     if not cwd:
         return enabled, keep, digest
+    carried = _carrier(cwd, "RUN_REPORT_ENABLED")
+    if carried is not None:
+        enabled = carried.lower() not in ("off", "0", "false", "no")
+    carried_keep = _carrier(cwd, "RUN_REPORT_RUNS_KEEP")
+    if carried_keep is not None:
+        try:
+            keep = max(1, int(carried_keep))
+        except ValueError:
+            carried_keep = None
     f = Path(cwd) / ".claude" / "run-report.env.ini"
     try:
         text = f.read_text(encoding="utf-8")
@@ -42,9 +66,9 @@ def _read_enabled(cwd):
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = (x.strip() for x in line.split("=", 1))
-        if k == "ENABLED":
+        if k == "ENABLED" and carried is None:
             enabled = v.lower() not in ("off", "0", "false", "no")
-        elif k == "RUNS_KEEP":
+        elif k == "RUNS_KEEP" and carried_keep is None:
             try:
                 keep = max(1, int(v))
             except ValueError:

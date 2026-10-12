@@ -22,8 +22,15 @@ class PolicyFileTests(unittest.TestCase):
         for expected in (".mcp.json", ".mcp.json.example", ".claude/settings.local.json", "CLAUDE.md",
                          "skills-lock.json", ".claude/skills/", ".swissknifeman/backups/",
                          ".grok/config.toml", ".grok/config.toml.example", ".grok/hooks/",
-                         ".grok/review-gate.state.json", ".grok/lsp.json", ".grok/plugins/"):
+                         ".grok/review-gate.state.json", ".grok/lsp.json", ".grok/plugins/",
+                         ".swissknifeman/hooks.env"):
             self.assertIn(expected, paths)
+
+    def test_hook_modes_carrier_is_committed_and_the_legacy_files_stay_listed(self):
+        entries = {entry["id"]: entry for entry in gp.load_policy()["entries"]}
+        self.assertEqual(entries["hook-modes-carrier"]["policy"], "commit")
+        self.assertEqual(entries["hook-modes-carrier"]["paths"], [".swissknifeman/hooks.env"])
+        self.assertIn(".claude/memory.env.ini", entries["hook-modes"]["paths"])
 
     def test_glob_translation(self):
         self.assertTrue(gp._regex(".claude/**/*.bak").match(".claude/x.bak"))
@@ -63,6 +70,12 @@ class CheckProjectTests(unittest.TestCase):
         self.write("CLAUDE.md")
         git(self.root, "add", "CLAUDE.md", ".gitignore")
         self.assertEqual(gp.check_project(self.root, self.policy), [])
+
+    def test_unstaged_carrier_is_reported_until_it_is_committed(self):
+        self.write(".swissknifeman/hooks.env", "# Generated\nMEMORY_MODE=maind\n")
+        self.assertIn(("not-committed-yet", ".swissknifeman/hooks.env"), self.codes())
+        git(self.root, "add", ".swissknifeman/hooks.env")
+        self.assertFalse([c for c in self.codes() if c[1] == ".swissknifeman/hooks.env"])
 
     def test_ignore_policy_reports_tracked_and_unignored(self):
         self.write(".claude/settings.local.json")

@@ -68,12 +68,12 @@ harness hooks --target . --memory core:federation # file|federation|agentmemory|
 
 Machine-owned allowlist trusted directories: inside its roots auto-approve
 skips `rm`/`rmdir` past deny_hard (code below git — deletion is reversible), out —
-blocks as before. The config lives **at the root of the monorepo swissknifeman** —
-`safe-dirs.json` (gitignored, template `safe-dirs.example.json` — same pattern,
-what `config.json` node maind); search ladder with hook: `$SKM_SAFE_DIRS_CONFIG`
-(exclusive override) → monorepo root (via realpath launcher from PATH) →
-legacy `~/.swissknifeman/safe-dirs.json` (`init` migrates it to the repo
-automatically). Verdict considers `hooks/auto-approve/lib/safedirs.py` strictly
+blocks as before. The config is `safe-dirs.json` in `<config>/harness/` (`~/.config/swissknifeman/harness/safe-dirs.json`,
+`$SKM_HOME/config/harness/safe-dirs.json` when `SKM_HOME` is set; template
+`configs/safe-dirs.example.json`). One search ladder for the command and the hook:
+`$SKM_SAFE_DIRS_CONFIG` (exclusive override) → the file above → legacy `<hub root>/safe-dirs.json`
+→ legacy `~/.swissknifeman/safe-dirs.json`; the first existing file is the active one, `init` creates
+the new file only when none exists and does not move the legacy ones. Verdict considers `hooks/auto-approve/lib/safedirs.py` strictly
 fail-closed: argv via shlex, realpath vs symlink-escape/`..`, containment
 by component, protection `.git` and the root itself, globs by static prefix;
 any shell-magic (`$VAR`, `$( )`, backticks, `xargs rm`) → deny.

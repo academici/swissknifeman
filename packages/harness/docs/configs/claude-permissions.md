@@ -38,7 +38,7 @@ The logic of each preset is three-level:
 ::: tip rm is controlled by a hook, not ask-rules
 `rm`/`rmdir` in presets **are not in ask**: hard blocks them deny_hard
 auto-approve-hook, and inside the trusted directories (machine-owned allowlist
-`safe-dirs.json` at the root of the monorepo swissknifeman, command `harness safe-dirs`) —
+`safe-dirs.json` in the harness folder of the swissknifeman config directory, command `harness safe-dirs`) —
 skips.
 Static The ask-rule would only get in the way here: hook-`allow` does not penetrate ask
 from settings (official semantics permissions), and rm in safe-dirs would prompt

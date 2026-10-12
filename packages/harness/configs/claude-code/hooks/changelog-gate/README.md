@@ -35,13 +35,13 @@ MAJOR/breaking gate does NOT classify (D32/D33 — this is manually the owner, o
 | File | Role |
 |:--|:--|
 | `changelog-gate.py` | PreToolUse-hook: stdin → solution for `-m` + staged-files → exit 0/2 (+ warning) |
-| `env.ini` | `MODE` (off/warn/strict). Per-project override in `.claude/changelog-gate.env.ini` |
+| `env.ini` | `MODE` (off/warn/strict). Per-project override: `[harness.hooks.changelog_gate] mode` in `.swissknifeman/config.toml` (carrier `.swissknifeman/hooks.env`; the legacy `.claude/changelog-gate.env.ini` is still read) |
 
 ## Installation / enable
 
 ```bash
 harness hooks --global                                  # copies the hook to ~/.claude/hooks/changelog-gate/
-harness hooks --target . --changelog-gate warn           # include in the project (env.ini + registration PreToolUse)
+harness hooks --target . --changelog-gate warn           # include in the project (config + hooks.env + registration PreToolUse)
 harness hooks --target . --changelog-gate strict         # blocking mode
 harness hooks --target . --changelog-gate off             # turn off (kill-switch, hook remains registered but inactive)
 ```

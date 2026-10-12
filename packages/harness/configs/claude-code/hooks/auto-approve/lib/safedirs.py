@@ -35,15 +35,33 @@ def _repo_root():
     return None
 
 
-def _config_path(home):
-    """Internal documentation."""
+def config_candidates(home):
+    """The safe-dirs.json ladder, nearest first (the same order as `harness safe-dirs`)."""
     env = os.environ.get("SKM_SAFE_DIRS_CONFIG")
     if env:
-        return env
-    root = _repo_root()
-    if root and os.path.isfile(os.path.join(root, "safe-dirs.json")):
-        return os.path.join(root, "safe-dirs.json")
-    return os.path.join(home, ".swissknifeman", "safe-dirs.json")
+        return [env]
+    skm_home = os.environ.get("SKM_HOME", "")
+    if skm_home and os.path.isabs(skm_home):
+        base = os.path.join(skm_home, "config")
+    else:
+        xdg = os.environ.get("XDG_CONFIG_HOME", "")
+        base = os.path.join(xdg if xdg and os.path.isabs(xdg) else os.path.join(home, ".config"),
+                            "swissknifeman")
+    found = [os.path.join(base, "harness", "safe-dirs.json")]
+    root = _repo_root()  # legacy rung
+    if root:
+        found.append(os.path.join(root, "safe-dirs.json"))
+    found.append(os.path.join(home, ".swissknifeman", "safe-dirs.json"))
+    return found
+
+
+def _config_path(home):
+    """The first existing file of the ladder; the new place when none exists (nothing loads: fail-closed)."""
+    found = config_candidates(home)
+    for path in found:
+        if os.path.isfile(path):
+            return path
+    return found[0]
 
 
 def load_allowlist(home, path=None):

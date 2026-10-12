@@ -93,7 +93,8 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
     - **native**: return native auto-memory Claude Code (revert hook), MODE=off.
     - **off**: memory disabled (MODE=off, native do not touch).
     Idempotent; The already connected project also completes."""
-    from ..health import apply_memory_hook, configure_manual_memory, revert_memory_hook
+    from ..health import (apply_memory_hook, configure_manual_memory, hook_memory_mode,
+                          revert_memory_hook, set_hook_memory_mode)
     changed = False
     if mechanism == "maind":
         if namespaces and proj.get("namespaces") != list(namespaces):
@@ -107,19 +108,15 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
         if changed and not dry:
             write_registry(env, config)
     wrote = False
+    skipped = None
     lp = proj.get("local_path")
     mode = {"maind": "maind", "manual": "manual", "native": "off",
             "off": "off"}.get(mechanism, "manual")
-    if lp and not dry:
-        cdir = Path(os.path.expanduser(lp)) / ".claude"
-        f = cdir / "memory.env.ini"
-        cur = f.read_text(encoding="utf-8") if f.is_file() else ""
-        if f"MODE={mode}" not in cur:
-            cdir.mkdir(parents=True, exist_ok=True)
-            f.write_text(f"# Project memory - mechanism '{mechanism}'.\n"
-                         f"# maind = demon + insulation by scope; native = auto-memory Claude Code.\n"
-                         f"MODE={mode}\n", encoding="utf-8")
-            wrote = True
+    if lp and not dry and hook_memory_mode(proj) != mode:
+        status, detail = set_hook_memory_mode(proj, mode)
+        wrote = status == "ok"
+        if status == "skip":
+            skipped = detail
     # maind → digest; manual → explicit only MCP; otherwise → native/revert.
     if mechanism == "maind":
         hook = apply_memory_hook(env, config, proj, "auto", dry)
@@ -128,7 +125,8 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
     else:
         hook = revert_memory_hook(env, config, proj, dry)
     return {"mechanism": mechanism, "namespaces": proj.get("namespaces"),
-            "memory_env_written": wrote, "changed": changed, "memory_hook": hook.get("status")}
+            "memory_env_written": wrote, "memory_env_skipped": skipped, "changed": changed,
+            "memory_hook": hook.get("status")}
 
 
 def onboard(env, config, project_or_path, opts):

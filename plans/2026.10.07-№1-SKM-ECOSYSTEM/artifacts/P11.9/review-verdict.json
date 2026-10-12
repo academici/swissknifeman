@@ -1,0 +1,66 @@
+{
+  "item": "P11.9",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A machine config ($SKM_HOME/config/config.toml or ~/.config/swissknifeman/config.toml) contains schema_version = 1 and [harness.hooks.pack_guard] mode = \"strict\", and the project .swissknifeman/config.toml sets policy_profile = \"base\". Every hook leaf, including provider overrides, has x-skm-layers [\"defaults\", \"project\"], so aicore.config.model._allowed raises CONFIG_LAYER_FORBIDDEN. harness hooks show --target P --json and harness hooks sync exit via hooks.py:2662 and hooks.py:2628. settings_audit.read_policy_declaration catches that ConfigError, warns HARNESS_CONFIG_INVALID, and does not return the project policy_profile. The contract requires every hook key on the project layer and on the machine layer as a user default. The candidate test test_a_machine_layer_key_is_refused expects this exit.",
+          "id": "F1",
+          "location": "packages/harness/configs/config.schema.json:28",
+          "reproduction": "Static: packages/harness/tests/test_hooks_env.py:245 writes the machine key under SKM_HOME and expects SystemExit from hooks show. Not re-run in this review.",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "machine config $SKM_HOME/config/config.toml with [harness.hooks.pack_guard] mode=\"strict\"; project config with [harness] policy_profile=\"base\"; HOME=$T SKM_HOME=$T/skm python3 -m harness . hooks show --target $T/proj --json",
+            "exit": 1,
+            "observed": "ERROR: ...skm/config/config.toml:3: machine: hooks.pack_guard.mode: cannot be set in the machine layer (allowed: defaults, project) [CONFIG_LAYER_FORBIDDEN]"
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "With no safe-dirs file present, harness safe-dirs (no arguments) prints \"init create ~/.swissknifeman/safe-dirs.json\". harness safe-dirs init writes <config>/harness/safe-dirs.json (cmd_init at line 102 via _state_file). The operator looks in ~/.swissknifeman, does not find the file, and treats init as a no-op. The sample line at line 110 already points at configs/safe-dirs.example.json.",
+          "id": "F2",
+          "location": "packages/harness/lib/harness/safedirs.py:272",
+          "reproduction": "Static read of the help string at safedirs.py:272 against cmd_init. Not executed.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "HOME=$T SKM_HOME=$T/skm python3 -m harness . safe-dirs; then the same with 'init'; find $T -name safe-dirs.json",
+            "exit": 0,
+            "observed": "help says 'init create ~/.swissknifeman/safe-dirs.json'; init writes $T/skm/config/harness/safe-dirs.json"
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a13180-3b13-7ce2-990e-478fd93d1f50",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261012T183604Z-1454d9/P11.9/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [],
+        "session": "fd7bb130-493a-415b-8b78-7696478d7295"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "01a13196-a8bc-75d0-8ce8-77f8a07a6f7d",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261012T183604Z-1454d9/P11.9/streams/review.2.jsonl",
+      "triage": null,
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261012T183604Z-1454d9",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

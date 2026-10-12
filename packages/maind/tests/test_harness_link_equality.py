@@ -2,7 +2,11 @@
 
 ``fixtures/harness-link-before-v1.json`` came from the in-process link (harness imported by maind).
 Now maind reaches harness through its JSON commands; the same scenarios must produce the same
-bytes, whether the commands are answered by the fake or by the real harness."""
+bytes, whether the commands are answered by the fake or by the real harness.
+
+The d104 and d108 records were re-captured once when the generated Codex dispatcher began to read the
+committed hook-modes carrier (the recorded `codex-lifecycle-fragment.json` was re-captured with it); every other
+scenario is the original capture."""
 import json
 import unittest
 from pathlib import Path

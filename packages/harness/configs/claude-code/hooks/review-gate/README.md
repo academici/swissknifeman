@@ -13,7 +13,7 @@ the agent still scored - a guarantee is where the prose is «follow the skill» 
 | `warn` | violation → hint for context (`additionalContext`), subagent is NOT blocked; DOWNLOADS any `strict`-check before `warn` (upgrade `warn`→`strict` disabled by global mode) |
 | `strict` | strict-checks are blocked (see «Semantics `exit 2`» below); warn-checks, as usual, only suggest |
 
-Per-project override: `.claude/review-gate.env.ini` (`MODE=...`).
+Per-project override: `[harness.hooks.review_gate] mode` in `.swissknifeman/config.toml` (carrier `REVIEW_GATE_MODE` in `.swissknifeman/hooks.env`; the legacy `.claude/review-gate.env.ini` `MODE=...` is still read).
 
 ## Contents - `checks/`, set and mode - `config.json`
 

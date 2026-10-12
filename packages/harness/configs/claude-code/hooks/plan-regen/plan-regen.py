@@ -10,7 +10,25 @@ _EDIT_TOOLS = ("Edit", "Write", "MultiEdit")
 _MAX_ISSUES = 5
 
 
+def _carrier(cwd, key):
+    """Value of `key` in the committed carrier .swissknifeman/hooks.env (provider key first)."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except Exception:
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            found[k.strip()] = v.strip()
+    return found.get(key + "__CLAUDE_CODE", found.get(key))
+
+
 def _enabled(cwd):
+    carried = _carrier(cwd, "PLAN_REGEN_MODE")
+    if carried is not None:
+        return carried.lower() == "on"
     try:
         text = (Path(cwd) / ".claude" / "plan-regen.env.ini").read_text(encoding="utf-8")
     except Exception:

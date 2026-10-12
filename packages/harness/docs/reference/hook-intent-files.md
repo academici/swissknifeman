@@ -1,4 +1,54 @@
-# `*.env.ini` — hook intent, not node config
+# Hook modes: `[harness.hooks]`, `.swissknifeman/hooks.env` and the legacy `*.env.ini`
+
+## Current model
+
+The modes of the hooks installed in a project are keys of the project configuration,
+`.swissknifeman/config.toml`:
+
+```toml
+schema_version = 1
+
+[harness.hooks.pack_guard]
+mode = "strict"
+
+[harness.hooks.pack_guard.providers.cursor]   # replaces the general key for one provider
+mode = "warn"
+
+[harness.hooks.memory]
+mode = "maind"
+```
+
+`harness hooks sync [--target P]` renders the committed carrier `.swissknifeman/hooks.env` from it
+(`harness hooks show [--target P] [--json]` prints the configuration, the carrier, the legacy files
+and whether the carrier is stale; contract `hooks-state/v1`). The flags of `harness hooks`
+(`--auto-approve`, `--memory`, `--router`, `--run-report`, `--pack-guard`, `--plan-guard`,
+`--plan-regen`, `--changelog-gate`, and `--review-gate`, `--git-guardrails` with `--provider`)
+set the key and run the sync; they write no `<hook>.env.ini`.
+
+Carrier format: the first line is a "generated, do not edit" comment, then sorted `KEY=value` lines
+that the configuration sets: `<HOOK>_<KEY>` (`AUTO_APPROVE_MODE`, `MEMORY_MODE`, `MEMORY_BRAIN`,
+`AGENT_ROUTER_POLICY`, `RUN_REPORT_ENABLED`, `RUN_REPORT_RUNS_KEEP`, `PACK_GUARD_MODE`,
+`PLAN_GUARD_MODE`, `PLAN_REGEN_MODE`, `CHANGELOG_GATE_MODE`, `REVIEW_GATE_MODE`,
+`GIT_GUARDRAILS_MODE`, `OBSERVER_ENABLED`) and `<HOOK>_<KEY>__<PROVIDER>` for a provider
+(`MEMORY_MODE__CURSOR`, `PACK_GUARD_MODE__CLAUDE_CODE`). The file is committed (gitignore policy
+entry `hook-modes-carrier`), so a fresh clone gets the modes. Hooks parse it as plain lines.
+
+Every reader uses this ladder (a hook installed in `~/.claude/hooks` or in a project has no aicore):
+
+```
+<project>/.swissknifeman/hooks.env   (provider key, then the general key)
+      ↓ (key not set)
+<project>/<provider-dir>/<hook>.env.ini   (legacy, read only)
+      ↓ (not found)
+<hookdir>/env.ini                          (machine default of the hook, Claude hooks only)
+      ↓ (not found)
+the default in the code
+```
+
+A project with no carrier behaves as before. The legacy files are never written or deleted by new
+code; the values move with `swissknifeman upgrade`.
+
+## Legacy `*.env.ini` (read only)
 
 `*.env.ini` — designed media **hook intent per-project** (what mode is included in
 THIS tree): not scattered local configs and not a duplicate node config mAInd. File
@@ -30,9 +80,9 @@ Both untracked with this item'ohm (`git update-index --force-remove`, without co
 (`auto-approve`/`memory` per-project patterns have already covered any depth, including
 `packages/skiller/.claude/`).
 
-## Priority ladder
+## Priority ladder of the legacy files
 
-Same for both bash-readers (`auto-approve`, `memory`):
+Same for both bash-readers (`auto-approve`, `memory`), after the carrier:
 
 ```
 $CLAUDE_PROJECT_DIR/.claude/<hook>.env.ini   (per-project override — if the file exists, it is used)

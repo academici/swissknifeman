@@ -255,8 +255,9 @@ def _health_hook_run(env, config, projects, mode, dry):
 
 def _memory_hook_run(env, config, projects, mode, dry):
     """SessionStart-memory DIGEST injection + disabling native auto-memory - by intent
-    project from .claude/memory.env.ini: MODE=maind → set (apply_memory_hook), MODE=off →
-    roll back to native (revert_memory_hook), no config → do not touch. Yes `maind sync`
+    project from the memory hook mode (harness hooks show, the committed hooks.env, the legacy
+    memory ini): maind → set (apply_memory_hook), off → roll back to native
+    (revert_memory_hook), nothing configured → do not touch. Yes `maind sync`
     rolls out auto-loading of memory to already connected projects, without running the full onboard."""
     from ..health import (apply_memory_hook, configure_manual_memory, hook_memory_mode,
                           revert_memory_hook)
@@ -271,7 +272,7 @@ def _memory_hook_run(env, config, projects, mode, dry):
             results.append(revert_memory_hook(env, config, p, dry))
         else:                                         # project memory not configured
             results.append(_result("memory-hook", p["id"], "skip", state="absent",
-                                   detail="no MODE in .claude/memory.env.ini — pass"))
+                                   detail="no memory mode configured — pass"))
     return results
 
 
@@ -566,9 +567,10 @@ def _output_style_run(env, config, projects, mode, dry):
 
 def _router_config_run(env, config, projects, mode, dry):
     """Generate/update directory intent-router (.claude/agent-router.config.json) via
-    harness — ONLY for projects where the hook is already enabled (opt-in: yes agent-router.env.ini with
-    POLICY!=off; turns on `harness hooks --router` / `maind onboard`). Not enabled/no path/
-    harness not available → graceful skip. Comes after agent-pack (reads newly delivered agents)."""
+    harness — ONLY for projects where the hook is already enabled (opt-in: a router policy
+    other than off in the project configuration; turned on by `harness hooks --router` /
+    `maind onboard`). Not enabled/no path/harness not available → graceful skip. Comes after agent-pack (reads newly delivered agents)."""
+    from ..health import hook_router_policy
     from .orchestrate import run_capability
     results = []
     for p in projects:
@@ -576,11 +578,8 @@ def _router_config_run(env, config, projects, mode, dry):
         if not lp:
             results.append(_result("router-config", p["id"], "skip", detail="no path"))
             continue
-        envini = Path(os.path.expanduser(lp)) / ".claude" / "agent-router.env.ini"
-        try:
-            enabled = "POLICY=off" not in envini.read_text(encoding="utf-8").replace(" ", "")
-        except Exception:
-            enabled = False
+        policy = hook_router_policy(p)
+        enabled = policy is not None and policy != "off"
         if not enabled:
             results.append(_result("router-config", p["id"], "skip",
                                    detail="intent-router not enabled (opt-in)"))

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.9",
   "title": "harness: режимы хуков в [harness.hooks] и .swissknifeman/hooks.env; maind ставит режим памяти через harness; safe-dirs в месте конфига; policy_profile в [harness]; бэкапы; константы lock",
-  "status": "todo",
+  "status": "done",
   "summary": "Схема и пример конфига harness; флаги harness hooks пишут проектный конфиг и регенерируют закоммиченный .swissknifeman/hooks.env (harness hooks sync|show); все хуки читают hooks.env, затем наследный env.ini; env.ini новым кодом не пишутся; maind onboard, sync, health читают и ставят режим памяти через harness; safe-dirs.json в <config>/harness с одинаковой лестницей в harness и хуке; policy_profile из [harness]; *.bak → aicore.state.backup; путь lock — константы.",
   "why": "D72, D5; архитектура §5.3 (*.env.ini, safe-dirs.json, *.bak). Жёсткие риски: (1) хук безопасности safe-dirs fail-closed и выбирает тот же файл, что harness (тест паритета); (2) свежий клон проекта получает режимы из закоммиченного кармана, а проект без кармана — прежнее поведение через env.ini; (3) хуки установлены в ~/.claude/hooks и в проекты без aicore — чтение кармана простым разбором строк; (4) maind без harness — чтение кармана и env.ini, запись — skip.",
   "scope": {
@@ -178,6 +178,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/889eda1212107aae7773dd0d1686e5357333b3a06dc3f9b4554cab151a85f6ca",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
     "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
@@ -249,6 +255,66 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T12:18:33Z"
+  "result": {
+    "started_at": "2026-10-12T18:36:05Z",
+    "finished_at": "2026-10-12T19:46:06Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-d59379d0cc0d11113588c082-P11.9",
+    "notes": "F1 fixed. In config.schema.json every [harness.hooks] leaf (including providers.* overrides) now allows layers defaults, machine, project; policy_profile stays defaults/project. config.example.toml regenerated. hooks_env.project_settings now resolves with an empty machine location, so hooks show/sync and hooks.env use only keys set in the project file and machine defaults are never copied into the committed carrier. settings_audit.read_policy_declaration uses the full resolve and now returns the project policy_profile when a machine hook key exists. In test_hooks_env.py, test_a_machine_layer_key_is_refused is replaced by two tests: a machine-layer hook key plus a project policy_profile makes hooks show succeed and read_policy_declaration return 'base'; sync renders only project-file keys. The layer-pinning schema test was updated. CHANGELOG line adjusted. Targeted runs (tmp HOME/SKM_HOME): tests.test_hooks_env + tests.test_settings_audit (90 OK); tests.test_provider_hooks + tests.test_doctor_settings_cli + tests.test_settings_audit_fieldcase (32 OK, 1 skipped); `aicore config example packages/harness` output equals the committed example.\nChanged: packages/harness/configs/config.schema.json, packages/harness/config.example.toml, packages/harness/lib/harness/hooks_env.py, packages/harness/tests/test_hooks_env.py, CHANGELOG.md",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T19:46:06Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T19:46:06Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T19:46:06Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T19:46:06Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T19:46:06Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T19:46:06Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V6.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V5.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.9/evidence/V6.json"
+    ]
+  },
+  "updated_at": "2026-10-12T19:46:06Z"
 }

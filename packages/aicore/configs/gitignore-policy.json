@@ -93,6 +93,15 @@
       "why": "Hook modes (`*.env.ini`, `*.config.json`: autonomy, memory, telemetry, gates): are committed until they contain paths on the computer (/home/…, /Users/…) or secrets; with such paths - only in .gitignore."
     },
     {
+      "id": "hook-modes-carrier",
+      "owner": "harness hooks sync",
+      "paths": [
+        ".swissknifeman/hooks.env"
+      ],
+      "policy": "commit",
+      "why": "Generated from the committed project configuration ([harness.hooks] in .swissknifeman/config.toml); hooks read it without a TOML parser. A fresh clone gets the hook modes from it."
+    },
+    {
       "id": "tool-backups",
       "policy": "ignore",
       "paths": [

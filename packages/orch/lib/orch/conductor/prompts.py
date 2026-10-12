@@ -117,12 +117,23 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     return "\n\n".join(part.rstrip() for part in parts) + "\n"
 
 
+_PRE_FINAL = """\
+## Pre-final audit
+
+The defects of an earlier review round were corrected in this candidate. This audit only confirms that nothing
+important is left: report findings of severity {floor} or higher only (severities, most severe first: Blocker, Major,
+Minor, Nit; a Major defect breaks an acceptance check, the contract of the input, or other code). Do not look for
+lower findings and do not report them. If there is no such finding, the verdict is GREEN.
+"""
+
+
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
-             roles_dir=None, skills=()) -> str:
+             roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major") -> str:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
     parts = [_head("reviewer", input_doc, roles_dir, list(skills)),
              f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the candidate is the working tree "
              "(uncommitted changes, untracked files included). Read files as you need; do not change anything.",
+             *([_PRE_FINAL.format(floor=min_severity)] if pre_final else []),
              "Acceptance checks run by the conductor on this candidate:\n\n" + summary,
              "Diff against the base:\n\n" + _fence(diff or "(no tracked changes; see the untracked files)", "diff"),
              _PROGRESS.format(item=item, step=step),

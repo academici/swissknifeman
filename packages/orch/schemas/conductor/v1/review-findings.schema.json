@@ -31,9 +31,8 @@
       }
     },
     "residual_risk": {
-      "description": "Material residual risk when there are no findings.",
-      "type": "string",
-      "minLength": 1
+      "description": "Material residual risk when there are no findings; an empty string means none.",
+      "type": "string"
     }
   },
   "required": [

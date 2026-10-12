@@ -15,6 +15,7 @@ from pathlib import Path
 import shutil
 import signal
 import subprocess
+import threading
 import time
 from typing import Mapping, Optional
 
@@ -106,8 +107,48 @@ def _kill(process: subprocess.Popen) -> None:
         process.wait()
 
 
+POLL_S = 5  # how often a running role is looked at
+
+
+def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int) -> Optional[str]:
+    """Feed ``prompt`` and wait for the child; ``None`` when it ended, else why it was stopped.
+
+    ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file (a role that
+    keeps writing is working, however long it takes); 0 switches either off.
+    """
+    writer = threading.Thread(target=_feed, args=(process, prompt.encode("utf-8")), daemon=True)
+    writer.start()
+    started = last_growth = time.monotonic()
+    size = -1
+    while True:
+        try:
+            process.wait(timeout=POLL_S)
+            return None
+        except subprocess.TimeoutExpired:
+            pass
+        now = time.monotonic()
+        try:
+            current = raw_path.stat().st_size
+        except OSError:
+            current = size
+        if current != size:
+            size, last_growth = current, now
+        if timeout_s > 0 and now - started > timeout_s:
+            return f"no result within {timeout_s} s"
+        if idle_timeout_s > 0 and now - last_growth > idle_timeout_s:
+            return f"no output for {idle_timeout_s} s"
+
+
+def _feed(process: subprocess.Popen, data: bytes) -> None:
+    try:
+        process.stdin.write(data)
+        process.stdin.close()
+    except (BrokenPipeError, OSError, ValueError):
+        pass
+
+
 def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
-             env: Optional[Mapping[str, str]] = None) -> RoleRun:
+             env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0) -> RoleRun:
     """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child."""
     if transport == "acp":
         return RoleRun(exit=None, error="TRANSPORT_UNSUPPORTED", detail="the conductor does not drive acp roles")
@@ -124,14 +165,14 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
         except OSError as error:
             return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=str(error), raw=str(raw_path))
         try:
-            process.communicate(prompt.encode("utf-8"), timeout=timeout_s if timeout_s > 0 else None)
-        except subprocess.TimeoutExpired:
-            _kill(process)
-            return RoleRun(exit=process.returncode, error="TIMEOUT", detail=f"no result within {timeout_s} s",
-                           duration_s=time.monotonic() - started, raw=str(raw_path))
+            stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s)
         except BaseException:
             _kill(process)
             raise
+        if stopped:
+            _kill(process)
+            return RoleRun(exit=process.returncode, error="TIMEOUT", detail=stopped,
+                           duration_s=time.monotonic() - started, raw=str(raw_path))
     duration = time.monotonic() - started
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],

@@ -16,11 +16,14 @@ import re
 from orch.conductor import contract
 
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
-                  "stage_timeout_s": 0, "check_timeout_s": 1800}
+                  "stage_timeout_s": 0, "stage_idle_timeout_s": 1800, "check_timeout_s": 1800}
+DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True}
+SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
-            "on_blocked": "stop"}
+            "review": DEFAULT_REVIEW, "on_blocked": "stop"}
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
-                "tokens_max": (0, None), "stage_timeout_s": (0, None), "check_timeout_s": (1, None)}
+                "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
+                "check_timeout_s": (1, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
@@ -86,7 +89,7 @@ def merge(base: dict, layer: dict) -> dict:
             out["stages"] = _merge_stages(out.get("stages", []), value)
         elif key == "rules":
             out["rules"] = _dedupe(list(out.get("rules", [])) + list(value))
-        elif key == "limits":
+        elif key in ("limits", "review"):
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
@@ -143,8 +146,8 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
         nonlocal current
         current = merge(current, layer)
         for key, value in layer.items():
-            if key == "limits":
-                sources.update({f"limits.{sub}": name for sub in value})
+            if key in ("limits", "review"):
+                sources.update({f"{key}.{sub}": name for sub in value})
             elif key == "skills":
                 sources.update({f"skills.{entry['role']}": name for entry in value})
             elif key == "stages":

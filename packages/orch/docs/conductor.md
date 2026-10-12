@@ -41,6 +41,13 @@ corrections within `limits.review_rounds` rounds (2 rounds and 1 correction by d
 finding that did not reproduce is never a reason for a correction. After a limit the piece is registered `blocked`
 with an escalation (`CHECKS_RED`, `REVIEW_LIMIT`).
 
+Review rounds are tiered by severity (`review.correct_min_severity`, default `Major`; `review.pre_final`, default
+`true`). Round 1 looks for everything. Only confirmed findings of that severity or higher go to a correction; the
+others are not corrected: they travel as `note` issues ("deferred minor finding…")
+in the registered report, so the cleanup of the phase can fix them together. After a correction the next round is a
+pre-final audit (when `review.pre_final` is on): the reviewer is told to report findings of that severity or higher
+only. A round with no confirmed finding at the floor ends the review.
+
 The executor sees only its prompt: the execution-input, the context map, `rules` and the correction package. It never
 sees the plan or the plan's command line. A gap that needs the owner is `blocked` with one `escalation` issue per
 missing thing; `done_with_deviations` needs a `deviation` issue. A result outside its contract is repeated within
@@ -81,7 +88,8 @@ effect.
 | `reviewer` | `PROVIDER/MODEL[/CONTEXT][/EFFORT]` |
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]` |
-| `limits` | `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3), `retries` (0–5), `tokens_max`, `stage_timeout_s`, `check_timeout_s` |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`) |
+| `limits` | `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3), `retries` (0–5), `tokens_max`, `stage_timeout_s` (ceiling on a whole role run, off by default for streaming roles), `stage_idle_timeout_s` (default 1800: a streaming role is stopped only when its output is silent that long), `check_timeout_s` |
 | `on_blocked` | `stop` or `report` |
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its

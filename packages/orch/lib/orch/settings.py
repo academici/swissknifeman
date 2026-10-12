@@ -73,7 +73,7 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "rules": list(resolved.get("conductor.rules") or []),
         "on_blocked": resolved.get("conductor.on_blocked"),
         "limits": {key: resolved.get(f"conductor.limits.{key}")
-                   for key in ("tokens_max", "stage_timeout_s", "check_timeout_s")},
+                   for key in ("tokens_max", "stage_timeout_s", "stage_idle_timeout_s", "check_timeout_s")},
         "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
     }
 

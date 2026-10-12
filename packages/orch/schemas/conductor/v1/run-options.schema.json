@@ -37,6 +37,23 @@
       "description": "Limits of the run of the piece of work.",
       "$ref": "#/$defs/limits"
     },
+    "review": {
+      "description": "How review findings are handled; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "correct_min_severity": {
+          "description": "Confirmed findings of this severity or higher are corrected; lower ones are deferred to the plan as notes for the cleanup of the phase (Blocker > Major > Minor > Nit). Default Major.",
+          "type": "string",
+          "enum": ["Blocker", "Major", "Minor", "Nit"]
+        },
+        "pre_final": {
+          "description": "A review round after a correction is a pre-final audit that looks only for findings of correct_min_severity or higher. Default true.",
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
     "on_blocked": {
       "description": "What a blocked piece of work does to the run: stop the run, or report it and go on with the next piece.",
       "type": "string",
@@ -130,7 +147,11 @@
           "type": "integer"
         },
         "stage_timeout_s": {
-          "description": "Timeout of one role run in seconds; 0 keeps the launch catalog timeout; 0 or more.",
+          "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role, which is stopped by stage_idle_timeout_s instead, and keeps the launch catalog timeout for a text role; 0 or more.",
+          "type": "integer"
+        },
+        "stage_idle_timeout_s": {
+          "description": "A streaming role is stopped when its output has not grown for this many seconds (a role that keeps writing is working however long it takes); 0 switches the check off; 0 or more.",
           "type": "integer"
         },
         "check_timeout_s": {

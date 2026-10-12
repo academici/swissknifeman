@@ -362,8 +362,13 @@ class Conductor:
                 triage = self._triage(item, review_round, findings)
                 if not triage["confirmed"]:
                     break
+                major, minor = self._split_confirmed(item, findings, triage)
+                self._defer_minor(item, findings, minor)
+                if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
+                    break
+                triage = dict(triage, confirmed=major)
                 if review_round >= limits["review_rounds"] or state["corrections_used"] >= limits["corrections"]:
-                    ids = ", ".join(entry["finding"] for entry in triage["confirmed"])
+                    ids = ", ".join(entry["finding"] for entry in major)
                     return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
                                         f"confirmed review findings {ids} remain after {review_round} review "
                                         f"round(s) and {state['corrections_used']} correction(s)"), rows)
@@ -376,10 +381,6 @@ class Conductor:
                 rows, report, round_no = self._green(item, rows, report, round_no, scout_text)
                 if report["status"] == "blocked":
                     return self._finish(item, report, rows)
-                if not self._needs_rereview(findings, triage):
-                    self.progress.emit("info", item=item.ref, message="only minor findings were corrected; "
-                                                                       "no further review round")
-                    break
                 review_round += 1
         return self._finish(item, report, rows)
 
@@ -400,13 +401,30 @@ class Conductor:
             rows = self._run_checks(item, round_no, report)
         return rows, report, round_no
 
+    def _split_confirmed(self, item: Item, findings: dict, triage: dict) -> tuple:
+        """``(corrected, deferred)`` confirmed entries by ``review.correct_min_severity``: only the first go to a
+        correction and make a new audit necessary."""
+        ranks = {name.lower(): rank for rank, name in enumerate(opts.SEVERITIES)}
+        floor = ranks[item.options["review"]["correct_min_severity"].lower()]
+        severity = {found.get("id"): ranks.get(str(found.get("severity", "")).lower(), 0)
+                    for found in findings["findings"]}
+        corrected = [entry for entry in triage["confirmed"] if severity.get(entry["finding"], 0) <= floor]
+        deferred = [entry for entry in triage["confirmed"] if severity.get(entry["finding"], 0) > floor]
+        return corrected, deferred
+
     @staticmethod
-    def _needs_rereview(findings: dict, triage: dict) -> bool:
-        """A corrected round is reviewed again only when a confirmed finding was more than minor."""
-        confirmed = {entry["finding"] for entry in triage["confirmed"]}
-        minor = ("minor", "nit", "info", "low")
-        return any(str(found.get("severity", "")).lower() not in minor
-                   for found in findings["findings"] if found.get("id") in confirmed)
+    def _defer_minor(item: Item, findings: dict, minor: list) -> None:
+        """Confirmed minor findings are not corrected now: they travel as plan notes for the cleanup of the phase."""
+        by_id = {found.get("id"): found for found in findings["findings"]}
+        deferred = item.state.setdefault("deferred_minors", [])
+        for entry in minor:
+            found = by_id.get(entry["finding"], {})
+            note = ({"text": f"deferred {str(found.get('severity', 'Minor')).lower()} finding "
+                                     f"{found.get('location', '-')}: {found.get('failure_scenario', '')}",
+                             "kind": "note", "impact": "none for the acceptance; found by the review of this item",
+                     "next": f"fix at the cleanup of the phase; fix idea: {entry.get('fix', '-')}"})
+            if note not in deferred:  # a resumed run walks the closed rounds again
+                deferred.append(note)
 
     @staticmethod
     def _blocked(report: dict, code: str, text: str) -> dict:
@@ -569,9 +587,14 @@ class Conductor:
                                          effort=effort, cwd=self.project)
         except launch.LaunchError as error:
             raise Stop(error.code, str(error)) from None
-        timeout = item.options["limits"].get("stage_timeout_s") or entry["timeout_s"]
+        # A streaming role is stopped when it falls silent (``stage_idle_timeout_s``), not for being long: the wall-clock
+        # ceiling ``stage_timeout_s`` is off unless asked for. A ``text`` role writes only at its end, so the catalog
+        # timeout stays its ceiling.
+        limits, streaming = item.options["limits"], entry["transport"] != "text"
+        timeout = limits.get("stage_timeout_s") or (0 if streaming else entry["timeout_s"])
+        idle = limits.get("stage_idle_timeout_s", 0) if streaming else 0
         return {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
-                "transport": entry["transport"], "timeout_s": timeout, "argv": argv}
+                "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
 
     def _route_minimum(self, item: Item) -> None:
         minimum = item.claim.get("route") or {}
@@ -605,7 +628,8 @@ class Conductor:
             suffix = "" if attempt == 1 else f"-a{attempt}"
             raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
             run = process.run_role(route["argv"], prompt, transport=route["transport"], cwd=self.project,
-                                   timeout_s=route["timeout_s"], raw_path=raw, env=self.env)
+                                   timeout_s=route["timeout_s"], raw_path=raw, env=self.env,
+                                   idle_timeout_s=route.get("idle_timeout_s", 0))
             self._tokens(item, run.usage)
             if run.error in ("PROVIDER_UNAVAILABLE", "TRANSPORT_UNSUPPORTED"):
                 raise Stop(run.error, f"{role} on {route['provider']}: {run.detail}")
@@ -622,10 +646,12 @@ class Conductor:
                     "exit": run.exit, "usage": run.usage}
             if problem is None:
                 return (doc if kind else run.text), meta
-            item.state["retries_used"] = item.state.get("retries_used", 0) + 1
+            item.state["retries_used"] = item.state.get("retries_used", 0) + 1  # the total of the piece, for the report
+            by_stage = item.state.setdefault("retries_by_stage", {})
+            by_stage[key] = by_stage.get(key, 0) + 1
             self._save()
             self._budget(item)
-            if item.state["retries_used"] > item.options["limits"]["retries"]:
+            if by_stage[key] > item.options["limits"]["retries"]:  # a stage has its own repeats: a slow executor must not cost the review its only one
                 raise Stop(problem.split(":", 1)[0], f"{role} on {self.label(route)}: {problem}")
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
                                message=f"attempt {attempt} failed ({problem}); repeating")
@@ -747,6 +773,8 @@ class Conductor:
             base = item.state["steps"]["brief"]["result"]["base"]
             prompt = prompts.reviewer(item.input_doc, item=item.ref, step=key, base=base,
                                       diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
+                                      pre_final=number > 1 and item.options["review"]["pre_final"],
+                                      min_severity=item.options["review"]["correct_min_severity"],
                                       roles_dir=self.roles_dir, skills=item.options["skills"].get("reviewer", []))
             findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems)
             return {"findings": findings, **meta}
@@ -833,6 +861,8 @@ class Conductor:
         return found
 
     def _finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
+        if item.state.get("deferred_minors"):
+            report = dict(report, open_issues=list(report.get("open_issues", [])) + item.state["deferred_minors"])
         status = report["status"]
         write_json(item.artifacts / "stage-report.json", report)
         body = {key: value for key, value in report.items() if key != "status"}

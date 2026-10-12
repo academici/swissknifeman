@@ -255,17 +255,50 @@ class CorrectionTests(ConductorCase):
         self.assertIn("triage_reproduction", verdict["rounds"][0]["findings"][0])
         self.assertEqual((self.project / "out/W1.txt").read_text(), "done\n")
 
-    def test_a_corrected_minor_finding_is_not_reviewed_again(self):
+    def test_a_confirmed_minor_finding_is_deferred_to_the_plan_without_a_correction(self):
         minor = {"result": {"verdict": "ATTENTION", "findings": [dict(FINDING["result"]["findings"][0], severity="Minor")]}}
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                               "observed": "ok"}, "fix": "write done"}],
                              "rejected": []}}
-        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
-                     "reviewer": [minor], "triager": [triage]})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [minor], "triager": [triage]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
-        self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (2, 1, 1))
-        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+        self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (1, 1, 1))
+        item = self.source()["items"]["W1"]
+        self.assertEqual(item["status"], "done")
+        self.assertTrue(any(i["text"].startswith("deferred minor finding") for i in item["report"]["open_issues"]))
+
+    def test_major_findings_are_corrected_minor_ones_deferred_and_the_audit_is_pre_final(self):
+        mixed = {"result": {"verdict": "ATTENTION", "findings": [
+            dict(FINDING["result"]["findings"][0]), dict(FINDING["result"]["findings"][0], id="F2", severity="Minor")]}}
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "major fix"},
+                                           {"finding": "F2", "reproduction": repro, "fix": "minor fix"}], "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [mixed, GREEN], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 2))
+        self.assertIn("major fix", self.prompt("executor", 2))
+        self.assertNotIn("minor fix", self.prompt("executor", 2))
+        self.assertNotIn("Pre-final audit", self.prompt("reviewer", 1))
+        self.assertIn("Pre-final audit", self.prompt("reviewer", 2))
+        issues = self.source()["items"]["W1"]["report"]["open_issues"]
+        self.assertEqual(sum(1 for i in issues if i["text"].startswith("deferred minor")), 1)
+
+    def test_review_options_set_the_correction_floor_and_the_pre_final_audit(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "review": {"correct_min_severity": "Minor", "pre_final": False}}}]}})
+        mixed = {"result": {"verdict": "ATTENTION", "findings": [
+            dict(FINDING["result"]["findings"][0], id="F2", severity="Minor")]}}
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F2", "reproduction": repro, "fix": "minor fix"}], "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [mixed, GREEN], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertIn("minor fix", self.prompt("executor", 2))  # a Minor is corrected when the floor says so
+        self.assertNotIn("Pre-final audit", self.prompt("reviewer", 2))  # pre_final off: a full review again
 
     def test_finding_that_does_not_reproduce_is_rejected_without_a_correction(self):
         triage = {"result": {"confirmed": [], "rejected": [{"finding": "F1", "reason": "the file is as specified",
@@ -399,6 +432,19 @@ class StopTests(ConductorCase):
         self.script({"executor": [{"text": "never a block"}]})
         code, _, err = self.run_items("W2")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROLE_OUTPUT_INVALID")), err)
+
+    def test_every_stage_has_its_own_repeats(self):
+        self.script({"executor": [{"text": "no block here"}, executor_ok("W1")],
+                     "reviewer": [{"text": "no block here"}, GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 2))
+
+    def test_an_empty_residual_risk_is_accepted(self):
+        self.script({"executor": [executor_ok("W1")],
+                     "reviewer": [{"result": {"verdict": "GREEN", "findings": [], "residual_risk": ""}}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
 
     def test_invalid_options_of_the_source_stop(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": {"review_rounds": 9}}}]}})

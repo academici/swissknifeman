@@ -446,3 +446,14 @@
 | triage + executor.2 + review.2 | 1–12 мин | review.2 с `audit_scope=corrected`: ожидаю 5–8 вместо 17 |
 | close + commit | 1 мин | |
 | **итого** | **≈35–60 мин** | |
+
+## P11.10 — ошибка наблюдателя: скилл ломал `golden.py check` (#38)
+
+- **#38 Регистрация скилла `orch-debug` сделала красной проверку golden** (`.agents/.claude skills/orch-debug` «not in digests»,
+  `bootstrap/publication-lock.json` «sha256 differs»): любой пункт с `golden.py check` в проверках (V3 P11.10, V4 P11.9–P11.13) краснел бы
+  не по своей вине. Заметил исполнитель P11.10 в своём отчёте (`difficulty`); я проверил и исправил: `golden.py capture --only skiller-registry`
+  (коммит `84b57563`). Причина моей ошибки: после `skiller registry` не запускал `golden.py check`. Урок и правило — в скилле
+  (раздел «Editing this skill») и в списке «что поправить в инструкциях» (I11): правило для авторов скиллов — генерируемые проекции
+  входят в golden-дайджесты; регистрация/правка скилла завершается `golden.py check`.
+- Исполнитель P11.10 сообщил красный `golden.py check` и **не стал править чужое** (ни проекции, ни дайджесты) — поведение по роли верное;
+  поддерживает выбор изоляции инструкций (без «fix every defect beyond scope»).

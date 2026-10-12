@@ -655,7 +655,7 @@ class Conductor:
             suffix = "" if attempt == 1 else f"-a{attempt}"
             raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
             run = process.run_role(route["argv"], prompt, transport=route["transport"], cwd=self.project,
-                                   timeout_s=route["timeout_s"], raw_path=raw, env=self.env,
+                                   timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
                                    idle_timeout_s=route.get("idle_timeout_s", 0))
             self._tokens(item, run.usage)
             if run.error in ("PROVIDER_UNAVAILABLE", "TRANSPORT_UNSUPPORTED"):
@@ -686,6 +686,23 @@ class Conductor:
                                message=f"attempt {attempt} failed ({problem}); repeating")
             prompt = (f"{first_prompt}\n\n# Your previous answer was rejected\n\n{problem}\n\n"
                       "Do the work again as needed and end with one corrected block that fits the contract exactly.\n")
+
+    # The environment that keeps a provider's project instructions (the repository CLAUDE.md, the project memory) out of
+    # a role process. Claude Code reads both by itself; grok was probed and does not read the repository CLAUDE.md; codex
+    # would need its own CODEX_HOME (not used by a run so far).
+    ISOLATION_ENV = {"claude-code": {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}}
+
+    def _role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
+        """The environment of a role process. A role named in ``instructions.isolate_roles`` starts without the project
+        instructions: they carry the rules of a developer's own session ("quality over speed", "fix every defect even
+        beyond the scope"), which contradict the role's own scope rules; every role gets exactly the instructions of its
+        own prompt."""
+        extra = self.ISOLATION_ENV.get(route.get("provider")) if role in item.options["instructions"]["isolate_roles"] else None
+        if not extra:
+            return self.env
+        base = dict(os.environ if self.env is None else self.env)
+        base.update(extra)
+        return base
 
     def _tokens(self, item: Item, usage: dict) -> None:
         for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),

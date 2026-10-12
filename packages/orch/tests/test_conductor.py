@@ -226,10 +226,22 @@ class CorrectionTests(ConductorCase):
         self.assertEqual((verdicts["checks.1"], verdicts["checks.2"]), ("red V1", "green"))
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
+    def test_project_instructions_can_be_kept_away_from_a_claude_code_role(self):
+        eng = engine.Conductor.__new__(engine.Conductor)
+        eng.env = {"PATH": "/bin"}
+        item = type("I", (), {"options": {"instructions": {"isolate_roles": ["executor", "registrar"]}}})()
+        env = eng._role_env(item, "executor", {"provider": "claude-code"})
+        self.assertEqual((env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"], env["CLAUDE_CODE_DISABLE_AUTO_MEMORY"]), ("1", "1"))
+        self.assertEqual(env["PATH"], "/bin")
+        self.assertEqual(eng._role_env(item, "reviewer", {"provider": "claude-code"}), {"PATH": "/bin"})
+        self.assertEqual(eng._role_env(item, "executor", {"provider": "grok"}), {"PATH": "/bin"})
+
     def test_the_executor_is_told_to_run_only_the_tests_of_its_change_unless_asked_otherwise(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W1")[0], 0)
         self.assertIn("This replaces the instruction above to run every acceptance check yourself", self.prompt("executor", 1))
+        self.assertIn("The conductor runs these commands itself", self.prompt("executor", 1))
+        self.assertIn("`test -f out/W1.txt`", self.prompt("executor", 1))
         self.set_items({"W2": {"options": [{"source": "item:W2", "options": {"checks": {"executor_runs_checks": True}}}]}})
         self.script({"executor": [executor_ok("W2")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W2")[0], 0)

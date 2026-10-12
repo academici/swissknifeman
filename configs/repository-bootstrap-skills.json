@@ -44,6 +44,10 @@
       "canonical": "packages/maind/dev-skills/maind-overview/SKILL.md"
     },
     {
+      "identity": "orch-debug",
+      "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md"
+    },
+    {
       "identity": "package-architecture",
       "canonical": "bootstrap/skills/package-architecture/SKILL.md"
     },

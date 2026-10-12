@@ -22,8 +22,8 @@ MANIFEST_SPEC.loader.exec_module(manifest_snapshot)
 
 
 def snapshot(root):
-    """Hash repository artifacts only, excluding live VCS and maind runtime state."""
-    excluded = (root / ".git", root / "packages/maind/data")
+    """Hash repository artifacts only, excluding live VCS, conductor/maind runtime state."""
+    excluded = (root / ".git", root / ".swissknifeman", root / "packages/maind/data")
     return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(root.rglob("*")) if path.is_file()
             and "__pycache__" not in path.relative_to(root).parts

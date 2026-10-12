@@ -31,7 +31,9 @@ End your answer with exactly one fenced block tagged `stage-report` holding one 
 `status` is `blocked` whenever the work needs something only the owner can give (a decision, a path outside
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
 thing as an `escalation` issue. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`
-issue. List in `checks_run` only checks that really ran; the conductor runs every acceptance check again itself.
+issue. Every `checks_run` entry has exactly the keys shown (`id`, `cmd`, `exit`) or, for a manual procedure,
+`id`, `procedure`, `verdict` (`pass | fail`); no other keys, no entry for a check that did not run, put notes in
+`open_issues`. List in `checks_run` only checks that really ran; the conductor runs every acceptance check again itself.
 """
 
 _REVIEW_FINDINGS = """\

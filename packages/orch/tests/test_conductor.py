@@ -367,6 +367,8 @@ class StopTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertEqual(self.calls("executor"), 2)
+        self.assertNotIn("previous answer was rejected", self.prompt("executor", 1))
+        self.assertIn("previous answer was rejected", self.prompt("executor", 2))
         repeats = [line for line in self.lines(err) if line["event"] == "info" and "repeating" in line["message"]]
         self.assertEqual(len(repeats), 1)
         self.set_items({"W2": {}})

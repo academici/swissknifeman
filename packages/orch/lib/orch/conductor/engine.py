@@ -587,6 +587,7 @@ class Conductor:
         (item.directory / "prompts").mkdir(parents=True, exist_ok=True)
         (item.directory / "prompts" / f"{key}.md").write_text(prompt, encoding="utf-8")
         attempt = 0
+        first_prompt = prompt
         while True:
             attempt += 1
             suffix = "" if attempt == 1 else f"-a{attempt}"
@@ -616,6 +617,8 @@ class Conductor:
                 raise Stop(problem.split(":", 1)[0], f"{role} on {self.label(route)}: {problem}")
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
                                message=f"attempt {attempt} failed ({problem}); repeating")
+            prompt = (f"{first_prompt}\n\n# Your previous answer was rejected\n\n{problem}\n\n"
+                      "Do the work again as needed and end with one corrected block that fits the contract exactly.\n")
 
     def _tokens(self, item: Item, usage: dict) -> None:
         for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),

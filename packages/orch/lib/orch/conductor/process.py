@@ -110,7 +110,8 @@ def _kill(process: subprocess.Popen) -> None:
 POLL_S = 5  # how often a running role is looked at
 
 
-def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int) -> Optional[str]:
+def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int,
+          cancel: Optional[threading.Event] = None) -> Optional[str]:
     """Feed ``prompt`` and wait for the child; ``None`` when it ended, else why it was stopped.
 
     ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file (a role that
@@ -126,6 +127,8 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
             return None
         except subprocess.TimeoutExpired:
             pass
+        if cancel is not None and cancel.is_set():
+            return "cancelled"
         now = time.monotonic()
         try:
             current = raw_path.stat().st_size
@@ -148,7 +151,8 @@ def _feed(process: subprocess.Popen, data: bytes) -> None:
 
 
 def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
-             env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0) -> RoleRun:
+             env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
+             cancel: Optional[threading.Event] = None) -> RoleRun:
     """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child."""
     if transport == "acp":
         return RoleRun(exit=None, error="TRANSPORT_UNSUPPORTED", detail="the conductor does not drive acp roles")
@@ -165,13 +169,13 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
         except OSError as error:
             return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=str(error), raw=str(raw_path))
         try:
-            stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s)
+            stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel)
         except BaseException:
             _kill(process)
             raise
         if stopped:
             _kill(process)
-            return RoleRun(exit=process.returncode, error="TIMEOUT", detail=stopped,
+            return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
                            duration_s=time.monotonic() - started, raw=str(raw_path))
     duration = time.monotonic() - started
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))

@@ -24,7 +24,9 @@ FORBIDDEN = (
     re.compile(r"\b(?!system/init(?![a-z0-9-]))(general|quality|system|devops|oss-dev|repository-bootstrap)[/:][a-z][a-z0-9-]+"),
 )
 # docs/research/ is a verbatim historical record of the design research; it names partners by nature.
-SKIPPED_DIRS = ("docs/research/", "docs/.vitepress/cache/", "docs/.vitepress/dist/")
+# dev-skills/ are agent skills for operating the hub (they name the commands of the other packages, like the dev-skills of
+# every module); they are not module code.
+SKIPPED_DIRS = ("docs/research/", "docs/.vitepress/cache/", "docs/.vitepress/dist/", "dev-skills/")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 # Generated instruction projections (harness instruction catalog); their boundary sentence names the partners once.
 GENERATED_INSTRUCTIONS = {"CLAUDE.md", "AGENTS.md", ".cursor-instructions.mdc", ".grok-instructions.md"}

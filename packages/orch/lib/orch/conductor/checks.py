@@ -79,12 +79,13 @@ def _relative(path: Path, project: Path) -> str:
 
 def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: Path, timeout_s: int,
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
-               parallel: int = 1) -> list:
+               parallel: int = 1, on_result=None) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
     stage-report (the source of a manual procedure's verdict); ``executor`` its actor. ``parallel`` command checks run at
-    the same time (they must not share files; the order of the rows does not change).
+    the same time (they must not share files; the order of the rows does not change). ``on_result`` is called with each row
+    as soon as its check ends (from a worker thread).
     """
     project = Path(project)
     candidate = {"head": head(project), "dirty_digest": dirty_digest(project)}
@@ -93,6 +94,12 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
     wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in RUN_KINDS]
 
     def run_one(check: dict) -> dict:
+        row = run_check(check)
+        if on_result is not None:
+            on_result(row)
+        return row
+
+    def run_check(check: dict) -> dict:
         check_id = check["id"]
         started = _utc()
         row = {"id": check_id, "kind": check["kind"]}

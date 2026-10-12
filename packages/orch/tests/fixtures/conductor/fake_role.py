@@ -24,6 +24,9 @@ counter.write_text(str(number))
 (state / f"{role}-{number}.md").write_text(prompt, encoding="utf-8")
 answers = json.loads(Path(os.environ["FAKE_ROLE_SCRIPT"]).read_text(encoding="utf-8")).get(role) or [{}]
 answer = answers[min(number, len(answers)) - 1]
+if answer.get("sleep"):  # a slow role (the cancellation tests)
+    import time
+    time.sleep(float(answer["sleep"]))
 for path, content in (answer.get("write") or {}).items():
     target = Path.cwd() / path
     target.parent.mkdir(parents=True, exist_ok=True)

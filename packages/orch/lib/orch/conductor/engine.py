@@ -23,6 +23,7 @@ import secrets
 import shlex
 import subprocess
 import sys
+import threading
 import time
 from typing import Any, Callable, Optional
 
@@ -643,7 +644,7 @@ class Conductor:
     # ------------------------------------------------------------------ model stages
 
     def _role(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
-              extra: Optional[Callable[[dict], list]] = None) -> tuple:
+              extra: Optional[Callable[[dict], list]] = None, cancel=None) -> tuple:
         """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None) after repeats."""
         route = item.routes[role]
         (item.directory / "prompts").mkdir(parents=True, exist_ok=True)
@@ -656,8 +657,10 @@ class Conductor:
             raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
             run = process.run_role(route["argv"], prompt, transport=route["transport"], cwd=self.project,
                                    timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
-                                   idle_timeout_s=route.get("idle_timeout_s", 0))
+                                   idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel)
             self._tokens(item, run.usage)
+            if run.error == "CANCELLED":
+                raise Stop("REVIEW_CANCELLED", f"{role} on {self.label(route)} was cancelled: the checks are red")
             if run.error in ("PROVIDER_UNAVAILABLE", "TRANSPORT_UNSUPPORTED"):
                 raise Stop(run.error, f"{role} on {route['provider']}: {run.detail}")
             problem = f"{run.error}: {run.detail}" if run.error else None
@@ -779,7 +782,7 @@ class Conductor:
                            verdict=lambda result: result["report"]["status"])
         return found["report"]
 
-    def _compute_checks(self, item: Item, number: int, report: dict) -> list:
+    def _compute_checks(self, item: Item, number: int, report: dict, on_result=None) -> list:
         """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
         try:
             return checks_mod.run_checks(
@@ -787,7 +790,8 @@ class Conductor:
                 log_dir=item.directory / "checks" / str(number),
                 timeout_s=item.options["limits"]["check_timeout_s"],
                 evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
-                executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"])
+                executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
+                on_result=on_result)
         except (RuntimeError, ValueError, OSError) as error:
             raise Stop("CHECKS_FAILED", str(error)) from None
 
@@ -811,10 +815,15 @@ class Conductor:
         if steps.get(f"checks.{checks_no}", {}).get("status") == "done" \
                 or steps.get(f"review.{review_no}", {}).get("status") == "done":
             return self._run_checks(item, checks_no, report)
+        cancel = threading.Event()  # a red check ends the review at once: it reads a candidate that is about to change
         with ThreadPoolExecutor(max_workers=1) as pool:
-            computed = pool.submit(self._compute_checks, item, checks_no, report)
+            computed = pool.submit(self._compute_checks, item, checks_no, report,
+                                   lambda row: None if row.get("green") else cancel.set())
             try:
-                self._review(item, review_no, [], pending=True)
+                self._review(item, review_no, [], pending=True, cancel=cancel)
+            except Stop as stop:
+                if stop.code != "REVIEW_CANCELLED":
+                    raise
             finally:
                 computed.exception()  # wait for the checks before the pool closes, whatever the review did
         rows = self._run_checks(item, checks_no, report, computed=computed)
@@ -847,7 +856,7 @@ class Conductor:
         return [dict(by_id.get(entry["finding"], {}), id=entry["finding"], fix=entry.get("fix", ""))
                 for entry in triage.get("confirmed", [])]
 
-    def _review(self, item: Item, number: int, rows: list, pending: bool = False) -> dict:
+    def _review(self, item: Item, number: int, rows: list, pending: bool = False, cancel=None) -> dict:
         route = item.routes["reviewer"]
         key = f"review.{number}"
 
@@ -860,7 +869,8 @@ class Conductor:
                                       min_severity=item.options["review"]["correct_min_severity"],
                                       roles_dir=self.roles_dir, skills=item.options["skills"].get("reviewer", []),
                                       checks_pending=pending)
-            findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems)
+            findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems,
+                                        cancel=cancel)
             return {"findings": findings, **meta}
 
         found = self._step(item, key, run, role="reviewer", route=self.label(route),

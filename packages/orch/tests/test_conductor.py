@@ -16,6 +16,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -273,6 +274,22 @@ class CorrectionTests(ConductorCase):
         self.assertIn("at the same time", self.prompt("reviewer", 2))
         self.assertIn("Pre-final audit", self.prompt("reviewer", 2))
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def test_a_red_check_cancels_the_slow_overlapping_review_at_once(self):
+        from orch.conductor import process
+        old = process.POLL_S
+        process.POLL_S = 0.2
+        self.addCleanup(setattr, process, "POLL_S", old)
+        self.overlapping()
+        self.script({"executor": [{"result": report("W1")}, executor_ok("W1")],
+                     "reviewer": [dict(GREEN, sleep=60), GREEN]})
+        started = time.monotonic()
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertLess(time.monotonic() - started, 40)  # the 60 s review was cancelled, not awaited
+        cancelled = [line for line in self.lines(err) if line.get("reason_code") == "REVIEW_CANCELLED"]
+        self.assertEqual(len(cancelled), 1, err)
+        self.assertEqual(self.calls("reviewer"), 2)
 
     def test_red_checks_drop_the_overlapping_review_and_repeat_it_after_the_correction(self):
         self.overlapping()

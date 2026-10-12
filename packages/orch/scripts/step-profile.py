@@ -57,7 +57,8 @@ def main(argv=None) -> int:
             first = when if first is None else first
             last = when
         kind = event.get("type")
-        content = (event.get("message") or {}).get("content")
+        message = event.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
         if kind == "assistant" and isinstance(content, list):
             turns += 1
             if when is not None and last_result is not None:

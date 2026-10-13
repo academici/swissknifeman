@@ -25,6 +25,12 @@ _TARGETED_EVENTS = frozenset({"start", "finish", "design_done", "phase_closed", 
                               "difficulty", "assumption"})
 
 
+
+# Commands whose cost grows with the repository or the branch, not with the item: an item check that runs one of them
+# repeats the full pass of the phase in every item (the P11 run spent most of its time there).
+HEAVY_CHECK_MARKS = ("--tier all", "standalone --baseline", "test-integration.sh", "origin/", "ecosystem-units.py standalone",
+                     "docs-impact.py --base", "schema compat --base")
+
 class Issue(NamedTuple):
     level: str  # "error" | "warning"
     code: str
@@ -358,6 +364,28 @@ class _Context:
                 if len(carriers) != 1:
                     self.error("validation_carrier", f"{rel}/validation/{index}",
                                "validation needs exactly one of cmd or procedure")
+        def listed(doc, key) -> list:  # a plan may hold anything; check reports shapes elsewhere and never raises
+            value = doc.get(key) if isinstance(doc, dict) else None
+            return value if isinstance(value, list) else []
+
+        for phase_id, phase in self.p.phases.items():
+            broad = {entry.get("id") for entry in listed(phase, "validation") if isinstance(entry, dict)}
+            for item_id in listed(phase, "items"):
+                item = self.p.items.get(item_id) if isinstance(item_id, str) else None
+                for index, entry in enumerate(listed(item, "validation")):
+                    if isinstance(entry, dict) and entry.get("id") in broad:
+                        self.warn("validation_id_clash", f"{self.file_of('item', item_id)}/validation/{index}",
+                                  f"{entry['id']} is also a phase check of {phase_id}: one recorded result stands for "
+                                  "both, so the item's run can pass for the full pass; give the phase check its own id")
+        for key, item in self.p.items.items():
+            for index, entry in enumerate(listed(item, "validation")):
+                text = entry.get("cmd") if isinstance(entry, dict) else None
+                text = text if isinstance(text, str) else None
+                heavy = next((mark for mark in HEAVY_CHECK_MARKS if text and mark in text), None)
+                if heavy:
+                    self.warn("check_cadence", f"{self.file_of('item', key)}/validation/{index}",
+                              f"{entry.get('id')} runs {heavy!r}, a repository-wide or branch-wide check: put it into "
+                              "phase.validation, which the closing item of the phase runs once")
         for key, unit in self.p.units.items():
             command = unit.get("command")
             if isinstance(command, dict) and not command.get("cmd"):

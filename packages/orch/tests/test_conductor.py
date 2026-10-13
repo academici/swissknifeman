@@ -251,7 +251,7 @@ class CorrectionTests(ConductorCase):
                                                 {"finding": "F2", "reason": "not a defect"}]}
         eng._note_rejected(item, findings, triage)
         eng._note_rejected(item, findings, triage)
-        notes = item.state["deferred_minors"]
+        notes = item.state["plan_notes"]
         self.assertEqual(len(notes), 1)
         self.assertIn("a.py:1", notes[0]["text"])
         self.assertIn("outside the write set", notes[0]["text"])
@@ -259,13 +259,14 @@ class CorrectionTests(ConductorCase):
     def test_the_executor_is_told_to_run_only_the_tests_of_its_change_unless_asked_otherwise(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W1")[0], 0)
-        self.assertIn("This replaces the instruction above to run every acceptance check yourself", self.prompt("executor", 1))
         self.assertIn("The conductor runs these commands itself", self.prompt("executor", 1))
+        self.assertNotIn("Run every acceptance check of the input yourself", self.prompt("executor", 1))
         self.assertIn("`test -f out/W1.txt`", self.prompt("executor", 1))
         self.set_items({"W2": {"options": [{"source": "item:W2", "options": {"checks": {"executor_runs_checks": True}}}]}})
         self.script({"executor": [executor_ok("W2")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W2")[0], 0)
-        self.assertNotIn("This replaces the instruction above", self.prompt("executor", 2))
+        self.assertIn("Run every acceptance check of the input yourself", self.prompt("executor", 2))
+        self.assertNotIn("The conductor runs these commands itself", self.prompt("executor", 2))
 
     def overlapping(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
@@ -496,23 +497,34 @@ class StopTests(ConductorCase):
         self.assertEqual({ref: item["status"] for ref, item in self.source()["items"].items()},
                          {"W1": "blocked", "W2": "done"})
 
-    def test_a_stop_and_a_resume_repeat_no_closed_step(self):
+    def test_a_missing_provider_stops_before_any_work(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         missing = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         missing["reviewer"] = [str(self.project / "no-such-grok")]
         self.write_config(missing)
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_UNAVAILABLE")), err)
+        self.assertIn("reviewer", [line for line in self.lines(err) if line["event"] == "run.end"][0]["message"])
+        self.assertEqual(self.calls("executor"), 0)  # the preflight: no hour of work before a role that cannot start
+        self.write_config()
+        code, _, err = self.conduct("resume", "--run", self.run_dir(err).name, "--json-lines")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 1)
+
+    def test_a_stop_and_a_resume_repeat_no_closed_step(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        self.set_items({"W1": {}}, refuse=["register"])
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "REGISTER_REFUSED")), err)
         self.assertEqual(self.calls("executor"), 1)
         run_id = self.run_dir(err).name
         status = self.conduct("status", "--run", run_id, "--json")
         self.assertEqual(json.loads(status[1])["status"], "stopped")
-        self.write_config()
         code, _, err = self.conduct("resume", "--run", run_id, "--json-lines")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertEqual((self.calls("executor"), self.calls("context-scout"), self.calls("reviewer")), (1, 1, 1))
         skipped = [line["stage"] for line in self.lines(err) if line["event"] == "stage.skip"]
-        self.assertEqual(skipped, ["brief", "prepare", "scout", "executor.1", "checks.1"])
+        self.assertEqual(skipped, ["brief", "prepare", "scout", "executor.1", "checks.1", "review.1"])
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_a_repeated_registration_is_a_no_op(self):
@@ -575,11 +587,13 @@ class StopTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROUTE_UNDERSHOOT")), err)
         self.assertEqual(self.calls("executor"), 0)
 
-    def test_an_exhausted_budget_stops(self):
+    def test_a_spent_budget_is_a_beacon_not_a_stop(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": {"tokens_max": 50}}}]}})
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "BUDGET_EXHAUSTED")), err)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        beacons = [line for line in self.lines(err) if line.get("reason_code") == "BUDGET_OVER"]
+        self.assertEqual(len(beacons), 1)
 
     def test_cache_reads_are_not_counted_against_the_budget(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": {"tokens_max": 500}}}]}})
@@ -629,6 +643,217 @@ class StopTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "OPTIONS_INVALID")), err)
 
+
+REPRO = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+TRIAGE_F1 = {"result": {"confirmed": [{"finding": "F1", "reproduction": REPRO, "fix": "write done"}], "rejected": []}}
+
+
+class ScopeTests(ConductorCase):
+    """The changed paths come from git after every executor round; paths outside the write set are a deviation."""
+
+    def test_paths_outside_the_write_set_become_a_reviewed_deviation_and_are_committed(self):
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n", "docs/extra.md": "x\n"}, "result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        item = self.source()["items"]["W1"]
+        self.assertEqual(item["status"], "done_with_deviations")
+        self.assertEqual(item["report"]["changed_paths"], ["docs/extra.md", "out/W1.txt"])
+        self.assertTrue(any(i["kind"] == "deviation" and "docs/extra.md" in i["text"] for i in item["report"]["open_issues"]))
+        self.assertIn("## Changed outside the write set", self.prompt("reviewer", 1))
+        self.assertIn("`docs/extra.md`", self.prompt("reviewer", 1))
+        self.assertIn("docs/extra.md", self.source()["commits"][0]["paths"])
+
+    def test_scope_outside_block_stops_the_piece_right_after_the_executor(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"scope": {"outside": "block"}}}]}})
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n", "docs/extra.md": "x\n"}, "result": report("W1")}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (1, 0))
+        self.assertIn("OUTSIDE_WRITE_SET", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])
+
+    def test_changed_paths_are_the_union_of_every_round_not_the_last_report(self):
+        self.set_items({"W1": {"write_set": ["out/**"], "checks": [check("W1"), {"id": "V2", "cmd": "test -f out/b.txt",
+                                                                                "expect": "exit 0", "kind": "acceptance"}]}})
+        second = {"write": {"out/b.txt": "b\n"}, "result": report("W1", changed_paths=["out/b.txt"])}
+        self.script({"executor": [executor_ok("W1"), second], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.source()["items"]["W1"]["report"]["changed_paths"], ["out/W1.txt", "out/b.txt"])
+        self.assertEqual(self.git("status", "--porcelain", "--", "out").strip(), "")
+
+
+class HealAndRepairTests(ConductorCase):
+    def test_a_form_mismatch_is_healed_without_a_repeat(self):
+        healed = report("W1", "done_with_deviations",
+                        checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "0"}],
+                        open_issues=[{"text": "a gap", "kind": "Escalation"}])
+        self.script({"executor": [dict(executor_ok("W1"), result=healed)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor")), (0, 1), err)
+        item = self.source()["items"]["W1"]
+        self.assertEqual(item["status"], "done")
+        kinds = [issue["kind"] for issue in item["report"]["open_issues"]]
+        self.assertIn("difficulty", kinds)
+        self.assertNotIn("escalation", kinds)
+        self.assertTrue(any(line.get("reason_code") == "RESULT_HEALED" for line in self.lines(err)))
+
+    def test_a_result_outside_the_contract_is_repaired_by_the_report_fixer_before_a_repeat(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
+                           for role in ROLES + ("report-fixer",)})
+        broken = {"write": {"out/W1.txt": "ok\n"},
+                  "result": report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "zero"}])}
+        self.script({"executor": [broken], "reviewer": [GREEN],
+                     "report-fixer": [{"result": report("W1"), "tag": "stage-report"}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("report-fixer")), (1, 1))
+        fixer = self.prompt("report-fixer", 1)
+        self.assertIn("Never raise a status", fixer)
+        self.assertIn("expected integer, got string", fixer)
+        self.assertTrue(any(line.get("reason_code") == "RESULT_REPAIRED" for line in self.lines(err)))
+
+    def test_without_a_repair_the_role_is_repeated_as_before(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": {"repairs": 0}}}]}})
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
+                           for role in ROLES + ("report-fixer",)})
+        self.script({"executor": [{"text": "no block here"}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("report-fixer")), (2, 0))
+
+
+class SoftLimitTests(ConductorCase):
+    def two_checks(self, **options):
+        v2 = {"id": "V2", "cmd": "test -f out/two.txt", "expect": "exit 0", "kind": "acceptance"}
+        self.set_items({"W1": {"write_set": ["out/**"], "checks": [check("W1"), v2],
+                               "options": [{"source": "item:W1", "options": options}] if options else []}})
+
+    def test_a_correction_that_makes_progress_goes_past_the_target(self):
+        self.two_checks()
+        self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.calls("executor"), 3)
+        over = [line for line in self.lines(err) if line.get("reason_code") == "LIMIT_OVER"]
+        self.assertEqual(len(over), 1, err)
+        self.assertTrue(any("goes past the target" in i["text"] for i in self.source()["items"]["W1"]["report"]["open_issues"]))
+
+    def test_the_ceiling_ends_even_a_progressing_fight(self):
+        self.two_checks(limits={"ceiling_factor": 1})
+        self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertIn("ceiling", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])
+
+    def test_a_combined_review_correction_is_sent_once(self):
+        slow = {"id": "V1", "cmd": "sleep 2; test -f out/W1.txt", "expect": "exit 0", "kind": "acceptance"}
+        self.set_items({"W1": {"checks": [slow], "options": [{"source": "item:W1", "options": {
+            "checks": {"overlap_review": True}, "limits": {"check_fixes": 2}}}]}})
+        self.script({"executor": [{"result": report("W1")}, {"result": report("W1")}, executor_ok("W1")],
+                     "reviewer": [FINDING, GREEN], "triager": [TRIAGE_F1]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertIn("The review found these defects", self.prompt("executor", 2))
+        self.assertNotIn("The review found these defects", self.prompt("executor", 3))
+
+
+class BeaconTests(ConductorCase):
+    def fast_polls(self):
+        from orch.conductor import checks as checks_mod, process
+        for module in (process, checks_mod):
+            old = module.POLL_S
+            module.POLL_S = 0.2
+            self.addCleanup(setattr, module, "POLL_S", old)
+
+    def test_a_silent_role_and_a_long_check_print_beacons_and_are_not_stopped(self):
+        self.fast_polls()
+        slow = {"id": "V1", "cmd": "sleep 2; test -f out/W1.txt", "expect": "exit 0", "kind": "acceptance"}
+        self.set_items({"W1": {"checks": [slow], "options": [{"source": "item:W1", "options": {
+            "limits": {"stage_idle_warn_s": 1, "check_warn_s": 1}}}]}})
+        self.script({"executor": [dict(executor_ok("W1"), sleep=2.5)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        codes = [line.get("reason_code") for line in self.lines(err) if line["event"] == "info"]
+        self.assertIn("STAGE_IDLE", codes)
+        self.assertIn("CHECK_SLOW", codes)
+        idle = next(line for line in self.lines(err) if line.get("reason_code") == "STAGE_IDLE")
+        self.assertIn("no output for", idle["message"])
+        self.assertIn("no child process", idle["message"])  # the fake provider sleeps in its own process
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+
+class RepositoryRulesTests(ConductorCase):
+    def test_an_isolated_role_gets_the_module_rules_and_nothing_else_of_claude_md(self):
+        (self.project / "CLAUDE.md").write_text("# Rules\n\n## root.module-folders\nEvery module is a folder.\n\n"
+                                                "## root.quality\nQuality over speed.\n", encoding="utf-8")
+        (self.project / "out").mkdir()
+        (self.project / "out" / "CLAUDE.md").write_text("## out.module-boundaries\nImport only out.\n", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "rules")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        prompt = self.prompt("executor", 1)
+        self.assertIn("## Repository rules", prompt)
+        self.assertIn("Every module is a folder.", prompt)
+        self.assertIn("Import only out.", prompt)
+        self.assertNotIn("Quality over speed", prompt)
+
+
+class AdoptAndSettleTests(ConductorCase):
+    def test_adopt_takes_over_an_earlier_attempt_inside_the_write_set(self):
+        (self.project / "out").mkdir()
+        (self.project / "out" / "W1.txt").write_text("half\n", encoding="utf-8")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--adopt",))
+        self.assertEqual(code, 0, err)
+        self.assertIn("A previous attempt at this piece of work is already in the working tree", self.prompt("executor", 1))
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def test_adopt_refuses_changes_outside_the_write_set(self):
+        (self.project / "stray.txt").write_text("x", encoding="utf-8")
+        code, _, err = self.run_items("W1", extra=("--adopt",))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "WORKTREE_DIRTY")), err)
+        self.assertEqual(self.calls("executor"), 0)
+
+    def test_settle_closes_a_piece_by_hand(self):
+        blocked = report("W1", "blocked", open_issues=[{"text": "needs a decision", "kind": "escalation"}])
+        self.script({"executor": [{"result": blocked}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        run_id = self.run_dir(err).name
+        code, _, err2 = self.conduct("settle", "--run", run_id, "--item", "W1", "--outcome", "done",
+                                     "--reason", "finished by the owner")
+        self.assertEqual(code, 0, err2)
+        state = json.loads((engine.runs_root(self.project) / run_id / engine.STATE_FILE).read_text())
+        self.assertEqual(state["items"]["W1"]["outcome"], "done")
+        self.assertEqual(state["items"]["W1"]["settled"][0]["reason"], "finished by the owner")
+
+
+class AmendedPlanTests(ConductorCase):
+    def test_a_plan_amended_during_the_piece_reaches_the_next_round(self):
+        state = self.source()
+        state["items"]["W1"].update(status="in_progress", goal="Create the amended output of W1.")
+        amend = {"result": report("W1"), "write": {str(self.state_file): json.dumps(state)}}  # the owner edits the plan
+        self.script({"executor": [amend, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("amended output", self.prompt("executor", 1))
+        self.assertIn("Create the amended output of W1.", self.prompt("executor", 2))
+        self.assertTrue(any(line.get("reason_code") == "INPUT_REBUILT" for line in self.lines(err)), err)
+
+class OverlapStopTests(ConductorCase):
+    def test_finished_checks_are_kept_when_the_overlapping_review_fails(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"overlap_review": True}}}]}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [{"exit": 3}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROLE_FAILED")), err)
+        steps = self.state(err)["items"]["W1"]["steps"]
+        self.assertEqual(steps["checks.1"]["status"], "done")
 
 class SoloTests(ConductorCase):
     scenario = "scout-solo"

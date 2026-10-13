@@ -827,12 +827,29 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
         elif status == "done_with_deviations":
             if missing:
                 raise PlanError("CHECKS_MISSING", f"acceptance check(s) not recorded: {', '.join(missing)} (--check V1=0)")
+        if status in ("done", "done_with_deviations") and all(
+                status_of(p, other) in TERMINAL for other in phase_items(p, phase_id) if other != item_id):
+            # the item that closes its phase runs the broad checks of the phase (phase.validation) once: the full pass
+            # cannot be skipped, because the phase does not close without its results
+            phase_checks = p.phases[phase_id].get("validation")
+            broad = [c["id"] for c in (phase_checks if isinstance(phase_checks, list) else [])
+                     if isinstance(c, dict) and c.get("kind") == "acceptance" and "id" in c]
+            unrun = [i for i in broad if i not in recorded]
+            if unrun:
+                raise PlanError("CHECKS_MISSING", f"{item_id} closes phase {phase_id}: phase check(s) "
+                                                  f"{', '.join(unrun)} not recorded; the full pass of the phase runs in "
+                                                  "its closing item (--check V1=0)")
+            failed = [i for i in broad if recorded[i] != 0]
+            if failed and status == "done":
+                raise PlanError("CHECKS_RED", f"{item_id} closes phase {phase_id}: phase check(s) failed: "
+                                              + ", ".join(f"{i}={recorded[i]}" for i in failed))
+        if status == "done_with_deviations":
             if not deviations:
                 raise PlanError("DEVIATION_REQUIRED", "done_with_deviations needs at least one --deviation")
         elif status == "blocked":
             if not escalation:
                 raise PlanError("ESCALATION_REQUIRED", "blocked needs --escalation: what the owner must decide or provide")
-        else:  # skipped
+        elif status == "skipped":
             if not decision:
                 raise PlanError("DECISION_REQUIRED", "skipped needs --decision D#: an accepted decision that skips the item")
             try:

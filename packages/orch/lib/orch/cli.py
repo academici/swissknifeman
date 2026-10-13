@@ -306,7 +306,8 @@ def _ignored(project: Path, relative: str) -> bool | None:
 
 
 def doctor_checks(project: Path | None) -> list:
-    """The conductor's runtime folder must be ignored (streams, scout cache, progress); its reports must not be."""
+    """The conductor's runtime folder (streams, scout cache, progress) and its observer reports are run output, not
+    artifacts of the work: both must be ignored. A piece of work keeps its record in its own artifact folder."""
     if project is None or not (project / ".git").exists():
         return [_check("orch.conductor-gitignore", "skip", "not inside a git repository")]
     rows = []
@@ -323,13 +324,15 @@ def doctor_checks(project: Path | None) -> list:
                            remediation="add `.swissknifeman/state/` to .gitignore (the shared gitignore policy "
                                        "entry swissknifeman-state)"))
     reports = _ignored(project, REPORTS_PROBE)
-    if reports:
+    if reports is False:
         rows.append(_check("orch.conductor-reports", "warn",
-                           "the conductor reports folder is ignored: stage-reports and observer reports would "
-                           "not be committed", evidence=[REPORTS_PROBE],
-                           remediation="remove the rule that ignores `.swissknifeman/orch/` from .gitignore"))
-    elif reports is False:
-        rows.append(_check("orch.conductor-reports", "ok", "the conductor reports folder is committed",
+                           "the conductor reports folder is not ignored: the observer report written at the end of "
+                           "every run would leave the tree dirty for the next piece and refuse its commit",
+                           evidence=[REPORTS_PROBE],
+                           remediation="add `.swissknifeman/orch/` to .gitignore (the shared gitignore policy entry "
+                                       "orch-conductor-reports)"))
+    elif reports:
+        rows.append(_check("orch.conductor-reports", "ok", "the conductor reports folder is ignored",
                            evidence=[REPORTS_PROBE]))
     return rows
 

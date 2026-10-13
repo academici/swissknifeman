@@ -17,7 +17,7 @@ import signal
 import subprocess
 import threading
 import time
-from typing import Mapping, Optional
+from typing import Callable, Mapping, Optional
 
 
 @dataclass
@@ -92,6 +92,80 @@ def parse_stream(transport: str, data: str) -> dict:
     return found
 
 
+def partial_usage(data: str) -> dict:
+    """Tokens of a stream that ended without its ``result`` line (a cancelled or stopped role): the usage of each
+    assistant message, counted once per message id; the result line wins when there is one."""
+    parsed = parse_stream("jsonl", data)
+    if any(parsed["usage"].values()):
+        return parsed["usage"]
+    total, seen = {"input": 0, "cached": 0, "output": 0}, {}
+    for raw in data.splitlines():
+        try:
+            doc = json.loads(raw)
+        except ValueError:
+            continue
+        message = doc.get("message") if isinstance(doc, dict) and doc.get("type") == "assistant" else None
+        if isinstance(message, dict) and isinstance(message.get("usage"), dict):
+            seen[message.get("id") or len(seen)] = _usage(message["usage"])
+    for usage in seen.values():
+        for key in total:
+            total[key] += usage[key]
+    return total
+
+
+def activity(pid: Optional[int], raw_path: Path) -> str:
+    """What a running role does now, for a beacon: its last command (from the stream) and the processes of its
+    session other than the provider CLI, the longest-running first."""
+    parts = []
+    last = _last_command(raw_path)
+    if last:
+        parts.append(f"last command: {last}")
+    if pid:
+        try:
+            listing = subprocess.run(["ps", "-o", "pid=,etimes=,args=", "-s", str(pid)], capture_output=True, text=True,
+                                     timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            listing = ""
+        rows = []
+        for line in listing.splitlines():
+            fields = line.split(None, 2)
+            if len(fields) == 3 and fields[0].isdigit() and int(fields[0]) != pid and fields[1].isdigit():
+                rows.append((int(fields[1]), fields[2]))
+        rows = [row for row in rows if not row[1].startswith(("ps ", "/bin/sh -c ps"))]
+        if rows:
+            shown = ", ".join(f"{args[:120]} ({seconds}s)" for seconds, args in sorted(rows, reverse=True)[:3])
+            parts.append(f"running: {shown}")
+        else:
+            parts.append("no child process: the model call itself is silent")
+    return "; ".join(parts) or "nothing observed"
+
+
+def _last_command(raw_path: Path, tail: int = 200_000) -> str:
+    """The input of the last tool call in the stream (a command, a file), shortened."""
+    try:
+        with open(raw_path, "rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - tail))
+            data = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+    found = ""
+    for raw in data.splitlines():
+        try:
+            doc = json.loads(raw)
+        except ValueError:
+            continue
+        message = doc.get("message") if isinstance(doc, dict) else None
+        for block in (message.get("content") if isinstance(message, dict) else None) or []:
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                given = block.get("input") or {}
+                value = given.get("command") or given.get("file_path") or given.get("path") or given.get("pattern") \
+                    if isinstance(given, dict) else given
+                found = f"{block.get('name', 'tool')}: {' '.join(str(value or '').split())[:160]}"
+    return found
+
+
 def _kill(process: subprocess.Popen) -> None:
     try:
         os.killpg(process.pid, signal.SIGTERM)
@@ -111,16 +185,19 @@ POLL_S = 5  # how often a running role is looked at
 
 
 def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int,
-          cancel: Optional[threading.Event] = None) -> Optional[str]:
+          cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None) -> Optional[str]:
     """Feed ``prompt`` and wait for the child; ``None`` when it ended, else why it was stopped.
 
-    ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file (a role that
-    keeps writing is working, however long it takes); 0 switches either off.
+    ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file; 0 switches
+    either off (the default of the conductor: a long role is reported by beacons, never stopped). ``on_tick(elapsed,
+    idle, pid)`` is called on every look at the child. Every growth of the stream is stamped in ``<stream>.times``
+    (``seconds-since-start size`` per line): providers whose stream has no times of its own can be profiled with it.
     """
     writer = threading.Thread(target=_feed, args=(process, prompt.encode("utf-8")), daemon=True)
     writer.start()
     started = last_growth = time.monotonic()
     size = -1
+    times = raw_path.with_name(raw_path.name + ".times")
     while True:
         try:
             process.wait(timeout=POLL_S)
@@ -136,6 +213,13 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
             current = size
         if current != size:
             size, last_growth = current, now
+            try:
+                with open(times, "a", encoding="utf-8") as handle:
+                    handle.write(f"{now - started:.1f} {current}\n")
+            except OSError:
+                pass
+        if on_tick is not None:
+            on_tick(now - started, now - last_growth, process.pid)
         if timeout_s > 0 and now - started > timeout_s:
             return f"no result within {timeout_s} s"
         if idle_timeout_s > 0 and now - last_growth > idle_timeout_s:
@@ -152,7 +236,7 @@ def _feed(process: subprocess.Popen, data: bytes) -> None:
 
 def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
              env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
-             cancel: Optional[threading.Event] = None) -> RoleRun:
+             cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None) -> RoleRun:
     """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child."""
     if transport == "acp":
         return RoleRun(exit=None, error="TRANSPORT_UNSUPPORTED", detail="the conductor does not drive acp roles")
@@ -169,14 +253,17 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
         except OSError as error:
             return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=str(error), raw=str(raw_path))
         try:
-            stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel)
+            stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
+                            on_tick=on_tick)
         except BaseException:
             _kill(process)
             raise
         if stopped:
             _kill(process)
+            usage = partial_usage(raw_path.read_text(encoding="utf-8", errors="replace")) if transport == "jsonl" else None
             return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
-                           duration_s=time.monotonic() - started, raw=str(raw_path))
+                           duration_s=time.monotonic() - started, raw=str(raw_path),
+                           **({"usage": usage} if usage else {}))
     duration = time.monotonic() - started
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],

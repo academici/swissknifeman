@@ -57,9 +57,9 @@ class BaselineTests(CheckCase):
     def test_demo_plan_has_no_errors(self):
         self.assertEqual([i for i in self.run_check() if i.level == "error"], [])
 
-    def test_demo_plan_warnings_are_only_missing_reads_and_modify_targets(self):
+    def test_demo_plan_warnings_are_only_missing_files_and_shared_validation_ids(self):
         warnings = {i.code for i in self.run_check() if i.level == "warning"}
-        self.assertEqual(warnings, {"read_missing", "modify_missing"})
+        self.assertEqual(warnings, {"read_missing", "modify_missing", "validation_id_clash"})
 
     def test_issue_shape(self):
         self.edit(P1 + "P1.2.json", lambda d: d.pop("why"))

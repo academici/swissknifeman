@@ -2,7 +2,8 @@
 
 ``$FAKE_ROLE_SCRIPT`` is a JSON file ``{role: [answer, …]}``; the n-th call of a role takes the n-th answer (the last
 one repeats). An answer may hold ``result`` (a JSON document put into the result block of the role), ``text`` (the
-whole answer), ``write`` (``{path: content}`` written below the working directory first), ``run_command`` (run the ``sh`` block of
+whole answer), ``tag`` (the tag of the result block, for the report-fixer), ``write`` (``{path: content}`` written below
+the working directory first; an absolute path is written as it is), ``run_command`` (run the ``sh`` block of
 the prompt, the way the registrar does) , ``exit`` and ``usage``.
 Every call is counted and its prompt kept in ``$FAKE_ROLE_STATE/<role>-<n>.md``. The context-scout answers in plain
 text (the text transport); the other roles print stream-json like claude-code.
@@ -42,7 +43,8 @@ if answer.get("run_command"):  # the registrar: run the one command of the promp
 elif "text" in answer:
     text = answer["text"]
 elif "result" in answer:
-    text = f"[orch] work done\n\n```{TAGS.get(role, 'json')}\n{json.dumps(answer['result'])}\n```\n"
+    tag = answer.get("tag") or TAGS.get(role, "json")
+    text = f"[orch] work done\n\n```{tag}\n{json.dumps(answer['result'])}\n```\n"
 else:
     text = "a context map line — why it matters\nUnknowns:\n- none\n"
 if role == "context-scout":

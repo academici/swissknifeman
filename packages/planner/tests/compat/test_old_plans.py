@@ -18,6 +18,7 @@ EXPECTED_WARNINGS_0_28_3 = {
     "modify_missing": 8,
     "read_missing": 1,
     "context_unbound": 1,
+    "validation_id_clash": 4,
 }
 
 

@@ -8,8 +8,9 @@ Models are used only for the narrow roles: context scout, executor, reviewer, tr
 
 ```text
 conduct.py [--config FILE] run --plan P (--items REF… | --batch [--max-items N]) [--plans-root DIR]
-           [--options FILE] [--dry-run [--scenario S]] [--quiet | --json-lines] [--model-catalog FILE]
+           [--options FILE] [--adopt] [--dry-run [--scenario S]] [--quiet | --json-lines] [--model-catalog FILE]
 conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
+conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 conduct.py status [--run RUN] [--json]
 conduct.py observe [--run RUN] [--follow]
 ```
@@ -28,18 +29,22 @@ Every step has a key and is recorded in `state.json` once it closes; the work so
 | `brief` | work source | `source brief`; the execution-input is read from the artifact store; the base revision is recorded |
 | `prepare` | orch | `source prepare` writes the launch-plan of the scenario's pack (routes, policy decision) |
 | `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map |
-| `executor.N` | executor | the execution-input, the context map, the run rules and, for a correction, its package; returns a closed `stage-report` |
-| `checks.N` | deterministic | every `acceptance`/`impact` command check, with a check-evidence file per check |
+| `executor.N` | executor | the execution-input, the context map, the run rules, the repository rules of an isolated role and, for a correction, its package; returns a closed `stage-report`; the conductor then reads the changed paths from git |
+| `checks.N` | deterministic | every `acceptance`/`impact` command check of the cadences asked for, with a check-evidence file per check |
 | `review.N` | reviewer (default `grok/grok-4.7/high`) | read-only, the diff against the base and the check results; returns `review-findings` |
 | `triage.N` | triager | reproduces every finding; returns `triage-result` (confirmed with a correction package, or rejected with a reason) |
 | `close` | registrar (economy) | only when a layer of the options names the registrar in `stages`: a model runs the one `source register` command the conductor built (the launch catalog allows it exactly `python3 *orch.py source register *`) and answers with its output; it never sees the task |
 | `register` | work source | `source register` with the report, the status and the evidence; a repeat is a no-op, so after a closer it only confirms the record, and when the closer failed it records the result and `close` says `conductor` and why |
 | `commit` | work source | `source commit` with the changed paths and the artifact folder, when the pack's `git_action` is `commit` |
 
-Red checks get at most `limits.check_fixes` corrections; confirmed findings at most `limits.corrections`
-corrections within `limits.review_rounds` rounds (2 rounds and 1 correction by default, as in the `full` pack). A
-finding that did not reproduce is never a reason for a correction. After a limit the piece is registered `blocked`
-with an escalation (`CHECKS_RED`, `REVIEW_LIMIT`).
+Red checks get `limits.check_fixes` corrections; confirmed findings `limits.corrections` corrections within
+`limits.review_rounds` rounds (2 rounds and 1 correction by default, as in the `full` pack). These limits are
+**targets**: past one, a further round runs while the last correction made progress (the set of red checks changed or
+fewer failures show; fewer or other findings to correct), up to `limits.ceiling_factor` times the target (2 by
+default). Every round past a target prints a `LIMIT_OVER` beacon and leaves a plan note. A correction that changed
+nothing, or the ceiling, registers the piece `blocked` with an escalation (`CHECKS_RED`, `REVIEW_LIMIT`). A finding that
+did not reproduce is never a reason for a correction; a confirmed review finding corrected together with red checks is
+sent to the executor once, in that one round.
 
 Review rounds are tiered by severity (`review.correct_min_severity`, default `Major`; `review.pre_final`, default
 `true`). Round 1 looks for everything. Only confirmed findings of that severity or higher go to a correction; the
@@ -49,9 +54,26 @@ pre-final audit (when `review.pre_final` is on): the reviewer is told to report 
 only. A round with no confirmed finding at the floor ends the review.
 
 The executor sees only its prompt: the execution-input, the context map, `rules` and the correction package. It never
-sees the plan or the plan's command line. A gap that needs the owner is `blocked` with one `escalation` issue per
-missing thing; `done_with_deviations` needs a `deviation` issue. A result outside its contract is repeated within
-`limits.retries`.
+sees the plan or the plan's command line. It runs the tests of what it changed; the conductor runs the acceptance
+checks (their commands are listed in the prompt so the executor does not repeat them) unless
+`checks.executor_runs_checks` asks it to. A gap that needs the owner is `blocked` with one `escalation` issue per
+missing thing; `done_with_deviations` needs a `deviation` issue.
+
+**What changed is read from git.** After every executor round the conductor lists the dirty paths of the tree, minus
+what the work source wrote when it claimed, the artifact folder, the plan folder of the input and the conductor
+reports. The union over the rounds is the `changed_paths` of the registered report and the paths of the commit (a
+correction round lists only its own paths; the conductor does not lose the first round's). Paths that
+`scope.write_set` does not own are, with `scope.outside: deviation` (default), listed to the reviewer, recorded as a
+`deviation` and committed with the piece; with `block` the piece is blocked right after the executor
+(`OUTSIDE_WRITE_SET`).
+
+**A result outside its contract** goes through three steps: healing by rule (`heal.py`: one honest reading of a form
+mismatch, such as a string exit, an escalation in a report that is not blocked, a GREEN verdict with a Major finding;
+every mend is said in a `RESULT_HEALED` line and, for a stage-report, a `note` issue; a status is never raised, nothing
+is invented); a repair by the `report-fixer` role (an economy model that rewrites only the result block from the role's
+own answer, `limits.repairs` times, default 1; `RESULT_REPAIRED`); and only then a repeat of the whole role within
+`limits.retries` per step. A triage that rejects a Blocker or Major finding without a reproduction that ran is outside
+the contract.
 
 ### Stops
 
@@ -61,19 +83,44 @@ The conductor stops only on:
 | --- | --- |
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
-| `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start (an optional scout is skipped instead) |
-| `BUDGET_EXHAUSTED` | the fresh input and output tokens of the piece (cache reads are reported as `cached` and not counted) passed `limits.tokens_max` |
-| `ROLE_FAILED`, `TIMEOUT`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after `limits.retries` |
-| `WORKTREE_DIRTY` | changes outside the conductor reports before new work |
+| `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead) |
+| `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
+| `TIMEOUT` | only when a ceiling was asked for (`stage_timeout_s`, `stage_idle_timeout_s`); none by default |
+| `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece) |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |
 | `OPTIONS_INVALID`, `POLICY_UNKNOWN`, `MODEL_CATALOG_UNAVAILABLE` | the run options, the pack or the model catalog are unusable |
 
 With `on_blocked = "report"` a blocked piece that changed nothing is registered, its records are committed and the
 run goes on; a blocked piece with changes stops the run, because its partial work would leak into the next piece.
 
+### Beacons: long and costly runs are reported, not cut
+
+Nothing is stopped for being long or for its tokens. The conductor prints `info` lines with a stable `reason_code`
+instead; `conduct.py status` shows the latest one of the running step:
+
+| Code | When | What it says |
+| --- | --- | --- |
+| `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
+| `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output | the same; `no child process` means the model call itself is silent |
+| `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check | the check id and its processes |
+| `BUDGET_OVER` | once, when the fresh tokens of a piece pass `limits.tokens_max` | the tokens used |
+| `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
+| `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
+| `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
+| `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag | roles are isolated by the environment only |
+
+A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
+the run is healthy (a long test run is) or needs a look. `stage_timeout_s`, `stage_idle_timeout_s` and
+`check_timeout_s` still set hard ceilings when asked for; all are off by default.
+
 ### Resume
 
-`resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. A closed step returns its recorded result and prints `stage.skip`; a
+`resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
+
+`run --adopt` starts the first piece on a tree that already holds an earlier attempt of it (all changed paths inside its
+write set, else `WORKTREE_DIRTY`): the executor is told to check and finish that work, not to start over.
+`settle --run RUN --item REF --outcome … --reason …` sets the outcome of a piece by hand after it was finished or given up
+outside the conductor (for example committed with the work source's own command); the journal keeps the reason. A closed step returns its recorded result and prints `stage.skip`; a
 piece that closed (done or blocked) is not claimed again; a piece that stopped half-way continues on its own working
 tree. The configuration of the run is read again, so a fixed provider or a corrected `[orch.conductor.argv]` takes
 effect.
@@ -88,10 +135,11 @@ effect.
 | `reviewer` | `PROVIDER/MODEL[/CONTEXT][/EFFORT]` |
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]` |
-| `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`) |
-| `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`; `["acceptance"]` is the quick pass: the heavy `impact` checks wait for the full pass of the phase), `red_first` (default false: in a correction round the previously red checks run first, and the others only when those are green), `executor_runs_checks` (default false: the executor is told to run only the tests of the code it changed) |
-| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `final_correction` (default `false`: on the last allowed round the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
-| `limits` | `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3), `retries` (0–5), `tokens_max`, `stage_timeout_s` (ceiling on a whole role run, off by default for streaming roles), `stage_idle_timeout_s` (default 1800: a streaming role is stopped only when its output is silent that long), `check_timeout_s` |
+| `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`); `module_rules` (default `["module-folders", "module-boundaries", "engineering-invariants"]`: the instruction sections, by the last part of their `## <scope>.<name>` heading, that a role still gets from the CLAUDE.md or AGENTS.md of the root and of every folder on the way to a write-set path, as a short Repository rules block). An isolated role gets the text of its `skills` in the prompt, because its provider loads none by name |
+| `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set` |
+| `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default false: in a correction round the previously red checks run first, and the others only when those are green), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
+| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s` |
 | `on_blocked` | `stop` or `report` |
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its
@@ -122,14 +170,15 @@ the step running now, the last step and outcome of each piece, the tokens.
 | `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the digest of the brief, the plan version, the route and the role text |
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
-| `.swissknifeman/orch/reports/<run>/` | committed | `observer.json`, `observer.md`; the artifact folder of a source without `artifacts_dir` |
+| `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
+| `.swissknifeman/orch-artifacts/<run>/<item>/` | committed | the artifact folder of a source without `artifacts_dir` |
 | the plan (JSON) | committed | through the work source's own commit |
 
 Role streams never go into the artifact folder; a review verdict there is short and points at the stream in state.
 The shared gitignore policy (`packages/aicore/configs/gitignore-policy.json`, entries `swissknifeman-state` and
 `orch-conductor-reports`) states the same for every connected project, and `orch.py doctor` warns when the runtime
-folder is not ignored or the reports folder is (`orch.conductor-gitignore`, `orch.conductor-reports`,
-`check-result/v1` with `--json`).
+folder or the reports folder is not ignored (`orch.conductor-gitignore`, `orch.conductor-reports`, `check-result/v1`
+with `--json`).
 
 ## Observer
 
@@ -141,6 +190,9 @@ each piece and proposals to improve the run options. `conduct.py observe --follo
 that is still going from another terminal; `conduct.py observe` writes the report again.
 
 ## Configuration
+
+The `report-fixer` role runs on the conductor's provider by default (an economy model: Claude Code haiku, codex luna, grok);
+a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}` moves it, and `limits.repairs: 0` turns it off.
 
 `[orch.conductor]` (`configs/config.schema.json`): `provider` (default `claude-code`), `reviewer`
 (`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `limits.tokens_max`,

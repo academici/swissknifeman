@@ -22,6 +22,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_hex  # noqa: E402
 
 context, store, _model = partners.planner_engine("plan.context", "plan.store", "plan.model")
 ITEM_ID, PlanError, item_phase = _model.ITEM_ID, _model.PlanError, _model.item_phase
+TERMINAL = {str(getattr(status, "value", status)) for status in _model.TERMINAL}
 
 SCHEMA = "urn:swissknifeman:orch:exec:execution-input:v1"
 CONTRACT_VERSION = "exec/v1"
@@ -126,11 +127,27 @@ def _unresolved(plan: store.Plan, pack: dict) -> list[str]:
             and (not d.get("loaded") or d.get("status") != "accepted")]
 
 
-def _checks(item: dict, unit: dict | None) -> list[dict]:
+def _checks(item: dict, unit: dict | None, plan: store.Plan | None = None, item_id: str | None = None) -> list[dict]:
+    """The checks of the input; the item that closes its phase (every other item of the phase is terminal) also gets
+    the broad checks of the phase (``phase.validation``) marked ``cadence: phase``: the full pass runs there, once."""
     if unit is None:
-        return copy.deepcopy(item.get("validation", []))
+        checks = copy.deepcopy(item.get("validation", []))
+        if plan is not None and item_id is not None:
+            checks += _phase_checks(plan, item_id, {c.get("id") for c in checks if isinstance(c, dict)})
+        return checks
     by_id = {c["id"]: c for c in item.get("validation", [])}  # as units.brief
     return [copy.deepcopy(by_id[c] if isinstance(c, str) else c) for c in unit.get("checks", [])]
+
+
+def _phase_checks(plan: store.Plan, item_id: str, taken: set) -> list[dict]:
+    phase = plan.phases.get(item_phase(item_id), {})
+    broad = [c for c in phase.get("validation") or [] if isinstance(c, dict) and c.get("id") not in taken]
+    if not broad:
+        return []
+    others = [i for i in phase.get("items") or [] if isinstance(i, str) and i != item_id and i in plan.items]
+    if any(plan.items[i].get("status", "todo") not in TERMINAL for i in others):
+        return []
+    return [dict(copy.deepcopy(check), cadence="phase") for check in broad]
 
 
 def _context_refs(plan: store.Plan, pack: dict, plan_dir: str) -> list[dict]:
@@ -172,7 +189,7 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
     phase = plan.phases.get(item_phase(item_id), {})
     missing = []
     checks = doc.get("acceptance", {}).get("checks", [])
-    expected = _checks(item, unit)
+    expected = _checks(item, unit, plan, item_id)
     if not expected:
         missing.append("acceptance.checks: no acceptance check")
     for check in expected:
@@ -265,7 +282,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
                        "generated_by": {"tool": TOOL, "task_version": _task_version()}},
         "goal": unit["goal"] if unit is not None else f"{item['title']}: {item['summary']}",
         "scope": scope,
-        "acceptance": {"checks": _checks(item, unit), "deliverables": copy.deepcopy(item.get("deliverables", []))},
+        "acceptance": {"checks": _checks(item, unit, plan, item_id), "deliverables": copy.deepcopy(item.get("deliverables", []))},
         "route": {"minimum": copy.deepcopy((unit if unit is not None else item).get("route"))},
         "result_contract": {"report": list(REPORT), "write_authority": "none" if read_only else "code_scope",
                             "commit_owner": "coordinator", "plan_mutation": "forbidden"},

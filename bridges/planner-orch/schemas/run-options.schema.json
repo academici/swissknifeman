@@ -46,8 +46,27 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar"]
+            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer"]
           }
+        },
+        "module_rules": {
+          "description": "Instruction sections an isolated role still needs, by the last part of their heading id (`## <scope>.<name>` in the CLAUDE.md or AGENTS.md of the repository root and of every folder on the way to a write-set path): their text goes into the prompt as a short Repository rules block. Default `[\"module-folders\", \"module-boundaries\", \"engineering-invariants\"]`; `[]` sends none.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"}
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "scope": {
+      "description": "What the conductor does with paths a role changed outside `scope.write_set` of the input; the changed paths are read from git after every executor round, never from the report.",
+      "type": "object",
+      "properties": {
+        "outside": {
+          "description": "`deviation` (default): the paths are kept, listed as a deviation issue, shown to the reviewer and committed with the piece; `block`: the piece is blocked at once with an escalation that names them.",
+          "type": "string",
+          "enum": ["deviation", "block"]
         }
       },
       "required": [],
@@ -65,6 +84,13 @@
           "description": "Kinds of checks the conductor runs in a piece of work: `[\"acceptance\"]` is the quick pass (the gate needs evidence of the acceptance checks only), the default `[\"acceptance\", \"impact\"]` the full one. Heavy repository-wide checks belong to `impact` and run in the full pass (the closing piece of a phase, or on request).",
           "type": "array",
           "items": {"type": "string", "enum": ["acceptance", "impact"]},
+          "minItems": 1
+        },
+        "cadence": {
+          "description": "Cadences of checks the conductor runs in a piece of work: `[\"item\"]` runs only the checks of the piece (a check without `cadence` is `item`); the default `[\"item\", \"phase\"]` runs all. `phase` checks (repository-wide, branch against origin) belong to the closing piece of a phase.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "enum": ["item", "phase"]},
           "minItems": 1
         },
         "red_first": {
@@ -139,7 +165,8 @@
             "bounded-implementer",
             "reviewer",
             "triager",
-            "registrar"
+            "registrar",
+            "report-fixer"
           ]
         },
         "provider": {
@@ -182,35 +209,55 @@
       "type": "object",
       "properties": {
         "review_rounds": {
-          "description": "Review rounds at most (the policy pack's max_rounds by default); 0 to 5.",
+          "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A target, not a wall: past it a round still runs while the last correction made progress, up to ceiling_factor times the target, with a LIMIT_OVER beacon and a plan note.",
           "type": "integer"
         },
         "corrections": {
-          "description": "Corrections after a confirmed review finding at most (the policy pack's max_corrections by default); 0 to 3.",
+          "description": "Corrections planned after a confirmed review finding (the policy pack's max_corrections by default); 0 to 3; a target like review_rounds.",
           "type": "integer"
         },
         "check_fixes": {
-          "description": "Corrections after red acceptance checks at most; 0 to 3.",
+          "description": "Corrections planned after red acceptance checks; 0 to 3; a target: past it a correction still runs while the red checks change, up to ceiling_factor times the target.",
           "type": "integer"
         },
         "retries": {
-          "description": "Repeats of a role whose run failed or whose result is outside its contract (the policy pack's retries_budget by default); 0 to 5.",
+          "description": "Repeats of one step whose role run failed or whose result stays outside its contract after healing and repair (the policy pack's retries_budget by default); counted per step; 0 to 5.",
           "type": "integer"
         },
         "tokens_max": {
-          "description": "Input and output tokens of every role of the run together; 0 means no limit; 0 or more.",
+          "description": "Fresh input and output tokens of the piece of work: past it a BUDGET_OVER beacon is printed once (nothing is stopped); 0 means none; 0 or more.",
           "type": "integer"
         },
         "stage_timeout_s": {
-          "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role, which is stopped by stage_idle_timeout_s instead, and keeps the launch catalog timeout for a text role; 0 or more.",
+          "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role (stage_warn_s beacons report a long run instead) and keeps the launch catalog timeout for a text role; 0 or more.",
           "type": "integer"
         },
         "stage_idle_timeout_s": {
-          "description": "A streaming role is stopped when its output has not grown for this many seconds (a role that keeps writing is working however long it takes); 0 switches the check off; 0 or more.",
+          "description": "A streaming role is stopped when its output has not grown for this many seconds; 0 (default) never stops it (stage_idle_warn_s beacons report the silence and what runs meanwhile); 0 or more.",
           "type": "integer"
         },
         "check_timeout_s": {
-          "description": "Timeout of one acceptance check in seconds; 1 or more.",
+          "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: a long check is reported by check_warn_s beacons, not stopped; 0 or more.",
+          "type": "integer"
+        },
+        "ceiling_factor": {
+          "description": "How far past their target review_rounds, corrections and check_fixes may go while every extra round makes progress: the ceiling is this factor times the target (at least target + 1); 1 to 5, default 2.",
+          "type": "integer"
+        },
+        "repairs": {
+          "description": "Repairs of a role result outside its contract by the report-fixer role (an economy model that rewrites only the closed block from the role's own answer) before the whole role is repeated; 0 switches repair off; 0 to 3, default 1.",
+          "type": "integer"
+        },
+        "stage_warn_s": {
+          "description": "A STAGE_SLOW beacon (what the role runs now: its last command and the child processes) is printed every this many seconds of one role run; nothing is stopped; 0 switches it off; default 2700.",
+          "type": "integer"
+        },
+        "stage_idle_warn_s": {
+          "description": "A STAGE_IDLE beacon is printed every this many seconds while the output of a role has not grown (a long test run or a silent model call); nothing is stopped; 0 switches it off; default 600.",
+          "type": "integer"
+        },
+        "check_warn_s": {
+          "description": "A CHECK_SLOW beacon is printed every this many seconds of one running acceptance check; 0 switches it off; default 900.",
           "type": "integer"
         }
       },

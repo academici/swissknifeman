@@ -22,6 +22,8 @@ observed failing, each with one correction package. You judge evidence; you do n
 - Do not reject a real defect only because it sits outside the write set or belongs to a later
   item: say in `reason` that it reproduces and which item or module owns it. The conductor records
   every rejected Major-or-higher finding as a plan note, so the reason is read by the reviewer of the phase.
+- Reject a Blocker or Major finding only with a reproduction attempt that ran (`reproduction` with
+  its command, exit and what you observed); a reason without a run is not a rejection.
 
 ## You never
 

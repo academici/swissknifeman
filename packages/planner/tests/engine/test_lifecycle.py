@@ -236,6 +236,33 @@ class StartTests(LifeCase):
         self.refused("GATE_UNKNOWN", lambda root, *a: lifecycle.grant(root, label, "Owner says go."))
 
 
+class PhaseChecksTests(LifeCase):
+    """phase.validation is the full pass of a phase: the item that closes the phase records it, once."""
+
+    FULL = {"id": "V9", "cmd": "python3 scripts/affected-tests.py --tier all --run", "expect": "exit 0", "kind": "acceptance"}
+
+    def test_the_item_that_closes_a_phase_records_the_phase_checks(self):
+        ops.patch(self.load(), "P1", {"validation": [dict(self.FULL)]})
+        self.start("P1.1")
+        self.finish("P1.1")  # another item is still open: the phase checks are not this item's
+        self.start("P1.2")
+        finish = lifecycle.finish
+        error = self.refused("CHECKS_MISSING", lambda root, *a: finish(root, "P1.2", "done", checks={"V1": 0}))
+        self.assertIn("closes phase P1", error.message)
+        self.refused("CHECKS_RED", lambda root, *a: finish(root, "P1.2", "done", checks={"V1": 0, "V9": 1}))
+        result = self.finish("P1.2", checks={"V1": 0, "V9": 0})
+        self.assertEqual(result.phase_closed, "done")
+
+    def test_check_refuses_a_shared_id_and_warns_about_a_heavy_item_check(self):
+        ops.patch(self.load(), "P1", {"validation": [dict(self.FULL, id="V1")]})
+        codes = [(issue.level, issue.code) for issue in check.check(self.load())]
+        self.assertIn(("warning", "validation_id_clash"), codes)
+        ops.patch(self.load(), "P1", {"validation": []})
+        ops.patch(self.load(), "P1.1", {"validation": [dict(self.FULL, id="V1")]})
+        codes = [(issue.level, issue.code) for issue in check.check(self.load())]
+        self.assertIn(("warning", "check_cadence"), codes)
+        self.assertNotIn(("warning", "validation_id_clash"), codes)
+
 class FinishTests(LifeCase):
     def test_done_needs_every_acceptance_check_with_exit_zero(self):
         self.start("P1.1")

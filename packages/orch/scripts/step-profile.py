@@ -2,7 +2,9 @@
 """Where the time of one role run went, from its stream-json file (``.../streams/<step>.jsonl``); markdown on stdout.
 
 Splits the wall time into model time (between a tool result and the next assistant message) and tool time (a tool call
-until its result), lists the longest commands, repeated commands and the share of test runs:
+until its result), lists the longest commands, repeated commands and the share of test runs. A stream without times of
+its own (grok) is timed by the ``<stream>.times`` file the conductor writes beside it (seconds since start and size at
+every growth of the stream):
 
     step-profile.py STREAM.jsonl [--top N]
 """
@@ -29,12 +31,25 @@ def ts(value) -> float | None:
 
 
 def load(path: str) -> list:
-    events = []
-    for line in open(path, encoding="utf-8", errors="replace"):
-        try:
-            events.append(json.loads(line))
-        except ValueError:
-            continue
+    """The events of the stream; each without a ``timestamp`` gets ``_t`` from ``<stream>.times`` when it exists."""
+    marks = []
+    try:
+        for line in open(path + ".times", encoding="utf-8"):
+            seconds, size = line.split()
+            marks.append((float(seconds), int(size)))
+    except (OSError, ValueError):
+        marks = []
+    events, offset = [], 0
+    with open(path, "rb") as handle:
+        for raw in handle:
+            offset += len(raw)
+            try:
+                event = json.loads(raw.decode("utf-8", errors="replace"))
+            except ValueError:
+                continue
+            if isinstance(event, dict) and marks and not event.get("timestamp"):
+                event["_t"] = next((seconds for seconds, size in marks if size >= offset), marks[-1][0])
+            events.append(event)
     return events
 
 
@@ -53,6 +68,8 @@ def main(argv=None) -> int:
     out_tokens = 0
     for event in events:
         when = ts(event.get("timestamp"))
+        if when is None and isinstance(event.get("_t"), float):
+            when = event["_t"]
         if when is not None:
             first = when if first is None else first
             last = when

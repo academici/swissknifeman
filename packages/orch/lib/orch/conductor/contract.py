@@ -36,4 +36,7 @@ def triage_problems(findings: dict, triage: dict) -> list[str]:
     issues += [f"/: finding {name} is triaged {seen.count(name)} times" for name in sorted(set(seen))
                if seen.count(name) > 1]
     issues += [f"/: finding {name} is not triaged" for name in expected if name not in seen]
+    severe = {item["id"] for item in findings.get("findings", []) if item.get("severity") in ("Blocker", "Major")}
+    issues += [f"/rejected: {entry['finding']} is a Blocker or Major finding rejected without a reproduction that ran"
+               for entry in triage.get("rejected", []) if entry.get("finding") in severe and not entry.get("reproduction")]
     return issues

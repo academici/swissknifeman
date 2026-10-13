@@ -89,27 +89,32 @@ def _fence(text: str, tag: str = "") -> str:
     return f"{mark}{tag}\n{text.rstrip()}\n{mark}"
 
 
-def _head(role: str, input_doc: dict, roles_dir, skills: list) -> str:
+def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", skill_texts=None) -> str:
+    """Role text and task block, then the repository rules an isolated role still needs and its skills: by name when
+    the provider loads skills itself, as text when the role runs isolated (its provider loads none)."""
     manifest, text = render.load_role(role, roles_dir)
     prompt = render.render_prompt(input_doc, manifest, text)
-    if skills:
-        prompt += "\n\n## Skills\n\nLoad and apply these skills: " + ", ".join(f"`{name}`" for name in skills) + ".\n"
+    if rules:
+        prompt += "\n\n## Repository rules\n\n" + rules.rstrip() + "\n"
+    texts = dict(skill_texts or {})
+    named = [name for name in skills if name not in texts]
+    if named:
+        prompt += "\n\n## Skills\n\nLoad and apply these skills: " + ", ".join(f"`{name}`" for name in named) + ".\n"
+    for name, body in texts.items():
+        prompt += f"\n\n## Skill `{name}`\n\n" + body.rstrip() + "\n"
     return prompt
 
 
-def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, skills=()) -> str:
-    return _head("context-scout", input_doc, roles_dir, list(skills)) + "\n" + _PROGRESS.format(item=item, step=step)
+def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, skills=(), skill_texts=None) -> str:
+    return _head("context-scout", input_doc, roles_dir, list(skills), skill_texts=skill_texts) + "\n" \
+        + _PROGRESS.format(item=item, step=step)
 
 
-_TARGETED_TESTS = """\
+_RUN_CHECKS = """\
 ## Verification
 
-This replaces the instruction above to run every acceptance check yourself. Run only the tests that cover the code
-you changed: the test files of the changed modules and the single commands that
-name them. Do not run the acceptance checks of the input as a whole, repository-wide suites, or the suites of modules
-you did not touch: the conductor runs every acceptance check itself right after your report, and a full run here only
-repeats it. `checks_run` lists acceptance checks only, under their own ids (`V1`…); name the targeted test commands
-you ran in `summary` instead.
+Run every acceptance check of the input yourself, exactly as written, before you report, and list each in
+`checks_run` under its id. The conductor runs them again after your report.
 """
 
 
@@ -126,13 +131,18 @@ def _conductor_commands(input_doc: dict) -> str:
 
 
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
-             role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = False) -> str:
-    parts = [_head(role, input_doc, roles_dir, list(skills))]
+             role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
+             skill_texts=None) -> str:
+    parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
     if scout_text:
         parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
                      + _fence(scout_text, "text"))
     if targeted_tests:
-        parts.append(_TARGETED_TESTS + _conductor_commands(input_doc))
+        commands = _conductor_commands(input_doc)
+        if commands:
+            parts.append("## Verification\n" + commands)
+    else:
+        parts.append(_RUN_CHECKS)
     if rules:
         parts.append("## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))
     if correction:
@@ -164,13 +174,14 @@ def _corrected_scope(corrected) -> str:
 
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
              roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
-             checks_pending: bool = False, corrected=()) -> str:
+             checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None) -> str:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
-    parts = [_head("reviewer", input_doc, roles_dir, list(skills)),
+    parts = [_head("reviewer", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
              f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the candidate is the working tree "
              "(uncommitted changes, untracked files included). Read files as you need; do not change anything.",
              *([_PRE_FINAL.format(floor=min_severity)] if pre_final else []),
              *([_corrected_scope(corrected)] if corrected else []),
+             *([_outside_scope(outside)] if outside else []),
              ("Acceptance checks run by the conductor on this candidate:\n\n" + summary) if not checks_pending else
              "The conductor runs the acceptance checks on this candidate at the same time; their result is not known yet "
              "and is not your concern: review the candidate itself.",
@@ -180,8 +191,15 @@ def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, che
     return "\n\n".join(part.rstrip() for part in parts) + "\n"
 
 
-def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict, roles_dir=None, skills=()) -> str:
-    parts = [_head("triager", input_doc, roles_dir, list(skills)),
+def _outside_scope(outside) -> str:
+    return ("## Changed outside the write set\n\nThe executor changed these paths, which `scope.write_set` does not own. "
+            "Judge whether each change is needed by the goal; an unneeded or harmful one is a finding (basis: input "
+            "contract):\n\n" + "\n".join(f"- `{path}`" for path in outside))
+
+
+def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict, roles_dir=None, skills=(),
+            repo_rules: str = "", skill_texts=None) -> str:
+    parts = [_head("triager", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
              f"## Candidate\n\nBase revision `{base}`; the candidate is the working tree. Scratch files go to a "
              "temporary directory outside the repository.",
              "## Review findings\n\n" + _fence(json.dumps(findings, ensure_ascii=False, indent=2), "json"),
@@ -205,6 +223,36 @@ def closer(*, item: str, step: str, command: str) -> str:
         "failed, do not run it again and do not look for another way.",
     ]
     return "\n\n".join(part.rstrip() for part in parts) + "\n"
+
+
+CONTRACT_TEXT = {"stage-report": _STAGE_REPORT, "review-findings": _REVIEW_FINDINGS, "triage-result": _TRIAGE_RESULT}
+
+
+def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, limit: int = 40_000) -> str:
+    """The repair prompt: rewrite only the closed block of a role's answer so that it fits the contract."""
+    shown = answer if len(answer) <= limit else "[… the start of the answer is cut …]\n" + answer[-limit:]
+    parts = [
+        f"# Repair: the `{kind}` block of {item} {step}",
+        "A role finished its work and ended its answer with a result block that does not fit the contract. You do not "
+        "redo, judge or extend the work, read no file and run nothing. You rewrite that one block from the facts the "
+        "answer states.",
+        "## Rules\n\n- Keep every fact of the answer: statuses, paths, check ids and exits, verdicts, findings, reasons.\n"
+        "- Never invent a check, an exit, a verdict, a path, a finding or a reproduction the answer does not give; when "
+        "a required fact is missing, use the closest honest statement of the answer (for example an issue that says "
+        "what is missing).\n- Never raise a status: a blocked answer stays blocked.\n"
+        "- Change only what the problem below names, plus what the contract needs for the block to be valid.",
+        "## The problem\n\n" + _fence(problem, "text"),
+        "## The contract\n\n" + CONTRACT_TEXT[kind],
+        "## The answer\n\n" + _fence(shown, "text"),
+        "## Result\n\nAnswer with exactly one fenced block tagged `" + kind + "` holding the corrected JSON object, and "
+        "nothing else.",
+    ]
+    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+
+
+ADOPTED = """\
+A previous attempt at this piece of work is already in the working tree (these paths are changed: {paths}). Do not
+start over: check it against the input, finish what is missing and fix what is wrong, inside the same scope."""
 
 
 def check_correction(failed: list) -> str:

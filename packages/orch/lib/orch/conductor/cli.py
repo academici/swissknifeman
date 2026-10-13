@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``conduct.py run|resume|status|observe``.
+"""Command line of the conductor: ``conduct.py run|resume|settle|status|observe``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -23,7 +23,7 @@ def _project() -> Path | None:
 
 
 def _mode(args) -> str:
-    return "quiet" if args.quiet else "json-lines" if args.json_lines else "text"
+    return "quiet" if getattr(args, "quiet", False) else "json-lines" if getattr(args, "json_lines", False) else "text"
 
 
 def _latest(project: Path) -> str | None:
@@ -43,10 +43,13 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     conductor.run_doc = {"options_file": str(args.options) if args.options else None}
     conductor._resolve(item, persist=False)
     conductor._routes(item, persist=False)
+    from orch.conductor import process
+    available = {role: process.available(route["argv"]) for role, route in item.routes.items()}
+    isolation = {role: conductor._role_argv(item, role, route)[len(route["argv"]):] for role, route in item.routes.items()}
     return {"plan": args.plan, "items": args.items or None, "batch": bool(args.batch),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
             "review": item.policy.get("review"), "options": item.options, "sources": item.sources,
-            "routes": item.routes,
+            "routes": item.routes, "available": available, "isolation_args": isolation,
             "note": "the work source adds the scenario and the options of the plan, phase and item at claim time"}
 
 
@@ -67,6 +70,9 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--scenario", help="with --dry-run: the scenario to preview (default: default_profile)")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
+    run.add_argument("--adopt", action="store_true",
+                     help="take over the changes in the tree as an earlier attempt of the first piece (they must lie in "
+                          "its write set): the executor checks and finishes them instead of starting over")
     resume = verbs.add_parser("resume", help="continue a stopped run; closed steps are not repeated")
     resume.add_argument("--run", required=True, metavar="RUN")
     resume.add_argument("--retry", nargs="+", default=[], metavar="ITEM",
@@ -77,6 +83,12 @@ def main(argv: list | None = None) -> int:
         quiet = sub.add_mutually_exclusive_group()
         quiet.add_argument("--quiet", action="store_true", help="no progress lines on stderr")
         quiet.add_argument("--json-lines", dest="json_lines", action="store_true", help="progress lines as JSON")
+    settle = verbs.add_parser("settle", help="set the outcome of a piece of a run by hand, after it was finished or "
+                                             "given up outside the conductor")
+    settle.add_argument("--run", required=True, metavar="RUN")
+    settle.add_argument("--item", required=True, metavar="REF")
+    settle.add_argument("--outcome", required=True, choices=["done", "done_with_deviations", "blocked"])
+    settle.add_argument("--reason", required=True, help="why, for the journal")
     status = verbs.add_parser("status", help="state of a run from its journal (default: the latest run)")
     status.add_argument("--run", metavar="RUN")
     status.add_argument("--json", action="store_true")
@@ -116,6 +128,9 @@ def main(argv: list | None = None) -> int:
             current = found["current"]
             print(f"  now: {current['item']} {current['stage']} {current.get('role') or ''} "
                   f"{current.get('route') or ''} since {current['since']}".rstrip())
+            if found.get("beacon"):
+                beacon = found["beacon"]
+                print(f"  beacon {beacon['ts']} {beacon['reason_code']}: {beacon.get('message', '')}")
         for row in found["items"]:
             last = row["last"] or {}
             print(f"  {row['item']}: {row['outcome'] or 'running'}"
@@ -134,14 +149,17 @@ def main(argv: list | None = None) -> int:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
     conductor = engine.Conductor(project=project, settings=current, config_file=args.config, mode=_mode(args),
-                                 model_catalog=args.model_catalog)
+                                 model_catalog=getattr(args, "model_catalog", None))
     try:
         if args.verb == "run" and args.dry_run:
             print(json.dumps(_preview(conductor, args), ensure_ascii=False, indent=2))
             return 0
         if args.verb == "run":
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
-                                 batch=args.batch, max_items=args.max_items, options_file=args.options)
+                                 batch=args.batch, max_items=args.max_items, options_file=args.options,
+                                 adopt=args.adopt)
+        if args.verb == "settle":
+            return conductor.settle(args.run, args.item, args.outcome, args.reason)
         return conductor.resume(args.run, retry=args.retry)
     except engine.Stop as stop:
         print(f"{stop.code}: {stop.message}", file=sys.stderr)

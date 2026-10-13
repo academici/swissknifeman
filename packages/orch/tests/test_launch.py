@@ -30,7 +30,7 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_repository_catalog_is_valid_and_complete(self):
         rows = [(role, provider) for role, providers in self.catalog["launch"].items() for provider in providers]
-        self.assertEqual(len(rows), 15)
+        self.assertEqual(len(rows), 18)
         self.assertEqual({provider for role, provider in rows if role == "triager"}, {"claude-code", "codex"})
         self.assertEqual({role for role, _ in rows}, set(launch.ROLES))
         self.assertNotIn(("scout", "grok"), rows)

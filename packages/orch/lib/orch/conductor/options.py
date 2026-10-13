@@ -15,23 +15,32 @@ import re
 
 from orch.conductor import contract
 
+# Limits are targets and beacons, not walls: no role and no check is stopped for being long (the owner or an observer
+# reads the STAGE_SLOW / STAGE_IDLE / CHECK_SLOW beacons and decides); rounds go past their target while they make
+# progress, up to ``ceiling_factor`` times it. The *_timeout_s ceilings stay available, off by default.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
-                  "stage_timeout_s": 0, "stage_idle_timeout_s": 1800, "check_timeout_s": 1800}
+                  "stage_timeout_s": 0, "stage_idle_timeout_s": 0, "check_timeout_s": 0, "ceiling_factor": 2,
+                  "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected"}
-DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar"]}
+DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
+                                         "report-fixer"],
+                        "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"]}
+DEFAULT_SCOPE = {"outside": "deviation"}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": False,
-                  "kinds": ["acceptance", "impact"]}
+                  "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
 CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
-            "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "on_blocked": "stop"}
+            "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
+            "on_blocked": "stop"}
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
                 "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
-                "check_timeout_s": (1, None)}
+                "check_timeout_s": (0, None), "ceiling_factor": (1, 5), "repairs": (0, 3), "stage_warn_s": (0, None),
+                "stage_idle_warn_s": (0, None), "check_warn_s": (0, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
-MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
+MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
                        r"(?:/(?P<context>[0-9]+[kKmM]?))?(?:/(?P<effort>low|medium|high|xhigh|max|ultra))?$")
 _ACTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
@@ -95,7 +104,7 @@ def merge(base: dict, layer: dict) -> dict:
             out["stages"] = _merge_stages(out.get("stages", []), value)
         elif key == "rules":
             out["rules"] = _dedupe(list(out.get("rules", [])) + list(value))
-        elif key in ("limits", "review", "checks", "instructions"):
+        elif key in ("limits", "review", "checks", "instructions", "scope"):
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
@@ -152,7 +161,7 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
         nonlocal current
         current = merge(current, layer)
         for key, value in layer.items():
-            if key in ("limits", "review", "checks", "instructions"):
+            if key in ("limits", "review", "checks", "instructions", "scope"):
                 sources.update({f"{key}.{sub}": name for sub in value})
             elif key == "skills":
                 sources.update({f"skills.{entry['role']}": name for entry in value})

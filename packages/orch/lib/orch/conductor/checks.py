@@ -77,9 +77,40 @@ def _relative(path: Path, project: Path) -> str:
         return str(path)
 
 
+POLL_S = 5
+
+
+def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_slow=None) -> int:
+    """Exit code of ``argv``; 124 after ``timeout_s`` (0: no ceiling). ``on_slow(elapsed, pid)`` every ``warn_s``."""
+    process = subprocess.Popen(argv, cwd=str(cwd), stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
+    began, next_warn = time.monotonic(), warn_s
+    while True:
+        try:
+            return process.wait(timeout=POLL_S)
+        except subprocess.TimeoutExpired:
+            pass
+        elapsed = time.monotonic() - began
+        if timeout_s and elapsed > timeout_s:
+            try:
+                os.killpg(process.pid, 15)
+                process.wait(timeout=10)
+            except (OSError, subprocess.TimeoutExpired):
+                try:
+                    os.killpg(process.pid, 9)
+                except OSError:
+                    pass
+                process.wait()
+            out.write(f"\n[orch] check timed out after {timeout_s} s\n".encode("utf-8"))
+            return 124
+        if warn_s and on_slow is not None and elapsed >= next_warn:
+            next_warn += warn_s
+            on_slow(elapsed, process.pid)
+
+
 def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: Path, timeout_s: int,
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
-               parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS) -> list:
+               parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS, cadence=("item", "phase"),
+               warn_s: int = 0, on_slow=None) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
@@ -88,13 +119,17 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
     as soon as its check ends (from a worker thread). ``first`` names checks (the ones that were red before) to run before
     all others: when one of them is still red the others are not run (``skipped``) — a correction that did not mend the
     red check does not need a half-hour run of everything else. ``kinds`` limits the run to these kinds (a quick pass
-    runs ``acceptance`` only; the ``impact`` checks wait for the full pass).
+    runs ``acceptance`` only; the ``impact`` checks wait for the full pass). ``cadence`` limits it to the checks of
+    these cadences (a check without one is ``item``; ``phase`` checks run in the closing piece of a phase).
+    ``timeout_s`` 0 sets no ceiling on a check; ``on_slow(check_id, elapsed, pid)`` is called every ``warn_s`` seconds of
+    a running check, so a long run is reported, not cut.
     """
     project = Path(project)
     candidate = {"head": head(project), "dirty_digest": dirty_digest(project)}
     subject = subject_of(input_doc)
     reported = {row["id"]: row for row in (report or {}).get("checks_run", [])}
-    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in kinds]
+    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", [])
+              if check.get("kind") in kinds and check.get("cadence", "item") in cadence]
 
     def run_one(check: dict) -> dict:
         row = run_check(check)
@@ -115,13 +150,9 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
             log.parent.mkdir(parents=True, exist_ok=True)
             begin = time.monotonic()
             with open(log, "wb") as out:
-                try:
-                    done = subprocess.run(["bash", "-c", check["cmd"]], cwd=str(cwd), stdout=out,
-                                          stderr=subprocess.STDOUT, timeout=timeout_s, start_new_session=True)
-                    code = done.returncode
-                except subprocess.TimeoutExpired:
-                    code = 124
-                    out.write(f"\n[orch] check timed out after {timeout_s} s\n".encode("utf-8"))
+                code = _run_command(["bash", "-c", check["cmd"]], cwd=cwd, out=out, timeout_s=timeout_s, warn_s=warn_s,
+                                    on_slow=None if on_slow is None else
+                                    (lambda elapsed, pid, check_id=check_id: on_slow(check_id, elapsed, pid)))
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-TAIL_LINES:]
             row.update(cmd=check["cmd"], exit=code, log=str(log), tail="\n".join(tail),
                        seconds=round(time.monotonic() - begin, 1), green=code == 0)

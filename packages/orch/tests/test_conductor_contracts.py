@@ -136,7 +136,8 @@ class SettingsTests(unittest.TestCase):
         found = settings.defaults().conductor
         self.assertEqual((found["provider"], found["reviewer"], found["registrar"], found["on_blocked"]),
                          ("claude-code", "grok/grok-4.7/high", "orch/conductor", "stop"))
-        self.assertEqual((found["argv"], found["limits"]["check_timeout_s"]), ({}, 1800))
+        self.assertEqual((found["argv"], found["limits"]["check_timeout_s"], found["limits"]["stage_idle_timeout_s"]),
+                         ({}, 0, 0))  # nothing long is cut by default: beacons report it
 
     def test_a_project_file_cannot_choose_the_commands(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -164,15 +165,15 @@ class DoctorTests(unittest.TestCase):
         (project / ".gitignore").write_text(ignore, encoding="utf-8")
         return project
 
-    def test_an_ignored_runtime_folder_is_ok(self):
-        rows = {row["check_id"]: row for row in doctor_checks(self.git_project(".swissknifeman/state/\n"))}
+    def test_ignored_runtime_and_reports_folders_are_ok(self):
+        rows = {row["check_id"]: row for row in doctor_checks(self.git_project(".swissknifeman/state/\n.swissknifeman/orch/\n"))}
         self.assertEqual((rows["orch.conductor-gitignore"]["status"], rows["orch.conductor-reports"]["status"]),
                          ("ok", "ok"))
 
     def test_a_runtime_folder_git_would_see_is_a_warning(self):
-        rows = {row["check_id"]: row for row in doctor_checks(self.git_project(".swissknifeman/\n"))}
+        rows = {row["check_id"]: row for row in doctor_checks(self.git_project(".swissknifeman/state/\n"))}
         self.assertEqual(rows["orch.conductor-gitignore"]["status"], "ok")
-        self.assertEqual(rows["orch.conductor-reports"]["status"], "warn")
+        self.assertEqual(rows["orch.conductor-reports"]["status"], "warn")  # the observer report would dirty the tree
         rows = {row["check_id"]: row for row in doctor_checks(self.git_project("node_modules/\n"))}
         self.assertEqual(rows["orch.conductor-gitignore"]["status"], "warn")
         self.assertIn(".swissknifeman/state/", rows["orch.conductor-gitignore"]["remediation"])

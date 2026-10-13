@@ -1,5 +1,5 @@
 {
- "catalog_version": "1.1.0",
+ "catalog_version": "1.2.0",
  "launch": {
   "scout": {
    "claude-code": {
@@ -326,6 +326,75 @@
      "-c",
      "model_reasoning_effort=\"{effort}\"",
      "-"
+    ],
+    "timeout_s": 600,
+    "model_set": "supported"
+   }
+  },
+  "report-fixer": {
+   "claude-code": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "jsonl",
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--tools",
+     "",
+     "--no-session-persistence"
+    ],
+    "timeout_s": 600,
+    "model_set": "supported"
+   },
+   "codex": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "jsonl",
+    "argv": [
+     "codex",
+     "-a",
+     "never",
+     "exec",
+     "--json",
+     "--sandbox",
+     "read-only",
+     "--model",
+     "{model}",
+     "-c",
+     "model_reasoning_effort=\"{effort}\"",
+     "--ephemeral",
+     "-"
+    ],
+    "timeout_s": 600,
+    "model_set": "supported"
+   },
+   "grok": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "jsonl",
+    "argv": [
+     "grok",
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write,run_terminal_command",
+     "--output-format",
+     "streaming-messages-json"
     ],
     "timeout_s": 600,
     "model_set": "supported"

@@ -2,8 +2,10 @@
 
 It reads the progress journal and the state of the run, and the ``orch.run.*`` and ``planner.*`` events of the
 project's aicore event journal since the run started, and writes ``observer.json`` and ``observer.md`` into the
-committed reports folder (``.swissknifeman/orch/reports/<run>/``): repeats and resumes, red checks, review findings
-by class, idle time between stages, tokens and time by role, stops, and proposals to improve the run options.
+reports folder (``.swissknifeman/orch/reports/<run>/``, ignored run output): repeats and resumes, red checks, review
+findings by class, idle time between stages, tokens and time by role, the beacons and mends of the run (slow or
+silent steps, rounds past a target, healed and repaired results), the share of the wall time spent in checks, stops,
+and proposals to improve the run options.
 ``follow`` prints the notable lines of a run that is still going.
 """
 from __future__ import annotations
@@ -101,8 +103,13 @@ def build(directory: Path, project: Path) -> dict:
                       "check_fixes": item.get("check_fixes_used", 0), "corrections": item.get("corrections_used", 0),
                       "retries": item.get("retries_used", 0), "tokens": item.get("tokens", {"input": 0, "output": 0})})
     counts, problems = _events(project, started) if started else ({}, [])
+    codes = Counter(line.get("reason_code") for line in lines if line.get("event") == "info" and line.get("reason_code"))
+    wall = (_seconds(lines[-1]["ts"]) - _seconds(lines[0]["ts"])) if len(lines) > 1 else 0.0
     report = {
         "schema": "orch-conductor-observer/v1", "run": run_id, "started": started,
+        "beacons": dict(sorted(codes.items())),
+        "wall_s": round(wall, 1),
+        "checks_share": round(seconds.get("deterministic", 0) / wall, 2) if wall else 0.0,
         "ended": lines[-1]["ts"] if lines else None, "status": state.get("status"), "stop": state.get("stop"),
         "resumes": sum(1 for line in lines if line.get("event") == "run.resume"),
         "repeats": [{"item": line.get("item"), "stage": line.get("stage"), "message": line.get("message")}
@@ -133,6 +140,16 @@ def proposals(report: dict) -> list:
     if report["repeats"]:
         found.append(f"{len(report['repeats'])} role run(s) were repeated (failed run or output outside its "
                      "contract): check the provider and the result block of that role.")
+    beacons = report.get("beacons") or {}
+    if beacons.get("RESULT_HEALED", 0) + beacons.get("RESULT_REPAIRED", 0) >= 2:
+        found.append("Role results needed mending more than once: compare the result blocks in the streams with the "
+                     "contract text of the prompt; a recurring mend is a prompt or contract to fix at its source.")
+    if beacons.get("LIMIT_OVER"):
+        found.append(f"{beacons['LIMIT_OVER']} round(s) went past a target: the item was larger or riskier than its "
+                     "plan said; split items like it, or raise the target in their options.")
+    if report.get("checks_share", 0) > 0.5:
+        found.append(f"Checks took {int(report['checks_share'] * 100)} % of the wall time: move repository-wide checks "
+                     "to phase.validation, turn on checks.red_first, or run them in parallel (checks.parallel).")
     if report["idle"]["total_s"] > 300:
         found.append(f"{int(report['idle']['total_s'])} s of idle time between stages, the longest at "
                      f"{report['idle']['max_between']}: look at the work source calls there.")
@@ -163,7 +180,9 @@ def markdown(report: dict) -> str:
              f"; triage confirmed {report['triage']['confirmed']}, rejected {report['triage']['rejected']}",
              f"- Idle between stages: {report['idle']['total_s']} s (longest {report['idle']['max_s']} s"
              + (f", {report['idle']['max_between']}" if report['idle']['max_between'] else "") + ")",
-             f"- Scout cache: {report['scout_cache']['hits']}/{report['scout_cache']['runs']} hits", "",
+             f"- Scout cache: {report['scout_cache']['hits']}/{report['scout_cache']['runs']} hits",
+             f"- Wall time {report['wall_s']} s; checks {int(report['checks_share'] * 100)} % of it",
+             f"- Beacons and mends: {', '.join(f'{k}×{v}' for k, v in report['beacons'].items()) or 'none'}", "",
              "## Items", "", "| Item | Outcome | Check fixes | Corrections | Repeats | Tokens in/out |",
              "| --- | --- | --- | --- | --- | --- |"]
     for item in report["items"]:

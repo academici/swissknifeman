@@ -42,3 +42,29 @@ class RoleProcessTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ActivityAndUsageTests(unittest.TestCase):
+    def test_activity_names_the_child_processes_of_a_role(self):
+        import subprocess
+        child = subprocess.Popen(["sh", "-c", "sleep 30 & wait"], start_new_session=True)
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        import time
+        time.sleep(0.3)
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = Path(tmp) / "s.jsonl"
+            raw.write_text('{"type":"assistant","message":{"id":"m1","content":[{"type":"tool_use","name":"Bash",'
+                           '"input":{"command":"bash scripts/test.sh"}}],"usage":{"input_tokens":5,'
+                           '"cache_read_input_tokens":7,"output_tokens":2}}}\n', encoding="utf-8")
+            text = process.activity(child.pid, raw)
+            self.assertIn("last command: Bash: bash scripts/test.sh", text)
+            self.assertIn("sleep 30", text)
+            self.assertEqual(process.partial_usage(raw.read_text()), {"input": 5, "cached": 7, "output": 2})
+        import os
+        import signal
+        os.killpg(child.pid, signal.SIGKILL)
+
+    def test_a_role_without_children_is_said_to_wait_on_its_model(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIn("no child process", process.activity(999999, Path(tmp) / "none"))

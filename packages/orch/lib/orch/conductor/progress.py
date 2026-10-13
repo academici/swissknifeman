@@ -11,9 +11,13 @@ import json
 import os
 from pathlib import Path
 import sys
+import threading
 from typing import Callable, Optional
 
 MODES = ("text", "json-lines", "quiet")
+# ``info`` lines that report a long or costly run without stopping it; the latest one of the running step is the
+# answer to "why is it taking so long" (``conduct.py status`` prints it)
+BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER")
 PROGRESS_FILE = "progress.jsonl"
 WORDS = {"run.start": "run start", "run.resume": "run resume", "run.end": "run end", "item.start": "item start",
          "item.end": "item end", "stage.start": "start", "stage.end": "end", "stage.skip": "skip", "info": "info"}
@@ -66,8 +70,13 @@ class Progress:
         self.mode = mode
         self.stream = stream
         self.clock = clock or utc_now
+        self._lock = threading.Lock()  # beacons of checks come from worker threads
 
     def emit(self, event: str, **fields) -> dict:
+        with self._lock:
+            return self._emit(event, **fields)
+
+    def _emit(self, event: str, **fields) -> dict:
         line = {"ts": self.clock(), "run": self.run_id, "event": event,
                 **{key: value for key, value in fields.items() if value is not None and value != ""}}
         if "message" in line:
@@ -109,8 +118,10 @@ def read_lines(directory: Path) -> list:
 def summarize(lines: list) -> dict:
     """State of a run from its journal: status, the stage running now, and per item its last stage and outcome."""
     items: dict = {}
-    status, reason, current = "unknown", None, None
+    status, reason, current, beacon = "unknown", None, None, None
     for line in lines:
+        if line.get("event") == "info" and line.get("reason_code") in BEACONS:
+            beacon = line
         event = line.get("event")
         if event in ("run.start", "run.resume"):
             status, reason = "running", None
@@ -124,11 +135,13 @@ def summarize(lines: list) -> dict:
                 current = {"item": item, "stage": line.get("stage"), "role": line.get("role"),
                            "route": line.get("route"), "since": line["ts"]}
             elif event in ("stage.end", "stage.skip"):
+                beacon = None if beacon and beacon.get("stage") == line.get("stage") else beacon
                 row["stages"] += 1
                 row["last"] = {"stage": line.get("stage"), "verdict": line.get("verdict"), "ts": line["ts"]}
                 current = None
             elif event == "item.end":
                 row["outcome"] = line.get("outcome")
                 row["reason_code"] = line.get("reason_code")
-    return {"status": status, "reason_code": reason, "current": current, "items": list(items.values()),
+    return {"status": status, "reason_code": reason, "current": current, "beacon": beacon if current else None,
+            "items": list(items.values()),
             "lines": len(lines), "last_ts": lines[-1]["ts"] if lines else None}

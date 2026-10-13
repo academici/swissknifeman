@@ -150,6 +150,20 @@ class MappingTests(BriefCase):
         self.assertEqual(self.brief()["route"]["minimum"], {"class": "frontier", "effort": "max"})
 
 
+class PhaseChecksTests(BriefCase):
+    FULL = {"id": "V9", "cmd": "python3 scripts/affected-tests.py --tier all --run", "expect": "exit 0", "kind": "acceptance"}
+
+    def test_only_the_item_that_closes_the_phase_gets_the_phase_checks(self):
+        ops.patch(self.root, "P1", {"validation": [dict(self.FULL)]})
+        ids = [check["id"] for check in self.brief()["acceptance"]["checks"]]
+        self.assertNotIn("V9", ids)  # P1.2 is still open
+        self.start("P1.1")
+        self.finish("P1.1")
+        self.start("P1.2")
+        checks = self.brief("P1.2")["acceptance"]["checks"]
+        self.assertEqual(checks[-1], dict(self.FULL, cadence="phase"))
+        self.assertEqual(brief.verify(self.load(), "P1.2", self.brief("P1.2")), [])
+
 class ReadsTests(BriefCase):
     def test_existing_files_carry_sha256_and_missing_ones_do_not(self):
         ops.patch(self.root, "P1.1", {"reads": [

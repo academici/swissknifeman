@@ -48,17 +48,17 @@ schema_version = 1
 # on_blocked = "stop"
 
 [orch.conductor.limits]
-# Tokens of all roles of a piece of work together; 0 means no limit. Integer >= 0.
+# Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none. Integer >= 0.
 # tokens_max = 0
 
-# Ceiling on the whole run of one role in seconds; 0 has none for a streaming role (see stage_idle_timeout_s) and keeps the launch catalog timeout for a text role. Integer >= 0.
+# Ceiling on the whole run of one role in seconds; 0 has none for a streaming role (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role. Integer >= 0.
 # stage_timeout_s = 0
 
-# A streaming role is stopped when its output has not grown for this many seconds; 0 switches the check off. Integer >= 0.
-# stage_idle_timeout_s = 1800
+# A streaming role is stopped when its output has not grown for this many seconds; 0 (default) never stops it: STAGE_IDLE beacons report the silence and what runs meanwhile. Integer >= 0.
+# stage_idle_timeout_s = 0
 
-# Timeout of one acceptance check in seconds. Integer >= 1.
-# check_timeout_s = 1800
+# Ceiling on one acceptance check in seconds; 0 (default) has none: CHECK_SLOW beacons report a long check. Integer >= 0.
+# check_timeout_s = 0
 
 [orch.conductor.argv]
 # Command line of a role instead of the launch catalog entry, by role id ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands the conductor runs.

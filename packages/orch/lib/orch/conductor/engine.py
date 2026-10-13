@@ -7,8 +7,11 @@ the same path up to the step that did not close. The work source is reached only
 roles only through the launch catalog (or ``[orch.conductor.argv]``) and see the execution-input, never the plan.
 
 The conductor stops only on: a blocked piece of work (``on_blocked = "stop"``), red checks or confirmed findings
-after the correction limits, an exhausted token budget, a route below the minimum of the work, an unavailable
-provider or role, a refusal of the work source, or a dirty working tree before new work. Anything else goes on.
+whose corrections stopped making progress (or reached the ceiling of their limit), a route below the minimum of the
+work, an unavailable provider or role, a refusal of the work source, or a dirty working tree before new work. Nothing
+is stopped for being long or costly: limits of time and tokens print beacons (``info`` lines with ``STAGE_SLOW``,
+``STAGE_IDLE``, ``CHECK_SLOW``, ``BUDGET_OVER``, ``LIMIT_OVER``) that say what runs now, and the owner or an
+observer decides.
 """
 from __future__ import annotations
 
@@ -31,15 +34,18 @@ from aicore.state import blobs, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
 from orch import catalog as catalogs, events, launch, policies, render
-from orch.conductor import checks as checks_mod, contract, observer, options as opts, process, prompts
-from orch.conductor.progress import Progress
+from orch.conductor import checks as checks_mod, contract, heal, observer, options as opts, process, prompts
+from orch.conductor import scope as scopes
+from orch.conductor.progress import Progress, human_duration
 from orch.settings import ORCH_ROOT
 
 CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 5}
 LAUNCH_ROLE = {"context-scout": "scout"}
+RULE_HEADING = re.compile(r"^## ([A-Za-z0-9_.-]+)[ \t]*$", re.M)
 RUN_FILE, STATE_FILE = "run.json", "state.json"
-REPORTS = Path(".swissknifeman") / "orch" / "reports"
+REPORTS = Path(".swissknifeman") / "orch" / "reports"  # observer reports: run output, ignored
+FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
 STATUS_EXIT = {"finished": 0, "stopped": 1}
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -166,10 +172,11 @@ class Conductor:
     # ------------------------------------------------------------------ public verbs
 
     def run(self, *, plan: str, plans_root: Optional[str], items: list, batch: bool, max_items: int,
-            options_file: Optional[Path] = None) -> int:
+            options_file: Optional[Path] = None, adopt: bool = False) -> int:
         run_id = new_run_id()
         run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
                    "max_items": max_items, "options_file": str(options_file) if options_file else None,
+                   "adopt": bool(adopt),
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
                    "project": str(self.project)}
         self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
@@ -219,6 +226,27 @@ class Conductor:
         self._save()
         self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated")
 
+    def settle(self, run_id: str, ref: str, outcome: str, reason: str) -> int:
+        """Set the outcome of a piece of this run by hand, after the owner or an observer finished it outside the
+        conductor (committed it with the work source's own command, or gave it up). Nothing else changes: the work
+        source keeps its own record; a resume then treats the piece as closed."""
+        directory = runs_root(self.project) / run_id
+        run_doc, state = read_json(directory / RUN_FILE), read_json(directory / STATE_FILE)
+        if run_doc is None or state is None:
+            raise Stop("RUN_UNKNOWN", f"no conductor run {run_id} in {directory.parent}")
+        if ref not in state.get("items", {}):
+            raise Stop("ITEM_UNKNOWN", f"{ref} is not a piece of run {run_id}")
+        self._open(run_id, run_doc, state)
+        item = state["items"][ref]
+        before = item.get("outcome")
+        item["outcome"] = outcome
+        item.pop("stop", None)
+        item.pop("partial", None)
+        item.setdefault("settled", []).append({"from": before, "to": outcome, "reason": reason, "at": utc_now()})
+        self._save()
+        self.progress.emit("info", item=ref, reason_code="SETTLED", message=f"outcome {before or '-'} → {outcome} by hand: {reason}")
+        return 0
+
     # ------------------------------------------------------------------ the loop over pieces of work
 
     def _loop(self) -> int:
@@ -266,12 +294,20 @@ class Conductor:
             if outcome in ("done", "done_with_deviations", "blocked"):
                 count += 1
                 continue
+            adopted = []
             if known is None:
-                self._require_clean_tree()
+                if doc.get("adopt") and index == 1:
+                    adopted = self._dirty_paths()  # the work of an earlier attempt, checked against the write set later
+                else:
+                    self._require_clean_tree()
             answer = self._claim(key, asked)
             if answer is None:
                 return
             count += 1
+            if adopted:
+                self.state["items"].setdefault(answer["ref"], {"steps": {}, "retries_used": 0, "orch_run": answer["run_id"]}) \
+                    .setdefault("adopted", adopted)
+                self._save()
             outcome = self._piece(answer)
             if outcome == "blocked" and (self._on_blocked() == "stop"
                                          or self.state["items"][answer["ref"]].get("partial")):
@@ -281,29 +317,20 @@ class Conductor:
     def _on_blocked(self) -> str:
         return self.state.get("on_blocked") or self.conductor.get("on_blocked") or "stop"
 
-    def _require_clean_tree(self) -> None:
-        """New work starts on a clean tree: changes outside the conductor reports would leak into it."""
+    def _dirty_paths(self) -> list:
+        """Changed paths of the tree outside the conductor reports."""
         try:
-            listing = checks_mod.git(self.project, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+            return scopes.own(scopes.dirty(self.project), [REPORTS.as_posix()])
         except RuntimeError as error:
             raise Stop("PROJECT_NOT_GIT", str(error)) from None
-        reports = REPORTS.as_posix() + "/"
-        dirty = []
-        entries = listing.split("\0")
-        index = 0
-        while index < len(entries):
-            entry = entries[index]
-            index += 1
-            if not entry:
-                continue
-            status, path = entry[:2], entry[3:]
-            if status[0] in "RC":
-                index += 1  # the original name of a rename or copy follows
-            if not path.startswith(reports):
-                dirty.append(path)
+
+    def _require_clean_tree(self) -> None:
+        """New work starts on a clean tree: changes outside the conductor reports would leak into it (``run --adopt``
+        takes the changes of an earlier attempt of the first piece instead)."""
+        dirty = self._dirty_paths()
         if dirty:
             raise Stop("WORKTREE_DIRTY", f"{len(dirty)} changed path(s) before new work, such as {dirty[0]}; "
-                                         "commit or set them aside, then resume")
+                                         "commit or set them aside, or take them over with run --adopt, then resume")
 
     def _claim(self, key: str, asked: list) -> Optional[dict]:
         actor = self._claim_actor()
@@ -366,12 +393,15 @@ class Conductor:
         brief = self._step(item, "brief", lambda: self._brief(item))
         item.input_doc = json.loads(Path(brief["input_path"]).read_text(encoding="utf-8"))
         item.artifacts = self.project / brief["artifacts_dir"]
+        if "source_paths" not in item.state:  # what the work source changed by claiming: never the role's work
+            item.state["source_paths"] = sorted(set(self._dirty_paths()) - set(item.state.get("adopted") or []))
+            self._save()
         self._resolve(item)
         item.launch_plan = self._step(item, "prepare", lambda: self._prepare(item))
         self._routes(item)
+        adopted = self._adopted(item)
         scout_text = self._scout(item)
-        limits = item.options["limits"]
-        report = self._execute(item, 1, scout_text, "")
+        report = self._execute(item, 1, scout_text, prompts.ADOPTED.format(paths=", ".join(adopted)) if adopted else "")
         if report["status"] == "blocked":
             return self._finish(item, report, None)
         overlap = self._review_enabled(item) and item.options["checks"]["overlap_review"]
@@ -386,7 +416,7 @@ class Conductor:
         if report["status"] == "blocked":
             return self._finish(item, report, rows)
         if self._review_enabled(item):
-            review_round = 1
+            review_round, earlier = 1, None
             while True:
                 findings = self._review(item, review_round, rows)
                 if not findings["findings"]:
@@ -398,22 +428,29 @@ class Conductor:
                 self._defer_minor(item, findings, minor)
                 if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                     break
+                # progress: fewer findings to correct than the round before, or other ones (a first round has
+                # nothing to compare with, so it never goes past a target on its own)
+                places = sorted(self._place(findings, entry["finding"]) for entry in major)
+                progress = earlier is not None and (len(places) < len(earlier) or places != earlier)
+                earlier = places
+                replayed = review_round in state["corrections_at"]
+                rounds_why = self._allowance(item, "review_rounds", review_round, progress, emit=not replayed)
                 if review_round in state.get("combined_done", []):  # corrected together with the red checks
-                    if review_round >= limits["review_rounds"]:
-                        self._defer_note(item, f"findings of review round {review_round} were corrected together with the "
-                                               "red checks; the correction was not reviewed again")
+                    if rounds_why:
+                        self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
+                                              "red checks; the correction was not reviewed again")
                         break
                     review_round += 1
                     continue
                 triage = dict(triage, confirmed=major)
-                at_limit = review_round >= limits["review_rounds"]
-                final = at_limit and item.options["review"]["final_correction"]  # correct, but audit no more
-                replayed = review_round in state["corrections_at"]
-                if not replayed and ((at_limit and not final) or len(state["corrections_at"]) >= limits["corrections"]):
+                final = bool(rounds_why) and item.options["review"]["final_correction"]  # correct, but audit no more
+                done_before = len([number for number in state["corrections_at"] if number != review_round])
+                fixes_why = None if replayed else self._allowance(item, "corrections", done_before, progress)
+                if not replayed and ((rounds_why and not final) or fixes_why):
                     ids = ", ".join(entry["finding"] for entry in major)
                     return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
                                         f"confirmed review findings {ids} remain after {review_round} review "
-                                        f"round(s) and {len(state['corrections_at'])} correction(s)"), rows)
+                                        f"round(s) and {done_before} correction(s): {rounds_why or fixes_why}"), rows)
                 if not replayed:
                     state["corrections_at"].append(review_round)
                 state["corrections_used"] = len(state["corrections_at"])
@@ -429,36 +466,78 @@ class Conductor:
                     return self._finish(item, report, rows)
                 if final:
                     ids = ", ".join(entry["finding"] for entry in major)
-                    self._defer_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
-                                           "review round the limit allows; the correction was not reviewed again")
+                    self._plan_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
+                                          "review round the limit allows; the correction was not reviewed again")
                     break
                 review_round += 1
         return self._finish(item, report, rows)
 
+    @staticmethod
+    def _place(findings: dict, finding_id: str) -> str:
+        found = next((entry for entry in findings.get("findings", []) if entry.get("id") == finding_id), {})
+        return f"{found.get('location', '-')}|{str(found.get('failure_scenario', ''))[:80]}"
+
+    def _allowance(self, item: Item, name: str, used: int, progress: bool, emit: bool = True) -> Optional[str]:
+        """``None`` when one more round of ``name`` (``review_rounds``, ``corrections``, ``check_fixes``) may run after
+        ``used`` of them, else why not. The limit is a target: past it a round still runs while the last one made
+        progress, up to ``ceiling_factor`` times the target; every such round prints a LIMIT_OVER beacon and leaves a
+        plan note, so a long fight with a piece of work is visible, and a correction that changes nothing ends it."""
+        limits = item.options["limits"]
+        target = limits[name]
+        if used < target:
+            return None
+        ceiling = target * limits["ceiling_factor"]
+        if used >= ceiling:
+            return f"the ceiling of {ceiling} for {name} (target {target} × {limits['ceiling_factor']}) is reached"
+        if not progress:
+            return f"past the target of {target} for {name} the last correction made no progress"
+        if emit:
+            text = (f"{name}: round {used + 1} goes past the target of {target} (ceiling {ceiling}) because the last "
+                    "correction made progress")
+            self.progress.emit("info", item=item.ref, reason_code="LIMIT_OVER", message=text)
+            self._plan_note(item, text)
+        return None
+
+    @staticmethod
+    def _red_signature(rows: list) -> tuple:
+        """The red checks of a round and how many failure lines their tails show (a correction that mends some of
+        the tests of a red check is progress too)."""
+        red = [row for row in rows if not row["green"] and not row.get("skipped")]
+        failures = sum(len(re.findall(r"^(?:FAIL|ERROR|FAILED|not ok)\b", row.get("tail") or "", re.M)) for row in red)
+        return tuple(sorted(row["id"] for row in red)), failures
+
     def _green(self, item: Item, rows: list, report: dict, round_no: int, scout_text: str,
                review_no: Optional[int] = None) -> tuple:
-        """Correct red checks within ``check_fixes``; a red result after the limit blocks the piece of work. With
-        ``review_no`` (``checks.overlap_review``) the checks of a correction run while review ``review_no`` reads it."""
-        state, limit = item.state, item.options["limits"]["check_fixes"]
+        """Correct red checks, within the ``check_fixes`` target or past it while the red checks change; otherwise
+        the piece of work is blocked. With ``review_no`` (``checks.overlap_review``) the checks of a correction run
+        while review ``review_no`` reads it."""
+        state, earlier = item.state, None
         while not all(row["green"] for row in rows):
             red = [row for row in rows if not row["green"] and not row.get("skipped")]
+            signature = self._red_signature(rows)
+            progress = earlier is not None and (signature[0] != earlier[0] or signature[1] < earlier[1])
+            earlier = signature
             replayed = round_no in state["check_fixes_at"]
-            if not replayed and len(state["check_fixes_at"]) >= limit:
+            done_before = len([number for number in state["check_fixes_at"] if number != round_no])
+            why = None if replayed else self._allowance(item, "check_fixes", done_before, progress)
+            if why:
                 names = ", ".join(row["id"] for row in red)
                 return rows, self._blocked(report, "CHECKS_RED", f"acceptance checks {names} stay red after "
-                                                                 f"{state['check_fixes_used']} correction(s)"), round_no
+                                                                 f"{done_before} correction(s): {why}"), round_no
             if not replayed:
                 state["check_fixes_at"].append(round_no)
             state["check_fixes_used"] = len(state["check_fixes_at"])
             round_no += 1
             text, combined = prompts.check_correction(red), state.get("combined")
-            if combined:  # the finished review's confirmed findings are corrected in the same round
+            if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
                 text += "\n\n" + combined["text"]
                 if combined["review"] not in state.setdefault("combined_done", []):
                     state["combined_done"].append(combined["review"])
                 if combined["review"] not in state["corrections_at"]:
                     state["corrections_at"].append(combined["review"])
                 state["corrections_used"] = len(state["corrections_at"])
+                state.pop("combined")
+                self._save()
             report = self._execute(item, round_no, scout_text, text)
             if report["status"] == "blocked":
                 return rows, report, round_no
@@ -478,12 +557,19 @@ class Conductor:
         return corrected, deferred
 
     @staticmethod
-    def _defer_note(item: Item, text: str) -> None:
-        note = {"text": text, "kind": "note", "impact": "the correction is checked by the acceptance checks only",
+    def _notes(item: Item) -> list:
+        """The plan notes the registration of the piece carries (``deferred_minors`` in runs before the rename)."""
+        if "plan_notes" not in item.state and "deferred_minors" in item.state:
+            item.state["plan_notes"] = item.state.pop("deferred_minors")
+        return item.state.setdefault("plan_notes", [])
+
+    @classmethod
+    def _plan_note(cls, item: Item, text: str) -> None:
+        note = {"text": text, "kind": "note", "impact": "the run of this piece went its own way here",
                 "next": "a reviewer of the phase may look at it"}
-        deferred = item.state.setdefault("deferred_minors", [])
-        if note not in deferred:
-            deferred.append(note)
+        notes = cls._notes(item)
+        if note not in notes:
+            notes.append(note)
 
     def _note_rejected(self, item: Item, findings: dict, triage: dict) -> None:
         """A rejected finding at or above ``review.correct_min_severity`` is never lost: the reason travels as a plan
@@ -491,7 +577,7 @@ class Conductor:
         ranks = {name.lower(): rank for rank, name in enumerate(opts.SEVERITIES)}
         floor = ranks[item.options["review"]["correct_min_severity"].lower()]
         by_id = {found.get("id"): found for found in findings["findings"]}
-        deferred = item.state.setdefault("deferred_minors", [])
+        deferred = self._notes(item)
         for entry in triage["rejected"]:
             found = by_id.get(entry["finding"], {})
             if ranks.get(str(found.get("severity", "")).lower(), len(ranks)) > floor:
@@ -503,11 +589,11 @@ class Conductor:
             if note not in deferred:
                 deferred.append(note)
 
-    @staticmethod
-    def _defer_minor(item: Item, findings: dict, minor: list) -> None:
+    @classmethod
+    def _defer_minor(cls, item: Item, findings: dict, minor: list) -> None:
         """Confirmed minor findings are not corrected now: they travel as plan notes for the cleanup of the phase."""
         by_id = {found.get("id"): found for found in findings["findings"]}
-        deferred = item.state.setdefault("deferred_minors", [])
+        deferred = cls._notes(item)
         for entry in minor:
             found = by_id.get(entry["finding"], {})
             note = ({"text": f"deferred {str(found.get('severity', 'Minor')).lower()} finding "
@@ -576,7 +662,7 @@ class Conductor:
         except (OSError, ValueError, KeyError) as error:
             raise Stop("BRIEF_UNAVAILABLE", str(error)) from None
         path = write_json(item.directory / "input.json", doc)
-        artifacts = answer.get("artifacts_dir") or (REPORTS / self.run_id / safe(item.ref)).as_posix()
+        artifacts = answer.get("artifacts_dir") or (FALLBACK_ARTIFACTS / self.run_id / safe(item.ref)).as_posix()
         try:
             base = checks_mod.head(self.project)  # the review compares the candidate with this revision
         except RuntimeError as error:
@@ -640,9 +726,24 @@ class Conductor:
             roles.append("registrar")
         for role in roles:
             item.routes[role] = self._route(item, role)
+        if item.options["limits"].get("repairs", 0) > 0:
+            try:  # optional: without a launch entry or a model for it, results are only healed and repeated
+                item.routes["report-fixer"] = self._route(item, "report-fixer")
+            except Stop:
+                pass
         self._route_minimum(item)
         if persist:
+            self._preflight(item)
             write_json(item.directory / "routes.json", item.routes)
+
+    def _preflight(self, item: Item) -> None:
+        """Every required role can start before any work is done: a missing CLI stops the run now with a plain message,
+        not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
+        optional = {"context-scout", "report-fixer"}
+        missing = [f"{role} ({route['argv'][0]})" for role, route in item.routes.items()
+                   if role not in optional and not process.available(route["argv"])]
+        if missing:
+            raise Stop("PROVIDER_UNAVAILABLE", f"cannot start {', '.join(missing)}: install or log in the CLI, then resume")
 
     def _route(self, item: Item, role: str) -> dict:
         wanted = opts.stage_route(item.options, role)
@@ -678,9 +779,9 @@ class Conductor:
                                          effort=effort, cwd=self.project)
         except launch.LaunchError as error:
             raise Stop(error.code, str(error)) from None
-        # A streaming role is stopped when it falls silent (``stage_idle_timeout_s``), not for being long: the wall-clock
-        # ceiling ``stage_timeout_s`` is off unless asked for. A ``text`` role writes only at its end, so the catalog
-        # timeout stays its ceiling.
+        # A role is never stopped for being long: both ceilings (``stage_timeout_s``, ``stage_idle_timeout_s``) are off
+        # unless asked for, and beacons report a long or silent run. A ``text`` role writes only at its end, so the
+        # catalog timeout stays its ceiling.
         limits, streaming = item.options["limits"], entry["transport"] != "text"
         timeout = limits.get("stage_timeout_s") or (0 if streaming else entry["timeout_s"])
         idle = limits.get("stage_idle_timeout_s", 0) if streaming else 0
@@ -708,7 +809,11 @@ class Conductor:
 
     def _role(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
               extra: Optional[Callable[[dict], list]] = None, cancel=None) -> tuple:
-        """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None) after repeats."""
+        """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None).
+
+        A result outside its contract is first healed by rule (``heal``), then repaired by the report-fixer role from
+        the role's own answer (``limits.repairs``), and only then is the whole role repeated (``limits.retries`` per
+        step): a repeat costs a whole run of the role, a repair seconds."""
         route = item.routes[role]
         (item.directory / "prompts").mkdir(parents=True, exist_ok=True)
         (item.directory / "prompts" / f"{key}.md").write_text(prompt, encoding="utf-8")
@@ -720,26 +825,28 @@ class Conductor:
             raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
             run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
                                    timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
-                                   idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel)
+                                   idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
+                                   on_tick=self._beacons(item, key, role, raw))
             self._tokens(item, run.usage)
             if run.error == "CANCELLED":
                 raise Stop("REVIEW_CANCELLED", f"{role} on {self.label(route)} was cancelled: the checks are red")
             if run.error in ("PROVIDER_UNAVAILABLE", "TRANSPORT_UNSUPPORTED"):
                 raise Stop(run.error, f"{role} on {route['provider']}: {run.detail}")
             problem = f"{run.error}: {run.detail}" if run.error else None
-            doc = None
+            doc, healed, repaired = None, [], None
             if problem is None and kind:
-                doc, error = prompts.json_block(run.text, kind)
-                if kind == "stage-report" and not error:
-                    doc = heal_report(doc)
-                issues = [error] if error else contract.problems(doc, kind)
-                if not issues and extra:
-                    issues = extra(doc)
+                doc, healed, issues = self._closed(run.text, kind, extra)
+                if issues:
+                    doc, healed, issues, repaired = self._repair(item, key, kind, extra, run.text, issues, doc, healed)
                 if issues:
                     problem = f"ROLE_OUTPUT_INVALID: {'; '.join(issues[:3])}"
             meta = {"session": run.session, "model": run.model, "stream": self._relative(raw), "attempts": attempt,
-                    "exit": run.exit, "usage": run.usage}
+                    "exit": run.exit, "usage": run.usage,
+                    **({"healed": healed} if healed else {}), **({"repaired_by": repaired} if repaired else {})}
             if problem is None:
+                if healed:
+                    self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="RESULT_HEALED",
+                                       message="; ".join(healed))
                 return (doc if kind else run.text), meta
             item.state["retries_used"] = item.state.get("retries_used", 0) + 1  # the total of the piece, for the report
             by_stage = item.state.setdefault("retries_by_stage", {})
@@ -753,6 +860,73 @@ class Conductor:
             prompt = (f"{first_prompt}\n\n# Your previous answer was rejected\n\n{problem}\n\n"
                       "Do the work again as needed and end with one corrected block that fits the contract exactly.\n")
 
+    @staticmethod
+    def _closed(text: str, kind: str, extra) -> tuple:
+        """``(document, healed, issues)`` of the result block in ``text``."""
+        doc, error = prompts.json_block(text, kind)
+        if error:
+            return None, [], [error]
+        doc, healed = heal.heal(kind, doc)
+        if kind == "stage-report" and healed:
+            doc = dict(doc, open_issues=list(doc.get("open_issues") or []) + [
+                {"text": ("the conductor mended the form of this report: " + "; ".join(healed))[:900], "kind": "note",
+                 "impact": "none", "next": "none"}])
+        issues = contract.problems(doc, kind)
+        if not issues and extra:
+            issues = extra(doc)
+        return doc, healed, issues
+
+    def _repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: list, doc, healed) -> tuple:
+        """The report-fixer rewrites the result block from the role's own answer; ``(doc, healed, issues, route)``."""
+        if item.options["limits"]["repairs"] <= 0 or "report-fixer" not in item.routes:
+            return doc, healed, issues, None
+        route = item.routes["report-fixer"]
+        if not process.available(route["argv"]):
+            return doc, healed, issues, None
+        for number in range(1, item.options["limits"]["repairs"] + 1):
+            problem = "; ".join(issues[:5])
+            prompt = prompts.report_fixer(kind=kind, problem=problem, answer=answer, item=item.ref, step=key)
+            raw = item.directory / "streams" / f"{key}-fix{number}.jsonl"
+            (item.directory / "prompts" / f"{key}-fix{number}.md").write_text(prompt, encoding="utf-8")
+            run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
+                                   cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
+                                   env=self._role_env(item, "report-fixer", route))
+            self._tokens(item, run.usage)
+            if run.error:
+                self.progress.emit("info", item=item.ref, stage=key, role="report-fixer", route=self.label(route),
+                                   reason_code="REPAIR_FAILED", message=f"{run.error}: {run.detail}")
+                return doc, healed, issues, None
+            fixed, fixed_healed, fixed_issues = self._closed(run.text, kind, extra)
+            self.progress.emit("info", item=item.ref, stage=key, role="report-fixer", route=self.label(route),
+                               reason_code="RESULT_REPAIRED" if not fixed_issues else "REPAIR_FAILED",
+                               message=f"was: {problem}" + (f"; still: {'; '.join(fixed_issues[:2])}" if fixed_issues else ""))
+            if not fixed_issues:
+                return fixed, healed + fixed_healed + [f"repaired by {self.label(route)}: {problem}"[:300]], [], self.label(route)
+            issues = fixed_issues
+        return doc, healed, issues, None
+
+    def _beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
+        """The tick of a running role: a STAGE_SLOW beacon every ``stage_warn_s`` and a STAGE_IDLE one every
+        ``stage_idle_warn_s`` of silence, each saying what the role runs now. Nothing is stopped."""
+        limits = item.options["limits"]
+        warn, idle_warn = limits.get("stage_warn_s", 0), limits.get("stage_idle_warn_s", 0)
+        marks = {"slow": warn, "idle": idle_warn}
+
+        def tick(elapsed: float, idle: float, pid: int) -> None:
+            if warn and elapsed >= marks["slow"]:
+                marks["slow"] += warn
+                self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW",
+                                   message=f"running {human_duration(elapsed)}; {process.activity(pid, raw)}")
+            if idle_warn:
+                if idle < idle_warn:
+                    marks["idle"] = idle_warn
+                elif idle >= marks["idle"]:
+                    marks["idle"] += idle_warn
+                    self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_IDLE",
+                                       message=f"no output for {human_duration(idle)} (running {human_duration(elapsed)}); "
+                                               f"{process.activity(pid, raw)}")
+        return tick
+
     # The environment that keeps a provider's project instructions (the repository CLAUDE.md, the project memory) out of
     # a role process. Claude Code reads both by itself; grok was probed and does not read the repository CLAUDE.md; codex
     # would need its own CODEX_HOME (not used by a run so far).
@@ -765,7 +939,29 @@ class Conductor:
     def _role_argv(self, item: Item, role: str, route: dict) -> list:
         isolated = role in item.options["instructions"]["isolate_roles"]
         extra = self.ISOLATION_ARGS.get(route.get("provider")) if isolated else None
+        if extra and not self._knows(route["argv"], extra):
+            return list(route["argv"])
         return list(route["argv"]) + (extra or [])
+
+    _KNOWN: dict = {}
+
+    def _knows(self, argv: list, flags: list) -> bool:
+        """Whether the provider CLI of ``argv`` lists ``flags`` in its ``--help`` (an older CLI without ``--safe-mode``
+        still runs, isolated by the environment only, and the run says so once)."""
+        command = next((arg for arg in argv if os.path.basename(arg) in ("claude", "codex", "grok")), None)
+        if command is None:  # a test stand-in or a wrapper the conductor does not know: pass the flags as asked
+            return True
+        key = (command, tuple(flags))
+        if key not in self._KNOWN:
+            try:
+                text = subprocess.run([command, "--help"], capture_output=True, text=True, timeout=20).stdout
+            except (OSError, subprocess.SubprocessError):
+                text = ""
+            self._KNOWN[key] = all(flag in text for flag in flags)
+            if not self._KNOWN[key] and self.progress is not None:
+                self.progress.emit("info", reason_code="ISOLATION_PARTIAL",
+                                   message=f"{command} does not list {' '.join(flags)}; roles are isolated by the environment only")
+        return self._KNOWN[key]
 
     def _role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
         """The environment of a role process. A role named in ``instructions.isolate_roles`` starts without the project
@@ -786,12 +982,15 @@ class Conductor:
                 bucket[key] = bucket.get(key, 0) + int(usage.get(key, 0))
 
     def _budget(self, item: Item) -> None:
+        """``tokens_max`` is a beacon: past it a BUDGET_OVER line is printed once per piece, nothing is stopped."""
         limit = item.options["limits"].get("tokens_max") or 0
         tokens = item.state.get("tokens", {})
         used = int(tokens.get("input", 0)) + int(tokens.get("output", 0))  # cache reads are not spend
-        if limit and used > limit:
+        if limit and used > limit and not item.state.get("budget_over"):
+            item.state["budget_over"] = used
             self._save()
-            raise Stop("BUDGET_EXHAUSTED", f"{item.ref} used {used} tokens of {limit}")
+            self.progress.emit("info", item=item.ref, reason_code="BUDGET_OVER",
+                               message=f"{item.ref} used {used} fresh tokens, past tokens_max {limit}; the run goes on")
 
     def _relative(self, path: Path) -> str:
         try:
@@ -827,7 +1026,8 @@ class Conductor:
             if cache.is_file():
                 return {"text": cache.read_text(encoding="utf-8"), "cache": self._relative(cache), "hit": True}
             prompt = prompts.scout(item.input_doc, item=item.ref, step="scout", roles_dir=self.roles_dir,
-                                   skills=item.options["skills"].get("context-scout", []))
+                                   skills=item.options["skills"].get("context-scout", []),
+                                   skill_texts=self._skill_texts(item, "context-scout"))
             text, meta = self._role(item, "scout", "context-scout", prompt, None)
             cache.parent.mkdir(parents=True, exist_ok=True)
             cache.write_text(text, encoding="utf-8")
@@ -842,17 +1042,129 @@ class Conductor:
         key = f"executor.{number}"
 
         def run() -> dict:
+            if number > 1:
+                self._refresh_input(item)
             prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                       rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir,
                                       targeted_tests=not item.options["checks"]["executor_runs_checks"],
-                                      skills=item.options["skills"].get("executor", []))
+                                      skills=item.options["skills"].get("executor", []),
+                                      repo_rules=self._repo_rules(item, "executor"),
+                                      skill_texts=self._skill_texts(item, "executor"))
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
-            return {"report": report, **meta}
+            return {"report": report, "changed": self._changed_now(item), **meta}
 
         found = self._step(item, key, run, role="executor", route=self.label(route),
                            verdict=lambda result: result["report"]["status"])
-        return found["report"]
+        report = found["report"]
+        outside = self._outside(item)
+        if outside and report["status"] != "blocked" and item.options["scope"]["outside"] == "block":
+            report = self._blocked(report, "OUTSIDE_WRITE_SET", "the executor changed paths the write set does not own: "
+                                   + ", ".join(outside[:20]) + "; widen the write set in the plan or set them aside, then retry")
+        return report
+
+    # ------------------------------------------------------------------ what the roles really changed
+
+    def _changed_now(self, item: Item) -> list:
+        """The paths the roles have changed so far: the dirty tree without what the work source wrote when it claimed,
+        the artifact folder, the plan folder of the input and the conductor reports."""
+        excluded = [REPORTS.as_posix(), self._relative(item.artifacts) if item.artifacts else "",
+                    str((item.input_doc.get("provenance") or {}).get("plan_dir") or "")]
+        source = set(item.state.get("source_paths") or [])
+        return [path for path in scopes.own(self._dirty_paths(), excluded) if path not in source]
+
+    def _changed(self, item: Item) -> list:
+        """Every path any executor round of the piece changed (git, not the reports)."""
+        steps = item.state.get("steps", {})
+        found = set(item.state.get("adopted") or [])
+        for key, step in steps.items():
+            if key.startswith("executor.") and isinstance(step.get("result"), dict):
+                found.update(step["result"].get("changed") or [])
+        return sorted(found)
+
+    def _outside(self, item: Item) -> list:
+        return scopes.outside(self._changed(item), (item.input_doc.get("scope") or {}).get("write_set"))
+
+    def _adopted(self, item: Item) -> list:
+        """``run --adopt``: the changed paths taken over must lie in the write set of the piece."""
+        adopted = item.state.get("adopted") or []
+        stray = scopes.outside(adopted, (item.input_doc.get("scope") or {}).get("write_set"))
+        if stray:
+            raise Stop("WORKTREE_DIRTY", f"run --adopt takes only changes inside the write set of {item.ref}; outside it: "
+                                         + ", ".join(stray[:10]))
+        return adopted
+
+    def _refresh_input(self, item: Item) -> None:
+        """A plan amended during the piece (a wider write set, a fixed check) reaches the next executor round: the brief
+        is asked again and, when its digest changed, replaces the input of every later step."""
+        code, answer, _ = self._orch("source", "brief", "--run", item.orch_run)
+        if code != 0 or not isinstance(answer, dict) or not answer.get("input_ref"):
+            return
+        try:
+            doc = json.loads(blobs.read_bytes(answer["input_ref"], project=self.project))
+        except (OSError, ValueError, KeyError):
+            return
+        if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
+            write_json(item.directory / "input.json", doc)
+            item.input_doc = doc
+            self.progress.emit("info", item=item.ref, reason_code="INPUT_REBUILT",
+                               message=f"the plan changed during the piece: input {answer.get('input_id', '-')} is used from now on")
+
+    # ------------------------------------------------------------------ what an isolated role still needs to know
+
+    def _repo_rules(self, item: Item, role: str) -> str:
+        """The instruction sections of ``instructions.module_rules`` from the CLAUDE.md (else AGENTS.md) of the
+        repository root and of every folder on the way to a write-set path. An isolated role does not read those
+        files, and the rest of them are the rules of a developer's session, not of this role."""
+        wanted = item.options["instructions"].get("module_rules") or []
+        if not wanted:
+            return ""
+        folders = {Path(".")}
+        for pattern in (item.input_doc.get("scope") or {}).get("write_set") or []:
+            fixed = []
+            for part in str(pattern).split("/")[:-1]:
+                if any(mark in part for mark in "*?["):
+                    break
+                fixed.append(part)
+            for depth in range(1, len(fixed) + 1):
+                folders.add(Path(*fixed[:depth]))
+        lines, size = [], 0
+        for folder in sorted(folders, key=lambda path: (len(path.parts), str(path))):
+            carrier = next((self.project / folder / name for name in ("CLAUDE.md", "AGENTS.md")
+                            if (self.project / folder / name).is_file()), None)
+            if carrier is None:
+                continue
+            text = carrier.read_text(encoding="utf-8", errors="replace")
+            heads = list(RULE_HEADING.finditer(text))
+            for index, head in enumerate(heads):
+                name = head.group(1)
+                if not any(name == rule or name.endswith("." + rule) for rule in wanted):
+                    continue
+                body = text[head.end():heads[index + 1].start() if index + 1 < len(heads) else len(text)]
+                body = " ".join(body.split())
+                if body and size + len(body) < 4000:
+                    lines.append(f"- `{name}` ({self._relative(carrier)}): {body}")
+                    size += len(body)
+        return "\n".join(lines)
+
+    def _skill_texts(self, item: Item, role: str) -> dict:
+        """The text of the skills a role is given, when the role runs isolated (its provider then loads no skill by
+        name): the SKILL.md of the project's skill folders, without its front matter."""
+        names = item.options["skills"].get(role, [])
+        if not names or role not in item.options["instructions"]["isolate_roles"]:
+            return {}
+        texts = {}
+        for name in names:
+            for folder in (".claude/skills", ".agents/skills"):
+                path = self.project / folder / name / "SKILL.md"
+                if path.is_file():
+                    body = path.read_text(encoding="utf-8", errors="replace")
+                    if body.startswith("---"):
+                        end = body.find("\n---", 3)
+                        body = body[end + 4:] if end != -1 else body
+                    texts[name] = body.strip()[:12000]
+                    break
+        return texts
 
     @staticmethod
     def _red_before(item: Item, number: int) -> list:
@@ -875,7 +1187,11 @@ class Conductor:
                 timeout_s=item.options["limits"]["check_timeout_s"],
                 evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
                 executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
-                on_result=on_result, first=self._red_before(item, number), kinds=tuple(item.options["checks"]["kinds"]))
+                on_result=on_result, first=self._red_before(item, number), kinds=tuple(item.options["checks"]["kinds"]),
+                cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
+                on_slow=lambda check_id, elapsed, pid: self.progress.emit(
+                    "info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_SLOW",
+                    message=f"{check_id} running {human_duration(elapsed)}; {process.activity(pid, Path(os.devnull))}"))
         except (RuntimeError, ValueError, OSError) as error:
             raise Stop("CHECKS_FAILED", str(error)) from None
 
@@ -907,6 +1223,8 @@ class Conductor:
                 self._review(item, review_no, [], pending=True, cancel=cancel)
             except Stop as stop:
                 if stop.code != "REVIEW_CANCELLED":
+                    if computed.exception() is None:  # the checks ran to the end: keep them for the resume
+                        self._run_checks(item, checks_no, report, computed=computed)
                     raise
             finally:
                 computed.exception()  # wait for the checks before the pool closes, whatever the review did
@@ -970,7 +1288,9 @@ class Conductor:
                                       pre_final=number > 1 and item.options["review"]["pre_final"],
                                       min_severity=item.options["review"]["correct_min_severity"],
                                       roles_dir=self.roles_dir, skills=item.options["skills"].get("reviewer", []),
-                                      checks_pending=pending)
+                                      checks_pending=pending, outside=self._outside(item),
+                                      repo_rules=self._repo_rules(item, "reviewer"),
+                                      skill_texts=self._skill_texts(item, "reviewer"))
             findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems,
                                         cancel=cancel)
             return {"findings": findings, **meta}
@@ -989,7 +1309,8 @@ class Conductor:
         def run() -> dict:
             base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
             prompt = prompts.triager(item.input_doc, item=item.ref, step=key, base=base, findings=findings,
-                                     roles_dir=self.roles_dir, skills=item.options["skills"].get(role, []))
+                                     roles_dir=self.roles_dir, skills=item.options["skills"].get(role, []),
+                                     repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role))
             triage, meta = self._role(item, key, role, prompt, "triage-result",
                                       extra=lambda doc: contract.triage_problems(findings, doc))
             return {"triage": triage, **meta}
@@ -1047,8 +1368,6 @@ class Conductor:
             try:
                 text, meta = self._role(item, "close", "registrar", prompt, None)
             except Stop as stop:
-                if stop.code == "BUDGET_EXHAUSTED":
-                    raise
                 return {"by": "conductor", "reason_code": stop.code, "message": stop.message}
             return {"by": "closer", "answer": text[-1500:], **meta}
 
@@ -1058,8 +1377,20 @@ class Conductor:
         return found
 
     def _finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
-        if item.state.get("deferred_minors"):
-            report = dict(report, open_issues=list(report.get("open_issues", [])) + item.state["deferred_minors"])
+        changed = self._changed(item)
+        if changed or any("changed" in (step.get("result") or {}) for key, step in item.state.get("steps", {}).items()
+                          if key.startswith("executor.") and isinstance(step.get("result"), dict)):
+            report = dict(report, changed_paths=changed)  # git, not the report of the last round
+        outside = self._outside(item)
+        if outside and report["status"] != "blocked":
+            issue = {"text": "changed outside the write set: " + ", ".join(outside)[:800], "kind": "deviation",
+                     "impact": "the commit takes these paths with the piece; the reviewer saw them",
+                     "next": "widen the write set of later items like this one"}
+            report = dict(report, status="done_with_deviations",
+                          open_issues=list(report.get("open_issues", [])) + [issue])
+        notes = self._notes(item)
+        if notes:
+            report = dict(report, open_issues=list(report.get("open_issues", [])) + notes)
         status = report["status"]
         write_json(item.artifacts / "stage-report.json", report)
         body = {key: value for key, value in report.items() if key != "status"}
@@ -1117,23 +1448,6 @@ class Conductor:
 
             self._step(item, "commit", commit, verdict=lambda result: f"{result['outcome']} {result.get('sha') or ''}".strip())
         return status
-
-
-def heal_report(report: dict) -> dict:
-    """A ``checks_run`` entry whose id is not a check id of the input (``V1``…) is moved to a ``note`` issue instead of
-    failing the whole report: the conductor runs every acceptance check itself and never reads such an entry."""
-    rows = report.get("checks_run")
-    if not isinstance(rows, list):
-        return report
-    kept = [row for row in rows if not isinstance(row, dict) or re.fullmatch(r"V[0-9]+", str(row.get("id", "")))]
-    foreign = [row for row in rows if row not in kept]
-    if not foreign:
-        return report
-    cmds = "; ".join(f"{row.get('id')}: {row.get('cmd') or row.get('procedure') or '-'} → "
-                     f"{row.get('exit', row.get('verdict', '-'))}" for row in foreign)
-    note = {"text": f"commands the executor ran outside the acceptance checks: {cmds}"[:900], "kind": "note",
-            "impact": "none", "next": "none"}
-    return dict(report, checks_run=kept, open_issues=list(report.get("open_issues") or []) + [note])
 
 
 def report_problems(report: dict) -> list:

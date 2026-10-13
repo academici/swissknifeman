@@ -258,7 +258,7 @@ class OptionsContractTests(unittest.TestCase):
         self.assertEqual(manifest["extends"], {"orchestration.options": "schemas/run-options.schema.json"})
         supplied = json.loads((_BRIDGE / manifest["extends"]["orchestration.options"]).read_text(encoding="utf-8"))
         orch = json.loads((ORCH / "schemas/conductor/v1/run-options.schema.json").read_text(encoding="utf-8"))
-        self.assertEqual(supplied, orch)
+        self.assertEqual(supplied, orch, "the mirror is stale: run bridges/planner-orch/scripts/sync-schema.py")
 
     def test_the_planner_declares_a_slot_and_keeps_no_copy(self):
         defs = json.loads((PLAN_PY.parents[1] / "schemas/plan/v1/defs.schema.json").read_text(encoding="utf-8"))["$defs"]

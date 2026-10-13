@@ -147,6 +147,14 @@
         "cwd": {
           "description": "Working directory for the command.",
           "$ref": "#/$defs/path"
+        },
+        "cadence": {
+          "description": "When the check runs: item (default) in every round of its piece of work, phase once in the closing piece of the phase (the full pass of repository-wide checks).",
+          "type": "string",
+          "enum": [
+            "item",
+            "phase"
+          ]
         }
       },
       "required": [

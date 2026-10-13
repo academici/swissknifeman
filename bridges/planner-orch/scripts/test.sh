@@ -9,4 +9,9 @@ TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_AICORE_EVENTS__DELIVERY=off
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME
-python3 -m unittest discover -s tests -t tests -p "test_*.py" "$@"
+# Parallel worker processes when aicore is importable (its locator: AICORE_ROOT); SKM_TEST_JOBS=1 runs them one by one.
+if [ -n "${AICORE_ROOT:-}" ] && PYTHONPATH="$AICORE_ROOT/lib" python3 -c "import aicore.util.par_unittest" 2>/dev/null; then
+  PYTHONPATH="$AICORE_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" python3 -m aicore.util.par_unittest discover -s tests -t tests -p "test_*.py" "$@"
+else
+  python3 -m unittest discover -s tests -t tests -p "test_*.py" "$@"
+fi

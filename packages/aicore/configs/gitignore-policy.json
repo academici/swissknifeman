@@ -191,12 +191,12 @@
     },
     {
       "id": "orch-conductor-reports",
-      "policy": "commit",
+      "policy": "ignore",
       "paths": [
-        ".swissknifeman/orch/reports/"
+        ".swissknifeman/orch/"
       ],
       "owner": "orch conductor",
-      "why": "Observer reports of conductor runs (observer.json, observer.md): the reviewed record of a run; the raw streams stay in .swissknifeman/state/."
+      "why": "Observer reports of conductor runs (observer.json, observer.md) are written when a run ends, after the commit of its last piece: run output like the state folder. A piece of work keeps its committed record in its own artifact folder (stage-report, review-verdict, evidence)."
     },
     {
       "id": "plan-role-streams",

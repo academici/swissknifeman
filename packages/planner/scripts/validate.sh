@@ -103,14 +103,10 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-# Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
-# SKM_TEST_JOBS=1 gives the old sequential run.
-UT=(python3 -m unittest)
-if PYTHONPATH="$AICORE_LIB" python3 -c "import aicore.util.par_unittest" 2>/dev/null; then UT=(python3 -m aicore.util.par_unittest); fi
 echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
-# lib/ — package planner; the aicore lib serves the projection renderer and its tests.
-hermetic PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
-  "${UT[@]}" discover -s tests -p "test_*.py" || err "unittest"
+# lib/ — package planner; the aicore lib serves the projection renderer and its tests. Both suites (tests/ and the
+# plan engine tests/engine) run side by side in scripts/test.sh.
+bash "$REPO_ROOT/scripts/test.sh" || err "unittest"
 
 if $fleet; then
   if [[ -n "$HUB_ROOT" && -d "$HUB_ROOT/plans" ]]; then
@@ -119,8 +115,6 @@ if $fleet; then
     echo "  hub layout not found — gate skipped (--fleet)"
   fi
 fi
-hermetic PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
-  "${UT[@]}" discover -s tests/engine -p "test_*.py" || err "engine unittest"
 
 # A target is a plan directory (holds plan.json) or a plans/ root of such directories.
 plan_dirs=()

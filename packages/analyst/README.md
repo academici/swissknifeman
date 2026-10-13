@@ -106,4 +106,10 @@ bash scripts/test.sh          # unittest (without network and daemons)
 bash scripts/validate.sh      # py_compile + bash -n + JSON + required files + tests
 ```
 
+**Scope of the tests.** analyst is an auxiliary tool: it only reads the logs and outputs of other modules and is not part of
+the core. Its tests run **only while analyst itself is developed**; `ecosystem-units standalone --baseline` and
+`scripts/test-integration.sh` skip it unless `--with-tools` is given, CI tests it in a separate job that does not block the
+core, and `scripts/affected-tests.py` adds it only when its own files changed (`standalone.tools` in
+`configs/ecosystem-units.json`).
+
 stdlib-only; `Env(BaseEnv)` explicit; atomic JSON; messages in Russian. Convention - in `CLAUDE.md`.

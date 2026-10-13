@@ -5,9 +5,6 @@
 set -euo pipefail
 # Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
 # SKM_TEST_JOBS=1 gives the old sequential run.
-# maind's tests share a process-wide fake harness installed by earlier modules (an order dependence), so they run
-# sequentially unless SKM_TEST_JOBS says otherwise.
-export SKM_TEST_JOBS="${SKM_TEST_JOBS:-1}"
 _unittest() {
   if python3 -c "import aicore.util.par_unittest" 2>/dev/null; then python3 -m aicore.util.par_unittest "$@"; else python3 -m unittest "$@"; fi
 }

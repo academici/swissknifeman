@@ -17,6 +17,12 @@ Escape hatch: commit trailer `Docs-Not-Needed: <reason>` on any commit in the ra
 local), or env var DOCS_NOT_NEEDED="<reason>" (local/`--staged`). An empty value is NOT an
 escape (still fails). The escape covers the WHOLE change-set — no partial per-class escape.
 
+A package removed as a whole (every one of its surface entries is a deletion and the package folder is gone at the
+head) needs no docs edit: its docs went with it.
+
+`--base REF --worktree` measures the working tree (tracked changes and untracked files) against the merge-base with
+REF, so a piece of work can be checked before it is committed.
+
 Range: always three-dot (`<base>...<head>`, merge-base diff) — this generalizes the spec's
 "three dots on PR, two dots on push": for a push range like `HEAD~1..HEAD` the merge-base of
 two directly-linear commits IS the base itself, so three-dot and two-dot diffs are byte-
@@ -127,8 +133,9 @@ def parse_name_status(text: str) -> list[tuple[str, str]]:
     return entries
 
 
-def classify(entries: list[tuple[str, str]]):
-    """→ (needed: {class: [(path, status)]}, credited: {class})."""
+def classify(entries: list[tuple[str, str]], exists=None):
+    """→ (needed: {class: [(path, status)]}, credited: {class}). ``exists(path)`` says whether a path is in the head;
+    a package whose surface entries are all deletions and whose folder is gone is credited (removed as a whole)."""
     needed: dict[str, list[tuple[str, str]]] = {}
     credited: set[str] = set()
     for status, path in entries:
@@ -138,6 +145,11 @@ def classify(entries: list[tuple[str, str]]):
             if triggers:
                 needed.setdefault(klass, []).append((path, status))
         credited |= credit(path)
+    if exists is not None:
+        for klass, rows in needed.items():
+            if klass.startswith("pkg:") and all(status == "D" for _, status in rows) \
+                    and not exists(f"packages/{klass[len('pkg:'):]}"):
+                credited.add(klass)
     return needed, credited
 
 
@@ -169,8 +181,8 @@ def report(needed: dict[str, list[tuple[str, str]]], credited: set[str]) -> list
     return lines
 
 
-def run(entries: list[tuple[str, str]], range_args: list[str] | None) -> int:
-    needed, credited = classify(entries)
+def run(entries: list[tuple[str, str]], range_args: list[str] | None, exists=None) -> int:
+    needed, credited = classify(entries, exists)
     missing = report(needed, credited)
     if not missing:
         print("docs-impact: OK")
@@ -191,25 +203,40 @@ def main() -> int:
     group = ap.add_mutually_exclusive_group(required=True)
     group.add_argument("--base", help="range base point (with --head)")
     group.add_argument("--staged", action="store_true", help="index (git diff --cached)")
-    ap.add_argument("--head", help="high point of range (required with --base)")
+    ap.add_argument("--head", help="high point of range (required with --base, unless --worktree)")
+    ap.add_argument("--worktree", action="store_true",
+                    help="with --base: the working tree (and untracked files) against the merge-base, before a commit")
     args = ap.parse_args()
 
-    if args.base and not args.head:
-        ap.error("--base requires --head")
+    if args.base and not args.head and not args.worktree:
+        ap.error("--base requires --head or --worktree")
+
+    def in_tree(ref: str | None):
+        def exists(path: str) -> bool:
+            if ref is None:
+                return (ROOT / path).exists()
+            return subprocess.run(["git", "cat-file", "-e", f"{ref}:{path}"], cwd=ROOT, capture_output=True).returncode == 0
+        return exists
 
     try:
         if args.staged:
             diff_text = git("diff", "--name-status", "-M", "--cached")
-            range_args = None
+            range_args, exists = None, in_tree(None)
+        elif args.worktree:
+            base = git("merge-base", args.base, "HEAD").strip()
+            diff_text = git("diff", "--name-status", "-M", base)
+            untracked = git("ls-files", "--others", "--exclude-standard")
+            diff_text += "".join(f"A\t{line}\n" for line in untracked.splitlines() if line)
+            range_args, exists = [f"{args.base}..HEAD"], in_tree(None)
         else:
             diff_text = git("diff", "--name-status", "-M", f"{args.base}...{args.head}")
-            range_args = [f"{args.base}..{args.head}"]
+            range_args, exists = [f"{args.base}..{args.head}"], in_tree(args.head)
     except GitError as exc:
         print(f"docs-impact: error git — {exc}", file=sys.stderr)
         return 2
 
     entries = parse_name_status(diff_text)
-    return run(entries, range_args)
+    return run(entries, range_args, exists)
 
 
 if __name__ == "__main__":

@@ -389,13 +389,27 @@ def _check(reg: Registry, schema: dict, base: str, value: Any, pointer: str, out
         _check_object(reg, schema, base, value, pointer, out, add)
     branches = schema.get("oneOf")
     if branches is not None:
-        matched = 0
+        matched, trials = 0, []
         for branch in branches:
             trial: list[ValidationIssue] = []
             _check(reg, branch, base, value, pointer, trial)
             matched += not trial
+            trials.append((branch, trial))
         if matched != 1:
-            add("one_of", f"matches {matched} of {len(branches)} oneOf branches, expected exactly 1")
+            add("one_of", f"matches {matched} of {len(branches)} oneOf branches, expected exactly 1"
+                + (_closest(trials) if matched == 0 else ""))
+
+
+def _closest(trials: list) -> str:
+    """The issues of the branch that came nearest, so a reader learns which field and value to change rather than only
+    that no branch matched (a branch that names the value's own keys wins a tie)."""
+    def score(trial) -> tuple:
+        branch, issues = trial
+        return (len(issues), -len(branch.get("required", ()) or ()))
+    branch, issues = min(trials, key=score)
+    name = branch.get("description") or branch.get("title") or "the nearest branch"
+    shown = "; ".join(issue.message for issue in issues[:3])
+    return f"; {str(name).rstrip('.')}: {shown}" if shown else ""
 
 
 def _check_array(reg, schema, base, value, pointer, out, add) -> None:

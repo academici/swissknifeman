@@ -10,13 +10,24 @@ its partners); a change of the foundation (``aicore``) affects every unit. A *to
 ``configs/ecosystem-units.json``, e.g. ``maind``) is tested only when its own files changed or ``--with-tools`` is given: it
 never joins the tests of the core because a core module changed.
 
-Tiers: ``fast`` runs ``dev.test`` of the affected units (and the cheap hub checks when a hub path changed); ``full`` adds
+Tiers: ``fast`` runs ``dev.test`` of the affected units (and the hub checks of the hub paths that changed); ``full`` adds
 ``dev.validate``; ``all`` is every unit that is not a tool — the full pass for the end of a phase. Without ``--run`` the
 commands are only printed (one per line, ``<folder>: <command>``), ``--json`` prints them as a document.
+
+Hub paths bring their own checks: always ``ecosystem-units check`` and ``public-hygiene``; ``golden.py check`` when a
+generated surface can move (skills, configs, bootstrap, command catalogs, unit manifests); ``scripts/test-<name>.py`` when
+``scripts/<name>.*`` or the test itself changed.
+
+A green result is remembered (``--run``, tiers ``fast`` and ``full``): the key is the command and the content of the
+unit, of every unit it requires and of the foundation (tracked bytes plus the changes of the tree). The modules import
+nothing of each other, so the same content gives the same verdict; an unchanged unit is not run again. The cache lives in
+the git directory (``affected-tests/``) and is never used by ``--tier all``, the full pass that must run everything;
+``--no-cache`` turns it off.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -26,6 +37,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HUB_CHECKS = [["python3", "scripts/ecosystem-units.py", "check"], ["python3", "scripts/public-hygiene.py"]]
+GOLDEN = ["python3", "scripts/golden.py", "check"]
+# a change below these prefixes (or of a unit manifest, a SKILL.md, a command catalog) can move a generated surface
+GOLDEN_PREFIXES = ("bootstrap/", ".claude/", ".agents/", ".cursor/", "configs/", "golden/", "tests/golden/")
+GOLDEN_NAMES = ("SKILL.md", "unit.json", "command-routing.json", "launch-catalog.json")
 
 
 def units() -> dict:
@@ -57,6 +72,24 @@ def changed_paths(args) -> list:
     return paths
 
 
+def hub_checks(paths: list) -> list:
+    """The checks of the hub paths among ``paths`` (none when no path is outside a unit)."""
+    found = [list(argv) for argv in HUB_CHECKS]
+    if any(path.startswith(GOLDEN_PREFIXES) or Path(path).name in GOLDEN_NAMES or "/dev-skills/" in path
+           or "/skills/" in path for path in paths):
+        found.append(list(GOLDEN))
+    for path in paths:
+        name = Path(path)
+        if name.parent.as_posix() != "scripts":
+            continue
+        test = name if name.name.startswith("test-") else name.with_name(f"test-{name.stem}.py")
+        if test.suffix == ".py" and (ROOT / test).is_file():
+            argv = ["python3", test.as_posix()]
+            if argv not in found:
+                found.append(argv)
+    return found
+
+
 def select(all_units: dict, foundation: str, tools: set, paths: list, tier: str, with_tools: bool) -> tuple:
     """``(folders to test, hub touched)``."""
     ids = {folder: doc.get("id", folder.split("/")[-1]) for folder, doc in all_units.items()}
@@ -85,15 +118,67 @@ def select(all_units: dict, foundation: str, tools: set, paths: list, tier: str,
     return sorted(kept), hub
 
 
-def commands(all_units: dict, folders: list, hub: bool, tier: str) -> list:
+def commands(all_units: dict, folders: list, hub: bool, tier: str, paths: list = ()) -> list:
     plan = []
     for folder in folders:
         dev = all_units[folder].get("dev") or {}
         names = ("test",) if tier == "fast" else ("test", "validate")
         plan += [(folder, dev[name]) for name in names if dev.get(name)]
-    if hub or tier == "all":
-        plan += [("hub", argv) for argv in HUB_CHECKS]
+    if tier == "all":
+        plan += [("hub", argv) for argv in HUB_CHECKS + [GOLDEN]]
+    elif hub:
+        owned = [path for path in paths if not any(path == f or path.startswith(f + "/") for f in all_units)]
+        plan += [("hub", argv) for argv in hub_checks(owned)]
     return plan
+
+
+def requirements(all_units: dict, folder: str, foundation: str) -> list:
+    """``folder`` and every unit folder it requires, transitively, plus the foundation."""
+    by_id = {doc.get("id", f.split("/")[-1]): f for f, doc in all_units.items()}
+    seen, todo = set(), [folder]
+    while todo:
+        current = todo.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        for entry in all_units.get(current, {}).get("requires") or ():
+            unit = entry.get("unit") if isinstance(entry, dict) else entry
+            if by_id.get(unit):
+                todo.append(by_id[unit])
+    if by_id.get(foundation):
+        seen.add(by_id[foundation])
+    return sorted(seen)
+
+
+def content_key(folders: list, command: list) -> str:
+    """The digest of what a command reads: the tracked bytes of ``folders`` (their git index) and the changes of the
+    tree below them (diff against the index and untracked files), with the command and the Python version."""
+    digest = hashlib.sha256(json.dumps([command, sys.version.split()[0], folders]).encode("utf-8"))
+    for args in (["ls-files", "-s", "-z", "--", *folders], ["diff", "--binary", "--", *folders]):
+        digest.update(subprocess.run(["git", *args], cwd=ROOT, capture_output=True, check=True).stdout)
+    untracked = subprocess.run(["git", "ls-files", "--others", "--exclude-standard", "-z", "--", *folders], cwd=ROOT,
+                               capture_output=True, check=True).stdout.split(b"\0")
+    for name in sorted(item for item in untracked if item):
+        digest.update(b"\0" + name)
+        try:
+            digest.update((ROOT / os.fsdecode(name)).read_bytes())
+        except OSError:
+            digest.update(b"?")
+    return digest.hexdigest()
+
+
+def cache_file() -> Path:
+    common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=ROOT,
+                            capture_output=True, text=True, check=True).stdout.strip()
+    return Path(common) / "affected-tests" / "green.json"
+
+
+def read_cache(path: Path) -> dict:
+    try:
+        found = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return found if isinstance(found, dict) else {}
 
 
 def bridge_env() -> dict:
@@ -115,13 +200,16 @@ def main(argv=None) -> int:
     parser.add_argument("--run", action="store_true")
     parser.add_argument("-j", "--jobs", type=int, default=3)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--no-cache", dest="cache", action="store_false",
+                        help="run every command even when its content was green before")
     args = parser.parse_args(argv)
     config = json.loads((ROOT / "configs" / "ecosystem-units.json").read_text(encoding="utf-8"))
     tools = set((config.get("standalone") or {}).get("tools") or ())
     all_units = units()
-    folders, hub = select(all_units, (config.get("foundation") or {}).get("id", "aicore"), tools,
-                          [] if args.tier == "all" else changed_paths(args), args.tier, args.with_tools)
-    plan = commands(all_units, folders, hub, args.tier)
+    foundation = (config.get("foundation") or {}).get("id", "aicore")
+    paths = [] if args.tier == "all" else changed_paths(args)
+    folders, hub = select(all_units, foundation, tools, paths, args.tier, args.with_tools)
+    plan = commands(all_units, folders, hub, args.tier, paths)
     if args.json:
         print(json.dumps({"tier": args.tier, "units": folders, "hub": hub,
                           "commands": [{"folder": f, "argv": a} for f, a in plan]}, indent=2))
@@ -131,21 +219,43 @@ def main(argv=None) -> int:
     if not args.run:
         return 0
 
+    use_cache = args.cache and args.tier != "all"
+    store = cache_file() if use_cache else None
+    green = read_cache(store) if store else {}
+    # the commands share the machine: each test runner gets its part of the cores, not all of them
+    share = str(max(1, (os.cpu_count() or 2) // max(1, min(args.jobs, len(plan) or 1))))
+
+    def key_of(folder, command):
+        reads = requirements(all_units, folder, foundation) if folder != "hub" else ["."]
+        return content_key(reads, command) if use_cache and folder != "hub" else None
+
     def run(item):
         folder, command = item
+        key = key_of(folder, command)
+        if key and key in green:
+            return folder, command, None, key
         cwd = ROOT if folder == "hub" else ROOT / folder
-        done = subprocess.run(command, cwd=cwd, capture_output=True, text=True,
-                              env=bridge_env() if folder.startswith("bridges/") else dict(os.environ))
-        return folder, command, done
+        env = bridge_env() if folder.startswith("bridges/") else dict(os.environ)
+        env.setdefault("SKM_TEST_JOBS", share)
+        done = subprocess.run(command, cwd=cwd, capture_output=True, text=True, env=env)
+        return folder, command, done, key
 
     failed = 0
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
-        for folder, command, done in pool.map(run, plan):
+        for folder, command, done, key in pool.map(run, plan):
+            if done is None:
+                print(f"[cached] {folder}: {' '.join(command)}", flush=True)
+                continue
             state = "ok" if done.returncode == 0 else "FAIL"
             print(f"[{state}] {folder}: {' '.join(command)}", flush=True)
             if done.returncode:
                 failed += 1
                 sys.stderr.write((done.stdout + done.stderr)[-3000:])
+            elif key:
+                green[key] = {"folder": folder, "command": command}
+    if store and green:
+        store.parent.mkdir(parents=True, exist_ok=True)
+        store.write_text(json.dumps(green, sort_keys=True), encoding="utf-8")
     return 1 if failed else 0
 
 

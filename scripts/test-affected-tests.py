@@ -44,6 +44,35 @@ class AffectedTestsTests(unittest.TestCase):
         self.assertTrue(result["hub"])
         self.assertEqual({item["folder"] for item in result["commands"]}, {"hub"})
 
+    def test_hub_paths_bring_their_own_checks(self):
+        argv = [" ".join(item["argv"]) for item in plan("bootstrap/skills/x/SKILL.md", "scripts/docs-impact.py")["commands"]]
+        self.assertIn("python3 scripts/golden.py check", argv)
+        self.assertIn("python3 scripts/test-docs-impact.py", argv)
+        self.assertNotIn("python3 scripts/golden.py check",
+                         [" ".join(item["argv"]) for item in plan("docs/develop.md")["commands"]])
+
+    def test_analyst_and_maind_are_tools(self):
+        units = plan("packages/aicore/lib/aicore/util/io.py")["units"]
+        self.assertNotIn("packages/analyst", units)
+        self.assertEqual(plan("packages/analyst/lib/analyst/x.py")["units"], ["packages/analyst"])
+
+    def test_planner_has_a_quick_test_command(self):
+        commands = plan("packages/planner/lib/planner/plan/x.py")["commands"]
+        self.assertIn(("packages/planner", ["bash", "scripts/test.sh"]),
+                      [(item["folder"], item["argv"]) for item in commands])
+
+    def test_the_cache_key_follows_the_content_of_the_unit_and_its_requirements(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("affected_tests", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        units = module.units()
+        self.assertEqual(module.requirements(units, "bridges/planner-orch", "aicore"),
+                         ["bridges/planner-orch", "packages/aicore", "packages/orch", "packages/planner"])
+        key = module.content_key(["packages/brain"], ["bash", "scripts/test.sh"])
+        self.assertEqual(key, module.content_key(["packages/brain"], ["bash", "scripts/test.sh"]))
+        self.assertNotEqual(key, module.content_key(["packages/brain"], ["bash", "scripts/validate.sh"]))
+
     def test_the_full_tier_adds_validate_and_all_is_every_core_unit(self):
         folders = [(item["folder"], item["argv"][-1]) for item in plan("packages/skiller/x.py", tier="full")["commands"]]
         self.assertIn(("packages/skiller", "scripts/validate.sh"), folders)

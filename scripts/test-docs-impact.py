@@ -100,6 +100,24 @@ class DocsImpactTests(unittest.TestCase):
         ]
         self.assertEqual(missing_count(entries), 1)
 
+    def test_a_package_removed_as_a_whole_needs_no_docs(self):
+        entries = [("D", "packages/gone/lib/gone/x.py"), ("D", "packages/gone/bin/gone")]
+        needed, credited = docs_impact.classify(entries, exists=lambda path: False)
+        self.assertIn("pkg:gone", credited)
+        needed, credited = docs_impact.classify(entries, exists=lambda path: True)  # the folder is still there
+        self.assertNotIn("pkg:gone", credited)
+        mixed = entries + [("A", "packages/gone/lib/gone/y.py")]
+        needed, credited = docs_impact.classify(mixed, exists=lambda path: False)
+        self.assertNotIn("pkg:gone", credited)
+
+    def test_the_worktree_mode_reads_uncommitted_and_untracked_changes(self):
+        import subprocess
+        import sys
+        done = subprocess.run([sys.executable, str(ROOT / "scripts/docs-impact.py"), "--base", "HEAD", "--worktree"],
+                              cwd=ROOT, capture_output=True, text=True)
+        self.assertIn(done.returncode, (0, 1), done.stderr)
+        self.assertTrue(done.stdout.startswith("docs-impact:"), done.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

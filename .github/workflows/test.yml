@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master]
 
+# A test that fails in parallel and passes alone is a race (in the tests or the code): CI keeps it failed.
+env:
+  SKM_TEST_CLASH: fail
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -89,7 +93,7 @@ jobs:
         # imports/variables). Now both — so that the test code maintains the same level.
         run: bash scripts/lint.sh
 
-  # maind is an auxiliary tool outside the core verification: it is tested on its own and never blocks the core.
+  # maind and analyst are auxiliary tools outside the core verification: tested on their own, they never block the core.
   tools:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -107,6 +111,9 @@ jobs:
         env:
           SKM_REQUIRE_MCP_SDK: '1'
         run: bash packages/maind/scripts/test.sh -v
+
+      - name: Test analyst
+        run: bash packages/analyst/scripts/test.sh -v
 
       - name: Integration of the tools with their partners
         run: bash scripts/test-integration.sh --with-tools

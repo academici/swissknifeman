@@ -106,6 +106,17 @@ class TestValidation(SchemaCase):
         self.assertEqual(self.codes(body, None), ["one_of"])
         self.assertEqual(self.codes({"oneOf": [{"type": "integer"}, {"type": "number"}]}, 1), ["one_of"])
 
+    def test_one_of_says_what_the_nearest_branch_misses(self):
+        body = {"oneOf": [
+            {"description": "Command check.", "type": "object", "required": ["id", "exit"],
+             "properties": {"id": {"type": "string", "pattern": "^V[0-9]+$"}, "exit": {"type": "integer"}}},
+            {"description": "Manual check.", "type": "object", "required": ["id", "verdict"],
+             "properties": {"id": {"type": "string"}, "verdict": {"enum": ["pass", "fail"]}}}]}
+        issues = schema.validate({"id": "tests", "exit": 0}, "thing", self.registry(body))
+        self.assertEqual([issue.code for issue in issues], ["one_of"])
+        self.assertIn("Command check:", issues[0].message)
+        self.assertIn('"tests" does not match pattern ^V[0-9]+$', issues[0].message)
+
     def test_ref_inside_registry_and_unresolved(self):
         body = {"type": "object", "properties": {"h": {"$ref": "#/$defs/hex"}, "z": {"$ref": "#/$defs/none"}},
                 "$defs": {"hex": {"type": "string", "pattern": "^[0-9a-f]+$"}}}

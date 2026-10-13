@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import threading
+import types
 import unittest
 from dataclasses import FrozenInstanceError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -20,7 +21,8 @@ from aicore.util.io import (atomic_write_json, atomic_write_text, backup_file, l
                             read_ndjson, read_ndjson_iter, safe_load_json)
 from aicore.util.block import content_hash, managed_block, upsert_block
 from aicore.util.repo import find_monorepo_root, find_repo_root, sibling_bin
-from aicore.util.paths import is_within, is_within_lexical
+from aicore.util import paths
+from aicore.util.paths import is_within, is_within_lexical, resolve_path
 from aicore.util.term import now_iso, parse_iso
 from aicore.util.cli import parse_args, parse_flags, run_cmd
 from aicore.util.proc import pid_alive
@@ -291,6 +293,78 @@ class TestPaths(unittest.TestCase):
                 with self.subTest(check=check.__name__):
                     self.assertFalse(check(loop / "child", root))
                     self.assertFalse(check(root / "child", loop))
+
+
+def _lenient_resolve(self, strict=False):
+    """Path.resolve of Python 3.13+: a symlink loop does not raise, the unresolved rest is kept."""
+    return Path(os.path.realpath(os.fspath(self)))
+
+
+def _without_allow_missing():
+    """aicore.util.paths seeing an os.path as of a Python without ALLOW_MISSING (3.9 .. 3.12.10)."""
+    old_path = types.SimpleNamespace(**{k: v for k, v in vars(os.path).items() if k != "ALLOW_MISSING"})
+    old_os = types.SimpleNamespace(**{**vars(os), "path": old_path})
+    return mock.patch("aicore.util.paths.os", old_os)
+
+
+class TestResolvePath(unittest.TestCase):
+    """N1: containment fails closed on every Python, also where a symlink loop does not raise (3.13+)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(tmp.name).resolve()
+        self.root = base / "dest"
+        self.root.mkdir()
+        self.outside = base / "outside"
+        self.outside.mkdir()
+        (self.root / "inner").mkdir()
+        (self.root / "loop").symlink_to("loop")
+        (self.root / "dangling").symlink_to(self.outside / "missing")
+        (self.root / "to_inner").symlink_to(self.root / "inner", target_is_directory=True)
+        (self.root / "to_outside").symlink_to(self.outside, target_is_directory=True)
+
+    def answers(self):
+        root = self.root
+        return {
+            "loop": is_within(root / "loop" / "child", root),
+            "loop_root": is_within(root / "child", root / "loop"),
+            "dangling": is_within(root / "dangling" / "child", root),
+            "to_inner": is_within(root / "to_inner" / "new", root),
+            "to_outside": is_within(root / "to_outside" / "x", root),
+            "missing_tail": is_within(root / "a" / "b" / "c", root),
+            "dotdot_tail": is_within(root / "a" / ".." / ".." / "outside", root),
+            "dotdot_after_link": is_within(root / "to_outside" / ".." / "escape", root),
+            "root_itself": is_within(root, root),
+            "lexical_loop": is_within_lexical(root / "loop" / "child", root),
+            "lexical_link_leaf": is_within_lexical(root / "to_outside", root),
+        }
+
+    EXPECTED = {
+        "loop": False, "loop_root": False, "dangling": False, "to_inner": True, "to_outside": False,
+        "missing_tail": True, "dotdot_tail": False, "dotdot_after_link": False, "root_itself": True,
+        "lexical_loop": False, "lexical_link_leaf": True,
+    }
+
+    def test_answers_with_allow_missing(self):
+        self.assertEqual(self.answers(), self.EXPECTED)
+
+    def test_answers_without_allow_missing(self):
+        with _without_allow_missing():
+            self.assertFalse(hasattr(paths.os.path, "ALLOW_MISSING"))
+            self.assertEqual(self.answers(), self.EXPECTED)
+
+    def test_answers_when_resolve_does_not_raise_on_a_loop(self):
+        with mock.patch.object(Path, "resolve", _lenient_resolve):
+            self.assertEqual(self.answers(), self.EXPECTED)
+
+    def test_resolve_path_raises_on_a_loop_and_on_dotdot_in_a_missing_tail(self):
+        for patch in (mock.patch.object(os, "name", os.name), _without_allow_missing()):
+            with patch, self.subTest(patch=patch):
+                with self.assertRaises(OSError):
+                    resolve_path(self.root / "loop" / "child")
+                self.assertEqual(resolve_path(self.root / "to_inner" / "x"), self.root / "inner" / "x")
+                self.assertEqual(resolve_path(self.root / "gone" / "x"), self.root / "gone" / "x")
 
 
 class TestRepoRoot(unittest.TestCase):

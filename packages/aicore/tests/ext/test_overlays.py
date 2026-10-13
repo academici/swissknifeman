@@ -1,6 +1,9 @@
 """aicore.ext.overlays: slots of modules, files by layer, the marked block, limits, warnings and the CLI."""
 import json
+import os
 import unittest
+from pathlib import Path
+from unittest import mock
 
 from aicore.ext import overlays
 from aicore.ext.errors import CODES, ExtError
@@ -162,6 +165,18 @@ class TestWarnings(OverlayCase):
         self.assertEqual([(item.path.name, item.text) for item in found.items], [("ok.md", "ok\n")])
         self.assertEqual([item["code"] for item in found.warnings], ["OVERLAY_INVALID"] * 3)
         self.assertNotIn("SENTINEL", repr(found))
+
+    def test_a_project_symlink_loop_is_refused_also_when_resolve_does_not_raise(self):
+        loop = self.project / "docs" / "loop.md"
+        loop.parent.mkdir(parents=True, exist_ok=True)
+        loop.symlink_to("loop.md")
+        self.project_file(f'[aicore.overlays]\n"{SLOT}" = ["../docs/loop.md"]\n')
+        lenient = lambda self, strict=False: Path(os.path.realpath(os.fspath(self)))  # noqa: E731 (Python 3.13+)
+        for patch in (mock.patch.object(Path, "resolve", lenient), mock.patch.object(os, "name", os.name)):
+            with patch:
+                found = self.resolve()
+            self.assertEqual(found.items, ())
+            self.assertEqual([item["code"] for item in found.warnings], ["OVERLAY_INVALID"])
 
     def test_the_machine_may_name_any_file(self):
         outside = self.write(self.tmp / "anywhere.md", "ok\n")

@@ -30,6 +30,7 @@ from ..config import ConfigError
 from ..config.units import foundation_root
 from ..util import schema as _schema
 from ..util.digest import digest_json
+from ..util.paths import is_within, resolve_path
 from . import settings as _settings
 from . import units as _units
 from .environment import clean_environment, effective_profile, ignored_requests
@@ -185,10 +186,7 @@ def _host_contracts() -> Dict[str, List[str]]:
 
 
 def _inside(root: Path, path: Path) -> bool:
-    try:
-        return os.path.commonpath([str(root), str(path)]) == str(root)
-    except ValueError:
-        return False
+    return is_within(path, root)
 
 
 def _resolve_entrypoint(argv: Sequence[str], directory: Path) -> Tuple[str, ...]:
@@ -200,10 +198,10 @@ def _resolve_entrypoint(argv: Sequence[str], directory: Path) -> Tuple[str, ...]
     script = argv[index]
     if os.path.isabs(script):
         raise ExtError("PLUGIN_MANIFEST_INVALID", "the entrypoint path must be relative to the manifest folder")
-    root = directory.resolve()
     try:
-        resolved = (root / script).resolve()
-    except (OSError, RuntimeError):  # a symlink loop raises RuntimeError
+        root = resolve_path(directory)
+        resolved = resolve_path(root / script)
+    except (OSError, ValueError, RuntimeError):  # a symlink loop, an unresolvable component
         raise ExtError("PLUGIN_MANIFEST_INVALID", "the entrypoint path cannot be resolved") from None
     if not _inside(root, resolved) or resolved == root:
         raise ExtError("PLUGIN_MANIFEST_INVALID", "the entrypoint must stay inside the folder of the manifest")

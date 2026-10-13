@@ -124,6 +124,18 @@ class SafeCopyCase(Base):
         self.assertTrue(loop.is_symlink())
         self.assertEqual((self.src / "SKILL.md").read_bytes(), SKILL)
 
+    def test_skips_a_looping_symlink_inside_the_skill_and_copies_the_rest(self):
+        (self.src / "loop").symlink_to("loop")
+        (self.src / "sub").mkdir()
+        write(self.src / "sub" / "keep.txt")
+        dst = self.dest_root / "demo"
+        copied, stderr = quiet(m.safe_copy_skill, self.src, dst, self.dest_root)
+        self.assertTrue(copied)
+        self.assertIn("symlink loop", stderr)
+        self.assertFalse((dst / "loop").is_symlink() or (dst / "loop").exists())
+        self.assertEqual((dst / "SKILL.md").read_bytes(), SKILL)
+        self.assertTrue((dst / "sub" / "keep.txt").is_file())
+
     def test_replaces_an_existing_directory_and_a_file(self):
         dst = self.dest_root / "demo"
         write(dst / "old.txt")

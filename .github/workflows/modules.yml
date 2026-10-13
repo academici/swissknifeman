@@ -26,7 +26,7 @@ jobs:
       - id: list
         run: |
           echo "matrix=$(python3 scripts/ci-matrix.py list --json)" >> "$GITHUB_OUTPUT"
-          echo "test-matrix=$(python3 scripts/ci-matrix.py list --json --step test --python 3.9,3.13)" >> "$GITHUB_OUTPUT"
+          echo "test-matrix=$(python3 scripts/ci-matrix.py list --json --step test --python 3.9,3.13,3.14)" >> "$GITHUB_OUTPUT"
 
   # Every step except `test` on one runtime. maind and analyst are tools: they never block the core.
   unit:

@@ -122,6 +122,8 @@
 
 ### Fixed
 
+- **aicore, hub:** `is_within` and `is_within_lexical` fail closed on every Python: the new `aicore.util.paths.resolve_path` resolves through `os.path.realpath(strict=os.path.ALLOW_MISSING)` (or, without it, the existing prefix with a strict `resolve` and no `..` in the missing tail), so a symlink loop raises instead of passing on Python 3.13+. `ext/units`, `ext/overlays`, `ext/plugins` use it; `safe_copy_skill` skips an entry with a symlink loop with a warning. The CI matrix tests Python 3.9, 3.13 and 3.14.
+
 - **planner:** `plan.py check` reports `human_view` (a read naming plan Markdown) as a warning, not an error, for a plan whose status is `archived`; the archived plan predates the rule, and the fleet gate of `validate.sh --fleet` was red on it.
 - **orch:** `unknown_outcome` стадии без права записи выбирает `retry` даже при конфликтующем
   `on_error` (в том числе в пакете `full`); лимиты повторов сохраняются, пишущая стадия требует `reconcile`.

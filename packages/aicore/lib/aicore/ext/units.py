@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
 from ..config import units as _config_units
+from ..util.paths import is_within
 from .errors import warn_once
 
 
@@ -82,10 +83,7 @@ def extension_points(units: Mapping[str, UnitDoc]) -> Dict[str, Dict[str, Any]]:
 
 
 def _inside(root: Path, path: Path) -> bool:
-    try:
-        return os.path.commonpath([str(root.resolve()), str(path.resolve())]) == str(root.resolve())
-    except (ValueError, RuntimeError, OSError):  # a symlink loop raises RuntimeError
-        return False
+    return is_within(path, root)  # fails closed, also on a symlink loop
 
 
 def module_subscriptions(units: Mapping[str, UnitDoc]) -> Dict[str, Dict[str, Any]]:

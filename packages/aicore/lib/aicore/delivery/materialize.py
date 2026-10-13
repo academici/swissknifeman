@@ -6,14 +6,16 @@ record per managed skill (source, digest, install path), an optional ``.gitignor
 copies. :func:`sync_skillset` applies an already computed plan (add, update, remove, keep, conflicts) to
 a project. Choosing which skills a project wants, and planning, stay with the caller. stdlib only.
 """
+import errno
 import hashlib
 import json
+import os
 import shutil
 from pathlib import Path
 
 from ..content.skill import SKILL_IGNORE
 from ..util.io import atomic_write_json, atomic_write_text, safe_load_json
-from ..util.paths import is_within, is_within_lexical
+from ..util.paths import is_within, is_within_lexical, resolve_path
 from ..util.term import die, now_iso, warn
 
 MANIFEST = ".swissknifeman-manifest.json"
@@ -80,6 +82,21 @@ def strip_skill_managed_marker(data):
     return data
 
 
+def _copy_ignore(directory, names):
+    """copytree ignore: SKILL_IGNORE plus entries whose symlink loops (skipped with a warning, the copy goes on)."""
+    skipped = set(shutil.ignore_patterns(*SKILL_IGNORE)(directory, names))
+    for name in names:
+        if name in skipped:
+            continue
+        try:
+            resolve_path(os.path.join(directory, name))
+        except OSError as exc:
+            if exc.errno == errno.ELOOP:
+                warn(f"skip: symlink loop in a skill: {os.path.join(directory, name)}")
+                skipped.add(name)
+    return skipped
+
+
 def safe_copy_skill(src, dst, dest_root):
     """Safely copy skill directory src→dst inside dest_root. SINGLE copy path
     for vendor.do_vendor and skillset.sync_skillset (used to be duplicated, diverging into
@@ -98,8 +115,7 @@ def safe_copy_skill(src, dst, dest_root):
     if dst.is_symlink() or dst.exists():
         warn(f"pass '{dst.name}': path recreated between deletion and copy (race)")
         return False
-    shutil.copytree(src, dst, dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns(*SKILL_IGNORE))
+    shutil.copytree(src, dst, dirs_exist_ok=True, ignore=_copy_ignore)
     return True
 
 

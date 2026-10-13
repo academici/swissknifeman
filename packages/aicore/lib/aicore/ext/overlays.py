@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from ..util.digest import sha256_tagged
+from ..util.paths import is_within
 from . import settings as _settings
 from . import units as _units
 from .errors import ExtError
@@ -63,11 +64,7 @@ def _line(text: str) -> str:
 
 
 def _inside(root: Path, path: Path) -> bool:
-    try:
-        base = root.resolve()
-        return os.path.commonpath([str(base), str(path.resolve())]) == str(base)
-    except (ValueError, OSError, RuntimeError):
-        return False
+    return is_within(path, root)  # fails closed, also on a symlink loop
 
 
 def resolve_overlays(slot: str, *, project: Optional[PathLike] = None, env: Optional[Mapping[str, str]] = None,

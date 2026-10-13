@@ -11,6 +11,7 @@ import time
 import unittest
 import uuid
 from pathlib import Path
+from unittest import mock
 
 from aicore.ext import delivery, events, plugins, settings
 from aicore.ext.environment import clean_environment
@@ -222,6 +223,17 @@ class TestManifest(PluginCase):
             plugins.load_manifest(path)
         self.assertEqual(caught.exception.code, "PLUGIN_MANIFEST_INVALID")
         self.assertIn("inside", caught.exception.message)
+
+    def test_entrypoint_symlink_loop_is_refused_also_when_resolve_does_not_raise(self):
+        path = self.stage("echo", name="looped")
+        script = Path(path).parent / "plugin.py"
+        script.unlink()
+        script.symlink_to("plugin.py")
+        lenient = lambda self, strict=False: Path(os.path.realpath(os.fspath(self)))  # noqa: E731 (Python 3.13+)
+        for patch in (mock.patch.object(Path, "resolve", lenient), mock.patch.object(os, "name", os.name)):
+            with patch, self.assertRaises(ExtError) as caught:
+                plugins.load_manifest(path)
+            self.assertEqual(caught.exception.code, "PLUGIN_MANIFEST_INVALID")
 
     def test_protocol_range(self):
         wide = plugins.load_manifest(self.stage("echo", name="wide", patch={"protocol": {"min": "0", "max": "5"}}))

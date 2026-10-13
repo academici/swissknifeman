@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.9",
   "title": "Документация хаба: сайт в docs/ корня, страницы umbrella, doctor, профили и примеры, conformance, выпуск, CI; ecosystem и contracts; ADR 0072–0078; CHANGELOG",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "vitepress-скрипты переезжают из packages/skiller/package.json в docs/package.json, docs.yml — working-directory docs, path_allow снят; новые страницы reference/umbrella, reference/doctor, install-profiles с примерами, reference/conformance, reference/release-bundle, develop (CI-матрица); ecosystem.md и contracts.md — корень хаба и новые контракты; ADR 0072–0078 и индекс; README и getting-started — установка профилями; skill package-architecture — команды umbrella.",
   "why": "D24, E45, E16, D76 (сайт хаба); knowledge/hub-p12#docs. Риски: (1) сборка сайта ломается после переезда — npm run docs:build в docs/; (2) skill bootstrap меняется только через канон и генератор, golden skiller-registry.",
   "scope": {
@@ -157,6 +157,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/a661454387ae04a986f87c88377a0ba79209bc913c49e102ad59dfcf37bc50e6",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
     "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
@@ -212,6 +218,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:25:08Z"
+  "result": {
+    "started_at": "2026-10-13T15:44:32Z",
+    "finished_at": "2026-10-13T15:55:05Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-758b8d60dc77a4552aade1d5-P12.9",
+    "notes": "Site moved to docs/: docs/package.json plus package-lock.json (copied from skiller's lock with the package name changed), scripts docs:sync/build/dev/preview run in docs/ (vitepress build .), the link-nm script is dropped. skiller keeps only docs:standalone:* and its devDependencies. docs.yml uses working-directory docs and docs/package-lock.json; its paths trigger now watch docs/package*.json. The path_allow entry for packages/skiller/package.json is removed. New pages: reference/umbrella, doctor, conformance, release-bundle, install-profiles, a CI-matrix section in develop.md, and docs/examples/{install-profile-custom.json,extension.json}. ecosystem.md has a hub-root table; contracts.md has rows for plugin-catalog, compat-manifest, umbrella-config, install-profiles and the umbrella output documents, plus the unit/v1 additions. ADR 0072-0078 and the README index are written; sidebar entries for the new pages and ADRs are in the vitepress config. README and getting-started install by profile. The package-architecture canon gained an umbrella section; skiller registry in a sandbox regenerated the .claude and .agents projections and publication-lock.json, and skiller-registry golden was recaptured with a reason. CHANGELOG [Unreleased] has an entry. Also run: docs:build (ok), test of V2 expression (ok), ecosystem-units check, public-hygiene, golden check, test-docs-impact (all ok).\nChanged: .agents/skills/package-architecture/SKILL.md, .claude/skills/package-architecture/SKILL.md, .github/workflows/docs.yml, CHANGELOG.md, README.md, bootstrap/publication-lock.json, bootstrap/skills/package-architecture/SKILL.md, configs/ecosystem-units.json, docs/.vitepress/config.mts, docs/architecture/contracts.md, docs/architecture/decisions/0072-umbrella-reads-modules-from-unit-json.md, docs/architecture/decisions/0073-doctor-aggregator.md, docs/architecture/decisions/0074-install-profiles.md, docs/architecture/decisions/0075-marketplace-from-unit-json.md, docs/architecture/decisions/0076-conformance-kit.md, docs/architecture/decisions/0077-release-bundle.md, docs/architecture/decisions/0078-installed-form-smoke-and-ci-matrix.md, docs/architecture/decisions/README.md, docs/architecture/ecosystem.md, docs/core/index.md, docs/develop.md, docs/examples/extension.json, docs/examples/install-profile-custom.json, docs/getting-started.md, docs/install-profiles.md, docs/package-lock.json, docs/package.json, docs/reference/conformance.md, docs/reference/doctor.md, docs/reference/release-bundle.md, docs/reference/umbrella.md, packages/skiller/package.json, tests/golden/cases.json, tests/golden/generation.json",
+    "deviations": [
+      "The site build had two dead links that this work exposed. docs/core/index.md linked to packages/aicore/README, which is outside the site; I changed it to plain text. docs/orch/configuration.md is a synced copy of packages/orch/docs/configuration.md, which is outside the write set and links to the module's config.example.toml; I added `ignoreDeadLinks: [/config\\.example\\.toml$/]` to docs/.vitepress/config.mts instead.",
+      "Examples: install has no flag for a custom profiles file, because PROFILES is fixed to configs/install-profiles.json. docs/examples/install-profile-custom.json is therefore a shape example to merge into that file in a checkout, and `--units` and `--option` are given as the per-run alternative. The example is not validated by a command."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T15:55:05Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T15:55:05Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T15:55:05Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T15:55:05Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.9/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-13T15:55:05Z"
 }

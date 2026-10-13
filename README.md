@@ -90,10 +90,13 @@ General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, 
 ## Installation
 
 ```bash
-./install.sh                  # CLI + router + Codex core/planner + Grok planner plugin
+./install.sh                  # every module: profile full (CLI + router + Codex core/planner + Grok planner plugin)
+./bin/swissknifeman install --profile minimal --dry-run   # look first; profiles: minimal, standard (default), full
+swissknifeman doctor          # read-only checks of every module
 ```
 
-`install.sh` delegates batch post-configuration to their own installers,
+Profiles are data in `configs/install-profiles.json`; see [install profiles](docs/install-profiles.md). `install.sh` is
+a wrapper over `swissknifeman install --profile full` and delegates batch post-configuration to their own installers,
 puts a symlink `swissknifeman` → root router, connects the Codex marketplace
 with `core`/`planner`, and installs the Grok plugins `packages/planner` and
 `prefix-hold` (`grok plugin install … --trust`). planner commands are `/planner:*`.

@@ -1,7 +1,7 @@
 # core — removed
 
 **What is this.** The root `core/` package used to hold the shared stdlib-only primitives of the monorepo. They moved
-into the foundation module [`packages/aicore`](../../packages/aicore/README.md), and the folder `core/` is gone: there is
+into the foundation module `packages/aicore` (see its `README.md`), and the folder `core/` is gone: there is
 no import shim and no `AICORE_ROOT` fallback for the name `core`
 ([ADR 0071](../architecture/decisions/0071-core-and-artifex-removal-and-strict-boundaries.md)).
 

@@ -97,3 +97,10 @@ by a new record.
 | [0069](0069-module-doctor-contract.md) | Module doctors print check-result/v1 and keep probe and repair apart | Accepted |
 | [0070](0070-maind-mcp-protocol-negotiation.md) | The maind MCP server negotiates the protocol version | Accepted |
 | [0071](0071-core-and-artifex-removal-and-strict-boundaries.md) | core and artifex are removed and the module boundary check is strict | Accepted |
+| [0072](0072-umbrella-reads-modules-from-unit-json.md) | The umbrella CLI reads modules from `unit.json`; aliases are data | Accepted |
+| [0073](0073-doctor-aggregator.md) | `swissknifeman doctor` aggregates the doctor probes of modules, read-only | Accepted |
+| [0074](0074-install-profiles.md) | `swissknifeman install` with profiles; `install.sh` is a wrapper | Accepted |
+| [0075](0075-marketplace-from-unit-json.md) | The marketplace and the Codex index are assembled from `unit.json` | Accepted |
+| [0076](0076-conformance-kit.md) | Conformance kit for plugins and engines | Accepted |
+| [0077](0077-release-bundle.md) | Release bundle: compat manifest, schema package, attestation and checksums | Accepted |
+| [0078](0078-installed-form-smoke-and-ci-matrix.md) | Smoke of the installed form and a CI matrix generated from `unit.json` | Accepted |

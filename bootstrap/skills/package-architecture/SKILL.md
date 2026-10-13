@@ -125,6 +125,14 @@ scheme and resolves nodes from this file.
 `scripts/connect-claude.sh` and `sync.sh` are one-release deprecation wrappers. Brain-sync was
 removed: brain is an ordinary consuming project.
 
+## Umbrella CLI `swissknifeman`
+
+The root CLI finds modules by `unit.json` and holds no module logic: `swissknifeman units` lists them, `install
+[--profile minimal|standard|full] [--dry-run]` installs by profile, `doctor [--unit ID] [--json]` aggregates the read-only
+`provides.doctor` probes, `conformance plugin <extension.json>|engine` checks a plugin or an engine, and
+`release bundle --root R --tag T --out DIR` writes the release files. A module with `provides.cli` is a command group of its
+own id; the former groups and skiller verbs are aliases in `configs/umbrella.json`. Details: `docs/reference/umbrella.md`.
+
 ## Generated artifacts — never hand-edited
 
 | Artifact | Generator |

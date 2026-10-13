@@ -364,6 +364,35 @@ and the planner and orch test suites enforce the rule.
 Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion
 artifacts made of wood - a separate decision of the owner (not auto-editing the gate).
 
+## CI matrix of modules
+
+`scripts/ci-matrix.py` is the one source of the CI steps of every module and bridge; the workflow
+`.github/workflows/modules.yml` and a developer's shell run the same steps
+([ADR 0078](architecture/decisions/0078-installed-form-smoke-and-ci-matrix.md)). Units are read from
+`packages/*/unit.json` and `bridges/*/unit.json`; nothing is listed by hand.
+
+| Steps of a module | `lint`, `test`, `validate`, `standalone`, `cli-smoke`, `contracts`, `schema-compat`, `secrets` |
+| --- | --- |
+| Steps of a bridge | `lint`, `test`, `cli-smoke`, `contracts` |
+
+```bash
+python3 scripts/ci-matrix.py list                          # the matrix of units
+python3 scripts/ci-matrix.py steps skiller                 # the steps of one unit
+python3 scripts/ci-matrix.py run --unit planner --step test --step contracts
+python3 scripts/ci-matrix.py run --all                     # every unit, tools excluded
+python3 scripts/ci-matrix.py --check --strict              # the workflow covers the matrix
+```
+
+Each step runs with a throwaway `HOME` and `SKM_HOME` and prints `ok|fail|skip <unit> <step> <seconds>`; the exit code is
+1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.9 and 3.13, marks the tools
+named by `standalone.tools` (`maind`, `analyst`) as `continue-on-error`, and has a `hub` job: `--check`,
+`ecosystem-units.py check --strict`, golden, `scripts/test-*.py`, `scripts/smoke-installed.sh` and
+`swissknifeman conformance engine`, the last two in a sandbox. `test.yml` and `validate.yml` no longer exist.
+
+The documentation site is built from `docs/`: `cd docs && npm ci && npm run docs:build` (the `docs:sync` script first copies
+`packages/<module>/docs` into `docs/<module>/`; those copies are ignored by git). `.github/workflows/docs.yml` runs the same
+commands with `working-directory: docs`.
+
 ## Scripts-FAQ
 
 **«Phase ended, he proposes `/task` with text - compact or a new session?»**

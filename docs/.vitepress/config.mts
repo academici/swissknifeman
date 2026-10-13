@@ -13,6 +13,9 @@ export default withMermaid(defineConfig({
     'Ecosystem umbrella academici: skills (skiller), environment Claude Code (harness), memory and graph (maind)',
   base: '/swissknifeman/',
   lastUpdated: true,
+  // docs/orch/configuration.md is a copy of a module page that links to the module's generated config.example.toml,
+  // which lives outside the site.
+  ignoreDeadLinks: [/config\.example\.toml$/],
 
   themeConfig: {
     nav: [
@@ -303,6 +306,13 @@ export default withMermaid(defineConfig({
             { text: '0025 Shape of unit.json and the aicore skeleton', link: '/architecture/decisions/0025-unit-manifest-shape-and-aicore-skeleton' },
             { text: '0026 The folder-is-a-module rule through a pinned root common instruction', link: '/architecture/decisions/0026-pinned-root-common-instruction' },
             { text: '0027 Golden fixtures: location, normalisation, lifecycle outside CI', link: '/architecture/decisions/0027-golden-fixtures-lifecycle' },
+            { text: '0072 The umbrella CLI reads modules from unit.json; aliases are data', link: '/architecture/decisions/0072-umbrella-reads-modules-from-unit-json' },
+            { text: '0073 swissknifeman doctor aggregates the doctor probes of modules', link: '/architecture/decisions/0073-doctor-aggregator' },
+            { text: '0074 swissknifeman install with profiles; install.sh is a wrapper', link: '/architecture/decisions/0074-install-profiles' },
+            { text: '0075 The marketplace and the Codex index come from unit.json', link: '/architecture/decisions/0075-marketplace-from-unit-json' },
+            { text: '0076 Conformance kit for plugins and engines', link: '/architecture/decisions/0076-conformance-kit' },
+            { text: '0077 Release bundle: compat manifest, schemas, attestation, checksums', link: '/architecture/decisions/0077-release-bundle' },
+            { text: '0078 Installed-form smoke and a CI matrix from unit.json', link: '/architecture/decisions/0078-installed-form-smoke-and-ci-matrix' },
           ],
         },
       ],
@@ -313,12 +323,22 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/' },
             { text: 'Get started', link: '/getting-started' },
+            { text: 'Install profiles', link: '/install-profiles' },
             { text: 'Development with Claude Code', link: '/develop' },
             { text: 'Architecture', link: '/architecture/' },
             { text: 'Deployment: new host / team', link: '/deploy' },
             { text: 'Routing sources and tasks', link: '/routing' },
             { text: 'Control-surface projects', link: '/control-surface' },
             { text: 'Roadmap', link: '/roadmap' },
+          ],
+        },
+        {
+          text: 'Hub reference',
+          items: [
+            { text: 'Umbrella CLI', link: '/reference/umbrella' },
+            { text: 'Doctor aggregator', link: '/reference/doctor' },
+            { text: 'Conformance kit', link: '/reference/conformance' },
+            { text: 'Release bundle', link: '/reference/release-bundle' },
           ],
         },
         {

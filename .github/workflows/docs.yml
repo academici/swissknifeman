@@ -7,7 +7,8 @@ on:
       - 'docs/**'                      # general umbrella + .vitepress config
       - 'packages/*/docs/**'           # per-package docks (source of truth)
       - 'packages/harness/configs/**'  # inlines/presets, which the docs refer to
-      - 'packages/skiller/package.json'
+      - 'docs/package.json'
+      - 'docs/package-lock.json'
       - 'scripts/docs-sync.sh'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
@@ -30,14 +31,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: packages/skiller/package-lock.json
-      # docs-tuling (vitepress) lives in packages/skiller (root package.json no —
-      # monorepo). docs:build = docs:sync (aggregates packages/<pkg>/docs → docs/<pkg>)
-      # + vitepress build ../../docs → artifact in <repo>/docs/.vitepress/dist.
+          cache-dependency-path: docs/package-lock.json
+      # The site belongs to the hub: vitepress lives in docs/package.json.
+      # docs:build = docs:sync (aggregates packages/<pkg>/docs → docs/<pkg>)
+      # + vitepress build . → artifact in docs/.vitepress/dist.
       - run: npm ci
-        working-directory: packages/skiller
+        working-directory: docs
       - run: npm run docs:build
-        working-directory: packages/skiller
+        working-directory: docs
       - uses: actions/configure-pages@v4
         with:
           enablement: true   # auto-turn on Pages, if not configured (otherwise «Get Pages site failed: Not Found»)

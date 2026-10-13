@@ -168,16 +168,16 @@
       "provider": "claude",
       "target": ".claude/skills/package-architecture/SKILL.md",
       "canonical": "bootstrap/skills/package-architecture/SKILL.md",
-      "canonical_sha256": "6a6675bf809d40451b9889f8c45c4b78744301f2221605ccc44edb4c3074638c",
-      "rendered_sha256": "11d69d1df53c967467f508195f5b1473b8b6840631f1a086de956005292ed972"
+      "canonical_sha256": "60d2a7dc05638a23618449dbb2b5be762699dc573744667d58b26b26c7da9c3a",
+      "rendered_sha256": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86"
     },
     {
       "identity": "package-architecture",
       "provider": "codex",
       "target": ".agents/skills/package-architecture/SKILL.md",
       "canonical": "bootstrap/skills/package-architecture/SKILL.md",
-      "canonical_sha256": "6a6675bf809d40451b9889f8c45c4b78744301f2221605ccc44edb4c3074638c",
-      "rendered_sha256": "11d69d1df53c967467f508195f5b1473b8b6840631f1a086de956005292ed972"
+      "canonical_sha256": "60d2a7dc05638a23618449dbb2b5be762699dc573744667d58b26b26c7da9c3a",
+      "rendered_sha256": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86"
     },
     {
       "identity": "planner-development-philosophy",

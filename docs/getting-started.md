@@ -8,11 +8,17 @@ SwissKnifeMan does not require a plan for each task. Choose a shortcut based on 
 From a cloned root SwissKnifeMan:
 
 ```bash
-./install.sh
+./install.sh --bin-dir ~/.local/bin              # every module (profile full)
+# or choose a profile; --dry-run first prints the plan and writes nothing
+./bin/swissknifeman install --profile minimal --dry-run
+./bin/swissknifeman install --profile standard   # the default
 swissknifeman doctor
 ```
 
-`doctor` checks the tools on the machine. See the status of a specific connected project
+Profiles `minimal` (skills and plans), `standard` (adds the environment, the second brain and the orchestrator) and `full`
+(adds `maind` and `analyst`) are described in [install profiles](install-profiles.md).
+
+`doctor` runs the read-only checks that every module declares ([reference](reference/doctor.md)). See the status of a specific connected project
 via `swissknifeman status <project-id>`; is a different check.
 
 ## First task in the project

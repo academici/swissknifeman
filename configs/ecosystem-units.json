@@ -99,10 +99,6 @@
     {
       "path": "packages/skiller/tests/test_boundary.py",
       "reason": "boundary test: the forbidden path samples are test data"
-    },
-    {
-      "path": "packages/skiller/package.json",
-      "reason": "hub site build scripts hosted in the skiller npm package until the hub owns the site build"
     }
   ],
   "standalone": {

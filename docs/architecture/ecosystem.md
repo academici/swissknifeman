@@ -46,7 +46,7 @@ swissknifeman/                      # the hub repository
     planner-orch/                    # glue between two modules (hub)
     orch-skiller/
     orch-harness/
-  bin/swissknifeman                  # umbrella CLI: install, upgrade, doctor, config, units
+  bin/swissknifeman                  # umbrella CLI: units, install, doctor, config, aliases of module CLIs
   configs/  scripts/  bootstrap/  docs/  .github/
 ```
 
@@ -113,7 +113,7 @@ flowchart LR
 | orch to analyst | events | `orch.run.*` |
 | maind to skiller, planner, harness, brain, analyst | partner commands found by `aicore.util.partners` | provisioning commands and JSON commands of the partner (`run-lookup/v1`, `mcp-catalog/v1`, `profile-resolution/v1`) |
 | analyst to maind | partner command | `maind projects list --json` |
-| doctors of maind, analyst, harness, skiller, brain | contract | `check-result/v1`, aggregated by the hub |
+| doctors of maind, analyst, harness, skiller, brain, orch, aicore | contract | `check-result/v1`, aggregated by `swissknifeman doctor` from `provides.doctor` ([ADR 0073](decisions/0073-doctor-aggregator.md)) |
 | every module to aicore | import | `aicore` range in `unit.json` |
 
 ## 3. Module contract
@@ -449,8 +449,20 @@ maind JSON commands: `mcp catalog`, `profiles resolve`, `hooks codex-lifecycle`,
 
 ### hub root
 
-The umbrella CLI `swissknifeman` (`install`, `upgrade`, `doctor`, `config`, `units`), the marketplace and plugin set,
-the documentation site, the CI matrix and bootstrap skills.
+The hub root composes the modules and holds no module logic. It imports only `aicore` and finds every module by its
+`unit.json`; the only place with module ids is data.
+
+| Part | Where | What it does |
+| --- | --- | --- |
+| Umbrella CLI | `bin/swissknifeman`, `scripts/umbrella.py`, `configs/umbrella.json` | built-ins `units`, `install`, `doctor`, `-V`; a module with `provides.cli` is a command group; former groups and legacy skiller verbs are aliases ([reference](../reference/umbrella.md), [ADR 0072](decisions/0072-umbrella-reads-modules-from-unit-json.md)) |
+| Doctor | `swissknifeman doctor` | runs the unique `provides.doctor` probes once, read-only, prints `umbrella-doctor/v1` ([reference](../reference/doctor.md), [ADR 0073](decisions/0073-doctor-aggregator.md)) |
+| Install profiles | `configs/install-profiles.json`, `install.sh` | `minimal`, `standard` and `full`, ordered by `requires` ([guide](../install-profiles.md), [ADR 0074](decisions/0074-install-profiles.md)) |
+| Marketplace | `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json` | assembled by `aicore.content.marketplace` from `provides.plugins` ([ADR 0075](decisions/0075-marketplace-from-unit-json.md)) |
+| Conformance | `swissknifeman conformance plugin\|engine` | protocol checks for plugins and engines ([reference](../reference/conformance.md), [ADR 0076](decisions/0076-conformance-kit.md)) |
+| Release bundle | `swissknifeman release bundle` | `compat.json`, schema package, attestation, `SHA256SUMS` ([reference](../reference/release-bundle.md), [ADR 0077](decisions/0077-release-bundle.md)) |
+| CI | `scripts/ci-matrix.py`, `.github/workflows/modules.yml`, `scripts/smoke-installed.sh` | steps and matrix generated from `unit.json`; smoke of the installed form ([ADR 0078](decisions/0078-installed-form-smoke-and-ci-matrix.md), [development](../develop.md)) |
+| Site | `docs/` (`package.json`, `.vitepress`) | the documentation site; `docs/<module>/` are copies of `packages/<module>/docs` made by `scripts/docs-sync.sh` |
+| Bootstrap skills | `bootstrap/skills/` | the skills of the root, projected by the generators |
 
 ## 8. Skill distribution
 
@@ -502,7 +514,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
 | P9 | `planner` rename with the `task` compatibility alias, layered configuration, events, overlay slots, external plan checks, execution scenario and attempt owner, commands on `aicore` (done) |
 | P10 | `orch` on `aicore`; bridges as hub units (`bridges/`); work-source port with an evidence gate; `exec/v1` protocol fields; run-policy packs and engine choice in `[orch]`; `orch.run.*` events; engine conformance (done) |
 | P11 | hub modules (`maind`, `analyst`, `harness`) on `aicore` and new state places; `core/` and `artifex` removed, `check --strict` green and in CI (done) |
-| P12 | hub: umbrella CLI, marketplace and plugin set, CI matrix, module documentation |
+| P12 | hub: umbrella CLI over `unit.json`, doctor aggregator, install profiles, marketplace from `unit.json`, conformance kit, release bundle, installed-form smoke, CI matrix, site in `docs/` (done) |
 | P13 | cutover: `swissknifeman upgrade`, upgrade guide, rehearsal, merge, tag, rollback |
 
 ## 10. Transition for live projects
@@ -536,7 +548,8 @@ sandbox and on the second computer; only then is the branch merged and a major v
   ([ADR 0018](decisions/0018-execution-protocol-identity-fencing-idempotency.md)).
 - **Doctor** is a module contract: `provides.doctor` and the `check-result` schema
   ([ADR 0022](decisions/0022-doctor-as-module-contract.md)).
-- **Releases:** checksums, changelog, compatibility manifest and schema package now; SBOM, signatures and provenance on a
+- **Releases:** checksums, changelog, compatibility manifest and schema package now (`swissknifeman release bundle`,
+  [ADR 0077](decisions/0077-release-bundle.md)); SBOM, signatures and provenance on a
   trigger ([ADR 0023](decisions/0023-releases-and-supply-chain.md)).
 - **Names:** import names equal the module id; distribution names will be `skm-<id>`
   ([ADR 0024](decisions/0024-python-package-names.md)).

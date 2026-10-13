@@ -18,7 +18,12 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Contract | `$id` / carrier | Owner | Stability | Gap and closing stage |
 | --- | --- | --- | --- | --- |
 | Module manifest `unit/v1` | `urn:swissknifeman:aicore:unit:v1`, `packages/aicore/schemas/unit/v1` | aicore | development | `subscribes`, anchored `provides.events`, `overlay_slots` and `permissions` as a `$ref` added as minor changes (P6); `permissions` is declared, not enforced |
-| Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | `maind`, `analyst`, `harness`, `skiller` and `brain` print it from `doctor --json` (done in P11); aggregation is P12 |
+| Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | `maind`, `analyst`, `harness`, `skiller` and `brain` print it from `doctor --json`; `swissknifeman doctor` aggregates it ([ADR 0073](decisions/0073-doctor-aggregator.md)) |
+| Plugin catalog `plugin-catalog/v1` | `urn:swissknifeman:aicore:plugin-catalog:v1`, `packages/aicore/schemas/plugin-catalog/v1`; skiller's file is `packages/skiller/.claude-plugin/catalog.json` | aicore (content) | development | the document key is `schema` (other aicore contracts use `$schema`); `skills[]` paths are relative to the module ([ADR 0075](decisions/0075-marketplace-from-unit-json.md)) |
+| Compat manifest `compat-manifest/v1` | `urn:swissknifeman:aicore:compat-manifest:v1`, `packages/aicore/schemas/compat-manifest/v1` | aicore (release) | development | `compat.json` of `swissknifeman release bundle` ([ADR 0077](decisions/0077-release-bundle.md)) |
+| Umbrella config `umbrella-config/v1` | `configs/umbrella.json`, schema `configs/umbrella.schema.json` | hub | development | aliases with ordered routes; the only data in the hub that names modules ([ADR 0072](decisions/0072-umbrella-reads-modules-from-unit-json.md)) |
+| Install profiles `install-profiles/v1` | `configs/install-profiles.json`, schema `configs/install-profiles.schema.json` | hub | development | profiles `minimal`, `standard`, `full` ([ADR 0074](decisions/0074-install-profiles.md)) |
+| Umbrella output `umbrella-units/v1`, `umbrella-doctor/v1`, `umbrella-install/v1` | output of `swissknifeman units|doctor|install --json`; schemas `configs/schemas/umbrella-units.schema.json` and `umbrella-doctor.schema.json` | hub | development | no schema yet for the install document |
 | Digest `digest/v1` | `urn:swissknifeman:aicore:digest:v1`, `packages/aicore/schemas/digest/v1` | aicore | development | `exec` and plan digests still use the bare-hex form and their own copies; they adopt it with their modules: P9, P10 |
 | Error `error/v1` | `urn:swissknifeman:aicore:error:v1`, `packages/aicore/schemas/error/v1` | aicore (provider) | development | orch and the engines adopt the classes: P10 |
 | Capability support `capability-support/v1` | `urn:swissknifeman:aicore:capability-support:v1`, `packages/aicore/schemas/capability-support/v1` | aicore (provider) | development | the record of `exec/v1` `capability-record` adopts it: P10 |
@@ -76,7 +81,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | PluginManifest | `unit.json`; `extension/v1` for an external plugin | aicore | none |
 | ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog is separate: `model-catalog/v1` |
 | SkillDescriptor | `skill-descriptor/v1` (`aicore.content.skill.describe_skill`) over skill frontmatter and `upstream.json`; `skills.json` and `skills-lock.json` keep their formats | aicore (content) | the receipt of skill digests in a run: P10 |
-| HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | the hub aggregator: P12 |
+| HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | the hub aggregator `swissknifeman doctor` ([ADR 0073](decisions/0073-doctor-aggregator.md)) |
 | PolicyDecision | refusals `CODE: message`, run-policy | orch | structured decision inside the launch plan: P10 |
 | EffectRequest / Receipt | `exec/v1` `effect-receipt` | orch | `effect_id` as idempotency key: P10 |
 | Error taxonomy | `error/v1`, `aicore.provider.errors`, rules in `packages/aicore/configs/provider-errors.json` | aicore (provider) | the engine port and the modules adopt the classes: P10, P11 |
@@ -120,9 +125,14 @@ that introduces its `v2`.
 
 Fields: `$schema`, `id`, `title`, `kind` (`foundation`, `capability`, `bridge`), `version`, `stability`,
 `destination` (`own-repo`, `hub`), `requires` (list of `{unit, range}`), `provides` (`cli`, `plugins`, `contracts`,
-`doctor`, `config`, `events`, `overlay_slots`, `extension_points`, `ports`), and optional `subscribes` (default event
+`install`, `doctor`, `config`, `events`, `overlay_slots`, `extension_points`, `ports`), and optional `subscribes` (default event
 subscriptions, `<module>:<name>`), `permissions` (`permissions/v1`), `protocol`, `dev`. Collections are lists of records, never maps with arbitrary keys, because the closed profile of the validator
 cannot express such maps ([ADR 0025](decisions/0025-unit-manifest-shape-and-aicore-skeleton.md)).
+
+Minor additions of the hub (all optional): `provides.install` (an argv run from the module root; it accepts `--bin-dir DIR`
+and `--force`) and, in `provides.plugins[]`, `source` (a plugin folder) or `catalog` (a `plugin-catalog/v1` file) in place
+of `manifest`, exactly one of the three ([ADR 0074](decisions/0074-install-profiles.md),
+[ADR 0075](decisions/0075-marketplace-from-unit-json.md)).
 
 ### digest/v1
 

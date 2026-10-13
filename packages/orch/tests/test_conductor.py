@@ -511,6 +511,16 @@ class StopTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertEqual(self.calls("executor"), 1)
 
+    def test_an_acp_role_stops_the_run_before_any_work(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        options = self.project.parent / "grok-executor.json"
+        options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "grok"}]}), encoding="utf-8")
+        code, _, err = self.run_items("W1", extra=("--options", options))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TRANSPORT_UNSUPPORTED")), err)
+        message = [line for line in self.lines(err) if line["event"] == "run.end"][0]["message"]
+        self.assertIn("executor on grok", message)
+        self.assertEqual(self.calls("executor"), 0)
+
     def test_a_stop_and_a_resume_repeat_no_closed_step(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         self.set_items({"W1": {}}, refuse=["register"])
@@ -989,6 +999,29 @@ class PreviewAndStatusTests(ConductorCase):
         self.assertEqual(preview["routes"]["triager"]["model_class"], "implementation")
         self.assertFalse(engine.runs_root(self.project).exists())
         self.assertEqual(self.source()["calls"], [])
+
+    def test_dry_run_marks_an_acp_route_unavailable_with_the_reason(self):
+        options = self.project.parent / "grok-executor.json"
+        options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "grok"}]}), encoding="utf-8")
+        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full",
+                                      "--options", options)
+        self.assertEqual(code, 0, err)
+        preview = json.loads(out)
+        self.assertEqual(preview["routes"]["executor"]["transport"], "acp")
+        self.assertIs(preview["available"]["executor"], False)
+        self.assertTrue(preview["unavailable"]["executor"].startswith("TRANSPORT_UNSUPPORTED:"), preview["unavailable"])
+        self.assertTrue(preview["available"]["reviewer"])  # grok reviewer is jsonl under ro-run
+        self.assertNotIn("reviewer", preview["unavailable"])
+
+    def test_dry_run_names_a_missing_binary(self):
+        missing = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        missing["reviewer"] = [str(self.project / "no-such-grok")]
+        self.write_config(missing)
+        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")
+        self.assertEqual(code, 0, err)
+        preview = json.loads(out)
+        self.assertIs(preview["available"]["reviewer"], False)
+        self.assertTrue(preview["unavailable"]["reviewer"].startswith("PROVIDER_UNAVAILABLE: "), preview["unavailable"])
 
     def test_status_without_runs_is_refused(self):
         code, _, err = self.conduct("status")

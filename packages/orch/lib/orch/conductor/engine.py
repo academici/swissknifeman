@@ -435,6 +435,8 @@ class Conductor:
             item.state["source_paths"] = sorted(set(self._dirty_paths()) - set(item.state.get("adopted") or []))
             self._save()
         self._resolve(item)
+        self._routes(item, persist=False)
+        self._refuse_acp(item)  # before prepare: the binding would refuse an acp route with a less telling code
         item.launch_plan = self._step(item, "prepare", lambda: self._prepare(item))
         self._routes(item)
         adopted = self._adopted(item)
@@ -774,12 +776,32 @@ class Conductor:
             self._preflight(item)
             write_json(item.directory / "routes.json", item.routes)
 
+    @staticmethod
+    def route_problem(route: dict) -> str | None:
+        """Why a route cannot run, as ``CODE: text``; ``None`` when it can. An ``acp`` role is never driven by the
+        conductor (D4), whatever command line stands in for it."""
+        if route["transport"] == "acp":
+            return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
+        if not process.available(route["argv"]):
+            return f"PROVIDER_UNAVAILABLE: {route['argv'][0]} not found"
+        return None
+
+    OPTIONAL_ROLES = {"context-scout", "report-fixer"}
+
+    def _refuse_acp(self, item: Item) -> None:
+        unsupported = [(role, route) for role, route in item.routes.items()
+                       if role not in self.OPTIONAL_ROLES and route["transport"] == "acp"]
+        if unsupported:
+            raise Stop("TRANSPORT_UNSUPPORTED", "; ".join(
+                f"{role} on {route['provider']}: the conductor does not drive acp roles; "
+                "use claude-code or codex for this role" for role, route in unsupported))
+
     def _preflight(self, item: Item) -> None:
-        """Every required role can start before any work is done: a missing CLI stops the run now with a plain message,
-        not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
-        optional = {"context-scout", "report-fixer"}
+        """Every required role can start before any work is done: an acp route or a missing CLI stops the run now with a
+        plain message, not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
+        self._refuse_acp(item)
         missing = [f"{role} ({route['argv'][0]})" for role, route in item.routes.items()
-                   if role not in optional and not process.available(route["argv"])]
+                   if role not in self.OPTIONAL_ROLES and not process.available(route["argv"])]
         if missing:
             raise Stop("PROVIDER_UNAVAILABLE", f"cannot start {', '.join(missing)}: install or log in the CLI, then resume")
 

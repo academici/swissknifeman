@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.5",
   "title": "orch conductor: acp-маршрут недоступен заранее — dry-run available false с причиной, preflight TRANSPORT_UNSUPPORTED до работы, Grok только reviewer/report-fixer в docs",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "conductor/cli.py _preview: available учитывает transport acp, новое поле unavailable {role: причина}; engine._preflight останавливает run кодом TRANSPORT_UNSUPPORTED до любой работы для обязательной роли с transport acp; README и docs/conductor.md: Grok в conductor — reviewer и report-fixer; тесты dry-run и run в tests/test_conductor.py.",
   "why": "Аудит П0.5 (N3), D4, C8: сейчас dry-run показывает available true для grok executor, сбой — только при запуске роли.",
   "scope": {
@@ -95,6 +95,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:26:51Z"
+  "result": {
+    "started_at": "2026-10-13T20:41:45Z",
+    "finished_at": "2026-10-13T20:54:02Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "86068c8c-34bb-426c-be25-afe31c80b9e1"
+    },
+    "notes": "available/unavailable в dry-run, TRANSPORT_UNSUPPORTED до prepare и в preflight, docs, changelog, 3 теста",
+    "deviations": [
+      "acp check also runs before prepare"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:54:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T20:54:02Z"
 }

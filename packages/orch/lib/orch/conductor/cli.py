@@ -43,13 +43,15 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     conductor.run_doc = {"options_file": str(args.options) if args.options else None}
     conductor._resolve(item, persist=False)
     conductor._routes(item, persist=False)
-    from orch.conductor import process
-    available = {role: process.available(route["argv"]) for role, route in item.routes.items()}
+    problems = {role: conductor.route_problem(route) for role, route in item.routes.items()}
+    available = {role: problem is None for role, problem in problems.items()}
+    unavailable = {role: problem for role, problem in problems.items() if problem}
     isolation = {role: conductor._role_argv(item, role, route)[len(route["argv"]):] for role, route in item.routes.items()}
     return {"plan": args.plan, "items": args.items or None, "batch": bool(args.batch),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
             "review": item.policy.get("review"), "options": item.options, "sources": item.sources,
-            "routes": item.routes, "available": available, "isolation_args": isolation,
+            "routes": item.routes, "available": available, "unavailable": unavailable,
+            "isolation_args": isolation,
             "note": "the work source adds the scenario and the options of the plan, phase and item at claim time"}
 
 

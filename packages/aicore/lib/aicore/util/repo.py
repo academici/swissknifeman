@@ -13,7 +13,7 @@ def find_repo_root(start):
     return None
 
 
-def find_monorepo_root(start, *, markers=("packages", "core")):
+def find_monorepo_root(start, *, markers=("packages",)):
     """Return the nearest ancestor containing a configured monorepo marker."""
     start = Path(start)
     for cand in (start, *start.parents):

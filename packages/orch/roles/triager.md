@@ -19,6 +19,9 @@ observed failing, each with one correction package. You judge evidence; you do n
   and the regression check that proves the correction.
 - Reject a finding that does not reproduce, lies outside the input's contract or is already
   covered, and say why.
+- Do not reject a real defect only because it sits outside the write set or belongs to a later
+  item: say in `reason` that it reproduces and which item or module owns it. The conductor records
+  every rejected Major-or-higher finding as a plan note, so the reason is read by the reviewer of the phase.
 
 ## You never
 

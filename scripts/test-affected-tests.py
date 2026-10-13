@@ -16,6 +16,15 @@ def plan(*paths, tier="fast", extra=()):
 
 
 class AffectedTestsTests(unittest.TestCase):
+    def test_a_bridge_gets_its_partners_from_the_hub_layout(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("affected_tests", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        env = module.bridge_env()
+        for name in ("PLANNER_ROOT", "PLANNER_PLAN_PY", "SKM_ORCH_ROOT", "SKM_SKILLER_ROOT", "SKM_HARNESS_ROOT", "AICORE_ROOT"):
+            self.assertTrue(Path(env[name]).exists(), name)
+
     def test_a_tool_is_tested_when_its_own_files_change(self):
         self.assertEqual(plan("packages/maind/lib/maind/x.py")["units"], ["packages/maind"])
 

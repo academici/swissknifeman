@@ -55,6 +55,8 @@ CONTENT_MAX_BYTES = 2_000_000
 CONTENT_EXEMPT = {
     "packages/maind/tests/test_provider_deploy.py":
         "accurate historical preimage D108/D115, sha256 which is pinned to provider_deploy.py",
+    "packages/maind/tests/harness_equality.py":
+        "the same sealed D108 preimage as above, rebuilt byte for byte for the harness-link equality test",
 }
 # Sealed measurement evidence: its text is the measured input, so rewriting it would falsify the measurement.
 # None remain: the only one (the v2 calibration probe log) was deleted with the v2 runtime.

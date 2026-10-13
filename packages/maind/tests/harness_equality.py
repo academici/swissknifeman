@@ -30,9 +30,9 @@ D104_PREIMAGE = b'''{
 }
 '''
 
-# The D108 preimage is sealed by hash, so its machine-specific paths cannot change; the prefix is
-# assembled here and shared with the fixture through the token below.
-PINNED_PACKAGES = "/".join(("", "home", "vostrikov", "projects", "packages"))
+# The D108 preimage is sealed by hash, so its machine-specific paths cannot change; this file is listed in
+# ``CONTENT_EXEMPT`` of scripts/public-hygiene.py for that reason, and the fixture holds the token below instead.
+PINNED_PACKAGES = "/home/vostrikov/projects/packages"
 PINNED_TOKEN = "@PINNED_PACKAGES@"
 
 _D108_MCP_PREIMAGE_TEMPLATE = b'''{

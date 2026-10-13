@@ -96,6 +96,16 @@ def commands(all_units: dict, folders: list, hub: bool, tier: str) -> list:
     return plan
 
 
+def bridge_env() -> dict:
+    """The partners a bridge finds through the environment, wired from the hub layout (as scripts/test-bridges.sh does)."""
+    env = dict(os.environ)
+    packages = ROOT / "packages"
+    env.update({"PLANNER_ROOT": str(packages / "planner"), "PLANNER_PLAN_PY": str(packages / "planner/scripts/plan.py"),
+                "SKM_ORCH_ROOT": str(packages / "orch"), "SKM_SKILLER_ROOT": str(packages / "skiller"),
+                "SKM_HARNESS_ROOT": str(packages / "harness"), "AICORE_ROOT": str(packages / "aicore")})
+    return env
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--base")
@@ -124,7 +134,8 @@ def main(argv=None) -> int:
     def run(item):
         folder, command = item
         cwd = ROOT if folder == "hub" else ROOT / folder
-        done = subprocess.run(command, cwd=cwd, capture_output=True, text=True, env=dict(os.environ))
+        done = subprocess.run(command, cwd=cwd, capture_output=True, text=True,
+                              env=bridge_env() if folder.startswith("bridges/") else dict(os.environ))
         return folder, command, done
 
     failed = 0

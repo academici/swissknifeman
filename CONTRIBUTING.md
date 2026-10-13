@@ -96,7 +96,7 @@ python3 scripts/ecosystem-units.py check --strict             # module boundarie
 ## PR
 
 1. Thread from `main` (on `main` do not commit directly).
-2. Validation of affected packages is green; `core`-tests pass.
+2. Validation of affected packages is green (`python3 scripts/affected-tests.py --run`).
 3. PR in Russian, description - what and why. CI will run the same validation.
 
 Package-specific (skills, upstreams, memory/graph) — in `packages/<pkg>/CONTRIBUTING.md` and `CLAUDE.md`.

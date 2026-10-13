@@ -120,16 +120,16 @@
       "provider": "claude",
       "target": ".claude/skills/harness-operations/SKILL.md",
       "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md",
-      "canonical_sha256": "da5ae9537152d4ed42d1ed34c11b19715ca45038f5541d0cac366cfb21aac362",
-      "rendered_sha256": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f"
+      "canonical_sha256": "0912abd96f92047ab8f16d5f45745759dfc653918c7cea77688b11adf9b4fd05",
+      "rendered_sha256": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b"
     },
     {
       "identity": "harness-operations",
       "provider": "codex",
       "target": ".agents/skills/harness-operations/SKILL.md",
       "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md",
-      "canonical_sha256": "da5ae9537152d4ed42d1ed34c11b19715ca45038f5541d0cac366cfb21aac362",
-      "rendered_sha256": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f"
+      "canonical_sha256": "0912abd96f92047ab8f16d5f45745759dfc653918c7cea77688b11adf9b4fd05",
+      "rendered_sha256": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b"
     },
     {
       "identity": "maind-overview",

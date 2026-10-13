@@ -27,7 +27,8 @@ checked.
 
 ## Consequences
 
-- A conformance run needs an environment with the SDK; the hub CI step installs it.
+- A conformance run needs an environment with the SDK; the CI job `tools` installs it and sets `SKM_REQUIRE_MCP_SDK=1`, so a
+  missing SDK there fails the run instead of skipping the test. Without the variable the test is skipped.
 
 ## Supersedes
 

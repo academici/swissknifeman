@@ -68,10 +68,10 @@ machine-owned config (not project-local — RCE), unless `ALLOW_PROJECT_CONFIG=1
 **safe-dirs (rm inside trusted folders):** `rm`/`rmdir` targeting strictly inside allowlist roots
 bypass `deny_hard` — MACHINE-OWNED allowlist `<monorepo>/safe-dirs.json` (repo ROOT, gitignored,
 template `safe-dirs.example.json` — same pattern as maind's config.json; hook resolution ladder:
-`$SKM_SAFE_DIRS_CONFIG` → monorepo root via the PATH launcher's realpath → legacy
-`~/.swissknifeman/safe-dirs.json`, `init` migrates it into the repo). Commands: `harness
+`$SKM_SAFE_DIRS_CONFIG` → `<config>/harness/safe-dirs.json` → legacy hub-root file → legacy
+`~/.swissknifeman/safe-dirs.json`; the first existing file is active). Commands: `harness
 safe-dirs init|list|add|remove|prune-ask`; default includes onboarded projects from
-`projects.json`. Verdict — `hooks/auto-approve/lib/safedirs.py`, fail-closed (shlex-argv,
+the skiller registry (`<state>/skiller/projects.json`). Verdict — `hooks/auto-approve/lib/safedirs.py`, fail-closed (shlex-argv,
 realpath, containment, `.git`/root protection; globs by static prefix; `$VAR`/`$( )`/`xargs rm`
 → deny). A project-level hook-config override does not affect the allowlist. `Bash(rm -r*)` ask
 rules were removed from presets (a hook-allow doesn't beat a static ask) — on older projects, run
@@ -107,7 +107,7 @@ writers) · `permissions.py` (wraps `scripts/apply-permissions.sh`) · `mcp.py`
 - **skiller delegates here** via subprocess (`skiller connect`/`vendor`/`integrate` call `harness
   permissions|mcp|hooks`; resolution `SKM_HARNESS_BIN` →
   `<monorepo>/packages/harness/bin/harness`; missing harness → graceful skip).
-- **Memory shares state with skiller** (`~/.swissknifeman/topology.json`/`projects.json`); paths
+- **Memory shares state with other modules** (`<state>/maind/topology.json`, `<state>/skiller/projects.json`; legacy `~/.swissknifeman/` only as a fallback); paths
   in installed hooks must NOT change (back-compat).
 - `.swissknife.json:memory_brain` is written by harness (`hooks --memory`), validated by skiller
   (`CONFIG_KEYS`).

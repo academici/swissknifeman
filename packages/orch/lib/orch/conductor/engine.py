@@ -485,6 +485,24 @@ class Conductor:
         if note not in deferred:
             deferred.append(note)
 
+    def _note_rejected(self, item: Item, findings: dict, triage: dict) -> None:
+        """A rejected finding at or above ``review.correct_min_severity`` is never lost: the reason travels as a plan
+        note, because a single triager may reject a real defect as "outside the write set" and nobody picks it up."""
+        ranks = {name.lower(): rank for rank, name in enumerate(opts.SEVERITIES)}
+        floor = ranks[item.options["review"]["correct_min_severity"].lower()]
+        by_id = {found.get("id"): found for found in findings["findings"]}
+        deferred = item.state.setdefault("deferred_minors", [])
+        for entry in triage["rejected"]:
+            found = by_id.get(entry["finding"], {})
+            if ranks.get(str(found.get("severity", "")).lower(), len(ranks)) > floor:
+                continue
+            note = {"text": f"rejected {str(found.get('severity')).lower()} finding {found.get('location', '-')}: "
+                            f"{found.get('failure_scenario', '')} Triage reason: {entry.get('reason', '-')}",
+                    "kind": "note", "impact": "a real defect rejected as outside this item stays open until someone owns it",
+                    "next": "the reviewer of the phase checks the rejection; a real defect gets an owner item"}
+            if note not in deferred:
+                deferred.append(note)
+
     @staticmethod
     def _defer_minor(item: Item, findings: dict, minor: list) -> None:
         """Confirmed minor findings are not corrected now: they travel as plan notes for the cleanup of the phase."""
@@ -980,6 +998,7 @@ class Conductor:
                            verdict=lambda result: f"confirmed {len(result['triage']['confirmed'])}, "
                                                   f"rejected {len(result['triage']['rejected'])}")
         self._verdict_file(item)
+        self._note_rejected(item, findings, found["triage"])
         return found["triage"]
 
     def _verdict_file(self, item: Item) -> None:

@@ -1,6 +1,6 @@
 {
   "$comment": "Template machine-owned allowlist'a safe-dirs: inside the roots dirs[] (recursively) auto-approve skips rm/rmdir past deny_hard. Real file - safe-dirs.json in the harness folder of the swissknifeman config directory (created by `harness safe-dirs init`; SKM_HOME moves it). Search ladder shared with the hook: $SKM_SAFE_DIRS_CONFIG → <config>/harness/safe-dirs.json → legacy <hub root>/safe-dirs.json → legacy ~/.swissknifeman/safe-dirs.json; the first existing file is the active one.",
-  "$comment_fields": "include_registered_projects — auto-include project paths from ~/.swissknifeman/projects.json; dirs — explicit roots ('~/' supported; '/', $HOME and ancestors $HOME are ignored); exclude — seizures inside the roots; protect_git — do not allow deletion.git; allow_globs — resolve globs by containment static prefix.",
+  "$comment_fields": "include_registered_projects — auto-include project paths from the skiller registry (<state>/skiller/projects.json; legacy ~/.swissknifeman/projects.json while it is the only one); dirs — explicit roots ('~/' supported; '/', $HOME and ancestors $HOME are ignored); exclude — seizures inside the roots; protect_git — do not allow deletion.git; allow_globs — resolve globs by containment static prefix.",
   "version": 1,
   "include_registered_projects": true,
   "dirs": [

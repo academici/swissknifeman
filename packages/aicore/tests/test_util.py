@@ -309,11 +309,16 @@ class TestRepoRoot(unittest.TestCase):
     def test_find_monorepo_root_by_marker(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "core").mkdir()
             (root / "packages").mkdir()
             deep = root / "packages" / "maind"
             deep.mkdir()
             self.assertEqual(find_monorepo_root(deep), root)
+
+    def test_find_monorepo_root_ignores_a_plain_core_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "core").mkdir()
+            self.assertIsNone(find_monorepo_root(root / "core"))
 
     def test_find_monorepo_root_none_standalone(self):
         with tempfile.TemporaryDirectory() as tmp:

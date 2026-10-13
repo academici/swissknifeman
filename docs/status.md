@@ -41,7 +41,7 @@ Fleet Capability Maturity Matrix - not «is the command», a «proven to work».
 | task | `plan.py check` — plan integrity (schema, refs, cycles, completeness, fresh views) | available | `python3 packages/planner/scripts/plan.py check <PLAN>`; `packages/planner/tests/engine/` and `packages/planner/scripts/validate.sh --plan <dir>` green |
 | task | `plan.py start`/`finish` — route pool, dependency and acceptance gate | available | `python3 packages/planner/scripts/plan.py start <PLAN> <item> --actor <provider>/<model>` refuses an undershoot route; `finish --status done` needs recorded acceptance checks; `packages/planner/tests/engine/test_lifecycle.py` |
 | aicore | `aicore.util.io` — atomic record (tmp + `os.replace`) | available | `bash packages/aicore/scripts/test.sh` |
-| aicore | `aicore.util.repo` — unified repo root search/monorepo | available | is used by the launchers of all five packages (`find_repo_root`/`find_monorepo_root`), covered `packages/aicore/tests/test_util.py` |
+| aicore | `aicore.util.repo` — unified repo root search/monorepo | available | is used by the launchers and by `harness run` (`find_repo_root`/`find_monorepo_root`, marker `packages/`), covered `packages/aicore/tests/test_util.py` |
 
 ## What risks are covered by the checks
 

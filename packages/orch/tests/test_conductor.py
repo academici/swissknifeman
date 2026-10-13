@@ -241,6 +241,21 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(eng._role_argv(item, "reviewer", {"provider": "claude-code", "argv": ["claude", "-p"]}), ["claude", "-p"])
         self.assertEqual(eng._role_argv(item, "executor", {"provider": "grok", "argv": ["grok"]}), ["grok"])
 
+    def test_a_rejected_major_finding_is_kept_as_a_plan_note(self):
+        eng = engine.Conductor.__new__(engine.Conductor)
+        item = type("I", (), {"options": {"review": {"correct_min_severity": "Major"}}, "state": {}})()
+        findings = {"findings": [
+            {"id": "F1", "severity": "Major", "location": "a.py:1", "failure_scenario": "real defect"},
+            {"id": "F2", "severity": "Minor", "location": "b.py:2", "failure_scenario": "small"}]}
+        triage = {"confirmed": [], "rejected": [{"finding": "F1", "reason": "outside the write set"},
+                                                {"finding": "F2", "reason": "not a defect"}]}
+        eng._note_rejected(item, findings, triage)
+        eng._note_rejected(item, findings, triage)
+        notes = item.state["deferred_minors"]
+        self.assertEqual(len(notes), 1)
+        self.assertIn("a.py:1", notes[0]["text"])
+        self.assertIn("outside the write set", notes[0]["text"])
+
     def test_the_executor_is_told_to_run_only_the_tests_of_its_change_unless_asked_otherwise(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W1")[0], 0)

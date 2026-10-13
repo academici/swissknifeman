@@ -100,7 +100,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install the MCP SDK for the conformance test
+        run: python3 -m pip install -r packages/maind/requirements-dev.txt
+
       - name: Test maind
+        env:
+          SKM_REQUIRE_MCP_SDK: '1'
         run: bash packages/maind/scripts/test.sh -v
 
       - name: Integration of the tools with their partners

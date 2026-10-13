@@ -110,13 +110,15 @@ def _state_file(home, owner, name):
 def _registered_projects(home):
     """Paths of the projects the skiller registry knows (first existing file of the ladder)."""
     for path in _state_file(home, "skiller", "projects.json"):
-        try:
+        if not os.path.isfile(path):
+            continue
+        try:  # the first existing file decides; an unreadable one does not fall through to a staler legacy file
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
             return [p["path"] for p in data.get("projects", [])
                     if isinstance(p, dict) and isinstance(p.get("path"), str)]
         except (OSError, ValueError, AttributeError):
-            continue
+            return []
     return []
 
 

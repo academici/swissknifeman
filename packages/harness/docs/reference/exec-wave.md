@@ -56,7 +56,7 @@ fallen item is waiting for the next manual start.
 ## What it DOESN'T do (closed list)
 
 Decision machine `decide` · run-folder · retry-ladder of three shooting ranges ·
-integration with instant messengers and remote-approve · package `packages/artifex` ·
+integration with instant messengers and remote-approve · a separate execution package ·
 rolling out agent-pack'ohm · second driver (`codex exec`) · unattended-profile
 (`--permission-mode` — run policy remains the owner's environment) ·
 parallel launch of workers.

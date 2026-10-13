@@ -1566,7 +1566,7 @@
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 1,
-          "intent": "Apply this source-derived instruction: Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`. Also, installed Claude hooks live under `~/.claude/hooks/`, reading state owned by `skiller` under `~/.swissknifeman/`.",
+          "intent": "Apply this source-derived instruction: Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`. Also, installed Claude hooks live under `~/.claude/hooks/`, reading the registries that `skiller` and `maind` own in the aicore state directory (`~/.swissknifeman/` only as the legacy place).",
           "obligations": [
             {
               "modality": "must",
@@ -1580,7 +1580,7 @@
             {
               "source_id": "instruction.fragment.harness.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
-              "sha256": "b89c40672d28f9b58610fac769e0bbcfa8cf1651abfd034f831d591a75762dbf"
+              "sha256": "1f637425cd75411a5c52cf3f4e4d412f10df3cbff9b54c5bde212d4d213fda8e"
             }
           ],
           "compatibility_assertions": [
@@ -1611,7 +1611,7 @@
             {
               "source_id": "instruction.fragment.harness.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
-              "sha256": "b89c40672d28f9b58610fac769e0bbcfa8cf1651abfd034f831d591a75762dbf"
+              "sha256": "1f637425cd75411a5c52cf3f4e4d412f10df3cbff9b54c5bde212d4d213fda8e"
             }
           ],
           "compatibility_assertions": [
@@ -1639,7 +1639,7 @@
             {
               "source_id": "instruction.fragment.harness.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
-              "sha256": "b89c40672d28f9b58610fac769e0bbcfa8cf1651abfd034f831d591a75762dbf"
+              "sha256": "1f637425cd75411a5c52cf3f4e4d412f10df3cbff9b54c5bde212d4d213fda8e"
             }
           ],
           "compatibility_assertions": [
@@ -1671,7 +1671,7 @@
             {
               "source_id": "instruction.fragment.harness.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
-              "sha256": "b89c40672d28f9b58610fac769e0bbcfa8cf1651abfd034f831d591a75762dbf"
+              "sha256": "1f637425cd75411a5c52cf3f4e4d412f10df3cbff9b54c5bde212d4d213fda8e"
             }
           ],
           "compatibility_assertions": [

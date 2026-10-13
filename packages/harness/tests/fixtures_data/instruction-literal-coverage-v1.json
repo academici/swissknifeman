@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "18aa84b7ffcf9ae3ffe16837f88e5b7b86a77c1a0107dce8022e19379e29e14e",
+    "source_sha256": "445cf4638a617c991293da2cd0b4ee029753d004215eec4679001c7c4d226c16",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 351
+    "literal_count": 362
   },
   "literals": [
     {
@@ -731,6 +731,22 @@
     },
     {
       "semantic_id": "harness.cross-package-boundaries",
+      "literal": "Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path."
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
+      "literal": "`harness`"
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
+      "literal": "`aicore.util.partners`"
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
       "literal": "Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher."
     },
     {
@@ -740,10 +756,6 @@
     {
       "semantic_id": "harness.cross-package-boundaries",
       "literal": "`.swissknife.json:memory_brain`"
-    },
-    {
-      "semantic_id": "harness.cross-package-boundaries",
-      "literal": "`harness`"
     },
     {
       "semantic_id": "harness.cross-package-boundaries",
@@ -859,6 +871,22 @@
     },
     {
       "semantic_id": "maind.module-boundaries",
+      "literal": "Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path."
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
+      "literal": "`maind`"
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
+      "literal": "`aicore.util.partners`"
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
       "literal": "Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized."
     },
     {
@@ -879,7 +907,7 @@
     },
     {
       "semantic_id": "maind.module-boundaries",
-      "literal": "manual graph links live only in `<repo>/.maind.graph.json`"
+      "literal": "manual graph links live only in `[maind.graph.links.<id>]` of the project configuration"
     },
     {
       "semantic_id": "maind.orchestration",
@@ -988,6 +1016,22 @@
     {
       "semantic_id": "analyst.layout",
       "literal": "`lib/analyst/`"
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "Import only `analyst` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path."
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "`analyst`"
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "`aicore.util.partners`"
     },
     {
       "semantic_id": "analyst.module-boundaries",

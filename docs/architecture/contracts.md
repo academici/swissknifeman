@@ -18,7 +18,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Contract | `$id` / carrier | Owner | Stability | Gap and closing stage |
 | --- | --- | --- | --- | --- |
 | Module manifest `unit/v1` | `urn:swissknifeman:aicore:unit:v1`, `packages/aicore/schemas/unit/v1` | aicore | development | `subscribes`, anchored `provides.events`, `overlay_slots` and `permissions` as a `$ref` added as minor changes (P6); `permissions` is declared, not enforced |
-| Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | modules still print text in `doctor`; conversion P11, aggregation P12 |
+| Check result `check-result/v1` | `urn:swissknifeman:aicore:check-result:v1`, `packages/aicore/schemas/check-result/v1` | aicore | development | `maind`, `analyst`, `harness`, `skiller` and `brain` print it from `doctor --json` (done in P11); aggregation is P12 |
 | Digest `digest/v1` | `urn:swissknifeman:aicore:digest:v1`, `packages/aicore/schemas/digest/v1` | aicore | development | `exec` and plan digests still use the bare-hex form and their own copies; they adopt it with their modules: P9, P10 |
 | Error `error/v1` | `urn:swissknifeman:aicore:error:v1`, `packages/aicore/schemas/error/v1` | aicore (provider) | development | orch and the engines adopt the classes: P10 |
 | Capability support `capability-support/v1` | `urn:swissknifeman:aicore:capability-support:v1`, `packages/aicore/schemas/capability-support/v1` | aicore (provider) | development | the record of `exec/v1` `capability-record` adopts it: P10 |
@@ -27,6 +27,15 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Skill descriptor `skill-descriptor/v1` | `urn:swissknifeman:aicore:skill-descriptor:v1`, `packages/aicore/schemas/skill-descriptor/v1` | aicore (content) | development | none yet; the receipt of skill digests in a run is P10 ([ADR 0038](decisions/0038-skill-descriptor-agent-skills-standard.md)) |
 | Eval context `eval-context/v1` | `urn:swissknifeman:aicore:eval-context:v1`, `packages/aicore/schemas/eval-context/v1` | aicore (content) | development | none yet; benchmarks carry it as `context` in `skill-benchmark/v3` and `system-bank-benchmark/v2` ([ADR 0039](decisions/0039-eval-result-context.md)) |
 | Skiller config `skiller` section | `urn:swissknifeman:skiller:config:v1`, `packages/skiller/configs/config.schema.json` | skiller | development | tables `[skiller]` and `[skiller.sync]` of `.swissknifeman/config.toml`; the legacy files are read with a warning until `swissknifeman upgrade` ([ADR 0050](decisions/0050-skiller-settings-in-the-layered-config.md)) |
+| Maind config `maind` section | `urn:swissknifeman:maind:config:v1`, `packages/maind/configs/config.schema.json` | maind | alpha | table `[maind]` of the layered config; the fleet registry is `<state>/maind/registry.json` and is not a layered section ([ADR 0065](decisions/0065-maind-configuration-and-state.md)) |
+| Harness config `harness` section | `urn:swissknifeman:harness:config:v1`, `packages/harness/configs/config.schema.json` | harness | alpha | tables `[harness.hooks.<hook>]` (with `providers.<id>`) and `[harness] policy_profile` ([ADR 0067](decisions/0067-harness-configuration-and-state.md)) |
+| Analyst config `analyst` section | `urn:swissknifeman:analyst:config:v1`, `packages/analyst/configs/config.schema.json` | analyst | alpha | table `[analyst]`: recompute and digest thresholds |
+| Provider selection `[aicore.providers]` | `packages/aicore/configs/config.schema.json`, key `aicore.providers` | aicore (provider) | development | `contract_version` and `[aicore.providers.selection.<provider>]` in the project layer; read by `maind` and `harness` (the legacy `.swissknife.json#/providers` is read with a warning until upgrade) |
+| Run lookup `run-lookup/v1`, `run-codegraph/v1` | `urn:swissknifeman:analyst:run-lookup:v1`, `urn:swissknifeman:analyst:run-codegraph:v1`, `packages/analyst/schemas/` | analyst | alpha | output of `analyst runs show|codegraph --json`; read by `maind analyze` and the code graph report through `aicore.util.partners` ([ADR 0064](decisions/0064-run-analytics-in-analyst-and-event-subscriber.md)) |
+| Harness data for maind `mcp-catalog/v1`, `profile-resolution/v1`, `codex-lifecycle/v1`, `instruction-scopes/v1` | `urn:swissknifeman:harness:<name>:v1`, `packages/harness/schemas/<name>/v1` | harness | alpha | output of `harness mcp catalog`, `profiles resolve`, `hooks codex-lifecycle fragment|validate` and `instructions scopes`, all with `--json` ([ADR 0066](decisions/0066-maind-harness-link-and-mcp-projection.md)) |
+| Hook state `hooks-state/v1` | `urn:swissknifeman:harness:hooks-state:v1`, `packages/harness/schemas/hooks-state/v1` | harness | alpha | output of `harness hooks show|sync --json` |
+| MCP tools `mcp-tools/v1` | `urn:swissknifeman:maind:mcp-tools:v1`, `packages/maind/schemas/mcp-tools/v1` | maind | alpha | output of `maind mcp tools --json` (`tools_digest`, `tools`) ([ADR 0070](decisions/0070-maind-mcp-protocol-negotiation.md)) |
+| Projects list `projects-list/v1` | `urn:swissknifeman:maind:projects-list:v1`, `urn:swissknifeman:skiller:projects-list:v1` | maind, skiller | alpha | `maind projects list --json` (registry) and `skiller list --json` (connected projects); each owner has its own schema |
 | Common definitions `common/v1` | `urn:swissknifeman:aicore:common:v1`, `packages/aicore/schemas/common/v1` | aicore (ext) | development | none yet; shared `$defs` that other contracts reference; modules adopt them as they add contracts |
 | Event `event/v1` | `urn:swissknifeman:aicore:event:v1`, `packages/aicore/schemas/event/v1` | aicore (ext) | development | none yet; journal and delivery are [ADR 0041](decisions/0041-event-envelope-journal-and-delivery.md); the catalog of types is `provides.events` of each `unit.json` |
 | Artifact reference `artifact-ref/v1` | `urn:swissknifeman:aicore:artifact-ref:v1`, `packages/aicore/schemas/artifact-ref/v1` | aicore (ext) | development | none yet; points at data stored by `aicore.state.blobs` |
@@ -67,7 +76,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | PluginManifest | `unit.json`; `extension/v1` for an external plugin | aicore | none |
 | ProviderDescriptor | provider manifest, `packages/aicore/configs/provider-capabilities.json` | aicore (provider) | model catalog is separate: `model-catalog/v1` |
 | SkillDescriptor | `skill-descriptor/v1` (`aicore.content.skill.describe_skill`) over skill frontmatter and `upstream.json`; `skills.json` and `skills-lock.json` keep their formats | aicore (content) | the receipt of skill digests in a run: P10 |
-| HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | modules' own `doctor` formats differ: P11, P12 |
+| HealthCheckDescriptor | `provides.doctor` in `unit.json`, `check-result/v1` | aicore and modules | the hub aggregator: P12 |
 | PolicyDecision | refusals `CODE: message`, run-policy | orch | structured decision inside the launch plan: P10 |
 | EffectRequest / Receipt | `exec/v1` `effect-receipt` | orch | `effect_id` as idempotency key: P10 |
 | Error taxonomy | `error/v1`, `aicore.provider.errors`, rules in `packages/aicore/configs/provider-errors.json` | aicore (provider) | the engine port and the modules adopt the classes: P10, P11 |
@@ -204,7 +213,7 @@ type against the producer schema; when they disagree the consumer fixture is fix
 
 | Aspect | Policy |
 | --- | --- |
-| Reads | `v1` only; no module produces it yet |
+| Reads | `v1` only; produced by `doctor --json` of every module that declares `provides.doctor` |
 | Writes | `$schema: urn:swissknifeman:aicore:check-result:v1`, required `check_id`, `status`, `category`, `observed` |
 | Upcast | none |
 | Deprecation window | set with `v2` |

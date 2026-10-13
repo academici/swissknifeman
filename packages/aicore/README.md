@@ -155,14 +155,30 @@ A candidate qualifies when its `unit.json` has `"id": "aicore"`. The fragment ex
 `AICORE_LIB=$AICORE_ROOT/lib`, which the wrapper puts on `PYTHONPATH`. When nothing is found it prints
 `AICORE_NOT_FOUND` with the hint to set `AICORE_ROOT` and exits with code 2.
 
-## Compatibility shim
+## Removed names
 
-The root `core/` package is a transitional alias layer. Its `__init__.py` makes `aicore` importable (using
-`AICORE_ROOT`, otherwise the sibling `packages/aicore/lib`) and registers every moved module under its old name as
-the same module object (`core.io` is `aicore.util.io`, `core.provider.lock` is `aicore.artifacts.lock`), and keeps
-the old flat `core.__all__`. The window lasts until `core/` is removed, when the hub modules move onto `aicore`.
-New code imports `aicore`, never `core`. A test checks that every alias is the same object and that the facade is
-unchanged.
+The root `core/` package and its import shim are removed: there is no `core` module, no flat facade and no `core.*`
+alias. Import the subsystem directly (`aicore.util.io`, `aicore.provider.*`, `aicore.artifacts.lock`, ...). The legacy
+`aicore.util.paths.state_dir` is removed too; use `aicore.state.state_dir(app)` (and `data_dir`, `config_dir`). Run analytics
+that used to live in `core` belong to `analyst` and are read through `analyst runs show|codegraph --json`.
+
+## Partner commands
+
+`aicore.util.partners` finds the command of another module and reads its JSON, so no module imports a partner or names its
+folder. `partner_command(name)` returns the argv prefix or `None`: the deprecated variables the caller lists in
+`legacy_env` (one warning), `SKM_<NAME>_BIN`, `SKM_<NAME>_ROOT/bin/<name>`, then `<name>` on `PATH`; for `planner` it is
+`PLANNER_PLAN_PY`, `PLANNER_ROOT/scripts/plan.py`, the deprecated `SKM_TASK_ROOT`, then `planner` on `PATH`.
+`require_partner` raises `PartnerUnavailable` (`PARTNER_UNAVAILABLE: <name> not found (set SKM_<NAME>_ROOT or put <name> on
+PATH)`) and `run_partner_json(name, args)` returns the decoded stdout or raises `PartnerError`.
+
+## Provider selection and MCP projection
+
+The `[aicore.providers]` table of the project configuration selects the provider surfaces rolled out into a project:
+`contract_version` and `[aicore.providers.selection.<provider>]` with `enabled`. It is allowed only in the project layer; its
+owner is `aicore.provider`, and `maind` and `harness` read it (the legacy `.swissknife.json#/providers` is still read with a
+warning). `aicore.provider.mcp` holds the pure MCP projection (`McpServer`, `McpProjection`, `parse_mcp_catalog`,
+`plan_mcp_projection`, `plan_mcp_artifact`, `render_mcp_projection`); the caller passes parsed documents and the artifact
+sources, so the foundation names no module path.
 
 ## Contracts
 

@@ -36,8 +36,9 @@ Selecting projects (`select_projects`) — exactly one of `--project` / `--names
 | `instructions` | managed instruction blocks for the selected providers | `sync.py` → harness instructions |
 | `gitignore` | appends `.gitignore` lines from `packages/aicore/configs/gitignore-policy.json` for service files that already exist (`ignore`, and `portable-or-ignore` when the file holds a machine path). Does not delete lines and does not run `git rm --cached`. Last, so files written earlier in the same sync are visible | `aicore/state/gitignore.py` |
 
-> `memory-hook` reads «intent» memory from `<project>/.claude/memory.env.ini` (`MODE`),
-> who writes `maind onboard --memory`. So auto-download can be extended to already connected
+> `memory-hook` reads «intent» memory from the committed `<project>/.swissknifeman/hooks.env` (`MEMORY_MODE`; legacy
+> `<project>/.claude/memory.env.ini` while there is no carrier), which `maind onboard --memory` sets through
+> `harness hooks --memory` (skipped with `PARTNER_UNAVAILABLE` without harness). So auto-download can be extended to already connected
 > projects without full onboard: `maind sync --all --only memory-hook`.
 >
 > `skills-catalog`/`output-style` — the same principle for skills and terse voice: `skiller

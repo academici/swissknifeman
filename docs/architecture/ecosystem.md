@@ -62,8 +62,8 @@ swissknifeman/                      # the hub repository
 | `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/planner` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch` (research in `docs/research`) |
-| `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus `topology`, `listing`, `state` from `skiller` |
-| `analyst` | analytics, lessons, traces | `aicore` | `packages/analyst` (run analytics moved from `core`) |
+| `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus the `topology` registry of the machine from `skiller` |
+| `analyst` | analytics, lessons, traces, run analytics, subscriber of run events | `aicore` | `packages/analyst` (run analytics from the former `core`) |
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
 | `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`) |
@@ -73,6 +73,11 @@ The file-level map, with the stage that moves each entry and a confidence mark, 
 [ownership](ownership.md); this document does not copy it.
 
 ### How modules are linked
+
+A module reaches a partner only through the partner's public command with JSON output, found by `aicore.util.partners`
+(`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`, then `PATH`); a missing partner is `PARTNER_UNAVAILABLE` and the command
+degrades ([ADR 0063](decisions/0063-partner-command-links.md)). The boundary check is strict: `check --strict` has no
+exception for code ([ADR 0071](decisions/0071-core-and-artifex-removal-and-strict-boundaries.md)).
 
 ```mermaid
 flowchart LR
@@ -106,7 +111,9 @@ flowchart LR
 | analyst to planner | read-only planner CLI | plan read API |
 | planner to brain, analyst | events | `planner.*` |
 | orch to analyst | events | `orch.run.*` |
-| maind to skiller, planner, harness, brain | module CLIs | provisioning commands |
+| maind to skiller, planner, harness, brain, analyst | partner commands found by `aicore.util.partners` | provisioning commands and JSON commands of the partner (`run-lookup/v1`, `mcp-catalog/v1`, `profile-resolution/v1`) |
+| analyst to maind | partner command | `maind projects list --json` |
+| doctors of maind, analyst, harness, skiller, brain | contract | `check-result/v1`, aggregated by the hub |
 | every module to aicore | import | `aicore` range in `unit.json` |
 
 ## 3. Module contract
@@ -153,7 +160,7 @@ named adapters: a new provider is an adapter plus a catalog entry; a new kind of
 | `aicore.util` | atomic write, paths, text, terminal, CLI, processes, HTTP, repository root, managed blocks, project type | all |
 | `aicore.config` | layered configuration with schemas and an explanation of where a value comes from | all |
 | `aicore.state` | standard places for state, cache and backups; `SKM_HOME` for isolation | all |
-| `aicore.provider` | provider capability manifests, configuration, control plane, health, adapter registry, model catalog | harness, maind, planner, orch, skiller |
+| `aicore.provider` | provider capability manifests, configuration, control plane, health, adapter registry, model catalog, MCP projection (`aicore.provider.mcp`) | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile, backups | skiller, harness, maind |
 | `aicore.content` | skill model and `skill-descriptor/v1`, the one token estimate and context budgets, publication mechanics (manifest bytes, whole-file artifacts, Codex plugin manifest, publication lock), the shared part of command projection, skill and system-bank evaluation with `eval-context/v1`; later: agent, hook and instruction models | skiller (harness uses the token estimate; planner uses command projection from P9) |
 | `aicore.delivery` | mechanics of connecting plugins and skills to a project: Codex plugin selection, Claude marketplace settings merge, vendor and marketplace distribution plans, managed skill copies with manifest and `skills-lock.json` | skiller now; planner, brain, hub when they connect through it |
@@ -180,11 +187,11 @@ knows no bucket or host moved into `aicore.content`, `aicore.delivery` and `aico
   publication catalog and the rendering of unit kinds (bucket, curated, meta, management), `registry.py` and
   `skills.json`, `connect`, `vendor`, `update`, `status`, `skillset` planning, `doctor`, `config`, `lock`, `resolve`
   and the `skiller` commands over the moved functions. Delivery to the fleet, `host.py` and the root bootstrap are hub
-  work (P12); `lock.py` and `resolve.py` meet the orch bridge (P10); `topology`, `listing` and `state` go to `maind`
-  (P11), `brain_sync` to `brain` (P7); the skills move with their modules (P8).
+  work (P12); `lock.py` and `resolve.py` meet the orch bridge (P10); `topology` moved to `maind` (P11) while `listing` and `state` stay with `skiller`
+  as the registry of connected projects (`skiller list --json`), `brain_sync` to `brain` (P7); the skills move with their modules (P8).
 - `planner`: the catalog of commands, routing and the wrapper texts of command projection (P9); only the shared part is in
   `aicore.content.commands`.
-- `harness`: rendering of instruction projections (P11).
+- `harness`: the pure MCP projection is `aicore.provider.mcp` (P11); the profile renderers stay in harness.
 
 ## 5. Configuration and service files
 
@@ -245,16 +252,16 @@ What each service file is today, who writes it and where it ends up:
 | --- | --- | --- |
 | `<project>/.swissknife.json` (plugins, providers) | skiller | `.swissknifeman/config.toml`, table `[skiller]` (done in P8; the legacy file is read with a warning until upgrade); providers move with `delivery` |
 | `<project>/.swissknifeman/config.json` (vendor skillset) | skiller | table `[skiller.sync]` of the same file (done in P8; the legacy file is read with a warning until upgrade) |
-| `<project>/.swissknifeman/provider-artifacts.lock.json`, `rogue-lock.json`, `receipts/` | core.provider, skiller | `.swissknifeman/state/` |
+| `<project>/.swissknifeman/provider-artifacts.lock.json`, `rogue-lock.json`, `receipts/` | aicore.provider, skiller | the lock stays where it is (a committed contract read by hooks); `rogue-lock.json` and `receipts/` go to `.swissknifeman/state/` |
 | `<project>/.swissknifeman-manifest.json`, `.swissknifeman-codex-links.json` | skiller | `.swissknifeman/state/` |
-| `<project>/.claude/{auto-approve,memory,review-gate}.env.ini` | harness, maind | sections `hooks.auto_approve`, `memory.mode`, `hooks.review_gate` of the project config; shell hooks read the generated `.swissknifeman/state/hooks.env`, which is not edited by hand |
-| `*.bak`, `*.provider-artifact.bak` next to files | core.io, harness, maind, skiller | `.swissknifeman/backups/<ts>/` with rotation |
+| `<project>/<provider>/<hook>.env.ini` (legacy `.claude/{auto-approve,memory,review-gate}.env.ini`) | harness, maind | `[harness.hooks.<hook>]` of the project config; `harness hooks sync` generates the committed `.swissknifeman/hooks.env`, which hooks read first and which is not edited by hand (done in P11; the legacy file is read until upgrade) |
+| `*.bak`, `*.provider-artifact.bak` next to files | aicore.util, harness, maind, skiller | `.swissknifeman/backups/<ts>/` with rotation through `aicore.state.backup` (done in P11 for maind and harness) |
 | `<project>/.maind.graph.json` | maind | table `[maind.graph.links.<project>]` of the project config (done in P11; the legacy file is read with a warning until upgrade) |
-| `<project>/.claude/agent-pack.lock.json` | harness | `.swissknifeman/state/agent-packs.lock.json` |
-| `~/.swissknifeman/{topology,projects}.json` | skiller | `~/.local/state/swissknifeman/` |
+| `<project>/.claude/agent-pack.lock.json` | harness | stays: a committed contract that hooks read; the code holds only the constant |
+| `~/.swissknifeman/topology.json`, `~/.swissknifeman/projects.json` | maind (topology), skiller (projects) | `<state>/maind/topology.json` and `<state>/skiller/projects.json` (done in P11; the legacy files are read with a warning until upgrade) |
 | `~/.maind/{projects,agents}.json`, `<module>/data` | maind | `~/.local/state/swissknifeman/maind/` and `~/.local/share/swissknifeman/maind/` (done in P11; the legacy places are used with a warning until upgrade) |
 | `config.json` (also `.maind.json`) in the repository root (machine-specific, ignored by git) | maind | settings: table `[maind]` of `~/.config/swissknifeman/config.toml`; fleet registry (projects, namespaces, agent definitions, MCP servers, providers, role packs): `~/.local/state/swissknifeman/maind/registry.json` (done in P11; the legacy file is read, and the registry written back to it, until upgrade) |
-| `safe-dirs.json` in the repository root (machine-specific, ignored by git) | harness | `~/.config/swissknifeman/config.toml` |
+| `safe-dirs.json` in the repository root (machine-specific, ignored by git) | harness | `<config>/harness/safe-dirs.json` (done in P11; the legacy files are read as later steps of the ladder) |
 | `<project>/.swissknife.json#/providers` | aicore.provider, maind | table `[aicore.providers.selection.<provider>]` of the project config (done in P11; the legacy carrier is read with a warning until upgrade) |
 | `~/.claude/hooks/*` (global hooks) | harness | stay (a Claude surface) but are installed from the harness catalog with a lock file |
 | `~/.local/bin/*` symlinks into the working copy | `install.sh` | created by `swissknifeman install`; the registry of installed modules lives in state |
@@ -407,29 +414,38 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   ([ADR 0046](decisions/0046-brain-surface-and-vault-lookup.md),
   [ADR 0047](decisions/0047-document-sync-through-a-host-command.md),
   [ADR 0048](decisions/0048-plan-closed-subscriber-and-idempotent-notes.md)).
-- **Still to come:** the move of `maind` onto `brain vault` (P11), `brain`
+- **Still to come:** `brain`
   on `PATH` (P12), the migration of `.swissknife.json::memory_brain` (P13). Moving the external vault code comes later
   ([ADR 0007](decisions/0007-brain-module-scope.md)).
 
 ### maind
 
-Memory, graph, the project registry (including `topology` and `listing` from `skiller`), provisioning (onboard, sync,
-deploy) on top of `aicore.artifacts` and `aicore.config`, and the MCP server. The vault parts (`MAIND_BRAIN_VAULT`,
-`cache-brain-docs.sh`) go to `brain`.
+Memory, graph, the project registry, the machine topology (`maind topology`), provisioning (onboard, sync,
+deploy) on top of `aicore.artifacts` and `aicore.config`, and the MCP server. Settings are the `[maind]` table of the
+layered configuration and the fleet registry is `<state>/maind/registry.json`
+([ADR 0065](decisions/0065-maind-configuration-and-state.md)). It imports only itself and `aicore`: harness, analyst,
+skiller and brain are reached through their commands
+([ADR 0063](decisions/0063-partner-command-links.md), [ADR 0066](decisions/0066-maind-harness-link-and-mcp-projection.md)).
+The MCP server negotiates the protocol version ([ADR 0070](decisions/0070-maind-mcp-protocol-negotiation.md)). The vault
+location comes from `brain vault --json`.
 
 ### analyst
 
 Lessons, digest, metrics, provider readers and traces, plus run analytics (`run_reports`, `pathology`, `codegraph`;
-moved from `core`). Other modules read run reports through `analyst runs show|codegraph --json` (contracts `run-lookup/v1`
-and `run-codegraph/v1`), found with `aicore.util.partners`. Subscribes to `planner.*` and `orch.run.*`. Reads the planner
-workflow through its CLI, not by import.
+moved from the former `core`). Other modules read run reports through `analyst runs show|codegraph --json` (contracts `run-lookup/v1`
+and `run-codegraph/v1`), found with `aicore.util.partners`. Subscribes to `planner.*` and `orch.run.*` and records outcomes without copying event data
+([ADR 0064](decisions/0064-run-analytics-in-analyst-and-event-subscriber.md)). Reads the planner workflow and the project
+registry (`maind projects list --json`) through their commands, not by import.
 
 ### harness
 
 Catalogs and policies of the environment: permissions, settings, hooks, agent packs, profiles, instructions and MCP.
 Dividing rule: **rendering into a provider format belongs to `aicore.provider`; catalogs and policies belong to
-`harness`.** The concrete renderers (`cursor_render`, `grok_render`, `provider_render`, instruction projection) move by
-this rule in the stage of the hub modules.
+`harness`.** The pure MCP projection is `aicore.provider.mcp`; the profile renderers (`cursor_render`, `grok_render`,
+`provider_render`) stay in harness because they carry policy and have one consumer. Hook modes live in `[harness.hooks]` and
+the committed `.swissknifeman/hooks.env` ([ADR 0067](decisions/0067-harness-configuration-and-state.md)); the instruction
+catalog holds its targets as data ([ADR 0068](decisions/0068-instruction-catalog-and-legacy-driver.md)). harness gives
+maind JSON commands: `mcp catalog`, `profiles resolve`, `hooks codex-lifecycle`, `instructions scopes`.
 
 ### hub root
 

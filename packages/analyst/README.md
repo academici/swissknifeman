@@ -41,7 +41,9 @@ analyst digest    [--cwd | --session UUID]      # run-report → candidates for 
 analyst review    [--state ephemeral|candidate|curated] [--json]
 analyst promote   <id> [--to candidate|curated] [--yes]   # human-gate; curated → memory mAInd
 analyst deprecate <id>                          # soft-demo (not deleted - audit)
-analyst doctor                                  # environment diagnostics
+analyst doctor [--json]                         # environment diagnostics (check-result/v1)
+analyst runs      show|codegraph --project DIR [--json]   # run reports and code graph usage (run-lookup/v1, run-codegraph/v1)
+analyst events    ingest --event -|FILE | list [--type T] [--since ISO] [--json]   # ecosystem run outcomes
 analyst workflow-scan --output DIR --now ISO    # read-only workflow fleet evidence
 ```
 
@@ -76,6 +78,19 @@ An invalid value stops the command with the file and line. The cross-project sta
 lives in the `analyst` folder of the machine state directory (`~/.local/state/swissknifeman/analyst`, or under
 `SKM_HOME`); a folder left at `~/.swissknifeman/analyst` is still read, with one warning, until it is moved.
 Documentation that says `<state>` means that directory.
+
+## Partners and events
+
+analyst imports only itself and `aicore`. It reads the project registry with `maind projects list --json` and promotes curated
+lessons with `maind`; both are found by `aicore.util.partners` (`SKM_MAIND_ROOT`, `SKM_MAIND_BIN` or `PATH`; the old `MAIND_BIN`
+works with one warning) and are optional: without them the command degrades with `PARTNER_UNAVAILABLE`. Other modules read run
+reports through `analyst runs show|codegraph --json`.
+
+The subscription `run-events` of `unit.json` runs `analyst events ingest --event -` for `planner.item.finished`,
+`planner.phase.closed`, `planner.plan.closed`, `orch.run.finished` and `orch.run.refused`. One line per event
+(`event_id`, `type`, `occurred_at`, `source`, `project`, `subject`, `outcome`, `data_digest`) goes to
+`<state>/analyst/ecosystem-events.jsonl`, once per event id; the values of `data` are not copied. `analyst events list`
+and `analyst status` show the counters.
 
 ## Skills
 

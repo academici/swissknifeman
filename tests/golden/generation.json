@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "b9d8ed708475",
-  "reason": "artifex scope removed from the instruction catalog; root sections no longer name core/",
+  "captured_from": "ae5110fd445a",
+  "reason": "module boundary sections of maind, analyst and harness use partner commands",
   "generators": [
     {
       "id": "skiller-registry",
@@ -205,7 +205,7 @@
     "bootstrap/publication-lock.json": "b4cc31f82dc7433c3f8498ac1ccfabfdc76ea391ad581a937cd35b824b716d9e",
     "docs/provider-support.md": "2e1d793c251c5b077020617804c67e7143608ac59c7271abdf634ca826724999",
     "packages/harness/docs/reference/provider-instructions.md": "76de972f2bf1b8e232d1fd3d134e5a8bb4c2207dbaaa2030468caa4cc31b5712",
-    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "70f4e0aa54e3c3294494bde9de870609cc3bc499e4b84a95c93edb7cf7e356fb",
+    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "50e60c7e08c92e547d700a28d9e4f6ae4538522987c0894ea3e1f3cf23bd47cd",
     "packages/planner/docs/reference/provider-commands.md": "43aa1483a8310e33e50f3b188474767774cc3f3839de0385dee57fd17d143923",
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "fd0b05fa5f4b6fb788582b23b1705ea82f67fd69071f59c1b3c4d034080d0780",

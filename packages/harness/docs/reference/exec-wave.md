@@ -19,8 +19,9 @@ the worker physically could not. The driver does not make decisions - he produce
   &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` under timeout (default 1800s),
   strictly one worker at a time (serial wave - parallel fan-out on
   common codebase does not start). Model selectors/effort are taken from the aicore model
-  catalog. The planner is found through `PLANNER_ROOT`, `SKM_TASK_ROOT` (deprecated),
-  `PLANNER_PLAN_PY` or the `planner` command on `PATH`; none found is `PLANNER_UNAVAILABLE`.
+  catalog. The legacy driver finds the planner through `PLANNER_ROOT`, `SKM_TASK_ROOT` (deprecated,
+  one warning), `PLANNER_PLAN_PY` or the `planner` command on `PATH` (never a neighbouring folder or the monorepo root); none
+  found is `PLANNER_UNAVAILABLE`. The invocation template comes from the `aicore` model catalog, not from a planner file.
 - **`gate`** gives a verdict `GREEN`/`ATTENTION`/`RED` from four sources:
   run outcome class, `plan.py check` (errors RED, warnings ATTENTION), git
   closing (`<SHA to>..HEAD` commits and the uncommitted remainder outside the plan directory),

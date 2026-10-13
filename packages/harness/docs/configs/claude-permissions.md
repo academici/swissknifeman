@@ -248,11 +248,11 @@ harness doctor --settings --target .
 # machine output (CI/fleet): single JSON, exit-code 0 clean / 1 warn / 2 error
 harness doctor --settings --target . --json
 
-# check with explicit policy-profile (overlaps .swissknife.json:policy_profile)
+# check with explicit policy-profile (overlaps `[harness] policy_profile`)
 harness doctor --settings --profile max-permissive
 ```
 
-Project declares expected policy as key `policy_profile` in `.swissknife.json`
+Project declares expected policy as key `policy_profile` under `[harness]` in `.swissknifeman/config.toml` (the legacy `.swissknife.json` key is read with a warning)
 (profiles - `configs/claude-code/policy/<name>.json`: `base`, `max-permissive`);
 doctor checks the fact against the declaration. Audit **doesn't fix anything** — writer remains
 `harness permissions`. The same audit is available from the skill registry by facade

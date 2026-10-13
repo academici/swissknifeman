@@ -116,10 +116,42 @@ without flag - current directory. Warn in stderr as the week's median increases 
 adjacent) week - signal context-economy-relapse (permanent alternative to one-time measurement
 `skiller budget --first-turn` / `maind doctor --context`).
 
+## `analyst runs`
+
+```
+analyst runs show --project DIR [--session ID] [--project-id ID] [--json]
+analyst runs codegraph --project DIR [--limit N] [--json]
+```
+
+Read-only access to the run reports of a project. `runs show` prints the provenance-checked run report (the newest, or the one
+of `--session`), its code graph usage summary and the neutral analytics events; the exit is 0 also when there is no report
+(`lookup.status` is `found`, `rejected` or `missing`, with the rejection code as `reason`). `runs codegraph` prints the code
+graph summaries of the newest run reports of Claude Code, Cursor and Codex. With `--json` the output is the contract
+`run-lookup/v1` or `run-codegraph/v1` (`packages/analyst/schemas`). Other modules (`maind analyze`, the code graph usage
+report) read it through `aicore.util.partners` instead of importing analyst.
+
+## `analyst events`
+
+```
+analyst events ingest --event -|FILE
+analyst events list [--type T] [--since ISO] [--json]
+```
+
+`ingest` is the handler of the subscription `run-events` declared in `unit.json`: it receives one event of the types
+`planner.item.finished`, `planner.phase.closed`, `planner.plan.closed`, `orch.run.finished` and `orch.run.refused`, checks
+the envelope and appends one line `{event_id, type, occurred_at, source, project, subject, outcome, data_digest}` to
+`ecosystem-events.jsonl` in the analyst state directory, under a file lock and once per `event_id`. The values of `data` are
+never copied, only their digest. Another event type exits 0 and prints `skip` to stderr; an invalid event exits 2 with
+`ANALYST_EVENT_INVALID`. `list` prints the recorded events and the counts per type and outcome; `analyst status` shows the
+same counters. Registering the subscription in a project is a hub step.
+
 ## `analyst doctor`
 
 ```
-analyst doctor
+analyst doctor [--json]
 ```
 
-Environment diagnostics (python / core / maind).
+Environment diagnostics as `check-result/v1`: `analyst.environment` (Python floor `aicore.MIN_PYTHON`, writable state
+directory), `analyst.partners` (`maind` and `planner` are optional; `skip` when neither is found, `warn` for one) and
+`analyst.events` (the analytics journal of the current project). `--json` prints a list of documents, the text form prints
+`<status> <check_id>: <observed>`; exit 1 means a `fail`. The probe writes nothing.

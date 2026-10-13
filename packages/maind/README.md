@@ -78,8 +78,10 @@ maind projects list
 | `maind agents <list\|register\|heartbeat\|kill>` | agent registry |
 | `maind projects <list\|sync --from brain>` | project registry |
 | `maind migrate <from-brain\|from-agentmemory>` | import from brain / agent-memory |
-| `maind mcp` | run maind like MCP-server (stdio) |
-| `maind doctor` | environment diagnostics |
+| `maind mcp [tools [--json]]` | run maind like MCP-server (stdio); `tools` prints the tool list and `tools_digest` |
+| `maind topology <show\|init> [--json]` | machine map of the hub nodes (`<state>/maind/topology.json`) |
+| `maind health [--plan-repair\|--apply-repair]` | check a project's connection; repair is read-only or applied |
+| `maind doctor [--json]` | environment diagnostics; `--json` is a list of `check-result/v1` |
 
 ---
 
@@ -102,6 +104,14 @@ the monorepo, or `.maind.json`) is read with one `MAIND_LEGACY_CONFIG` warning: 
 registry back into that file). If there is no config at all, maind reads legacy `.projects.json` in
 mode read-only (with migration warning).
 
+## Partners
+
+maind imports only itself and `aicore`. It reaches `harness`, `analyst`, `skiller` and `brain` through their public
+commands with JSON output, found by `aicore.util.partners` (`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`, then `PATH`;
+the old `MAIND_*_BIN` variables work with one warning). A missing partner prints `PARTNER_UNAVAILABLE: <partner> not found
+(set SKM_<P>_ROOT or put <partner> on PATH)` and the step degrades: provider steps are skipped without harness, `maind
+analyze` marks the run report unavailable without analyst. Details: [docs/ecosystem.md](docs/ecosystem.md).
+
 ## Memory (scopes)
 
 HTTP-demon contract (agentmemory 0.9.x, verified live): `GET /agentmemory/health` ·
@@ -119,7 +129,7 @@ facade `federation.graph_reader`. `graph.adapter`: `federation` (default) | `dis
 
 ## MCP
 
-`maind mcp` — stdio JSON-RPC server (11 tools): memory (`store`/`recall`/`forget`), graph
+`maind mcp` — stdio JSON-RPC server (11 tools; protocol versions `2025-06-18` and `2024-11-05`, the requested one when supported, otherwise the newest): memory (`store`/`recall`/`forget`), graph
 (`query`/`neighbors`/`path`/`project`), `memory_links`, `agents_list`, `projects_list`,
 `projects_status`. Client connection (`.mcp.json`):
 
@@ -155,6 +165,7 @@ A project gets them through the `system` bucket of `skiller`: `skiller connect` 
 ```bash
 scripts/test.sh          # unittest (no third party dependencies and no live daemon)
 scripts/validate.sh      # py_compile + bash -n + JSON + tests
+bash scripts/test-integration.sh   # from the hub root: tests with partners wired
 npm run docs:dev         # documentation (VitePress)
 ```
 

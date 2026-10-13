@@ -1331,7 +1331,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1358,7 +1358,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1386,7 +1386,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1418,7 +1418,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1454,7 +1454,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1486,7 +1486,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1502,7 +1502,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.",
+          "intent": "Apply this source-derived instruction: Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path. Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.",
           "obligations": [
             {
               "modality": "must",
@@ -1516,14 +1516,17 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
+            "Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+            "`harness`",
+            "`aicore`",
+            "`aicore.util.partners`",
             "Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher.",
             "`skiller`",
             "`.swissknife.json:memory_brain`",
-            "`harness`",
             "never break paths already installed on consumers"
           ]
         },
@@ -1547,7 +1550,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
+              "sha256": "ed8bc6fcc92d95e9acb7d097d50b4921e8340f0097638cf3cd015a27a639efae"
             }
           ],
           "compatibility_assertions": [
@@ -1706,7 +1709,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
@@ -1734,7 +1737,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
@@ -1762,7 +1765,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
@@ -1779,7 +1782,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized. Also, never treat `graphify` as a live tool name — manual graph links live only in `<repo>/.maind.graph.json`.",
+          "intent": "Apply this source-derived instruction: Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path. Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized. Also, never treat `graphify` as a live tool name — manual graph links live only in `[maind.graph.links.<id>]` of the project configuration.",
           "obligations": [
             {
               "modality": "must",
@@ -1793,16 +1796,20 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
+            "Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+            "`maind`",
+            "`aicore`",
+            "`aicore.util.partners`",
             "Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized.",
             "`federation.graph_reader`",
             "`federation`",
             "`disabled`",
             "never treat `graphify` as a live tool name",
-            "manual graph links live only in `<repo>/.maind.graph.json`"
+            "manual graph links live only in `[maind.graph.links.<id>]` of the project configuration"
           ]
         },
         {
@@ -1825,7 +1832,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
@@ -1853,7 +1860,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
@@ -1885,7 +1892,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
+              "sha256": "250d94fd622ebdcbc575fa85e22c4aefe039685b0f5b6ffd7b5ae4645137c36a"
             }
           ],
           "compatibility_assertions": [
@@ -1985,7 +1992,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
@@ -2014,7 +2021,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
@@ -2042,7 +2049,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
@@ -2057,7 +2064,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules. The documented exception is `extract_pathologies`, which reads run-report history to detect recurrence and is limited to read-only I/O.",
+          "intent": "Apply this source-derived instruction: Import only `analyst` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path. Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules. The documented exception is `extract_pathologies`, which reads run-report history to detect recurrence and is limited to read-only I/O.",
           "obligations": [
             {
               "modality": "must",
@@ -2071,10 +2078,14 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
+            "Import only `analyst` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+            "`analyst`",
+            "`aicore`",
+            "`aicore.util.partners`",
             "Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules.",
             "`cmd_*`",
             "The documented exception is `extract_pathologies`"
@@ -2100,7 +2111,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
@@ -2129,7 +2140,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
@@ -2157,7 +2168,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [
@@ -2185,7 +2196,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
+              "sha256": "247da93a1b6e11be04460a84c1ead350b3ee8af1db3c0738b8ca0e2a9088e195"
             }
           ],
           "compatibility_assertions": [

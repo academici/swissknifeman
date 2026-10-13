@@ -301,14 +301,14 @@ does not authorize a tag, push, publication, fleet rollout, or provider repair.
 
 **Gate docs-impact (CI, `.github/workflows/hygiene.yml`).** `scripts/docs-impact.py` stops
 change-set, which enters/removes/renames the package surface file (`packages/<pkg>/
-{bin,lib,commands,configs}/**`, `core/*.py`, root `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
+{bin,lib,commands,configs}/**`, root `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
 or edits its interface paths (`bin`/`commands`/`configs`/`install.sh`), without editing docks
 **of the same package** (`packages/<pkg>/docs/**`; y `planner` — second legal home `docs/planner/**`;
 root - `docs/*.md`) in the same range. Bypass - commit trailer `Docs-Not-Needed: <reason>`
 (reason is printed, an empty value is not considered bypass).
 Measured frequency (research/24-P8.4-refine-2026-07-27.md` §1–§2,
 tree `cd93dbc8`): **8 of 12** PR, **11 of 41** commit. Coverage Boundary: Gate **does NOT catch**
-changing the behavior of an existing module `lib/**`/`core/*.py`/`scripts/*.{sh,py}` without new
+changing the behavior of an existing module `lib/**`/`scripts/*.{sh,py}` without new
 file and without editing the interface - this is a conscious narrowing (form «any surface editing» painted
 100 % PR and would have filmed on the very first controversial evening), rather than full coverage.
 
@@ -333,6 +333,13 @@ lists of rules - data:
 Blocks are listed in `configs/managed-blocks.json`. `--check` prints `DRIFT`/`MISSING <id>` and exits 1;
 `--write` regenerates only the text between the managed markers (the block itself is inserted by hand once).
 Never edit a managed block directly — edit the source and run `--write`.
+
+**Partner commands.** A module imports only itself and `aicore`. When it needs data or a service of another module it calls
+the partner's public command with JSON output, found by `aicore.util.partners` (`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`,
+then `PATH`; for planner `PLANNER_PLAN_PY` or `PLANNER_ROOT`). A missing partner is `PARTNER_UNAVAILABLE` on stderr and the command
+degrades; a test that needs a partner is skipped when none is found. `bash scripts/test-integration.sh` runs the tests of
+`analyst`, `maind` and `harness` with every partner wired from the hub layout, in a temporary `HOME`, so those tests run instead
+of being skipped. There is no `core/` folder any more; code that imported it imports `aicore`.
 
 **Bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to
@@ -458,7 +465,8 @@ describes how that work is isolated from a working machine. It is removed at cut
    ([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
    - `check [--strict] [--json]` runs the manifest, ownership-map, schema-identifier and boundary checks. Boundary
      violations that exist today are recorded in `configs/ecosystem-baseline.json`: a new violation (or a larger count)
-     fails with `ECOSYSTEM_BOUNDARY_NEW`, a smaller one is reported as an improvement, and `--strict` fails on any.
+     fails with `ECOSYSTEM_BOUNDARY_NEW`, a smaller one is reported as an improvement, and `--strict` fails on any. The baseline is empty and CI runs `check --strict`, so any violation fails; a path or import of
+     another module in code is never allowed, and `path_allow` holds only data with a reason.
    - `baseline --update` recomputes the baseline and prints the difference. Commit it only together with the reason in
      the commit message; a baseline update never hides a violation that was just introduced.
    - `render [--check]` regenerates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and the

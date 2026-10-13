@@ -107,9 +107,27 @@ sequenceDiagram
   maind-->>Dev: report (steps · deployed · graph)
 ```
 
+## Partner modules and degradation
+
+maind imports only itself and `aicore`. Other modules are reached through their public commands with JSON output, found by
+`aicore.util.partners`: `SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`, then `<name>` on `PATH` (the old
+`MAIND_HARNESS_BIN`, `MAIND_SKM_BIN`, `MAIND_BRAIN_BIN`, `MAIND_ANALYST_BIN` and `MAIND_BIN` are read with one deprecation
+warning). A missing partner is `PARTNER_UNAVAILABLE: <partner> not found (set SKM_<P>_ROOT or put <partner> on PATH)` on
+stderr and the step is skipped.
+
+| Partner | What maind asks | Without the partner |
+|:--|:--|:--|
+| `harness` | `mcp catalog`, `profiles resolve`, `hooks codex-lifecycle fragment\|validate`, `instructions scopes\|plan\|check\|apply`, `hooks show`, `hooks --memory` (all `--json`) | provider steps of deploy, sync and workspace are skipped; hub servers still deploy |
+| `analyst` | `runs show\|codegraph --json` (contracts `run-lookup/v1`, `run-codegraph/v1`) | `maind analyze` marks the source `run-report` unavailable (confidence low) |
+| `skiller` | `profiles --json` and the capability commands of `maind run` | the step is skipped |
+| `brain` | `vault --json` (vault location), used when `integrations.brain.path` and the `brain` project `vault_path` are not set | no vault path (a warning) |
+
+The pure MCP projection (`McpServer`, `plan_mcp_projection`, `render_mcp_projection`) is `aicore.provider.mcp`; harness
+only supplies the catalog. Run the module tests with partners wired using `bash scripts/test-integration.sh` from the hub.
+
 ## Config and data flow
 
-maind — **reader everyone** key files and **writer** only `registry.json`, MCP-configs
+maind — **reader everyone** key files and **writer** only `registry.json` (`<state>/maind/registry.json`), MCP-configs
 project and **own** `.claude/settings.local.json` (hub trust in ecosystem projects,
 see [Workspace](./guide/workspace)). Project skills described `skills-lock.json` (composes
 swissknifeman + Laravel Boost, swissknifeman wins). brain holds his `<vault>/.projects.json`

@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.7.0",
+  "fixture_version": "1.8.0",
   "provenance": {
     "captured_before_renderer": true
   },
@@ -617,10 +617,13 @@
         "codex"
       ],
       "assertions": [
+        "Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+        "`harness`",
+        "`aicore`",
+        "`aicore.util.partners`",
         "Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher.",
         "`skiller`",
         "`.swissknife.json:memory_brain`",
-        "`harness`",
         "never break paths already installed on consumers"
       ]
     },
@@ -726,12 +729,16 @@
         "codex"
       ],
       "assertions": [
+        "Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+        "`maind`",
+        "`aicore`",
+        "`aicore.util.partners`",
         "Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized.",
         "`federation.graph_reader`",
         "`federation`",
         "`disabled`",
         "never treat `graphify` as a live tool name",
-        "manual graph links live only in `<repo>/.maind.graph.json`"
+        "manual graph links live only in `[maind.graph.links.<id>]` of the project configuration"
       ]
     },
     {
@@ -838,6 +845,10 @@
         "codex"
       ],
       "assertions": [
+        "Import only `analyst` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+        "`analyst`",
+        "`aicore`",
+        "`aicore.util.partners`",
         "Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules.",
         "`cmd_*`",
         "The documented exception is `extract_pathologies`"

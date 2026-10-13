@@ -121,7 +121,7 @@ maind graph --cross --namespace axioma # cross-project layer of one group
 
 If memory is not raised in the project + maind MCP, development in progress «past» column/memory → spaces.
 `maind health --cwd` (client, from project) prints `connected|partial|standalone` + hints;
-`--fix` picks up memory and adds MCP-servers. «Priority №1» is delivered to projects as
+`--apply-repair` (`--fix` is a deprecated alias; `--plan-repair` only shows the steps) picks up memory and adds MCP-servers. «Priority №1» is delivered to projects as
 managed block in `CLAUDE.md`. SessionStart-hook available as explicit opt-in via
 `observability.session_start_health_hook`; default health is started manually.
 

@@ -57,7 +57,7 @@ maind sync --all --only health-doc,health-hook --mode update   # update outdated
 ## Troubleshooting
 
 - `memory daemon not running The project does not have` → `maind start --only memory`.
-- `no … MCP in the project` → `maind sync --only mcp --project <id>` (or `maind health --fix`).
+- `no … MCP in the project` → `maind sync --only mcp --project <id>` (or `maind health --apply-repair`).
 - `missing-path` →  `local_path` or the path does not exist - correct `config.json`.
 
 Next: [Sync →](./sync)

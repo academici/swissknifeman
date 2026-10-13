@@ -51,16 +51,20 @@ Global installation of hook files (times per car) and enabling project modes.
 ```
 harness hooks --global                            # auto-approve/memory/notify/log/review-gate → ~/.claude/hooks
 harness hooks --target . --auto-approve strict    # strict|permissive|bypass|off
-harness hooks --target . --memory core:federation # file|federation|agentmemory|off
+harness hooks --target . --memory core:federation # file|federation|agentmemory|maind|manual|off
+harness hooks sync|show [--target P] [--json]     # render / inspect .swissknifeman/hooks.env
 ```
 
-- `--auto-approve` writes `.claude/auto-approve.env.ini` and registers PreToolUse-hook
-  (Bash/ExitPlanMode), merge-only.
+- The mode flags (`--auto-approve`, `--memory`, `--router`, `--run-report`, `--pack-guard`, `--plan-guard`, ...) set a key of
+  `[harness.hooks.<hook>]` in `.swissknifeman/config.toml` and regenerate the committed `.swissknifeman/hooks.env`; no
+  `*.env.ini` is written any more ([hook modes](./reference/hook-intent-files)). `harness hooks sync` regenerates the carrier
+  from the configuration, `harness hooks show` prints configuration, carrier and legacy files (`hooks-state/v1`).
+- `--auto-approve` also registers the PreToolUse-hook (Bash/ExitPlanMode), merge-only.
 - `--memory BRAIN:MODE` attaches the project to the brain: `.swissknife.json:memory_brain`
-  + `.claude/memory.env.ini`.
+  + `[harness.hooks.memory]` (`MEMORY_MODE` in `.swissknifeman/hooks.env`).
 - **review-gate** (`SubagentStop`) — deterministic architecture gate: drives away
   project verification after the subagent, `warn` → hint, `strict` → block. Mode in
-  `.claude/review-gate.env.ini` (`off|warn|strict`, default `warn`), check in
+  `[harness.hooks.review_gate]` (`off|warn|strict`, default `warn`), check in
   `.claude/review-gate.config.json` (`check_command`; empty → no-op). Details -
   `hooks/review-gate/README.md`.
 
@@ -141,10 +145,35 @@ harness instructions adopt --authorize <target> --owner-decision D# \
 - Manual editing of managed blocks (between HTML-markers) banned forever -
   next `check`/`repair` will see this as `managed-drift`.
 
+### JSON commands for other modules
+
+`maind` (and any other module) reaches harness only through these commands, found by `aicore.util.partners`; each prints a
+closed contract with `--json`:
+
+| Command | Contract |
+|:--|:--|
+| `harness mcp catalog [--provider ID]` | `mcp-catalog/v1`: the catalog, the bindings and the sources for the artifact lock |
+| `harness profiles resolve --provider ID --profile ID --target-scope S ...` | `profile-resolution/v1` |
+| `harness hooks codex-lifecycle fragment` / `validate --document FILE --memory-command CMD` | `codex-lifecycle/v1` |
+| `harness instructions scopes` | `instruction-scopes/v1` (scope ids and target files from the catalog) |
+| `harness hooks show` / `sync` | `hooks-state/v1` |
+
+The pure MCP projection these commands feed is `aicore.provider.mcp`; the profile renderers stay in harness.
+
+### Settings: `policy_profile`
+
+The project's expected policy is `policy_profile` under `[harness]` in `.swissknifeman/config.toml`; the legacy
+`.swissknife.json` key is still read with one `HARNESS_LEGACY_POLICY_PROFILE` warning until `swissknifeman upgrade`.
+The provider selection of a project is `[aicore.providers.selection.<id>]`. Settings writers keep the replaced file through
+`aicore.state.backup`; the locks `.swissknifeman/provider-artifacts.lock.json` and `.claude/agent-pack.lock.json` stay where
+they are.
+
 ### `harness doctor`
 
-Diagnostics: presence of presets and `apply-permissions.sh`, whether the files are installed
-hooks in `~/.claude/hooks/`. Provider audit:
+`harness doctor --json` prints a list of `check-result/v1` documents: `harness.environment` (Python floor
+`aicore.MIN_PYTHON`, presets and launcher), `harness.hooks` (hook files in `~/.claude/hooks/`), `harness.hooks-env` (the
+carrier is current) and `harness.safe-dirs`; the text form prints `<status> <check_id>: <observed>`. The probe writes nothing and
+prints no secret. Provider audit:
 
 ```
 harness doctor --settings --provider cursor --target .
@@ -155,8 +184,8 @@ harness doctor --provider-audit
 
 - `skiller connect`/`vendor`/`integrate` name `harness permissions` under the hood
   (`--no-permissions` disables) — does not need to be installed separately.
-- Memory shares state with `skiller` (`~/.swissknifeman/`): installed hooks
-  `~/.claude/hooks/memory/` read `topology.json`/`projects.json` from there.
+- Memory shares state with the other modules: installed hooks `~/.claude/hooks/memory/` read the machine
+  `topology.json`/`projects.json` registries (legacy place `~/.swissknifeman/`).
 - Plugin `harness@swissknifeman` gives slash-commands `/harness:*`.
 
 ## Development clone guard

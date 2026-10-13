@@ -20,7 +20,9 @@ invariants and data layout.
 | `promote.py` | pipeline + **man-gate** curated + surfacing to memory mAInd (subprocess, graceful) |
 | `trace.py` | **Unified Agent Trace v1** — sole owner of the schema `TraceRecord`: assembly/record validation (provenance + sha256), fail-closed on any raw key potentially carrying chain-of-thought/tool-payload/secret, `quality.completeness` for six groups of fields with a reason for each missing one, dedup resume/fork by natural key |
 | `metrics.py` | paired reliability metrics over committed ones `TraceRecord` and frozen bank: `numerator/denominator/exclusions/completeness/source-trace-IDs/baseline-proof-class` in each entry; absent candidate - `deferred`, and not a silent zero; baseline class `pinned-not-recomputable`/`unknown` cannot justify comparison (fail closed) |
-| `doctor.py` | environment diagnostics |
+| `run_reports.py`, `pathology.py`, `codegraph.py`, `runs_cli.py` | run analytics (run-report lookup, pathology detection, code graph usage) and `analyst runs`; contracts `run-lookup/v1`, `run-codegraph/v1` |
+| `ecosystem_events.py`, `telemetry.py` | `analyst events ingest|list` (subscriber of `planner.*` and `orch.run.*`) and the names of spans and metric labels from the conventions of `aicore` |
+| `doctor.py` | environment diagnostics as `check-result/v1` |
 
 The table names the carrier modules; complete package map (including `capture`/`events`/`readers`/
 `runs`/`ingest`/`proposals`/`sessions`/`status`/`token_report`) — in `packages/analyst/CLAUDE.md`.
@@ -40,7 +42,7 @@ publication surface.
 - **Privacy:** raw — LOCAL-only; out - abstracted only `trigger→action`; secrets at the link.
 - **stdlib-only** — none pip-dependencies in runtime (without daemon/networks).
 - **`Env` is passed explicitly** (frozen dataclass), without modular globals - testable in tmpdir.
-- **Atomic JSON** (`core.atomic_write_json`); `audit`/`events` — overwrite only, never overwrite.
+- **Atomic JSON** (`aicore.util.io.atomic_write_json`); `audit`/`events` — overwrite only, never overwrite.
 - **Extractors/generators - pure functions** (input → exit, without I/O/hours); IO — only in `cmd_*`/writers.
 - **Determinism + namespace-insulation** are inherited throughout cross-project layer.
 
@@ -60,11 +62,12 @@ publication surface.
 
 ## Ecosystem Connections
 
-- **[mAInd](/maind/)** — `curated`-lessons pop up in the shared memory (`maind memory`, subprocess,
+- **[mAInd](/maind/)** — the project registry is read with `maind projects list --json`; `curated`-lessons pop up in the shared memory (`maind memory`, subprocess,
   graceful: the demon lay down → lesson on disk, will repeat later). Namespace-insulation scan is inherited from here.
 - **[skiller](/skiller/)** — endpoint `suggest`: draft → person → registered skill.
 - **[harness](/harness/)** — hook `run-report` captures the run (input for `digest`).
-- **core** — general stdlib-foundation (`Env`/`io`/`text`/`term`), connects via PYTHONPATH.
+- **[planner](/planner/), orch** — events `planner.item.finished`, `planner.phase.closed`, `planner.plan.closed`, `orch.run.finished`, `orch.run.refused` are recorded by `analyst events ingest` (subscription `run-events`).
+- **aicore** — the foundation (`Env`, `io`, `text`, `term`, `partners`, `telemetry`); the only module analyst imports. Other modules are reached through their commands found by `aicore.util.partners`; none is required.
 
 ## Development
 

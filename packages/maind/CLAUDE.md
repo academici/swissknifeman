@@ -17,7 +17,7 @@ Keep agent-memory, the maind federation graph, and the Serena code graph as inde
 Keep `bin/maind` as the launcher, `lib/maind/` as stdlib-only logic, `provision/` and `analysis/` as named subpackages, and tests independent of a live daemon.
 <!-- instruction:maind.module-boundaries -->
 ## maind.module-boundaries
-Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized. Also, never treat `graphify` as a live tool name — manual graph links live only in `<repo>/.maind.graph.json`.
+Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path. Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized. Also, never treat `graphify` as a live tool name — manual graph links live only in `[maind.graph.links.<id>]` of the project configuration.
 <!-- instruction:maind.orchestration -->
 ## maind.orchestration
 Keep memory, graph, and code-graph modules decoupled; combine them only through onboarding, sync, and orchestration entry points.

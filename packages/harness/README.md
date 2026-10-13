@@ -32,11 +32,28 @@ harness hooks --global                         # hook files in ~/.claude/hooks (
 harness hooks --target . --auto-approve strict # enable auto-approve for the project
 harness hooks --target . --memory core:federation
 
-harness doctor                                 # diagnostics
+harness hooks sync|show --target .             # modes: [harness.hooks] -> .swissknifeman/hooks.env
+harness doctor [--json]                        # diagnostics (check-result/v1)
 ```
 
-Writing to projects - **merge-only**: existing rules/servers are saved, file
-is backed up to `*.bak`.
+Writing to projects - **merge-only**: existing rules/servers are saved, the replaced file is kept through
+`aicore.state.backup`.
+
+## Configuration and state
+
+Hook modes are keys of `[harness.hooks.<hook>]` in the project's `.swissknifeman/config.toml` (with `providers.<id>` overrides);
+`harness hooks sync` generates the committed `.swissknifeman/hooks.env` that the installed hooks read first (then the legacy
+`<provider>/<hook>.env.ini`, then their default). `policy_profile` is `[harness] policy_profile`. The `safe-dirs.json` allowlist is
+`<config>/harness/safe-dirs.json`. The locks `.swissknifeman/provider-artifacts.lock.json` and `.claude/agent-pack.lock.json` stay in the
+project. Legacy places are read with one warning until `swissknifeman upgrade`.
+
+## Partners and JSON commands
+
+harness imports only itself and `aicore`; other modules are reached through their commands found by `aicore.util.partners`
+(the legacy `run` driver looks for planner with `PLANNER_ROOT`, `PLANNER_PLAN_PY` or `PATH`). maind reaches harness through
+`harness mcp catalog --json`, `profiles resolve --json`, `hooks codex-lifecycle fragment|validate --json` and
+`instructions scopes --json`; without harness maind skips its provider steps with `PARTNER_UNAVAILABLE`. The instruction catalog
+(`configs/common/instructions/catalog.json`) holds the scope targets as data. See [docs/index.md](docs/index.md).
 
 ## Presets
 

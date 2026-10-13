@@ -1,11 +1,12 @@
-# core — transitional compatibility shim
+# core — removed
 
 **What is this.** The root `core/` package used to hold the shared stdlib-only primitives of the monorepo. They moved
-into the foundation module [`packages/aicore`](../../packages/aicore/README.md). `core/` now has two parts: a shim
-that keeps the old import names working, and the modules whose owners are later stages.
+into the foundation module [`packages/aicore`](../../packages/aicore/README.md), and the folder `core/` is gone: there is
+no import shim and no `AICORE_ROOT` fallback for the name `core`
+([ADR 0071](../architecture/decisions/0071-core-and-artifex-removal-and-strict-boundaries.md)).
 
-**When to touch.** Never for new code: import `aicore`. The shim is removed together with `core/` when the hub
-modules move onto `aicore` ([ADR 0028](../architecture/decisions/0028-aicore-subsystems-and-core-shim.md)).
+**When to touch.** Never. New and old code import `aicore`; code outside the repository that imports `core` must switch to
+the names below.
 
 ## Where the code went
 
@@ -17,13 +18,7 @@ modules move onto `aicore` ([ADR 0028](../architecture/decisions/0028-aicore-sub
 | `core.usage` | `aicore.usage` |
 | `core.gitignore_policy` | `aicore.state.gitignore` |
 | `core.runs`, `core.pathology`, `core.codegraph_telemetry` | `analyst.run_reports`, `analyst.pathology`, `analyst.codegraph`; read by other modules through `analyst runs show\|codegraph --json` |
-
-Every old name is registered in `sys.modules` as the same module object as the new one, so `mock.patch("core.io.os.replace")`
-acts on `aicore.util.io`. The flat facade `from core import …` keeps its previous `__all__`. If `aicore` is not
-importable, the shim looks for it in `$AICORE_ROOT/lib`, then in `packages/aicore/lib` next to `core/`; otherwise it
-raises `ImportError("aicore not found: set AICORE_ROOT or run from the monorepo")`.
-
-Run analytics left `core/` for `analyst`. `core/` now holds only the shim and its test.
+| `aicore.util.paths.state_dir` | `aicore.state.state_dir` |
 
 ## Reference: run telemetry (SCHEMA=2)
 

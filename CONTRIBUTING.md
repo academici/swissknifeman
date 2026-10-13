@@ -1,14 +1,13 @@
 # Contributing — swissknifeman (monorepo-umbrella)
 
 Guide for monorepo root contributors. This **ecosystem umbrella academici**: one repository -
-three independent packages (`skiller`, `harness`, `maind`) + general `core` + root router
+isolated modules in `packages/<id>/` (`aicore`, `skiller`, `planner`, `orch`, `maind`, `analyst`, `harness`, `brain`) + root router
 `swissknifeman`. Detailed map - in [`CLAUDE.md`](CLAUDE.md) (root and each package).
 
 ## Layout
 
 ```
 packages/aicore/      # foundation: stdlib-only util/provider/artifacts/usage, schemas, provider data
-core/                 # transitional shim over aicore (until the hub modules move onto aicore)
 packages/skiller/     # skill registry            (CLI skiller)   — see packages/skiller/CONTRIBUTING.md
 packages/harness/     # environment Claude Code      (CLI harness)
 packages/maind/       # memory hub/column/coordination (CLI maind)   — see packages/maind/CONTRIBUTING.md
@@ -22,11 +21,11 @@ install.sh            # umbrella installer (delegates install.sh packages)
 ./install.sh                  # puts CLI packages + symlink swissknifeman in ~/.local/bin
 ```
 
-- **Without pip, stdlib-only.** Runtime dependencies in Python no; `core` connects via
-  `PYTHONPATH` — launchers (`packages/*/bin/*`) add monorepo root automatically
-  (fallback on standalone-package layout). Nothing separately «install» for `core` is not needed.
-- **IDE-autocompletion `from core import ...`:** for Pylance/pyright lies at the root
-  `pyrightconfig.json` (`extraPaths`: repo root `.` + `packages/*/lib`) — resolve works «from
+- **Without pip, stdlib-only.** Runtime dependencies in Python no; a module imports only itself and `aicore`
+  (found through `AICORE_ROOT` or `packages/aicore` of the hub) and reaches other modules only through their commands
+  (`aicore.util.partners`). There is no `core/` folder. Nothing separately «install» for `aicore` is needed.
+- **IDE-autocompletion `import aicore`:** for Pylance/pyright lies at the root
+  `pyrightconfig.json` (`extraPaths`: `packages/*/lib`) — resolve works «from
   boxes», without pip. PyCharm: mark `.` and `packages/*/lib` like *Sources Root*.
 - **`.mcp.json` and `config.json` machine-specific** (absolute paths) and do not commit
   (`.gitignore`); templates - `.mcp.json.example` / `packages/maind/configs/registry.example.json`. Real `.mcp.json` for
@@ -47,14 +46,15 @@ Run it before a PR together with the validation below.
 
 ## Tests and validation
 
-Before each PR — green validation on affected packages + smoke `core`:
+Before each PR — green validation on affected packages:
 
 ```bash
 bash packages/skiller/scripts/validate.sh
 bash packages/harness/scripts/validate.sh
 bash packages/maind/scripts/validate.sh
 bash packages/aicore/scripts/test.sh -v                        # foundation (aicore)
-PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # transitional core shim
+bash scripts/test-integration.sh                               # modules with their partners wired
+python3 scripts/ecosystem-units.py check --strict             # module boundaries, no baseline
 ```
 
 `validate.sh` of each packet runs `py_compile`, `bash -n`, checks JSON and unit tests
@@ -62,12 +62,12 @@ PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # transitional core
 
 ## Conventions
 
-- **stdlib-only** in Python (`lib/`, `core/`; minimum Python 3.9) — none pip-dependencies at runtime.
+- **stdlib-only** in Python (`lib/`; minimum Python 3.9) — none pip-dependencies at runtime.
 - **`Env` is passed explicitly** (frozen dataclass, heir `aicore.util.env.BaseEnv`) — without modular globals,
   everything is tested in tmpdir.
-- **Atomic write** files/JSON — via `core.atomic_write_text` / `atomic_write_json`.
+- **Atomic write** files/JSON — via `aicore.util.io.atomic_write_text` / `atomic_write_json`.
 - **Messages - in Russian** (`die`, `warn`).
-- **Commits - Conventional Commits in Russian** (e.g. `fix(core): ...`, `docs: ...`).
+- **Commits - Conventional Commits in Russian** (e.g. `fix(aicore): ...`, `docs: ...`).
 
 ## Release discipline
 

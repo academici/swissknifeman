@@ -27,7 +27,7 @@ Agent packs render templates, upgrade only safe managed files, write conflicts a
 Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics.
 <!-- instruction:harness.cross-package-boundaries -->
 ## harness.cross-package-boundaries
-Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.
+Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path. Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.
 <!-- instruction:harness.validation-release -->
 ## harness.validation-release
 Run `bash scripts/test.sh` and `bash scripts/validate.sh` before release; regenerate the umbrella registry after changing harness plugin commands.

@@ -88,3 +88,12 @@ by a new record.
 | [0060](0060-execution-protocol-fields-in-exec-v1.md) | Execution protocol fields in `exec/v1`, as minor changes | Accepted |
 | [0061](0061-run-policy-packs-engine-choice-and-orch-events.md) | Run-policy packs, engine choice in `[orch]` and `orch.run.*` events | Accepted |
 | [0062](0062-engine-conformance-and-non-goals.md) | Engine conformance and the non-goals of `orch` | Accepted |
+| [0063](0063-partner-command-links.md) | Modules reach each other through partner commands with JSON output | Accepted |
+| [0064](0064-run-analytics-in-analyst-and-event-subscriber.md) | Run analytics live in analyst, and analyst subscribes to ecosystem events | Accepted |
+| [0065](0065-maind-configuration-and-state.md) | maind configuration is split into settings and a fleet registry; machine registries move | Accepted |
+| [0066](0066-maind-harness-link-and-mcp-projection.md) | maind reaches harness through JSON commands; the MCP projection moves to aicore | Accepted |
+| [0067](0067-harness-configuration-and-state.md) | harness hook modes live in the project configuration and a committed carrier | Accepted |
+| [0068](0068-instruction-catalog-and-legacy-driver.md) | The instruction catalog holds its targets as data; the legacy run driver finds planner by lookup | Accepted |
+| [0069](0069-module-doctor-contract.md) | Module doctors print check-result/v1 and keep probe and repair apart | Accepted |
+| [0070](0070-maind-mcp-protocol-negotiation.md) | The maind MCP server negotiates the protocol version | Accepted |
+| [0071](0071-core-and-artifex-removal-and-strict-boundaries.md) | core and artifex are removed and the module boundary check is strict | Accepted |

@@ -16,32 +16,23 @@ source module.
 ## Layers
 
 ```
-harness-hook (SessionEnd)        analyst/pathology.py              consumers route
-run-report SCHEMA=2       ──▶   detect(run_report)       ──▶   maind analyze  — attention → reasons
-(usage/reads/error_loops/                                                       (verdict ATTENTION);
- retrieval/protected_writes)                                                    info → section «Efficiency»
-                                                                 analyst digest — relapse ≥2 out of 5
-                                                                   last sessions → candidate-lesson
+harness-hook (SessionEnd)        analyst/pathology.py              consumer
+run-report SCHEMA=2       ──▶   detect(run_report)       ──▶   analyst digest — relapse ≥2 out of 5
+(usage/reads/error_loops/                                        last sessions → candidate-lesson
+ retrieval/protected_writes)
 ```
 
 Hook **collects** raw run slices (tool calls, readings, error-series, retrieval, protected-writes,
 usage-tokens) in `<project>/.claude/runs/<sid>.json`. `pathology.detect()` **evaluates** this slice
 detectors below and gives a flat list of findings - he himself does not write anything or solve anything. Next
-finds **route** consumers: `maind analyze` — to the verdict of the current run (read-only
-parsing «did everything work?»), `analyst digest` — in the candidate lesson, if the pathology is not one-time (see
-«Relapse rule» below). The same clean list of finds is at the entrance to both.
+finds **route** to `analyst digest` — the candidate lesson, if the pathology is not one-time (see
+«Relapse rule» below). `maind analyze` no longer evaluates pathologies; it reads the run report only.
 
-Both connections are implemented and covered by tests (plan SKM-MASTER-002, phase P3, items P3.1–P3.3):
+The connection is implemented and covered by tests:
 
-- **`maind analyze`** (`packages/maind/lib/maind/analyze.py`, `pathology_slice()`) unfolds
-  finds by severity: `attention` leaves **lines evidence** (without code) in `reasons` verdict
-  via `compute_verdict(..., pathology_attention=...)` — goes where pack-drift/dirty
-  tree/token-anomalies; `info` goes to `rep["efficiency"]` and is printed in human-readable output
-  as a separate block `code: evidence` under the title **«Efficiency»**. Import `analyst.pathology`
-  unconditional - like the others `from core import ...` in `maind`/`analyst`/`harness` (none
-  wrapped in `try/except ImportError`; degradation «core/ not on PYTHONPATH» — launcher care/
-  `validate.sh`, not every import in place). Formally diverges from literal wording Code
-  Guidance item P3.2 («import from ImportError-fallback»), but follows the actual repo convention.
+- **`maind analyze`** reads the run report through `analyst runs show --json` (found by `aicore.util.partners`) and builds its
+  verdict from the report, git, the Bash log and health; it does not run the pathology detector itself. Without analyst the
+  run-report source is unavailable and the confidence is low.
 - **`analyst digest`** (`packages/analyst/lib/analyst/digest.py`, `extract_pathologies()`) drives away
   `detect()` according to the latest `PATHOLOGY_WINDOW=5` run-report'project am (reads them directly from disk
   `<project>/.claude/runs/*.json`, not via trend file) and creates a candidate lesson only if the code
@@ -282,8 +273,7 @@ within ONE run, and not about the plan between runs), upon relapse, it also beco
 
 - [`analyst/pathology.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/pathology.py) —
   detector code (SSOT formulas/thresholds/severity).
-- [`packages/maind/lib/maind/analyze.py`](https://github.com/academici/swissknifeman/blob/main/packages/maind/lib/maind/analyze.py)
-  (`pathology_slice`) · [`packages/analyst/lib/analyst/digest.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/digest.py)
+- [`packages/analyst/lib/analyst/digest.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/digest.py)
   (`extract_pathologies`, `_PATHOLOGY_REMEDIATIONS`) — routing finds to verdict/lessons.
 - [Tuning parameters](./tuning) — same principle «change the threshold only in the source module», for
   confidence-arithmetic `analyst`.

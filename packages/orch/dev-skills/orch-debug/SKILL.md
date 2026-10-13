@@ -60,7 +60,7 @@ package, and leaves a record that a later reviewer can audit. Never activate it 
    `packages/orch/scripts/run-usage.py <run>` for time and tokens per role; `observer.md` of the run counts the beacons,
    the mends (`RESULT_HEALED`, `RESULT_REPAIRED`) and the share of the wall time spent in checks.
 6. **Analyze and fix** what slowed or broke the item; test, document, commit, merge to the branch.
-7. **Log** (below), then start the next item.
+7. **Log** (below), then start the next item. An item is not closed for the observer until its metrics row is complete: estimate versus actual, step profile, deviations, block of Repository rules; an empty cell is written as «not measured» with the reason, never skipped silently.
 
 ## Metrics per item
 

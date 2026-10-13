@@ -17,15 +17,6 @@
       "required": ["fallback_file", "fallback_key"],
       "additionalProperties": false
     },
-    "doctor": {
-      "type": "object",
-      "description": "Bare doctor: modules whose own doctor command runs, in this order.",
-      "properties": {
-        "fanout": {"type": "array", "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}, "description": "Module ids."}
-      },
-      "required": ["fanout"],
-      "additionalProperties": false
-    },
     "aliases": {
       "type": "object",
       "description": "Alias name to its routes.",

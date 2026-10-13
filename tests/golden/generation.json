@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "0d72f5cc74e1",
-  "reason": "umbrella reads unit.json",
+  "captured_from": "3bf57d27748a",
+  "reason": "help lists the doctor aggregator options",
   "generators": [
     {
       "id": "skiller-registry",

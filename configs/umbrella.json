@@ -5,9 +5,6 @@
     "fallback_file": "packages/planner/configs/command-routing.json",
     "fallback_key": "plugin_version"
   },
-  "doctor": {
-    "fanout": ["skiller", "harness", "maind", "analyst"]
-  },
   "aliases": {
     "skills": {
       "description": "skill registry: connect, vendor, registry, ...",

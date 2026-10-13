@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "0d72f5cc74e1",
-  "reason": "umbrella reads unit.json",
+  "captured_from": "3bf57d27748a",
+  "reason": "help lists the doctor aggregator options",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

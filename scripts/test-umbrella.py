@@ -26,6 +26,7 @@ UMBRELLA = ROOT / "scripts" / "umbrella.py"
 
 
 def make_unit(packages: Path, unit_id: str, cli=None, kind="capability", doctor=False, extra=None) -> Path:
+    """``doctor`` is True (one text check) or a list of provides.doctor entries."""
     folder = packages / unit_id
     (folder / "bin").mkdir(parents=True)
     provides = dict(extra or {})
@@ -36,7 +37,9 @@ def make_unit(packages: Path, unit_id: str, cli=None, kind="capability", doctor=
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(f"#!/bin/sh\necho \"{unit_id}:$*\"\nexit 0\n", encoding="utf-8")
             path.chmod(0o755)
-    if doctor:
+    if isinstance(doctor, list):
+        provides["doctor"] = doctor
+    elif doctor:
         provides["doctor"] = [{"id": f"{unit_id}.environment", "category": "environment",
                                "probe": [cli[0], "doctor"], "output": "text"}]
     doc = {"$schema": "urn:swissknifeman:aicore:unit:v1", "id": unit_id, "title": f"Fake {unit_id}", "kind": kind,
@@ -124,16 +127,6 @@ class TestLegacyGroups(RouteCase):
             with self.subTest(argv=argv):
                 self.assertEqual([script(name), *rest], self.exec_of(*argv))
 
-    def test_doctor_fan_out_argv_and_order(self):
-        for extra in ("brain", "orch"):
-            make_unit(self.hub.packages, extra, [f"bin/{extra}"], doctor=True)
-        units = umbrella.load_units(self.hub.env)
-        with mock.patch.object(umbrella.subprocess, "run") as run:
-            run.return_value.returncode = 0
-            self.assertEqual(0, umbrella.doctor_command(units, umbrella.load_config()))
-        calls = [c.args[0] for c in run.call_args_list]
-        self.assertEqual([[self.unit_cli(i), "doctor"] for i in ("skiller", "harness", "maind", "analyst")], calls)
-
     def test_every_alias_of_the_config_is_covered(self):
         covered = {"skills", "env", "wf", "release", "release-fleet", "hub", "config", "setup", "status", "connect",
                    "vendor", "integrate", "update", "init", "sync", "lock", "list", "registry", "topology"}
@@ -191,11 +184,157 @@ class TestModuleGroups(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("launcher not found", result.stderr)
 
-    def test_doctor_fan_out_reports_missing_launcher(self):
+
+def check(check_id, status="ok", category="environment", observed="fine", **extra):
+    return {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": check_id, "status": status,
+            "category": category, "observed": observed, **extra}
+
+
+def probe_unit(hub: "Hub", unit_id: str, body: str, ids, categories=None) -> Path:
+    """A module whose probe ``bin/<id> doctor`` runs a python ``body``; ``ids`` are the declared check ids."""
+    folder = make_unit(hub.packages, unit_id, [f"bin/{unit_id}"], doctor=[
+        {"id": check_id, "category": (categories or {}).get(check_id, "environment"),
+         "probe": [f"bin/{unit_id}", "doctor"], "output": "check-result/v1"} for check_id in ids])
+    (folder / "bin" / unit_id).write_text(f"#!/usr/bin/env python3\nimport json, sys, time\n{body}\n", encoding="utf-8")
+    return folder
+
+
+def snapshot(*roots: Path):
+    state = {}
+    for root in roots:
+        for path in sorted(root.rglob("*")):
+            if path.is_file():
+                state[str(path)] = (path.stat().st_mtime_ns, path.read_bytes())
+    return state
+
+
+class TestDoctor(unittest.TestCase):
+    def setUp(self):
+        self.hub = Hub(ids=())
+        self.addCleanup(self.hub.close)
+
+    def json(self, *args):
+        result = self.hub.run("doctor", "--json", *args)
+        return result.returncode, json.loads(result.stdout)
+
+    def test_ok_and_warn_exit_zero_and_follow_the_schema(self):
+        rows = [check("good.one"), check("good.two", "warn", "config", "meh", remediation="fix it")]
+        probe_unit(self.hub, "good", f"print(json.dumps({rows!r}))", ["good.one", "good.two"])
+        rc, doc = self.json()
+        self.assertEqual(0, rc)
+        self.assertEqual("umbrella-doctor/v1", doc["schema"])
+        self.assertEqual([("good.one", "ok", "good"), ("good.two", "warn", "good")],
+                         [(r["check_id"], r["status"], r["unit"]) for r in doc["results"]])
+        schema = json.loads((ROOT / "configs" / "schemas" / "umbrella-doctor.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual("umbrella-doctor/v1", schema["properties"]["schema"]["const"])
+        item = schema["properties"]["results"]["items"]
+        for row in doc["results"]:
+            self.assertLessEqual(set(row), set(item["properties"]))
+            self.assertTrue(set(item["required"]) <= set(row))
+        self.assertEqual(set(schema["required"]), set(doc))
+
+    def test_single_object_output_is_accepted(self):
+        probe_unit(self.hub, "solo", f"print(json.dumps({check('solo.one')!r}))", ["solo.one"])
+        rc, doc = self.json()
+        self.assertEqual((0, ["solo.one"]), (rc, [r["check_id"] for r in doc["results"]]))
+
+    def test_shared_probe_runs_once(self):
+        log = self.hub.home / "runs.log"
+        rows = [check("many.a"), check("many.b"), check("many.c")]
+        probe_unit(self.hub, "many", f"open({str(log)!r}, 'a').write('x')\nprint(json.dumps({rows!r}))",
+                   ["many.a", "many.b", "many.c"])
+        rc, doc = self.json()
+        self.assertEqual(3, len(doc["results"]))
+        self.assertEqual("x", log.read_text())
+
+    def test_declared_id_without_result_is_a_synthetic_fail(self):
+        probe_unit(self.hub, "gap", f"print(json.dumps([{check('gap.one')!r}]))", ["gap.one", "gap.two"])
+        rc, doc = self.json()
+        self.assertEqual(1, rc)
+        by_id = {r["check_id"]: r for r in doc["results"]}
+        self.assertEqual("ok", by_id["gap.one"]["status"])
+        self.assertEqual(("fail", "probe printed no result for this check"),
+                         (by_id["gap.two"]["status"], by_id["gap.two"]["observed"]))
+        self.assertIn("bin/gap doctor", by_id["gap.two"]["remediation"])
+
+    def test_undeclared_foreign_result_is_dropped(self):
+        rows = [check("other.thing"), check("keep.extra"), check("keep.one")]
+        probe_unit(self.hub, "keep", f"print(json.dumps({rows!r}))", ["keep.one"])
+        _, doc = self.json()
+        self.assertEqual(["keep.extra", "keep.one"], sorted(r["check_id"] for r in doc["results"]))
+
+    def test_invalid_json_and_schema_violation_and_crash(self):
+        probe_unit(self.hub, "junk", "print('not json at all')", ["junk.one"])
+        probe_unit(self.hub, "badshape", "print(json.dumps([{'check_id': 'badshape.one', 'status': 'great'}]))", ["badshape.one"])
+        probe_unit(self.hub, "crash", "sys.stderr.write('boom\\n'); sys.exit(3)", ["crash.one"])
+        rc, doc = self.json()
+        self.assertEqual(1, rc)
+        by_id = {r["check_id"]: r for r in doc["results"]}
+        self.assertEqual({"junk.doctor", "badshape.doctor", "crash.doctor"}, set(by_id))
+        for row in by_id.values():
+            self.assertEqual("fail", row["status"])
+        self.assertIn("not JSON", by_id["junk.doctor"]["observed"])
+        self.assertIn("check-result/v1", by_id["badshape.doctor"]["observed"])
+        self.assertIn("boom", by_id["crash.doctor"]["observed"])
+
+    def test_timeout_gives_a_synthetic_fail_and_does_not_hang(self):
+        probe_unit(self.hub, "slow", "time.sleep(30)", ["slow.one"])
+        probe_unit(self.hub, "fast", f"print(json.dumps([{check('fast.one')!r}]))", ["fast.one"])
+        rc, doc = self.json("--timeout", "1")
+        self.assertEqual(1, rc)
+        by_id = {r["check_id"]: r for r in doc["results"]}
+        self.assertEqual("fail", by_id["slow.doctor"]["status"])
+        self.assertIn("timed out", by_id["slow.doctor"]["observed"])
+        self.assertEqual("ok", by_id["fast.one"]["status"])
+
+    def test_units_without_doctor_are_listed(self):
+        make_unit(self.hub.packages, "plain", ["bin/plain"])
+        probe_unit(self.hub, "good", f"print(json.dumps([{check('good.one')!r}]))", ["good.one"])
+        _, doc = self.json()
+        self.assertEqual(["plain"], doc["units_without_doctor"])
+        text = self.hub.run("doctor")
+        self.assertEqual(0, text.returncode)
+        self.assertIn("info plain: no doctor checks declared", text.stdout)
+        self.assertIn("ok good.one: fine", text.stdout)
+        self.assertIn("1 ok, 0 warn, 0 fail", text.stdout)
+
+    def test_text_prints_remediation_and_exit_one_on_fail(self):
+        rows = [check("bad.one", "fail", "state", "broken", remediation="run the repair")]
+        probe_unit(self.hub, "bad", f"print(json.dumps({rows!r}))", ["bad.one"])
         result = self.hub.run("doctor")
         self.assertEqual(1, result.returncode)
-        self.assertIn("== skiller ==", result.stdout)
-        self.assertIn("launcher not found", result.stderr)
+        self.assertIn("fail bad.one: broken", result.stdout)
+        self.assertIn("bad.one: run the repair", result.stdout)
+
+    def test_unit_and_category_filters(self):
+        log = self.hub.home / "runs.log"
+        for name in ("aa", "bb"):
+            rows = [check(f"{name}.env"), check(f"{name}.cfg", category="config")]
+            probe_unit(self.hub, name, f"open({str(log)!r}, 'a').write({name!r})\nprint(json.dumps({rows!r}))",
+                       [f"{name}.env", f"{name}.cfg"], {f"{name}.cfg": "config"})
+        _, doc = self.json("--unit", "aa", "--category", "config")
+        self.assertEqual(["aa.cfg"], [r["check_id"] for r in doc["results"]])
+        self.assertEqual("aa", log.read_text())
+        self.assertEqual(["bb"], self.json("--unit=bb")[1]["results"][0]["unit"] and ["bb"])
+
+    def test_usage_errors_exit_two(self):
+        probe_unit(self.hub, "good", "print('[]')", [])
+        for args in (["--unit", "nope"], ["--category", "x"], ["--timeout", "abc"], ["--timeout", "0"], ["--bogus"],
+                     ["--unit"]):
+            with self.subTest(args=args):
+                result = self.hub.run("doctor", *args)
+                self.assertEqual(2, result.returncode)
+                self.assertEqual("", result.stdout)
+
+    def test_doctor_writes_nothing(self):
+        rows = [check("good.one")]
+        probe_unit(self.hub, "good", f"print(json.dumps({rows!r}))", ["good.one"])
+        make_unit(self.hub.packages, "plain", ["bin/plain"])
+        before = snapshot(self.hub.home, self.hub.packages)
+        self.assertEqual(0, self.hub.run("doctor").returncode)
+        self.assertEqual(0, self.hub.run("doctor", "--json").returncode)
+        self.assertEqual(before, snapshot(self.hub.home, self.hub.packages))
+        self.assertFalse((self.hub.home.parent / "skm").exists())
 
 
 class TestUnits(unittest.TestCase):

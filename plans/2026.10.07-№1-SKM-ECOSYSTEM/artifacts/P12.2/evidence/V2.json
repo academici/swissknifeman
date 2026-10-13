@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T111935Z-4f9589:P12.2:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P12.2",
+  "candidate": {
+    "head": "3bf57d27748ab33e78f2ef1e241f879dd6553d36",
+    "dirty_digest": "4742926ca15d0ae9e86e556967f5e2df381c0b9055f49fef9c44bbd40f08c79c"
+  },
+  "started_at": "2026-10-13T11:23:37Z",
+  "procedure": {
+    "cmd": "H=$(mktemp -d) && HOME=$H SKM_HOME=$H/skm bin/swissknifeman doctor --json > $H/d.json; rc=$?; [ $rc -le 1 ] && python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); units = {x[\"unit\"] for x in d[\"results\"]}; assert d[\"schema\"] == \"umbrella-doctor/v1\" and {\"aicore\", \"skiller\", \"maind\", \"harness\", \"brain\", \"orch\", \"analyst\"} <= units, units; assert all(x[\"status\"] in (\"ok\", \"warn\", \"fail\", \"skip\") for x in d[\"results\"])' $H/d.json",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T11:23:39Z"
+}

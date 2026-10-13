@@ -284,6 +284,24 @@
       "note": "schema of configs/umbrella.json; the umbrella-units/v1 schema lives in configs/schemas/"
     },
     {
+      "path": "configs/schemas/umbrella-units.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "umbrella-units/v1: output of swissknifeman units --json"
+    },
+    {
+      "path": "configs/schemas/umbrella-doctor.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "umbrella-doctor/v1: output of swissknifeman doctor --json"
+    },
+    {
       "path": "configs/repository-bootstrap-skills.json",
       "owner": "root",
       "consumers": [

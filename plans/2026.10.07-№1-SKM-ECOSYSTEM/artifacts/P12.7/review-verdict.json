@@ -1,0 +1,55 @@
+{
+  "item": "P12.7",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "The maind marketplace entry is archived to ~/.claude/plugins/cache/swissknifeman/maind/<version>/. check_plugin only reads plugin.json, hooks/hooks.json and commands/*.md, and only for ${CLAUDE_PLUGIN_ROOT}. The copy still contains executable climbs out of the plugin root: packages/maind/bin/maind:79 ($REPO_ROOT/../aicore, REPO_ROOT is the plugin root), packages/maind/install.sh:109 ($REPO_ROOT/../..), and packages/maind/skills/swissknifeman-locator/SKILL.md:35 (cd of the binary directory plus ../../..). The same locator line is in packages/analyst/bin/analyst:75, packages/brain/bin/brain:46 and packages/harness/bin/harness:80. None of these files are opened. A static run of the implemented path checks reports 0 problems, so the script prints smoke-installed OK.",
+          "id": "F1",
+          "location": "scripts/smoke-installed.sh:149",
+          "reproduction": "Read check_plugin sources at scripts/smoke-installed.sh:139-159, then the three maind lines above. The hub-p12#smoke rule is that no file of the copy may contain an executable relative path that resolves outside the plugin root.",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "T=$(mktemp -d); mkdir -p $T/home $T/skm $T/copy; git archive --format=tar HEAD:packages/maind | tar -x -C $T/copy; HOME=$T/home SKM_HOME=$T/skm bash scripts/smoke-installed.sh --check-plugin $T/copy --name maind; grep -n '\\.\\./' $T/copy/bin/maind $T/copy/install.sh",
+            "exit": 0,
+            "observed": "Prints 'smoke-installed plugin OK' with exit 0, although the copy has executable climbs out of the plugin root: bin/maind:79 and :80 ($REPO_ROOT/../aicore) and install.sh:109 ($REPO_ROOT/../..). check_plugin only reads plugin.json, hooks/hooks.json and commands/*.md, so no executable file is opened."
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "medium",
+          "failure_scenario": "swissknifeman doctor --json prints an object whose schema is umbrella-doctor/v1 and whose keys match configs/schemas/umbrella-doctor.schema.json, but a result row has category outside the enum, $schema other than urn:swissknifeman:aicore:check-result:v1, observed equal to an empty string, or units_without_doctor is a string. The checker only compares key sets and the status enum. It still prints smoke-installed OK. collect_doctor copies provides.doctor[].category into a synthetic row without checking the enum (scripts/umbrella.py:404).",
+          "id": "F2",
+          "location": "scripts/smoke-installed.sh:222",
+          "reproduction": "Compare scripts/smoke-installed.sh:217-228 with the category enum, $schema const, observed minLength and units_without_doctor items in configs/schemas/umbrella-doctor.schema.json.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "python3 -I m.py (scratch script): apply the smoke checker's three conditions (required keys, key subset, status enum) to a row with category 'bogus', observed '' and $schema 'x', using configs/schemas/umbrella-doctor.schema.json",
+            "exit": 0,
+            "observed": "Prints True True True, so the row passes. The checker looks only at key sets and the status enum, and ignores the category enum, the $schema const, the observed minLength and the units_without_doctor item type, so the smoke would still print OK."
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a135ac-d7ae-7340-8742-377d6c8a1c89",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261013T142810Z-c2c8a3/P12.7/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [],
+        "session": "d3133179-a71f-4e6a-b153-3e93621dc8d7"
+      },
+      "verdict": "ATTENTION"
+    }
+  ],
+  "run": "cnd-20261013T142810Z-c2c8a3",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

@@ -16,6 +16,7 @@ Built-in:
 
 Aliases (configs/umbrella.json):
   config         layered config: show, explain, set, unset, init, example, paths
+  conformance    conformance plugin <extension.json> | engine [--binding B]: protocol checks
   env            environment: permissions, mcp, hooks (full passthrough)
   hub            same as the maind group
   release        monorepo release proposal: [Unreleased] and conventional commits

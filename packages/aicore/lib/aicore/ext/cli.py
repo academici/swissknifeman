@@ -11,8 +11,8 @@ errors go to stderr as ``<CODE>: <message>``.
 configuration: ``describe`` and ``invoke`` start plugins (after the manifest check and the handshake),
 ``list`` and ``status`` never do; ``status`` always exits 0, it is a diagnosis. ``aicore ext overlays SLOT``
 prints the overlay block of a module slot; warnings go to stderr and ``--strict`` makes them exit 1.
-``aicore ext conformance MANIFEST`` starts a plugin through the conformance scenarios, prints one
-``<status> <check_id>: <observed>`` line each (``--json``: a list of check-result documents) and exits 1 on a ``fail``.
+``aicore ext conformance MANIFEST`` (or ``--manifest PATH``; a plugin anywhere on disk) starts a plugin through the
+conformance scenarios, prints one ``<status> <check_id>: <observed>`` line each (``--json``: a list of check-result documents) and exits 1 on a ``fail``.
 """
 from __future__ import annotations
 
@@ -253,7 +253,11 @@ def build_ext_parser() -> argparse.ArgumentParser:
 
     conformance_cmd = commands.add_parser("conformance", help="check a plugin against the protocol (starts it "
                                           "several times)")
-    conformance_cmd.add_argument("manifest", metavar="MANIFEST", help="path of the extension.json of the plugin")
+    conformance_cmd.add_argument("manifest", metavar="MANIFEST", nargs="?",
+                                 help="path of the extension.json of the plugin (any path, inside the repository "
+                                 "or not)")
+    conformance_cmd.add_argument("--manifest", dest="manifest_option", metavar="PATH",
+                                 help="the same as MANIFEST, as an option")
     conformance_cmd.add_argument("--input-file", metavar="FILE", help="the input of the invoke call, a JSON object "
                                  "(default: example_input of the manifest)")
     conformance_cmd.add_argument("--json", action="store_true", help="print the results as a JSON list of "
@@ -396,7 +400,13 @@ def _run_ext_overlays(args: argparse.Namespace, env: Mapping[str, str], cwd: Pat
 
 def _run_ext_conformance(args: argparse.Namespace, env: Mapping[str, str], cwd: Path, out: TextIO,
                          err: TextIO) -> int:
-    results = _conformance.run_conformance(cwd / args.manifest, input_doc=_input(args), env=env)
+    given = args.manifest_option or args.manifest
+    if args.manifest_option and args.manifest:
+        raise ExtError("EVENT_INVALID", "give the manifest once: as MANIFEST or as --manifest")
+    if not given:
+        print("aicore ext conformance: error: the manifest path is required (MANIFEST or --manifest)", file=err)
+        return 2
+    results = _conformance.run_conformance(cwd / given, input_doc=_input(args), env=env)
     if args.json:
         print(json.dumps(results, ensure_ascii=False, sort_keys=True), file=out)
     else:

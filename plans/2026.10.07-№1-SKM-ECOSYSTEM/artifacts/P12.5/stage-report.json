@@ -1,0 +1,98 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "configs/umbrella.json",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/lib/aicore/ext/cli.py",
+    "packages/aicore/lib/aicore/ext/conformance.py",
+    "packages/aicore/tests/ext/fixtures/plugins/crash-signal/extension.json",
+    "packages/aicore/tests/ext/fixtures/plugins/crash-signal/plugin.py",
+    "packages/aicore/tests/ext/fixtures/plugins/crash/extension.json",
+    "packages/aicore/tests/ext/fixtures/plugins/crash/plugin.py",
+    "packages/aicore/tests/ext/fixtures/subscribers/killed.py",
+    "packages/aicore/tests/ext/test_conformance.py",
+    "packages/aicore/tests/ext/test_delivery.py",
+    "packages/orch/conformance/scenarios.json",
+    "packages/orch/docs/conformance.md",
+    "packages/orch/tests/test_conformance.py",
+    "packages/orch/tests/test_native_conformance.py",
+    "scripts/test-umbrella.py",
+    "scripts/umbrella.py",
+    "tests/golden/cases.json",
+    "tests/golden/cli/swissknifeman-help.txt",
+    "tests/golden/cli/swissknifeman-unknown-subcommand.txt",
+    "tests/golden/generation.json"
+  ],
+  "checks_run": [
+    {
+      "cmd": "python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "exit": 0,
+      "id": "V4"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "The commit must take configs/umbrella.json with the piece.",
+      "kind": "deviation",
+      "next": "Widen the write set of later items like this one.",
+      "text": "configs/umbrella.json is outside write_set, but the `conformance` alias lives there (routes are data by hub rule 2, and umbrella.py may not hold module ids). Edited it by necessity."
+    },
+    {
+      "impact": "Both spellings work; giving both is EVENT_INVALID (exit 1).",
+      "kind": "deviation",
+      "next": "None.",
+      "text": "D82 and the goal say `--manifest <path>`, but the CLI had a positional MANIFEST. Kept the positional and added `--manifest` as an equivalent option."
+    },
+    {
+      "impact": "A plugin is judged on its invoke, event and redelivery calls only.",
+      "kind": "assumption",
+      "next": "Confirm at audit.",
+      "text": "The design says a crash makes the host record fail and not advance the cursor. The conformance scenario only classifies the plugin's own process (exit code or signal in evidence); the host-side no-cursor-move and redelivery guarantee is proven by a new test in test_delivery.py. The scenario does not run the delivery code itself."
+    },
+    {
+      "impact": "The scenario proves scope detection, not OS-level confinement of a role.",
+      "kind": "assumption",
+      "next": "Add a Landlock-backed proof if the scenario is meant to cover OS confinement.",
+      "text": "workspace-permissions for native is proven by the scope check (what a role wrote outside write_set, found from the git tree) on a fake-argv role, not by Landlock (ro-run.py). ro-run's test is skipped where Landlock is missing, and run_test counts a skip as a pass, so it was a poor proof."
+    },
+    {
+      "impact": "None.",
+      "kind": "note",
+      "next": "None.",
+      "text": "lock-expiry is `n/a` (not declared) in the catalogue, with a reason. Left unchanged; the input's 'declared to test' did not apply to it."
+    },
+    {
+      "impact": "Docs lag the new `crash` scenario and `--manifest`.",
+      "kind": "pending",
+      "next": "Update the README in a later item with a write set that covers it.",
+      "text": "packages/aicore/README.md (lines ~308-309) still lists nine conformance scenarios and the old usage. It is outside write_set and now stale."
+    },
+    {
+      "impact": "The reason text in generation.json now describes the umbrella help change.",
+      "kind": "note",
+      "next": "None.",
+      "text": "golden.py capture rewrote the metadata (captured_from, reason) of tests/golden/generation.json as well as cases.json. The generated content is unchanged."
+    },
+    {
+      "impact": "A new generic behaviour of the umbrella for conditional aliases. No existing alias is affected, because all have a catch-all route.",
+      "kind": "note",
+      "next": "None.",
+      "text": "`swissknifeman conformance` without plugin or engine, or with another word, now exits 2 with 'expected one of: engine, plugin' (generic umbrella logic for an alias whose routes all have a condition). Previously such a case would have reached 'Unknown command'."
+    },
+    {
+      "impact": "None.",
+      "kind": "note",
+      "next": "None.",
+      "text": "V1, V2 and V3 were not run, per the input (the conductor runs them). V3's route was checked by hand with a temp HOME, and V4 was run as written."
+    },
+    {
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "text": "changed outside the write set: configs/umbrella.json"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "aicore ext conformance gets a new last scenario `crash`: a plugin that exits non-zero or dies by a signal while handling an invoke or event fails with evidence `call=...` and `exit_code=N` or `signal=NAME`, plus the remediation from the design. Skipped when an earlier call timed out. The CLI accepts `--manifest PATH` besides the positional manifest; giving both is an error and giving none exits 2. New fixtures: plugins `crash` (subscriber, exit 3) and `crash-signal` (command, SIGKILL), and subscriber `killed.py`. Tests copy fixtures into a fresh temp dir and run them by path, and test_delivery pins that a subscriber killed by SIGKILL leaves the cursor in place, sets pending PROCESS_EXIT, and redelivers the same event once fixed (delivery.py needed no change). Orch: new tests/test_native_conformance.py, all on fake argv: child-process-cleanup (grandchild gone after idle timeout, linger and cancel; a bystander in another session survives), stdout-stderr-framing (separate raw and .stderr files, failure detail from stderr only), and workspace-permissions (writes outside write_set are found from the git tree via scope.dirty/outside). These three scenarios are now `covered` for native with a ref in scenarios.json. For cao and claude-only they stay declared with a reason that names the orch parity trigger (ADR 0062). lock-expiry stays n/a with its existing reason. orch test_conformance.py and docs/conformance.md updated. Umbrella: `conformance` alias in configs/umbrella.json with routes plugin (aicore ext conformance) and engine (orch conformance), both found via provides.cli. scripts/umbrella.py prints a usage error (exit 2) when a known alias has no matching route. test-umbrella.py gets TestConformanceRoutes. Golden help cases recaptured. Both CHANGELOGs updated. Narrow tests all pass (see the list above)."
+}

@@ -5,7 +5,7 @@ stdin, one JSON object expected on stdout) and answers with a list of ``check-re
 scenario, ``check_id`` ``ext.conformance.<scenario>``:
 
 ``manifest``, ``describe``, ``protocol-unsupported``, ``invoke``, ``redelivery``, ``stdout-discipline``,
-``deadline``, ``no-descendants`` and ``secrets``.
+``deadline``, ``no-descendants``, ``secrets`` and ``crash``.
 
 Every scenario is always reported: ``ok``, ``fail``, or ``skip`` when it does not apply (a command plugin has no
 redelivery) or cannot run (the manifest is broken, an earlier call timed out, the platform is not Linux).
@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import sys
 import time
 import uuid
@@ -35,7 +36,7 @@ from .plugins import DEFAULT_TIMEOUT_S, HOST_PROTOCOL, REQUEST_SCHEMA, Manifest,
 from .process import GRACE_S, ProcessResult, run_json
 
 SCENARIOS = ("manifest", "describe", "protocol-unsupported", "invoke", "redelivery", "stdout-discipline",
-             "deadline", "no-descendants", "secrets")
+             "deadline", "no-descendants", "secrets", "crash")
 CHECK_PREFIX = "ext.conformance."
 RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 UNSUPPORTED_PROTOCOL = "999"
@@ -56,6 +57,7 @@ _REMEDIATION = {
     "deadline": "Answer within timeout_seconds of the manifest (60 s without it).",
     "no-descendants": "Wait for or stop every process the plugin starts before it exits.",
     "secrets": "Never write a secret value to stdout.",
+    "crash": "Answer with status error instead of exiting; the host redelivers after a crash.",
 }
 _contracts: Dict[str, Tuple[Any, str]] = {}
 
@@ -69,9 +71,11 @@ def _problems(doc: object, contract: str) -> List[str]:
     return [f"{issue.path or '/'}: {issue.message}" for issue in _schema.validate(doc, kind, registry)]
 
 
-def _result(scenario: str, status: str, observed: str) -> Dict[str, Any]:
+def _result(scenario: str, status: str, observed: str, evidence: Optional[Sequence[str]] = None) -> Dict[str, Any]:
     doc: Dict[str, Any] = {"$schema": RESULT_SCHEMA, "check_id": CHECK_PREFIX + scenario, "status": status,
                            "category": "integration", "observed": safe_text(observed, 300) or "no detail"}
+    if evidence:
+        doc["evidence"] = [safe_text(item, 200) for item in evidence]
     if status == "fail":
         doc["remediation"] = _REMEDIATION[scenario]
     return doc
@@ -238,6 +242,31 @@ def _deadline(calls: Sequence[_Call], timeout: int) -> Tuple[str, str]:
     return "ok", f"all {len(calls)} call(s) finished within {timeout} s (slowest {slowest} ms)"
 
 
+def _crash(calls: Sequence[_Call]) -> Tuple[str, str, List[str]]:
+    """``(status, observed, evidence)``: did the plugin die while it handled the request or the event?
+
+    The host treats a dead process as a failed attempt: the event is not delivered, the cursor of the subscription
+    stays and the event comes again (``aicore.ext.delivery``). A plugin that exits instead of answering with
+    ``status: error`` therefore costs the host a retry; the exit code or the signal is the evidence.
+    """
+    handled = [call for call in calls if call.label in ("invoke", "event", "redelivery")]
+    if not handled:
+        return "skip", "no request was handled", []
+    for call in handled:
+        result = call.result
+        if result.code != "PROCESS_EXIT" or result.exit is None:
+            continue
+        if result.exit < 0:
+            try:
+                name = signal.Signals(-result.exit).name
+            except ValueError:
+                name = str(-result.exit)
+            return "fail", f"{call.label}: the plugin was killed by signal {name}", [f"call={call.label}", f"signal={name}"]
+        return "fail", f"{call.label}: the plugin exited with code {result.exit}", [f"call={call.label}",
+                                                                                   f"exit_code={result.exit}"]
+    return "ok", f"the plugin survived {len(handled)} request(s)", []
+
+
 def _leaks(value: object, sentinel: str) -> bool:
     return any(sentinel in json.dumps(value, ensure_ascii=ascii_only) for ascii_only in (True, False))
 
@@ -302,7 +331,7 @@ def run_conformance(manifest_path: PathLike, *, input_doc: Optional[Mapping[str,
         results = [_result("manifest", "fail", f"{exc.code}: {exc.message}")]
         return results + [_result(name, "skip", "the manifest check failed") for name in SCENARIOS[1:]]
     timeout = manifest.timeout_seconds or DEFAULT_TIMEOUT_S
-    found: Dict[str, Tuple[str, str]] = {
+    found: Dict[str, Tuple[Any, ...]] = {
         "manifest": ("ok", f"{manifest.kind} plugin {manifest.id} {manifest.version}, protocol "
                            f"{manifest.protocol[0]}-{manifest.protocol[1]}")}
     stopped = "not run: an earlier call timed out"
@@ -328,6 +357,9 @@ def run_conformance(manifest_path: PathLike, *, input_doc: Optional[Mapping[str,
     found["no-descendants"] = ("skip", stopped) if runner.stopped else _supervised(path, source_env, timeout,
                                                                                     input_doc)
     found["secrets"] = _secrets_check(manifest, source_env, timeout, input_doc)
+    found["crash"] = _crash(runner.calls)
+    if runner.stopped and found["crash"][0] == "ok":
+        found["crash"] = ("skip", stopped)
     return [_result(name, *found[name]) for name in SCENARIOS]
 
 
@@ -366,7 +398,6 @@ def _reap() -> Set[int]:
 
 def _adopted() -> Set[int]:
     """Every process the plugin left to this subreaper since the last call: reaped if it was over, killed if not."""
-    import signal
     seen: Set[int] = set()
     give_up = time.monotonic() + 2.0
     while True:

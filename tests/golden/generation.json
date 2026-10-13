@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "6ceaad50a909",
-  "reason": "маркетплейс и Codex-индекс собираются из unit.json: catalog.json skiller; package записи task теперь planner",
+  "captured_from": "04faff494737",
+  "reason": "conformance alias added to the umbrella help (plugin and engine routes)",
   "generators": [
     {
       "id": "skiller-registry",

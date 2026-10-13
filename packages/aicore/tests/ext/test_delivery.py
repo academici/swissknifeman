@@ -210,6 +210,22 @@ class TestFailures(DeliveryCase):
         self.assertEqual(failed[0]["exit"], 3)
         self.assertIn("failing once on purpose", failed[0]["stderr_tail"])
 
+    def test_a_subscriber_killed_by_a_signal_does_not_move_the_cursor_and_the_event_comes_again(self):
+        self.subscribe("mine", command("killed.py"))
+        event = self.emit(delivery_mode="sync")
+        cursor = self.cursors()["mine"]
+        self.assertEqual((cursor["offset"], cursor["pending"]["attempts"], cursor["pending"]["last_error"]),
+                         (event.offset, 1, "PROCESS_EXIT"))
+        self.assertLess(self.log()[-1]["exit"], 0)  # -9: the exit status of a process that died by SIGKILL
+        self.assertNotEqual(cursor.get("last_id"), event.id)
+        self.assertEqual(self.row("mine")["lag"], 1)
+        self.config = ""  # the plugin was fixed
+        self.subscribe("mine", command("ok.py", str(self.out)))
+        report = self.deliver()
+        self.assertEqual((report.delivered, report.ok), (1, True))
+        self.assertEqual([item["id"] for item in self.got()], [event.id])
+        self.assertEqual(self.cursors()["mine"]["offset"], journal.size(self.journal))
+
     def test_dead_letter_after_max_attempts_then_the_cursor_moves_on(self):
         self.subscribe("mine", command("always_fail.py"))
         poisoned = self.emit(delivery_mode="sync")

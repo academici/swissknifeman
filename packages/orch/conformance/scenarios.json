@@ -223,36 +223,39 @@
       "title": "The engine runs a stage with the permissions of its role and no more",
       "kit": "agent",
       "how": "test",
+      "ref": "tests.test_native_conformance.WorkspacePermissionTests.test_what_a_role_wrote_outside_its_write_set_is_found_from_the_tree",
       "bindings": {
-        "native": "declared",
+        "native": "covered",
         "cao": "declared",
         "claude-only": "declared"
       },
-      "reason": "needs the execution engine (not implemented)"
+      "reason": "the native binding is proven on fake argv; the cao and claude-only engines run their own processes and get their proof when orch parity is triggered (ADR 0062)"
     },
     {
       "id": "stdout-stderr-framing",
       "title": "Output of a stage is framed into events without mixing stdout and stderr",
       "kit": "agent",
       "how": "test",
+      "ref": "tests.test_native_conformance.StdoutStderrFramingTests.test_the_two_streams_land_in_two_files_without_mixing",
       "bindings": {
-        "native": "declared",
+        "native": "covered",
         "cao": "declared",
         "claude-only": "declared"
       },
-      "reason": "needs the execution engine (not implemented)"
+      "reason": "the native binding is proven on fake argv; the cao and claude-only engines run their own processes and get their proof when orch parity is triggered (ADR 0062)"
     },
     {
       "id": "child-process-cleanup",
       "title": "Child processes of a stage end with the stage",
       "kit": "agent",
       "how": "test",
+      "ref": "tests.test_native_conformance.ChildProcessCleanupTests.test_a_stopped_role_takes_its_descendants_with_it_and_only_them",
       "bindings": {
-        "native": "declared",
+        "native": "covered",
         "cao": "declared",
         "claude-only": "declared"
       },
-      "reason": "needs the execution engine (not implemented)"
+      "reason": "the native binding is proven on fake argv; the cao and claude-only engines run their own processes and get their proof when orch parity is triggered (ADR 0062)"
     }
   ]
 }

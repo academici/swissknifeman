@@ -40,12 +40,18 @@ class CatalogueTests(unittest.TestCase):
         listed = {item["ref"] for item in catalogue()["scenarios"] if item["id"].startswith("golden-")}
         self.assertEqual(listed, {p.relative_to(ROOT).as_posix() for p in (ROOT / "fixtures/traces").glob("*.jsonl")})
 
-    def test_process_scenarios_are_declared_with_the_engine_reason(self):
+    def test_process_scenarios_are_proven_for_native_and_declared_with_a_reason_elsewhere(self):
         for item in catalogue()["scenarios"]:
             if item["id"] in PROCESS_SCENARIOS:
                 with self.subTest(item["id"]):
-                    self.assertEqual(set(item["bindings"].values()), {"declared"})
-                    self.assertIn("execution engine", item["reason"])
+                    self.assertEqual(item["bindings"], {"native": "covered", "cao": "declared",
+                                                        "claude-only": "declared"})
+                    self.assertTrue(item["ref"].startswith("tests.test_native_conformance."))
+                    self.assertIn("parity", item["reason"])
+
+    def test_no_declared_row_is_left_without_a_reason(self):
+        self.assertEqual([row["scenario"] for row in conformance.run() if row["status"] == "declared"
+                          and not row["reason"]], [])
 
     def test_every_binding_is_named_in_every_scenario(self):
         for item in catalogue()["scenarios"]:
@@ -97,6 +103,8 @@ class RunTests(unittest.TestCase):
         self.assertEqual(rows["lock-expiry", "native"]["status"], "n/a")
         self.assertIn("time-to-live", rows["lock-expiry", "native"]["reason"])
         self.assertEqual(rows["child-process-cleanup", "cao"]["status"], "declared")
+        self.assertIn("parity", rows["child-process-cleanup", "cao"]["reason"])
+        self.assertEqual(rows["child-process-cleanup", "native"]["status"], "pass")
         self.assertEqual(rows["stale-owner", "cao"]["status"], "pass")
         self.assertIsNone(rows["stale-owner", "cao"]["reason"])
 
@@ -151,7 +159,8 @@ class ConformanceCli(CliCase):
         code, out, _ = self.run_cli("conformance", "--binding", "native")
         self.assertEqual(code, 0)
         self.assertIn("PASS\tnative\tstale-owner", out)
-        self.assertIn("DECLARED\tnative\tchild-process-cleanup\tneeds the execution engine", out)
+        self.assertIn("PASS\tnative\tchild-process-cleanup", out)
+        self.assertNotIn("DECLARED\tnative", out)
 
     def test_every_binding_without_a_filter(self):
         code, out, _ = self.run_cli("conformance", "--json")

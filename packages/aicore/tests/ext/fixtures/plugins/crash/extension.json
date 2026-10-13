@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "crash",
+  "kind": "subscriber",
+  "version": "0.1.0",
+  "description": "Describes itself, then exits with code 3 while it handles an event.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["python3", "plugin.py"],
+  "provides": {"events": ["demo.*"]},
+  "timeout_seconds": 20
+}

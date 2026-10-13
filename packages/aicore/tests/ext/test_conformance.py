@@ -5,8 +5,10 @@ checked there and may be a ``skip`` elsewhere.
 """
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 import uuid
@@ -120,6 +122,60 @@ class TestBrokenPlugins(ConformanceCase):
         results = run_conformance(self.tmp / "nowhere" / "extension.json", env=self.env)
         self.assertEqual((results[0]["status"], len(results)), ("fail", len(SCENARIOS)))
         self.assertIn("PLUGIN_MANIFEST_INVALID", results[0]["observed"])
+
+
+class TestCrash(ConformanceCase):
+    """R13: a plugin that dies while it handles a call fails ``crash`` and the evidence names the exit or the signal."""
+
+    def staged(self, name):
+        """A copy of a fixture plugin in a fresh temporary directory, far from the repository."""
+        root = tempfile.mkdtemp(prefix="aicore-foreign-plugin-")
+        self.addCleanup(shutil.rmtree, root, True)
+        target = os.path.join(root, name)
+        shutil.copytree(PLUGINS / name, target, ignore=shutil.ignore_patterns("__pycache__", "marks"))
+        return os.path.join(target, "extension.json")
+
+    def test_good_plugins_do_not_crash(self):
+        for name in ("echo", "sub"):
+            with self.subTest(name):
+                self.assertEqual(self.run_plugin(name)["crash"]["status"], "ok")
+
+    def test_a_subscriber_that_exits_while_it_handles_an_event_fails_with_its_exit_code(self):
+        found = self.run_plugin("crash")
+        self.assertStatuses(found, manifest="ok", describe="ok", invoke="fail", crash="fail")
+        self.assertEqual(found["crash"]["evidence"], ["call=event", "exit_code=3"])
+        self.assertEqual(found["crash"]["remediation"],
+                         "Answer with status error instead of exiting; the host redelivers after a crash.")
+
+    @unittest.skipUnless(LINUX, "a signal death is reported as a negative exit status")
+    def test_a_command_plugin_killed_by_a_signal_fails_with_the_signal(self):
+        found = self.run_plugin("crash-signal")
+        self.assertStatuses(found, describe="ok", crash="fail")
+        self.assertEqual(found["crash"]["evidence"], ["call=invoke", "signal=SIGKILL"])
+
+    def test_a_foreign_plugin_outside_the_repository_is_checked_by_its_path(self):
+        path = self.staged("crash")
+        self.assertFalse(path.startswith(str(AICORE_ROOT)))
+        code, out, _err = run_cli("ext", "conformance", "--manifest", path, "--json", env=self.env)
+        self.assertEqual(code, 1)
+        results = {item["check_id"].rpartition(".")[2]: item for item in json.loads(out)}
+        self.assertEqual(results["crash"]["status"], "fail")
+        self.assertIn("exit_code=3", results["crash"]["evidence"])
+
+    def test_a_foreign_good_plugin_passes_by_its_path(self):
+        code, out, _err = run_cli("ext", "conformance", "--manifest", self.staged("sub"), "--json", env=self.env)
+        self.assertEqual(code, 0, out)
+        self.assertEqual({item["check_id"].rpartition(".")[2]: item["status"] for item in json.loads(out)}["crash"],
+                         "ok")
+
+    def test_the_manifest_is_given_once(self):
+        path = self.staged("echo")
+        code, _out, err = run_cli("ext", "conformance", path, "--manifest", path, env=self.env)
+        self.assertEqual(code, 1)
+        self.assertIn("once", err)
+
+    def test_a_crash_is_not_run_after_a_timeout(self):
+        self.assertEqual(self.run_plugin("hangs")["crash"]["status"], "skip")
 
 
 class TestCommandLine(ConformanceCase):

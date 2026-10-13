@@ -151,6 +151,12 @@ def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
         if path is None or not path.exists():
             return _missing(path or ROOT / "packages" / str(target["unit"]))
         return _exec(_command(path), target["argv_prefix"] + target["args"])
+    alias = (config.get("aliases") or {}).get(cmd)
+    if isinstance(alias, dict):  # a known alias whose routes all have a condition that the arguments miss
+        accepted = sorted({word for item in alias.get("routes") or ()
+                           for word in (item.get("when") or {}).get("first_in", ())})
+        print(f"swissknifeman {cmd}: expected one of: {', '.join(accepted) or 'see --help'}", file=sys.stderr)
+        return 2
     unit = group_units(units).get(cmd)
     if unit is not None:
         path = cli_of(unit)

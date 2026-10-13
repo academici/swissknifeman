@@ -26,6 +26,13 @@
       "description": "validated local post-tag delivery and fleet sync (never pushes or publishes)",
       "routes": [{"script": "scripts/release-fleet.sh"}]
     },
+    "conformance": {
+      "description": "conformance plugin <extension.json> | engine [--binding B]: protocol checks",
+      "routes": [
+        {"when": {"first_in": ["plugin"]}, "unit": "aicore", "argv_prefix": ["ext", "conformance"], "drop_first": true},
+        {"when": {"first_in": ["engine"]}, "unit": "orch", "argv_prefix": ["conformance"], "drop_first": true}
+      ]
+    },
     "hub": {
       "description": "same as the maind group",
       "routes": [{"unit": "maind"}]

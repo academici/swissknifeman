@@ -11,7 +11,7 @@ a proof (`how`: `trace` or `test`, with a `ref`) and one status per binding:
 | Status | Meaning |
 | --- | --- |
 | `covered` | a trace file or an existing orch test proves it; the command runs it |
-| `declared` | needs the execution engine, which does not exist yet; listed with its `reason`, never fails the command |
+| `declared` | no proof for this binding yet (an external engine, or work that waits for orch parity); listed with its `reason`, never fails the command |
 | `n/a` | does not apply to the binding; listed with its `reason`, never fails the command |
 
 `declared` and `n/a` always carry a `reason`; `covered` needs a `ref` that exists. A test checks the catalogue itself:
@@ -28,7 +28,10 @@ it through `RunState` and compares with `expect`:
 | `effect` | `unknown_receipt`: `effects.check` must not let the effect run again |
 | `inputs`, `decision` | the stage inputs for `retry.decide` (`stage_writes`, `worktree_dirty`, `receipt_unresolved`) and the action it must return |
 
-A test reference is a dotted unittest name; it runs once however many bindings are reported.
+A test reference is a dotted unittest name; it runs once however many bindings are reported. The process scenarios of the
+native binding (`child-process-cleanup`, `stdout-stderr-framing`, `workspace-permissions`) are proven by
+`tests/test_native_conformance.py` on fake argv (a `python -c` role, never a live provider); the same scenarios stay
+`declared` for `cao` and `claude-only` until orch parity is triggered (ADR 0062).
 
 ## Command
 

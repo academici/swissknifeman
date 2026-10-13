@@ -131,7 +131,7 @@ class TestLegacyGroups(RouteCase):
 
     def test_every_alias_of_the_config_is_covered(self):
         covered = {"skills", "env", "wf", "release", "release-fleet", "hub", "config", "setup", "status", "connect",
-                   "vendor", "integrate", "update", "init", "sync", "lock", "list", "registry", "topology"}
+                   "vendor", "integrate", "update", "init", "sync", "lock", "list", "registry", "topology", "conformance"}
         self.assertEqual(covered, set(umbrella.load_config()["aliases"]))
 
     def test_help_lists_the_former_groups(self):
@@ -139,6 +139,64 @@ class TestLegacyGroups(RouteCase):
         for word in ("skills", "env", "wf", "release", "release-fleet", "hub", "config", "setup", "status", "doctor",
                      "units", "--version"):
             self.assertIn(word, text)
+
+
+class TestConformanceRoutes(unittest.TestCase):
+    """``conformance plugin|engine`` reaches the CLIs named by provides.cli of the modules, with their exit code."""
+
+    def setUp(self):
+        self.hub = Hub(ids=("aicore", "orch"))
+        self.addCleanup(self.hub.close)
+        self.units = umbrella.load_units(self.hub.env)
+
+    def exec_of(self, *argv):
+        with mock.patch.object(umbrella.os, "execv", side_effect=lambda path, args: None) as execv:
+            umbrella.route(list(argv), self.units, umbrella.load_config())
+        self.assertEqual(1, execv.call_count, argv)
+        return execv.call_args[0][1]
+
+    def cli(self, unit_id):
+        return str(umbrella.cli_of(self.units[unit_id]))
+
+    def test_plugin_goes_to_the_extension_conformance_of_the_foundation(self):
+        self.assertEqual([self.cli("aicore"), "ext", "conformance", "/elsewhere/extension.json", "--json"],
+                         self.exec_of("conformance", "plugin", "/elsewhere/extension.json", "--json"))
+        self.assertEqual([self.cli("aicore"), "ext", "conformance", "--manifest", "m.json"],
+                         self.exec_of("conformance", "plugin", "--manifest", "m.json"))
+
+    def test_engine_goes_to_the_conformance_of_the_engine_module(self):
+        self.assertEqual([self.cli("orch"), "conformance", "--binding", "native", "--json"],
+                         self.exec_of("conformance", "engine", "--binding", "native", "--json"))
+        self.assertEqual([self.cli("orch"), "conformance"], self.exec_of("conformance", "engine"))
+
+    def test_the_exit_code_is_the_one_of_the_called_command(self):
+        for unit_id, word, code in (("aicore", "plugin", 4), ("orch", "engine", 7)):
+            cli = umbrella.cli_of(self.units[unit_id])
+            cli.write_text(f"#!/bin/sh\necho \"{unit_id}:$*\"\nexit {code}\n", encoding="utf-8")
+            with self.subTest(unit=unit_id):
+                result = self.hub.run("conformance", word, "x")
+                self.assertEqual(code, result.returncode, result.stderr)
+        self.assertIn("orch:conformance x", self.hub.run("conformance", "engine", "x").stdout)
+
+    def test_the_route_follows_the_module_not_a_path_in_the_code(self):
+        moved = self.hub.packages / "orch" / "tools"
+        moved.mkdir()
+        (moved / "run").write_text("#!/bin/sh\necho moved:$*\n", encoding="utf-8")
+        (moved / "run").chmod(0o755)
+        doc = json.loads((self.hub.packages / "orch" / "unit.json").read_text(encoding="utf-8"))
+        doc["provides"]["cli"] = ["tools/run"]
+        (self.hub.packages / "orch" / "unit.json").write_text(json.dumps(doc), encoding="utf-8")
+        self.assertIn("moved:conformance", self.hub.run("conformance", "engine").stdout)
+
+    def test_without_a_known_word_it_is_a_usage_error(self):
+        for argv in (["conformance"], ["conformance", "nope"]):
+            with self.subTest(argv=argv):
+                result = self.hub.run(*argv)
+                self.assertEqual(2, result.returncode)
+                self.assertIn("expected one of: engine, plugin", result.stderr)
+
+    def test_help_describes_the_group(self):
+        self.assertIn("conformance", umbrella.help_text(self.units, umbrella.load_config()))
 
 
 class TestModuleGroups(unittest.TestCase):

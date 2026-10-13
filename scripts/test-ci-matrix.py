@@ -126,6 +126,17 @@ class CiMatrixTests(unittest.TestCase):
         self.assertEqual(bad.returncode, 1)
         self.assertRegex(bad.stdout, r"^fail broken test \d+\.\d\n$")
 
+    def test_validate_skips_the_tests_after_a_green_test_step(self):
+        log = self.fx.root / "validate-env"
+        probe = f'echo "${{SKM_VALIDATE_SKIP_TESTS:-unset}}" >> {log}'
+        self.fx.unit("packages/dedup", unit_doc("dedup", test=["bash", "-c", "exit 0"], validate=["bash", "-c", probe]))
+        self.fx.unit("packages/redtest", unit_doc("redtest", test=["bash", "-c", "exit 1"], validate=["bash", "-c", probe]))
+        self.assertEqual(self.fx.run("run", "--unit", "dedup", "--step", "test", "--step", "validate").returncode, 0)
+        self.assertEqual(self.fx.run("run", "--unit", "dedup", "--step", "validate").returncode, 0)  # tests not run here
+        self.fx.run("run", "--unit", "redtest", "--step", "test", "--step", "validate")  # a red test step: no skip
+        self.assertEqual(self.fx.run("run", "--unit", "dedup", "--repeat-tests", "--step", "test", "--step", "validate").returncode, 0)
+        self.assertEqual(log.read_text(encoding="utf-8").split(), ["1", "unset", "unset", "unset"])
+
     def test_run_skip_and_unknown(self):
         out = self.fx.run("run", "--unit", "link", "--skip", "test")
         self.assertEqual(out.returncode, 0, out.stderr)
@@ -203,7 +214,8 @@ class StepTests(unittest.TestCase):
 
     def link_foundation(self) -> None:
         (self.fx.root / "packages").mkdir(exist_ok=True)
-        (self.fx.root / "packages/aicore").symlink_to(HUB / "packages/aicore")
+        if not (self.fx.root / "packages/aicore").exists():
+            (self.fx.root / "packages/aicore").symlink_to(HUB / "packages/aicore")
 
     def fake_compat(self, code: int, message: str) -> None:
         self.fx.write("packages/aicore/bin/aicore", f"#!/bin/bash\necho '{message}' >&2\nexit {code}\n")
@@ -249,6 +261,40 @@ class StepTests(unittest.TestCase):
              "properties": {"a": {"$ref": "#/definitions/d"}}}))
         self.assertEqual(self.fx.run("run", "--unit", "mod", "--step", "contracts").returncode, 0)
 
+    def slot_set(self, extra: dict) -> subprocess.CompletedProcess:
+        """A contract set of two documents; ``main`` leaves the extension slot ``options`` open, as plan/v1 does."""
+        self.module([{"id": "urn:swissknifeman:mod:set", "path": "schemas/set/v1", "version": "v1", "stability": "alpha"}])
+        self.link_foundation()
+        prefix = "urn:swissknifeman:mod:set:"
+        base = {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object"}
+        self.fx.write("packages/mod/schemas/set/v1/defs.schema.json", json.dumps(
+            {**base, "$id": f"{prefix}defs:v1", "$defs": {"text": {"type": "string"}}}))
+        self.fx.write("packages/mod/schemas/set/v1/main.schema.json", json.dumps(
+            {**base, "$id": f"{prefix}main:v1", "properties": {"a": {"$ref": f"{prefix}defs:v1#/$defs/text"}, **extra}}))
+        return self.fx.run("run", "--unit", "mod", "--step", "contracts")
+
+    def test_contracts_accept_an_open_extension_slot_and_check_the_rest_of_the_set(self):
+        slot = {"opts": {"$ref": "urn:swissknifeman:mod:set:extension:options:v1"}}
+        out = self.slot_set(slot)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        broken = self.slot_set({**slot, "b": {"$ref": "urn:swissknifeman:mod:set:defs:v1#/$defs/nope"}})
+        self.assertEqual(broken.returncode, 1, broken.stdout + broken.stderr)  # the slot does not excuse a real ref
+        self.assertIn("nope", broken.stderr)
+        self.assertEqual(self.slot_set({"c": {"$ref": "urn:swissknifeman:mod:set:other:v1"}}).returncode, 1)
+
+    def test_secrets_step_applies_the_plan_reference_rule_of_the_hygiene_gate(self):
+        self.module([])
+        self.fx.write("scripts/public-hygiene.py", (HUB / "scripts/public-hygiene.py").read_text(encoding="utf-8"))
+        self.fx.write("packages/mod/notes.md", "clean\n")
+        subprocess.run(["git", "init", "-q"], cwd=self.fx.root, check=True)
+        subprocess.run(["git", "add", "-A"], cwd=self.fx.root, check=True)
+        self.assertEqual(self.fx.run("run", "--unit", "mod", "--step", "secrets").returncode, 0)
+        self.fx.write("packages/mod/notes.md", "see plan 2026.10.07-№1-SKM-ECOSYSTEM\n")
+        subprocess.run(["git", "add", "-A"], cwd=self.fx.root, check=True)
+        out = self.fx.run("run", "--unit", "mod", "--step", "secrets")
+        self.assertEqual(out.returncode, 1, out.stdout + out.stderr)
+        self.assertIn("packages/mod/notes.md", out.stderr)
+
     def test_compat_base_invalid_is_a_reported_skip(self):
         self.fake_compat(1, "SCHEMA_COMPAT_BASE_INVALID: x/v1 at the base: unknown schema kind")
         out = self.fx.run("run", "--unit", "mod", "--step", "schema-compat", "--base-ref", "HEAD")
@@ -268,6 +314,20 @@ class RealHubTests(unittest.TestCase):
         listed = {e["unit"] for e in json.loads(out.stdout)["include"]}
         folders = {p.parent.name for pattern in ("packages/*/unit.json", "bridges/*/unit.json") for p in HUB.glob(pattern)}
         self.assertEqual(listed, folders)
+
+    def test_the_compat_tool_reads_the_base_of_every_module_with_schemas(self):
+        """No module needs the SCHEMA_COMPAT_BASE_INVALID skip: the loader reads the base ref of all of them."""
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as home:
+            env = {**os.environ, "HOME": home, "SKM_HOME": home + "/skm", "PYTHONPATH": str(HUB / "packages/aicore/lib")}
+            for unit in sorted(p.parent for p in HUB.glob("packages/*/unit.json")):
+                if not any((unit / "schemas").glob("*/v*/*.schema.json")):
+                    continue
+                code = ("import sys; from aicore.util.schemacompat import main; "
+                        f"sys.exit(main(['compat', '--base', 'HEAD', '--root', '{unit}/schemas', '--unit', '{unit}/unit.json']))")
+                out = subprocess.run([sys.executable, "-c", code], cwd=HUB, env=env, capture_output=True, text=True, timeout=120)
+                self.assertEqual(out.returncode, 0, f"{unit.name}: {out.stdout}{out.stderr}")
 
     def test_the_legacy_workflows_are_gone_and_the_check_passes(self):
         self.assertFalse((HUB / ".github/workflows/test.yml").exists())

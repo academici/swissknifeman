@@ -85,7 +85,11 @@ for category in valid invalid; do
 done
 
 echo "[7/7] tests"
-bash scripts/test.sh || err "unittest"
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  bash scripts/test.sh || err "unittest"
+fi
 
 if [[ "$fail" -eq 0 ]]; then
   echo "validate: OK"

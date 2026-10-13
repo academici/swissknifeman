@@ -373,7 +373,7 @@ artifacts made of wood - a separate decision of the owner (not auto-editing the 
 
 | Steps of a module | `lint`, `test`, `validate`, `standalone`, `cli-smoke`, `contracts`, `schema-compat`, `secrets` |
 | --- | --- |
-| Steps of a bridge | `lint`, `test`, `cli-smoke`, `contracts` |
+| Steps of a bridge | `test`, `contracts` |
 
 ```bash
 python3 scripts/ci-matrix.py list                          # the matrix of units
@@ -382,6 +382,10 @@ python3 scripts/ci-matrix.py run --unit planner --step test --step contracts
 python3 scripts/ci-matrix.py run --all                     # every unit, tools excluded
 python3 scripts/ci-matrix.py --check --strict              # the workflow covers the matrix
 ```
+
+The tests of a module run once per invocation: after a green `test` step the `validate` step runs with
+`SKM_VALIDATE_SKIP_TESTS=1` (the `validate.sh` of a module skips its test run; `--repeat-tests` turns this off), and
+`standalone` runs the tests in its copy once and then `validate` the same way.
 
 Each step runs with a throwaway `HOME` and `SKM_HOME` and prints `ok|fail|skip <unit> <step> <seconds>`; the exit code is
 1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.9 and 3.13, marks the tools

@@ -60,7 +60,11 @@ d = Path(sys.argv[1]); i = describe_skill(d, skill_id=d.name); sys.exit(0 if i.n
 done
 
 echo "[6/6] tests"
-scripts/test.sh
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  scripts/test.sh
+fi
 
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: FAILURE" >&2; exit 1; fi

@@ -1295,7 +1295,11 @@ echo "CLI + shell scripts: syntax OK"
   echo "ERROR: lib/skiller package missing" >&2; exit 1; }
 PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "import skiller.cli" || {
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
-"$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "tests skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
+fi
 
 # --- 12b. registry drift-gate (skills.json/_index.md/manifests vs sources) ----
 # Rebuilds the registry IN MEMORY and checks it against committed artifacts. Catches the quiet one

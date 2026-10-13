@@ -62,6 +62,8 @@ SCHEMA_SKIP_DIRS = ("tests", "fixtures", "examples")
 STANDALONE_STATES = ("pass", "fail", "n/a")
 STANDALONE_TIMEOUT_S = 1800
 STANDALONE_TAIL_LINES = 40
+# validate.sh of a module skips its test run when this is set (ci-matrix.py sets it after a green test step).
+SKIP_TESTS_ENV = "SKM_VALIDATE_SKIP_TESTS"
 VERSION_DIR = re.compile(r"^v([0-9]+)$")
 
 
@@ -1060,8 +1062,12 @@ def run_standalone(ctx: Context, folder: str) -> tuple:
         copy_tracked(ctx, f"packages/{folder}", tmp, f"vendor/{folder}")
         module = tmp / "vendor" / folder
         env = standalone_env(tmp / "home", unset)
+        tested = False
         for name, argv in commands:
+            if name == "validate" and tested:  # the tests of the copy just passed: validate.sh does not run them again
+                env = {**env, SKIP_TESTS_ENV: "1"}
             code, out = run_limited(argv, module, env, timeout)
+            tested = tested or name == "test"
             if code != 0:
                 reason = f"timeout after {timeout}s" if code is None else f"exit {code}"
                 tail = "\n".join(out.splitlines()[-STANDALONE_TAIL_LINES:])

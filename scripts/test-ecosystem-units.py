@@ -1180,6 +1180,16 @@ class StandaloneTests(unittest.TestCase):
                  validate=["python3", "-c", "import sys; sys.exit(0 if open('order').read()=='st' else 1)"])
         self.assertEqual(self.standalone("alpha").returncode, 0)
 
+    def test_validate_skips_the_tests_the_copy_just_ran(self):
+        skipped = "import os, sys; sys.exit(0 if os.environ.get('SKM_VALIDATE_SKIP_TESTS') == '1' else 1)"
+        self.dev(test=["python3", "-c", "pass"], validate=["python3", "-c", skipped])
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        untouched = "import os, sys; sys.exit(1 if 'SKM_VALIDATE_SKIP_TESTS' in os.environ else 0)"
+        self.dev(validate=["python3", "-c", untouched])  # no test command: validate keeps the tests it runs itself
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_layout_home_and_environment(self):
         script = ("import os, pathlib, sys; home = pathlib.Path(os.environ['HOME']).resolve(); "
                   "tmp = pathlib.Path.cwd().resolve().parents[1]; "

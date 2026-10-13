@@ -4,15 +4,17 @@
 Usage:
   ci-matrix.py list [--json] [--step S] [--python V,V]    units of the hub as a matrix {"include": [{unit, kind, tool}]}
   ci-matrix.py steps UNIT [--json]                        the steps of one unit
-  ci-matrix.py run (--unit U [--step S]... [--skip S]... | --all [--include-tools]) [--base-ref REF]
-                                                          run steps; one line `ok|fail|skip <unit> <step> <seconds>` each
+  ci-matrix.py run (--unit U [--step S]... [--skip S]... | --all [--include-tools]) [--base-ref REF] [--repeat-tests]
+                                                          run steps; one line `ok|fail|skip <unit> <step> <seconds>` each;
+                                                          after a green `test` step `validate` runs with
+                                                          SKM_VALIDATE_SKIP_TESTS=1 (validate.sh skips its test run)
   ci-matrix.py --check [--strict] [--legacy FILE]         structural check of the workflow against the matrix
 Common option: --root DIR (hub root; default: the checkout of this script).
 
 Units are read from packages/*/unit.json and bridges/*/unit.json; `tool` marks the modules named by
 configs/ecosystem-units.json standalone.tools (their failure never blocks: the workflow sets continue-on-error).
-Steps of a module: lint, test, validate, standalone, cli-smoke, contracts, schema-compat, secrets; of a bridge: lint,
-test, cli-smoke, contracts. Every step runs with a throwaway HOME and SKM_HOME (lint keeps the real one for the pipx cache).
+Steps of a module: lint, test, validate, standalone, cli-smoke, contracts, schema-compat, secrets; of a bridge: test,
+contracts. Every step runs with a throwaway HOME and SKM_HOME (lint keeps the real one for the pipx cache).
 Exit: 0 ok, 1 a step failed or the check found a problem, 2 usage.
 """
 from __future__ import annotations
@@ -32,6 +34,9 @@ from pathlib import Path
 HUB = Path(__file__).resolve().parents[1]
 WORKFLOW = ".github/workflows/modules.yml"
 TEST_PYTHONS = "3.9,3.13"
+# validate.sh of a module skips its test run when this is set: the `test` step has just run them (the standalone step
+# does the same inside its copy, see ecosystem-units.py).
+SKIP_TESTS_ENV = "SKM_VALIDATE_SKIP_TESTS"
 STEP_ORDER = ("lint", "test", "validate", "standalone", "cli-smoke", "contracts", "schema-compat", "secrets")
 # Extra arguments of dev.validate in CI (the plan fleet is checked besides the module itself). Data until unit.json
 # gets a field for it.
@@ -179,11 +184,12 @@ def temp_env(home: Path, extra: dict) -> dict:
     return env
 
 
-def run_argv(root: Path, step: dict) -> tuple:
+def run_argv(root: Path, step: dict, extra_env: dict | None = None) -> tuple:
     home = Path(tempfile.mkdtemp(prefix="skm-ci-"))
     try:
         env = dict(os.environ) if step["id"] == "lint" else temp_env(home, {})
         env.update(step.get("env") or {})
+        env.update(extra_env or {})
         proc = subprocess.run(step["argv"], cwd=str(root / step["cwd"]), env=env)
         if step["id"] == "lint" and proc.returncode == 2 and not os.environ.get("CI"):
             return "skip", "lint tool missing (need pipx or ruff at the pinned version)"
@@ -251,53 +257,18 @@ def contracts(root: Path, unit: Unit) -> tuple:
                         problems.append(f"{entry['path']}: unresolved reference {ref!r}: {exc}")
         except schema.SchemaProfileError as first:
             try:
-                registry, kinds = schema.load_contract_set(directory)
+                # A set may leave extension slots open (plan/v1 -> orchestration.options, supplied by a bridge): they
+                # resolve to a placeholder; any other profile or reference error stays a failure.
+                registry, kinds = schema.load_contract_set(directory, open_slots=True)
             except schema.SchemaProfileError as second:
-                # A set may leave extension slots open (plan/v1 -> orchestration.options, supplied by a bridge): stub
-                # only those slots and load again; any other profile or reference error stays a failure.
-                try:
-                    kinds = slot_stubbed_set(schema, directory)
-                    registry = None
-                except schema.SchemaProfileError as third:
-                    problems.append(f"{entry['path']}: {third} (first: {first}; set: {second})")
-                    continue
+                problems.append(f"{entry['path']}: {second} (first: {first})")
+                continue
         if registry is not None and len(kinds) == 1:
             problems += example_problems(schema, registry, kinds[0], directory, entry["path"])
     if problems:
         sys.stderr.write("\n".join(problems) + "\n")
         return "fail", f"{len(problems)} problem(s)"
     return "ok", f"{len(declared)} contract(s)"
-
-
-def slot_stubbed_set(schema, directory: Path) -> list:
-    """Load a contract set whose open extension slots are stubbed; every other reference must resolve."""
-    documents = schema._read_schemas(directory)
-    ids = list(documents)
-    matches = [schema._SET_ID.fullmatch(i) for i in ids]
-    if any(m is None for m in matches):
-        raise schema.SchemaProfileError(f"{directory}: $id does not match <prefix><kind>:v<N>")
-    prefix = matches[0].group(1)
-    slots = sorted({ref.partition("#")[0] for doc in documents.values() for ref in schema._refs(doc)
-                    if f"{prefix}extension:" in ref and ref.partition("#")[0] not in documents})
-    if not slots:
-        raise schema.SchemaProfileError(f"{directory}: the set does not load and has no open extension slot")
-    stub = Path(tempfile.mkdtemp(prefix="skm-ci-slot-"))
-    try:
-        for n, slot in enumerate(slots):
-            (stub / f"slot{n}.schema.json").write_text(json.dumps({"$id": slot, "type": "object"}), encoding="utf-8")
-        kinds = tuple(sorted(m.group(2) for m in matches))
-        extras = schema._referenced_contract_dirs(directory.resolve(), schema.CONTRACT_URN_PREFIX, None) + (stub,)
-        registry = schema.load_registry(directory, urn_prefix=prefix, kinds=kinds, version=directory.name,
-                                        extra_dirs=extras)
-        for schema_id, document in documents.items():
-            for ref in schema._refs(document):
-                try:
-                    registry.resolve(ref, schema_id)
-                except schema.RefError as exc:
-                    raise schema.SchemaProfileError(f"unresolved reference {ref!r}: {exc}") from None
-    finally:
-        shutil.rmtree(stub, ignore_errors=True)
-    return list(kinds)
 
 
 def legacy_problems(files: list, label: str) -> list:
@@ -396,7 +367,7 @@ def secrets(root: Path, unit: Unit) -> tuple:
     os.chdir(root)
     try:
         paths = [p for p in module.list_tracked_files() if p.startswith(prefix)]
-        found = module.check(paths) + module.content_violations(paths)
+        found = module.check(paths) + module.content_violations(paths) + module.plan_reference_violations(paths)
     finally:
         os.chdir(cwd)
     for path, reason in found:
@@ -404,9 +375,9 @@ def secrets(root: Path, unit: Unit) -> tuple:
     return ("fail", f"{len(found)} violation(s)") if found else ("ok", f"{len(paths)} file(s)")
 
 
-def execute(root: Path, unit: Unit, step: dict, base_ref: str) -> tuple:
+def execute(root: Path, unit: Unit, step: dict, base_ref: str, extra_env: dict | None = None) -> tuple:
     if step["kind"] == "argv":
-        return run_argv(root, step)
+        return run_argv(root, step, extra_env)
     name = step["id"]
     if name == "cli-smoke":
         return cli_smoke(root, unit)
@@ -437,11 +408,14 @@ def cmd_run(args, root: Path) -> int:
         if bad and not args.all:
             print(f"ci-matrix: {unit.id} has no step {', '.join(bad)} (steps: {', '.join(known)})", file=sys.stderr)
             return 2
+        tests_green = False  # the tests of this unit ran green in this invocation: validate does not run them again
         for step in steps:
             if step["id"] not in wanted or step["id"] in (args.skip or []):
                 continue
             started = time.monotonic()
-            state, note = execute(root, unit, step, args.base_ref or os.environ.get("BASE_REF", ""))
+            extra = {SKIP_TESTS_ENV: "1"} if step["id"] == "validate" and tests_green and not args.repeat_tests else {}
+            state, note = execute(root, unit, step, args.base_ref or os.environ.get("BASE_REF", ""), extra)
+            tests_green = tests_green or (step["id"] == "test" and state == "ok")
             print(f"{state} {unit.id} {step['id']} {time.monotonic() - started:.1f}", flush=True)
             if state == "fail":
                 failed = True
@@ -559,6 +533,8 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--skip", action="append")
     run.add_argument("--all", action="store_true")
     run.add_argument("--include-tools", action="store_true")
+    run.add_argument("--repeat-tests", action="store_true",
+                     help="validate runs the tests again after a green test step (default: it skips them)")
     run.add_argument("--base-ref", default="")
     sub.add_parser("check")
     return p

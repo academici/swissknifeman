@@ -102,7 +102,11 @@ import sys
 from harness.agentpacks import do_doctor
 from harness.common import Env
 sys.exit(do_doctor(Env('$REPO_ROOT', 'validate')))" || err "agent-packs integrity"
-scripts/test.sh || err "tests"
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  tests skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  scripts/test.sh || err "tests"
+fi
 
 echo "[8/12] generated provider instructions reference"
 PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" \

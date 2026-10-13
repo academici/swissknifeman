@@ -18,8 +18,9 @@ Code plugin cache, where files outside the plugin folder are absent.
   `~/.claude/plugins/cache/swissknifeman/<name>/<version>/` with checks of `${CLAUDE_PLUGIN_ROOT}` paths, of paths that
   leave the plugin root, and of hook launch. The `skills[]` paths of `source: ./` entries are checked in the archive.
 - **One source of steps.** `scripts/ci-matrix.py list|steps|run|--check` defines the steps of modules (`lint`, `test`,
-  `validate`, `standalone`, `cli-smoke`, `contracts`, `schema-compat`, `secrets`) and bridges (`lint`, `test`,
-  `cli-smoke`, `contracts`) from `unit.json`. Each step runs with a throwaway `HOME`.
+  `validate`, `standalone`, `cli-smoke`, `contracts`, `schema-compat`, `secrets`) and bridges (`test`,
+  `contracts`) from `unit.json`. Each step runs with a throwaway `HOME`; the tests of a module run once (`validate`
+  skips them after a green `test` step, `SKM_VALIDATE_SKIP_TESTS`).
 - **Workflow.** `.github/workflows/modules.yml` takes its matrix from `list --json`, tests on Python 3.9 and 3.13, runs the
   tools (`standalone.tools`) with `continue-on-error`, and has a `hub` job.
 - **Replacement.** `test.yml` and `validate.yml` are removed after `--check` proves that each of their commands is covered.

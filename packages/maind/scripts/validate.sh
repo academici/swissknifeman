@@ -56,7 +56,11 @@ sys.exit(1 if bad else 0)
 PY
 
 echo "[6/6] tests"
-scripts/test.sh
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  scripts/test.sh
+fi
 
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: FAILURE" >&2; exit 1; fi

@@ -106,7 +106,11 @@ PY
 echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
 # lib/ — package planner; the aicore lib serves the projection renderer and its tests. Both suites (tests/ and the
 # plan engine tests/engine) run side by side in scripts/test.sh.
-bash "$REPO_ROOT/scripts/test.sh" || err "unittest"
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  tests skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  bash "$REPO_ROOT/scripts/test.sh" || err "unittest"
+fi
 
 if $fleet; then
   if [[ -n "$HUB_ROOT" && -d "$HUB_ROOT/plans" ]]; then

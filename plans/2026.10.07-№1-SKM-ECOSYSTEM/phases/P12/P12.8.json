@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.8",
   "title": "CI-матрица модулей: scripts/ci-matrix.py из unit.json, .github/workflows/modules.yml; test.yml и validate.yml заменяются",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "scripts/ci-matrix.py list|steps|run|--check — единый источник шагов модулей и мостов (lint, test, validate, standalone, cli-smoke, contracts, schema-compat, secrets); modules.yml берёт матрицу из list --json (fromJSON), инструменты continue-on-error, job hub (check --strict, golden, scripts/test-*.py, smoke-installed, conformance engine); test.yml и validate.yml удаляются после --check о покрытии их команд.",
   "why": "D85, E43, R10, R31 (E42 отложен); knowledge/hub-p12#ci. Риски: (1) потеря проверки при удалении test.yml/validate.yml — --check сверяет каждую их команду со шагами; (2) матрица-литерал вместо обнаружения — --check ловит; (3) brain и мосты впервые в CI — их красное чинится у владельца в пункте, если мало, иначе open_issues.",
   "scope": {
@@ -42,16 +42,6 @@
     {
       "ref": "knowledge/hub-p12#ci",
       "why": "шаги, матрица, workflow, удаление старых",
-      "required": true
-    },
-    {
-      "path": ".github/workflows/test.yml",
-      "why": "команды, которые должны остаться покрыты",
-      "required": true
-    },
-    {
-      "path": ".github/workflows/validate.yml",
-      "why": "то же",
       "required": true
     },
     {
@@ -128,6 +118,21 @@
     {
       "path": "CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/test_ci_gate.py",
+      "change": "modify",
+      "note": "читал удаляемый test.yml: переписать на modules.yml и ci-matrix.py steps planner"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6af003fb65351d555792c74aa0865490a07bdd3e967b6fd0c6f89300935c8899",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/4ed0c7aac999872df8677a7666011110b368937b6475870c8a5d354c7d3b3936",
+      "role": "input"
     }
   ],
   "rules": [
@@ -184,6 +189,13 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:25:08Z"
+  "result": {
+    "started_at": "2026-10-13T15:17:02Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "session": "run-78d97923de104dc2fab78f22"
+    }
+  },
+  "updated_at": "2026-10-13T15:17:02Z"
 }

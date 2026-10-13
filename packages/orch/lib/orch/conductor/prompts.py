@@ -95,6 +95,7 @@ def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", 
     manifest, text = render.load_role(role, roles_dir)
     prompt = render.render_prompt(input_doc, manifest, text)
     if rules:
+        rules = re.sub(r"\s*<!--.*?-->", "", rules, flags=re.S)  # instruction markers are for generators, not for roles
         prompt += "\n\n## Repository rules\n\n" + rules.rstrip() + "\n"
     texts = dict(skill_texts or {})
     named = [name for name in skills if name not in texts]

@@ -788,7 +788,7 @@ class BeaconTests(ConductorCase):
 
 class RepositoryRulesTests(ConductorCase):
     def test_an_isolated_role_gets_the_module_rules_and_nothing_else_of_claude_md(self):
-        (self.project / "CLAUDE.md").write_text("# Rules\n\n## root.module-folders\nEvery module is a folder.\n\n"
+        (self.project / "CLAUDE.md").write_text("# Rules\n\n## root.module-folders\nEvery module is a folder. <!-- swissknifeman:marker --> <!-- semantic:x -->\n\n"
                                                 "## root.quality\nQuality over speed.\n", encoding="utf-8")
         (self.project / "out").mkdir()
         (self.project / "out" / "CLAUDE.md").write_text("## out.module-boundaries\nImport only out.\n", encoding="utf-8")
@@ -801,6 +801,7 @@ class RepositoryRulesTests(ConductorCase):
         self.assertIn("## Repository rules", prompt)
         self.assertIn("Every module is a folder.", prompt)
         self.assertIn("Import only out.", prompt)
+        self.assertNotIn("<!--", prompt.split("## Repository rules")[1].split("## Context map")[0])
         self.assertNotIn("Quality over speed", prompt)
 
 

@@ -364,9 +364,10 @@ class UnitAttemptTests(AttemptCase):
 class CompatTests(unittest.TestCase):
     @unittest.skipUnless((ARCHIVED_PLAN / "plan.json").is_file(), "archived plan 1 is not in this checkout")
     def test_archived_plan_still_checks_clean(self):  # case 9
-        # human_view (reads naming plan Markdown) is a later authoring rule the archived plan predates; every
-        # other error, schema conformance included, must stay absent.
-        errors = [i for i in check.check(store.load_plan(ARCHIVED_PLAN)) if i.level == "error" and i.code != "human_view"]
+        # human_view (reads naming plan Markdown) is a later authoring rule the archived plan predates: it is a
+        # warning there; every error, schema conformance included, must stay absent.
+        issues = check.check(store.load_plan(ARCHIVED_PLAN))
+        errors = [i for i in issues if i.level == "error"]
         self.assertEqual(errors, [])
 
 

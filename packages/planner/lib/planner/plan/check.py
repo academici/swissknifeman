@@ -425,7 +425,9 @@ class _Context:
                 elif value.startswith("/") or _DRIVE.match(value) or value.startswith("~"):
                     self.error("path", f"{rel}{pointer}", f"path {value!r} must be relative to the repository or @plan/")
                 elif kind in ("item", "unit") and pointer.startswith(("/reads/", "/examples/")) and context.human_view(self.p, value):
-                    self.error("human_view", f"{rel}{pointer}", "plan Markdown and human views cannot be agent inputs")
+                    # An archived plan predates this authoring rule and is read-only history: advisory there.
+                    report = self.warn if self.p.plan.get("status") == "archived" else self.error
+                    report("human_view", f"{rel}{pointer}", "plan Markdown and human views cannot be agent inputs")
 
     def results(self) -> None:
         for key, doc in self.p.items.items():

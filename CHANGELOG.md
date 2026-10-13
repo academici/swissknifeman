@@ -122,6 +122,7 @@
 
 ### Fixed
 
+- **planner:** `plan.py check` reports `human_view` (a read naming plan Markdown) as a warning, not an error, for a plan whose status is `archived`; the archived plan predates the rule, and the fleet gate of `validate.sh --fleet` was red on it.
 - **orch:** `unknown_outcome` стадии без права записи выбирает `retry` даже при конфликтующем
   `on_error` (в том числе в пакете `full`); лимиты повторов сохраняются, пишущая стадия требует `reconcile`.
 - **hub:** golden-дайджесты проекций `planner-development-philosophy` и bootstrap publication lock

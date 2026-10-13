@@ -25,7 +25,8 @@ import umbrella  # noqa: E402
 UMBRELLA = ROOT / "scripts" / "umbrella.py"
 
 
-def make_unit(packages: Path, unit_id: str, cli=None, kind="capability", doctor=False, extra=None) -> Path:
+def make_unit(packages: Path, unit_id: str, cli=None, kind="capability", doctor=False, extra=None,
+              requires=None) -> Path:
     """``doctor`` is True (one text check) or a list of provides.doctor entries."""
     folder = packages / unit_id
     (folder / "bin").mkdir(parents=True)
@@ -43,7 +44,8 @@ def make_unit(packages: Path, unit_id: str, cli=None, kind="capability", doctor=
         provides["doctor"] = [{"id": f"{unit_id}.environment", "category": "environment",
                                "probe": [cli[0], "doctor"], "output": "text"}]
     doc = {"$schema": "urn:swissknifeman:aicore:unit:v1", "id": unit_id, "title": f"Fake {unit_id}", "kind": kind,
-           "version": "1.2.3", "stability": "alpha", "destination": "hub", "requires": [], "provides": provides}
+           "version": "1.2.3", "stability": "alpha", "destination": "hub", "requires": list(requires or []),
+           "provides": provides}
     (folder / "unit.json").write_text(json.dumps(doc), encoding="utf-8")
     return folder
 
@@ -381,6 +383,189 @@ class TestUnits(unittest.TestCase):
                              text=True, check=True).stdout
         kinds = {row["id"]: row["kind"] for row in json.loads(out)["units"]}
         self.assertIn("bridge", set(kinds.values()))
+
+
+class TestInstall(unittest.TestCase):
+    """``swissknifeman install`` on a fixture hub: order, dry-run, cli links, installer arguments, PROFILE_* errors."""
+
+    def setUp(self):
+        self.hub = Hub(ids=("base",))
+        self.addCleanup(self.hub.close)
+        self.bin = self.hub.home.parent / "bin"
+        self.log = self.hub.home.parent / "installers.log"
+        req = [{"unit": "base", "range": "^1"}]
+        make_unit(self.hub.packages, "tool", ["bin/tool"], extra={"install": ["install.sh"]}, requires=req)
+        make_unit(self.hub.packages, "plain", ["bin/plain", "bin/plain-extra"], requires=req)
+        make_unit(self.hub.packages, "broken", ["bin/broken"], extra={"install": ["install.sh"]}, requires=req)
+        make_unit(self.hub.packages, "late", ["bin/late"], requires=[{"unit": "plain", "range": "^1"}])
+        for name, code in (("tool", 0), ("broken", 3)):
+            script = self.hub.packages / name / "install.sh"
+            script.write_text(f"#!/bin/sh\necho \"{name} $*\" >> \"{self.log}\"\nexit {code}\n", encoding="utf-8")
+            script.chmod(0o755)
+        self.profiles = self.hub.home.parent / "profiles.json"
+        self.write_profiles({
+            "mini": {"description": "d", "units": ["late", "plain", "base"], "options": {}},
+            "opts": {"description": "d", "units": ["base", "tool"], "options": {"tool": ["--flag"]}},
+            "bad-requires": {"description": "d", "units": ["late"], "options": {}},
+            "bad-unit": {"description": "d", "units": ["base", "ghost"], "options": {}},
+            "fails": {"description": "d", "units": ["base", "broken", "tool"], "options": {}}})
+        self.units = umbrella.load_units(self.hub.env)
+
+    def write_profiles(self, profiles):
+        doc = {"schema": "install-profiles/v1", "default": "mini", "own_links": ["*/bin/hub"], "profiles": profiles}
+        self.profiles.write_text(json.dumps(doc), encoding="utf-8")
+
+    def install(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(umbrella, "PROFILES", self.profiles), mock.patch.dict(os.environ, self.hub.env), \
+                redirect_stdout(out), redirect_stderr(err):
+            code = umbrella.install_command(list(args), self.units)
+        return code, out.getvalue(), err.getvalue()
+
+    def logged(self):
+        return self.log.read_text(encoding="utf-8").splitlines() if self.log.exists() else []
+
+    def test_order_follows_requires_not_the_profile_list(self):
+        code, out, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--dry-run", "--json")
+        self.assertEqual(0, code)
+        doc = json.loads(out)
+        self.assertEqual("umbrella-install/v1", doc["schema"])
+        self.assertEqual(["base", "plain", "late", "swissknifeman"], [step["unit"] for step in doc["steps"]])
+
+    def test_dry_run_writes_nothing_and_runs_nothing(self):
+        for extra in ((), ("--json",)):
+            code, _, _ = self.install("--profile", "opts", "--bin-dir", str(self.bin), "--dry-run", *extra)
+            self.assertEqual(0, code)
+        self.assertFalse(self.bin.exists())
+        self.assertEqual([], self.logged())
+
+    def test_default_profile_is_used(self):
+        code, out, _ = self.install("--bin-dir", str(self.bin), "--dry-run", "--json")
+        self.assertEqual((0, "mini"), (code, json.loads(out)["profile"]))
+
+    def test_modules_without_install_get_cli_links(self):
+        code, out, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--force")
+        self.assertEqual(0, code)
+        for name in ("base", "plain", "plain-extra", "late"):
+            link = self.bin / name
+            self.assertTrue(link.is_symlink(), name)
+            self.assertEqual(name.split("-")[0], link.resolve().parent.parent.name if name != "late" else "late")
+        self.assertEqual(str(ROOT / "bin" / "swissknifeman"), os.readlink(self.bin / "swissknifeman"))
+        self.assertIn("Done. CLI: swissknifeman (router) · base · plain · late", out)
+
+    def test_cli_without_exec_bit_gets_a_runnable_wrapper_and_dry_run_matches_real_run(self):
+        (self.hub.packages / "base" / "bin" / "base").chmod(0o644)
+        code, out, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--force", "--dry-run", "--json")
+        planned = [(s["unit"], s["links"]) for s in json.loads(out)["steps"]]
+        self.assertFalse(self.bin.exists())
+        code, out, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--force", "--json")
+        steps = {s["unit"]: s for s in json.loads(out)["steps"]}
+        self.assertEqual((0, "ok", ["base"]), (code, steps["base"]["status"], steps["base"]["links"]))
+        wrapper = self.bin / "base"
+        self.assertTrue(wrapper.is_file() and not wrapper.is_symlink() and os.access(wrapper, os.X_OK))
+        self.assertIn(str(self.hub.packages / "base" / "bin" / "base"), wrapper.read_text(encoding="utf-8"))
+        self.assertEqual(planned, [(s["unit"], s["links"]) for s in json.loads(out)["steps"]])
+
+    def test_installer_gets_bin_dir_force_and_profile_options(self):
+        code, _, _ = self.install("--profile", "opts", "--bin-dir", str(self.bin), "--force", "--option", "tool=--more")
+        self.assertEqual(0, code)
+        self.assertEqual([f"tool --flag --more --force --bin-dir {self.bin}"], self.logged())
+
+    def test_units_list_adds_requires(self):
+        code, out, _ = self.install("--units", "late", "--bin-dir", str(self.bin), "--dry-run", "--json")
+        self.assertEqual(0, code)
+        self.assertEqual(["base", "plain", "late"], [s["unit"] for s in json.loads(out)["steps"] if s["unit"] != "swissknifeman"])
+
+    def test_failed_installer_is_reported_and_the_rest_runs(self):
+        code, out, err = self.install("--profile", "fails", "--bin-dir", str(self.bin))
+        self.assertEqual(1, code)
+        self.assertIn("packages not installed: broken", err)
+        self.assertEqual(2, len(self.logged()))
+        self.assertTrue((self.bin / "swissknifeman").is_symlink())
+        code, out, _ = self.install("--profile", "fails", "--bin-dir", str(self.bin), "--json")
+        self.assertEqual((1, ["broken"]), (code, json.loads(out)["failed"]))
+
+    def test_foreign_link_needs_force_and_own_link_is_replaced(self):
+        self.bin.mkdir()
+        foreign = self.hub.home.parent / "elsewhere"
+        foreign.write_text("x", encoding="utf-8")
+        (self.bin / "swissknifeman").symlink_to(foreign)
+        with mock.patch.object(umbrella.sys.stdin, "isatty", return_value=False):
+            code, _, err = self.install("--profile", "mini", "--bin-dir", str(self.bin))
+        self.assertEqual(0, code)
+        self.assertIn("restart with --force", err)
+        self.assertEqual(str(foreign), os.readlink(self.bin / "swissknifeman"))
+        code, _, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--force")
+        self.assertEqual(str(ROOT / "bin" / "swissknifeman"), os.readlink(self.bin / "swissknifeman"))
+        own = self.hub.home.parent / "x" / "bin" / "hub"
+        own.parent.mkdir(parents=True)
+        own.write_text("x", encoding="utf-8")
+        (self.bin / "swissknifeman").unlink()
+        (self.bin / "swissknifeman").symlink_to(own)
+        code, _, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin))
+        self.assertEqual(str(ROOT / "bin" / "swissknifeman"), os.readlink(self.bin / "swissknifeman"))
+
+    def test_profile_errors(self):
+        cases = (("bad-requires", "PROFILE_REQUIRES_MISSING"), ("bad-unit", "PROFILE_UNIT_UNKNOWN"),
+                 ("nope", "PROFILE_UNKNOWN"))
+        for name, code_word in cases:
+            with self.subTest(profile=name):
+                code, _, err = self.install("--profile", name, "--bin-dir", str(self.bin), "--dry-run")
+                self.assertEqual(2, code)
+                self.assertIn(code_word, err)
+        self.assertFalse(self.bin.exists())
+
+    def test_usage_errors(self):
+        for args, word in ((("--units", "ghost"), "UNIT_UNKNOWN"), (("--profile", "mini", "--units", "base"), "exclude"),
+                           (("--bogus",), "unknown argument"), (("--option", "x"), "UNIT=ARG")):
+            with self.subTest(args=args):
+                code, _, err = self.install(*args, "--dry-run")
+                self.assertEqual(2, code)
+                self.assertIn(word, err)
+
+
+class TestInstallProfiles(unittest.TestCase):
+    """The real profile data: shape, schema keys, every id a module, requires closed, dry-run of each profile."""
+
+    def setUp(self):
+        self.doc = json.loads((ROOT / "configs" / "install-profiles.json").read_text(encoding="utf-8"))
+        self.schema = json.loads((ROOT / "configs" / "install-profiles.schema.json").read_text(encoding="utf-8"))
+
+    def test_matches_the_schema(self):
+        self.assertLessEqual(set(self.doc), set(self.schema["properties"]))
+        self.assertTrue(set(self.schema["required"]) <= set(self.doc))
+        item = self.schema["properties"]["profiles"]["additionalProperties"]
+        self.assertEqual({"minimal", "standard", "full"}, set(self.doc["profiles"]))
+        self.assertIn(self.doc["default"], self.doc["profiles"])
+        for name, profile in self.doc["profiles"].items():
+            with self.subTest(profile=name):
+                self.assertEqual(set(item["required"]), set(profile))
+
+    def test_profiles_nest_and_are_valid_units(self):
+        units = umbrella.load_units()
+        profiles = self.doc["profiles"]
+        self.assertLess(set(profiles["minimal"]["units"]), set(profiles["standard"]["units"]))
+        self.assertLess(set(profiles["standard"]["units"]), set(profiles["full"]["units"]))
+        for name in profiles:
+            with self.subTest(profile=name):
+                label, ids, _ = umbrella.select_units(units, self.doc, name, None)
+                self.assertEqual("aicore", ids[0])
+                self.assertEqual(set(profiles[name]["units"]), set(ids))
+
+    def test_dry_run_of_every_profile_on_the_real_hub(self):
+        home = Path(tempfile.mkdtemp())
+        env = {**os.environ, "HOME": str(home), "SKM_HOME": str(home / "skm"),
+               "PYTHONPATH": str(ROOT / "packages" / "aicore" / "lib")}
+        env.pop("SKM_UNITS_PATH", None)
+        for name in self.doc["profiles"]:
+            with self.subTest(profile=name):
+                out = subprocess.run([sys.executable, str(UMBRELLA), "install", "--profile", name, "--bin-dir",
+                                      str(home / "bin"), "--dry-run", "--json"], env=env, capture_output=True,
+                                     text=True, check=False)
+                self.assertEqual(0, out.returncode, out.stderr)
+                doc = json.loads(out.stdout)
+                self.assertEqual((name, True), (doc["profile"], doc["dry_run"]))
+        self.assertFalse((home / "bin").exists())
 
 
 class TestVersion(unittest.TestCase):

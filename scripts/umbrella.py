@@ -7,6 +7,7 @@ This file holds no module logic and no module ids. stdlib and the foundation mod
 """
 from __future__ import annotations
 
+import fnmatch
 import json
 import os
 import subprocess
@@ -16,6 +17,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs" / "umbrella.json"
+PROFILES = ROOT / "configs" / "install-profiles.json"
 DEFAULT_UNITS_PATH = ("packages", "bridges")
 UNITS_SCHEMA = "umbrella-units/v1"
 HELP_FLAGS = ("-h", "--help", "help")
@@ -23,6 +25,8 @@ VERSION_WORDS = ("-V", "--version", "version")
 
 BUILTINS = (
     ("units [list|show <id>] [--json]", "modules found by unit.json"),
+    ("install [--profile P | --units a,b] [--bin-dir DIR] [--force] [--dry-run] [--json]",
+     "install modules by profile (configs/install-profiles.json)"),
     ("doctor [--unit ID] [--category C] [--json] [--timeout S]", "read-only checks of the modules (provides.doctor)"),
     ("help, -h, --help", "this text"),
     ("-V, --version, version", "umbrella version (git describe)"),
@@ -133,6 +137,8 @@ def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
         return units_command(rest, units)
     if cmd == "doctor":
         return doctor_command(rest, units)
+    if cmd == "install":
+        return install_command(rest, units)
     config = load_config() if config is None else config
     target = resolve_alias(config, cmd, rest)
     units = load_units() if units is None else units
@@ -426,6 +432,276 @@ def doctor_command(args: Sequence[str], units: Optional[Mapping[str, Any]] = Non
         for item in fixes:
             print(f"  {item['check_id']}: {item['remediation']}")
     return 1 if failed else 0
+
+
+INSTALL_SCHEMA = "umbrella-install/v1"
+INSTALL_USAGE = ("usage: swissknifeman install [--profile P | --units a,b] [--bin-dir DIR] [--force] [--dry-run] [--json]"
+                 " [--option UNIT=ARG]...")
+
+
+class InstallError(Exception):
+    """A usage or data error of ``install``: a stable ``CODE`` and a message."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+
+
+def load_profiles(path: Optional[Path] = None) -> Dict[str, Any]:
+    """The profile data, shape-checked; ``PROFILES_INVALID`` when the file is unreadable or malformed."""
+    path = path or PROFILES
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise InstallError("PROFILES_INVALID", f"{path}: {exc.__class__.__name__}")
+    profiles = doc.get("profiles") if isinstance(doc, dict) else None
+    if not isinstance(profiles, dict) or not profiles or not isinstance(doc.get("default"), str):
+        raise InstallError("PROFILES_INVALID", f"{path}: needs 'default' and a non-empty 'profiles' object")
+    for name, item in profiles.items():
+        if not isinstance(item, dict) or not _strings(item.get("units")):
+            raise InstallError("PROFILES_INVALID", f"{path}: profile {name!r} needs a non-empty 'units' list")
+        options = item.get("options") or {}
+        if not isinstance(options, dict) or not all(isinstance(v, list) for v in options.values()):
+            raise InstallError("PROFILES_INVALID", f"{path}: profile {name!r} 'options' must map ids to lists")
+    return doc
+
+
+def _requires(unit: Any) -> List[str]:
+    entries = unit.doc.get("requires")
+    return [item["unit"] for item in entries if isinstance(item, dict) and isinstance(item.get("unit"), str)] \
+        if isinstance(entries, list) else []
+
+
+def _order(units: Mapping[str, Any], ids: Sequence[str]) -> List[str]:
+    """Topological order by ``requires`` among ``ids``; ties keep the order given."""
+    pending = list(ids)
+    done: List[str] = []
+    while pending:
+        ready = [key for key in pending if all(dep in done for dep in _requires(units[key]) if dep in ids)]
+        if not ready:
+            raise InstallError("PROFILE_REQUIRES_CYCLE", "requires form a cycle among " + ", ".join(pending))
+        done.append(ready[0])
+        pending.remove(ready[0])
+    return done
+
+
+def select_units(units: Mapping[str, Any], profiles: Mapping[str, Any], profile: Optional[str],
+                 wanted: Optional[Sequence[str]]) -> Any:
+    """``(label, ordered ids, options)`` of a profile or of an explicit unit list (its requires are added)."""
+    if wanted:
+        unknown = [key for key in wanted if key not in units]
+        if unknown:
+            raise InstallError("UNIT_UNKNOWN", f"no module {unknown[0]!r}; known: {', '.join(units) or 'none'}")
+        ids = list(wanted)
+        for key in ids:  # closure over requires: a module never lands without its dependencies
+            ids += [dep for dep in _requires(units[key]) if dep in units and dep not in ids]
+        return "units", _order(units, ids), {}
+    name = profile or str(profiles["default"])
+    item = (profiles.get("profiles") or {}).get(name)
+    if item is None:
+        raise InstallError("PROFILE_UNKNOWN", f"no profile {name!r}; known: {', '.join(profiles['profiles'])}")
+    ids = _strings(item.get("units"))
+    for key in ids:
+        if key not in units:
+            raise InstallError("PROFILE_UNIT_UNKNOWN", f"profile {name!r} names {key!r}, which is not a module here")
+    for key in ids:
+        for dep in _requires(units[key]):
+            if dep not in ids:
+                raise InstallError("PROFILE_REQUIRES_MISSING", f"profile {name!r}: {key!r} requires {dep!r}, not in the profile")
+    return name, _order(units, ids), {k: _strings(v) for k, v in (item.get("options") or {}).items()}
+
+
+def build_plan(units: Mapping[str, Any], ids: Sequence[str], options: Mapping[str, Sequence[str]]) -> List[Dict[str, Any]]:
+    """One step per module: run its ``provides.install`` or link its ``provides.cli``; modules with neither are listed."""
+    steps: List[Dict[str, Any]] = []
+    for key in ids:
+        unit = units[key]
+        provides = _provides(unit)
+        install = _strings(provides.get("install"))
+        cli = _strings(provides.get("cli"))
+        if install:
+            steps.append({"unit": key, "action": "install", "argv": install + list(options.get(key, ()))})
+        elif cli:
+            steps.append({"unit": key, "action": "link", "links": cli})
+        else:
+            steps.append({"unit": key, "action": "none"})
+    return steps
+
+
+def _link(link: Path, target: Path, force: bool, own: Any, wrap: bool = False) -> Any:
+    """Make one symlink (or, with ``wrap``, an exec wrapper for a target without the execute bit); the rule of the
+    former root installer. ``(status, message)``; status ok, skipped."""
+    wrapper = f'#!/usr/bin/env bash\nexec python3 "{target}" "$@"\n'
+    if link.exists() or link.is_symlink():
+        current = os.path.realpath(link)
+        if own(current) or (wrap and not link.is_symlink() and link.is_file() and link.read_text() == wrapper):
+            pass  # our earlier link: replace silently
+        elif force:
+            pass
+        elif sys.stdin.isatty():
+            answer = input(f"{link} already exists and is not similar to ours. Replace? [y/N] ")
+            if not answer.strip().lower().startswith("y"):
+                return "skipped", f"Skip {link.name}."
+        else:
+            return "skipped", f"ATTENTION: {link} exists - skip (restart with --force)"
+    if link.is_symlink() or link.exists():
+        link.unlink()
+    if wrap:
+        link.write_text(wrapper)
+        link.chmod(0o755)
+        return "ok", f"{link} -> {target} (wrapper: target is not executable)"
+    link.symlink_to(target)
+    return "ok", f"{link} -> {target}"
+
+
+def _run_installer(unit: Any, argv: Sequence[str], bin_dir: Path, force: bool, capture: bool) -> Any:
+    """Run one module installer from its root: ``(exit code, captured output)``."""
+    head = unit.root / argv[0]
+    command = (_command(head) if head.exists() else [argv[0]]) + list(argv[1:])
+    sys.stdout.flush()
+    command += (["--force"] if force else []) + ["--bin-dir", str(bin_dir)]
+    try:
+        proc = subprocess.run(command, cwd=str(unit.root), capture_output=capture, text=True, check=False)
+    except OSError as exc:
+        return 1, f"installer could not start: {exc.__class__.__name__}: {exc}"
+    return proc.returncode, (proc.stdout + proc.stderr)[-2000:] if capture else ""
+
+
+def execute_plan(units: Mapping[str, Any], steps: List[Dict[str, Any]], bin_dir: Path, force: bool,
+                 dry_run: bool, own_links: Sequence[str], as_json: bool) -> List[str]:
+    """Run or print the steps, then the hub link; sets ``status`` on every step; returns the failed module ids."""
+    failed: List[str] = []
+    say = (lambda text: None) if as_json else print
+    warn = (lambda text: None) if as_json else (lambda text: print(text, file=sys.stderr))
+    say(f"Installation CLI packages (bin-dir: {bin_dir}){' [dry run]' if dry_run else ''}:")
+    for step in steps:
+        unit = units[step["unit"]]
+        say(f"— {step['unit']}:")
+        if step["action"] == "none":
+            step["status"] = "skipped"
+            say("  nothing to install (no provides.install, no provides.cli)")
+        elif step["action"] == "install":
+            if dry_run:
+                step["status"] = "planned"
+                say("  would run: " + " ".join(step["argv"] + (["--force"] if force else []) + ["--bin-dir", str(bin_dir)]))
+                continue
+            code, output = _run_installer(unit, step["argv"], bin_dir, force, as_json)
+            step["status"] = "ok" if code == 0 else "failed"
+            if as_json:
+                step["output"] = output
+            if code:
+                failed.append(step["unit"])
+                warn(f"  ({step['unit']} install failed - check manually)")
+        else:
+            entries, step["status"], step["links"] = step["links"], "ok", []
+            for entry in entries:
+                target = unit.root / entry
+                name = Path(entry).name
+                if dry_run:
+                    step["status"] = "planned"
+                    say(f"  would link: {bin_dir / name} -> {target}")
+                    step["links"].append(name)
+                    continue
+                if not target.is_file():
+                    step["status"] = "skipped"
+                    warn(f"  ATTENTION: {target} is missing - not linked")
+                    continue
+                wrap = not os.access(target, os.X_OK)
+                status, message = _link(bin_dir / name, target, force,
+                                        lambda current, rel=entry: current == os.path.realpath(target)
+                                        or current.endswith("/" + rel), wrap)
+                (say if status == "ok" else warn)(f"  {message}")
+                step["links"].append(name)
+                if status != "ok":
+                    step["status"] = status
+    router = ROOT / "bin" / "swissknifeman"
+    entry = {"unit": "swissknifeman", "action": "link", "links": ["swissknifeman"]}
+    steps.append(entry)
+    if dry_run:
+        entry["status"] = "planned"
+        say(f"— swissknifeman: would link {bin_dir / 'swissknifeman'} -> {router}")
+    elif os.access(router, os.X_OK):
+        status, message = _link(bin_dir / "swissknifeman", router, force,
+                                lambda current: any(fnmatch.fnmatch(current, pattern) for pattern in own_links))
+        entry["status"] = status
+        if status == "ok":
+            say(f"— swissknifeman: {message}")
+        else:
+            warn(message)
+    else:
+        entry["status"] = "skipped"
+    if not dry_run and str(bin_dir) not in os.environ.get("PATH", "").split(os.pathsep):
+        warn(f"ATTENTION: {bin_dir} not in PATH — add: export PATH=\"{bin_dir}:$PATH\"")
+    return failed
+
+
+def _install_args(args: Sequence[str]) -> Any:
+    """Parse the install options: a dict or an error message."""
+    opts: Dict[str, Any] = {"profile": None, "units": None, "bin_dir": None, "force": False, "dry_run": False,
+                            "json": False, "option": {}}
+    rest = list(args)
+    while rest:
+        arg = rest.pop(0)
+        name, eq, inline = arg.partition("=")
+        if arg in ("--force", "--dry-run", "--json"):
+            opts[arg[2:].replace("-", "_")] = True
+        elif name in ("--profile", "--units", "--bin-dir", "--option"):
+            if eq:
+                value = inline
+            elif rest:
+                value = rest.pop(0)
+            else:
+                return f"{arg} needs a value"
+            if name == "--option":
+                unit_id, sep, extra = value.partition("=")
+                if not sep or not unit_id or not extra:
+                    return f"--option needs UNIT=ARG, got {value!r}"
+                opts["option"].setdefault(unit_id, []).append(extra)
+            elif name == "--units":
+                opts["units"] = [item for item in value.split(",") if item]
+            else:
+                opts[name[2:].replace("-", "_")] = value
+        else:
+            return f"unknown argument {arg!r}"
+    if opts["profile"] and opts["units"]:
+        return "--profile and --units exclude each other"
+    return opts
+
+
+def install_command(args: Sequence[str], units: Optional[Mapping[str, Any]] = None) -> int:
+    """Install modules by profile or list: their own installers, cli links, then the hub link; exit 1 on a failed module."""
+    opts = _install_args(args)
+    if isinstance(opts, str):
+        print(f"{opts}\n{INSTALL_USAGE}", file=sys.stderr)
+        return 2
+    units = load_units() if units is None else units
+    try:
+        profiles = load_profiles()
+        label, ids, options = select_units(units, profiles, opts["profile"], opts["units"])
+    except InstallError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    merged = {key: list(value) for key, value in options.items()}
+    for key, extra in opts["option"].items():
+        merged.setdefault(key, []).extend(extra)
+    bin_dir = Path(opts["bin_dir"] or os.path.join(os.path.expanduser("~"), ".local", "bin"))
+    steps = build_plan(units, ids, merged)
+    if not opts["dry_run"]:
+        bin_dir.mkdir(parents=True, exist_ok=True)
+    failed = execute_plan(units, steps, bin_dir, opts["force"], opts["dry_run"],
+                          _strings(profiles.get("own_links")), opts["json"])
+    if opts["json"]:
+        print(json.dumps({"schema": INSTALL_SCHEMA, "profile": label, "bin_dir": str(bin_dir),
+                          "dry_run": opts["dry_run"], "force": opts["force"], "steps": steps, "failed": failed},
+                         indent=2, ensure_ascii=False))
+        return 1 if failed else 0
+    if failed:
+        print(f"ERROR: packages not installed: {' '.join(failed)} — installation is incomplete, see log above.",
+              file=sys.stderr)
+        return 1
+    clis = [step["unit"] for step in steps if step["action"] != "none" and step["unit"] != "swissknifeman"
+            and cli_of(units[step["unit"]]) is not None]
+    print("Done. CLI: " + " · ".join(["swissknifeman (router)"] + clis))
+    return 0
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

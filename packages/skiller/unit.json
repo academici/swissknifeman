@@ -11,6 +11,7 @@
   ],
   "provides": {
     "cli": ["bin/skiller"],
+    "install": ["install.sh"],
     "config": "configs/config.schema.json",
     "plugins": [
       {"name": "skm", "manifest": "skm/.claude-plugin/plugin.json"},

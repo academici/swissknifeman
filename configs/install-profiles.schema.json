@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:hub:install-profiles:v1",
+  "title": "install-profiles",
+  "description": "Profiles of the swissknifeman install command (configs/install-profiles.json).",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "install-profiles/v1", "description": "Format identifier."},
+    "_doc": {"type": "string", "description": "Free-form note."},
+    "default": {"type": "string", "minLength": 1, "description": "Profile used without --profile and --units."},
+    "own_links": {
+      "type": "array",
+      "description": "Glob patterns of resolved symlink targets that the hub replaces silently (its own earlier links).",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Profile name to its definition.",
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"},
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": {"type": "string", "description": "One line for people."},
+          "units": {
+            "type": "array",
+            "description": "Module ids installed by the profile; every module needs its requires in the list.",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}
+          },
+          "options": {
+            "type": "object",
+            "description": "Module id to extra arguments passed to that module's install command.",
+            "additionalProperties": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "required": ["description", "units", "options"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "default", "own_links", "profiles"],
+  "additionalProperties": false
+}

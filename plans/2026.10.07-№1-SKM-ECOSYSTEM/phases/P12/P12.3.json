@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.3",
   "title": "swissknifeman install с профилями minimal/standard/full; provides.install в unit.json; install.sh — тонкая обёртка",
-  "status": "todo",
+  "status": "done",
   "summary": "configs/install-profiles.json (install-profiles/v1) и схема; skiller, harness, maind, analyst объявляют provides.install [\"install.sh\"]; swissknifeman install [--profile|--units] [--bin-dir] [--force] [--dry-run] [--json] ставит модули по requires, симлинки provides.cli для модулей без install, затем симлинк swissknifeman; install.sh вызывает install --profile full с прежними флагами.",
   "why": "D80, E16, E58; knowledge/hub-p12#install. Риски: (1) поведение ./install.sh для пользователя не меняется (флаги, вывод итога, правило чужого симлинка) — scripts/test-root-install.py; (2) установщики модулей не должны ждать ввода без TTY; (3) scripts/bootstrap-machine.sh вызывает install.sh — его тест зелёный.",
   "scope": {
@@ -165,6 +165,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7c6e9b32ec90aad0dab430867b966bd81aa5885d2bf4f689c3d1ec6d2058dfb7",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/c17df87a071e0d9fb1768637fd61aa78b5468c9f0885e2faa0caafe5f661c81a",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
     "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
@@ -220,6 +230,52 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:25:51Z"
+  "result": {
+    "started_at": "2026-10-13T11:53:03Z",
+    "finished_at": "2026-10-13T12:38:57Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-71c286a0352856e927ebb2e9-P12.3",
+    "notes": "F1 fixed: in scripts/umbrella.py, a provides.cli target without the execute bit now gets an executable bash wrapper (exec python3 <target> \"$@\") in the bin-dir instead of a bare symlink. Reinstall over our own wrapper is silent; a foreign file still needs --force. The regression test in test-umbrella.py was updated to check the entry is executable and references the target. Manual check: bin/plan.py installed from the planner runs (--help works).\nChanged: CHANGELOG.md, configs/config-inventory.json, configs/install-profiles.json, configs/install-profiles.schema.json, install.sh, packages/analyst/unit.json, packages/harness/unit.json, packages/maind/CHANGELOG.md, packages/maind/unit.json, packages/skiller/unit.json, scripts/test-root-install.py, scripts/test-umbrella.py, scripts/umbrella.py, tests/golden/cases.json, tests/golden/cli/swissknifeman-help.txt, tests/golden/cli/swissknifeman-unknown-subcommand.txt, tests/golden/generation.json",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T12:38:57Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T12:38:57Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T12:38:57Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T12:38:57Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.3/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-13T12:38:57Z"
 }

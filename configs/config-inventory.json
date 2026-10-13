@@ -275,6 +275,25 @@
       "note": "aliases of the umbrella CLI (umbrella-config/v1); the hub reads module groups from unit.json"
     },
     {
+      "path": "configs/install-profiles.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/umbrella.py",
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "install profiles (install-profiles/v1) of swissknifeman install: module ids, per-module installer options, own-link patterns"
+    },
+    {
+      "path": "configs/install-profiles.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "schema of configs/install-profiles.json"
+    },
+    {
       "path": "configs/umbrella.schema.json",
       "owner": "root",
       "consumers": [

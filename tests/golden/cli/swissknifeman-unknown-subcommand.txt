@@ -8,10 +8,11 @@ swissknifeman — umbrella over the module CLIs (finds modules by unit.json; hol
 Usage: swissknifeman <command> [args]
 
 Built-in:
-  units [list|show <id>] [--json]                           modules found by unit.json
-  doctor [--unit ID] [--category C] [--json] [--timeout S]  read-only checks of the modules (provides.doctor)
-  help, -h, --help                                          this text
-  -V, --version, version                                    umbrella version (git describe)
+  units [list|show <id>] [--json]                                                     modules found by unit.json
+  install [--profile P | --units a,b] [--bin-dir DIR] [--force] [--dry-run] [--json]  install modules by profile (configs/install-profiles.json)
+  doctor [--unit ID] [--category C] [--json] [--timeout S]                            read-only checks of the modules (provides.doctor)
+  help, -h, --help                                                                    this text
+  -V, --version, version                                                              umbrella version (git describe)
 
 Aliases (configs/umbrella.json):
   config         layered config: show, explain, set, unset, init, example, paths

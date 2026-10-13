@@ -73,6 +73,31 @@ class RootInstallCase(unittest.TestCase):
         self.assertIn("Codex plugins: pass (--no-codex-plugins)", result.stdout)
         self.assertIn("Grok plugins: pass (--no-grok-plugins)", result.stdout)
 
+    def test_umbrella_installer_links_every_module_and_ends_with_done(self):
+        result = self.run_installer(UMBRELLA_INSTALLER, "--no-codex-plugins", "--no-grok-plugins")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(str(ROOT / "bin" / "swissknifeman"), os.readlink(self.install_bin / "swissknifeman"))
+        for name in ("skiller", "harness", "maind", "analyst"):
+            self.assertTrue((self.install_bin / name).is_symlink(), name)
+        self.assertRegex(result.stdout, r"Done\. CLI: swissknifeman \(router\) · .*skiller")
+
+    def test_umbrella_installer_keeps_a_foreign_link_without_force(self):
+        self.install_bin.mkdir()
+        (self.install_bin / "swissknifeman").symlink_to(self.fake_bin / "codex")
+
+        result = self.run_installer(UMBRELLA_INSTALLER, "--no-codex-plugins", "--no-grok-plugins")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("restart with --force", result.stderr)
+        self.assertEqual(str(self.fake_bin / "codex"), os.readlink(self.install_bin / "swissknifeman"))
+
+    def test_umbrella_installer_rejects_an_unknown_flag(self):
+        result = self.run_installer(UMBRELLA_INSTALLER, "--bogus")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unknown argument", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

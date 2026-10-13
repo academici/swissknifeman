@@ -50,7 +50,7 @@ package, and leaves a record that a later reviewer can audit. Never activate it 
 2. **Estimate before the run.** `python3 packages/orch/scripts/estimate.py --input <the item's input.json> --effort E`
    (or `--cmd` per acceptance command): the history medians of the roles and the measured seconds of the same
    commands. Write it down; after the run compare each step; a deviation over 30% needs a recorded cause.
-3. **Watch.** Status on every notification and at least every 30 minutes (`conduct.py status` prints the latest beacon of
+3. **Watch.** Arm the completion monitor (`Monitor`, unbounded `tail -F` of the run log, filter on `run end|item end|STAGE_|CHECK_SLOW|BUDGET_OVER|LIMIT_OVER|RESULT_|WORKTREE|Traceback|stopped`, max timeout, re-arm on expiry) in the SAME turn as the run start — never start a run without it, and report the end of every item in the chat at once; the owner must never learn of a finished item before you. Status on every notification and at least every 30 minutes (`conduct.py status` prints the latest beacon of
    the running step). Answer each beacon by its content, not by its clock.
 4. **Before the commit.** The conductor reads the changed paths from git and reports paths outside the write set as a
    deviation (shown to the reviewer, committed with the piece); review that list and widen the plan for the next items

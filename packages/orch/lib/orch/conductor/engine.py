@@ -441,7 +441,7 @@ class Conductor:
         ``review_no`` (``checks.overlap_review``) the checks of a correction run while review ``review_no`` reads it."""
         state, limit = item.state, item.options["limits"]["check_fixes"]
         while not all(row["green"] for row in rows):
-            red = [row for row in rows if not row["green"]]
+            red = [row for row in rows if not row["green"] and not row.get("skipped")]
             replayed = round_no in state["check_fixes_at"]
             if not replayed and len(state["check_fixes_at"]) >= limit:
                 names = ", ".join(row["id"] for row in red)
@@ -827,6 +827,18 @@ class Conductor:
                            verdict=lambda result: result["report"]["status"])
         return found["report"]
 
+    @staticmethod
+    def _red_before(item: Item, number: int) -> list:
+        """The checks that were red in the latest earlier round, when ``checks.red_first`` asks to run them first."""
+        if not item.options["checks"]["red_first"]:
+            return []
+        steps = item.state.get("steps", {})
+        for earlier in range(number - 1, 0, -1):
+            rows = (steps.get(f"checks.{earlier}") or {}).get("result")
+            if rows:
+                return [row["id"] for row in rows if not row.get("green") and not row.get("skipped")]
+        return []
+
     def _compute_checks(self, item: Item, number: int, report: dict, on_result=None) -> list:
         """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
         try:
@@ -836,7 +848,7 @@ class Conductor:
                 timeout_s=item.options["limits"]["check_timeout_s"],
                 evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
                 executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
-                on_result=on_result)
+                on_result=on_result, first=self._red_before(item, number))
         except (RuntimeError, ValueError, OSError) as error:
             raise Stop("CHECKS_FAILED", str(error)) from None
 

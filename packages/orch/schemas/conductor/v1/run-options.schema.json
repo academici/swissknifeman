@@ -61,6 +61,10 @@
           "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
           "type": "integer"
         },
+        "red_first": {
+          "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default false.",
+          "type": "boolean"
+        },
         "executor_runs_checks": {
           "description": "When false (default) the executor is told to run only the tests that cover the code it changed, because the conductor runs every acceptance check right after its report; true lets it run the checks itself.",
           "type": "boolean"

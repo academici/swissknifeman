@@ -323,6 +323,13 @@ class RefusalTests(BriefCase):
             self.brief()
         self.assertEqual(ctx.exception.code, "READ_MISSING")
 
+    def test_required_read_the_item_deleted_does_not_refuse_the_brief_of_an_item_in_progress(self):
+        self.start("P1.1")
+        (self.repo / "lib" / "x.py").unlink()  # the item retires its own read; the claim after a stop builds the brief again
+        doc = self.brief()
+        self.assertEqual(doc["reads"][0]["path"], "lib/x.py")
+        self.assertFalse(doc["reads"][0]["exists"])
+
     def test_human_views_never_supply_input(self):
         ops.patch(self.root, "P1.1", {"reads": [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad",
                                                  "required": False}]})

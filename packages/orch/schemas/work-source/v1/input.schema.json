@@ -2,12 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:work-source:input:v1",
   "title": "work-source input",
-  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, or commit it.",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, or release it.",
   "oneOf": [
     {"$ref": "#/$defs/claim"},
     {"$ref": "#/$defs/brief"},
     {"$ref": "#/$defs/register"},
-    {"$ref": "#/$defs/commit"}
+    {"$ref": "#/$defs/commit"},
+    {"$ref": "#/$defs/release"}
   ],
   "$defs": {
     "text": {
@@ -136,6 +137,21 @@
         "actor": {"description": "Who commits.", "$ref": "#/$defs/actor"}
       },
       "required": ["op", "plan", "ref", "run_id", "attempt_id", "paths"],
+      "additionalProperties": false
+    },
+    "release": {
+      "description": "Give back a claimed piece of work that was stopped before any work began: the source takes the claim off the run, so that a later run can claim it again. Optional: a source without it keeps the claim.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "release"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that holds the claim.", "$ref": "#/$defs/runId"},
+        "reason": {"description": "Why the claim is given back.", "$ref": "#/$defs/text"},
+        "actor": {"description": "Who releases.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "plan", "ref", "run_id"],
       "additionalProperties": false
     }
   }

@@ -355,6 +355,7 @@ RUN_DOC = "run.json"
 LAUNCH_PLAN_DOC = "launch-plan.json"
 REGISTER_RECEIPT = "receipts/register.json"
 COMMIT_RECEIPT = "receipts/commit.json"
+RELEASE_RECEIPT = "receipts/release.json"
 STAGE_STATUS = {"done": "completed", "done_with_deviations": "completed", "blocked": "failed"}
 
 
@@ -554,9 +555,19 @@ def _source_commit(args, current, project) -> int:
     return 1 if answer["outcome"] == "refused" else 0
 
 
+def _source_release(args, current, project) -> int:
+    """Give a claimed run back to the source (a piece stopped before any work began), so that a later run can claim it."""
+    directory, doc = _run(args.run, project)
+    answer = _call(_source(current, project, args.config), "release", plan=doc["plan"], plans_root=doc.get("plans_root"),
+                   ref=doc["ref"], run_id=doc["run_id"], reason=args.reason, actor=args.actor)
+    journal.write_doc(directory, RELEASE_RECEIPT, answer)
+    _print(answer)
+    return 1 if answer["outcome"] == "refused" else 0
+
+
 def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
-               "register": _source_register, "commit": _source_commit}[args.action]
+               "register": _source_register, "commit": _source_commit, "release": _source_release}[args.action]
     try:
         project = _project_root()
         current = settings.load(project=project, config_file=args.config)  # the configuration is read once
@@ -576,7 +587,7 @@ def _source_command(args: argparse.Namespace) -> int:
 
 
 def _source_parser(verbs) -> None:
-    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit")
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
     claim.add_argument("--plan", required=True, help="collection of the work source, such as a plan id or path")
@@ -608,6 +619,11 @@ def _source_parser(verbs) -> None:
     commit.add_argument("--path", action="append", default=[], metavar="PATH",
                         help="repository path the commit owns beyond the scope of the work (repeatable)")
     commit.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who commits (default: the source decides)")
+    release = actions.add_parser("release", help="give a claimed run back to the source (no work began), so that a later "
+                                                 "run can claim the piece")
+    release.add_argument("--run", required=True, metavar="RUN")
+    release.add_argument("--reason", metavar="TEXT", help="why, for the source's journal")
+    release.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who releases (default: the source decides)")
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -3,7 +3,7 @@
 State: ``order`` (references in plan order), ``items`` (per reference: ``status``, ``title``, ``scenario``,
 ``options`` layers, ``checks``, ``write_set``, ``route``, ``holder``), ``registered`` (attempt id -> status),
 ``commits`` and ``calls`` (every request, in order). ``refuse`` names operations to refuse once (``commit``,
-``register``). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
+``register``, ``release``). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
 """
 import json
 import os
@@ -126,6 +126,17 @@ def commit(state, given, project):
     return {"op": "commit", "outcome": "committed", "sha": sha}
 
 
+def release(state, given):
+    if "release" in state.get("refuse", []):
+        state["refuse"].remove("release")
+        return {"op": "release", "outcome": "refused", "reason_code": "RELEASE_TEST_REFUSAL", "message": "once"}
+    item = state["items"][given["ref"]]
+    if item.get("holder") != given["run_id"] or item["status"] != "in_progress":
+        return {"op": "release", "outcome": "no-op", "message": "not held by this run"}
+    item["status"], item["holder"] = "todo", None
+    return {"op": "release", "outcome": "released"}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -140,7 +151,8 @@ elif request.get("op") == "invoke":
     state = load()
     state.setdefault("calls", []).append(given)
     handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
-                "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project)}
+                "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
+                "release": lambda: release(state, given)}
     answer = handlers[given["op"]]()
     save(state)
     reply(request_id, output=answer)

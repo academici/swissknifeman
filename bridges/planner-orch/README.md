@@ -29,6 +29,9 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
 
 - It holds the task, scope, acceptance checks, constraints, reads with `sha256`, decisions and upstream
   results; completeness is checked without truncation (`BRIEF_INCOMPLETE` names each omission).
+- Required reads are checked at the first claim only, as `plan.py start` does: the brief of an item already in progress
+  (a repeated claim, `run --adopt`) does not refuse with `READ_MISSING` for a required file the item itself deleted
+  (a workflow it retires); `exists: false` marks such a read.
 - Lifecycle instructions, the report API, the full plan and owner messages are excluded; the full
   coordinator pack stays reachable through `context_refs`.
 - `--unit U#` briefs one unit: its goal, files (write set), checks and instructions. A unit without
@@ -178,6 +181,7 @@ Untrusted, the plugin finds the planner and orch through `planner` and `orch` on
 | `brief` | `brief.build` in process (no plan write) → `aicore.state.blobs.put_json(..., project=<repository of the plan>)`; `plan.py add-artifact <plan> <item> --path <blob path> --role input` (a repeat is a no-op). A repeat whose brief differs only in `digest`, the `@` suffix and `provenance.source_digest` from the newest brief already declared on the item reuses that brief (declaring the brief changes the item and so the source digest). `artifact_id` = `brief-<ref with . and / as ->-<digest[:12]>`, returned to orch only (a planner artifact id names an output). |
 | `register` | `register.py <plan> <ref> --report <tmp> --status S --actor <registrar> --executed-by <worker> --attempt-id <attempt_id> --evidence V#=PATH… --owner-session <run_id> --gate evidence`; `outcome` `recorded`, `no-op` (every call was a no-op) or `refused` with the code of the guard or of the refused `plan.py` call; `gate` and `receipt` from the receipt. |
 | `commit` | `plan.py commit <plan> <ref> --role executor [--path P]… [--actor A] --json`: `committed` with `sha`; `NOTHING_TO_COMMIT` is `no-op` (a repeat after the commit); any other refusal (`OUTSIDE_SCOPE`, …) is `refused` with the planner's code. |
+| `release` | `plan.py finish <plan> <ref> --status blocked --owner-session <run_id>`, then `plan.py reopen`: the planner has no verb that returns an in-progress item to `todo`, and the two together clear the executor session. An item not in progress under this run is `no-op`; a refusal of `finish`/`reopen` is `refused` with the planner's code. |
 
 | Answer | `reason_code` |
 | --- | --- |

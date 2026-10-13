@@ -226,6 +226,42 @@ class Conductor:
         self._save()
         self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated")
 
+    @staticmethod
+    def _work_began(state: dict) -> bool:
+        """An executor round ran: the piece has this run's work in the tree and is no longer free to give back. Changes
+        adopted from an earlier attempt do not count: they stay in the tree, and a later ``run --adopt`` takes them again."""
+        return any(key.startswith("executor.") for key in state.get("steps", {}))
+
+    def _release_claim(self, ref: str, state: dict, reason: str) -> bool:
+        """Give the claim of ``ref`` back to the work source (``orch.py source release``), so that a later run can claim
+        the piece. A source that does not serve ``release`` or refuses it keeps the claim: the stop is reported anyway."""
+        code, answer, err = self._orch("source", "release", "--run", state["orch_run"], "--reason", reason)
+        released = code == 0 and isinstance(answer, dict) and answer.get("outcome") in ("released", "no-op")
+        state.setdefault("released", []).append({"at": utc_now(), "reason": reason, "ok": released})
+        self._save()
+        self.progress.emit("info", item=ref, reason_code="CLAIM_RELEASED" if released else "CLAIM_KEPT",
+                           message=(f"the claim of {ref} is given back to the work source" if released else
+                                    f"the claim of {ref} stays with run {state['orch_run']}: "
+                                    f"{(answer or {}).get('message') or err or 'the source refused'}"))
+        return released
+
+    def release(self, run_id: str, ref: str, reason: str) -> int:
+        """Give a piece of this run back to the work source by hand, when a run died or stopped before any work began
+        (an executor round makes it refuse: settle or retry the piece instead)."""
+        directory = runs_root(self.project) / run_id
+        run_doc, state = read_json(directory / RUN_FILE), read_json(directory / STATE_FILE)
+        if run_doc is None or state is None:
+            raise Stop("RUN_UNKNOWN", f"no conductor run {run_id} in {directory.parent}")
+        item = state.get("items", {}).get(ref)
+        if item is None:
+            raise Stop("ITEM_UNKNOWN", f"{ref} is not a piece of run {run_id}")
+        if self._work_began(item) or item.get("outcome") in ("done", "done_with_deviations"):
+            raise Stop("RELEASE_WORK_BEGAN", f"{ref} has work in the tree or is closed; settle it, or resume with --retry")
+        self._open(run_id, run_doc, state)
+        if not self._release_claim(ref, item, reason):
+            raise Stop("RELEASE_REFUSED", f"the work source did not release {ref}; see the progress line")
+        return 0
+
     def settle(self, run_id: str, ref: str, outcome: str, reason: str) -> int:
         """Set the outcome of a piece of this run by hand, after the owner or an observer finished it outside the
         conductor (committed it with the work source's own command, or gave it up). Nothing else changes: the work
@@ -381,6 +417,8 @@ class Conductor:
             state["outcome"] = "stopped"
             state["stop"] = {"code": stop.code, "message": stop.message}
             self._save()
+            if not self._work_began(state):  # a claim nobody worked on must not outlive the stopped run
+                self._release_claim(ref, state, f"stopped before any work began: {stop.code}")
             self.progress.emit("item.end", item=ref, outcome="stopped", reason_code=stop.code,
                                duration_s=round(time.monotonic() - begin, 1), message=stop.message)
             raise
@@ -1073,10 +1111,14 @@ class Conductor:
     def _changed_now(self, item: Item) -> list:
         """The paths the roles have changed so far: the dirty tree without what the work source wrote when it claimed,
         the artifact folder, the plan folder of the input and the conductor reports."""
-        excluded = [REPORTS.as_posix(), self._relative(item.artifacts) if item.artifacts else "",
-                    str((item.input_doc.get("provenance") or {}).get("plan_dir") or "")]
         source = set(item.state.get("source_paths") or [])
-        return [path for path in scopes.own(self._dirty_paths(), excluded) if path not in source]
+        return [path for path in scopes.own(self._dirty_paths(), self._not_the_role(item)) if path not in source]
+
+    def _not_the_role(self, item: Item) -> list:
+        """Folders whose changes are never the role's work: the conductor reports, the artifact folder of the piece
+        and the plan folder of the input."""
+        return [REPORTS.as_posix(), self._relative(item.artifacts) if item.artifacts else "",
+                str((item.input_doc.get("provenance") or {}).get("plan_dir") or "")]
 
     def _changed(self, item: Item) -> list:
         """Every path any executor round of the piece changed (git, not the reports)."""
@@ -1091,8 +1133,11 @@ class Conductor:
         return scopes.outside(self._changed(item), (item.input_doc.get("scope") or {}).get("write_set"))
 
     def _adopted(self, item: Item) -> list:
-        """``run --adopt``: the changed paths taken over must lie in the write set of the piece."""
-        adopted = item.state.get("adopted") or []
+        """``run --adopt``: the changed paths taken over must lie in the write set of the piece. The artifact folder of
+        the piece (evidence, review verdict of the earlier attempt) and the plan folder are allowed and are not
+        counted as the role's changes."""
+        adopted = scopes.own(item.state.get("adopted") or [], self._not_the_role(item))
+        item.state["adopted"] = adopted
         stray = scopes.outside(adopted, (item.input_doc.get("scope") or {}).get("write_set"))
         if stray:
             raise Stop("WORKTREE_DIRTY", f"run --adopt takes only changes inside the write set of {item.ref}; outside it: "

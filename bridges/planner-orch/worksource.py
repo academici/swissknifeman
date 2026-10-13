@@ -13,7 +13,10 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
   blob of the plan's repository and declares it with ``plan.py add-artifact`` (a repeat changes nothing); the answer
   names the item's artifact folder of the plan;
 - ``register`` runs ``register.py`` with owner fencing (``--owner-session <run_id>``) and the evidence gate;
-- ``commit`` runs ``plan.py commit <plan> <ref> --role executor --path …`` (nothing to commit is a no-op).
+- ``commit`` runs ``plan.py commit <plan> <ref> --role executor --path …`` (nothing to commit is a no-op);
+- ``release`` gives back an item this run holds in progress when the run stopped before any work began: the planner has
+  no verb that returns an in-progress item to ``todo``, so it is finished as ``blocked`` under owner fencing
+  (``--owner-session <run_id>``) and reopened, which clears the executor session (a run that does not hold the item is a no-op).
 
 An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
 ``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
@@ -38,7 +41,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit")
+OPS = ("claim", "brief", "register", "commit", "release")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -376,6 +379,31 @@ def op_commit(fields: dict) -> dict:
     return {"op": "commit", "outcome": "committed", "sha": result["sha"]}
 
 
+def op_release(fields: dict) -> dict:
+    """Return an item this run holds in progress to ``todo``: ``finish --status blocked --owner-session`` then ``reopen``."""
+    plan, ref, run_id, plans_root = fields["plan"], fields["ref"], fields["run_id"], fields.get("plans_root")
+    try:
+        doc = item_doc(plan, ref, plans_root)
+    except Blocked as blocked:
+        return {"op": "release", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    executor = ((doc.get("result") or {}).get("executor") or {})
+    if doc.get("status") != "in_progress" or executor.get("session") != run_id:
+        return {"op": "release", "outcome": "no-op", "message": f"{ref} is not in progress under run {run_id}"}
+    reason = fields.get("reason") or "released by the run"
+    actor = ["--actor", actor_text(fields["actor"])] if fields.get("actor") else []
+    finished = plan_py(["finish", plan, ref, "--status", "blocked", "--owner-session", run_id, "--notes", reason,
+                        "--escalation", f"claim released: {reason}", *actor], plans_root)
+    if finished.returncode:
+        blocked = refusal_of(finished.stderr or finished.stdout, "RELEASE_REFUSED")
+        return {"op": "release", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    reopened = plan_py(["reopen", plan, ref, "--reason", f"claim released by run {run_id}: {reason}", *actor], plans_root)
+    if reopened.returncode:
+        blocked = refusal_of(reopened.stderr or reopened.stdout, "RELEASE_REFUSED")
+        return {"op": "release", "outcome": "refused", "reason_code": blocked.code,
+                "message": f"{ref} was finished as blocked but not reopened: {blocked.message}"}
+    return {"op": "release", "outcome": "released"}
+
+
 # ------------------------------------------------------------------------------------------------ protocol
 
 
@@ -399,7 +427,8 @@ def invoke(request_id: str, request: dict) -> None:
         reply(request_id, "error", error={"code": "INPUT_INVALID",
                                           "message": f"expected point {POINT} with op {' | '.join(OPS)}"})
         return
-    handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit}[fields["op"]]
+    handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
+               "release": op_release}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

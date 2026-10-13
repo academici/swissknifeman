@@ -7,7 +7,8 @@
     {"$ref": "#/$defs/claim"},
     {"$ref": "#/$defs/brief"},
     {"$ref": "#/$defs/register"},
-    {"$ref": "#/$defs/commit"}
+    {"$ref": "#/$defs/commit"},
+    {"$ref": "#/$defs/release"}
   ],
   "$defs": {
     "text": {
@@ -143,6 +144,18 @@
         "outcome": {"description": "committed, no-op or refused.", "type": "string", "enum": ["committed", "no-op", "refused"]},
         "sha": {"description": "Commit revision.", "type": "string", "pattern": "^[0-9a-f]{7,40}$"},
         "reason_code": {"description": "Why the commit was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "release": {
+      "description": "Outcome of a release: released (the claim is off the run), no-op (the run does not hold the piece) or refused.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "release"},
+        "outcome": {"description": "released, no-op or refused.", "type": "string", "enum": ["released", "no-op", "refused"]},
+        "reason_code": {"description": "Why the release was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },
       "required": ["op", "outcome"],

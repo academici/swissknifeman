@@ -20,7 +20,7 @@ from orch.settings import ORCH_ROOT
 
 POINT = "orch:work-source"
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "work-source" / "v1"
-OPS = ("claim", "brief", "register", "commit")
+OPS = ("claim", "brief", "register", "commit", "release")
 _REGISTRY: list = []
 
 
@@ -36,7 +36,8 @@ class WorkSourceError(Exception):
 
 
 class WorkSource(Protocol):
-    """A work source: the four operations of ``work-source/v1``, each returning its output document."""
+    """A work source: the operations of ``work-source/v1``, each returning its output document. ``release`` is optional: a
+    source that does not serve it keeps the claim, and the caller treats the refusal as "not released"."""
 
     def claim(self, **fields: Any) -> dict: ...
 
@@ -45,6 +46,8 @@ class WorkSource(Protocol):
     def register(self, **fields: Any) -> dict: ...
 
     def commit(self, **fields: Any) -> dict: ...
+
+    def release(self, **fields: Any) -> dict: ...
 
 
 def _registry():
@@ -125,3 +128,6 @@ class PluginWorkSource:
 
     def commit(self, **fields: Any) -> dict:
         return self.call("commit", fields)
+
+    def release(self, **fields: Any) -> dict:
+        return self.call("release", fields)

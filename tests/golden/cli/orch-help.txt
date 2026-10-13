@@ -17,7 +17,7 @@ positional arguments:
     conformance         engine conformance scenarios; covered ones run,
                         declared ones are listed
     source              cycle of a work source: claim, brief, prepare,
-                        register, commit
+                        register, commit, release
     doctor              diagnose the project: the conductor files git must
                         ignore or keep
 

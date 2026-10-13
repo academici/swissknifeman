@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "dba3e1761203",
-  "reason": "package-architecture skill gains the umbrella CLI section",
+  "captured_from": "2d2117da0a9d",
+  "reason": "orch source release: новая подкоманда в справке",
   "generators": [
     {
       "id": "skiller-registry",

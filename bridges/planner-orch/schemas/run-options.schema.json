@@ -94,7 +94,7 @@
           "minItems": 1
         },
         "red_first": {
-          "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default false.",
+          "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default true; false runs every check in every round.",
           "type": "boolean"
         },
         "executor_runs_checks": {

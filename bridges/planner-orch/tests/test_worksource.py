@@ -443,6 +443,26 @@ class CommitTests(Case):
         self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "OUTSIDE_SCOPE"))
 
 
+class ReleaseTests(Case):
+    def release(self, run_id="run-a", **extra) -> dict:
+        return self.op(worksource.op_release, op="release", plan=self.plan, ref="P1.1", run_id=run_id, **extra)
+
+    def test_a_claimed_item_goes_back_to_todo_and_another_run_can_claim_it(self):
+        self.claim()
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        self.assertEqual(self.release(reason="the tree was dirty")["outcome"], "released")
+        item = self.item("P1.1")
+        self.assertEqual((item["status"], item.get("result")), ("todo", None))
+        self.assertEqual(self.claim(run_id="run-b", items=["P1.1"])["status"], "claimed")
+
+    def test_a_run_that_does_not_hold_the_item_releases_nothing(self):
+        self.claim(run_id="run-other")
+        self.assertEqual(self.release()["outcome"], "no-op")
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "run-other")  # still theirs
+        self.assertEqual(self.release(run_id="run-other")["outcome"], "released")
+        self.assertEqual(self.release(run_id="run-other")["outcome"], "no-op")  # nothing left to give back
+
+
 class ProtocolTests(Case):
     """describe and invoke through aicore.ext.plugins with the plugin registered in a temporary machine config."""
 

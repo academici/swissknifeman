@@ -52,6 +52,10 @@ def register(given):
             "receipt": {"input": given}}
 
 
+def release(given):
+    return {"op": "release", "outcome": "released", "message": given.get("reason")}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -69,7 +73,7 @@ elif request.get("op") == "invoke":
         with open(os.environ["FAKE_WS_MARKS"], "a", encoding="utf-8") as handle:
             handle.write(json.dumps(given, sort_keys=True) + "\n")
     project = request["context"]["project_root"]
-    answer = {"claim": claim, "register": register}.get(given["op"])
+    answer = {"claim": claim, "register": register, "release": release}.get(given["op"])
     reply(request_id, output=answer(given) if answer else brief(given, project))
 else:
     reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "unknown op"})

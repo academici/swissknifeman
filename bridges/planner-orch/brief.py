@@ -253,7 +253,9 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     phase_id = item_phase(item_id)
     if plan.phases.get(phase_id, {}).get("design") == "skeleton":
         raise PlanError("PHASE_NOT_DETAILED", f"{phase_id} is a skeleton; detail it before briefing {item_id}")
-    missing = context.missing_reads(plan, item_id)
+    # Like ``start``, check the required reads at the first claim only: an item in progress passed the check when it
+    # started, and its own work may have deleted a read (a file the item retires).
+    missing = [] if plan.items[item_id].get("status") == "in_progress" else context.missing_reads(plan, item_id)
     if missing:
         raise PlanError("READ_MISSING", f"required reads are missing: {', '.join(missing)}")
     pack = context.collect(plan, item_id, with_scout=True, repos=repos)

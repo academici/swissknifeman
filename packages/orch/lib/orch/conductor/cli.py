@@ -89,6 +89,11 @@ def main(argv: list | None = None) -> int:
     settle.add_argument("--item", required=True, metavar="REF")
     settle.add_argument("--outcome", required=True, choices=["done", "done_with_deviations", "blocked"])
     settle.add_argument("--reason", required=True, help="why, for the journal")
+    release = verbs.add_parser("release", help="give a claimed piece of a run back to the work source, when the run stopped "
+                                                "before any work began (so that a later run can claim it)")
+    release.add_argument("--run", required=True, metavar="RUN")
+    release.add_argument("--item", required=True, metavar="REF")
+    release.add_argument("--reason", default="released by hand", help="why, for the journal of the source")
     status = verbs.add_parser("status", help="state of a run from its journal (default: the latest run)")
     status.add_argument("--run", metavar="RUN")
     status.add_argument("--json", action="store_true")
@@ -158,6 +163,8 @@ def main(argv: list | None = None) -> int:
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.batch, max_items=args.max_items, options_file=args.options,
                                  adopt=args.adopt)
+        if args.verb == "release":
+            return conductor.release(args.run, args.item, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
         return conductor.resume(args.run, retry=args.retry)

@@ -729,6 +729,28 @@ class SoftLimitTests(ConductorCase):
         self.set_items({"W1": {"write_set": ["out/**"], "checks": [check("W1"), v2],
                                "options": [{"source": "item:W1", "options": options}] if options else []}})
 
+    def test_a_correction_round_runs_the_red_checks_first_by_default(self):
+        self.two_checks()
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        steps = self.state(err)["items"]["W1"]["steps"]
+        first, second = (steps[f"checks.{n}"]["result"] for n in (1, 2))
+        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in first],
+                         [("V1", False, False), ("V2", True, False)])
+        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in second],
+                         [("V1", False, False), ("V2", False, True)])  # V1 is still red: V2 is not run again
+
+    def test_red_first_off_runs_every_check_in_every_round(self):
+        self.two_checks(checks={"red_first": False})
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        second = self.state(err)["items"]["W1"]["steps"]["checks.2"]["result"]
+        self.assertEqual([(row["id"], bool(row.get("skipped"))) for row in second], [("V1", False), ("V2", False)])
+
     def test_a_correction_that_makes_progress_goes_past_the_target(self):
         self.two_checks()
         self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "2\n"}, "result": report("W1")},
@@ -815,11 +837,47 @@ class AdoptAndSettleTests(ConductorCase):
         self.assertIn("A previous attempt at this piece of work is already in the working tree", self.prompt("executor", 1))
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
+    def test_adopt_allows_the_artifact_folder_of_the_piece(self):
+        evidence = self.project / "plans/T/artifacts/W1/evidence"
+        evidence.mkdir(parents=True)
+        (evidence / "V1.json").write_text("{}\n", encoding="utf-8")  # left by the stopped attempt
+        (self.project / "out").mkdir()
+        (self.project / "out" / "W1.txt").write_text("half\n", encoding="utf-8")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--adopt",))
+        self.assertEqual(code, 0, err)
+        prompt = self.prompt("executor", 1)
+        self.assertIn("out/W1.txt", prompt)
+        self.assertNotIn("artifacts/W1/evidence", prompt.split("A previous attempt")[1].split("\n")[0])
+
     def test_adopt_refuses_changes_outside_the_write_set(self):
         (self.project / "stray.txt").write_text("x", encoding="utf-8")
         code, _, err = self.run_items("W1", extra=("--adopt",))
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "WORKTREE_DIRTY")), err)
         self.assertEqual(self.calls("executor"), 0)
+        # the stop came before any work: the claim is given back, so that a new run can claim the piece
+        self.assertEqual((self.source()["items"]["W1"]["status"], self.source()["items"]["W1"].get("holder")), ("todo", None))
+        self.assertIn("CLAIM_RELEASED", err)
+
+    def test_release_command_gives_back_a_claim_the_source_kept(self):
+        self.set_items({"W1": {}}, refuse=["release"])
+        (self.project / "stray.txt").write_text("x", encoding="utf-8")
+        code, _, err = self.run_items("W1", extra=("--adopt",))
+        self.assertEqual(code, 1, err)
+        self.assertIn("CLAIM_KEPT", err)
+        self.assertEqual(self.source()["items"]["W1"]["status"], "in_progress")  # still held by the dead run
+        run_id = self.run_dir(err).name
+        code, _, err2 = self.conduct("release", "--run", run_id, "--item", "W1", "--reason", "the run died")
+        self.assertEqual(code, 0, err2)
+        self.assertEqual((self.source()["items"]["W1"]["status"], self.source()["items"]["W1"].get("holder")), ("todo", None))
+
+    def test_release_refuses_a_piece_that_has_work_in_the_tree(self):
+        self.script({"executor": [{"result": report("W1", "blocked", open_issues=[{"text": "x", "kind": "escalation"}])}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        code, _, err2 = self.conduct("release", "--run", self.run_dir(err).name, "--item", "W1")
+        self.assertEqual(code, 1, err2)
+        self.assertIn("RELEASE_WORK_BEGAN", err2)
 
     def test_settle_closes_a_piece_by_hand(self):
         blocked = report("W1", "blocked", open_issues=[{"text": "needs a decision", "kind": "escalation"}])

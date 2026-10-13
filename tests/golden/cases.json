@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "dba3e1761203",
-  "reason": "package-architecture skill gains the umbrella CLI section",
+  "captured_from": "2d2117da0a9d",
+  "reason": "orch source release: новая подкоманда в справке",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

@@ -28,7 +28,7 @@ DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"]}
 DEFAULT_SCOPE = {"outside": "deviation"}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
-                  "red_first": False,
+                  "red_first": True,
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
 CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first

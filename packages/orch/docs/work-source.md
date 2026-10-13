@@ -18,6 +18,7 @@ choose a branch by `op`.
 | `brief` | `plan`, `plans_root?`, `ref`, `unit?`, `run_id` | `input_ref` (`artifact-ref/v1`), `input_id`, `digest`, `reused`, `artifact_id` |
 | `register` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `status` (`done` \| `done_with_deviations` \| `blocked`), `report`, `evidence` (`{"V<n>": path}`), `registrar`, `executed_by` | `outcome` `recorded` \| `no-op` \| `refused`; `gate` (`verdict` `pass` \| `missing` \| `red` \| `stale` \| `none`, `checks` `{"V<n>": exit or null}`); `receipt?`; `reason_code`, `message` when refused |
 | `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?` | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
+| `release` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `reason?`, `actor?` | `outcome` `released` \| `no-op` (the run does not hold the piece) \| `refused`; `reason_code`, `message` when refused |
 
 A claim may also answer `options`: the run-option layers of the work, general first (`[{source, options}]`, each a
 conductor `run-options` document that orch validates). A brief may answer `artifacts_dir`: the repository folder
@@ -30,7 +31,7 @@ outside the contract is a failure of the source.
 ## Client
 
 `orch.worksource.PluginWorkSource(plugin_id, *, project=None, env=None, config_file=None)` implements the
-`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, each returning
+`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, each returning
 the output document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
 describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and validates the answer.
 
@@ -51,6 +52,7 @@ orch.py source brief --run RUN
 orch.py source prepare --run RUN --provider P [--binding B] [--model-catalog FILE]
 orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… --actor P/M[/E] [--executed-by P/M[/E]]
 orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
+orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
 ```
 
 - `claim` derives `submission_id` = `sub-` + the first 24 hex characters of the SHA-256 of the canonical JSON
@@ -71,6 +73,9 @@ orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
   `orch.run.refused` (step `register`). A repeat that the source records as `no-op` emits nothing.
 - `commit` asks the source for one commit of the registered work and writes `receipts/commit.json`; nothing left
   to commit is `no-op`, a refusal exits 1.
+- `release` gives a claim back to the source and writes `receipts/release.json`: the piece goes back to the state
+  before the claim, so that a later run can claim it (`ITEM_OWNED` no longer holds). The op is optional: a source that
+  does not serve it answers `INPUT_INVALID`/`WORK_SOURCE_FAILED`, which the conductor reports as `CLAIM_KEPT` and goes on.
 
 The run directory is `<project>/.swissknifeman/state/orch/runs/<run_id>/` inside a project (a git repository or a
 folder with `.swissknifeman`), else under the machine state. Exit codes: 0 ok (`claimed`, `none`, `recorded`,

@@ -139,6 +139,7 @@
   даты отклоняются с `EVENT_DATA_INVALID` (exit 65).
 - **hub:** `golden.py capture` drops the digests of generated files that left the git index, so a moved generated file no longer
   leaves `golden.py check` red.
+- **orch, planner-orch:** defects of the P12 conductor runs. A piece that stops before any executor round gives its claim back to the work source (`release`, a new optional op of `work-source/v1`; `orch.py source release`, `conduct.py release --run RUN --item REF`; the planner bridge finishes the item as `blocked` under owner fencing and reopens it), so the next run no longer meets `ITEM_OWNED`. `run --adopt` allows the artifact folder of the piece and the plan folder. The planner bridge checks required reads only at the first claim, so a brief of an item in progress no longer fails with `READ_MISSING` for a file the item deleted. `checks.red_first` is on by default: a correction round runs the previously red checks first and skips the others while one is still red.
 
 ### Added
 

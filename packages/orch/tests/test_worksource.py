@@ -94,7 +94,7 @@ class ClientTests(SourceCase):
         with self.assertRaises(worksource.WorkSourceError) as caught:
             self.source().claim(plan="P", run_id="run-1", submission_id="not-a-submission", actor=ACTOR)
         self.assertEqual(caught.exception.code, "INPUT_INVALID")
-        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit"])
+        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release"])
 
 
 class UnregisteredTests(SourceCase):
@@ -120,6 +120,15 @@ class CycleTests(SourceCase):
 
     def run_dir(self, run_id: str) -> Path:
         return journal.run_dir(run_id, project=self.project)
+
+    def test_release_hands_the_claim_back_and_writes_a_receipt(self):
+        run_id = self.claim()["run_id"]
+        code, out, err = self.cli("source", "release", "--run", run_id, "--reason", "the tree was dirty")
+        self.assertEqual((code, err), (0, ""), out)
+        self.assertEqual(json.loads(out), {"op": "release", "outcome": "released", "message": "the tree was dirty"})
+        self.assertEqual(journal.read_doc(self.run_dir(run_id), "receipts/release.json")["outcome"], "released")
+        code, _, err = self.cli("source", "release", "--run", "run-unknown")
+        self.assertEqual((code, err.split(":")[0]), (1, "RUN_UNKNOWN"))
 
     def test_claim_writes_the_run_and_a_repeat_is_the_same_run(self):
         first = self.claim()

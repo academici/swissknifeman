@@ -163,13 +163,19 @@ def load_contract(contract_dir: Path, *, urn_prefix: str = CONTRACT_URN_PREFIX,
     return registry, kind
 
 
-def load_contract_set(contract_dir: Path, *, foundation: Path | None = None) -> tuple[Registry, list[str]]:
+def load_contract_set(contract_dir: Path, *, foundation: Path | None = None,
+                      open_slots: bool = False) -> tuple[Registry, list[str]]:
     """Load a contract directory ``<contract>/v<N>/`` that holds several ``<kind>.schema.json`` documents.
 
     The kind of a document is the last segment of its ``$id``; every ``$id`` must be ``<prefix><kind>:v<N>`` for
     one ``<prefix>`` shared by the directory and for the version ``v<N>`` named by the directory. The file name is
     not read (it may spell the kind with dots). References to the foundation contracts resolve as in
     ``load_contract`` (including ``foundation``). Return the registry and the sorted kinds.
+
+    ``open_slots`` lets a set leave extension slots open: a reference to ``<prefix>extension:<slot>:v<N>`` that no
+    document of the set holds (the module that fills the slot supplies it at run time, as a bridge does for
+    ``plan/v1`` -> ``orchestration.options``) resolves to a placeholder object schema; any other reference must
+    still resolve. The registry is then not cached.
     """
     directory = Path(contract_dir).resolve()
     version = directory.name
@@ -189,6 +195,12 @@ def load_contract_set(contract_dir: Path, *, foundation: Path | None = None) -> 
     kinds.sort()
     registry = load_registry(directory, urn_prefix=prefix or "", kinds=tuple(kinds), version=version,
                              extra_dirs=_referenced_contract_dirs(directory, CONTRACT_URN_PREFIX, foundation))
+    if open_slots:
+        slots = sorted({ref.partition("#")[0] for document in schemas.values() for ref in _refs(document)
+                        if ref.startswith(f"{prefix}extension:") and ref.partition("#")[0] not in registry._schemas})
+        if slots:
+            registry = Registry({**registry._schemas, **{slot: {"$id": slot, "type": "object"} for slot in slots}},
+                                urn_prefix=registry.urn_prefix, kinds=registry.kinds, version=registry.version)
     for schema_id, document in schemas.items():
         for ref in _refs(document):
             try:

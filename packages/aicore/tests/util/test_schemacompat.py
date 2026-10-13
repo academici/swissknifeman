@@ -710,6 +710,36 @@ class TestMultiDocument(unittest.TestCase):
         self.assertEqual([("thing", "v1", "compared", [])],
                          [(e["contract"], e["version"], e["status"], e["changes"]) for e in json.loads(out)["contracts"]])
 
+    def test_a_single_document_contract_of_a_module_is_read_with_its_own_prefix(self):
+        directory = self.schemas() / "thing" / "v1"
+        directory.mkdir(parents=True)
+        body = {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:swissknifeman:mod:thing:v1",
+                "type": "object", "additionalProperties": False, "properties": {"a": {"type": "string"}}}
+        (directory / "thing.schema.json").write_text(json.dumps(body), encoding="utf-8")
+        self.unit()
+        self.commit()
+        code, out, err = self.compat()
+        self.assertEqual((0, ""), (code, err), out)  # was SCHEMA_COMPAT_BASE_INVALID: unknown schema kind
+        body["properties"]["a"] = {"type": "integer"}
+        (directory / "thing.schema.json").write_text(json.dumps(body), encoding="utf-8")
+        code, out, _ = self.compat()  # an unlisted contract follows its module: development only warns
+        self.assertEqual(0, code)
+        self.assertIn("thing/v1 /properties/a: type-changed (warning)", out)
+
+    def test_a_set_with_an_open_extension_slot_is_compared_on_both_sides(self):
+        slot = {"properties": {"opts": {"$ref": f"{self.PLAN}extension:options:v1"}}}
+        self.write("alpha", slot)
+        self.unit()
+        self.commit()
+        code, out, err = self.compat()
+        self.assertEqual((0, ""), (code, err), out)  # was an unresolved reference at the base
+        self.write("alpha", {**slot, "required": ["opts"]})
+        code, out, _ = self.compat()
+        self.assertEqual(1, code)
+        self.assertIn("plan/v1:alpha /: required-added (error)", out)
+        self.write("alpha", {"properties": {"opts": {"$ref": f"{self.PLAN}other:options:v1"}}})  # not a slot
+        self.assertEqual(1, self.compat()[0])
+
 
 if __name__ == "__main__":
     unittest.main()

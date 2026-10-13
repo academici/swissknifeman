@@ -510,10 +510,26 @@ def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str,
 
 
 def _load(directory: Path, single: bool, foundation: Optional[Path]) -> Tuple[Registry, List[str]]:
+    """Load a contract directory of either side. A contract of one document keeps the prefix its own ``$id`` has (the
+    contracts of the modules are ``urn:swissknifeman:<module>:<kind>:v<N>``, not the foundation's); a set may leave
+    extension slots open, which both sides then fill with the same placeholder."""
     if single:
-        registry, kind = load_contract(directory, foundation=foundation)
+        prefix = _single_prefix(directory)
+        registry, kind = load_contract(directory, urn_prefix=prefix, foundation=foundation) if prefix else \
+            load_contract(directory, foundation=foundation)
         return registry, [kind]
-    return load_contract_set(directory, foundation=foundation)
+    return load_contract_set(directory, foundation=foundation, open_slots=True)
+
+
+def _single_prefix(directory: Path) -> Optional[str]:
+    """The ``urn:...:`` part of the ``$id`` of the one document of a contract directory, or None when it has no
+    ``<prefix><kind>:v<N>`` shape (the loader then names the problem)."""
+    try:
+        schema_id = json.loads(next(directory.glob("*.schema.json")).read_text(encoding="utf-8")).get("$id")
+    except (StopIteration, OSError, ValueError, AttributeError):
+        return None
+    found = re.fullmatch(r"(.+:)" + re.escape(directory.parent.name) + ":" + re.escape(directory.name), str(schema_id))
+    return found.group(1) if found else None
 
 
 def _grade(changes: Sequence[Tuple[Optional[str], Change]], stability: str) -> List[dict]:

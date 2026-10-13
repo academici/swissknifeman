@@ -1,0 +1,189 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.8",
+  "title": "CI-матрица модулей: scripts/ci-matrix.py из unit.json, .github/workflows/modules.yml; test.yml и validate.yml заменяются",
+  "status": "todo",
+  "summary": "scripts/ci-matrix.py list|steps|run|--check — единый источник шагов модулей и мостов (lint, test, validate, standalone, cli-smoke, contracts, schema-compat, secrets); modules.yml берёт матрицу из list --json (fromJSON), инструменты continue-on-error, job hub (check --strict, golden, scripts/test-*.py, smoke-installed, conformance engine); test.yml и validate.yml удаляются после --check о покрытии их команд.",
+  "why": "D85, E43, R10, R31 (E42 отложен); knowledge/hub-p12#ci. Риски: (1) потеря проверки при удалении test.yml/validate.yml — --check сверяет каждую их команду со шагами; (2) матрица-литерал вместо обнаружения — --check ловит; (3) brain и мосты впервые в CI — их красное чинится у владельца в пункте, если мало, иначе open_issues.",
+  "scope": {
+    "include": [
+      "scripts/ci-matrix.py, scripts/test-ci-matrix.py",
+      ".github/workflows/modules.yml; удаление test.yml и validate.yml",
+      "scripts/lint.sh — приём путей модуля"
+    ],
+    "exclude": [
+      "hygiene.yml, docs.yml, scanner-pr.yml, sha256-update.yml, upstream-sync.yml",
+      "reusable workflows (E42)"
+    ]
+  },
+  "depends_on": [
+    "P12.7"
+  ],
+  "decisions": [
+    "D85",
+    "D26"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#ci",
+      "why": "шаги, матрица, workflow, удаление старых",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "why": "команды, которые должны остаться покрыты",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/validate.yml",
+      "why": "то же",
+      "required": true
+    },
+    {
+      "path": "scripts/lint.sh",
+      "why": "версия ruff и пути",
+      "required": true
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "why": "standalone <id> и standalone.tools",
+      "required": true
+    },
+    {
+      "path": "scripts/test-bridges.sh",
+      "why": "запуск тестов мостов с партнёрами",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "строки R10, R31",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "строки E42, E43",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/ci-matrix.py",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-ci-matrix.py",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/modules.yml",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "change": "delete"
+    },
+    {
+      "path": ".github/workflows/validate.yml",
+      "change": "delete"
+    },
+    {
+      "path": "scripts/lint.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/affected-tests.py",
+      "change": "modify",
+      "note": "только если читает список workflow"
+    },
+    {
+      "path": "scripts/docs-impact.py",
+      "change": "modify",
+      "note": "только если ссылается на test.yml/validate.yml"
+    },
+    {
+      "path": "packages/brain/**",
+      "change": "any",
+      "note": "малое красное brain в первом CI-прогоне"
+    },
+    {
+      "path": "bridges/**",
+      "change": "any",
+      "note": "малое красное мостов"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Шаги модулей существуют только в scripts/ci-matrix.py; workflow вызывает его, а не дублирует команды"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: ci-matrix.py list/steps (из unit.json и карты) → run (таймер, итог) → --check (матрица из list --json, покрытие команд test.yml/validate.yml) → lint.sh пути → modules.yml → test-ci-matrix.py на фикстуре → run brain и мост planner-orch локально → удаление test.yml и validate.yml → CHANGELOG → V1–V4. Полный run --all — только в phase.validation.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-ci-matrix.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ci-matrix.py --check && test ! -e .github/workflows/test.yml && test ! -e .github/workflows/validate.yml && grep -q 'ci-matrix.py list --json' .github/workflows/modules.yml",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ci-matrix.py run --unit brain && python3 scripts/ci-matrix.py run --unit planner-orch --step contracts",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/public-hygiene.py && python3 scripts/test-docs-impact.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "scripts/ci-matrix.py",
+    ".github/workflows/modules.yml"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T10:25:08Z"
+}

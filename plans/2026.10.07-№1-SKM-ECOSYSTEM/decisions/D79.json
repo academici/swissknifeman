@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D79",
+  "title": "swissknifeman doctor агрегирует provides.doctor модулей, только чтение",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как umbrella собирает диагностику (D25, E28)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Уникальные probe каждого модуля запускаются по разу из корня модуля с таймаутом; stdout — check-result/v1 по схеме; объявленный id без результата и сбой probe — синтетический fail; модули без doctor перечисляются; --json umbrella-doctor/v1; код 1 при fail; repair не агрегируется, печатается remediation.",
+      "pros": "Одна команда для всей машины без знания модулей; probe/repair остаются раздельными у владельцев."
+    }
+  ],
+  "context": "knowledge/hub-p12#doctor",
+  "decision": "A — Уникальные probe каждого модуля запускаются по разу из корня модуля с таймаутом; stdout — check-result/v1 по схеме; объявленный id без результата и сбой probe — синтетический fail; модули без doctor перечисляются; --json umbrella-doctor/v1; код 1 при fail; repair не агрегируется, печатается remediation.",
+  "rationale": "Детализация P12 (2026-10-13): knowledge/hub-p12#doctor; агентское решение в рамках утверждённого плана.",
+  "applies_to": [
+    "P12.2"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

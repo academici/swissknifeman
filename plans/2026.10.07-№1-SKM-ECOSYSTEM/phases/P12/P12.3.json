@@ -1,0 +1,225 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.3",
+  "title": "swissknifeman install с профилями minimal/standard/full; provides.install в unit.json; install.sh — тонкая обёртка",
+  "status": "todo",
+  "summary": "configs/install-profiles.json (install-profiles/v1) и схема; skiller, harness, maind, analyst объявляют provides.install [\"install.sh\"]; swissknifeman install [--profile|--units] [--bin-dir] [--force] [--dry-run] [--json] ставит модули по requires, симлинки provides.cli для модулей без install, затем симлинк swissknifeman; install.sh вызывает install --profile full с прежними флагами.",
+  "why": "D80, E16, E58; knowledge/hub-p12#install. Риски: (1) поведение ./install.sh для пользователя не меняется (флаги, вывод итога, правило чужого симлинка) — scripts/test-root-install.py; (2) установщики модулей не должны ждать ввода без TTY; (3) scripts/bootstrap-machine.sh вызывает install.sh — его тест зелёный.",
+  "scope": {
+    "include": [
+      "scripts/umbrella.py: install",
+      "configs/install-profiles.json и configs/install-profiles.schema.json",
+      "provides.install в unit.json skiller, harness, maind, analyst",
+      "install.sh обёртка; scripts/test-root-install.py; scripts/bootstrap-machine.sh и его тест при необходимости",
+      "scripts/test-umbrella.py: install на фикстуре; config-inventory; CHANGELOG"
+    ],
+    "exclude": [
+      "слой конфига профиля (по триггеру)",
+      "swissknifeman upgrade (P13)"
+    ]
+  },
+  "depends_on": [
+    "P12.2"
+  ],
+  "decisions": [
+    "D80",
+    "D26"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#install",
+      "why": "контракт provides.install, профили, порядок, ошибки, обёртка",
+      "required": true
+    },
+    {
+      "path": "install.sh",
+      "why": "текущие флаги, цикл модулей, правило симлинка",
+      "required": true
+    },
+    {
+      "path": "scripts/test-root-install.py",
+      "why": "что проверяется у установщика корня",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/install.sh",
+      "why": "флаги установщика модуля (--bin-dir, --force, codex/grok)",
+      "required": true
+    },
+    {
+      "path": "scripts/bootstrap-machine.sh",
+      "why": "вызов install.sh при развёртывании машины",
+      "required": false
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "строки E16, E58 — что принято",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/install-profiles.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "install.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-root-install.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/bootstrap-machine.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-bootstrap-machine.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-dev-guard.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/install.sh",
+      "change": "modify",
+      "note": "только если установщик ждёт ввода без TTY"
+    },
+    {
+      "path": "packages/harness/install.sh",
+      "change": "modify",
+      "note": "то же"
+    },
+    {
+      "path": "packages/maind/install.sh",
+      "change": "modify",
+      "note": "то же"
+    },
+    {
+      "path": "packages/analyst/install.sh",
+      "change": "modify",
+      "note": "то же"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Установщики модулей и install запускаются в тестах только с временным HOME или в scripts/dev-sandbox.sh",
+    "Профиль — данные: в scripts/umbrella.py нет списка модулей профиля"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: provides.install в четырёх unit.json → профили и схема → install в umbrella.py (загрузка профиля, проверка requires, топологический порядок, симлинки cli, симлинк swissknifeman, dry-run, json, итог) → install.sh обёртка → test-root-install.py, test-bootstrap-machine.sh, test-dev-guard.py → test-umbrella.py → config-inventory → CHANGELOG → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-umbrella.py && python3 scripts/test-root-install.py && python3 scripts/test-dev-guard.py && bash scripts/test-bootstrap-machine.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "H=$(mktemp -d) && for pr in minimal standard full; do HOME=$H SKM_HOME=$H/skm bin/swissknifeman install --profile $pr --bin-dir $H/bin --dry-run --json > $H/$pr.json || exit 1; done && test ! -e $H/bin",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-inst-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bin/swissknifeman install --units harness,brain --force --bin-dir \"$HOME/.local/bin\" && for c in swissknifeman harness brain; do test -x \"$HOME/.local/bin/$c\" || exit 1; done'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-config-inventory.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "swissknifeman install и профили",
+    "install.sh — обёртка"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T10:25:51Z"
+}

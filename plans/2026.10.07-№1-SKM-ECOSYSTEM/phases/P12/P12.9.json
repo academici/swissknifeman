@@ -1,0 +1,217 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.9",
+  "title": "Документация хаба: сайт в docs/ корня, страницы umbrella, doctor, профили и примеры, conformance, выпуск, CI; ecosystem и contracts; ADR 0072–0078; CHANGELOG",
+  "status": "todo",
+  "summary": "vitepress-скрипты переезжают из packages/skiller/package.json в docs/package.json, docs.yml — working-directory docs, path_allow снят; новые страницы reference/umbrella, reference/doctor, install-profiles с примерами, reference/conformance, reference/release-bundle, develop (CI-матрица); ecosystem.md и contracts.md — корень хаба и новые контракты; ADR 0072–0078 и индекс; README и getting-started — установка профилями; skill package-architecture — команды umbrella.",
+  "why": "D24, E45, E16, D76 (сайт хаба); knowledge/hub-p12#docs. Риски: (1) сборка сайта ломается после переезда — npm run docs:build в docs/; (2) skill bootstrap меняется только через канон и генератор, golden skiller-registry.",
+  "scope": {
+    "include": [
+      "docs/package.json, docs/package-lock.json, .github/workflows/docs.yml, packages/skiller/package.json, configs/ecosystem-units.json (path_allow)",
+      "страницы docs/ из knowledge/hub-p12#docs, docs/examples/",
+      "docs/architecture/ecosystem.md, contracts.md, decisions/0072–0078 и README",
+      "README.md, docs/getting-started.md, bootstrap/skills/package-architecture/SKILL.md",
+      "CHANGELOG"
+    ],
+    "exclude": [
+      "upgrade guide (P13)"
+    ]
+  },
+  "depends_on": [
+    "P12.8"
+  ],
+  "decisions": [
+    "D24",
+    "D78",
+    "D79",
+    "D80",
+    "D81",
+    "D82",
+    "D83",
+    "D84",
+    "D85"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#docs",
+      "why": "состав документации фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#e1e2",
+      "why": "что должно быть отражено",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/package.json",
+      "why": "docs-скрипты для переезда",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/docs.yml",
+      "why": "сборка сайта",
+      "required": true
+    },
+    {
+      "path": "scripts/docs-sync.sh",
+      "why": "агрегация docs модулей",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/0071-core-and-artifex-removal-and-strict-boundaries.md",
+      "why": "формат ADR",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/README.md",
+      "why": "индекс ADR",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/**",
+      "change": "any"
+    },
+    {
+      "path": ".github/workflows/docs.yml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/package.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/package-lock.json",
+      "change": "modify",
+      "note": "только если меняются зависимости"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "README.md",
+      "change": "modify"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "change": "modify"
+    },
+    {
+      "path": "bootstrap/skills/package-architecture/**",
+      "change": "any"
+    },
+    {
+      "path": "bootstrap/publication-lock.json",
+      "change": "modify",
+      "note": "генератор"
+    },
+    {
+      "path": ".agents/skills/**",
+      "change": "any",
+      "note": "проекции bootstrap-скиллов генератором"
+    },
+    {
+      "path": ".claude/skills/**",
+      "change": "any",
+      "note": "проекции bootstrap-скиллов генератором"
+    },
+    {
+      "path": "AGENTS.md",
+      "change": "modify",
+      "note": "генератор каталога инструкций"
+    },
+    {
+      "path": "CLAUDE.md",
+      "change": "modify",
+      "note": "то же"
+    },
+    {
+      "path": "packages/skiller/docs/**",
+      "change": "any",
+      "note": "ссылки на сайт и установку"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Проекции скиллов и инструкций — только генераторами (skiller registry в песочнице, harness instructions) с golden check"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: сайт (docs/package.json, npm ci, docs:build, docs.yml, удаление скриптов из skiller, path_allow) → страницы reference и примеры → ecosystem/contracts → ADR 0072–0078 и индекс → README, getting-started, package-architecture через генератор → CHANGELOG → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "cd docs && npm ci --silent && npm run --silent docs:build",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test $(ls docs/architecture/decisions/007[2-8]-*.md | wc -l) -eq 7 && grep -q 0078 docs/architecture/decisions/README.md && ! grep -q '\"docs:sync\"' packages/skiller/package.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-docs-impact.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "сайт хаба в docs/",
+    "ADR 0072–0078",
+    "документация umbrella, профилей, conformance, выпуска, CI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T10:25:08Z"
+}

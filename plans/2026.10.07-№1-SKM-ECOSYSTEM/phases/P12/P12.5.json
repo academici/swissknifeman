@@ -1,0 +1,190 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.5",
+  "title": "Conformance kit: сценарий crash плагина, native без declared, swissknifeman conformance plugin|engine",
+  "status": "todo",
+  "summary": "aicore ext conformance получает сценарий crash и работает с манифестом вне репозитория; declared сценарии привязки native в orch получают тест или golden-трассу (иначе declared с причиной), cao и claude-only — declared с причиной; swissknifeman conformance plugin|engine маршрутизирует через unit.json.",
+  "why": "D82, E59, R13, R30; knowledge/hub-p12#conformance. Риски: (1) сценарий crash не должен двигать курсор доставки и терять событие; (2) тесты очистки процессов не воруют чужих потомков (supervise-процесс, как в conformance.py); (3) живые провайдеры в тестах запрещены — только фальшивые argv.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/ext/conformance.py, delivery при необходимости, фикстура плагина, тесты",
+      "packages/orch/conformance/scenarios.json (reason), тесты native в packages/orch/tests",
+      "scripts/umbrella.py: conformance plugin|engine; scripts/test-umbrella.py",
+      "CHANGELOG aicore и корня"
+    ],
+    "exclude": [
+      "golden-трассы cao и claude-only (триггер паритета orch)"
+    ]
+  },
+  "depends_on": [
+    "P12.4"
+  ],
+  "decisions": [
+    "D82",
+    "D19"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#conformance",
+      "why": "сценарий crash, native, маршруты umbrella",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/conformance.py",
+      "why": "SCENARIOS, supervise, результат",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/ext/test_conformance.py",
+      "why": "образец тестов сценариев",
+      "required": true
+    },
+    {
+      "path": "packages/orch/conformance/scenarios.json",
+      "why": "каталог сценариев и статус declared",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_conformance.py",
+      "why": "как сценарий становится pass",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "строки R13, R30, E59",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/ext/conformance.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/delivery.py",
+      "change": "modify",
+      "note": "только если курсор двигается после краха"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/ext/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/conformance/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/lib/orch/**",
+      "change": "any",
+      "note": "только код сценариев conformance"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any",
+      "note": "страница conformance"
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Сценарий без теста остаётся declared только с полем reason; молча удалять сценарий нельзя"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: crash в aicore (фикстура падающего плагина, курсор, повторная доставка) → тест чужого плагина из mkdtemp → orch native: child-process-cleanup, stdout-stderr-framing, workspace-permissions, lock-expiry (тест или golden-трасса на фальшивом argv) → reason у оставшихся declared → umbrella conformance → тесты → CHANGELOG → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "AICORE_ROOT=$PWD/packages/aicore python3 packages/orch/scripts/orch.py conformance --json | python3 -c 'import json, sys; rows = json.load(sys.stdin); bad = [r for r in rows if r.get(\"status\") == \"declared\" and not r.get(\"reason\")]; assert not bad, bad'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "H=$(mktemp -d) && HOME=$H SKM_HOME=$H/skm bin/swissknifeman conformance engine --binding native --json > $H/e.json && python3 -c 'import json, sys; json.load(open(sys.argv[1]))' $H/e.json && python3 scripts/test-umbrella.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "сценарий crash",
+    "conformance native без declared без причины",
+    "swissknifeman conformance"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T10:25:54Z"
+}

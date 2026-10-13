@@ -1,0 +1,94 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.10",
+  "title": "Закрытие фазы: phase.validation (CI-матрица всех модулей, хаб, e2e и smoke в песочнице, совместимость схем, бюджет первого хода), сверка E1/E2",
+  "status": "todo",
+  "summary": "Пункт получает и проходит phase.validation P12 (cadence phase): ci-matrix run --all --include-tools; check --strict, render, golden, гигиена, тесты скриптов хаба, test-integration; e2e и smoke-installed в песочнице; aicore schema compat и docs-impact против origin/ecosystem-split; skiller budget --first-turn (и --with-plugins). Красное чинится у владельца; сверка каждой строки knowledge/hub-p12#e1e2 с кодом — таблица в notes. Push не делать.",
+  "why": "Архитектура §12: P12 готова, когда CI-матрица зелёная; D26, D24. Риск: исправления после прохода — повторить затронутые шаги прохода до finish.",
+  "scope": {
+    "include": [
+      "phase.validation",
+      "исправления красного у владельца",
+      "сверка e1e2"
+    ],
+    "exclude": [
+      "push (публикацию ветки делает владелец)",
+      "новые функции"
+    ]
+  },
+  "depends_on": [
+    "P12.9"
+  ],
+  "decisions": [
+    "D26",
+    "D85"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#e1e2",
+      "why": "сверка тезисов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#deferred",
+      "why": "что отложено и не проверяется",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "**",
+      "change": "any",
+      "note": "исправления красного у владельца"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Бюджет первого хода: цель 16K, предупреждение 23K (правило root.claude-code.context-budget); результат в notes"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: phase.validation P12 по порядку V11–V15 → красное у владельца, затем повтор затронутых шагов → числа skiller budget --first-turn и --with-plugins (V15) в notes → сверка e1e2 построчно (таблица «тезис: где в коде/тест») → finish. Push не делать.",
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "Сверить каждую строку knowledge/hub-p12#e1e2 с кодом и тестами; таблица «тезис → файл/тест → статус» в notes finish; расхождение — исправление у владельца или plan.py log.",
+      "expect": "все строки с файлом или тестом",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "зелёная CI-матрица (локально)",
+    "сверка E1/E2 P12"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T10:25:31Z"
+}

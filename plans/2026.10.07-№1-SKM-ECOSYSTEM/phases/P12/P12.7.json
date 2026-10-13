@@ -1,0 +1,148 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.7",
+  "title": "Smoke установленной формы: scripts/smoke-installed.sh в песочнице — CLI из bin-dir вне checkout, doctor, плагины из копии кэша",
+  "status": "todo",
+  "summary": "scripts/smoke-installed.sh (только внутри dev-sandbox) ставит профиль full в HOME песочницы, вызывает --help каждого CLI из временной папки, doctor --json по схеме, копирует source каждого плагина маркетплейса в ~/.claude/plugins/cache/swissknifeman/<name>/<version>/ и проверяет пути ${CLAUDE_PLUGIN_ROOT}, отсутствие выхода за корень, запуск хуков, пути skills[] записей с source ./; scripts/test-smoke-installed.py.",
+  "why": "D84, E50; knowledge/hub-p12#smoke. Риски: (1) запуск вне песочницы трогает реальный HOME — скрипт отказывается без SKM_HOME во временной папке; (2) хуки плагинов могут писать в HOME — только HOME песочницы; (3) найденная зависимость плагина от checkout чинится у владельца модуля в пункте, если мала, иначе — open_issues.",
+  "scope": {
+    "include": [
+      "scripts/smoke-installed.sh, scripts/test-smoke-installed.py",
+      "исправления путей плагинов модулей, найденные smoke (малые)"
+    ],
+    "exclude": [
+      "реальный кэш ~/.claude",
+      "запуск Claude Code"
+    ]
+  },
+  "depends_on": [
+    "P12.6"
+  ],
+  "decisions": [
+    "D84"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#smoke",
+      "why": "шаги smoke и формат вывода",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#install",
+      "why": "install --profile и bin-dir",
+      "required": true
+    },
+    {
+      "path": "scripts/dev-sandbox.sh",
+      "why": "new/run/remove и переменные песочницы",
+      "required": true
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "why": "записи source и skills[]",
+      "required": true
+    },
+    {
+      "path": "scripts/e2e-module-skills.sh",
+      "why": "образец e2e-скрипта в песочнице",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "строка E50",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/smoke-installed.sh",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-smoke-installed.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/*/hooks/**",
+      "change": "any",
+      "note": "только малая правка пути, найденная smoke"
+    },
+    {
+      "path": "packages/*/.claude-plugin/plugin.json",
+      "change": "modify",
+      "note": "то же"
+    },
+    {
+      "path": "packages/*/commands/**",
+      "change": "any",
+      "note": "то же"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Скрипт и его тест не запускают реальные CLI провайдеров (claude, codex, grok)"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: проверка песочницы → install --profile full → --help CLI вне checkout → doctor --json → копии плагинов и проверки путей → записи source ./ → вывод OK/FAIL → test-smoke-installed.py (аргументы, отказ без песочницы, выход за корень на фикстуре) → прогон в песочнице (V2) → малые правки путей плагинов → V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-smoke-installed.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-smk-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/smoke-installed.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строка smoke-installed OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/public-hygiene.py && python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "scripts/smoke-installed.sh"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T10:25:07Z"
+}

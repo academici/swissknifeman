@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D83",
+  "title": "Состав выпуска: compat-manifest/v1, пакет схем, аттестация и SHA256SUMS",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Что входит в выпуск сейчас (D26, E41)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "aicore release bundle --root --tag --out: compat.json (compat-manifest/v1), schemas-<tag>.tar.gz детерминированно с index.json, release-attestation.json из aicore.release.attestation, SHA256SUMS в формате sha256sum; ничего вне --out; SBOM/подписи/SLSA — по триггеру.",
+      "pros": "Выпуск проверяем sha256sum -c и читаем upgrade (P13) без checkout."
+    }
+  ],
+  "context": "knowledge/hub-p12#release",
+  "decision": "A — aicore release bundle --root --tag --out: compat.json (compat-manifest/v1), schemas-<tag>.tar.gz детерминированно с index.json, release-attestation.json из aicore.release.attestation, SHA256SUMS в формате sha256sum; ничего вне --out; SBOM/подписи/SLSA — по триггеру.",
+  "rationale": "Детализация P12 (2026-10-13): knowledge/hub-p12#release; агентское решение в рамках утверждённого плана.",
+  "applies_to": [
+    "P12.6"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

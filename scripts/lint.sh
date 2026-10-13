@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # lint.sh — the CI lint step, runnable locally (ruff F + B, config in ruff.toml).
-# Usage: scripts/lint.sh [ruff args...]   e.g. scripts/lint.sh --statistics
+# Usage: scripts/lint.sh [ruff args...] [PATH...]   e.g. scripts/lint.sh --statistics
+#   An argument that names an existing file or directory is a path to check (e.g. packages/brain/lib): with any path
+#   given only those paths are checked; without one the default list below is. Other arguments go to ruff.
 #
 # ruff is a development tool, not a runtime dependency (packages stay stdlib-only). It is fetched on demand at the
 # pinned version, so nothing is installed into the repository. Needs: python3 >= 3.9 and one of
 #   - pipx            (apt install pipx | python3 -m pip install --user pipx), or
 #   - ruff==$RUFF_VERSION already on PATH (any install method).
-# The pinned version and the path list live only here; .github/workflows/test.yml calls this script.
+# The pinned version and the default path list live only here; scripts/ci-matrix.py calls this script per module.
 set -euo pipefail
 
 RUFF_VERSION="0.15.19"
@@ -18,10 +20,16 @@ PATHS=(packages/aicore/lib packages/aicore/tests
   packages/planner/lib packages/planner/tests)
 
 cd "$ROOT"
+FLAGS=()
+GIVEN=()
+for arg in "$@"; do
+  if [ -e "$arg" ]; then GIVEN+=("$arg"); else FLAGS+=("$arg"); fi
+done
+[ "${#GIVEN[@]}" -eq 0 ] || PATHS=("${GIVEN[@]}")
 if command -v ruff >/dev/null 2>&1 && [ "$(ruff --version | awk '{print $2}')" = "$RUFF_VERSION" ]; then
-  exec ruff check "$@" "${PATHS[@]}"
+  exec ruff check ${FLAGS[@]+"${FLAGS[@]}"} "${PATHS[@]}"
 elif command -v pipx >/dev/null 2>&1; then
-  exec pipx run "ruff==$RUFF_VERSION" check "$@" "${PATHS[@]}"
+  exec pipx run "ruff==$RUFF_VERSION" check ${FLAGS[@]+"${FLAGS[@]}"} "${PATHS[@]}"
 fi
 echo "LINT_TOOL_MISSING: need pipx or ruff==$RUFF_VERSION on PATH." >&2
 echo "  install pipx:  sudo apt install pipx   (or: python3 -m pip install --user pipx)" >&2

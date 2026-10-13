@@ -10,11 +10,12 @@ Commands:
   baseline --update          recompute the boundary baseline and print what changed
   render [--check]           generate docs/architecture/ownership.md from the config and unit.json files
   list [--json]              modules with id, kind, version, destination, stability, requires
-  standalone <id>… | --all | --baseline [--update-baseline]
+  standalone <id>… | --all | --baseline [--with-tools] [--update-baseline]
                              run dev.test and dev.validate of a module in a copy of its tracked files plus the
                              foundation stand-in, with HOME and XDG inside a temporary directory; result per
                              module is pass, fail or n/a (no dev commands); --baseline runs the modules the
-                             baseline records as pass; --update-baseline records the results; modules listed in
+                             baseline records as pass, except the tools (standalone.tools: auxiliary modules outside the
+                             core verification; --with-tools adds them); --update-baseline records the results; modules listed in
                              standalone.foundation_free get no standalone.foundation_paths in their copy
 
 Diagnostics are lines ``ECOSYSTEM_<CODE>: <path>: <message>`` on stderr. Simple checks are registered in
@@ -547,6 +548,13 @@ def check_config(ctx: Context) -> list:
                 bad(f"path_allow: {problem}")
     if not isinstance(config.get("ownership"), list):
         bad("ownership must be a list")
+    tools = (config.get("standalone") or {}).get("tools", [])
+    if not (isinstance(tools, list) and all(isinstance(x, str) for x in tools)):
+        bad("standalone.tools must be a list of module folders")
+    else:
+        for folder in tools:
+            if folder not in module_folders(ctx):
+                bad(f"standalone.tools: {folder!r} is not a module folder")
     free = (config.get("standalone") or {}).get("foundation_free", [])
     if not (isinstance(free, list) and all(isinstance(x, str) for x in free)):
         bad("standalone.foundation_free must be a list of module folders")
@@ -1080,7 +1088,8 @@ def cmd_standalone(ctx: Context, args) -> int:
     folders = sorted(load_units(ctx))
     recorded = recorded_standalone(ctx.root)
     if args.baseline:
-        chosen = [f for f in folders if recorded.get(f) == "pass"]
+        tools = set((ctx.config.get("standalone") or {}).get("tools") or ())
+        chosen = [f for f in folders if recorded.get(f) == "pass" and (args.with_tools or f not in tools)]
     elif args.all:
         chosen = folders
     else:
@@ -1133,6 +1142,7 @@ def build_parser() -> argparse.ArgumentParser:
     standalone.add_argument("ids", nargs="*", help="module folders (ids)")
     standalone.add_argument("--all", action="store_true", help="every module")
     standalone.add_argument("--jobs", type=int, default=0, help="modules at the same time (default SKM_STANDALONE_JOBS or 4)")
+    standalone.add_argument("--with-tools", action="store_true", help="with --baseline: also the tools (standalone.tools)")
     standalone.add_argument("--baseline", action="store_true", help="modules recorded as pass; fail if one is not")
     standalone.add_argument("--update-baseline", action="store_true", help="record the results in the baseline")
     return parser

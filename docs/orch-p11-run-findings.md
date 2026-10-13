@@ -786,3 +786,7 @@
 | F6 | `core.provider.*` → `aicore.provider.*` в `docs/reference*.md` и `_doc` aicore-конфигов |
 
 Проверено: тесты harness (846), skiller (861), aicore (1478), `golden.py check`, `ecosystem-units.py check`, `public-hygiene` — зелёные. Не прогонялись полные V-проверки пункта закрытия (они уже были зелёными на `5bff4d61`; коррекция не трогает их входы, кроме перечисленных тестов) — полный прогон остаётся владельцу по схеме «один раз в конце фазы».
+
+### maind вне проверок ядра (решение владельца, #62)
+
+Владелец: maind — вспомогательный инструмент и не должен тестироваться вместе с ядром (тесты maind держат цепочки проверок: `standalone --baseline`, `test-integration.sh`, CI-задача `test`, зависимость порядка тестов #56 мешает ускорению). **Сделано:** понятие «инструмент» — `configs/ecosystem-units.json` `standalone.tools: ["maind"]` (форма проверяется `ecosystem-units check`); `standalone --baseline` пропускает инструменты (`--with-tools` добавляет); `scripts/test-integration.sh` гоняет `analyst` и `harness` (maind — с `--with-tools`); CI: тесты и `validate.sh` maind вынесены в отдельную задачу `tools` с `continue-on-error` (ядро не блокируют); тесты `ecosystem-units` (148, +2) и документация (`docs/develop.md`). Сами тесты maind остаются у модуля (`bash packages/maind/scripts/test.sh`) и проверяются отдельно. Для планов: приёмка пункта и полный прогон ядра **не включают** `packages/maind/scripts/test.sh`/`validate.sh`, если пункт не меняет maind (I14); пункты, меняющие maind, гоняют его тесты как свои быстрые проверки.

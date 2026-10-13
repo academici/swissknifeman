@@ -338,8 +338,9 @@ Never edit a managed block directly — edit the source and run `--write`.
 the partner's public command with JSON output, found by `aicore.util.partners` (`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`,
 then `PATH`; for planner `PLANNER_PLAN_PY` or `PLANNER_ROOT`). A missing partner is `PARTNER_UNAVAILABLE` on stderr and the command
 degrades; a test that needs a partner is skipped when none is found. `bash scripts/test-integration.sh` runs the tests of
-`analyst`, `maind` and `harness` with every partner wired from the hub layout, in a temporary `HOME`, so those tests run instead
-of being skipped. There is no `core/` folder any more; code that imported it imports `aicore`.
+`analyst` and `harness` with every partner wired from the hub layout, in a temporary `HOME`, so those tests run instead
+of being skipped. `maind` is an auxiliary tool outside the core verification (`standalone.tools` in `configs/ecosystem-units.json`):
+`standalone --baseline` and the integration run skip it unless `--with-tools` is given, and CI tests it in a separate job that never blocks the core. There is no `core/` folder any more; code that imported it imports `aicore`.
 
 **Bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to

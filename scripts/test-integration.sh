@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Runs the tests of the modules that read a partner module's output (analyst, maind, harness) with every partner wired
+# Runs the tests of the modules that read a partner module's output (analyst, harness) with every partner wired
 # from the hub layout: the variables a module reads to find its partners point at packages/<id> of this checkout, so
-# tests that need a partner run instead of being skipped.
+# tests that need a partner run instead of being skipped. maind is an auxiliary tool outside the core verification:
+# it joins only with --with-tools.
 set -uo pipefail
 HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -19,9 +20,11 @@ export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm"
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME
 unset SKM_ANALYST_BIN SKM_MAIND_BIN SKM_HARNESS_BIN SKM_SKILLER_BIN SKM_BRAIN_BIN SKM_ORCH_BIN MAIND_ANALYST_BIN
 
+modules=(analyst harness)
+[[ "${1:-}" == "--with-tools" ]] && modules+=(maind)
 failed=()
 count=0
-for module in analyst maind harness; do
+for module in "${modules[@]}"; do
   count=$((count + 1))
   echo "== $module: bash packages/$module/scripts/test.sh"
   bash "$HUB/packages/$module/scripts/test.sh" || failed+=("$module")

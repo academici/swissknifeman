@@ -1236,6 +1236,28 @@ class StandaloneTests(unittest.TestCase):
         self.assertIn("standalone alpha: pass", result.stdout)
         self.assertNotIn("beta", result.stdout)
 
+    def test_baseline_skips_the_tools_unless_asked(self):
+        self.tree.add_module("beta")
+        self.tree.write_json("packages/beta/unit.json", {**json.loads(
+            (self.tree.root / "packages/beta/unit.json").read_text(encoding="utf-8")),
+            "dev": {"test": ["python3", "-c", "import sys; sys.exit(0)"]}})
+        self.dev(test=["python3", "-c", "import sys; sys.exit(0)"])
+        self.tree.config["standalone"]["tools"] = ["beta"]
+        self.tree.set_baseline({}, {"alpha": "pass", "beta": "pass"})
+        core = self.standalone("--baseline")
+        self.assertEqual(core.returncode, 0, core.stderr)
+        self.assertIn("standalone alpha: pass", core.stdout)
+        self.assertNotIn("beta", core.stdout)  # a tool is not part of the core verification
+        both = self.standalone("--baseline", "--with-tools")
+        self.assertIn("standalone beta: pass", both.stdout)
+
+    def test_the_tools_shape_is_checked(self):
+        self.assertEqual(self.tree.check().returncode, 0)
+        self.tree.config["standalone"] = {"tools": ["nowhere"]}
+        result = self.tree.check()
+        self.assertIn("ECOSYSTEM_CONFIG", codes(result))
+        self.assertIn("standalone.tools", result.stderr)
+
     def test_baseline_fails_when_a_recorded_pass_regresses(self):
         self.dev(test=["python3", "-c", "import sys; sys.exit(1)"])
         self.tree.set_baseline({}, {"alpha": "pass"})

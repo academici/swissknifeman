@@ -29,9 +29,6 @@ jobs:
       - name: Test harness
         run: bash packages/harness/scripts/test.sh -v
 
-      - name: Test maind
-        run: bash packages/maind/scripts/test.sh -v
-
       - name: Test orch contracts
         run: bash packages/orch/scripts/test.sh -v
 
@@ -91,3 +88,20 @@ jobs:
         # lib + tests: Previously it was only linted lib/, and in tests/ garbage was piling up (unused
         # imports/variables). Now both — so that the test code maintains the same level.
         run: bash scripts/lint.sh
+
+  # maind is an auxiliary tool outside the core verification: it is tested on its own and never blocks the core.
+  tools:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test maind
+        run: bash packages/maind/scripts/test.sh -v
+
+      - name: Integration of the tools with their partners
+        run: bash scripts/test-integration.sh --with-tools

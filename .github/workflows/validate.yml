@@ -21,11 +21,22 @@ jobs:
       - name: Validate harness
         run: bash packages/harness/scripts/validate.sh
 
-      - name: Validate maind
-        run: bash packages/maind/scripts/validate.sh
-
       - name: Validate planner and plan fleet
         run: bash packages/planner/scripts/validate.sh --fleet
 
       - name: Validate orch contracts
         run: bash packages/orch/scripts/validate.sh
+
+  # maind is an auxiliary tool outside the core verification; its validation never blocks the core.
+  tools:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate maind
+        run: bash packages/maind/scripts/validate.sh

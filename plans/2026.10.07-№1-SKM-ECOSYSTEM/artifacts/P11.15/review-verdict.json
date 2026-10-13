@@ -1,0 +1,69 @@
+{
+  "selector": {
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "xhigh"
+  },
+  "session": "01a13375-ee35-7b02-8a1d-07e01a8943b9",
+  "verdict": "RED",
+  "candidate": {
+    "head": "89c858ecdd96d43bef93c3f865bb38086223f68d",
+    "base": "a2e89b8669755a91439ba7d1c05a5f5cc0e86ab8"
+  },
+  "route": "init.model=grok-4.7 (stream init event); effort xhigh from argv (--effort xhigh) and session summary.json (current_model_id=grok-4.7, reasoning_effort=xhigh); CLI exit 0; result success, 61 turns, no spawn_subagent calls; modelUsage grok-4.7-build",
+  "launch": "python3 plan.py bridge orch launch reviewer grok --model grok-4.7 --effort xhigh --cwd <clone> (argv.json, launch.json); stdin = review-brief.md",
+  "stream": ".swissknifeman/state/review/P11.15/review-grok-4.7.stream.jsonl",
+  "stderr": ".swissknifeman/state/review/P11.15/review-grok-4.7.stderr (empty)",
+  "reproduction_transcript": ".swissknifeman/state/review/P11.15/repro.txt",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "medium",
+      "owner": "P11.6",
+      "file": "packages/harness/configs/claude-code/hooks/auto-approve/lib/safedirs.py",
+      "line": 99,
+      "report": "Hook and CLI registry readers open only `~/.swissknifeman/projects.json` and `~/.swissknifeman/topology.json`. After `save_db` / `save_topology` the owner files exist and the legacy files do not:\n\n- projects: `/tmp/tmp.2FdkgogoF1/.local/state/swissknifeman/skiller/projects.json`\n- topology: `/tmp/tmp.2FdkgogoF1/.local/state/swissknifeman/maind/topology.json`\n\n`load_allowlist` on a valid `<config>/harness/safe-dirs.json` with `include_registered_projects: true` and `dirs: []` returned `ALLOW_ROOTS []`, `PROJECT_COVERED False`, `RM_IN_REGISTERED_PROJECT_IS_SAFE False`. `harness safe-dirs prune-ask --all-projects` printed `ask-rules rm not found - pure` (it reads `packages/harness/lib/harness/safedirs.py:192`). The memory hook (`packages/harness/configs/claude-code/hooks/memory/lib/common.sh:68`) set `MEM_TOPO` and `MEM_PROJDB` to the legacy paths, `topo_node_path brain` was empty, and `resolve_member_path demo` printed `demo`. Copying the same records to the legacy files made the project covered, `rm` safe, `topo_node_path brain` equal to `/tmp/tmp.2FdkgogoF1/vault/brain`, and `resolve_member_path demo` equal to `/tmp/tmp.2FdkgogoF1/work/demo`. No warning was printed. `cmd_init` still names that legacy registry (`packages/harness/lib/harness/safedirs.py:108`). `docs/architecture/ecosystem.md:261` says this move is done and that the legacy files are read with a warning.\n\nThe list stays fail-closed: `rm` in the registered project is denied. A new install, which no longer creates the legacy files, never contributes onboarded projects to the allowlist, and the memory hook resolves members to a bare name.\n\nExpected: the same active file as `skiller` `Env.db_file` and `maind` `Env.topology_file` (new file when it exists, otherwise the legacy file, with one warning)."
+    },
+    {
+      "id": "F2",
+      "severity": "low",
+      "owner": "P11.6",
+      "file": "packages/skiller/install.sh",
+      "line": 125,
+      "report": "The installer prompt is gated on `[[ ! -f \"$HOME/.swissknifeman/topology.json\" ]]`. With the new topology file present and the legacy file absent, that test is true (`INSTALL_CONDITION_WOULD_PROMPT yes`). `install.sh` was not executed.\n\nExpected: the prompt uses the same path as `maind` `Env.topology_file`."
+    },
+    {
+      "id": "F3",
+      "severity": "low",
+      "owner": "P11.9",
+      "file": "packages/harness/lib/harness/safedirs.py",
+      "line": 272,
+      "report": "`harness safe-dirs` with no arguments prints `init create ~/.swissknifeman/safe-dirs.json`. `new_state_file()` in that same home is `/tmp/tmp.2FdkgogoF1/.config/swissknifeman/harness/safe-dirs.json`, which is the file the ladder writes when none exists.\n\nExpected: the help names `<config>/harness/safe-dirs.json`, and names the legacy file only as the existing active source."
+    },
+    {
+      "id": "F4",
+      "severity": "medium",
+      "owner": "P11.13",
+      "file": "docs/core/index.md",
+      "line": 40,
+      "report": "The core tombstone still tells the reader to run:\n\n`PYTHONPATH=. python3 -m unittest discover -s core/tests`\n\nThat command exits 1:\n\n`ImportError: Start directory is not importable: 'core/tests'`\n\nThe comment on that line says the shim and the modules are still in core. `core/` is absent.\n\nExpected: the development block points only at `bash packages/aicore/scripts/test.sh`."
+    },
+    {
+      "id": "F5",
+      "severity": "medium",
+      "owner": "P11.6",
+      "file": "bootstrap/skills/package-architecture/SKILL.md",
+      "line": 116,
+      "report": "The canonical package skill says topology is implemented by `lib/skiller/topology.py`, stored at `~/.swissknifeman/topology.json`, and saved with a `.bak` backup. `packages/skiller/lib/skiller/topology.py` is absent (`topology.py ABSENT`). `maind.topology.save_topology` writes `<state>/maind/topology.json` through `aicore.state.backup`. The same skill at line 96, and `packages/skiller/docs/guide/cli.md:214`, still present `~/.swissknifeman/projects.json` as the current project map. The same stale path is the current location in `packages/skiller/README.md:96`, `SECURITY.md:53`, `docs/guide/installation.md:161`, `docs/guide/troubleshooting.md:4`, and `docs/guide/integration-checklist.md:103`. `cli.md:170` already documents the `maind topology` alias.\n\nExpected: the skill and those guides name `<state>/skiller/projects.json` and `<state>/maind/topology.json`, with the legacy files as a warned fallback."
+    },
+    {
+      "id": "F6",
+      "severity": "low",
+      "owner": "P11.13",
+      "file": "docs/reference.md",
+      "line": 33,
+      "report": "The live \"Taken\" cells name `core.provider.distribution` and `core.provider.projection`. The same claim is the present tense in `docs/reference/provider-distribution.md:4`, `docs/reference/provider-projection.md:5`, and the `_doc` strings of `packages/aicore/configs/provider-distribution.json:3` and `provider-projection.json:3`.\n\n`PYTHONPATH=packages/aicore/lib:. python3 -c 'import core.provider.distribution'` exits 1 with `ModuleNotFoundError: No module named 'core'`. `import aicore.provider.distribution` loads `packages/aicore/lib/aicore/provider/distribution.py`.\n\nExpected: those sentences name `aicore.provider.distribution` and `aicore.provider.projection`."
+    }
+  ],
+  "reviewer_report": "VERDICT: RED\n\nHEAD `89c858ecd`. Isolated home `/tmp/tmp.2FdkgogoF1` (no `SKM_HOME`, no XDG overrides). Full transcript: `/tmp/p11-review-repro.txt`.\n\n## Findings\n\n**F1 medium, P11.6, `packages/harness/configs/claude-code/hooks/auto-approve/lib/safedirs.py:99`**\n\nHook and CLI registry readers open only `~/.swissknifeman/projects.json` and `~/.swissknifeman/topology.json`. After `save_db` / `save_topology` the owner files exist and the legacy files do not:\n\n- projects: `/tmp/tmp.2FdkgogoF1/.local/state/swissknifeman/skiller/projects.json`\n- topology: `/tmp/tmp.2FdkgogoF1/.local/state/swissknifeman/maind/topology.json`\n\n`load_allowlist` on a valid `<config>/harness/safe-dirs.json` with `include_registered_projects: true` and `dirs: []` returned `ALLOW_ROOTS []`, `PROJECT_COVERED False`, `RM_IN_REGISTERED_PROJECT_IS_SAFE False`. `harness safe-dirs prune-ask --all-projects` printed `ask-rules rm not found - pure` (it reads `packages/harness/lib/harness/safedirs.py:192`). The memory hook (`packages/harness/configs/claude-code/hooks/memory/lib/common.sh:68`) set `MEM_TOPO` and `MEM_PROJDB` to the legacy paths, `topo_node_path brain` was empty, and `resolve_member_path demo` printed `demo`. Copying the same records to the legacy files made the project covered, `rm` safe, `topo_node_path brain` equal to `/tmp/tmp.2FdkgogoF1/vault/brain`, and `resolve_member_path demo` equal to `/tmp/tmp.2FdkgogoF1/work/demo`. No warning was printed. `cmd_init` still names that legacy registry (`packages/harness/lib/harness/safedirs.py:108`). `docs/architecture/ecosystem.md:261` says this move is done and that the legacy files are read with a warning.\n\nThe list stays fail-closed: `rm` in the registered project is denied. A new install, which no longer creates the legacy files, never contributes onboarded projects to the allowlist, and the memory hook resolves members to a bare name.\n\nExpected: the same active file as `skiller` `Env.db_file` and `maind` `Env.topology_file` (new file when it exists, otherwise the legacy file, with one warning).\n\n**F2 low, P11.6, `packages/skiller/install.sh:125`**\n\nThe installer prompt is gated on `[[ ! -f \"$HOME/.swissknifeman/topology.json\" ]]`. With the new topology file present and the legacy file absent, that test is true (`INSTALL_CONDITION_WOULD_PROMPT yes`). `install.sh` was not executed.\n\nExpected: the prompt uses the same path as `maind` `Env.topology_file`.\n\n**F3 low, P11.9, `packages/harness/lib/harness/safedirs.py:272`**\n\n`harness safe-dirs` with no arguments prints `init create ~/.swissknifeman/safe-dirs.json`. `new_state_file()` in that same home is `/tmp/tmp.2FdkgogoF1/.config/swissknifeman/harness/safe-dirs.json`, which is the file the ladder writes when none exists.\n\nExpected: the help names `<config>/harness/safe-dirs.json`, and names the legacy file only as the existing active source.\n\n**F4 medium, P11.13, `docs/core/index.md:40`**\n\nThe core tombstone still tells the reader to run:\n\n`PYTHONPATH=. python3 -m unittest discover -s core/tests`\n\nThat command exits 1:\n\n`ImportError: Start directory is not importable: 'core/tests'`\n\nThe comment on that line says the shim and the modules are still in core. `core/` is absent.\n\nExpected: the development block points only at `bash packages/aicore/scripts/test.sh`.\n\n**F5 medium, P11.6, `bootstrap/skills/package-architecture/SKILL.md:116`**\n\nThe canonical package skill says topology is implemented by `lib/skiller/topology.py`, stored at `~/.swissknifeman/topology.json`, and saved with a `.bak` backup. `packages/skiller/lib/skiller/topology.py` is absent (`topology.py ABSENT`). `maind.topology.save_topology` writes `<state>/maind/topology.json` through `aicore.state.backup`. The same skill at line 96, and `packages/skiller/docs/guide/cli.md:214`, still present `~/.swissknifeman/projects.json` as the current project map. The same stale path is the current location in `packages/skiller/README.md:96`, `SECURITY.md:53`, `docs/guide/installation.md:161`, `docs/guide/troubleshooting.md:4`, and `docs/guide/integration-checklist.md:103`. `cli.md:170` already documents the `maind topology` alias.\n\nExpected: the skill and those guides name `<state>/skiller/projects.json` and `<state>/maind/topology.json`, with the legacy files as a warned fallback.\n\n**F6 low, P11.13, `docs/reference.md:33`**\n\nThe live \"Taken\" cells name `core.provider.distribution` and `core.provider.projection`. The same claim is the present tense in `docs/reference/provider-distribution.md:4`, `docs/reference/provider-projection.md:5`, and the `_doc` strings of `packages/aicore/configs/provider-distribution.json:3` and `provider-projection.json:3`.\n\n`PYTHONPATH=packages/aicore/lib:. python3 -c 'import core.provider.distribution'` exits 1 with `ModuleNotFoundError: No module named 'core'`. `import aicore.provider.distribution` loads `packages/aicore/lib/aicore/provider/distribution.py`.\n\nExpected: those sentences name `aicore.provider.distribution` and `aicore.provider.projection`.\n\n## Checked, holds\n\n- `core/` and `packages/artifex` are absent. `python3 scripts/ecosystem-units.py check --strict` exits 0. `python3 scripts/public-hygiene.py` reports 0 violations.\n- No `(3, 8)` under `packages/**/*.py`. The maind, analyst, harness, and skiller doctors import `aicore.MIN_PYTHON`.\n- `provides.doctor` on maind, analyst, and harness `unit.json` is `check-result/v1`. maind declares `urn:swissknifeman:maind:mcp-tools` at `schemas/mcp-tools/v1`.\n- With no legacy file, skiller and maind write the new state paths and leave `~/.swissknifeman/{projects,topology}.json` absent.\n- The safe-dirs ladder loads `<config>/harness/safe-dirs.json`. An allowlist with no roots does not mark `rm` safe. `load_allowlist` returns `None` for an unreadable or invalid document (`safedirs.py:72`).\n- The memory hook reads `.swissknifeman/hooks.env` before `memory.env.ini` (`common.sh:26`).\n- `maind health --plan-repair` returns before `apply_repair` (`health.py:576`). The deep round-trip stores a fact only when a memory daemon answers (`health.py:188`). That combination was not executed.\n\nModule suites, golden files, doctor filesystem snapshots, and the MCP and analyst event commands were not re-run.\n\nFINDINGS: 6"
+}

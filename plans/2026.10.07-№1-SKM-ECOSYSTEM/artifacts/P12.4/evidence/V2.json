@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T124217Z-bd8b85:P12.4:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P12.4",
+  "candidate": {
+    "head": "6ceaad50a9091fdb924b1fd4a1361b76ee6764f6",
+    "dirty_digest": "1b9e47f11f4b37a4d8aa1aa2a59860c6c1a587fe8afdc6b3eb1d02502983db08"
+  },
+  "started_at": "2026-10-13T13:04:56Z",
+  "procedure": {
+    "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T13:05:09Z"
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "urn:swissknifeman:aicore:plugin-catalog:v1",
+  "plugins": [
+    {"name": "a", "source": "a", "description": "A", "category": ""}
+  ]
+}

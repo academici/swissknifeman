@@ -22,13 +22,17 @@ from aicore.provider.values import CapabilityId, CapabilityRequirement, Provider
 
 # Publication primitives live in aicore.content.publication; the distribution plans in aicore.delivery.
 from aicore.content.publication import (
-    codex_marketplace_entry as _codex_marketplace_entry,
     codex_plugin_manifest as _codex_plugin_manifest, manifest_bytes as _manifest_text,
     package_rel, publication_lock, render_whole_file,
     skill_runtime_files as _codex_skill_runtime_files, validate_publication_capabilities)
 from aicore.delivery.distribution import (
     DistributionIdentity, ProviderDistributionPlan, connect_distribution_plan,
     distribution_artifact, vendor_distribution_plan)
+
+
+# skiller's own plugin-catalog/v1 file, declared in its unit.json and read by aicore.content.marketplace.
+PLUGIN_CATALOG_PATH = ".claude-plugin/catalog.json"
+PLUGIN_CATALOG_SCHEMA = "urn:swissknifeman:aicore:plugin-catalog:v1"
 
 
 def _generator(package_prefix: str) -> str:
@@ -221,15 +225,14 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
         raise TypeError("catalog must be PublicationCatalog")
     repo_root = repo_root.resolve()
     package_root = package_root.resolve()
-    rel_package = package_rel(repo_root, package_root)
-
-    def source_path(relative: str) -> str:
-        return f"./{rel_package}/{relative}" if rel_package else f"./{relative}"
-
     by_id = {skill.semantic_id: skill for skill in catalog.skills}
     metadata = {name: dict(data) for name, data in catalog.bucket_metadata}
     artifacts = []
-    marketplace_plugins = []
+    plugins = []
+    # The root Claude marketplace and the Codex index are assembled from the unit.json of the
+    # modules (aicore.content.marketplace); skiller states its own plugins in a plugin-catalog/v1
+    # file: every path is relative to the package.
+    codex_policy = {"install_policy": "explicit", "auth": "none"}
     for unit in catalog.units:
         if unit.kind == "bucket":
             meta = metadata[unit.plugin_id]
@@ -245,41 +248,42 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 package_root / "skills" / unit.plugin_id / ".claude-plugin" / "plugin.json",
                 unit, plugin_data, tuple(by_id[item] for item in unit.member_ids), repo_root,
                 catalog.package_version, package_root=package_root))
-            marketplace_plugins.append({
+            plugins.append({
                 "name": unit.plugin_id,
-                "source": source_path(f"skills/{unit.plugin_id}"),
+                "source": f"skills/{unit.plugin_id}",
                 "description": meta["description"],
                 "category": meta.get("category", ""),
-                "tags": meta.get("tags", []),
-                "package": "skiller",
+                "tags": list(meta.get("tags", [])),
+                "codex": dict(codex_policy),
             })
         elif unit.kind == "bucket-alias":
             meta = metadata[unit.plugin_id]
-            paths = [source_path(by_id[item].source_path.removesuffix("/SKILL.md"))
+            paths = [by_id[item].source_path.removesuffix("/SKILL.md")
                      for item in unit.member_ids]
-            marketplace_plugins.append({
+            plugins.append({
                 "name": unit.plugin_id,
                 "source": "./",
                 "skills": paths,
                 "description": meta.get("description")
                     or f"Alias: bucket moved to '{meta['alias_of']}'",
                 "category": meta.get("category", ""),
-                "tags": meta.get("tags", []),
-                "package": "skiller",
+                "tags": list(meta.get("tags", [])),
                 "alias_of": meta["alias_of"],
             })
         elif unit.kind == "curated":
-            marketplace_plugins.append({
+            plugins.append({
                 "name": unit.plugin_id,
                 "source": "./",
-                "skills": [source_path(by_id[item].source_path.removesuffix("/SKILL.md"))
+                "skills": [by_id[item].source_path.removesuffix("/SKILL.md")
                            for item in unit.member_ids],
                 "description": "Curated always-on core: token-economy skills (context-economy, "
                                "anti-drift, verify-claims, …) — lean replacement for the "
                                "general+oss-dev buckets in every project",
                 "category": "meta",
                 "tags": ["core", "token-economy", "always-on"],
-                "package": "skiller",
+                "codex": {"source": "adapters/codex/core",
+                          "description": "Curated always-on core skills",
+                          "category": "meta", "tags": ["core", "token-economy"], **codex_policy},
             })
         elif unit.kind == "meta":
             plugin_data = {"name": "generate-skill", "description": catalog.generate_skill_description,
@@ -287,35 +291,31 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
             artifacts.append(_render_artifact(
                 package_root / "generate-skill" / ".claude-plugin" / "plugin.json", unit,
                 plugin_data, (), repo_root, catalog.package_version, package_root=package_root))
-            marketplace_plugins.append({
-                "name": "generate-skill", "source": source_path("generate-skill"),
+            plugins.append({
+                "name": "generate-skill", "source": "generate-skill",
                 "description": catalog.generate_skill_description, "category": "meta",
-                "tags": ["meta", "authoring"], "package": "skiller",
+                "tags": ["meta", "authoring"], "codex": dict(codex_policy),
             })
         elif unit.kind == "management":
-            marketplace_plugins.append({
-                "name": "skm", "source": source_path("skm"),
+            plugins.append({
+                "name": "skm", "source": "skm",
                 "description": "skiller CLI — managing project skills: buckets "
                                "(connect/vendor), integrate, status",
                 "category": "meta", "tags": ["cli", "skills", "management"],
-                "package": "skiller",
+                "codex": {"source": "adapters/codex/skm",
+                          "description": "skiller management skill adapter", **codex_policy},
             })
 
-    marketplace_plugins.extend({
-        "name": sibling.name, "source": f"./{sibling.source_path}",
-        "description": sibling.description, "category": sibling.category,
-        "tags": list(sibling.tags), "package": sibling.package,
-    } for sibling in catalog.sibling_plugins)
-    marketplace_data = {
-        "name": catalog.marketplace_name,
-        "owner": dict(catalog.owner),
-        "plugins": sorted(marketplace_plugins, key=lambda plugin: plugin["name"]),
+    catalog_data = {
+        "schema": PLUGIN_CATALOG_SCHEMA,
+        "marketplace": {"name": catalog.marketplace_name, "owner": dict(catalog.owner)},
+        "plugins": sorted(plugins, key=lambda plugin: plugin["name"]),
     }
-    all_sources = tuple(catalog.skills) + tuple(catalog.sibling_plugins)
-    artifacts.append(_render_artifact(repo_root / ".claude-plugin" / "marketplace.json",
-                                      PublicationUnit("claude-marketplace", "claude-marketplace",
-                                                      "marketplace", ()), marketplace_data,
-                                      all_sources, repo_root, catalog.package_version, package_root=package_root))
+    artifacts.append(_render_artifact(package_root / PLUGIN_CATALOG_PATH,
+                                      PublicationUnit("plugin-catalog", "plugin-catalog",
+                                                      "catalog", ()), catalog_data,
+                                      tuple(catalog.skills), repo_root, catalog.package_version,
+                                      package_root=package_root))
     return tuple(artifacts)
 
 
@@ -335,10 +335,6 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
     by_id = {skill.semantic_id: skill for skill in catalog.skills}
     metadata = {name: dict(data) for name, data in catalog.bucket_metadata}
     artifacts: list[CodexPublicationArtifact] = []
-    plugins: list[dict[str, object]] = []
-
-    def source_path(path: Path) -> str:
-        return "./" + path.relative_to(repo_root).as_posix()
 
     for unit in catalog.units:
         if unit.kind == "bucket":
@@ -351,8 +347,6 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 tuple(by_id[item] for item in unit.member_ids), repo_root,
                 catalog.package_version, content_version=unit.content_version,
                 package_root=package_root))
-            plugins.append(_codex_marketplace_entry(unit.plugin_id, source_path(root),
-                                                    meta["description"], meta))
         elif unit.kind == "meta":
             root = package_root / "generate-skill"
             data = _codex_plugin_manifest("generate-skill", unit.content_version,
@@ -362,40 +356,14 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 root / ".codex-plugin" / "plugin.json", unit, data, (), repo_root,
                 catalog.package_version, content_version=unit.content_version,
                 package_root=package_root))
-            plugins.append(_codex_marketplace_entry("generate-skill", source_path(root),
-                                                    catalog.generate_skill_description,
-                                                    {"category": "meta", "tags": ["meta", "authoring"]}))
         elif unit.kind == "curated":
             root = package_root / "adapters" / "codex" / "core"
             artifacts.extend(_render_codex_bundle(
                 root, unit, catalog, tuple(by_id[item] for item in unit.member_ids), repo_root, package_root,
                 description="Curated always-on core skills", skill_root="./skills"))
-            plugins.append(_codex_marketplace_entry("core", source_path(root),
-                                                    "Curated always-on core skills",
-                                                    {"category": "meta", "tags": ["core", "token-economy"]}))
         elif unit.kind == "management":
             root = package_root / "adapters" / "codex" / "skm"
             artifacts.extend(_render_codex_skm_bundle(root, unit, catalog, repo_root, package_root=package_root))
-            plugins.append(_codex_marketplace_entry("skm", source_path(root),
-                                                    "skiller management skill adapter",
-                                                    {"category": "meta", "tags": ["cli", "skills", "management"]}))
-
-    codex_siblings = tuple(
-        sibling for sibling in catalog.sibling_plugins if sibling.codex_supported)
-    plugins.extend(_codex_marketplace_entry(
-        sibling.name, f"./{sibling.source_path}", sibling.description,
-        {"category": sibling.category, "tags": sibling.tags})
-        for sibling in codex_siblings)
-
-    marketplace = {
-        "name": catalog.marketplace_name,
-        "plugins": sorted(plugins, key=lambda plugin: str(plugin["name"])),
-    }
-    artifacts.append(_render_codex_artifact(
-        repo_root / ".agents" / "plugins" / "marketplace.json",
-        PublicationUnit("codex-marketplace", "codex-marketplace", "marketplace", ()),
-        marketplace, tuple(catalog.skills) + codex_siblings,
-        repo_root, catalog.package_version, package_root=package_root))
     return tuple(artifacts)
 
 

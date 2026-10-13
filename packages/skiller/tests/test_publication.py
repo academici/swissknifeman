@@ -10,7 +10,7 @@ from skiller.host import load_host
 from skiller.publication import PublicationCatalog, build_publication_catalog
 from skiller.registry import (build_claude_publication, build_plugin_manifests,
                               build_registry)
-from tests.fixtures import make_registry
+from tests.fixtures import hub_indexes, make_registry
 
 
 def _artifact_digest(artifacts, repo_root):
@@ -87,8 +87,7 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
         self.assertNotIn("repository-bootstrap", buckets)
 
         artifacts = build_claude_publication(env, metadata, buckets, registry)
-        marketplace = json.loads(next(item.managed_bytes for item in artifacts
-                                      if item.target.name == "marketplace.json"))
+        marketplace = hub_indexes(env, metadata, buckets, registry)["claude"]
         names = {plugin["name"] for plugin in marketplace["plugins"]}
         self.assertNotIn("repository-bootstrap", names)
         for artifact in artifacts:

@@ -11,10 +11,10 @@ from skiller.doctor import declared_fixture_unit_set
 from skiller.host import Host, load_host
 from skiller.publication import _generator, render_repository_bootstrap_projections
 from aicore.content.publication import package_rel
-from skiller.registry import (_legacy_build_plugin_manifests, _sibling_plugins,
+from skiller.registry import (_sibling_plugins,
                               build_catalog, build_claude_publication,
                               build_codex_publication, build_registry)
-from tests.fixtures import make_registry
+from tests.fixtures import hub_indexes, make_registry
 
 
 class HostPublicationCase(unittest.TestCase):
@@ -53,29 +53,41 @@ class HostPublicationCase(unittest.TestCase):
                           encoding="utf-8")
         return load_host(self.root)
 
-    def _marketplace(self, builder):
-        artifacts = builder(self.env, self.metadata, self.buckets, self.registry)
-        return json.loads(next(a.managed_bytes for a in artifacts
-                               if a.target.name == "marketplace.json"))
+    def _unit(self, name, *, codex):
+        """A hub module `packages/<name>` that ships one plugin and declares it in unit.json."""
+        root = self._plugin(f"packages/{name}", name, codex=codex)
+        (root / "unit.json").write_text(json.dumps({
+            "id": name, "provides": {"plugins": [{"name": name, "manifest": ".claude-plugin/plugin.json"}]}}),
+            encoding="utf-8")
+        return root
+
+    def _marketplace(self, which):
+        return hub_indexes(self.env, self.metadata, self.buckets, self.registry)[which]
+
+    def test_marketplace_takes_modules_from_unit_json_and_provider_support(self):
+        self._unit("alpha", codex=True)
+        self._unit("omega", codex=False)
+        for which in ("claude", "codex"):
+            plugins = {p["name"]: p for p in self._marketplace(which)["plugins"]}
+            self.assertEqual(plugins["alpha"]["source"], "./packages/alpha")
+            self.assertNotIn("hidden", plugins)  # a folder without unit.json is not a module
+            self.assertEqual("omega" in plugins, which == "claude")
+        self.assertEqual({p["name"]: p["package"] for p in self._marketplace("claude")["plugins"]}["alpha"],
+                         "alpha")
+
+    def test_marketplace_is_skiller_only_without_modules(self):
+        for which in ("claude", "codex"):
+            names = {p["name"] for p in self._marketplace(which)["plugins"]}
+            self.assertFalse(names & {"alpha", "omega", "hidden"})
+        self.assertIn("generate-skill", {p["name"] for p in self._marketplace("claude")["plugins"]})
 
     def test_siblings_use_host_globs_and_provider_support(self):
-        self._host(["plugins/*"])
-        for builder in (build_claude_publication, build_codex_publication):
-            plugins = {p["name"]: p for p in self._marketplace(builder)["plugins"]}
-            self.assertEqual(plugins["alpha"]["source"], "./plugins/alpha")
-            self.assertNotIn("hidden", plugins)
-            self.assertEqual("omega" in plugins, builder is build_claude_publication)
-        legacy = _legacy_build_plugin_manifests(self.env, self.metadata, self.buckets)
-        plugins = {p["name"]: p for p in legacy[-1][1]["plugins"]}
-        self.assertEqual(plugins["alpha"]["source"], "./plugins/alpha")
-
-    def test_siblings_are_empty_without_host(self):
+        """The host globs still feed the sibling scan of the doctor and `module_skills`."""
+        host = self._host(["plugins/*"])
+        siblings = _sibling_plugins(self.repo, self.root, host)
+        self.assertEqual([(p.name, p.source_path, p.codex_supported) for p in siblings],
+                         [("alpha", "plugins/alpha", True), ("omega", "plugins/omega", False)])
         self.assertEqual(_sibling_plugins(self.repo, self.root, Host.empty()), ())
-        for builder in (build_claude_publication, build_codex_publication):
-            names = {p["name"] for p in self._marketplace(builder)["plugins"]}
-            self.assertFalse(names & {"alpha", "omega", "hidden"})
-        legacy = _legacy_build_plugin_manifests(self.env, self.metadata, self.buckets)
-        self.assertFalse({p["name"] for p in legacy[-1][1]["plugins"]} & {"alpha", "omega"})
 
     def test_overlapping_patterns_are_deduplicated_sorted_and_exclude_self(self):
         self._plugin("vendor/skiller", "self", codex=True)
@@ -88,8 +100,8 @@ class HostPublicationCase(unittest.TestCase):
         from aicore.content import publication
         real_render = publication.plan_artifact_render
         with mock.patch.object(publication, "plan_artifact_render", wraps=real_render) as render:
-            self._marketplace(build_claude_publication)
-            self._marketplace(build_codex_publication)
+            build_claude_publication(self.env, self.metadata, self.buckets, self.registry)
+            build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         meta_sources = [source.path for call in render.call_args_list
                         for source in call.args[0].canonical_sources
                         if source.source_id == "skiller.publication.meta"]

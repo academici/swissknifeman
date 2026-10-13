@@ -13,6 +13,7 @@ GROUPS = {
     "schema": ("aicore.util.schemacompat", "main", "contract tools: compat"),
     "events": ("aicore.ext.cli", "main", "project event journal: emit, list, deliver, replay, status"),
     "ext": ("aicore.ext.cli", "ext_main", "extensions: plugins, overlays, conformance, status"),
+    "marketplace": ("aicore.content.marketplace", "main", "hub marketplace from unit.json: build [--check]"),
 }
 
 _HELP = ("-h", "--help", "help")

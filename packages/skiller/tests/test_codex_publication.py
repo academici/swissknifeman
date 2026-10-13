@@ -12,6 +12,7 @@ from skiller.publication import (
     assert_root_bootstrap_set_completeness, load_repository_bootstrap_config,
     render_repository_bootstrap_projections)
 from aicore.content.publication import skill_runtime_files as _codex_skill_runtime_files
+from tests.fixtures import hub_indexes
 from skiller.registry import (build_codex_publication, build_registry,
                               build_repository_bootstrap_publication, _sibling_plugins)
 
@@ -51,9 +52,8 @@ class TestCodexPublication(unittest.TestCase):
         second = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         self.assertEqual(first, second)
         paths = [item.target.relative_to(self.repo_root).as_posix() for item in first]
-        self.assertIn(".agents/plugins/marketplace.json", paths)
-        marketplace = json.loads(next(item.managed_bytes for item in first
-                                      if item.target.name == "marketplace.json"))
+        self.assertNotIn(".agents/plugins/marketplace.json", paths)  # assembled from unit.json
+        marketplace = hub_indexes(self.env, self.metadata, self.buckets, self.registry)["codex"]
         self.assertEqual(marketplace["name"], self.golden["marketplace_name"])
         names = [plugin["name"] for plugin in marketplace["plugins"]]
         self.assertEqual(names, sorted(names))
@@ -172,8 +172,7 @@ class TestCodexPublication(unittest.TestCase):
                       if skill["bucket"] == "repository-bootstrap"}
         self.assertEqual(member_ids, set())
         first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
-        marketplace = json.loads(next(item.managed_bytes for item in first
-                                      if item.target.name == "marketplace.json"))
+        marketplace = hub_indexes(self.env, self.metadata, self.buckets, self.registry)["codex"]
         names = {plugin["name"] for plugin in marketplace["plugins"]}
         self.assertNotIn("repository-bootstrap", names)
         self.assertFalse(any(item.publication_unit_id in {"bucket:repository-bootstrap",

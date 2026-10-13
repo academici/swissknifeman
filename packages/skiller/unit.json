@@ -14,8 +14,7 @@
     "install": ["install.sh"],
     "config": "configs/config.schema.json",
     "plugins": [
-      {"name": "skm", "manifest": "skm/.claude-plugin/plugin.json"},
-      {"name": "generate-skill", "manifest": "generate-skill/.claude-plugin/plugin.json"}
+      {"name": "skiller", "catalog": ".claude-plugin/catalog.json"}
     ],
     "contracts": [
       {"id": "urn:skiller", "path": "schema", "version": "v1", "stability": "beta"},

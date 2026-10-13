@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "7627b0a01bf0",
-  "reason": "слияние p12-notes",
+  "captured_from": "6ceaad50a909",
+  "reason": "маркетплейс и Codex-индекс собираются из unit.json: catalog.json skiller; package записи task теперь planner",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

@@ -680,7 +680,7 @@
       "description": "Deprecated compatibility alias of the planner plugin: /task:* commands for one minor release; use /planner:*.",
       "category": "ecosystem",
       "tags": [],
-      "package": "task"
+      "package": "planner"
     },
     {
       "name": "voice-ai",

@@ -71,10 +71,8 @@ class TestProviderPublicationParity(unittest.TestCase):
         self.assertEqual(catalog_ids, expected_ids)
         self.assertEqual(tuple(sorted(buckets)), expected_buckets)
 
-        claude_marketplace = json.loads(next(item.managed_bytes for item in claude
-                                             if item.target.name == "marketplace.json"))
-        codex_marketplace = json.loads(next(item.managed_bytes for item in codex
-                                            if item.target.name == "marketplace.json"))
+        indexes = fx.hub_indexes(self.env, metadata, buckets, registry)
+        claude_marketplace, codex_marketplace = indexes["claude"], indexes["codex"]
         claude_names = {item["name"] for item in claude_marketplace["plugins"]}
         codex_names = {item["name"] for item in codex_marketplace["plugins"]}
         expected_plugins = (set(expected_buckets) - private_buckets) \

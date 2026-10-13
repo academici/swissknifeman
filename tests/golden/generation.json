@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "7627b0a01bf0",
-  "reason": "слияние p12-notes",
+  "captured_from": "6ceaad50a909",
+  "reason": "маркетплейс и Codex-индекс собираются из unit.json: catalog.json skiller; package записи task теперь planner",
   "generators": [
     {
       "id": "skiller-registry",
@@ -18,6 +18,7 @@
         "packages/skiller/skills/*/.codex-plugin/plugin.json",
         "packages/skiller/generate-skill/.claude-plugin/plugin.json",
         "packages/skiller/generate-skill/.codex-plugin/plugin.json",
+        "packages/skiller/.claude-plugin/catalog.json",
         "packages/skiller/adapters/codex/**",
         "packages/skiller/docs/guide/budget.md",
         "packages/skiller/docs/guide/graph.md",
@@ -179,7 +180,7 @@
     ".agents/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
     ".agents/skills/release-discipline/SKILL.md": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9",
     ".agents/skills/skill-authoring/SKILL.md": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8",
-    ".claude-plugin/marketplace.json": "496d2771139005ce4c0cac25258e3d01cb206b0a673b014b93907a3eb304891f",
+    ".claude-plugin/marketplace.json": "a2f5aa38bb7e735b335c3c1ba142df28d176c3c42fc33a038ab11d700567f68e",
     ".claude/skills/cross-project-optimizer/SKILL.md": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6",
     ".claude/skills/decision-verification/SKILL.md": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a",
     ".claude/skills/docs-maintenance/SKILL.md": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10",
@@ -230,6 +231,7 @@
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "9df646c85be25dca0a689708d43f460b3166a67dbef1fc330a5f70414f1d331f",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "8de59557e90f6491267b6c32ed833eda2f70e6e28313dc7edbd069f0a0d6e72e",
     "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "e1c29b7e21396ed9a1161393dd2a211611c188f43c82ed4b1dc284064c7b45d3",
+    "packages/skiller/.claude-plugin/catalog.json": "5d7db1bd2ac6733507805d566dd1cec3586600d0bb4cd19b13d1f3d48e5f1e34",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "40aa013bca21f181e007ad52aac83643e43169ef231691f3b0bfeba2c2ef149d",
     "packages/skiller/adapters/codex/core/publication-lock.json": "e87ad3716d9e5a19e3b1bbaf31238f0e677967663b86941a349a1228d7b853d4",
     "packages/skiller/adapters/codex/core/skills/general/anti-drift/SKILL.md": "372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8",

@@ -417,6 +417,12 @@ def _check_paths(ctx, rel_base, manifest, doc) -> list:
     for rel in provides.get("cli", ()):
         probe("cli", rel, "provides.cli", executable=True)
     for plugin in provides.get("plugins", ()):
+        if "manifest" not in plugin:  # `source` (plugin folder) or `catalog` (plugin-catalog/v1 file)
+            if "source" in plugin:
+                probe("plugin", plugin["source"] + "/.claude-plugin/plugin.json", f"provides.plugins[{plugin['name']}]")
+            else:
+                probe("plugin", plugin["catalog"], f"provides.plugins[{plugin['name']}]")
+            continue
         target = probe("plugin", plugin["manifest"], f"provides.plugins[{plugin['name']}]")
         if target is not None:
             try:

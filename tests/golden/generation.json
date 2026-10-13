@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "04faff494737",
-  "reason": "conformance alias added to the umbrella help (plugin and engine routes)",
+  "captured_from": "6f210458d57f",
+  "reason": "release alias help names the bundle subcommand",
   "generators": [
     {
       "id": "skiller-registry",

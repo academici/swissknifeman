@@ -19,8 +19,11 @@
       "routes": [{"unit": "harness", "argv_prefix": ["wf"]}]
     },
     "release": {
-      "description": "monorepo release proposal: [Unreleased] and conventional commits",
-      "routes": [{"unit": "skiller", "argv_prefix": ["release"]}]
+      "description": "release proposal; release bundle --root R --tag T --out DIR: release files",
+      "routes": [
+        {"when": {"first_in": ["bundle"]}, "unit": "aicore", "argv_prefix": ["release", "bundle"], "drop_first": true},
+        {"unit": "skiller", "argv_prefix": ["release"]}
+      ]
     },
     "release-fleet": {
       "description": "validated local post-tag delivery and fleet sync (never pushes or publishes)",

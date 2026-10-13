@@ -141,6 +141,32 @@ class TestLegacyGroups(RouteCase):
             self.assertIn(word, text)
 
 
+class TestReleaseBundleRoute(unittest.TestCase):
+    """``release bundle`` goes to the foundation; every other ``release`` word stays with skiller."""
+
+    def setUp(self):
+        self.hub = Hub(ids=("aicore", "skiller"))
+        self.addCleanup(self.hub.close)
+        self.units = umbrella.load_units(self.hub.env)
+
+    def exec_of(self, *argv):
+        with mock.patch.object(umbrella.os, "execv", side_effect=lambda path, args: None) as execv:
+            umbrella.route(list(argv), self.units, umbrella.load_config())
+        self.assertEqual(1, execv.call_count, argv)
+        return execv.call_args[0][1]
+
+    def cli(self, unit_id):
+        return str(umbrella.cli_of(self.units[unit_id]))
+
+    def test_bundle_goes_to_the_release_bundle_of_the_foundation(self):
+        self.assertEqual([self.cli("aicore"), "release", "bundle", "--root", ".", "--tag", "v1", "--out", "o"],
+                         self.exec_of("release", "bundle", "--root", ".", "--tag", "v1", "--out", "o"))
+
+    def test_other_release_words_stay_with_skiller(self):
+        self.assertEqual([self.cli("skiller"), "release", "--json"], self.exec_of("release", "--json"))
+        self.assertEqual([self.cli("skiller"), "release"], self.exec_of("release"))
+
+
 class TestConformanceRoutes(unittest.TestCase):
     """``conformance plugin|engine`` reaches the CLIs named by provides.cli of the modules, with their exit code."""
 

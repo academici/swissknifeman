@@ -14,6 +14,7 @@ GROUPS = {
     "events": ("aicore.ext.cli", "main", "project event journal: emit, list, deliver, replay, status"),
     "ext": ("aicore.ext.cli", "ext_main", "extensions: plugins, overlays, conformance, status"),
     "marketplace": ("aicore.content.marketplace", "main", "hub marketplace from unit.json: build [--check]"),
+    "release": ("aicore.release.bundle", "main", "release bundle: compat manifest, schema package, attestation, checksums"),
 }
 
 _HELP = ("-h", "--help", "help")

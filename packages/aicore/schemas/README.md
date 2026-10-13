@@ -44,6 +44,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `plugin-describe` | v1 | The output of a `describe` call: plugin identity and the digest of what it provides |
 | `telemetry-conventions` | v1 | Names of spans and attributes for traces and metrics, with the cardinality of each attribute and the rule that only low-cardinality attributes label metrics; data in `configs/telemetry-conventions.json`, API `aicore.util.telemetry` |
 | `plugin-catalog` | v1 | Plugins a module generates itself (`provides.plugins[].catalog` in `unit.json`); `aicore.content.marketplace` assembles the Claude marketplace and the Codex index of the hub from them and from the plugin manifests of all modules |
+| `compat-manifest` | v1 | Versions, dependency ranges and contracts of every module and bridge of a hub release (`compat.json` of `aicore release bundle`) |
 
 ## Module config schemas
 

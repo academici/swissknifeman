@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.3",
   "title": "skiller: проверка ссылок budget-configs и негативные фикстуры ссылок presets, profiles, budget-configs",
-  "status": "todo",
+  "status": "done",
   "summary": "В packages/skiller/scripts/validate.sh добавить раздел budget-configs/*.json (buckets, exclude, include) с семантикой пресетов (bucket ∈ skills/ ∪ HOST_BUCKETS; skill ∈ имена ∪ bucket/rel); новый тест packages/skiller/tests/test_validate_references.py: копия пакета с битой ссылкой в presets, profiles, budget-configs → validate.sh exit≠0 с файлом и токеном; текущее дерево — exit 0.",
   "why": "Аудит П0.2 (N6, N8) с поправкой C2: ссылка ai/performance рабочая, пресеты уже проверяются; непроверенными остались budget-configs и нет негативных фикстур. Риск: тест копирует пакет — только во временный каталог.",
   "scope": {
@@ -86,6 +86,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:26:50Z"
+  "result": {
+    "started_at": "2026-10-13T20:16:56Z",
+    "finished_at": "2026-10-13T20:32:59Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f7b77ea6-4f64-4c2b-a08e-d6d608f212f2"
+    },
+    "notes": "validate.sh раздел 6c: budget-configs (buckets/include/exclude/presets) по семантике пресетов; test_validate_references.py: битые ссылки presets/profiles/budget-configs → exit≠0 с файлом и токеном; без раздела budget-тесты красные",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:32:59Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T20:32:59Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T20:32:59Z"
 }

@@ -919,17 +919,17 @@ else:
 # Checking: name==file (kebab), non-empty description, extends/buckets/include
 # resolve, cycles in extends no. Catalog optional (graceful skip).
 presets_dir = root / "presets"
+skill_names, skill_paths = set(), set()
+for skill_md in skill_files:
+    fm = parse_frontmatter(skill_md) or {}
+    nm = (fm.get("name", "") or "").strip().strip('"').strip("'")
+    if nm:
+        skill_names.add(nm)
+    parts = skill_md.parent.relative_to(root).parts
+    if len(parts) >= 3 and parts[0] == "skills":
+        skill_paths.add("/".join(parts[1:]))  # bucket/rel
+preset_names = {p.stem for p in presets_dir.glob("*.json")} if presets_dir.is_dir() else set()
 if presets_dir.is_dir():
-    skill_names, skill_paths = set(), set()
-    for skill_md in skill_files:
-        fm = parse_frontmatter(skill_md) or {}
-        nm = (fm.get("name", "") or "").strip().strip('"').strip("'")
-        if nm:
-            skill_names.add(nm)
-        parts = skill_md.parent.relative_to(root).parts
-        if len(parts) >= 3 and parts[0] == "skills":
-            skill_paths.add("/".join(parts[1:]))  # bucket/rel
-    preset_names = {p.stem for p in presets_dir.glob("*.json")}
     preset_extends = {}
     for pf in sorted(presets_dir.glob("*.json")):
         rel = pf.relative_to(root)
@@ -985,6 +985,43 @@ if presets_dir.is_dir():
                 pcol[pnode] = PB
                 ppath.pop()
                 pstack.pop()
+
+
+# --- 6c. budget-configs/*.json (test configs of `skiller budget`) ---------
+# Same reference semantics as presets: buckets ∈ skills/ catalogs ∪ host buckets, include and exclude
+# tokens ∈ skill names ∪ bucket/rel (exclude may also name a bucket), presets ∈ presets/.
+budget_configs_dir = root / "budget-configs"
+if budget_configs_dir.is_dir():
+    for bc in sorted(budget_configs_dir.glob("*.json")):
+        rel = bc.relative_to(root)
+        try:
+            data = json.loads(bc.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            errors.append(f"{rel}: invalid JSON: {e}")
+            continue
+        if not isinstance(data, dict):
+            errors.append(f"{rel}: must be a JSON object")
+            continue
+        for key in ("buckets", "include", "exclude", "presets"):
+            if not isinstance(data.get(key, []), list):
+                errors.append(f"{rel}: {key} must be a list")
+        lists = {key: data[key] if isinstance(data.get(key), list) else [] for key in
+                 ("buckets", "include", "exclude", "presets")}
+        for b in lists["buckets"]:
+            if b not in bucket_dirs and b not in HOST_BUCKETS:
+                errors.append(f"{rel}: unknown bucket '{b}'")
+        for tok in lists["include"]:
+            if tok not in skill_names and tok not in skill_paths:
+                errors.append(f"{rel}: include '{tok}' does not resolve into skill "
+                              f"(need name or bucket/rel)")
+        for tok in lists["exclude"]:
+            if tok not in skill_names and tok not in skill_paths and tok not in bucket_dirs \
+                    and tok not in HOST_BUCKETS:
+                errors.append(f"{rel}: exclude '{tok}' does not resolve into a skill or a bucket "
+                              f"(need name, bucket/rel or bucket)")
+        for name in lists["presets"]:
+            if name not in preset_names:
+                errors.append(f"{rel}: unknown preset '{name}'")
 
 
 # --- 7. plugin manifests (.claude-plugin/) ----------------------------------

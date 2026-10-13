@@ -343,6 +343,43 @@ class TestDoctor(unittest.TestCase):
                          (by_id["gap.two"]["status"], by_id["gap.two"]["observed"]))
         self.assertIn("bin/gap doctor", by_id["gap.two"]["remediation"])
 
+    def test_the_declared_category_decides_the_filter_and_a_matching_document_is_kept(self):
+        row = check("aa.cfg", "ok", "state", "actually fine")  # the probe says state, the module declared config
+        probe_unit(self.hub, "aa", f"print(json.dumps([{row!r}]))", ["aa.cfg"], {"aa.cfg": "config"})
+        rc, doc = self.json("--category", "config")
+        self.assertEqual(0, rc)
+        self.assertEqual([("aa.cfg", "ok", "config", "actually fine")],
+                         [(r["check_id"], r["status"], r["category"], r["observed"]) for r in doc["results"]])
+        self.assertEqual([], self.json("--category", "state")[1]["results"])
+
+    def test_a_check_belongs_to_its_own_probe_and_is_reported_once(self):
+        make_unit(self.hub.packages, "bb", ["bin/bb"], doctor=[
+            {"id": "bb.a", "category": "environment", "probe": ["bin/p1", "doctor"], "output": "check-result/v1"},
+            {"id": "bb.b", "category": "environment", "probe": ["bin/p2", "doctor"], "output": "check-result/v1"}])
+        rows = [check("bb.a", observed="from-p1"), check("bb.b", observed="from-p1")]
+        for name, body in (("p1", f"print(json.dumps({rows!r}))"), ("p2", "print('[]')")):
+            script = self.hub.packages / "bb" / "bin" / name
+            script.write_text(f"#!/usr/bin/env python3\nimport json\n{body}\n", encoding="utf-8")
+            script.chmod(0o755)
+        rc, doc = self.json()
+        self.assertEqual(1, rc)
+        self.assertEqual([("bb.a", "ok"), ("bb.b", "fail")], [(r["check_id"], r["status"]) for r in doc["results"]])
+
+    def test_a_broken_probe_is_reported_in_a_requested_category_and_once_per_module(self):
+        make_unit(self.hub.packages, "cc", ["bin/cc"], doctor=[
+            {"id": "cc.a", "category": "integration", "probe": ["bin/p1", "doctor"], "output": "check-result/v1"},
+            {"id": "cc.b", "category": "integration", "probe": ["bin/p2", "doctor"], "output": "check-result/v1"}])
+        for name in ("p1", "p2"):
+            script = self.hub.packages / "cc" / "bin" / name
+            script.write_text(f"#!/usr/bin/env python3\nprint('text from {name}')\n", encoding="utf-8")
+            script.chmod(0o755)
+        rc, doc = self.json("--category", "integration")
+        self.assertEqual(1, rc)
+        row, = doc["results"]  # not one row per probe, and inside the category that was asked for
+        self.assertEqual(("cc.doctor", "integration"), (row["check_id"], row["category"]))
+        self.assertIn("text from p1", row["observed"])
+        self.assertIn("text from p2", row["observed"])
+
     def test_undeclared_foreign_result_is_dropped(self):
         rows = [check("other.thing"), check("keep.extra"), check("keep.one")]
         probe_unit(self.hub, "keep", f"print(json.dumps({rows!r}))", ["keep.one"])
@@ -598,6 +635,43 @@ class TestInstall(unittest.TestCase):
                 self.assertEqual(2, code)
                 self.assertIn(code_word, err)
         self.assertFalse(self.bin.exists())
+
+    def test_an_explicit_empty_unit_list_is_a_usage_error_not_the_default_profile(self):
+        for args in (("--units", ","), ("--units", ""), ("--units=",), ("--profile", "mini", "--units", ",")):
+            with self.subTest(args=args):
+                code, _, err = self.install(*args, "--bin-dir", str(self.bin), "--dry-run")
+                self.assertEqual(2, code)
+                self.assertIn("--units", err)
+        self.assertEqual([], self.logged())
+
+    def test_a_captured_installer_has_no_terminal_to_ask(self):
+        marker = self.hub.home.parent / "stdin.log"
+        script = self.hub.packages / "tool" / "install.sh"
+        script.write_text(f"#!/bin/sh\nreadlink /proc/self/fd/0 > \"{marker}\"\nexit 0\n", encoding="utf-8")
+        script.chmod(0o755)
+        # a real process with an open stdin (a terminal in use): the captured installer must not inherit it
+        done = subprocess.run([sys.executable, str(UMBRELLA), "install", "--units", "tool", "--bin-dir", str(self.bin),
+                               "--json"], env=self.hub.env, input="", capture_output=True, text=True)
+        self.assertEqual(0, done.returncode, done.stderr)
+        self.assertEqual("/dev/null", marker.read_text(encoding="utf-8").strip())
+
+    def test_json_never_asks_about_a_foreign_file(self):
+        self.bin.mkdir()
+        (self.bin / "swissknifeman").write_text("foreign", encoding="utf-8")
+        with mock.patch.object(umbrella.sys.stdin, "isatty", return_value=True), \
+                mock.patch("builtins.input", side_effect=AssertionError("a prompt would corrupt the JSON document")):
+            code, out, _ = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--json")
+        self.assertEqual(0, code)
+        self.assertEqual("foreign", (self.bin / "swissknifeman").read_text(encoding="utf-8"))
+        self.assertEqual("skipped", json.loads(out)["steps"][-1]["status"])
+
+    def test_force_over_a_folder_is_a_skipped_link_not_a_crash(self):
+        (self.bin / "plain").mkdir(parents=True)
+        code, out, err = self.install("--profile", "mini", "--bin-dir", str(self.bin), "--force")
+        self.assertEqual(0, code)
+        self.assertIn("cannot be replaced", err)
+        self.assertTrue((self.bin / "plain").is_dir())
+        self.assertTrue((self.bin / "late").is_symlink())  # the rest went on
 
     def test_usage_errors(self):
         for args, word in ((("--units", "ghost"), "UNIT_UNKNOWN"), (("--profile", "mini", "--units", "base"), "exclude"),

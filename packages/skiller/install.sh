@@ -128,7 +128,7 @@ if [[ -z "$_topology_state" ]]; then
   [[ "$_topology_state" == /* ]] || _topology_state="$HOME/.local/state"
   _topology_state="$_topology_state/swissknifeman"
 fi
-if [[ ! -f "$_topology_state/maind/topology.json" && ( -n "${SKM_HOME:-}" || ! -f "$HOME/.swissknifeman/topology.json" ) && -t 0 ]]; then
+if [[ ! -f "$_topology_state/maind/topology.json" && ( -n "${SKM_HOME:-}" || ! -f "$HOME/.swissknifeman/topology.json" ) && "$FORCE" != true && -t 0 ]]; then
   read -r -p "Configure local environment map (skiller topology init)? [y/N] " ans
   [[ "$ans" =~ ^[yY] ]] && "$CLI" topology init || true
 fi

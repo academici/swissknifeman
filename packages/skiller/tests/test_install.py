@@ -96,7 +96,7 @@ class InstallScriptCase(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def run_installer(self, *args, **extra_env):
+    def run_installer(self, *args, stdin=None, timeout=None, **extra_env):
         env = {k: v for k, v in os.environ.items()
                if k not in {"SKILLER_HOST_CONFIG", "SKILLER_MARKETPLACE_ROOT"}}
         env.update({
@@ -114,10 +114,21 @@ class InstallScriptCase(unittest.TestCase):
             capture_output=True,
             text=True,
             check=False,
+            stdin=stdin,
+            timeout=timeout,
         )
 
     def lines(self, path):
         return path.read_text(encoding="utf-8").splitlines()
+
+    def test_force_on_a_terminal_does_not_wait_for_the_topology_question(self):
+        import pty
+        master, slave = pty.openpty()  # a terminal on stdin, no answer will ever come
+        self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
+        result = self.run_installer("--force", stdin=slave, timeout=120)  # a prompt would end in TimeoutExpired
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("skiller topology init", result.stdout + result.stderr)
 
     def test_install_does_not_seed_the_legacy_registry(self):
         import sys

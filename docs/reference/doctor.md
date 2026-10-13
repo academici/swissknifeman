@@ -29,8 +29,11 @@ documents; each one is validated against the schema.
 A synthetic `fail` is reported when
 
 - a probe cannot start, times out, prints nothing or prints something that is not valid `check-result/v1`
-  (one `<module>.doctor` result for the probe), or
-- a declared check id has no result in the output of its probe.
+  (one `<module>.doctor` result for the module, naming every broken probe, in the category of its checks), or
+- a declared check id has no result in the output of its own probe (a document for a check declared on another probe
+  is ignored: every check is reported once, by the probe that declared it).
+
+The declared category decides the `--category` filter and is the category of the result.
 
 The exit code of a probe is ignored when it printed valid documents. Modules without `provides.doctor` are listed
 under `units_without_doctor`.

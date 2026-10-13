@@ -122,6 +122,23 @@ class BundleTests(unittest.TestCase):
         self.assertEqual({"id", "version", "path", "sha256"}, set(index[0]))
         self.assertEqual("v1", index[0]["version"])
 
+    def test_a_schema_outside_a_version_folder_takes_its_version_from_its_id(self):
+        files = {"bridges/b/schemas/slot.schema.json": b'{"$id": "urn:test:mod:slot:v3"}',
+                 "bridges/b/schemas/odd.schema.json": b'{"$id": "urn:test:odd"}',
+                 "packages/mod/schemas/beta/v1/beta.schema.json": b'{"$id": "urn:test:mod:beta:v1"}'}
+        versions = {item["path"]: item["version"] for item in bundle.schema_index(files)}
+        self.assertEqual({"bridges/b/schemas/slot.schema.json": "v3", "bridges/b/schemas/odd.schema.json": "",
+                          "packages/mod/schemas/beta/v1/beta.schema.json": "v1"}, versions)
+
+    def test_a_unit_file_that_is_not_an_object_is_a_bundle_error_not_a_traceback(self):
+        for text in ("[]", '{"id": "x", "kind": "capability", "version": "1", "stability": "alpha", '
+                           '"destination": "hub", "provides": null}'):
+            with self.subTest(text=text):
+                write(self.hub, "packages/bad/unit.json", text)
+                with self.assertRaises(bundle.BundleError) as caught:
+                    bundle.compat_manifest(self.hub, "1.2.0", "v1.2.0")
+                self.assertEqual("BUNDLE_UNIT_INVALID", caught.exception.code)
+
     def test_attestation_is_taken_at_head_and_the_tag_is_only_a_label(self):
         code, _out, err = self.run_bundle("a", tag="v0.0.0-label")
         self.assertEqual((0, ""), (code, err))

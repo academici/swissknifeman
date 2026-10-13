@@ -75,7 +75,7 @@ def compat_manifest(root: Path, umbrella_version: str, tag: str) -> Dict[str, An
             try:
                 doc = json.loads(path.read_text(encoding="utf-8"))
                 entry = _unit_entry(root, path, doc)
-            except (OSError, ValueError, KeyError, TypeError) as exc:
+            except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:  # [] or a null provides is not a unit
                 raise BundleError("BUNDLE_UNIT_INVALID", f"{path.relative_to(root).as_posix()}: {exc!r}") from exc
             (bridges if entry["kind"] == "bridge" else units).append(entry)
     manifest = {"schema": COMPAT_SCHEMA, "umbrella": {"version": umbrella_version, "tag": tag},
@@ -116,6 +116,9 @@ def schema_index(files: Mapping[str, bytes]) -> List[Dict[str, str]]:
         except (ValueError, AttributeError):
             identifier = None
         version = next((part for part in reversed(path.split("/")) if re.fullmatch(r"v[0-9]+", part)), "")
+        if not version and isinstance(identifier, str):  # a mirror outside a v<N> folder (bridge slot schema): the id has it
+            tail = re.search(r":(v[0-9]+)$", identifier)
+            version = tail.group(1) if tail else ""
         index.append({"id": identifier if isinstance(identifier, str) else path, "version": version,
                       "path": path, "sha256": hashlib.sha256(data).hexdigest()})
     return index

@@ -382,28 +382,38 @@ def collect_doctor(units: Mapping[str, Any], unit_ids: Sequence[str], categories
         probes: Dict[tuple, List[Dict[str, Any]]] = {}
         for item in wanted:
             probes.setdefault(tuple(_strings(item["probe"])), []).append(item)
+        declared_ids = {item["id"]: str(item.get("category") or "environment") for item in declared}
+        emitted: set = set()  # a check id is reported once per module, whichever probe printed it
+        broken: List[Any] = []  # (probe items, probe argv, reason) of the probes that gave no documents
         for argv, items in probes.items():
             ids = {item["id"] for item in items}
             out, reason = _run_probe(argv, unit.root, timeout)
             docs, reason = _parse_results(out, registry, kind) if out is not None else (None, reason)
             if docs is None:
-                results.append(_synthetic(schema_id, unit.id, f"{unit.id}.doctor", "environment", str(reason),
-                                          "run in the module folder: " + " ".join(argv)))
+                broken.append((items, argv, str(reason)))
                 continue
-            seen = set()
             for doc in docs:
                 check = doc["check_id"]
-                if not (check in {d["id"] for d in declared} or check.startswith(unit.id + ".")):
+                # a declared check belongs to its own probe; an undeclared one is kept when it is the module's
+                if check in emitted or not (check in ids or (check not in declared_ids and check.startswith(unit.id + "."))):
                     continue
-                if categories and doc["category"] not in categories:
+                category = declared_ids.get(check, doc["category"])  # the declared category decides, as for the filter
+                if categories and category not in categories:
                     continue
-                seen.add(check)
-                results.append({**doc, "unit": unit.id})
+                emitted.add(check)
+                results.append({**doc, "category": category, "unit": unit.id})
             for item in items:
-                if item["id"] not in seen:
-                    results.append(_synthetic(schema_id, unit.id, item["id"], str(item.get("category") or "environment"),
+                if item["id"] not in emitted:
+                    emitted.add(item["id"])
+                    results.append(_synthetic(schema_id, unit.id, item["id"], declared_ids[item["id"]],
                                               "probe printed no result for this check",
                                               "run in the module folder: " + " ".join(argv)))
+        if broken:  # one row for the module, in a category the run asked for
+            cats = [declared_ids[item["id"]] for items, _, _ in broken for item in items]
+            category = cats[0] if len(set(cats)) == 1 or categories else "environment"  # under a filter all lie inside it
+            results.append(_synthetic(schema_id, unit.id, f"{unit.id}.doctor", category,
+                                      "; ".join(reason for _, _, reason in broken),
+                                      "run in the module folder: " + "; ".join(" ".join(argv) for _, argv, _ in broken)))
     return {"schema": DOCTOR_SCHEMA, "results": results, "units_without_doctor": without}
 
 
@@ -533,9 +543,10 @@ def build_plan(units: Mapping[str, Any], ids: Sequence[str], options: Mapping[st
     return steps
 
 
-def _link(link: Path, target: Path, force: bool, own: Any, wrap: bool = False) -> Any:
+def _link(link: Path, target: Path, force: bool, own: Any, wrap: bool = False, ask: bool = True) -> Any:
     """Make one symlink (or, with ``wrap``, an exec wrapper for a target without the execute bit); the rule of the
-    former root installer. ``(status, message)``; status ok, skipped."""
+    former root installer. ``(status, message)``; status ok, skipped. ``ask`` lets a foreign file be confirmed on a
+    terminal; without it (``--json``: stdout is a document) the file is kept unless ``force``."""
     wrapper = f'#!/usr/bin/env bash\nexec python3 "{target}" "$@"\n'
     if link.exists() or link.is_symlink():
         current = os.path.realpath(link)
@@ -543,14 +554,17 @@ def _link(link: Path, target: Path, force: bool, own: Any, wrap: bool = False) -
             pass  # our earlier link: replace silently
         elif force:
             pass
-        elif sys.stdin.isatty():
+        elif ask and sys.stdin.isatty():
             answer = input(f"{link} already exists and is not similar to ours. Replace? [y/N] ")
             if not answer.strip().lower().startswith("y"):
                 return "skipped", f"Skip {link.name}."
         else:
             return "skipped", f"ATTENTION: {link} exists - skip (restart with --force)"
     if link.is_symlink() or link.exists():
-        link.unlink()
+        try:
+            link.unlink()
+        except OSError as exc:  # a folder or a file we may not remove: not a crash of the whole install
+            return "skipped", f"ATTENTION: {link} cannot be replaced ({exc.__class__.__name__}: {exc.strerror or exc})"
     if wrap:
         link.write_text(wrapper)
         link.chmod(0o755)
@@ -566,7 +580,10 @@ def _run_installer(unit: Any, argv: Sequence[str], bin_dir: Path, force: bool, c
     sys.stdout.flush()
     command += (["--force"] if force else []) + ["--bin-dir", str(bin_dir)]
     try:
-        proc = subprocess.run(command, cwd=str(unit.root), capture_output=capture, text=True, check=False)
+        # Captured output means nobody sees a prompt: the installer must find no terminal on stdin and take its
+        # no-TTY path (keep a foreign file, skip the questions) instead of waiting for an answer nobody can give.
+        proc = subprocess.run(command, cwd=str(unit.root), capture_output=capture, text=True, check=False,
+                              stdin=subprocess.DEVNULL if capture else None)
     except OSError as exc:
         return 1, f"installer could not start: {exc.__class__.__name__}: {exc}"
     return proc.returncode, (proc.stdout + proc.stderr)[-2000:] if capture else ""
@@ -614,7 +631,7 @@ def execute_plan(units: Mapping[str, Any], steps: List[Dict[str, Any]], bin_dir:
                 wrap = not os.access(target, os.X_OK)
                 status, message = _link(bin_dir / name, target, force,
                                         lambda current, rel=entry: current == os.path.realpath(target)
-                                        or current.endswith("/" + rel), wrap)
+                                        or current.endswith("/" + rel), wrap, not as_json)
                 (say if status == "ok" else warn)(f"  {message}")
                 step["links"].append(name)
                 if status != "ok":
@@ -627,7 +644,8 @@ def execute_plan(units: Mapping[str, Any], steps: List[Dict[str, Any]], bin_dir:
         say(f"— swissknifeman: would link {bin_dir / 'swissknifeman'} -> {router}")
     elif os.access(router, os.X_OK):
         status, message = _link(bin_dir / "swissknifeman", router, force,
-                                lambda current: any(fnmatch.fnmatch(current, pattern) for pattern in own_links))
+                                lambda current: any(fnmatch.fnmatch(current, pattern) for pattern in own_links),
+                                ask=not as_json)
         entry["status"] = status
         if status == "ok":
             say(f"— swissknifeman: {message}")
@@ -664,11 +682,13 @@ def _install_args(args: Sequence[str]) -> Any:
                 opts["option"].setdefault(unit_id, []).append(extra)
             elif name == "--units":
                 opts["units"] = [item for item in value.split(",") if item]
+                if not opts["units"]:  # an explicit empty list must not fall back to the default profile
+                    return f"--units needs at least one module id, got {value!r}"
             else:
                 opts[name[2:].replace("-", "_")] = value
         else:
             return f"unknown argument {arg!r}"
-    if opts["profile"] and opts["units"]:
+    if opts["profile"] and opts["units"] is not None:
         return "--profile and --units exclude each other"
     return opts
 

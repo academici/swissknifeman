@@ -36,14 +36,16 @@ and `--no-grok-plugins`.
 
 ## What a step does
 
-- A module with `provides.install` runs that command from its root, with `--bin-dir DIR` and `--force`.
+- A module with `provides.install` runs that command from its root, with `--bin-dir DIR` (and `--force` when it was given). With `--json` its output is captured and it gets no terminal on stdin, so it never waits for an answer.
 - A module with only `provides.cli` gets a symlink `<bin-dir>/<name>` for each entry.
 - A module with neither is listed and skipped (aicore is a library).
 - Last, the `swissknifeman` link. A link made by an earlier install is replaced silently; a foreign file needs `--force`
-  or an answer on a terminal, otherwise the step is skipped with a warning.
+  or an answer on a terminal (never asked with `--json`), otherwise the step is skipped with a warning. With `--force` a
+  path that cannot be replaced (a folder) is skipped with a warning too.
 
 Exit code 1 when a module installer fails, 2 for a usage or data error: `PROFILE_UNKNOWN`, `PROFILE_UNIT_UNKNOWN`,
-`PROFILE_REQUIRES_MISSING`, `PROFILE_REQUIRES_CYCLE`, `UNIT_UNKNOWN`, `PROFILES_INVALID`.
+`PROFILE_REQUIRES_MISSING`, `PROFILE_REQUIRES_CYCLE`, `UNIT_UNKNOWN`, `PROFILES_INVALID`; an empty `--units` list
+(`--units ,`) is a usage error, not the default profile.
 
 ## Your own profile
 

@@ -814,3 +814,59 @@
 - **Хук auto-approve:** существующий, но нечитаемый файл реестра владельца не откатывается к устаревшему (тест).
 - **Найдено попутно:** `scripts/affected-tests.py` запускал мосты без партнёров (3 ошибки в `bridges/orch-skiller`, красные и на HEAD); теперь партнёры берутся из раскладки хаба, как в `scripts/test-bridges.sh`.
 
+
+## Подготовка к P12
+
+Сессия Sonnet 5.5 по `docs/orch-p12-prep-prompt.md`. Часть A — три коммита (`e81f6ad1f`, `f688dc260`, `7a38cbaa4`). Часть B — подтверждение прогонами; каждый найденный дефект закрыт тестом, который без правки красный.
+
+### Замеры (время стены, ядро на HEAD, `SKM_TEST_CLASH=fail`)
+
+| Команда | Время | Итог |
+| --- | --- | --- |
+| `affected-tests.py --tier all --run --no-cache -j 4` | 174 с | зелёный после правок (первый прогон: skiller `validate.sh` красный, дефект 1) |
+| `affected-tests.py --tier all --run -j 4` (кэш) | 153–166 с | зелёный |
+| `test-integration.sh` / `--with-tools` | 142 с / 114–175 с | зелёный после правки дефекта 2 |
+| `ecosystem-units.py check --strict` | 5 с | зелёный |
+| `ecosystem-units.py standalone --baseline` | 268–281 с | aicore, brain, harness, orch, planner, skiller — pass |
+| `golden.py check` | 8 с | зелёный |
+| `scripts/lint.sh` (ruff 0.15.19) | <1 с | 63 ошибки на HEAD → 0 (дефект 3) |
+| `test-bridges.sh` | 33 с | зелёный |
+| `e2e-module-skills/plan-events/work-source` в песочнице | 2 / 5 / 13 с | зелёные |
+| `aicore schema compat --base origin/ecosystem-split` | — | 18 контрактов, 0 ошибок |
+| `affected-tests.py --run` (правка в одном модуле) | 72 с | пересчитан только он и его мосты; повтор без правок — 4,9 с, всё `[cached]` |
+
+### Дефекты и правки
+
+1. **`affected-tests --tier all`: `skiller validate.sh` падал на dev-guard** (`SKM_DEV_GUARD`, затем «registry is out of date»): `bin/skiller registry --check` из `validate.sh` отказывает при настоящем HOME. Правка: `validate.sh` запускается с временным HOME как в `dev-sandbox.sh` (`command_env`); тест в `scripts/test-affected-tests.py`.
+2. **Тесты harness `safedirs` зависели от `SKM_HOME`** (3 красных только в `test-integration.sh` и `standalone`, где скрипт экспортирует `SKM_HOME`: он отключает поиск устаревших реестров). Правка: фикстуры сбрасывают `SKM_HOME`/`XDG_*`; без правки — 3 падения при заданном `SKM_HOME`, с правкой — 0.
+3. **`scripts/lint.sh` красный на HEAD (63 ошибки ruff)** — CI-шаг `lint` красный; правки владельцев: лишние импорты (реэкспорт `render_mcp_projection` в harness оставлен с `noqa`), `raise … from None`, привязка переменных цикла в замыканиях, узкие исключения в тестах (`FrozenInstanceError`, `PlanError`), мёртвые патчи `skiller.delivery.build` (модуль `build` не использовал). Ruff без pip: колесо скачано в песочницу, состояние машины не менялось.
+4. **Роли Claude Code стартовали с ≈14 K токенов, а не ≈6 K** (`--safe-mode` убирает плагины, пользовательские скиллы и MCP, но не определения встроенных инструментов). Замер одного хода: репозиторий — 14,0 K; пустой каталог — 13,5 K (то есть `CLAUDE.md` репозитория почти не попадает: ≈0,5 K); `--tools Bash,Read,Edit,Write,Grep,Glob` — 7,2 K. Правка: в `launch-catalog.json` executor, reviewer и triager получают явный `--tools` (executor: `Bash,Read,Edit,Write,Grep,Glob`; reviewer и triager: `Bash,Read,Grep,Glob`); registrar и scout уже имели; тест `test_claude_code_roles_list_their_tools`.
+5. **`claude -p` не завершался после финального `result`** (репетиция, P2.1): модель запустила `sleep 25` в фоне и монитор `until ! pgrep -x sleep …` — он совпадал с собственным `sleep 2` и не кончался; CLI ждёт фоновые задачи, дирижёр ждал процесс почти 12 минут при готовом ответе. Правка: `process.run_role` после строки `"type":"result"` даёт процессу `RESULT_GRACE_S` (30 с) и останавливает группу процессов, роль считается завершённой (`lingered`, exit 0); маяк `ROLE_LINGERED`; тесты (зависший процесс и самостоятельный выход).
+6. **Маяк `STAGE_IDLE` говорил «no child process», пока жил shell инструмента в другой сессии.** `activity()` перебирал процессы сессии; теперь — всё дерево потомков провайдера. Тест с внуком в своей сессии.
+7. **`conduct.py status` не показывал `settle`**: статус читает журнал, строка `SETTLED` не меняла исход. Правка: `SETTLED` несёт `outcome`, `summarize` его применяет; тест.
+8. Compat-тесты planner ожидают `validation_id_clash` (часть A).
+
+### Изоляция роли (шаг 7)
+
+`--safe-mode` + `ro-run.py --rw <repo>`: запись вне репозитория — `Permission denied` (Landlock); `Write`/`Edit` внутри репозитория работают, вне рабочего каталога `acceptEdits` отказывает. registrar (`--tools Bash,Read` + `--allowedTools "Bash(python3 *orch.py source register *)"`): `register --help` выполняется; `touch` и `python3 -c` требуют одобрения и отклоняются; `echo`/`git status` проходят как встроенные только-чтение (не запись).
+
+### Ремонт отчёта (шаг 8, haiku/low, без инструментов)
+
+| Блок | Исход | Время | Токены (вход / выход) |
+| --- | --- | --- | --- |
+| stage-report, `exit: "zero"` | исправлен: `exit: 0`, остальное без изменений | 12 с | ≈4,4 K / 0,3 K |
+| review-findings без `id` | исправлено правилом `heal` (`F1`), к fixer не доходило | 0 с | — |
+| triage-result, Major отклонён без воспроизведения | fixer ничего не выдумал: `exit: null`, схема отказывает — следует повтор роли | 13 с | ≈4,1 K / 1,0 K |
+
+### Репетиция дирижёра (шаг 9, пробный репозиторий вне клона, по умолчанию кода)
+
+- Блок `Repository rules` в промпте исполнителя есть (`root.module-folders`, `root.engineering-invariants` из `CLAUDE.md`); `changed_paths` берутся из git; отчёт наблюдателя содержит маяки и долю проверок (`checks 33 %`); `estimate.py` без истории даёт нули и «never measured» — работает.
+- `CHECK_SLOW` с содержимым: `V2 running 5s; running: sleep 12 (5s)`. `STAGE_IDLE`/`STAGE_SLOW` с последней командой — на P2.1 (дефекты 5 и 6).
+- Ремонт: `RESULT_REPAIRED` — fixer восстановил пропавший блок `stage-report` (P2.1).
+- `resume --retry`: заблокированный P2.1 после `reopen` и расширения write set — шаги с исполнителя повторены, `done`. `run --adopt`: частичная правка `div` (с `//`) подхвачена, промпт «A previous attempt … already in the working tree», исполнитель довёл. `settle` и `status` — дефект 7. Сценарий `--scenario` задаёт предпросмотр, живой запуск берёт сценарий из плана (`orchestration.scenario`) или `default_profile`; полный сценарий (scout → executor → проверки → review → triage → коррекция) проверен на P3.1: рецензент нашёл лишний файл, который создал сам чек V1, триажёр подтвердил.
+- Путь вне write set от исполнителя: живые исполнители держали write set (в обоих случаях отказались писать вне него и сообщили `deviation`), поэтому отклонение и строка «Changed outside the write set» в промпте ревьюера проверены юнит-тестами дирижёра (`test_conductor.py`, `scope.outside`), а не вживую; побочный файл чека виден ревьюеру в diff, но не в этом списке — список строится по шагам исполнителя.
+
+### Что осталось
+
+- P12 в плане пока без пунктов (только `phase.json`), шаг 10 — не к чему применять; в старых фазах остались 109 предупреждений `check_cadence` (история, не трогал).
+- `ideas/owner-waiver-of-acceptance-checks.md` в дереве не мой (не коммитил).

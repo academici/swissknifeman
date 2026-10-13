@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.8",
   "title": "CI-матрица модулей: scripts/ci-matrix.py из unit.json, .github/workflows/modules.yml; test.yml и validate.yml заменяются",
-  "status": "in_progress",
+  "status": "todo",
   "summary": "scripts/ci-matrix.py list|steps|run|--check — единый источник шагов модулей и мостов (lint, test, validate, standalone, cli-smoke, contracts, schema-compat, secrets); modules.yml берёт матрицу из list --json (fromJSON), инструменты continue-on-error, job hub (check --strict, golden, scripts/test-*.py, smoke-installed, conformance engine); test.yml и validate.yml удаляются после --check о покрытии их команд.",
   "why": "D85, E43, R10, R31 (E42 отложен); knowledge/hub-p12#ci. Риски: (1) потеря проверки при удалении test.yml/validate.yml — --check сверяет каждую их команду со шагами; (2) матрица-литерал вместо обнаружения — --check ловит; (3) brain и мосты впервые в CI — их красное чинится у владельца в пункте, если мало, иначе open_issues.",
   "scope": {
@@ -189,13 +189,6 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": {
-    "started_at": "2026-10-13T15:17:02Z",
-    "executor": {
-      "provider": "claude-code",
-      "model": "sonnet",
-      "session": "run-78d97923de104dc2fab78f22"
-    }
-  },
-  "updated_at": "2026-10-13T15:17:02Z"
+  "result": null,
+  "updated_at": "2026-10-13T15:17:45Z"
 }

@@ -1,7 +1,7 @@
 ---
 name: skill-authoring
 bucket: repository-bootstrap
-version: 3.0.1
+version: 3.0.2
 description: "Rules for creating or editing EN-only registry skills, references, snippets, metadata, provenance, tests, and generated projections."
 when_to_use: "Activate for any change under packages/skiller/skills/ or the skill generator."
 risk: write
@@ -131,8 +131,13 @@ passed.
 3. Add/update focused tests or evals for new behavior and failure branches.
 4. Run `bash packages/skiller/bin/skiller registry` to regenerate projections/manifests/locks.
 5. Run `bash packages/skiller/bin/skiller registry --check`.
-6. Run affected package validation; for repository changes also follow release discipline and
-   update root `CHANGELOG.md` under `[Unreleased]` when user-visible.
+6. Run `python3 scripts/golden.py check`: the projections and the publication lock are golden digests.
+   When it reports exactly the regenerated files, capture them with the skill
+   (`python3 scripts/golden.py capture --only skiller-registry --reason "..."`); a red golden check turns the
+   acceptance checks of every later piece of work red.
+7. Run `python3 scripts/affected-tests.py --run` (a new root-bootstrap identity also moves the counts of the
+   skiller publication tests); for repository changes also follow release discipline and update root
+   `CHANGELOG.md` under `[Unreleased]` when user-visible.
 
 Generated drift means the source was not regenerated; repair at the canonical source or generator,
 then regenerate. Never patch the projection to make a check green.
@@ -148,4 +153,5 @@ then regenerate. Never patch the projection to make a check green.
 - [ ] Snippet index matches snippet files.
 - [ ] Tests/evals distinguish success from fail-closed behavior.
 - [ ] Registry was regenerated, not hand-edited, and `registry --check` passes.
+- [ ] `golden.py check` is green, with the regenerated digests captured in the same change.
 - [ ] Provider verification status reflects actual replay evidence.

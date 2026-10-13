@@ -24,15 +24,16 @@ For Claude Code research, use the established `perplexity-web` route before `Web
 This package is under active restructuring on a development branch. The plan and its direction are
 already approved by the owner; the agent owns the implementation end to end.
 
-- Make all architectural, design, fix and sequencing decisions yourself. Record them in the plan
-  (`plan.py log`; an architectural choice becomes a plan decision) and keep going to the result.
-- Scope of the run is exactly the plan item(s) named in the invocation. "To the end" means that item
-  is fully done, verified and committed, not that the next items start. Never begin another item or
-  phase on your own; after finishing, report and stop.
-- Within the item, never ask for confirmation or "which option"; decide, log and finish it.
-- Fix every defect you hit right away and properly, even when it exceeds a soft threshold or is not
-  strictly in scope; log the deviation. Do not leave known red checks or defer obvious fixes.
-- Quality over speed: root-cause fixes, verified by the item's checks and the affected suites.
+- Make the architectural, design, fix and sequencing decisions yourself. Record them in the plan
+  (`plan.py log`; an architectural choice becomes a plan decision) and go on to the result.
+- Scope of the run is exactly the plan item(s) named in the invocation: each is done, verified and
+  committed; then report and stop. A conductor run over several items is one invocation; between its
+  items only the run mechanism (`packages/orch`, `bridges/`) may change, never the work of an item.
+- Within the item, decide and finish; do not ask "which option".
+- A defect met outside the item: fix it in the item only when it keeps the item's checks red;
+  otherwise record it as a plan note that names the item or module owning it.
+- Verify with the tests of what you changed (`python3 scripts/affected-tests.py --run`); the full
+  pass (`--tier all`) belongs to the item that closes a phase (`phase.validation`).
 - Ask the owner only for what only they can do (a command needing their terminal or credentials,
   changes to live machine state, pushes or publishing beyond the plan) or a truly irreversible
   product-level choice.

@@ -152,16 +152,16 @@
       "provider": "claude",
       "target": ".claude/skills/orch-debug/SKILL.md",
       "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
-      "canonical_sha256": "1c620fd44f86d9608bb917ff6dfd72be1bcba61902e3b53e613858817d12f6e6",
-      "rendered_sha256": "70db4806abf7b09b0ef2e91c2e4d5f72c6a166355ba076f4e21ae297f601c8e5"
+      "canonical_sha256": "eaef91bd6e56fe6caf762c113b6be828f85afa12b3b408f0cbcb2231084bbf96",
+      "rendered_sha256": "bf2ff450a7497388cad7e6d5635a3c763353ea22aed7c2903d3162cffa7ba826"
     },
     {
       "identity": "orch-debug",
       "provider": "codex",
       "target": ".agents/skills/orch-debug/SKILL.md",
       "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
-      "canonical_sha256": "1c620fd44f86d9608bb917ff6dfd72be1bcba61902e3b53e613858817d12f6e6",
-      "rendered_sha256": "70db4806abf7b09b0ef2e91c2e4d5f72c6a166355ba076f4e21ae297f601c8e5"
+      "canonical_sha256": "eaef91bd6e56fe6caf762c113b6be828f85afa12b3b408f0cbcb2231084bbf96",
+      "rendered_sha256": "bf2ff450a7497388cad7e6d5635a3c763353ea22aed7c2903d3162cffa7ba826"
     },
     {
       "identity": "package-architecture",
@@ -184,16 +184,16 @@
       "provider": "claude",
       "target": ".claude/skills/planner-development-philosophy/SKILL.md",
       "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md",
-      "canonical_sha256": "4196a3a4ce495410fe2efd246b5bc509a918bc3c391fbeb538d71d1946b0c18d",
-      "rendered_sha256": "db7ec737303ef123a7f80ae97933bee798ea6355ccd0020a499f0996e260606b"
+      "canonical_sha256": "bd2b2cd1b9248bafea9380f53b7256db9350ee5dbeae1f9506a9a4fa092db204",
+      "rendered_sha256": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3"
     },
     {
       "identity": "planner-development-philosophy",
       "provider": "codex",
       "target": ".agents/skills/planner-development-philosophy/SKILL.md",
       "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md",
-      "canonical_sha256": "4196a3a4ce495410fe2efd246b5bc509a918bc3c391fbeb538d71d1946b0c18d",
-      "rendered_sha256": "db7ec737303ef123a7f80ae97933bee798ea6355ccd0020a499f0996e260606b"
+      "canonical_sha256": "bd2b2cd1b9248bafea9380f53b7256db9350ee5dbeae1f9506a9a4fa092db204",
+      "rendered_sha256": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3"
     },
     {
       "identity": "project-tooling-runbook",
@@ -232,16 +232,16 @@
       "provider": "claude",
       "target": ".claude/skills/skill-authoring/SKILL.md",
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
-      "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
-      "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
+      "canonical_sha256": "5a41346180e7d8108672a311e949fad07ccc58f535bd87c5a27902c78003e330",
+      "rendered_sha256": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8"
     },
     {
       "identity": "skill-authoring",
       "provider": "codex",
       "target": ".agents/skills/skill-authoring/SKILL.md",
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
-      "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
-      "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
+      "canonical_sha256": "5a41346180e7d8108672a311e949fad07ccc58f535bd87c5a27902c78003e330",
+      "rendered_sha256": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8"
     }
   ]
 }

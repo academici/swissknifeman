@@ -1,7 +1,7 @@
 ---
 name: planner-development-philosophy
 bucket: repository-bootstrap
-version: 0.6.0
+version: 0.7.0
 description: "Guardrails for keeping planner plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/planner planning, validation, audit, close, retry, or budget policy."
 when_to_use: "Use for swissknifeman plan authoring and planner workflow-policy changes."
 risk: read
@@ -88,6 +88,24 @@ source.
 Do not prebuild speculative machinery. Record an unmeasured idea in a roadmap note with a trigger. Turn
 it into plan scope only after the trigger occurs or the owner explicitly prioritizes it.
 
+### Write set and checks of an item
+
+- Build `task_files` from references, not from intent: grep the repository for every path, module and
+  name the item moves, renames or deletes, and for the importers of every module it changes. Each hit is
+  in `task_files` or in a named later item. A missing path costs a blocked executor or a refused commit.
+- Item `validation` is quick and local: the tests of the touched units
+  (`python3 scripts/affected-tests.py --run`, or their test files). Repository-wide and branch-wide checks
+  (`affected-tests.py --tier all`, `ecosystem-units.py standalone --baseline`, `test-integration.sh`,
+  `docs-impact.py --base origin/…`, `aicore schema compat --base …`) go to `phase.validation`: the item that
+  closes the phase runs them once, and the phase does not close without their results. `plan.py check`
+  warns `check_cadence` on an item check that runs one of them.
+- A phase check id differs from every item check id of its phase: one recorded result would stand for both
+  (`plan.py check` warns `validation_id_clash`).
+- A check reads only what the item can produce before its commit: a check over committed history belongs
+  to the phase, not to an item.
+- Never put the same work twice into one set of checks.
+- A tool unit (`standalone.tools` of the hub map) is checked only by the items that change it.
+
 ## Review, pacing and model pool
 
 - **Review is plan shape.** Item `Review` defaults to `none` (self-check plus affected tests).
@@ -109,8 +127,9 @@ it into plan scope only after the trigger occurs or the owner explicitly priorit
 - **Models are a pool, not a contract.** A plan names a minimum semantic class; any pool model that
   covers it is admitted, a stronger one is recorded not stopped, only a weaker one stops. New models
   and retired ones change the pool config, never the plan.
-- **Broad checks run once.** Executors run affected checks; the one broad pass of a phase lives in
-  its review/last item and is reused by every later reader.
+- **Broad checks run once.** Executors run affected checks; the one broad pass of a phase is its
+  `phase.validation`, run by the item that closes the phase and reused by every later reader. A
+  correction committed after it reopens that item or adds one; it is not slipped in after the pass.
 
 ## Validation economy
 

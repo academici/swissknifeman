@@ -71,7 +71,7 @@ of the canonical JSON of the required part (`goal`, `scope`, `acceptance`, `cons
 | `commit` | | `scope: item\|unit`, distinct non-empty `roles` (`executor`, `reviewer`, `fix`), `message_convention` identifier; all three fields required when present |
 | `isolation` | | `mode: worktree\|shared`, `integration: sequential`, `recheck: item\|all\|none`; all three fields required when present |
 | `version` | | policy version (`MAJOR.MINOR.PATCH`) |
-| `sandbox` | | permissions of the stages (`permissions/v1` of aicore: `filesystem`, `network`, `shell`, `env`, `profile`, …) |
+| `sandbox` | | permissions of the stages (`permissions/v1` of aicore: `filesystem`, `network`, `shell`, `env`, `profile`, …); `network` is intent that the provider sandbox enforces for the shell commands of a role, never a limit of the agent process (see `conductor.md`, Sandboxes) |
 | `on_error` | | action by failure class: the 12 classes of `error/v1` and `unknown_outcome`, each `{action, max?}` with `action` one of `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile` |
 | `fallback_routes` | | `{provider, model_class}` routes that `fallback_route` may switch to, in order |
 | `budgets` | | `brief_max_bytes`, `packer_input_max_bytes`, `stage_tokens_max` (integers ≥ 0) |
@@ -96,7 +96,7 @@ nothing to integrate; documents without `isolation` remain valid.
 | --- | --- | --- |
 | `role_id`, `title`, `description` | * | identity |
 | `instructions` | * | repository paths of canonical texts (no copied bodies) |
-| `tools` | * | `filesystem`, `shell`, `network`, `plan_api` permissions |
+| `tools` | * | `filesystem`, `shell`, `network`, `plan_api` permissions; `network` is the declared intent: the provider sandbox confines the shell commands of the role, `ro-run.py` restricts only the filesystem writes of the process |
 | `write_authority`, `result_shape`, `model_class_min`, `forbidden_inputs` | * | authority and output shape |
 | `skills`, `agent_pack_roles` | | required/optional skills; link to agent-pack roles |
 

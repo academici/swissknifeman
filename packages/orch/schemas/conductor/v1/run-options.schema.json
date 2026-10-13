@@ -54,6 +54,17 @@
           "type": "array",
           "uniqueItems": true,
           "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"}
+        },
+        "sandbox": {
+          "description": "The provider sandbox for the shell commands of a role (bubblewrap; it confines the commands, not the agent process). `prefer` (default): Claude Code roles with Bash get `--settings` with a `sandbox` block when the sandbox can start here, else the run goes on under the filesystem guard and says so once (`ISOLATION_PARTIAL`); `require`: the run stops with `SANDBOX_UNAVAILABLE` before any work when it cannot start; `off`: no `--settings`. A Codex route that carries `--sandbox` is unavailable when the sandbox cannot start, whatever this value.",
+          "type": "string",
+          "enum": ["off", "prefer", "require"]
+        },
+        "sandbox_domains": {
+          "description": "Domains a sandboxed Claude Code role may reach (`network.allowedDomains` with `strictAllowlist`); a role whose manifest declares `network: allowed` is not restricted. Default `[]`: no network for the commands of a role that declares `none`.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(\\*\\.)?[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$"}
         }
       },
       "required": [],

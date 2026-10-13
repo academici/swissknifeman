@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.6",
   "title": "orch: песочницы провайдеров — проба bubblewrap, instructions.sandbox off|prefer|require, --settings sandbox для Claude-ролей с Bash, SANDBOX_UNAVAILABLE для Codex, network declared/enforced в dry-run; закрытие фазы P1",
-  "status": "todo",
+  "status": "done",
   "summary": "Новый packages/orch/lib/orch/sandbox.py (probe bwrap userns+netns, socat); orch.py doctor — check orch.sandbox; run-options instructions.sandbox (off|prefer|require, умолч. prefer) и instructions.sandbox_domains; engine._role_argv добавляет --settings с блоком sandbox для Claude-ролей с Bash; prefer+недоступно → ISOLATION_PARTIAL, require → SANDBOX_UNAVAILABLE до работы; codex-маршрут при недоступной песочнице недоступен; dry-run показывает sandbox и network declared/enforced; docs. Пункт закрывает фазу: phase.validation P1.",
   "why": "N5, D5, C7, C14: сеть процесса агента ограничить нельзя; штатные песочницы ограничивают инструменты. На машине песочницы не стартуют (AppArmor userns) — отчётность это показывает, живая проверка — после действия владельца. Риски: (1) --settings сливается с настройками пользователя — передаётся только блок sandbox; (2) strictAllowlist без доменов ломает сетевые тесты проекта — домены задаются instructions.sandbox_domains; (3) зеркало run-options моста.",
   "scope": {
@@ -160,6 +160,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:41:21Z"
+  "result": {
+    "started_at": "2026-10-13T20:41:45Z",
+    "finished_at": "2026-10-13T21:07:54Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "86068c8c-34bb-426c-be25-afe31c80b9e1"
+    },
+    "notes": "sandbox.py + doctor orch.sandbox; instructions.sandbox/sandbox_domains (+зеркало моста); --settings sandbox для Claude-ролей с Bash; ISOLATION_PARTIAL/SANDBOX_UNAVAILABLE; dry-run sandbox/network/warnings; docs; phase.validation V11-V13 зелёные",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T21:07:54Z"
 }

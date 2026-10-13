@@ -9,7 +9,7 @@ import sys
 from aicore.config import ConfigError
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import adhoc, catalog, conformance, events, journal, launch, policies, render, settings
+from orch import adhoc, catalog, conformance, events, journal, launch, policies, render, sandbox, settings
 from orch.bindings import BINDINGS, check_skills
 from orch.conductor import contract as conductor_contract
 from orch.contracts import validate
@@ -305,9 +305,26 @@ def _ignored(project: Path, relative: str) -> bool | None:
     return {0: True, 1: False}.get(done.returncode)
 
 
+def _sandbox_check() -> dict:
+    probed = sandbox.probe()
+    evidence = [f"{row['name']}: {row['detail']}" for row in probed["checked"]]
+    if probed["available"]:
+        return _check("orch.sandbox", "ok", "the provider sandbox can start", evidence=evidence)
+    return _check("orch.sandbox", "warn",
+                  f"the provider sandbox cannot start ({probed['reason']}): Codex roles are unavailable and the shell "
+                  "commands of Claude Code roles run under the filesystem guard only", evidence=evidence,
+                  remediation="install bubblewrap and socat; on Ubuntu 24.04+ an AppArmor profile that allows "
+                              "user namespaces for bwrap is needed (a change to the machine, made by its owner)")
+
+
 def doctor_checks(project: Path | None) -> list:
     """The conductor's runtime folder (streams, scout cache, progress) and its observer reports are run output, not
-    artifacts of the work: both must be ignored. A piece of work keeps its record in its own artifact folder."""
+    artifacts of the work: both must be ignored. A piece of work keeps its record in its own artifact folder. The
+    sandbox row says whether the providers' own sandboxes can start on this machine."""
+    return _gitignore_checks(project) + [_sandbox_check()]
+
+
+def _gitignore_checks(project: Path | None) -> list:
     if project is None or not (project / ".git").exists():
         return [_check("orch.conductor-gitignore", "skip", "not inside a git repository")]
     rows = []

@@ -88,6 +88,20 @@ class OptionsTests(unittest.TestCase):
             self.assertIn("item:P1.1", caught.exception.message)
             self.assertIn(words, caught.exception.message)
 
+    def test_sandbox_options_default_to_prefer_and_are_checked(self):
+        merged, _ = options.effective({}, self.policy(), [])
+        self.assertEqual((merged["instructions"]["sandbox"], merged["instructions"]["sandbox_domains"]), ("prefer", []))
+        layer = {"instructions": {"sandbox": "require", "sandbox_domains": ["pypi.org", "*.example.com"]}}
+        merged, sources = options.effective({}, self.policy(), [{"source": "item:P1.6", "options": layer}])
+        self.assertEqual(merged["instructions"]["sandbox"], "require")
+        self.assertEqual(sources["instructions.sandbox_domains"], "item:P1.6")
+        for bad, words in (({"sandbox": "always"}, "sandbox"), ({"sandbox_domains": ["http://x.org/y"]}, "sandbox_domains"),
+                           ({"sandbox_domains": ["a.org", "a.org"]}, "sandbox_domains")):
+            with self.subTest(bad=bad), self.assertRaises(options.OptionsError) as caught:
+                options.effective({}, self.policy(), [{"source": "item:P1.6", "options": {"instructions": bad}}])
+            self.assertEqual(caught.exception.code, "OPTIONS_INVALID")
+            self.assertIn(words, caught.exception.message)
+
     def test_selectors(self):
         self.assertEqual(options.parse_selector("grok/grok-4.7/500k/high"),
                          {"provider": "grok", "model": "grok-4.7", "context": "500k", "effort": "high"})
@@ -181,6 +195,19 @@ class DoctorTests(unittest.TestCase):
     def test_outside_git_the_check_is_skipped(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(doctor_checks(Path(tmp))[0]["status"], "skip")
+
+    def test_the_sandbox_row_follows_the_probe(self):
+        up = {"available": True, "reason": None, "checked": [{"name": "bwrap", "ok": True, "detail": "/usr/bin/bwrap"}]}
+        down = {"available": False, "reason": "bwrap not found on PATH",
+                "checked": [{"name": "bwrap", "ok": False, "detail": "bwrap not found on PATH"}]}
+        with mock.patch("orch.sandbox.probe", return_value=up):
+            row = {r["check_id"]: r for r in doctor_checks(None)}["orch.sandbox"]
+        self.assertEqual(row["status"], "ok")
+        with mock.patch("orch.sandbox.probe", return_value=down):
+            row = {r["check_id"]: r for r in doctor_checks(None)}["orch.sandbox"]
+        self.assertEqual(row["status"], "warn")
+        self.assertIn("bwrap not found on PATH", row["observed"])
+        self.assertIn("AppArmor", row["remediation"])
 
     def test_the_rows_are_check_results(self):
         from aicore.util import schema

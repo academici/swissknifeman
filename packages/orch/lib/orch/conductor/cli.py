@@ -12,7 +12,7 @@ import sys
 
 from aicore.config import ConfigError
 
-from orch import settings as settings_mod
+from orch import sandbox, settings as settings_mod
 from orch.conductor import engine, observer, progress
 
 
@@ -47,12 +47,38 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     available = {role: problem is None for role, problem in problems.items()}
     unavailable = {role: problem for role, problem in problems.items() if problem}
     isolation = {role: conductor._role_argv(item, role, route)[len(route["argv"]):] for role, route in item.routes.items()}
+    probed = sandbox.probe()
+    network, warnings = {}, []
+    for role, route in item.routes.items():
+        network[role] = _network(conductor, role, route, isolation[role], probed)
+        if network[role]["declared"] == "none" and not network[role]["enforced"]:
+            warnings.append(f"{role}: network is declared none, but nothing enforces it "
+                            f"({route['provider']} has no sandbox for its commands here)")
+    if conductor._sandbox_mode(item) == "require" and not probed["available"] \
+            and any(conductor._claude_bash(route) for route in item.routes.values()):
+        warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
+                        "a run stops with SANDBOX_UNAVAILABLE")
     return {"plan": args.plan, "items": args.items or None, "batch": bool(args.batch),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
             "review": item.policy.get("review"), "options": item.options, "sources": item.sources,
             "routes": item.routes, "available": available, "unavailable": unavailable,
-            "isolation_args": isolation,
+            "isolation_args": isolation, "sandbox": {"available": probed["available"], "reason": probed["reason"]},
+            "network": network, "warnings": warnings,
             "note": "the work source adds the scenario and the options of the plan, phase and item at claim time"}
+
+
+def _network(conductor, role: str, route: dict, isolation: list, probed: dict) -> dict:
+    """What a role may reach (``declared``, from its manifest) and whether a provider sandbox confines its commands
+    (``enforced``). The agent process itself is never confined: its model API stays reachable."""
+    declared = conductor.declared_network(role)
+    by = None
+    if "--settings" in isolation:
+        by = "claude-sandbox"
+    elif conductor._codex_sandboxed(route) and probed["available"]:
+        by = "codex-sandbox"
+    elif route.get("provider") == "claude-code" and not conductor._claude_bash(route):
+        by = "claude-tools"  # no shell tool: its commands cannot reach anything
+    return {"declared": declared, "enforced": by is not None, "by": by}
 
 
 def main(argv: list | None = None) -> int:

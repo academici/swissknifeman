@@ -83,6 +83,7 @@ The conductor stops only on:
 | --- | --- |
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
+| `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`) | stopped before any work |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` (grok `executor` and `bounded-implementer`) stops with `TRANSPORT_UNSUPPORTED` |
 | `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
 | `TIMEOUT` | only when a ceiling was asked for (`stage_timeout_s`, `stage_idle_timeout_s`); none by default |
@@ -108,7 +109,7 @@ instead; `conduct.py status` shows the latest one of the running step:
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
 | `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
-| `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag | roles are isolated by the environment only |
+| `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
 the run is healthy (a long test run is) or needs a look. `stage_timeout_s`, `stage_idle_timeout_s` and
@@ -145,7 +146,7 @@ effect.
 | `reviewer` | `PROVIDER/MODEL[/CONTEXT][/EFFORT]` |
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]` |
-| `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`); `module_rules` (default `["module-folders", "module-boundaries", "engineering-invariants"]`: the instruction sections, by the last part of their `## <scope>.<name>` heading, that a role still gets from the CLAUDE.md or AGENTS.md of the root and of every folder on the way to a write-set path, as a short Repository rules block). An isolated role gets the text of its `skills` in the prompt, because its provider loads none by name |
+| `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`); `module_rules` (default `["module-folders", "module-boundaries", "engineering-invariants"]`: the instruction sections, by the last part of their `## <scope>.<name>` heading, that a role still gets from the CLAUDE.md or AGENTS.md of the root and of every folder on the way to a write-set path, as a short Repository rules block). An isolated role gets the text of its `skills` in the prompt, because its provider loads none by name; `sandbox` (`off` \| `prefer` default \| `require`: the provider sandbox for shell commands, see Sandboxes) and `sandbox_domains` (default `[]`: the domains a sandboxed Claude Code role may reach) |
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set` |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
@@ -189,6 +190,33 @@ The shared gitignore policy (`packages/aicore/configs/gitignore-policy.json`, en
 `orch-conductor-reports`) states the same for every connected project, and `orch.py doctor` warns when the runtime
 folder or the reports folder is not ignored (`orch.conductor-gitignore`, `orch.conductor-reports`, `check-result/v1`
 with `--json`).
+
+## Sandboxes
+
+The tools of a role are confined by the provider's own sandbox, not by the conductor: Claude Code (Bash) and Codex use
+bubblewrap in user and network namespaces, Claude also `socat`. It limits the **shell commands of a role and their
+children**; the agent process is not limited (its model API stays reachable), and `scripts/ro-run.py` restricts only the
+filesystem writes of the process. So `network` in a role manifest is intent: the dry-run says which roles it is enforced
+for.
+
+- `orch.py doctor` (`orch.sandbox`) probes it: `bwrap` and `socat` on PATH, and `bwrap --ro-bind / / --unshare-user
+  --unshare-net --dev /dev --proc /proc true` (10 s, cached for the process; it changes nothing). On Ubuntu 24.04 and later
+  `kernel.apparmor_restrict_unprivileged_userns = 1` stops it without an AppArmor profile for bwrap
+  (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`); the profile is a change of the machine, made by its owner.
+- `instructions.sandbox`: `prefer` (default) adds `--settings '{"sandbox": {"enabled": true, "allowUnsandboxedCommands":
+  false, "failIfUnavailable": true, "network": {"strictAllowlist": true, "allowedDomains": <sandbox_domains>}}}'` to every
+  Claude Code role whose `--tools` include Bash (only the `sandbox` block; the provider merges it with the user's settings).
+  A role whose manifest declares `network: allowed` gets no `strictAllowlist` and no `allowedDomains`. When the sandbox cannot
+  start, `prefer` goes on without `--settings` and says `ISOLATION_PARTIAL` once; `require` stops with `SANDBOX_UNAVAILABLE`
+  before any work; `off` adds nothing. `strictAllowlist` with no domains also blocks the network of the project's own tests: put
+  the domains they need into `sandbox_domains`.
+- A Codex route with `--sandbox read-only|workspace-write` is unavailable while the sandbox cannot start: `--dry-run` shows
+  `available: false` and `SANDBOX_UNAVAILABLE: <reason>` in `unavailable`, a run stops with `SANDBOX_UNAVAILABLE`. Its argv is
+  not rewritten.
+- `conduct.py run --dry-run` also prints `sandbox: {available, reason}`, `network: {role: {declared, enforced, by}}` with `by` one
+  of `claude-sandbox`, `codex-sandbox`, `claude-tools` (a Claude role without Bash has no command to confine) or `null`, and
+  `warnings` for every role that declares `network: none` while nothing enforces it (the grok `reviewer`; every Claude role
+  when the sandbox is off or cannot start).
 
 ## Observer
 

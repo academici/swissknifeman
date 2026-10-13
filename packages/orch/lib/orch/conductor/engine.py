@@ -33,7 +33,7 @@ from typing import Any, Callable, Optional
 from aicore.state import blobs, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import catalog as catalogs, events, launch, policies, render
+from orch import catalog as catalogs, events, launch, policies, render, sandbox
 from orch.conductor import checks as checks_mod, contract, heal, observer, options as opts, process, prompts
 from orch.conductor import scope as scopes
 from orch.conductor.progress import Progress, human_duration
@@ -776,15 +776,23 @@ class Conductor:
             self._preflight(item)
             write_json(item.directory / "routes.json", item.routes)
 
-    @staticmethod
-    def route_problem(route: dict) -> str | None:
+    def route_problem(self, route: dict) -> str | None:
         """Why a route cannot run, as ``CODE: text``; ``None`` when it can. An ``acp`` role is never driven by the
-        conductor (D4), whatever command line stands in for it."""
+        conductor (D4), whatever command line stands in for it; a Codex route confined by ``--sandbox`` needs the
+        provider sandbox to start on this machine."""
         if route["transport"] == "acp":
             return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
+        if self._codex_sandboxed(route) and not sandbox.probe()["available"]:
+            return f"SANDBOX_UNAVAILABLE: {sandbox.probe()['reason']}"
         if not process.available(route["argv"]):
             return f"PROVIDER_UNAVAILABLE: {route['argv'][0]} not found"
         return None
+
+    @staticmethod
+    def _codex_sandboxed(route: dict) -> bool:
+        argv = route["argv"]
+        mode = argv[argv.index("--sandbox") + 1] if "--sandbox" in argv[:-1] else None
+        return route.get("provider") == "codex" and mode in ("read-only", "workspace-write")
 
     OPTIONAL_ROLES = {"context-scout", "report-fixer"}
 
@@ -800,6 +808,18 @@ class Conductor:
         """Every required role can start before any work is done: an acp route or a missing CLI stops the run now with a
         plain message, not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
         self._refuse_acp(item)
+        required = {role: route for role, route in item.routes.items() if role not in self.OPTIONAL_ROLES}
+        codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]
+        claude = self._sandbox_mode(item) == "require" and any(self._claude_bash(route) for route in required.values())
+        blocked = []
+        if (codex or claude) and not sandbox.probe()["available"]:  # probed only when a role depends on it
+            reason = sandbox.probe()["reason"]
+            blocked = [f"{role} on {route['provider']}: the provider sandbox cannot start ({reason})"
+                       for role, route in codex]
+            if claude:
+                blocked.append(f"instructions.sandbox is require, and the sandbox cannot start ({reason})")
+        if blocked:
+            raise Stop("SANDBOX_UNAVAILABLE", "; ".join(blocked))
         missing = [f"{role} ({route['argv'][0]})" for role, route in item.routes.items()
                    if role not in self.OPTIONAL_ROLES and not process.available(route["argv"])]
         if missing:
@@ -1005,8 +1025,53 @@ class Conductor:
         isolated = role in item.options["instructions"]["isolate_roles"]
         extra = self.ISOLATION_ARGS.get(route.get("provider")) if isolated else None
         if extra and not self._knows(route["argv"], extra):
-            return list(route["argv"])
-        return list(route["argv"]) + (extra or [])
+            extra = None
+        return list(route["argv"]) + (extra or []) + self._sandbox_args(item, role, route)
+
+    @staticmethod
+    def _sandbox_mode(item: Item) -> str:
+        return item.options["instructions"].get("sandbox", "prefer")
+
+    @staticmethod
+    def _claude_bash(route: dict) -> bool:
+        """A Claude Code role that can run shell commands, the only commands the Claude sandbox confines."""
+        argv = route["argv"]
+        return route.get("provider") == "claude-code" and "--tools" in argv[:-1] \
+            and "Bash" in argv[argv.index("--tools") + 1].split(",")
+
+    @staticmethod
+    def declared_network(role: str) -> str:
+        """``tools.network`` of the role manifest: what the role is meant to reach (``none`` when it has no manifest)."""
+        try:
+            manifest = json.loads((ORCH_ROOT / "roles" / f"{LAUNCH_ROLE.get(role, role)}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return "none"
+        return (manifest.get("tools") or {}).get("network", "none")
+
+    def _sandbox_args(self, item: Item, role: str, route: dict) -> list:
+        """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash (the provider merges it with
+        the user's settings). A sandbox that cannot start never leaves the commands unconfined silently: ``prefer``
+        says so once and goes on under the filesystem guard, ``require`` was stopped in the preflight."""
+        mode = self._sandbox_mode(item)
+        if mode == "off" or not self._claude_bash(route):
+            return []
+        probed = sandbox.probe()
+        if not probed["available"]:
+            if mode == "prefer" and not self._sandbox_noted and self.progress is not None:
+                self._sandbox_noted = True
+                self.progress.emit("info", reason_code="ISOLATION_PARTIAL",
+                                   message=f"sandbox unavailable: {probed['reason']}; the commands of claude-code roles "
+                                           "run under the filesystem guard only")
+            return []
+        if not self._knows(route["argv"], ["--settings"]):
+            return []
+        block = {"enabled": True, "allowUnsandboxedCommands": False, "failIfUnavailable": True}
+        if self.declared_network(role) != "allowed":
+            block["network"] = {"strictAllowlist": True,
+                                "allowedDomains": list(item.options["instructions"].get("sandbox_domains") or [])}
+        return ["--settings", json.dumps({"sandbox": block}, sort_keys=True)]
+
+    _sandbox_noted = False
 
     _KNOWN: dict = {}
 

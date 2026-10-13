@@ -990,6 +990,124 @@ class ClosingTests(ConductorCase):
         self.assertNotIn("close", self.steps(err))
 
 
+class SandboxTests(ConductorCase):
+    """The provider sandbox: a Claude Code role with Bash gets ``--settings`` with a ``sandbox`` block, a Codex route
+    needs the sandbox to start; the probe is replaced, no bubblewrap is run."""
+    UP = {"available": True, "reason": None, "checked": []}
+    DOWN = {"available": False, "reason": "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted", "checked": []}
+
+    def stand_in(self, **extra) -> None:
+        """An executor that looks like Claude Code with a shell (``--tools`` names Bash), run by the fake role."""
+        argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        argv["executor"] += ["--tools", "Bash,Read,Edit", *extra.get("executor", [])]
+        self.write_config(argv)
+
+    def options(self, **instructions) -> Path:
+        path = self.project.parent / "options.json"
+        path.write_text(json.dumps({"instructions": instructions} if instructions else {}), encoding="utf-8")
+        return path
+
+    @staticmethod
+    def extra(preview: dict, role: str) -> list:
+        """The arguments the conductor adds to a role beside ``--safe-mode``."""
+        return [arg for arg in preview["isolation_args"][role] if arg != "--safe-mode"]
+
+    def preview(self, probe: dict, **instructions) -> dict:
+        with mock.patch("orch.sandbox.probe", return_value=probe):
+            code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full",
+                                          "--options", self.options(**instructions))
+        self.assertEqual(code, 0, err)
+        return json.loads(out)
+
+    def test_an_available_sandbox_adds_only_the_sandbox_block(self):
+        self.stand_in()
+        preview = self.preview(self.UP, sandbox_domains=["pypi.org"])
+        args = self.extra(preview, "executor")
+        self.assertEqual(args[0], "--settings")
+        self.assertEqual(json.loads(args[1]), {"sandbox": {
+            "enabled": True, "allowUnsandboxedCommands": False, "failIfUnavailable": True,
+            "network": {"strictAllowlist": True, "allowedDomains": ["pypi.org"]}}})
+        self.assertEqual(self.extra(preview, "reviewer"), [])  # no Bash in its stand-in argv
+        self.assertEqual(preview["sandbox"], {"available": True, "reason": None})
+        self.assertEqual(preview["network"]["executor"], {"declared": "none", "enforced": True, "by": "claude-sandbox"})
+
+    def test_a_role_that_may_use_the_network_gets_no_allowlist(self):
+        self.stand_in()
+        with mock.patch.object(engine.Conductor, "declared_network", staticmethod(lambda role: "allowed")):
+            args = self.extra(self.preview(self.UP), "executor")
+        self.assertNotIn("network", json.loads(args[1])["sandbox"])
+
+    def test_sandbox_off_adds_nothing(self):
+        self.stand_in()
+        preview = self.preview(self.UP, sandbox="off")
+        self.assertEqual(self.extra(preview, "executor"), [])
+        self.assertEqual(preview["network"]["executor"], {"declared": "none", "enforced": False, "by": None})
+        self.assertTrue(any(w.startswith("executor: network is declared none") for w in preview["warnings"]))
+
+    def test_an_unavailable_sandbox_is_reported_in_the_dry_run(self):
+        self.stand_in()
+        preview = self.preview(self.DOWN)
+        self.assertEqual(preview["sandbox"], {"available": False, "reason": self.DOWN["reason"]})
+        self.assertEqual(self.extra(preview, "executor"), [])
+        self.assertFalse(preview["network"]["executor"]["enforced"])
+        self.assertTrue(preview["warnings"])
+
+    def test_require_names_the_stop_in_the_dry_run(self):
+        self.stand_in()
+        warnings = self.preview(self.DOWN, sandbox="require")["warnings"]
+        self.assertTrue(any("SANDBOX_UNAVAILABLE" in warning for warning in warnings), warnings)
+
+    def test_prefer_goes_on_and_says_so_once(self):
+        self.stand_in()
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
+            code, _, err = self.run_items("W1", extra=("--options", self.options()))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        partial = [line for line in self.lines(err) if line.get("reason_code") == "ISOLATION_PARTIAL"
+                   and "sandbox unavailable" in line["message"]]
+        self.assertEqual(len(partial), 1, err)
+
+    def test_require_stops_before_any_work(self):
+        self.stand_in()
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
+            code, _, err = self.run_items("W1", extra=("--options", self.options(sandbox="require")))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "SANDBOX_UNAVAILABLE")), err)
+        self.assertEqual(self.calls("executor"), 0)
+
+    def test_require_without_a_shell_role_does_not_need_the_sandbox(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})  # no --tools: nothing to confine
+        with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
+            code, _, err = self.run_items("W1", extra=("--options", self.options(sandbox="require")))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+
+    def test_a_codex_route_is_unavailable_without_the_sandbox(self):
+        argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        argv["executor"] += ["--sandbox", "workspace-write"]
+        self.write_config(argv)
+        options = self.project.parent / "codex.json"
+        options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "codex"}]}), encoding="utf-8")
+
+        def preview(probe):
+            with mock.patch("orch.sandbox.probe", return_value=probe):
+                code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full",
+                                              "--options", options)
+            self.assertEqual(code, 0, err)
+            return json.loads(out)
+        down = preview(self.DOWN)
+        self.assertIs(down["available"]["executor"], False)
+        self.assertTrue(down["unavailable"]["executor"].startswith("SANDBOX_UNAVAILABLE: bwrap"), down["unavailable"])
+        self.assertEqual(down["network"]["executor"]["by"], None)
+        up = preview(self.UP)
+        self.assertIs(up["available"]["executor"], True)
+        self.assertEqual(up["network"]["executor"], {"declared": "none", "enforced": True, "by": "codex-sandbox"})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
+            code, _, err = self.run_items("W1", extra=("--options", options))
+        self.assertEqual(self.calls("executor"), 0)
+        self.assertEqual(self.outcome(err)[1], "SANDBOX_UNAVAILABLE", err)
+
+
 class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_writes_nothing_and_shows_routes(self):
         code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")

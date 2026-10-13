@@ -25,7 +25,8 @@ DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_cor
                   "audit_scope": "corrected"}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer"],
-                        "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"]}
+                        "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
+                        "sandbox": "prefer", "sandbox_domains": []}
 DEFAULT_SCOPE = {"outside": "deviation"}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": True,

@@ -106,8 +106,14 @@ fi
 # source until `swissknifeman upgrade`; it is never copied or replaced here.
 # Settings (code graph policy, memory ports, ...) are the [maind] table of config.toml, see
 # config.example.toml.
-CFG_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$CFG_ROOT/packages" ] || CFG_ROOT="$REPO_ROOT"
+# The monorepo root is looked up only when this package sits in a hub checkout (a folder packages/<id>); from a plugin
+# cache copy the parents are not ours and are never read.
+CFG_ROOT="$REPO_ROOT"
+# --- checkout root ---
+if [ "$(basename "$(dirname "$REPO_ROOT")")" = packages ]; then
+  CFG_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
+fi
+# --- end checkout root ---
 if [[ -n "${SKM_HOME:-}" ]]; then
   STATE_DIR="$SKM_HOME/state"
 else

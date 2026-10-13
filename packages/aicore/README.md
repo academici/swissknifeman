@@ -305,10 +305,10 @@ projections generated into a project or onto a machine, never into shared plugin
 
 ### Conformance
 
-`aicore ext conformance MANIFEST [--input-file FILE] [--json]` starts any plugin through nine scenarios and prints
-`check-result/v1` documents `ext.conformance.<scenario>`: `manifest`, `describe`, `protocol-unsupported`, `invoke`,
-`redelivery`, `stdout-discipline`, `deadline`, `no-descendants` (Linux only, otherwise `skip`) and `secrets`. Exit
-code 1 when a scenario fails. Contract tests for the journal are in `tests/ext/test_event_contract.py`.
+`aicore ext conformance MANIFEST [--input-file FILE] [--manifest PATH] [--json]` starts any plugin through ten scenarios and
+prints `check-result/v1` documents `ext.conformance.<scenario>`: `manifest`, `describe`, `protocol-unsupported`, `invoke`,
+`redelivery`, `stdout-discipline`, `deadline`, `no-descendants` (Linux only, otherwise `skip`), `secrets` and `crash` (a
+plugin that answers `status: error` instead of exiting; a process that dies fails). Exit code 1 when a scenario fails. Contract tests for the journal are in `tests/ext/test_event_contract.py`.
 
 ## `[aicore]` configuration
 

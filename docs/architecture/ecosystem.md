@@ -331,7 +331,7 @@ flowchart LR
 | What does a plugin receive | an allowlisted environment; a `trusted` plugin also gets the environment names and `env://` secrets its manifest declares |
 | What is contained | the process group: new session, shared deadline, SIGTERM then SIGKILL to the group, output limits, secret redaction |
 | What is not contained | a descendant that calls `setsid()`; no cgroup or Landlock enforcement, so `trusted-local` is reported `enforced: false` and `read-only` is unavailable |
-| How is it checked | `aicore ext status` (doctor probe) and `aicore ext conformance MANIFEST` (nine scenarios) |
+| How is it checked | `aicore ext status` (doctor probe) and `aicore ext conformance MANIFEST` (ten scenarios) |
 
 Enforcement and the other deferred items (journal rotation, timer retries, describe cache, `secret-resolver`, OpenTelemetry
 export, in-process and remote extensions) are listed with their triggers in the aicore README. Names of spans and metric

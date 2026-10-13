@@ -28,11 +28,11 @@ Path is machine-specific — **resolve, don't hardcode**. Ladder:
 # A. Explicit env override
 SKM="$SWISSKNIFEMAN_ROOT"
 
-# B. Via an installed ecosystem binary (anchor): readlink to the real file in the repo,
-#    climb bin → package → packages → root (3 levels)
+# B. Via an installed ecosystem binary (anchor): readlink to the real file in the repo, then the root of its git
+#    checkout (bin → package → packages → root; no `..` climbing)
 if [ -z "$SKM" ]; then
   BIN="$(command -v maind || command -v skiller)"
-  [ -n "$BIN" ] && SKM="$(cd "$(dirname "$(readlink -f "$BIN")")/../../.." && pwd)"
+  [ -n "$BIN" ] && SKM="$(git -C "$(dirname "$(readlink -f "$BIN")")" rev-parse --show-toplevel 2>/dev/null)"
 fi
 
 # C. Candidates from $HOME (first existing); canonical — projects/packages/swissknifeman

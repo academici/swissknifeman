@@ -5,6 +5,7 @@
 # Usage:
 #   scripts/dev-sandbox.sh run "$SB" -- bash scripts/smoke-installed.sh
 #   smoke-installed.sh --check-plugin DIR [--name NAME]   check one plugin copy (used by the tests)
+#   smoke-installed.sh --check-doctor FILE                  check one `doctor --json` document (used by the tests)
 #   smoke-installed.sh -h|--help
 #
 # Steps (inside a sandbox only):
@@ -15,7 +16,8 @@
 #   3. Every marketplace entry whose source is not ./ is copied as `git archive HEAD <source>` into
 #      $HOME/.claude/plugins/cache/swissknifeman/<name>/<version>/ and checked there: plugin.json parses, every manifest
 #      path and every ${CLAUDE_PLUGIN_ROOT} path of plugin.json, hooks/hooks.json and commands/*.md exists inside the
-#      copy, no executable reference leaves the plugin root, and every hook script of hooks.json runs with
+#      copy, no executable reference (bin/, hook scripts, install.sh, the shell blocks of skills/*/SKILL.md) leaves the
+#      plugin root, and every hook script of hooks.json runs with
 #      CLAUDE_PLUGIN_ROOT set to the copy and `{}` on stdin without a missing-file error (exit 126 and 127 fail).
 #   4. Entries with source ./ and skills[]: every path of skills[] exists in `git archive HEAD`.
 #
@@ -32,10 +34,12 @@ usage() { sed -n '2,/^set -euo pipefail$/p' "${BASH_SOURCE[0]}" | sed '$d' | sed
 MODE=smoke
 CHECK_DIR=""
 CHECK_NAME=""
+CHECK_DOCTOR=""
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help) usage ;;
     --check-plugin) [ $# -ge 2 ] || usage; MODE=plugin; CHECK_DIR="$2"; shift 2 ;;
+    --check-doctor) [ $# -ge 2 ] || usage; MODE=doctor; CHECK_DOCTOR="$2"; shift 2 ;;
     --name) [ $# -ge 2 ] || usage; CHECK_NAME="$2"; shift 2 ;;
     *) echo "smoke-installed: unknown argument: $1" >&2; usage ;;
   esac
@@ -59,7 +63,7 @@ case "$(readlink -f "$HOME")" in
   *) refuse "needs HOME in a temporary directory (got $HOME)" ;;
 esac
 
-export SMOKE_REPO_ROOT="$REPO_ROOT" SMOKE_MODE="$MODE" SMOKE_CHECK_DIR="$CHECK_DIR" SMOKE_CHECK_NAME="$CHECK_NAME"
+export SMOKE_REPO_ROOT="$REPO_ROOT" SMOKE_MODE="$MODE" SMOKE_CHECK_DIR="$CHECK_DIR" SMOKE_CHECK_NAME="$CHECK_NAME" SMOKE_CHECK_DOCTOR="$CHECK_DOCTOR"
 unset PYTHONPATH
 exec python3 -I - <<'PY'
 import json
@@ -140,19 +144,20 @@ def climbs_out(line, start, token, depth):
 
 
 def executable_climbs(root, path):
-    """Lines of an executable file that climb out of the plugin root, minus the D32 locator block."""
+    """Lines of an executable file that climb out of the plugin root, minus the D32 locator block and the blocks
+    marked `# --- checkout root ---` (a path that is used only after proving the file sits in the hub checkout)."""
     depth = len(path.relative_to(root).parts) - 1
     hits = []
     skipping = False
     for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
-        if "# --- aicore locator ---" in line:
+        if "# --- aicore locator ---" in line or "# --- checkout root ---" in line:
             skipping = True
         if not skipping:
             for match in CLIMB.finditer(line):
                 if climbs_out(line, match.start(), match.group(0), depth):
                     hits.append((number, line.strip()[:120]))
                     break
-        if "# --- end aicore locator ---" in line:
+        if "# --- end aicore locator ---" in line or "# --- end checkout root ---" in line:
             skipping = False
     return hits
 
@@ -205,9 +210,17 @@ def check_plugin(name, root):
             fail(f"{name}: {script.relative_to(root)}:{number} leaves the plugin root: {text}")
     installer = root / "install.sh"
     if installer.is_file():
-        # the installer runs from a checkout, not from the cache: reported, not failed
+        # The installer may also be run from the cache copy: a path out of the plugin root there names a stranger's
+        # folder. A checkout-only path must sit in a `# --- checkout root ---` block, after proving the checkout.
         for number, text in executable_climbs(root, installer):
-            print(f"WARN {name}: install.sh:{number} climbs out of the plugin root (installer, checkout only): {text}", flush=True)
+            fail(f"{name}: install.sh:{number} leaves the plugin root: {text}")
+    for skill in sorted((root / "skills").glob("*/SKILL.md")) if (root / "skills").is_dir() else []:
+        fenced = False  # the shell blocks of a skill are commands an agent runs from the plugin copy
+        for number, line in enumerate(skill.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            if line.lstrip().startswith("```"):
+                fenced = not fenced
+            elif fenced and CLIMB.search(line) and any(climbs_out(line, m.start(), m.group(0), 0) for m in CLIMB.finditer(line)):
+                fail(f"{name}: {skill.relative_to(root)}:{number} leaves the plugin root: {line.strip()[:120]}")
     if hooks_doc is not None:
         env = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(root))
         for command in hook_commands(hooks_doc):
@@ -221,6 +234,35 @@ def check_plugin(name, root):
             if run.returncode in (126, 127) or "No such file" in run.stderr:
                 fail(f"{name}: hook cannot run from the copy ({command}): exit {run.returncode} {run.stderr.strip()[:200]}")
     return len(FAILS) - before
+
+
+def schema_problems(node, value, where):
+    """Violations of the closed subset the hub schemas use: const, enum, type, pattern, minLength, required,
+    properties, additionalProperties false, items."""
+    found = []
+    if "const" in node and value != node["const"]:
+        return [f"{where}: must be {node['const']!r}, got {value!r}"]
+    if "enum" in node and value not in node["enum"]:
+        return [f"{where}: {value!r} is not one of {node['enum']}"]
+    kinds = {"object": dict, "array": list, "string": str}
+    if node.get("type") in kinds and not isinstance(value, kinds[node["type"]]):
+        return [f"{where}: must be {node['type']}"]
+    if isinstance(value, str):
+        if "minLength" in node and len(value) < node["minLength"]:
+            found.append(f"{where}: must not be empty")
+        if "pattern" in node and not re.search(node["pattern"], value):
+            found.append(f"{where}: {value!r} does not match {node['pattern']}")
+    if isinstance(value, dict):
+        found += [f"{where}: missing {key}" for key in node.get("required", []) if key not in value]
+        if node.get("additionalProperties") is False:
+            found += [f"{where}: unexpected key {key}" for key in value if key not in node.get("properties", {})]
+        for key, sub in node.get("properties", {}).items():
+            if key in value:
+                found += schema_problems(sub, value[key], f"{where}.{key}")
+    if isinstance(value, list) and "items" in node:
+        for index, item in enumerate(value):
+            found += schema_problems(node["items"], item, f"{where}[{index}]")
+    return found
 
 
 def run(argv, **kwargs):
@@ -266,17 +308,8 @@ def smoke():
         fail(f"doctor --json printed no JSON (exit {doctor.returncode}): {(doctor.stderr or doctor.stdout).strip()[-200:]}")
     schema = load_json(REPO / "configs" / "schemas" / "umbrella-doctor.schema.json")
     if doc is not None and not isinstance(schema, Exception):
-        item = schema["properties"]["results"]["items"]
-        if not isinstance(doc, dict) or doc.get("schema") != "umbrella-doctor/v1":
-            fail("doctor --json is not an umbrella-doctor/v1 document")
-        else:
-            if not set(schema["required"]) <= set(doc) or not set(doc) <= set(schema["properties"]):
-                fail("doctor --json keys differ from the schema")
-            for row in doc.get("results") or ():
-                if not isinstance(row, dict) or not set(item["required"]) <= set(row) \
-                        or not set(row) <= set(item["properties"]) \
-                        or row.get("status") not in item["properties"]["status"]["enum"]:
-                    fail(f"doctor --json result off the schema: {json.dumps(row)[:200]}")
+        for problem in schema_problems(schema, doc, "doctor --json")[:5]:
+            fail(problem)
     # 3 and 4. plugins from a copy of the cache layout; skills[] of source ./ entries from git archive
     market = load_json(REPO / ".claude-plugin" / "marketplace.json")
     cache = HOME / ".claude" / "plugins" / "cache" / "swissknifeman"
@@ -307,6 +340,19 @@ def smoke():
         check_plugin(name, dest)
     return cli_count, plugin_count
 
+
+if os.environ["SMOKE_MODE"] == "doctor":
+    document = load_json(Path(os.environ["SMOKE_CHECK_DOCTOR"]))
+    shape = load_json(REPO / "configs" / "schemas" / "umbrella-doctor.schema.json")
+    if isinstance(document, Exception) or isinstance(shape, Exception):
+        fail(f"cannot read the document or the schema: {document if isinstance(document, Exception) else shape}")
+    else:
+        for problem in schema_problems(shape, document, "doctor --json"):
+            fail(problem)
+    if FAILS:
+        sys.exit(1)
+    print("smoke-installed doctor OK")
+    sys.exit(0)
 
 if os.environ["SMOKE_MODE"] == "plugin":
     target = Path(os.environ["SMOKE_CHECK_DIR"])

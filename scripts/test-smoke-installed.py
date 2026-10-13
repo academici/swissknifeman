@@ -87,6 +87,42 @@ class SmokeInstalledTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("leaves the plugin root", result.stdout)
 
+    def doctor_doc(self, **change):
+        row = {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": "mod.one", "status": "ok",
+               "category": "config", "observed": "fine", "unit": "mod"}
+        doc = {"schema": "umbrella-doctor/v1", "results": [row], "units_without_doctor": []}
+        for key, value in change.items():
+            if key.startswith("row_"):
+                row[key[4:]] = value
+            else:
+                doc[key] = value
+        path = Path(self.tmp.name) / "doctor.json"
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        return self.run_script("--check-doctor", str(path))
+
+    def test_doctor_document_must_follow_the_schema_not_just_its_key_sets(self):
+        result = self.doctor_doc()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        for change in ({"row_category": "elsewhere"}, {"row_observed": ""}, {"units_without_doctor": "plain"},
+                       {"row_status": "great"}, {"row_check_id": "Bad Id"},
+                       {"row_$schema": "urn:other:v1"}):
+            with self.subTest(change=change):
+                result = self.doctor_doc(**change)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("FAIL doctor --json", result.stdout)
+
+    def test_manifest_path_missing_in_the_copy_fails_and_a_present_one_passes(self):
+        manifest = {"name": "fx", "commands": ["./commands/a.md"], "hooks": "./hooks/hooks.json"}
+        root = self.plugin({"commands/a.md": "x\n"}, manifest=manifest)
+        result = self.run_script("--check-plugin", str(root), "--name", "fx")
+        self.assertEqual(1, result.returncode, result.stdout)
+        self.assertIn("FAIL fx: plugin.json hooks path does not exist in the copy: ./hooks/hooks.json", result.stdout)
+        self.assertNotIn("commands path", result.stdout)
+        (root / "hooks").mkdir()
+        (root / "hooks" / "hooks.json").write_text("{}\n", encoding="utf-8")
+        result = self.run_script("--check-plugin", str(root), "--name", "fx")
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_hook_with_a_missing_script_fails_and_a_present_one_passes(self):
         hooks = {"hooks": {"SessionStart": [{"hooks": [{"type": "command",
                                                        "command": "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh"}]}]}}
@@ -113,11 +149,25 @@ class SmokeInstalledTests(unittest.TestCase):
         result = self.run_script("--check-plugin", str(root), "--name", "fx")
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
-    def test_installer_climb_is_only_a_warning(self):
+    def test_installer_climb_fails_unless_it_is_in_a_checkout_root_block(self):
         root = self.plugin({"install.sh": 'R=.\nC="$(cd "$R/../.." && pwd)"\n'})
         result = self.run_script("--check-plugin", str(root), "--name", "fx")
+        self.assertEqual(1, result.returncode, result.stdout)
+        self.assertIn("FAIL fx: install.sh:2 leaves the plugin root", result.stdout)
+        (root / "install.sh").write_text('R=.\n# --- checkout root ---\nC="$(cd "$R/../.." && pwd)"\n'
+                                         '# --- end checkout root ---\n', encoding="utf-8")
+        result = self.run_script("--check-plugin", str(root), "--name", "fx")
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("WARN fx: install.sh:2", result.stdout)
+
+    def test_a_shell_block_of_a_skill_that_climbs_out_fails(self):
+        skill = "# s\n\n```bash\nSKM=\"$(cd \"$(dirname \"$BIN\")/../../..\" && pwd)\"\n```\n\nprose with ../../.. is fine\n"
+        root = self.plugin({"skills/loc/SKILL.md": skill})
+        result = self.run_script("--check-plugin", str(root), "--name", "fx")
+        self.assertEqual(1, result.returncode, result.stdout)
+        self.assertIn("skills/loc/SKILL.md:4 leaves the plugin root", result.stdout)
+        (root / "skills" / "loc" / "SKILL.md").write_text("# s\n\n```bash\ngit -C \"$(dirname \"$BIN\")\" rev-parse --show-toplevel\n```\n",
+                                                          encoding="utf-8")
+        self.assertEqual(0, self.run_script("--check-plugin", str(root), "--name", "fx").returncode)
 
 
 if __name__ == "__main__":

@@ -29,10 +29,11 @@ class InstallRegistryStep(unittest.TestCase):
         self.skm = self.tmp / "skm"
         self.registry = self.skm / "state" / "maind" / "registry.json"
 
-    def install(self):
+    def install(self, script=None):
+        script = script or self.pkg / "install.sh"
         env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
         env.update(HOME=str(self.home), SKM_HOME=str(self.skm))
-        subprocess.run(["bash", str(self.pkg / "install.sh"), "--bin-dir", str(self.tmp / "bin")],
+        subprocess.run(["bash", str(script), "--bin-dir", str(self.tmp / "bin")],
                        env=env, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def test_creates_the_registry_when_there_is_no_source(self):
@@ -47,6 +48,15 @@ class InstallRegistryStep(unittest.TestCase):
                 self.install()
                 self.assertFalse(self.registry.exists())
                 legacy.unlink()
+
+    def test_a_plugin_cache_copy_never_reads_the_folders_above_it(self):
+        cache = self.tmp / "cache" / "swissknifeman"
+        copy = cache / "maind" / "1.0.0"
+        shutil.copytree(self.pkg, copy)
+        (cache / "packages").mkdir()  # what a stranger's two-levels-up folder could hold
+        (cache / "config.json").write_text("{}", encoding="utf-8")
+        self.install(copy / "install.sh")
+        self.assertTrue(self.registry.is_file())
 
     def test_legacy_state_directory_is_a_source(self):
         (self.home / ".maind").mkdir()

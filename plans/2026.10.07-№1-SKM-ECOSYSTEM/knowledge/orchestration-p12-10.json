@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "orchestration-p12-10",
+  "title": "Orchestration: P12.10 (закрытие фазы, без ревью модели)",
+  "sections": [
+    {
+      "id": "orchestration",
+      "title": "Orchestration",
+      "text": "```json\n{\n \"scenario\": \"scout-solo\",\n \"options\": {\n  \"rules\": [\n   \"Закрывающий пункт: красное исправляй у владельца модуля; известные риски из заметок плана P12.8 и P12.10: aicore schema compat не читает базовые ref у harness, planner, skiller; maind install.sh:109 и SKILL.md:35 ломки в установленной форме.\",\n   \"Ревью модели нет: дирижёр гонит phase.validation, красное идёт тебе на исправление (limits.check_fixes).\"\n  ],\n  \"limits\": {\n   \"check_fixes\": 3\n  }\n }\n}\n```"
+    }
+  ],
+  "applies_to": [
+    "P12.10"
+  ]
+}

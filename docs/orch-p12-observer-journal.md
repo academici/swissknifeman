@@ -26,3 +26,4 @@
 - 15:15 resume не прошёл: READ_MISSING (reads содержали удаляемые файлы) → убрал; RETRY_NOT_BLOCKED; adopt: WORKTREE_DIRTY (артефакты, затем plans), ITEM_OWNED ×2 → снял владение вручную; 15:17 adopt принят. Всё — дефекты 5–7.
 - 15:42 P12.8 закрыт, коммит 18dc2069c. Ревью RED дважды (Blocker + Major исправлены без аудита).
 - 15:50 P12.9 (документация): добавил overlay `orchestration-p12-9` со сценарием scout-solo (без ревью модели). Причина: докс-пункт, проверки пункта (docs-impact, golden, гигиена) детерминированы. Решение владельца «выбирай оптимально».
+- 15:56 P12.9 закрыт, коммит 452b4ce00, 11 мин, без ревью. Overlay orchestration-p12-10: scenario scout-solo (закрывающий пункт: дирижёр гонит phase.validation, красное — на исправление), check_fixes=3. Риски из заметок: schema compat (3 модуля), maind install.sh.

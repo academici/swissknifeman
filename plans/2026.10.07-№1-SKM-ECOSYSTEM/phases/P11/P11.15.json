@@ -80,9 +80,7 @@
   ],
   "route": {
     "class": "implementation",
-    "effort": "xhigh",
-    "provider": "grok",
-    "model": "grok-4.7"
+    "effort": "high"
   },
   "review": {
     "mode": "requested",
@@ -102,5 +100,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-11T18:46:06Z"
+  "updated_at": "2026-10-13T04:10:44Z"
 }

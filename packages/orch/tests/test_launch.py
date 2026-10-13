@@ -85,6 +85,8 @@ class LaunchCatalogTests(unittest.TestCase):
     def test_bounded_implementer_is_confined_like_executor(self):
         argv = launch.build_argv(self.catalog, "bounded-implementer", "claude-code", model="sonnet", cwd="/w")
         self.assertTrue(argv[1].endswith("ro-run.py"))
+        self.assertIn("--", argv)  # ro-run refuses a command line without it
+        self.assertEqual(argv[argv.index("--") + 1], "claude")
         self.assertEqual(argv[argv.index("--rw") + 1], "/w")
         self.assertEqual(argv[argv.index("--tools") + 1], "Bash,Read,Edit,Write,Grep,Glob")
         self.assertEqual(argv[argv.index("--allowedTools") + 1], "Bash")

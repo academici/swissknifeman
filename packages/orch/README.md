@@ -22,8 +22,8 @@ with progress lines on stderr, `resume` without repeating closed steps and an ob
 ([docs/conductor.md](docs/conductor.md)). `orch.py doctor` checks that git ignores the conductor's runtime files.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
-Grok in the conductor is the `reviewer` and the `report-fixer` only (the `acp` routes of its `executor` and
-`bounded-implementer` are refused before any work, and shown unavailable by `--dry-run`). The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
+Grok in the conductor is the `reviewer` and the `report-fixer` only (a route with the `acp` transport, today the `executor` and `bounded-implementer`
+entries of its launch catalog, is refused before any work and shown unavailable by `--dry-run` when the conductor builds it). The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
 writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; `{orch}` in an argv is this package root.
 The claude-code `executor`, `bounded-implementer` and `triager` run under it too (shell allowed with `--allowedTools Bash`; the
 executor and the bounded-implementer write only to `{cwd}` and the temporary directories, the triager only to the

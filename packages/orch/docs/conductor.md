@@ -84,7 +84,7 @@ The conductor stops only on:
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`) | stopped before any work |
-| `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` (grok `executor` and `bounded-implementer`) stops with `TRANSPORT_UNSUPPORTED` |
+| `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` (today the grok `executor` entry; the conductor builds no `bounded-implementer` route) stops with `TRANSPORT_UNSUPPORTED` |
 | `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
 | `TIMEOUT` | only when a ceiling was asked for (`stage_timeout_s`, `stage_idle_timeout_s`); none by default |
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece) |
@@ -238,7 +238,7 @@ a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}`
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.
 
-Grok in the conductor is the `reviewer` and the `report-fixer` only: its `executor` and `bounded-implementer` routes use the
+Grok in the conductor is the `reviewer` and the `report-fixer` only: its `executor` and `bounded-implementer` launch entries use the
 `acp` transport, which the conductor does not drive. `conduct.py run --dry-run` shows such a route as `available: false` with
 the reason in `unavailable` (`TRANSPORT_UNSUPPORTED: …`, or `PROVIDER_UNAVAILABLE: <command> not found`), and a run stops before
 any work.

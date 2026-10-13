@@ -23,6 +23,7 @@ CHECKS; boundaries need the baseline and are run by the check command itself.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import ast
 import json
 import os
@@ -1092,14 +1093,18 @@ def cmd_standalone(ctx: Context, args) -> int:
         print("ecosystem-units: no module selected (give ids, --all or --baseline)", file=sys.stderr)
         return 2
     results, failed = {}, []
-    for folder in chosen:
-        state, tail = run_standalone(ctx, folder)
-        results[folder] = state
-        print(f"standalone {folder}: {state}", flush=True)
-        if state == "fail":
-            print(f"ECOSYSTEM_STANDALONE_FAIL: {unit_base(ctx, folder)}: {tail}", file=sys.stderr)
-            if args.baseline or recorded.get(folder) == "pass":
-                failed.append(folder)
+    # The modules are independent (each runs in its own copy with its own HOME), so they run side by side.
+    jobs = max(1, min(args.jobs or int(os.environ.get("SKM_STANDALONE_JOBS") or 4), len(chosen)))
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {folder: pool.submit(run_standalone, ctx, folder) for folder in chosen}
+        for folder in chosen:  # reported in the order asked for, as soon as each one is done
+            state, tail = futures[folder].result()
+            results[folder] = state
+            print(f"standalone {folder}: {state}", flush=True)
+            if state == "fail":
+                print(f"ECOSYSTEM_STANDALONE_FAIL: {unit_base(ctx, folder)}: {tail}", file=sys.stderr)
+                if args.baseline or recorded.get(folder) == "pass":
+                    failed.append(folder)
     if args.update_baseline:
         write_standalone(ctx, results)
         print(f"{BASELINE_PATH}: standalone updated for {', '.join(chosen)}")
@@ -1127,6 +1132,7 @@ def build_parser() -> argparse.ArgumentParser:
     standalone = sub.add_parser("standalone", parents=[shared], help="run a module's dev commands in an isolated copy")
     standalone.add_argument("ids", nargs="*", help="module folders (ids)")
     standalone.add_argument("--all", action="store_true", help="every module")
+    standalone.add_argument("--jobs", type=int, default=0, help="modules at the same time (default SKM_STANDALONE_JOBS or 4)")
     standalone.add_argument("--baseline", action="store_true", help="modules recorded as pass; fail if one is not")
     standalone.add_argument("--update-baseline", action="store_true", help="record the results in the baseline")
     return parser

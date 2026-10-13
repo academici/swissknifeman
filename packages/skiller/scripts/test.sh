@@ -4,6 +4,11 @@
 # Tests use the synthetic tmpdir registry from tests/fixtures.py and never alter
 # the real registry. This runner is also called by validate.sh.
 set -euo pipefail
+# Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
+# SKM_TEST_JOBS=1 gives the old sequential run.
+_unittest() {
+  if python3 -c "import aicore.util.par_unittest" 2>/dev/null; then python3 -m aicore.util.par_unittest "$@"; else python3 -m unittest "$@"; fi
+}
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -48,9 +53,9 @@ verbose=""
 # the raw output for focused debugging.
 cd "$REPO_ROOT"
 if [[ -n "$verbose" ]]; then
-  python3 -m unittest discover -s tests -p "test_*.py" -v
+  _unittest discover -s tests -p "test_*.py" -v
 else
-  out="$(python3 -m unittest discover -s tests -p "test_*.py" 2>&1)" || {
+  out="$(_unittest discover -s tests -p "test_*.py" 2>&1)" || {
     echo "$out" >&2
     echo "ERROR: tests failed" >&2
     exit 1

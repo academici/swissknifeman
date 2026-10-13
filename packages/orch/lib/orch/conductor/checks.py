@@ -79,19 +79,22 @@ def _relative(path: Path, project: Path) -> str:
 
 def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: Path, timeout_s: int,
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
-               parallel: int = 1, on_result=None) -> list:
+               parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
     stage-report (the source of a manual procedure's verdict); ``executor`` its actor. ``parallel`` command checks run at
     the same time (they must not share files; the order of the rows does not change). ``on_result`` is called with each row
-    as soon as its check ends (from a worker thread).
+    as soon as its check ends (from a worker thread). ``first`` names checks (the ones that were red before) to run before
+    all others: when one of them is still red the others are not run (``skipped``) — a correction that did not mend the
+    red check does not need a half-hour run of everything else. ``kinds`` limits the run to these kinds (a quick pass
+    runs ``acceptance`` only; the ``impact`` checks wait for the full pass).
     """
     project = Path(project)
     candidate = {"head": head(project), "dirty_digest": dirty_digest(project)}
     subject = subject_of(input_doc)
     reported = {row["id"]: row for row in (report or {}).get("checks_run", [])}
-    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in RUN_KINDS]
+    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in kinds]
 
     def run_one(check: dict) -> dict:
         row = run_check(check)
@@ -146,7 +149,24 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
         row["evidence"] = _relative(target, project)
         return row
 
-    if parallel > 1 and len(wanted) > 1:
-        with ThreadPoolExecutor(max_workers=min(parallel, len(wanted))) as pool:
-            return list(pool.map(run_one, wanted))  # map keeps the order of the input
-    return [run_one(check) for check in wanted]
+    def run_all(checks: list) -> list:
+        if parallel > 1 and len(checks) > 1:
+            with ThreadPoolExecutor(max_workers=min(parallel, len(checks))) as pool:
+                return list(pool.map(run_one, checks))  # map keeps the order of the input
+        return [run_one(check) for check in checks]
+
+    ahead = [check for check in wanted if check["id"] in set(first)]
+    if not ahead or len(ahead) == len(wanted):
+        return run_all(wanted)
+    done = {row["id"]: row for row in run_all(ahead)}
+    if all(row["green"] for row in done.values()):
+        done.update({row["id"]: row for row in run_all([check for check in wanted if check["id"] not in done])})
+    else:
+        for check in wanted:
+            if check["id"] not in done:
+                skipped = {"id": check["id"], "kind": check["kind"], "skipped": True, "green": False, "evidence": None,
+                           "cmd": check.get("cmd"), "procedure": check.get("procedure")}
+                if on_result is not None:
+                    on_result(skipped)
+                done[check["id"]] = skipped
+    return [done[check["id"]] for check in wanted]

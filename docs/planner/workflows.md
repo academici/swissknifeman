@@ -87,7 +87,7 @@ writes code or decisions, and the default start makes no model call.
 - Config (owner-editable): `configs/command-routing.json` → `orchestration.scout.<provider>` holds `model`, `effort`,
   `argv` (placeholders `{model}`, `{effort}`, `{cwd}`; the prompt goes through stdin) and `timeout_s`. The catalog
   rejects unknown keys, providers and placeholders. A provider without an entry is skipped; only `claude-code`
-  has one (`claude -p --model haiku --tools ""`: no tools, so no writes).
+  has one (`claude -p --model haiku --tools Read,Grep,Glob`: read-only tools, so no writes).
   Add other providers only after checking their `--help` for a non-interactive, read-only mode that reads stdin.
 - Result: `context/<item>.scout.json` (generated, gitignored) and the JSON scout field. A timeout,
   a non-zero exit or an empty answer never blocks `start`: the pack is built without the map.

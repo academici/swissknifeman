@@ -37,6 +37,68 @@
       "description": "Limits of the run of the piece of work.",
       "$ref": "#/$defs/limits"
     },
+    "instructions": {
+      "description": "Which instructions a role process sees; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "isolate_roles": {
+          "description": "Roles that start without the project instructions of their provider (for Claude Code: the repository CLAUDE.md and the project memory), so that each role gets only the instructions of its own prompt. Default none.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar"]
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "checks": {
+      "description": "How the acceptance checks of a piece of work are run; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
+          "type": "integer"
+        },
+        "executor_runs_checks": {
+          "description": "When false (default) the executor is told to run only the tests that cover the code it changed, because the conductor runs every acceptance check right after its report; true lets it run the checks itself.",
+          "type": "boolean"
+        },
+        "overlap_review": {
+          "description": "The checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated after the correction. Default false.",
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "review": {
+      "description": "How review findings are handled; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "correct_min_severity": {
+          "description": "Confirmed findings of this severity or higher are corrected; lower ones are deferred to the plan as notes for the cleanup of the phase (Blocker > Major > Minor > Nit). Default Major.",
+          "type": "string",
+          "enum": ["Blocker", "Major", "Minor", "Nit"]
+        },
+        "audit_scope": {
+          "description": "What a review round after a correction reads: `corrected` (default) only the confirmed findings of the previous round and the lines their correction touched; `full` the whole change again.",
+          "type": "string",
+          "enum": ["corrected", "full"]
+        },
+        "final_correction": {
+          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan says so) instead of blocking with REVIEW_LIMIT. Default false.",
+          "type": "boolean"
+        },
+        "pre_final": {
+          "description": "A review round after a correction is a pre-final audit that looks only for findings of correct_min_severity or higher. Default true.",
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
     "on_blocked": {
       "description": "What a blocked piece of work does to the run: stop the run, or report it and go on with the next piece.",
       "type": "string",
@@ -130,7 +192,11 @@
           "type": "integer"
         },
         "stage_timeout_s": {
-          "description": "Timeout of one role run in seconds; 0 keeps the launch catalog timeout; 0 or more.",
+          "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role, which is stopped by stage_idle_timeout_s instead, and keeps the launch catalog timeout for a text role; 0 or more.",
+          "type": "integer"
+        },
+        "stage_idle_timeout_s": {
+          "description": "A streaming role is stopped when its output has not grown for this many seconds (a role that keeps writing is working however long it takes); 0 switches the check off; 0 or more.",
           "type": "integer"
         },
         "check_timeout_s": {

@@ -85,7 +85,7 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 | [`packages/analyst`](packages/analyst/) | continuous learning: capturing lessons from runs, man-gate, provenance | `analyst` |
 | [`packages/planner`](packages/planner/) | task intent commands (`/planner:*`, `$ planner:*`, Cursor `planner:*`) | plugins Claude Code, Codex and Grok |
 
-General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, `provider`, `artifacts`, `usage`; the root [`core`](core/) is a transitional shim over it).
+General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, `provider`, `artifacts`, `usage`).
 
 ## Installation
 

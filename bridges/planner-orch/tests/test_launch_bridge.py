@@ -39,7 +39,8 @@ class LaunchBridge(unittest.TestCase):
 
     def test_scout_literals(self):
         out = json.loads(launch("scout", "claude-code").stdout)
-        self.assertEqual(out["argv"], ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "",
+        self.assertEqual(out["argv"], ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools",
+                                       "Read,Grep,Glob",
                                        "--no-session-persistence"])
         self.assertEqual(json.loads(launch("scout", "codex").stdout)["model"], "gpt-5.6-luna")
 

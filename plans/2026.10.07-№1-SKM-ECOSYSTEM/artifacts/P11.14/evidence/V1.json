@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T003243Z-c3a0f2:P11.14:checks.3:V1",
+  "check_id": "V1",
+  "subject": "PLAN3.P11.14",
+  "candidate": {
+    "head": "bea27515427122bc17aa340d24a8a1435481519a",
+    "dirty_digest": "597222f262313dc27fc2ea7a289e6db450b69b7ebcb5685560e10e2e58be5ee8"
+  },
+  "started_at": "2026-10-13T02:20:52Z",
+  "procedure": {
+    "cmd": "set -e; for m in aicore brain orch analyst maind harness; do bash packages/$m/scripts/test.sh; bash packages/$m/scripts/validate.sh; done; bash scripts/test-bridges.sh; bash scripts/test-integration.sh; for t in scripts/test-*.py; do python3 \"$t\"; done; bash scripts/test-bootstrap-machine.sh",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T02:47:00Z"
+}

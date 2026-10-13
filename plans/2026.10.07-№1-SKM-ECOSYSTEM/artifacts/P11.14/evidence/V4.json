@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T003243Z-c3a0f2:P11.14:checks.3:V4",
+  "check_id": "V4",
+  "subject": "PLAN3.P11.14",
+  "candidate": {
+    "head": "bea27515427122bc17aa340d24a8a1435481519a",
+    "dirty_digest": "597222f262313dc27fc2ea7a289e6db450b69b7ebcb5685560e10e2e58be5ee8"
+  },
+  "started_at": "2026-10-13T02:21:41Z",
+  "procedure": {
+    "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone --baseline && for m in aicore skiller planner orch maind analyst harness brain; do python3 scripts/ecosystem-units.py standalone $m || exit 1; done && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T03:20:04Z"
+}

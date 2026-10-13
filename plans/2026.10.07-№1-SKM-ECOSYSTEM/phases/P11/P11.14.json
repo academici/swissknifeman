@@ -67,7 +67,7 @@
     "Каждая строка таблицы knowledge/hub-p11#e1e2 подтверждена кодом или тестом; неподтверждённое — исправить или plan.py log с решением",
     "push — только после зелёного широкого прогона: git push origin ecosystem-split"
   ],
-  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: широкий прогон (V1) → песочницы planner и skiller (V2, V3) → граница и автономность (V4) → e2e в песочнице (V5) → совместимость и документация (V6) → `skiller budget --first-turn` и `--with-plugins` (цель 16K, предупреждение 23K — правило root.claude-code.context-budget; результат в notes) → сверка e1e2 построчно (в notes finish — таблица «тезис: где в коде/тест») → `git push origin ecosystem-split` → finish.",
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: широкий прогон (V1) → песочницы planner и skiller (V2, V3) → граница и автономность (V4) → e2e в песочнице (V5) → совместимость и документация (V6) → `skiller budget --first-turn` и `--with-plugins` (цель 16K, предупреждение 23K — правило root.claude-code.context-budget; результат в notes) → сверка e1e2 построчно (в notes finish — таблица «тезис: где в коде/тест») → finish. Push в origin не делать: публикацию ветки выполняет владелец (решение наблюдателя, записано в плане).",
   "validation": [
     {
       "id": "V1",
@@ -130,5 +130,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-11T12:21:56Z"
+  "updated_at": "2026-10-13T00:32:13Z"
 }

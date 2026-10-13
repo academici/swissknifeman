@@ -832,6 +832,8 @@ class AdoptAndSettleTests(ConductorCase):
         state = json.loads((engine.runs_root(self.project) / run_id / engine.STATE_FILE).read_text())
         self.assertEqual(state["items"]["W1"]["outcome"], "done")
         self.assertEqual(state["items"]["W1"]["settled"][0]["reason"], "finished by the owner")
+        code, out, _ = self.conduct("status", "--run", run_id, "--json")
+        self.assertEqual([row["outcome"] for row in json.loads(out)["items"] if row["item"] == "W1"], ["done"])
 
 
 class AmendedPlanTests(ConductorCase):

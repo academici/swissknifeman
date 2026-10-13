@@ -244,7 +244,7 @@ class Conductor:
         item.pop("partial", None)
         item.setdefault("settled", []).append({"from": before, "to": outcome, "reason": reason, "at": utc_now()})
         self._save()
-        self.progress.emit("info", item=ref, reason_code="SETTLED", message=f"outcome {before or '-'} → {outcome} by hand: {reason}")
+        self.progress.emit("info", item=ref, reason_code="SETTLED", outcome=outcome, message=f"outcome {before or '-'} → {outcome} by hand: {reason}")
         return 0
 
     # ------------------------------------------------------------------ the loop over pieces of work
@@ -828,6 +828,11 @@ class Conductor:
                                    idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                    on_tick=self._beacons(item, key, role, raw))
             self._tokens(item, run.usage)
+            if run.lingered:
+                self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
+                                   reason_code="ROLE_LINGERED",
+                                   message=f"the answer was complete; the process was still alive {process.RESULT_GRACE_S} s later "
+                                           "(a background task of the provider) and was stopped")
             if run.error == "CANCELLED":
                 raise Stop("REVIEW_CANCELLED", f"{role} on {self.label(route)} was cancelled: the checks are red")
             if run.error in ("PROVIDER_UNAVAILABLE", "TRANSPORT_UNSUPPORTED"):

@@ -142,6 +142,8 @@ def summarize(lines: list) -> dict:
             elif event == "item.end":
                 row["outcome"] = line.get("outcome")
                 row["reason_code"] = line.get("reason_code")
+            elif event == "info" and line.get("reason_code") == "SETTLED" and line.get("outcome"):
+                row["outcome"], row["reason_code"] = line["outcome"], "SETTLED"  # set by hand after the run stopped
     return {"status": status, "reason_code": reason, "current": current, "beacon": beacon if current else None,
             "items": list(items.values()),
             "lines": len(lines), "last_ts": lines[-1]["ts"] if lines else None}

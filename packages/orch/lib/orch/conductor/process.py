@@ -33,6 +33,7 @@ class RoleRun:
     raw: Optional[str] = None
     error: Optional[str] = None
     detail: Optional[str] = None
+    lingered: bool = False  # the final result was out but the process did not exit: it was reaped after the grace
 
 
 def available(argv: list) -> bool:
@@ -122,15 +123,23 @@ def activity(pid: Optional[int], raw_path: Path) -> str:
         parts.append(f"last command: {last}")
     if pid:
         try:
-            listing = subprocess.run(["ps", "-o", "pid=,etimes=,args=", "-s", str(pid)], capture_output=True, text=True,
+            listing = subprocess.run(["ps", "-eo", "pid=,ppid=,etimes=,args="], capture_output=True, text=True,
                                      timeout=5).stdout
         except (OSError, subprocess.SubprocessError):
             listing = ""
-        rows = []
+        table = {}
         for line in listing.splitlines():
-            fields = line.split(None, 2)
-            if len(fields) == 3 and fields[0].isdigit() and int(fields[0]) != pid and fields[1].isdigit():
-                rows.append((int(fields[1]), fields[2]))
+            fields = line.split(None, 3)
+            if len(fields) == 4 and all(field.isdigit() for field in fields[:3]):
+                table[int(fields[0])] = (int(fields[1]), int(fields[2]), fields[3])
+        below, grew = {pid}, True
+        while grew:  # the whole tree under the provider CLI: its tool shells may sit in sessions of their own
+            grew = False
+            for number, (parent, _seconds, _args) in table.items():
+                if parent in below and number not in below:
+                    below.add(number)
+                    grew = True
+        rows = [(table[number][1], table[number][2]) for number in below if number != pid and number in table]
         rows = [row for row in rows if not row[1].startswith(("ps ", "/bin/sh -c ps"))]
         if rows:
             shown = ", ".join(f"{args[:120]} ({seconds}s)" for seconds, args in sorted(rows, reverse=True)[:3])
@@ -182,15 +191,20 @@ def _kill(process: subprocess.Popen) -> None:
 
 
 POLL_S = 5  # how often a running role is looked at
+RESULT_GRACE_S = 30  # how long a process may live on after its final ``result`` line (a provider CLI waits for its
+# background tasks, for example a monitor loop that never ends, even though the role has answered)
+_RESULT_LINE = (b'"type":"result"', b'"type": "result"')
 
 
 def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int,
-          cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None) -> Optional[str]:
+          cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
+          result_grace_s: float = 0) -> Optional[str]:
     """Feed ``prompt`` and wait for the child; ``None`` when it ended, else why it was stopped.
 
     ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file; 0 switches
     either off (the default of the conductor: a long role is reported by beacons, never stopped). ``on_tick(elapsed,
-    idle, pid)`` is called on every look at the child. Every growth of the stream is stamped in ``<stream>.times``
+    idle, pid)`` is called on every look at the child. With ``result_grace_s`` > 0 a child that is still alive that long
+    after its final ``result`` line is given up as ``lingering`` (the answer is complete). Every growth of the stream is stamped in ``<stream>.times``
     (``seconds-since-start size`` per line): providers whose stream has no times of its own can be profiled with it.
     """
     writer = threading.Thread(target=_feed, args=(process, prompt.encode("utf-8")), daemon=True)
@@ -198,6 +212,7 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
     started = last_growth = time.monotonic()
     size = -1
     times = raw_path.with_name(raw_path.name + ".times")
+    seen, answered = 0, None
     while True:
         try:
             process.wait(timeout=POLL_S)
@@ -213,17 +228,33 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
             current = size
         if current != size:
             size, last_growth = current, now
+            if result_grace_s > 0 and answered is None:
+                seen, found = _scan_result(raw_path, seen)
+                answered = now if found else None
             try:
                 with open(times, "a", encoding="utf-8") as handle:
                     handle.write(f"{now - started:.1f} {current}\n")
             except OSError:
                 pass
+        if answered is not None and now - answered >= result_grace_s:
+            return "lingering"
         if on_tick is not None:
             on_tick(now - started, now - last_growth, process.pid)
         if timeout_s > 0 and now - started > timeout_s:
             return f"no result within {timeout_s} s"
         if idle_timeout_s > 0 and now - last_growth > idle_timeout_s:
             return f"no output for {idle_timeout_s} s"
+
+
+def _scan_result(raw_path: Path, offset: int) -> tuple:
+    """``(new offset, whether a final result line is in the stream)``, reading only what was added since ``offset``."""
+    try:
+        with open(raw_path, "rb") as handle:
+            handle.seek(offset)
+            data = handle.read()
+    except OSError:
+        return offset, False
+    return offset + len(data), any(marker in data for marker in _RESULT_LINE)
 
 
 def _feed(process: subprocess.Popen, data: bytes) -> None:
@@ -236,7 +267,8 @@ def _feed(process: subprocess.Popen, data: bytes) -> None:
 
 def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
              env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
-             cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None) -> RoleRun:
+             cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
+             result_grace_s: float = RESULT_GRACE_S) -> RoleRun:
     """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child."""
     if transport == "acp":
         return RoleRun(exit=None, error="TRANSPORT_UNSUPPORTED", detail="the conductor does not drive acp roles")
@@ -254,11 +286,14 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
             return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=str(error), raw=str(raw_path))
         try:
             stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
-                            on_tick=on_tick)
+                            on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0)
         except BaseException:
             _kill(process)
             raise
-        if stopped:
+        lingered = stopped == "lingering"
+        if lingered:
+            _kill(process)
+        elif stopped:
             _kill(process)
             usage = partial_usage(raw_path.read_text(encoding="utf-8", errors="replace")) if transport == "jsonl" else None
             return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
@@ -267,8 +302,10 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
     duration = time.monotonic() - started
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
-                  usage=parsed["usage"], duration_s=duration, raw=str(raw_path))
-    if process.returncode != 0 or parsed["is_error"]:
+                  usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered)
+    if lingered:
+        run.exit = 0
+    if (process.returncode != 0 and not lingered) or parsed["is_error"]:
         tail = err_path.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-3:]
         run.error, run.detail = "ROLE_FAILED", f"exit {process.returncode}" + (f": {' | '.join(tail)}" if tail else "")
     elif not run.text:

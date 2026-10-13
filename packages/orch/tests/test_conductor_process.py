@@ -1,6 +1,7 @@
 """Role processes of the conductor: a role that keeps writing is never stopped for its length; a silent one is."""
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from orch.conductor import process  # noqa: E402
 
 BUSY = ("import sys,time\\nsys.stdin.read()\\nfor n in range(6):\\n print('{\"type\":\"x\"}', flush=True)\\n time.sleep(0.5)\\n"
         "print('{\"type\":\"result\",\"result\":\"done\",\"usage\":{}}', flush=True)")
+LINGER = ("import sys,time\\nsys.stdin.read()\\nprint('{\"type\":\"result\",\"result\":\"done\",\"usage\":{}}', flush=True)\\n"
+          "time.sleep(60)")  # the final result is out, but a background task of the provider keeps the process alive
 SILENT = "import sys,time\nsys.stdin.read()\ntime.sleep(30)"
 
 
@@ -30,6 +33,17 @@ class RoleProcessTests(unittest.TestCase):
         run = self.run_role(BUSY, timeout_s=0, idle_timeout_s=2)  # runs about 3 s, silent for 0.5 s at most
         self.assertIsNone(run.error, run.detail)
         self.assertEqual(run.text, "done")
+
+    def test_a_role_that_has_given_its_result_but_does_not_exit_is_reaped_after_the_grace(self):
+        started = time.monotonic()
+        run = self.run_role(LINGER, timeout_s=0, idle_timeout_s=0, result_grace_s=1)
+        self.assertLess(time.monotonic() - started, 20)
+        self.assertIsNone(run.error, run.detail)
+        self.assertEqual((run.text, run.exit, run.lingered), ("done", 0, True))
+
+    def test_a_role_that_exits_by_itself_is_not_marked_lingering(self):
+        run = self.run_role(BUSY, timeout_s=0, idle_timeout_s=0, result_grace_s=1)
+        self.assertFalse(run.lingered)
 
     def test_a_silent_role_is_stopped_by_the_idle_limit(self):
         run = self.run_role(SILENT, timeout_s=0, idle_timeout_s=1)
@@ -64,6 +78,20 @@ class ActivityAndUsageTests(unittest.TestCase):
         import os
         import signal
         os.killpg(child.pid, signal.SIGKILL)
+
+    def test_activity_follows_the_process_tree_into_other_sessions(self):
+        # the shell of a model's Bash tool may sit in a session of its own
+        import subprocess
+        import time
+        code = ("import subprocess, time\\nsubprocess.Popen(['sleep', '31'], start_new_session=True)\\ntime.sleep(31)")
+        child = subprocess.Popen([sys.executable, "-c", code.replace("\\n", "\n")], start_new_session=True)
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        time.sleep(0.5)
+        with tempfile.TemporaryDirectory() as tmp:
+            text = process.activity(child.pid, Path(tmp) / "none")
+        subprocess.run(["pkill", "-fx", "sleep 31"], check=False)
+        self.assertIn("sleep 31", text)
 
     def test_a_role_without_children_is_said_to_wait_on_its_model(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -107,6 +107,7 @@ instead; `conduct.py status` shows the latest one of the running step:
 | `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
 | `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
+| `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag | roles are isolated by the environment only |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether

@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.6",
+  "title": "Автоисправление deviation: work.kind deviation_fix при условиях 2.9.3 в рамках correction budget; иначе отдельная работа или owner_decision",
+  "status": "todo",
+  "summary": "Все условия 2.9.3 одновременно (write set, acceptance и публичный API не меняются, есть детерминированная проверка, бюджет есть) → deviation_fix; связь corrects_event_id.",
+  "why": "Аудит П4.4.",
+  "scope": {
+    "include": [
+      "orch engine.py"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P6.1",
+    "P5.3"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 4. Deviations и write set (мысль 1; N9)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.9 Deviations",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:44Z"
+}

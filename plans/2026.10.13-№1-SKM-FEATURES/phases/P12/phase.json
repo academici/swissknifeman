@@ -1,0 +1,69 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P12",
+  "title": "Наблюдаемость: поля событий orch, новые типы событий, redaction, отчёты analyst, экспорт телеметрии",
+  "design": "skeleton",
+  "goal": "orch.run.*/orch.agent.* с agent_run_id, work_id, route, prompt_digest, config_digest, error_class, токенами (orch/schemas/event-data/v1/); типы 2.8.2; секреты не попадают в события и progress-lines; отчёты analyst 2.8.5 только по событиям и артефактам; экспорт OTel — отдельный плагин aicore:telemetry-exporter.",
+  "context": "audits/perplexity-audit.md — Фаза 11 (П11.1–П11.5), 2.8. П11.5 (OTel) — только при появлении потребителя телеметрии (D6). Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "orch события",
+      "analyst отчёты",
+      "redaction-тесты"
+    ],
+    "exclude": [
+      "зависимость OpenTelemetry в aicore"
+    ]
+  },
+  "depends_on": [
+    "P6"
+  ],
+  "deliverables": [
+    "события orch.agent.*",
+    "отчёты analyst"
+  ],
+  "items": [
+    "P12.1",
+    "P12.2",
+    "P12.3",
+    "P12.4",
+    "P12.5"
+  ],
+  "batches": [
+    {
+      "id": "BP12-1",
+      "items": [
+        "P12.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-2",
+      "items": [
+        "P12.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-3",
+      "items": [
+        "P12.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-4",
+      "items": [
+        "P12.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-5",
+      "items": [
+        "P12.5"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

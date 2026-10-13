@@ -1,0 +1,51 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P13.4",
+  "title": "Решения по результатам eval: kind и decision skills, prompt profiles; отчёт сравнения",
+  "status": "todo",
+  "summary": "Обновить записи решений; изменения P13.2/P13.3 подтверждены или откачены.",
+  "why": "Аудит П12.3.",
+  "scope": {
+    "include": [
+      "skiller записи решений",
+      "orch prompt-profiles"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P13.2",
+    "P13.3"
+  ],
+  "decisions": [
+    "D8"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 12. Eval на реальных моделях — только с бюджетом владельца",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:53Z"
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D1",
+  "title": "П2.1 и П2.4 относительно PLAN3 P13",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Аудит ставит П2.1 (aicore.providers.available) и П2.4 (удаление .swissknife.json) внутрь P13 PLAN3. Где их делать?",
+  "options": [
+    {
+      "id": "A",
+      "text": "П2.1 — в PLAN4 P3 без ожидания P13: новый необязательный machine-ключ аддитивен и не требует миграции; П2.4 исключён из PLAN4 и передан в scope PLAN3 P13 (миграция по schema_version, swissknifeman upgrade)",
+      "pros": "P13 PLAN3 не раздувается; удаление старого источника — там, где окно совместимости",
+      "cons": "PLAN4 P3 не убирает дубль .swissknife.json сам"
+    },
+    {
+      "id": "B",
+      "text": "Оба пункта внутри PLAN3 P13, как в аудите",
+      "pros": "один переход",
+      "cons": "аддитивная правка ждёт чужой фазы; два плана правят одну фазу"
+    }
+  ],
+  "decision": "A — П2.1 — в PLAN4 P3 без ожидания P13: новый необязательный machine-ключ аддитивен и не требует миграции; П2.4 исключён из PLAN4 и передан в scope PLAN3 P13 (миграция по schema_version, swissknifeman upgrade)",
+  "rationale": "Аддитивный ключ не меняет формат файла; удаление legacy-слоя — изменение формата и принадлежит окну совместимости PLAN3 P13.",
+  "applies_to": [
+    "P3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

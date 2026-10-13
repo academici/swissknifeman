@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.4",
+  "title": "Фокус review: focus[] и suggested_model_class рекомендации executor в промпт и routing reviewer",
+  "status": "todo",
+  "summary": "Не выше класса, разрешённого политикой; manifest reviewer содержит блок focus.",
+  "why": "Аудит П6.3.",
+  "scope": {
+    "include": [
+      "orch prompts.py, engine.py routing"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P9.1",
+    "P7.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 6. Динамический review (мысль 17; N10)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:47Z"
+}

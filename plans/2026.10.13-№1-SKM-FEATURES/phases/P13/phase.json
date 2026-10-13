@@ -1,0 +1,60 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P13",
+  "title": "Eval на реальных моделях: матрица, волна B skills, prompt profiles",
+  "design": "skeleton",
+  "goal": "Матрица economy / implementation / frontier × доступные провайдеры × no-skill / minimal / текущий профиль; метрики success, токены, latency, tool errors, conflicts, false activation; волна B SLIM/MERGE/SPLIT skills с eval-отчётом; orch/configs/prompt-profiles.json — только transforms с A/B-выигрышем; обновление kind и decision skills.",
+  "context": "audits/perplexity-audit.md — Фаза 12 (П12.1–П12.3), П7.7, П8.3, 2.4.2, 2.4.3, 2.6.8. Вход — подтверждённый владельцем бюджет платных прогонов (D8). Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "aicore.content.eval",
+      "отчёт в artifacts"
+    ],
+    "exclude": [
+      "прогоны без бюджета владельца"
+    ]
+  },
+  "depends_on": [
+    "P8",
+    "P9"
+  ],
+  "deliverables": [
+    "отчёт сравнения моделей и skills"
+  ],
+  "items": [
+    "P13.1",
+    "P13.2",
+    "P13.3",
+    "P13.4"
+  ],
+  "batches": [
+    {
+      "id": "BP13-1",
+      "items": [
+        "P13.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP13-2",
+      "items": [
+        "P13.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP13-3",
+      "items": [
+        "P13.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP13-4",
+      "items": [
+        "P13.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

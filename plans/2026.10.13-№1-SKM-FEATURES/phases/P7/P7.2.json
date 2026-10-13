@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.2",
+  "title": "Risk score conductor: чистая функция, веса в конфиге, review.dynamic и review.dynamic_threshold, REVIEW_ADDED",
+  "status": "todo",
+  "summary": "Признаки 2.14 (публичные API/CLI, schemas, миграции, auth/security, shared-модули, размер diff, красный check, deviation, выход за write set, рекомендация executor); превышение порога → reviewer+triager даже в solo/scout-solo; маяк REVIEW_ADDED, событие orch.review.added.",
+  "why": "Аудит П6.2, N10: review окупается. Риск: лишний review удорожает run — порог в конфиге, измерение по журналу.",
+  "scope": {
+    "include": [
+      "orch risk.py, engine.py, run-options review.dynamic*"
+    ],
+    "exclude": [
+      "LLM-оценка риска"
+    ]
+  },
+  "depends_on": [
+    "P7.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 6. Динамический review (мысль 17; N10)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:44Z"
+}

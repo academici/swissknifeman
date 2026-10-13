@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.3",
+  "title": "Одна точка выбора модели: классы вместо имён в профилях skiller, agent-packs harness и command-routing planner; orch.py route explain",
+  "status": "todo",
+  "summary": "model_tiers профилей skiller, agent-packs и role-bindings harness, planner/configs/command-routing.json — frontier/implementation/economy вместо opus/sonnet/haiku, подстановка модели из model-catalog при maind sync; orch.py route explain --role R [--plan P --item I] — кандидаты, доступность, выбранный маршрут, слой.",
+  "why": "Аудит П2.3, N7 (выбор модели в 6 местах). Риск: maind sync и harness agent-packs читают имена моделей — проверить потребителей.",
+  "scope": {
+    "include": [
+      "skiller profiles",
+      "harness agent-packs",
+      "planner command-routing",
+      "maind provision sync",
+      "orch route explain"
+    ],
+    "exclude": [
+      "новые файлы model-registry (часть 6 аудита)"
+    ]
+  },
+  "depends_on": [
+    "P3.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.4 Model control plane",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:40Z"
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.3",
+  "title": "Триггеры conditional research и перенос лесенки context7 → perplexity → WebSearch в конфиг источников",
+  "status": "todo",
+  "summary": "Design-фаза, внешний API, security/compliance, выбор технологии, явное требование; golden: локальный rename → нет research.",
+  "why": "Аудит П9.3.",
+  "scope": {
+    "include": [
+      "orch research policy",
+      "skills verify-claims, query-craft"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P10.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 9. Research / RAG (мысль 16)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.12 Research / RAG (мысль 16)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:48Z"
+}

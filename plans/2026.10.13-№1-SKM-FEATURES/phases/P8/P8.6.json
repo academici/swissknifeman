@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.6",
+  "title": "Карантин импортированных skills: compat-report.json рядом с upstream.json",
+  "status": "todo",
+  "summary": "Проверки 2.6.10: лицензия, provenance, скан prompt injection, конфликты, бюджет, предположения о tools; импорт skill с «прочитай ~/.ssh» → карантин.",
+  "why": "Аудит П7.6; риск supply chain.",
+  "scope": {
+    "include": [
+      "skiller import/upstream"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P8.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 7. Skills: метаданные, выбор, диета (мысль 15; часть 3)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.6 Архитектура skills",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:46Z"
+}

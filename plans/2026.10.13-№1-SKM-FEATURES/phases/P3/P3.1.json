@@ -1,0 +1,56 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.1",
+  "title": "aicore.providers.available: доступность провайдера на машине (machine/invocation/flags), итог available ∧ selection ∧ бинарник",
+  "status": "todo",
+  "summary": "Раздел [aicore.providers.available.<id>] (enabled, auth) с x-skm-layers defaults/machine/invocation/flags; итоговая доступность провайдера = available (machine) ∧ selection (project) ∧ бинарник найден; explain показывает оба слоя.",
+  "why": "Аудит П2.1, E1, D1: аддитивный ключ, без ожидания PLAN3 P13. Риск: project задаёт available → CONFIG_LAYER_FORBIDDEN.",
+  "scope": {
+    "include": [
+      "packages/aicore/configs/config.schema.json",
+      "packages/aicore/lib/aicore/provider/config.py",
+      "docs aicore"
+    ],
+    "exclude": [
+      "удаление .swissknife.json (PLAN3 P13)"
+    ]
+  },
+  "decisions": [
+    "D1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.3 Конфигурация",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:39Z"
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P5",
+  "title": "Deviations: классы, подсказка write set, минимальный lifecycle",
+  "design": "skeleton",
+  "goal": "issue kind deviation в stage-report имеет class, severity, impact, next, auto_fixable, evidence (обязательные impact, next, class); scout предлагает write_set_suggestions; исходы accepted | follow_up (новый пункт через API planner) | owner_decision.",
+  "context": "audits/perplexity-audit.md — Фаза 4 (П4.1–П4.3), 2.9, N9, N15; П4.4 (автоисправление) — P6.6. Соответствие — knowledge/audit-review#source. Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "orch stage-report.schema.json $defs/issue",
+      "orch roles/executor.md, heal.py",
+      "planner log-event data.class",
+      "мост planner-orch: follow_up через add-item"
+    ],
+    "exclude": [
+      "полный 8-статусный lifecycle (часть 6 аудита)"
+    ]
+  },
+  "depends_on": [
+    "P1"
+  ],
+  "deliverables": [
+    "классифицированные deviation",
+    "follow_up через API"
+  ],
+  "items": [
+    "P5.1",
+    "P5.2",
+    "P5.3"
+  ],
+  "batches": [
+    {
+      "id": "BP5-1",
+      "items": [
+        "P5.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP5-2",
+      "items": [
+        "P5.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP5-3",
+      "items": [
+        "P5.3"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

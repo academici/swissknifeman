@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P11",
+  "title": "Рефакторинг engine.py: characterization, вынос stages/policies/infrastructure/application, мутации плана только через work source",
+  "design": "skeleton",
+  "goal": "Characterization progress-lines и state.json на 8 сценариях с фейковыми провайдерами; вынос из engine.py по одному модулю в conductor/{application,domain,stages,policies,infrastructure}; классы только для stateful (Conductor, RunStore); прямых записей в plans/ вне infrastructure/work_source.py нет.",
+  "context": "audits/perplexity-audit.md — Фаза 10 (П10.1–П10.3), 2.19. После P2, P4, P6, P7 (все крупные правки engine.py). Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/**"
+    ],
+    "exclude": [
+      "изменение поведения conductor"
+    ]
+  },
+  "depends_on": [
+    "P2",
+    "P4",
+    "P6",
+    "P7"
+  ],
+  "deliverables": [
+    "engine.py разделён",
+    "characterization-тесты"
+  ],
+  "items": [
+    "P11.1",
+    "P11.2",
+    "P11.3"
+  ],
+  "batches": [
+    {
+      "id": "BP11-1",
+      "items": [
+        "P11.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP11-2",
+      "items": [
+        "P11.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP11-3",
+      "items": [
+        "P11.3"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

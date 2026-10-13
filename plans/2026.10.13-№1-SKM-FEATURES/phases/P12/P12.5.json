@@ -1,0 +1,57 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.5",
+  "title": "Экспорт телеметрии: плагин aicore:telemetry-exporter (JSONL/OTel-compatible sink)",
+  "status": "todo",
+  "summary": "Отдельный плагин, не зависимость ядра; вход — появление потребителя телеметрии (D6).",
+  "why": "Аудит П11.5; D6.",
+  "scope": {
+    "include": [
+      "плагин telemetry-exporter"
+    ],
+    "exclude": [
+      "зависимость opentelemetry в aicore"
+    ]
+  },
+  "depends_on": [
+    "P12.2"
+  ],
+  "decisions": [
+    "D6"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.20 Библиотеки",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:51Z"
+}

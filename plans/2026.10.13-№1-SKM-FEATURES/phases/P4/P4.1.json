@@ -1,0 +1,51 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.1",
+  "title": "limits.run_warn_s → маяк RUN_SLOW и событие orch.run.warning; limits.run_timeout_s (0)",
+  "status": "todo",
+  "summary": "DEFAULT_LIMITS и LIMIT_BOUNDS: run_warn_s 7200, run_timeout_s 0; маяк RUN_SLOW каждые run_warn_s от старта run, событие orch.run.warning; observer — рекомендация; run не останавливается.",
+  "why": "Аудит П3.1, мысль 13. Тест с фейковым временем.",
+  "scope": {
+    "include": [
+      "orch options.py, run-options.schema.json, progress.py, engine.py"
+    ],
+    "exclude": [
+      "agent_warn_s"
+    ]
+  },
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 3. Лимиты времени и batch (мысли 8, 13)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.11 Лимиты времени (мысль 13)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:41Z"
+}

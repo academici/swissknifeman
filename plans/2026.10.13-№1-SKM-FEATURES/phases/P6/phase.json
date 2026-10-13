@@ -1,0 +1,81 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P6",
+  "title": "Работа вне пунктов, папки и lineage агентов, тихий отказ, протокол вопросов, агентный режим, автоисправление deviation",
+  "design": "skeleton",
+  "goal": "conduct.py run --input FILE исполняет adhoc execution-input (provenance.kind plan_support, phase_support, review_followup, deviation_fix, research, advisor); <run>/<work>/agents/<agent_run_id>/ с request/result/usage и lineage; маяк RESULT_SILENT_DENIAL по result.permission_denials; stage-report.questions[], режимы orch.conductor.questions, conduct.py answer, QUESTION_WAIT; процедура «агент сам выбирает пункты»; автоисправление deviation (work.kind deviation_fix) при условиях аудита 2.9.3.",
+  "context": "audits/perplexity-audit.md — Фаза 5 (П5.1–П5.4, П5.6) и П4.4, 2.7, 2.9.3, 2.10, E2, E3, E5. Роль advisor (П5.5) — P10.4 (D6). Соответствие — knowledge/audit-review#source. Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "orch conductor cli.py, engine.py, worksource.py",
+      "exec/v1 provenance.kind",
+      "stage-report questions[]",
+      "conduct.py answer"
+    ],
+    "exclude": [
+      "advisor (P10)",
+      "режим interactive вопросов (только после queue/deny/defaults)"
+    ]
+  },
+  "depends_on": [
+    "P2",
+    "P5"
+  ],
+  "deliverables": [
+    "adhoc run",
+    "agent_run_id и папки агентов",
+    "протокол вопросов"
+  ],
+  "items": [
+    "P6.1",
+    "P6.2",
+    "P6.3",
+    "P6.4",
+    "P6.5",
+    "P6.6"
+  ],
+  "batches": [
+    {
+      "id": "BP6-1",
+      "items": [
+        "P6.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP6-2",
+      "items": [
+        "P6.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP6-3",
+      "items": [
+        "P6.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP6-4",
+      "items": [
+        "P6.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP6-5",
+      "items": [
+        "P6.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP6-6",
+      "items": [
+        "P6.6"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

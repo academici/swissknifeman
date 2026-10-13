@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.5",
+  "title": "Пользовательские skills: skiller.custom_dirs (machine), <project>/.swissknifeman/skills|overlays, EXTENSION_AMBIGUOUS, origin и digest в explain",
+  "status": "todo",
+  "summary": "Таблица прав и политика коллизий 2.6.9.",
+  "why": "Аудит П7.5, мысль 2.",
+  "scope": {
+    "include": [
+      "skiller config и discovery",
+      "aicore config schema"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P8.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 7. Skills: метаданные, выбор, диета (мысль 15; часть 3)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.6 Архитектура skills",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:46Z"
+}

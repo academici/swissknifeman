@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D7",
+  "title": "Источник правил классификации ошибок провайдеров",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Аудит требует брать тексты правил provider-errors.json только из реальных потоков прошлых запусков. В .swissknifeman/state/orch/conductor/*/streams нет ни одного отказа провайдера: только rate_limit_event со status allowed и result.permission_denials. Из чего строить классификацию?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Сначала структурные сигналы потока: Claude rate_limit_event (rate_limit_info.status ≠ allowed, resetsAt → retry_after_s, rateLimitType five_hour/seven_day → quota), result.is_error и api_error_status; затем текстовые правила provider-errors.json только для подтверждённых текстов (существующее правило quota) и текстов из официальной документации провайдера со ссылкой в поле rule; неизвестное → класс unknown; conductor по умолчанию задаёт on_error.unknown = retry (сохраняет текущий повтор, limits.retries)",
+      "pros": "ничего не выдумано; структурные поля надёжнее текста",
+      "cons": "codex/grok покрыты слабее до первых реальных отказов"
+    },
+    {
+      "id": "B",
+      "text": "Написать текстовые правила для всех классов по памяти модели",
+      "cons": "ложная классификация, запрет аудита"
+    }
+  ],
+  "decision": "A — Сначала структурные сигналы потока: Claude rate_limit_event (rate_limit_info.status ≠ allowed, resetsAt → retry_after_s, rateLimitType five_hour/seven_day → quota), result.is_error и api_error_status; затем текстовые правила provider-errors.json только для подтверждённых текстов (существующее правило quota) и текстов из официальной документации провайдера со ссылкой в поле rule; неизвестное → класс unknown; conductor по умолчанию задаёт on_error.unknown = retry (сохраняет текущий повтор, limits.retries)",
+  "rationale": "Наблюдаемый формат потока Claude даёт статус и время сброса лимита; тексты без источника запрещены.",
+  "applies_to": [
+    "P2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

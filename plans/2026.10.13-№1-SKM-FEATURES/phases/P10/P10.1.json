@@ -1,0 +1,55 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.1",
+  "title": "Источники research и политика: orch.research.policy, orch.research.sources (argv только machine), адаптеры command и filesystem",
+  "status": "todo",
+  "summary": "Ключи 2.3.6; project задаёт argv → CONFIG_LAYER_FORBIDDEN.",
+  "why": "Аудит П9.1, мысль 16. Вход фазы — D6. Имя бинарника Perplexity — решение владельца (часть 7, п. 7).",
+  "scope": {
+    "include": [
+      "orch config.schema",
+      "адаптеры источников"
+    ],
+    "exclude": [
+      "http, mcp, vector"
+    ]
+  },
+  "decisions": [
+    "D6"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 9. Research / RAG (мысль 16)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.12 Research / RAG (мысль 16)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:48Z"
+}

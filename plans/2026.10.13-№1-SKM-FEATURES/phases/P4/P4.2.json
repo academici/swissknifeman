@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.2",
+  "title": "Лимиты review на batch: review_rounds_batch, corrections_batch, findings_batch; LIMIT_OVER scope batch; Blocker → REVIEW_LIMIT",
+  "status": "todo",
+  "summary": "Счётчики уровня run в state.json; превышение → LIMIT_OVER (scope batch), далее target/ceiling; Blocker не обрезается — stop REVIEW_LIMIT.",
+  "why": "Аудит П3.2, мысль 8.",
+  "scope": {
+    "include": [
+      "orch options.py, engine.py, state.json"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P4.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 3. Лимиты времени и batch (мысли 8, 13)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:41Z"
+}

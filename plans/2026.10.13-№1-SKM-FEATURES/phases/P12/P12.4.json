@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.4",
+  "title": "Отчёты analyst по событиям и артефактам: токены по модели/роли/skill, review, deviation, fallback, долгие стадии",
+  "status": "todo",
+  "summary": "Список 2.8.5; analyst читает только события и артефакты; golden на фикстуре журнала.",
+  "why": "Аудит П11.4, мысль 14.",
+  "scope": {
+    "include": [
+      "packages/analyst"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P12.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.8 События, журнал, логи",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:51Z"
+}

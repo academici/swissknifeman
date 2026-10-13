@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D5",
+  "title": "Сетевая изоляция ролей (N5)",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Роли объявляют permissions.network = none, но ro-run.py ограничивает только ФС. Аудит предлагает Landlock ABI 4 (TCP). Как сделать декларацию правдивой?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Не ограничивать сеть процесса агента: ro-run.py оборачивает весь CLI провайдера, и TCP-ограничение блокирует его API; сделать правдивой отчётность — orch.py launch matrix и dry-run показывают network_enforced (yes для codex --sandbox read-only/workspace-write, no для claude/grok), docs/contracts.md описывает, что network — заявленное намерение, обеспечиваемое песочницей провайдера; принуждение через песочницу Bash провайдера — roadmap с триггером «инцидент или требование безопасности»",
+      "pros": "честно и без поломки ролей",
+      "cons": "сеть executor на Claude не ограничена"
+    },
+    {
+      "id": "B",
+      "text": "Landlock ABI 4 TCP в ro-run.py",
+      "cons": "обрывает соединение CLI с API модели — роль не работает"
+    }
+  ],
+  "decision": "A — Не ограничивать сеть процесса агента: ro-run.py оборачивает весь CLI провайдера, и TCP-ограничение блокирует его API; сделать правдивой отчётность — orch.py launch matrix и dry-run показывают network_enforced (yes для codex --sandbox read-only/workspace-write, no для claude/grok), docs/contracts.md описывает, что network — заявленное намерение, обеспечиваемое песочницей провайдера; принуждение через песочницу Bash провайдера — roadmap с триггером «инцидент или требование безопасности»",
+  "rationale": "Ограничение сети процесса-агента ломает сам вызов модели; ограничивать можно только инструменты внутри агента силами провайдера.",
+  "applies_to": [
+    "P1.6"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

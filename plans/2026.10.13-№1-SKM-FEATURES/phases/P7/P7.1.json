@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.1",
+  "title": "review_recommendation в stage-report: recommended, reason_codes, focus, suggested_model_class",
+  "status": "todo",
+  "summary": "Поле 2.14 в stage-report.schema.json (аддитивно), roles/executor.md; fixtures valid/invalid.",
+  "why": "Аудит П6.1, мысль 17.",
+  "scope": {
+    "include": [
+      "orch stage-report схема, roles/executor.md"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P5.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 6. Динамический review (мысль 17; N10)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:44Z"
+}

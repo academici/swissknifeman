@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D9",
+  "title": "Reviewer по умолчанию и fallback",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Reviewer по умолчанию grok/grok-4.7/high (options.py DEFAULTS). Нужен ли fallback?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Оставить grok/grok-4.7/high, fallback_routes reviewer по умолчанию — claude-code/frontier/high",
+      "pros": "N10: review окупается, его потеря при квоте Grok дорога"
+    },
+    {
+      "id": "B",
+      "text": "Без fallback",
+      "cons": "квота Grok останавливает run"
+    }
+  ],
+  "decision": "A — Оставить grok/grok-4.7/high, fallback_routes reviewer по умолчанию — claude-code/frontier/high",
+  "rationale": "Рекомендация аудита (часть 7, п. 3).",
+  "applies_to": [
+    "P2.3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

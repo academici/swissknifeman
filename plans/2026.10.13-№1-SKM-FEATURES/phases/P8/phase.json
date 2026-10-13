@@ -1,0 +1,79 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P8",
+  "title": "Skills: метаданные выбора, селектор для orch-ролей, волна A, перенос hooks, расширения, карантин импорта",
+  "design": "skeleton",
+  "goal": "metadata.selection (kind, roles, triggers, requires_tools, conflicts, exclusive_group, max_tokens) в skill-descriptor/v1; skiller select --role --paths --deps --model-class --explain; волна A без eval (ROUTER_ONLY, PERSONA, REFERENCE уходят из runtime ролей); git-safety → hook harness, preflight-скрипты; skiller.custom_dirs и EXTENSION_AMBIGUOUS; карантин импортированных skills.",
+  "context": "audits/perplexity-audit.md — Фаза 7 (П7.1–П7.6), 2.6, часть 3 (решения по 209 skills), N11, N12, N16; волна B (П7.7) — P13.2 (D8). Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "frontmatter SKILL.md и генератор skills.json",
+      "skiller select",
+      "harness hooks",
+      "skiller custom_dirs"
+    ],
+    "exclude": [
+      "физический перенос PACKAGE_LOCAL в чужие репозитории (после выноса модулей)"
+    ]
+  },
+  "depends_on": [
+    "P1"
+  ],
+  "deliverables": [
+    "skiller select --explain",
+    "волна A",
+    "карантин импорта"
+  ],
+  "items": [
+    "P8.1",
+    "P8.2",
+    "P8.3",
+    "P8.4",
+    "P8.5",
+    "P8.6"
+  ],
+  "batches": [
+    {
+      "id": "BP8-1",
+      "items": [
+        "P8.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP8-2",
+      "items": [
+        "P8.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP8-3",
+      "items": [
+        "P8.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP8-4",
+      "items": [
+        "P8.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP8-5",
+      "items": [
+        "P8.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP8-6",
+      "items": [
+        "P8.6"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

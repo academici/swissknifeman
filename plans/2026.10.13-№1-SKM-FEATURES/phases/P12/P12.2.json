@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.2",
+  "title": "Новые типы событий orch.* по списку 2.8.2",
+  "status": "todo",
+  "summary": "orch.run.warning, waiting; orch.work.blocked; orch.agent.*; orch.review.*; orch.deviation.*; orch.provider.rate_limited, quota_exhausted, fallback; orch.input.rebuilt.",
+  "why": "Аудит П11.2.",
+  "scope": {
+    "include": [
+      "orch events"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P12.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.8 События, журнал, логи",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:50Z"
+}

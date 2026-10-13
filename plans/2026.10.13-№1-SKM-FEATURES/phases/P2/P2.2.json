@@ -1,0 +1,142 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "retry.decide в conductor: retry, retry_after с PROVIDER_WAIT, fallback_route с ROUTE_FALLBACK, reconcile, коды PROVIDER_AUTH/QUOTA/REFUSED/CONTEXT; run-options on_error, fallback_routes, limits.provider_wait_max_s",
+  "status": "todo",
+  "summary": "engine._role: провайдерный отказ решается retry.decide по knowledge/provider-errors#flow (CONDUCTOR_ON_ERROR unknown → retry; длинное или неизвестное ожидание quota → fallback_route); промпт «# Your previous answer was rejected» только для ROLE_OUTPUT_INVALID; reconcile — повтор с секцией об оставленных изменениях; run-options on_error и fallback_routes (с role), limits.provider_wait_max_s (900); схема, зеркало моста, options.py, docs/conductor.md (Stops, Beacons); тесты conductor по knowledge/provider-errors#tests.",
+  "why": "Аудит П1.2, 2.16, N2: conductor повторяет любую ошибку как невалидный ответ, квота превращается в ROLE_FAILED. Риски: (1) ожидание retry_after блокирует run — прерывается cancel, ограничено provider_wait_max_s; (2) fallback на маршрут ниже класса работы — проверка _route_minimum для нового маршрута; (3) повтор пишущей роли на грязном дереве — только с секцией об изменениях.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/engine.py (_role и помощники маршрута)",
+      "packages/orch/lib/orch/conductor/options.py",
+      "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "bridges/planner-orch/schemas/run-options.schema.json (sync-schema.py)",
+      "packages/orch/docs/conductor.md",
+      "packages/orch/tests/test_conductor.py, фикстуры run-options"
+    ],
+    "exclude": [
+      "пересборка промпта для context_limit (P9)",
+      "события журнала aicore (P12)",
+      "fallback reviewer по умолчанию (P2.3)"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/provider-errors#flow",
+      "why": "алгоритм, действия, коды, ключи",
+      "required": true
+    },
+    {
+      "ref": "knowledge/provider-errors#tests",
+      "why": "сценарии",
+      "required": true
+    },
+    {
+      "ref": "knowledge/provider-errors#facts",
+      "why": "retry.py, options.py, схемы",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "section": "_role",
+      "why": "строки 848–904",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/retry.py",
+      "why": "decide и RetryInputs",
+      "required": true
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "section": "Stops",
+      "why": "таблицы Stops и Beacons",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/fixtures/**",
+      "change": "any",
+      "note": "valid/invalid run-options"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "run-options меняется аддитивно; aicore schema compat зелёный",
+    "retry.py не меняется (чистая функция, общая с conformance)",
+    "Ожидание проверяет cancel каждую секунду; ROLE_OUTPUT_INVALID — прежний путь"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты сценариев (падают) → схема и options.py (+ sync-schema.py) → _role → fallback-маршрут → docs → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0: зеркало run-options совпадает",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "retry.decide в conductor",
+    "fallback_routes"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:27:05Z"
+}

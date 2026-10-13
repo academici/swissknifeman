@@ -1,0 +1,74 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Конфигурация: доступность провайдеров на машине, явный проект, одна точка выбора модели, explain",
+  "design": "skeleton",
+  "goal": "aicore.providers.available (machine-only) ∧ selection (project) ∧ бинарник = доступность; алгоритм определения проекта и PROJECT_CONTEXT_REQUIRED; модели в профилях skiller, agent-packs harness и command-routing planner заданы классом, а не именем; orch.py route explain; swissknifeman config explain --all; config_digest и options_digest в run.json.",
+  "context": "audits/perplexity-audit.md — Фаза 2 (П2.1–П2.3, П2.5, П2.6), 2.3, 2.4, E1, N7. П2.4 (удаление .swissknife.json) исключён: передан в PLAN3 P13 (D1). Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "aicore config.schema.json: aicore.providers.available",
+      "определение проекта во всех точках входа",
+      "model_tiers и agent-packs по классам",
+      "route explain",
+      "config explain --all",
+      "digest в run.json"
+    ],
+    "exclude": [
+      "удаление .swissknife.json (PLAN3 P13)",
+      "миграция schema_version (PLAN3 P13)"
+    ]
+  },
+  "depends_on": [
+    "P1"
+  ],
+  "deliverables": [
+    "machine-доступность провайдеров",
+    "одна точка выбора модели",
+    "route explain"
+  ],
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P3.5"
+  ],
+  "batches": [
+    {
+      "id": "BP3-1",
+      "items": [
+        "P3.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-2",
+      "items": [
+        "P3.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-3",
+      "items": [
+        "P3.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-4",
+      "items": [
+        "P3.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-5",
+      "items": [
+        "P3.5"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.4",
+  "title": "Протокол вопросов: stage-report.questions[], orch.conductor.questions (queue|deny|defaults), conduct.py answer, resume с INPUT_REBUILT, QUESTION_WAIT",
+  "status": "todo",
+  "summary": "Контракт 2.10.2; blocking false → assumption в журнал плана; blocking true → blocked с escalation QUESTION, события orch.agent.questioned, orch.run.waiting; conduct.py answer --run R --item I --question Q --text …; question_warn_s.",
+  "why": "Аудит П5.4, мысль 3. Режим advisor — после P10.4; interactive — только для запуска человеком.",
+  "scope": {
+    "include": [
+      "stage-report схема",
+      "orch conductor cli.py, engine.py",
+      "config orch.conductor.questions"
+    ],
+    "exclude": [
+      "режим advisor (P10.4)"
+    ]
+  },
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.10 Вопросы и диалог (мысль 3)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:43Z"
+}

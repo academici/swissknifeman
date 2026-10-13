@@ -1,0 +1,56 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.4",
+  "title": "Роль advisor: advice (options, recommendation, confidence, sources, needs_owner), human_gate, режим вопросов advisor, causation",
+  "status": "todo",
+  "summary": "Read-only, network allowed, frontier; триггеры и pipeline 2.13; orch.advisor.* в конфиге; human_gate не применяется автоматически.",
+  "why": "Аудит П5.5, мысль 20; D6.",
+  "scope": {
+    "include": [
+      "orch roles/advisor.*, схема advice, launch-catalog, engine.py"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P10.2",
+    "P6.4"
+  ],
+  "decisions": [
+    "D6"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.13 Advisor / консилиум (мысль 20)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:49Z"
+}

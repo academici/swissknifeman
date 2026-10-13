@@ -1,0 +1,115 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "Классификация отказа роли: сигналы rate_limit_event Claude, classify_failure по provider-errors.json, error_class и retry_after_s в RoleRun; фейковый провайдер с сырым потоком и stderr",
+  "status": "todo",
+  "summary": "process.py: parse_stream хранит последний rate_limit_event; run_role при ROLE_FAILED/ROLE_OUTPUT_EMPTY вычисляет error_class, retry_after_s, error_code по knowledge/provider-errors#signals (rate_limit_event → classify_failure → unknown); fake_role.py получает ключи ответа stream, stderr, is_error; правила provider-errors.json — только с источником; поведение conductor не меняется (решение — P2.2).",
+  "why": "Аудит П1.1, 2.16, N2, E6, D7, C5. Риск: текстовое правило без источника классифицирует чужую ошибку как quota → ложное ожидание; правило добавляется только с наблюдённым текстом или URL документации.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/process.py",
+      "packages/orch/tests/fixtures/conductor/fake_role.py",
+      "packages/orch/tests/test_conductor_process.py",
+      "packages/aicore/configs/provider-errors.json и тесты правил (при новых правилах)"
+    ],
+    "exclude": [
+      "решение retry/fallback (P2.2)",
+      "события orch.provider.* (P12)"
+    ]
+  },
+  "depends_on": [
+    "P1.1"
+  ],
+  "decisions": [
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/provider-errors#facts",
+      "why": "код process.py, errors.py, fake_role.py",
+      "required": true
+    },
+    {
+      "ref": "knowledge/provider-errors#signals",
+      "why": "порядок сигналов и поля RoleRun",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#corrections",
+      "why": "C5: формат rate_limit_event",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/process.py",
+      "why": "parse_stream, run_role",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/provider/errors.py",
+      "section": "classify_failure",
+      "why": "API",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/process.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/fixtures/conductor/fake_role.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor_process.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/configs/provider-errors.json",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any",
+      "note": "тест нового правила"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Сырой текст ошибки провайдера не попадает в safe_message и progress-lines",
+    "orch импортирует aicore.provider.errors; модули друг друга не импортируют"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: fake_role (stream, stderr, is_error) → unit-тесты parse_stream и run_role (падают) → process.py → правила с источником (если есть) → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "error_class и retry_after_s в RoleRun"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:26:51Z"
+}

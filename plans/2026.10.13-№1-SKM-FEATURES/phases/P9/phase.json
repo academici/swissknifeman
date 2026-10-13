@@ -1,0 +1,63 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P9",
+  "title": "Сборка промпта: prompt manifest, дедупликация и конфликты, бюджеты, фокус review",
+  "design": "skeleton",
+  "goal": "prompts/<step>.manifest.json (блоки с origin, sha256, tokens) без изменения промпта байт-в-байт; conduct.py prompt explain; исключение skills, дублирующих контракт роли, и правила конфликтов (PROMPT_CONFLICT); измерение бюджетов core/supporting/retrieval в manifest и BUDGET_OVER с блоком; focus[] и suggested_model_class рекомендации executor в промпт и routing reviewer.",
+  "context": "audits/perplexity-audit.md — Фаза 8 (П8.1, П8.2, П8.4), П6.3, 2.5, E7; prompt profiles (П8.3) — P13.3 (D6, D8). Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "orch conductor prompts.py",
+      "схема prompt-manifest",
+      "conduct.py prompt explain"
+    ],
+    "exclude": [
+      "изменение смысла задачи компилятором",
+      "лимиты бюджетов до 2–3 фаз данных"
+    ]
+  },
+  "depends_on": [
+    "P7",
+    "P8"
+  ],
+  "deliverables": [
+    "prompt manifest",
+    "prompt explain"
+  ],
+  "items": [
+    "P9.1",
+    "P9.2",
+    "P9.3",
+    "P9.4"
+  ],
+  "batches": [
+    {
+      "id": "BP9-1",
+      "items": [
+        "P9.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP9-2",
+      "items": [
+        "P9.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP9-3",
+      "items": [
+        "P9.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP9-4",
+      "items": [
+        "P9.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

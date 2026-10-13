@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.5",
+  "title": "config_digest и options_digest в run.json и событии orch.run.started",
+  "status": "todo",
+  "summary": "Проверить, что orchestration.options плана/фазы/пункта идут слоями run-options; записать config_digest и options_digest в run.json и data события orch.run.started.",
+  "why": "Аудит П2.6; воспроизводимость run (критерий 2 части 9).",
+  "scope": {
+    "include": [
+      "orch conductor engine.py, events"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P3.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.3 Конфигурация",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:40Z"
+}

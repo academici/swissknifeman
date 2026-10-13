@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.1",
+  "title": "Поля событий orch: agent_run_id, work_id, route, prompt_digest, config_digest, error_class, токены; orch/schemas/event-data/v1/",
+  "status": "todo",
+  "summary": "Схемы data событий orch.run.* и orch.agent.*.",
+  "why": "Аудит П11.1.",
+  "scope": {
+    "include": [
+      "orch events, схемы event-data"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P6.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.8 События, журнал, логи",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:50Z"
+}

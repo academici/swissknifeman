@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.4",
+  "title": "swissknifeman config explain --all: значение, слой, файл, строка каждого ключа, --json",
+  "status": "todo",
+  "summary": "Фасад maind/umbrella над aicore config explain: все ключи effective config с источником; --json; golden на фикстуре machine+project+plan.",
+  "why": "Аудит П2.5.",
+  "scope": {
+    "include": [
+      "umbrella/maind config",
+      "aicore config explain"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P3.1"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.3 Конфигурация",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:40Z"
+}

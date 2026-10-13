@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.3",
+  "title": "Мутации плана только через work source: нет записей в plans/ вне infrastructure/work_source.py",
+  "status": "todo",
+  "summary": "Тест: rg \"open\\(.*plans/\" packages/orch/lib/orch/conductor пусто вне infrastructure/work_source.py.",
+  "why": "Аудит П10.3, критерий 14.",
+  "scope": {
+    "include": [
+      "orch conductor"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P11.2"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 10. Рефакторинг `engine.py` (мысль 7) — после фаз 1, 3, 5, 6",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.19 Рефакторинг Python (мысль 7)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:50Z"
+}

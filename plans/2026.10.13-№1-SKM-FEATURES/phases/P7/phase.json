@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P7",
+  "title": "Динамический review: рекомендация executor и risk score conductor",
+  "design": "skeleton",
+  "goal": "stage-report.review_recommendation; чистая функция risk score по признакам аудита 2.14 с весами в конфиге и порогом review.dynamic_threshold; добавление reviewer+triager даже в пакетах без review, маяк REVIEW_ADDED.",
+  "context": "audits/perplexity-audit.md — Фаза 6 (П6.1, П6.2), 2.14, N10; П6.3 (фокус в промпте reviewer) — P9.4. Детализируется перед исполнением.",
+  "scope": {
+    "include": [
+      "stage-report review_recommendation",
+      "orch risk.py",
+      "run-options review.dynamic, review.dynamic_threshold"
+    ],
+    "exclude": [
+      "LLM-оценка риска"
+    ]
+  },
+  "depends_on": [
+    "P5"
+  ],
+  "deliverables": [
+    "динамический review"
+  ],
+  "items": [
+    "P7.1",
+    "P7.2"
+  ],
+  "batches": [
+    {
+      "id": "BP7-1",
+      "items": [
+        "P7.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP7-2",
+      "items": [
+        "P7.2"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

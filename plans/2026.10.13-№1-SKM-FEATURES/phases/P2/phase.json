@@ -1,0 +1,69 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P2",
+  "title": "Ошибки провайдеров: классификация error/v1 в conductor, retry.decide, fallback_routes, коды остановки",
+  "design": "detailed",
+  "goal": "Ошибка роли в conductor классифицируется классом error/v1 (aicore.provider.errors + структурные сигналы потока), реакция выбирается retry.decide (retry, retry_after с ожиданием, fallback_route, replan, reconcile, stop) вместо безусловного повтора; коды остановки PROVIDER_QUOTA, PROVIDER_AUTH, PROVIDER_CONTEXT, RECONCILE_REQUIRED; run-options fallback_routes; fallback reviewer по умолчанию.",
+  "context": "audits/perplexity-audit.md — Фаза 1 (П1.1–П1.3), 2.16, N2, E6; дизайн — knowledge/provider-errors. Решение D7 (источник правил классификации). Зависит от baseline P1.1.",
+  "scope": {
+    "include": [
+      "orch conductor process.py: класс ошибки и сигналы rate_limit_event",
+      "orch conductor engine.py _role: retry.decide",
+      "aicore configs/provider-errors.json и aicore.provider.errors",
+      "run-options fallback_routes и on_error",
+      "маяки PROVIDER_WAIT, ROUTE_FALLBACK",
+      "docs conductor.md"
+    ],
+    "exclude": [
+      "события orch.provider.* в журнале aicore (P12)",
+      "advisor при потере возможностей (P10)"
+    ]
+  },
+  "depends_on": [
+    "P1"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "классификация ошибок ролей",
+    "retry.decide в conductor",
+    "fallback_routes"
+  ],
+  "items": [
+    "P2.1",
+    "P2.2",
+    "P2.3"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P2.1",
+        "P2.2",
+        "P2.3"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

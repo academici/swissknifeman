@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.3",
+  "title": "Маркер тихого отказа: result.permission_denials потока Claude → маяк RESULT_SILENT_DENIAL и note в отчёте",
+  "status": "todo",
+  "summary": "Парсить permission_denials (поле подтверждено, C5) в process.parse_stream; маяк RESULT_SILENT_DENIAL с tool_name; note в open_issues отчёта.",
+  "why": "Аудит П5.3, E2: реальный риск headless — тихий отказ.",
+  "scope": {
+    "include": [
+      "orch process.py, engine.py"
+    ],
+    "exclude": []
+  },
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.10 Вопросы и диалог (мысль 3)",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:43Z"
+}

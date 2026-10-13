@@ -1,0 +1,117 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.4",
+  "title": "orch launch-catalog: ro-run и --tools у bounded-implementer на Claude, --permission-prompts none у всех ролей Claude, причина записи Grok-reviewer в vendor/",
+  "status": "todo",
+  "summary": "launch-catalog.json: bounded-implementer.claude-code по образцу executor (ro-run.py --rw {cwd}, --tools Bash,Read,Edit,Write,Grep,Glob, --allowedTools Bash); --permission-prompts none во всех записях claude-code с -p; docs/conductor.md — причина --rw {cwd}/vendor у grok reviewer; обновить тесты launch, render, моста planner-orch и golden.",
+  "why": "Аудит П0.3 (N4), П0.4 (C4), П0.6 (N17, C3). Риск: изменение argv ломает golden и тесты моста planner-orch (test_launch_bridge.py) — захват golden только с --reason.",
+  "scope": {
+    "include": [
+      "packages/orch/configs/launch-catalog.json",
+      "packages/orch/tests/test_launch.py, test_render.py",
+      "bridges/planner-orch/tests/test_launch_bridge.py",
+      "tests/golden/**",
+      "packages/orch/docs/conductor.md",
+      "packages/orch/README.md (матрица)"
+    ],
+    "exclude": [
+      "поле network (P1.6)",
+      "argv grok reviewer"
+    ]
+  },
+  "reads": [
+    {
+      "ref": "knowledge/p1-fixes#launch",
+      "why": "точные argv и потребители",
+      "required": true
+    },
+    {
+      "path": "packages/orch/configs/launch-catalog.json",
+      "why": "текущие записи executor и bounded-implementer",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/configs/launch-catalog.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_launch.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_render.py",
+      "change": "any"
+    },
+    {
+      "path": "bridges/planner-orch/tests/test_launch_bridge.py",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутые случаи, захват с --reason"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Предпосылка: claude --help | grep -- '--permission-prompts'; нет флага — без --permission-prompts, отметка в open_issues"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: проверка флага → тест argv bounded-implementer (падает) → каталог → тесты потребителей → golden → docs → V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) python3 packages/orch/scripts/orch.py launch argv bounded-implementer claude-code --model sonnet --effort medium --cwd /w | python3 -c \"import json,sys; a=json.load(sys.stdin)['argv']; assert any(x.endswith('ro-run.py') for x in a) and '--tools' in a and a[a.index('--rw')+1]=='/w', a\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 -c \"import json; L=json.load(open('packages/orch/configs/launch-catalog.json'))['launch']; bad=[r for r,p in L.items() for k,e in p.items() if k=='claude-code' and '-p' in e['argv'] and '--permission-prompts' not in e['argv']]; assert not bad, bad\" && grep -q 'vendor' packages/orch/docs/conductor.md && python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "изоляция bounded-implementer",
+    "--permission-prompts none"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:26:51Z"
+}

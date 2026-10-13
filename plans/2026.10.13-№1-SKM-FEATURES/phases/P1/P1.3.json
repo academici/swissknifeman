@@ -1,0 +1,91 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.3",
+  "title": "skiller: проверка ссылок budget-configs и негативные фикстуры ссылок presets, profiles, budget-configs",
+  "status": "todo",
+  "summary": "В packages/skiller/scripts/validate.sh добавить раздел budget-configs/*.json (buckets, exclude, include) с семантикой пресетов (bucket ∈ skills/ ∪ HOST_BUCKETS; skill ∈ имена ∪ bucket/rel); новый тест packages/skiller/tests/test_validate_references.py: копия пакета с битой ссылкой в presets, profiles, budget-configs → validate.sh exit≠0 с файлом и токеном; текущее дерево — exit 0.",
+  "why": "Аудит П0.2 (N6, N8) с поправкой C2: ссылка ai/performance рабочая, пресеты уже проверяются; непроверенными остались budget-configs и нет негативных фикстур. Риск: тест копирует пакет — только во временный каталог.",
+  "scope": {
+    "include": [
+      "packages/skiller/scripts/validate.sh",
+      "packages/skiller/tests/test_validate_references.py"
+    ],
+    "exclude": [
+      "изменение presets/agent-context.json",
+      "семантика резолвера skillset._match"
+    ]
+  },
+  "reads": [
+    {
+      "ref": "knowledge/p1-fixes#skiller",
+      "why": "что именно проверять",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#corrections",
+      "why": "C2",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "section": "6b. presets/*.json",
+      "why": "образец проверки ссылок и HOST_BUCKETS",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/test_validate_references.py",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Тесты — временный HOME и временная копия пакета"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тест с битыми ссылками (падает для budget-configs) → раздел валидатора → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) SKM_VALIDATE_SKIP_TESTS=1 bash packages/skiller/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "проверка budget-configs",
+    "негативные фикстуры ссылок"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:26:50Z"
+}

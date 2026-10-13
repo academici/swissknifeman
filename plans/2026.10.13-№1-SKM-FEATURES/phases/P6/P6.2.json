@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.2",
+  "title": "Папка и lineage на каждый вызов агента: <run>/<work>/agents/<agent_run_id>/ request, result, usage; agent_run_id в progress-lines; orch.agent.started/finished/failed",
+  "status": "todo",
+  "summary": "agent_run_id в каждой progress-line и в event/v1 subject, causationid — событие-причина; conduct.py status --json — дерево агентов; observer считает токены по agent_run_id.",
+  "why": "Аудит П5.2, мысли 1 и 10.",
+  "scope": {
+    "include": [
+      "orch engine.py, progress.py, observer.py, cli.py"
+    ],
+    "exclude": []
+  },
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.7 Единица работы, артефакты, lineage",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:42Z"
+}

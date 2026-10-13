@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.2",
+  "title": "Явный проект во всех точках входа: --project, SKM_PROJECT_ROOT, маркер, PROJECT_CONTEXT_REQUIRED; project_root и project_resolution в run.json",
+  "status": "todo",
+  "summary": "Алгоритм 2.3.5 аудита во всех CLI (orch conduct.py и orch.py, planner, skiller, maind); без проекта команде, которой он нужен, — PROJECT_CONTEXT_REQUIRED (exit 1); run.json — project_root, project_resolution, working_directory, config_layers.",
+  "why": "Аудит П2.2. Риск: изменение поведения всех CLI — machine-only команды не должны требовать проект; golden-тесты CLI.",
+  "scope": {
+    "include": [
+      "CLI orch, planner, skiller, maind",
+      "aicore.state.locations"
+    ],
+    "exclude": [
+      "изменение find_project_root"
+    ]
+  },
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.3 Конфигурация",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:39Z"
+}

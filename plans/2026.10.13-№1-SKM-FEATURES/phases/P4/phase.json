@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P4",
+  "title": "Лимиты времени run и лимиты review на batch",
+  "design": "skeleton",
+  "goal": "limits.run_warn_s (7200) → маяк RUN_SLOW и событие orch.run.warning без остановки; limits.run_timeout_s (0); limits.review_rounds_batch, corrections_batch, findings_batch со счётчиком run; Blocker не обрезается — stop REVIEW_LIMIT.",
+  "context": "audits/perplexity-audit.md — Фаза 3 (П3.1, П3.2), 2.11, 2.14. Детализируется после P2 (тот же engine.py).",
+  "scope": {
+    "include": [
+      "orch options.py, run-options.schema.json, progress.py, engine.py"
+    ],
+    "exclude": [
+      "agent_warn_s (отклонено аудитом)"
+    ]
+  },
+  "depends_on": [
+    "P2"
+  ],
+  "deliverables": [
+    "RUN_SLOW",
+    "batch-лимиты review"
+  ],
+  "items": [
+    "P4.1",
+    "P4.2"
+  ],
+  "batches": [
+    {
+      "id": "BP4-1",
+      "items": [
+        "P4.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP4-2",
+      "items": [
+        "P4.2"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.4",
+  "title": "Перенос: git-safety → hook harness, task-brief-template → exec/v1, session-handoff → stage-report, preflight-skills → скрипты с JSON-результатом",
+  "status": "todo",
+  "summary": "Каждый перенос с тестом на новом месте; skill-обёртка ссылается на него.",
+  "why": "Аудит П7.4.",
+  "scope": {
+    "include": [
+      "harness hooks",
+      "skiller skills"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P8.3"
+  ],
+  "reads": [
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 7. Skills: метаданные, выбор, диета (мысль 15; часть 3)",
+      "why": "пункт аудита: файлы, шаги, приёмка",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "2.6 Архитектура skills",
+      "why": "целевая архитектура",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#source",
+      "why": "соответствие пунктов аудиту и поправки",
+      "required": true
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:28:45Z"
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.3",
+  "title": "Fallback reviewer по умолчанию claude-code/frontier/high при отказе Grok; источник reviewer и fallback в dry-run; закрытие фазы P2",
+  "status": "todo",
+  "summary": "options.py DEFAULTS: fallback_routes [{role: reviewer, provider: claude-code, model_class: frontier, effort: high}]; conduct.py run --dry-run показывает fallback_routes и слой, откуда пришёл reviewer; тест dry-run с недоступным grok показывает fallback; тест run: quota grok reviewer → ROUTE_FALLBACK на claude-code. Пункт закрывает фазу: phase.validation P2.",
+  "why": "Аудит П1.3, D9, N10: потеря review при квоте Grok дорога. Риск: дефолт заменяется слоем (массив) — проект без reviewer-fallback пишет fallback_routes = [].",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/options.py",
+      "packages/orch/lib/orch/conductor/cli.py (_preview)",
+      "packages/orch/tests/test_conductor.py",
+      "packages/orch/docs/conductor.md",
+      "phase.validation P2"
+    ],
+    "exclude": [
+      "route explain (P3.3)"
+    ]
+  },
+  "depends_on": [
+    "P2.2"
+  ],
+  "decisions": [
+    "D9"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/provider-errors#flow",
+      "why": "fallback_routes и ROUTE_FALLBACK",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-fixes#checks",
+      "why": "состав широкого прогона фазы (тот же)",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "section": "DEFAULTS",
+      "why": "умолчания",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "phase.validation P2 — после V1 пункта, один раз"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тесты (падают) → DEFAULTS → _preview → docs → V1 → phase.validation P2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "fallback reviewer"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:26:52Z"
+}

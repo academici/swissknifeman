@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SELF = Path(__file__).resolve().relative_to(ROOT).as_posix()
 ALLOWLIST = ROOT / "tests" / "boundary_allowlist.json"
 
-_NAMES = "orch|skiller|harness|maind|analyst|artifex"
+_NAMES = "orch|skiller|harness|maind|analyst"
 FORBIDDEN = (
     re.compile(rf"packages/({_NAMES})\b"),
     re.compile(rf"^\s*(from|import)\s+({_NAMES})\b"),

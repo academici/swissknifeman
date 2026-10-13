@@ -38,9 +38,6 @@ jobs:
       - name: Test aicore (stdlib foundation)
         run: bash packages/aicore/scripts/test.sh -v
 
-      - name: Test core (transitional shim)
-        run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
-
   standalone:
     runs-on: ubuntu-latest
     steps:
@@ -52,6 +49,18 @@ jobs:
 
       - name: Test and validate every module in an isolated copy
         run: python3 scripts/ecosystem-units.py standalone --baseline
+
+  boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Module boundary (strict)
+        run: python3 scripts/ecosystem-units.py check --strict
 
   task:
     runs-on: ubuntu-latest

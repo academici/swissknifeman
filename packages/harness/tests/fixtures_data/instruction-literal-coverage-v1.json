@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "4dab51a4d0e1dbea222b79ec8893e4b7e54da99dd946c9ed113496a0eb4bddb2",
+    "source_sha256": "18aa84b7ffcf9ae3ffe16837f88e5b7b86a77c1a0107dce8022e19379e29e14e",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 370
+    "literal_count": 351
   },
   "literals": [
     {
@@ -47,11 +47,15 @@
     },
     {
       "semantic_id": "root.repository-layout",
-      "literal": "Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site."
+      "literal": "Keep the modules as independent folders under `packages/`, the links between them in `bridges/`, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site."
     },
     {
       "semantic_id": "root.repository-layout",
-      "literal": "`core/`"
+      "literal": "`packages/`"
+    },
+    {
+      "semantic_id": "root.repository-layout",
+      "literal": "`bridges/`"
     },
     {
       "semantic_id": "root.repository-layout",
@@ -123,19 +127,19 @@
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "Put shared primitives in `core/`"
+      "literal": "Put shared primitives in `packages/aicore/`"
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback."
+      "literal": "module Python runtime stays stdlib-only and reaches `aicore` through the `lib/` folder of that module on `PYTHONPATH`."
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "`core/`"
+      "literal": "`packages/aicore/`"
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "`core`"
+      "literal": "`aicore`"
     },
     {
       "semantic_id": "root.shared-core",
@@ -1244,86 +1248,6 @@
     {
       "semantic_id": "planner.claude-code.model-pins",
       "literal": "`plan-run`"
-    },
-    {
-      "semantic_id": "artifex.identity",
-      "literal": "`artifex` is the standalone deterministic supervisor package"
-    },
-    {
-      "semantic_id": "artifex.identity",
-      "literal": "its package runtime is the sole live implementation after G1."
-    },
-    {
-      "semantic_id": "artifex.identity",
-      "literal": "`artifex`"
-    },
-    {
-      "semantic_id": "artifex.layout",
-      "literal": "Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates."
-    },
-    {
-      "semantic_id": "artifex.layout",
-      "literal": "`bin/artifex`"
-    },
-    {
-      "semantic_id": "artifex.layout",
-      "literal": "`lib/artifex/`"
-    },
-    {
-      "semantic_id": "artifex.layout",
-      "literal": "`tests/`"
-    },
-    {
-      "semantic_id": "artifex.runtime-boundaries",
-      "literal": "Keep provider adapters additive over one shared supervisor contract"
-    },
-    {
-      "semantic_id": "artifex.runtime-boundaries",
-      "literal": "use bounded fresh processes and never make package runtime import `plans/**`."
-    },
-    {
-      "semantic_id": "artifex.runtime-boundaries",
-      "literal": "`plans/**`"
-    },
-    {
-      "semantic_id": "artifex.provenance",
-      "literal": "Keep generation and source hashes explicit"
-    },
-    {
-      "semantic_id": "artifex.provenance",
-      "literal": "plan-local runtime remains immutable non-importable evidence rather than a package dependency."
-    },
-    {
-      "semantic_id": "artifex.engineering-invariants",
-      "literal": "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate."
-    },
-    {
-      "semantic_id": "artifex.engineering-invariants",
-      "literal": "`lib/artifex/`"
-    },
-    {
-      "semantic_id": "artifex.validation-release",
-      "literal": "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages."
-    },
-    {
-      "semantic_id": "artifex.validation-release",
-      "literal": "`bash scripts/test.sh`"
-    },
-    {
-      "semantic_id": "artifex.validation-release",
-      "literal": "`bash scripts/validate.sh`"
-    },
-    {
-      "semantic_id": "artifex.claude-code.package-scope",
-      "literal": "Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."
-    },
-    {
-      "semantic_id": "artifex.codex.package-scope",
-      "literal": "Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it."
-    },
-    {
-      "semantic_id": "artifex.codex.package-scope",
-      "literal": "`codex -C packages/artifex`"
     },
     {
       "semantic_id": "brain.identity",

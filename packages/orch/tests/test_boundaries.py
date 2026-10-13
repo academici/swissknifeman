@@ -12,11 +12,11 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SELF = Path(__file__).resolve().relative_to(ROOT).as_posix()
-_NAMES = "planner|skiller|harness|maind|analyst|artifex"
+_NAMES = "planner|skiller|harness|maind|analyst"
 FORBIDDEN = (
     re.compile(rf"packages/({_NAMES})\b"),
     re.compile(rf"^\s*(from|import)\s+({_NAMES})\b"),
-    re.compile(r"\b(skiller|harness|maind|analyst|artifex)\b"),
+    re.compile(r"\b(skiller|harness|maind|analyst)\b"),
     re.compile(r"plan\.py"),
     re.compile(r"\bplanner:[a-z][a-z-]*"),
     re.compile(r"planner/(lib|plan|scripts|commands|skills)\b"),

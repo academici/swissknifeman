@@ -11,11 +11,13 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+_AICORE_LIB = str(ROOT / "packages/aicore/lib")
+if _AICORE_LIB not in sys.path:
+    sys.path.insert(0, _AICORE_LIB)
 
-from core import (ProviderId, SupportLevel, load_provider_manifest,
-                  provider_manifest_sha256, support_for)
+from aicore.provider.manifest import (load_provider_manifest, provider_manifest_sha256,
+                                      support_for)
+from aicore.provider.values import ProviderId, SupportLevel
 
 
 MANIFEST_REL = "packages/aicore/configs/provider-capabilities.json"

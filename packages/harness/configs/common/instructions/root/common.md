@@ -3,7 +3,7 @@
 `swissknifeman` is the umbrella repository and control layer; `skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages. In this repository, names are not roles: the umbrella brand, marketplace, and `~/.swissknifeman/` state are never renamed to match an internal package.
 <!-- instruction:root.repository-layout -->
 ## root.repository-layout
-Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.
+Keep the modules as independent folders under `packages/`, the links between them in `bridges/`, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.
 <!-- instruction:root.package-boundaries -->
 ## root.package-boundaries
 Read the relevant package guide before changing `packages/<name>/`; `planner` remains plugin-only and has no standalone CLI. This is one monorepo: maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`.
@@ -12,7 +12,7 @@ Read the relevant package guide before changing `packages/<name>/`; `planner` re
 Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`. Installation delegates to package installers, and the umbrella owns the `swissknifeman` launcher alias.
 <!-- instruction:root.shared-core -->
 ## root.shared-core
-Put shared primitives in `core/`; package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback. In addition, bash launchers resolve the repository root independently — a deliberate exception, since `core` is not yet on `PYTHONPATH` at that point. One source of truth beats copies: deduplicate rather than maintain parallel implementations.
+Put shared primitives in `packages/aicore/`; module Python runtime stays stdlib-only and reaches `aicore` through the `lib/` folder of that module on `PYTHONPATH`. In addition, bash launchers resolve the repository root independently — a deliberate exception, since `aicore` is not yet on `PYTHONPATH` at that point. One source of truth beats copies: deduplicate rather than maintain parallel implementations.
 <!-- instruction:root.marketplace -->
 ## root.marketplace
 Maintain one generated `swissknifeman` marketplace with package provenance; plugin names remain unprefixed for backward compatibility. In addition, the curated `core` plugin lists skills explicitly. The `harness` and `maind` plugins ship commands only, without an MCP server.
@@ -54,4 +54,4 @@ By repository convention, implement optimizations only against a measured proble
 By convention, package documentation builds standalone and in the umbrella aggregate; internal documentation links stay relative, without a package-name prefix.
 <!-- instruction:root.module-folders -->
 ## root.module-folders
-Every `packages/<id>/` folder is an independent module described by its `unit.json`. A module imports only its own `lib/<id>/` and the foundation it declares in `requires` (`aicore`; `core/` until it is removed), and reaches other modules only through bridges (`bridges/`) or events, never by import or path. Modules with `destination: own-repo` will move to their own repositories. Check boundaries with `python3 scripts/ecosystem-units.py check`.
+Every `packages/<id>/` folder is an independent module described by its `unit.json`. A module imports only its own `lib/<id>/` and the foundation it declares in `requires` (`aicore`), and reaches other modules only through bridges (`bridges/`) or events, never by import or path. Modules with `destination: own-repo` will move to their own repositories. Check boundaries with `python3 scripts/ecosystem-units.py check`.

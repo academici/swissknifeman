@@ -14,16 +14,6 @@ def is_within(path, root):
         return False
 
 
-def state_dir(home, app=None):
-    """Return the umbrella state root or its application subdirectory.
-
-    Legacy location: new code uses :mod:`aicore.state` (XDG places, ``SKM_HOME``). Kept for the
-    modules that are not moved yet. maind deliberately owns its separate ``~/.maind`` directory.
-    """
-    base = Path(home) / ".swissknifeman"
-    return base / app if app else base
-
-
 def is_within_lexical(path, root, *, allow_root=True):
     """Check lexical containment without resolving the final ``path`` symlink.
 

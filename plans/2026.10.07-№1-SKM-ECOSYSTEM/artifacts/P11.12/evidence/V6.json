@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261012T213740Z-bd6455:P11.12:checks.3:V6",
+  "check_id": "V6",
+  "subject": "PLAN3.P11.12",
+  "candidate": {
+    "head": "1af1bea3cc350e9bf1d05855a6eda854855013ec",
+    "dirty_digest": "c1020dcb7b7c648bd22f0232e363d6f5a1c552089cf06364e764b22f56e6af54"
+  },
+  "started_at": "2026-10-13T00:04:19Z",
+  "procedure": {
+    "cmd": "! git grep -nE '^\\s*(from\\s+core(\\.|\\s)|import\\s+core\\b)' -- '*.py' && grep -q 'check --strict' .github/workflows/test.yml && bash scripts/test-bridges.sh && bash scripts/test-integration.sh && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T00:05:47Z"
+}

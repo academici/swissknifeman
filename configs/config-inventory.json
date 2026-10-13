@@ -510,7 +510,6 @@
         "bridges/planner-orch/launch.py",
         "packages/harness/lib/harness/cursor_render.py",
         "packages/harness/lib/harness/run/worker.py",
-        "packages/artifex/lib/artifex/providers/codex.py",
         "scripts/provider-docs.py",
         "configs/skiller-host.json"
       ],

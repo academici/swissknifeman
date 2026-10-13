@@ -28,7 +28,7 @@ class TestPublicHygiene(unittest.TestCase):
         self.assertEqual(len(violations), 2)
 
     def test_clean_list_zero_violations(self):
-        violations = public_hygiene.check(["README.md", "core/io.py", "docs/status.md"])
+        violations = public_hygiene.check(["README.md", "packages/aicore/lib/aicore/io.py", "docs/status.md"])
         self.assertEqual(violations, [])
 
     def test_component_rules(self):

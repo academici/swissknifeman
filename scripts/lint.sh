@@ -11,8 +11,7 @@ set -euo pipefail
 
 RUFF_VERSION="0.15.19"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PATHS=(core/ core/tests
-  packages/aicore/lib packages/aicore/tests
+PATHS=(packages/aicore/lib packages/aicore/tests
   packages/skiller/lib packages/skiller/tests
   packages/harness/lib packages/harness/tests
   packages/maind/lib packages/maind/tests

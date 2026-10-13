@@ -21,7 +21,6 @@ PACKAGE_DIRS = {
     "maind": "packages/maind",
     "analyst": "packages/analyst",
     "planner": "packages/planner",
-    "core": "core",
     "aicore": "packages/aicore",
 }
 

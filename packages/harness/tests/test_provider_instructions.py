@@ -10,7 +10,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from aicore.artifacts.artifact import sha256_digest
-from aicore.artifacts.lock import serialize_lock
+from aicore.artifacts.lock import ArtifactLock, parse_lock, serialize_lock
+from harness.instructions import _prune_retired_scope_records
 from harness.instructions import (
     CATALOG_VERSION, COMMON_IDS, CONTRACT_VERSION, DIAGNOSTIC_CODES, EXTENSION_IDS,
     PROVIDERS, ROOT_PINNED_COMMON_IDS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
@@ -64,13 +65,13 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_76_common_28_extension_104_total_and_thirty_six_targets(self):
+    def test_exact_70_common_26_extension_96_total_and_thirty_two_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (76, 28, 104))
+        self.assertEqual((common, extensions, common + extensions), (70, 26, 96))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
@@ -479,6 +480,24 @@ class PublicOperationTests(unittest.TestCase):
             })
             self.assertRegex(record["source_hash"], r"^sha256:[0-9a-f]{64}$")
             self.assertRegex(record["rendered_hash"], r"^sha256:[0-9a-f]{64}$")
+
+
+class RetiredScopeLockTests(unittest.TestCase):
+    def test_prune_drops_only_records_of_scopes_outside_the_catalog(self):
+        hub_lock = Path(__file__).resolve().parents[3] / ".swissknifeman/provider-artifacts.lock.json"
+        if not hub_lock.is_file():
+            self.skipTest("no hub lock around")
+        records = parse_lock(hub_lock.read_bytes()).records
+        own = next(r for r in records if r.artifact_id.startswith("harness.instruction-projection.root."))
+        retired = replace(own, artifact_id="harness.instruction-projection.gone.claude-code",
+                          target_path="packages/gone/CLAUDE.md")
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / ".swissknifeman/provider-artifacts.lock.json"
+            path.parent.mkdir()
+            path.write_bytes(serialize_lock(ArtifactLock(1, (own, retired))))
+            _prune_retired_scope_records(Path(temp))
+            kept = parse_lock(path.read_bytes()).records
+        self.assertEqual([r.artifact_id for r in kept], [own.artifact_id])
 
 
 if __name__ == "__main__":

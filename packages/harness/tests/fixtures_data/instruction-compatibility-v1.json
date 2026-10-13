@@ -30,8 +30,9 @@
         "codex"
       ],
       "assertions": [
-        "Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.",
-        "`core/`",
+        "Keep the modules as independent folders under `packages/`, the links between them in `bridges/`, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.",
+        "`packages/`",
+        "`bridges/`",
         "`.claude-plugin/marketplace.json`",
         "`docs/`"
       ]
@@ -76,10 +77,10 @@
         "codex"
       ],
       "assertions": [
-        "Put shared primitives in `core/`",
-        "package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback.",
-        "`core/`",
-        "`core`",
+        "Put shared primitives in `packages/aicore/`",
+        "module Python runtime stays stdlib-only and reaches `aicore` through the `lib/` folder of that module on `PYTHONPATH`.",
+        "`packages/aicore/`",
+        "`aicore`",
         "`PYTHONPATH`",
         "bash launchers resolve the repository root independently",
         "deduplicate rather than maintain parallel implementations"
@@ -1060,96 +1061,6 @@
         "Claude Code command frontmatter pins routes; do not change those pins without explicit intent. `plan-run` inherits the owner session route.",
         "do not change those pins without explicit intent.",
         "`plan-run`"
-      ]
-    },
-    {
-      "id": "artifex.identity",
-      "provider_ids": [
-        "claude-code",
-        "codex"
-      ],
-      "assertions": [
-        "`artifex` is the standalone deterministic supervisor package",
-        "its package runtime is the sole live implementation after G1.",
-        "`artifex`"
-      ]
-    },
-    {
-      "id": "artifex.layout",
-      "provider_ids": [
-        "claude-code",
-        "codex"
-      ],
-      "assertions": [
-        "Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.",
-        "`bin/artifex`",
-        "`lib/artifex/`",
-        "`tests/`"
-      ]
-    },
-    {
-      "id": "artifex.runtime-boundaries",
-      "provider_ids": [
-        "claude-code",
-        "codex"
-      ],
-      "assertions": [
-        "Keep provider adapters additive over one shared supervisor contract",
-        "use bounded fresh processes and never make package runtime import `plans/**`.",
-        "`plans/**`"
-      ]
-    },
-    {
-      "id": "artifex.provenance",
-      "provider_ids": [
-        "claude-code",
-        "codex"
-      ],
-      "assertions": [
-        "Keep generation and source hashes explicit",
-        "plan-local runtime remains immutable non-importable evidence rather than a package dependency."
-      ]
-    },
-    {
-      "id": "artifex.engineering-invariants",
-      "provider_ids": [
-        "claude-code",
-        "codex"
-      ],
-      "assertions": [
-        "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate.",
-        "`lib/artifex/`"
-      ]
-    },
-    {
-      "id": "artifex.validation-release",
-      "provider_ids": [
-        "claude-code",
-        "codex"
-      ],
-      "assertions": [
-        "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.",
-        "`bash scripts/test.sh`",
-        "`bash scripts/validate.sh`"
-      ]
-    },
-    {
-      "id": "artifex.claude-code.package-scope",
-      "provider_ids": [
-        "claude-code"
-      ],
-      "assertions": [
-        "Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."
-      ]
-    },
-    {
-      "id": "artifex.codex.package-scope",
-      "provider_ids": [
-        "codex"
-      ],
-      "assertions": [
-        "Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.",
-        "`codex -C packages/artifex`"
       ]
     },
     {

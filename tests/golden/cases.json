@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "6e9e2af4faf5",
-  "reason": "orch-debug: раздел Provenance, счётчики bootstrap-идентичностей",
+  "captured_from": "b9d8ed708475",
+  "reason": "artifex scope removed from the instruction catalog; root sections no longer name core/",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

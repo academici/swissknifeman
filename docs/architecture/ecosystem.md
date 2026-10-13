@@ -50,17 +50,15 @@ swissknifeman/                      # the hub repository
   configs/  scripts/  bootstrap/  docs/  .github/
 ```
 
-`core/` dissolves into `aicore` and `analyst` (the shared code is already in `packages/aicore`; `core/` keeps a
-compatibility shim and the modules of later stages, see [ADR 0028](decisions/0028-aicore-subsystems-and-core-shim.md)); `packages/artifex` is retired and stays in history by tag;
+`core/` dissolved into `aicore` and `analyst` (the shared code lives in `packages/aicore`; the compatibility shim was removed, see [ADR 0028](decisions/0028-aicore-subsystems-and-core-shim.md)); `packages/artifex` was retired and removed, it stays in history by tag;
 `packages/task` became `packages/planner`; the root research folder of orchestration moves into
-`packages/orch/docs/research/`. Until a module is moved, the transitional roots (`core/`, `orch/`, `packages/artifex/`,
-`packages/planner/`) are covered by the ownership map. The legacy driver `harness/run` stays until `orch` reaches parity.
+`packages/orch/docs/research/`. No transitional root is left: the ownership map holds only the files that still move to another module. The legacy driver `harness/run` stays until `orch` reaches parity.
 
 ### Modules
 
 | Module | Purpose | Depends on | Built from (current paths) |
 | --- | --- | --- | --- |
-| `aicore` | foundation | none | exists: `core/*` except analytics, `core/provider/*`, `core/usage.py` and `configs/provider-*.json` moved in; still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `planner` command rendering |
+| `aicore` | foundation | none | exists: the former root `core/` package and `configs/provider-*.json` moved in (`core/` is removed); still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `planner` command rendering |
 | `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/planner` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch` (research in `docs/research`) |
@@ -487,7 +485,7 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
 | P8 | `skiller` reduced to shared skills; code on `aicore`; module skills through the host-provided `system` bucket; settings in the layered config; skill metadata and `skiller describe` (done) |
 | P9 | `planner` rename with the `task` compatibility alias, layered configuration, events, overlay slots, external plan checks, execution scenario and attempt owner, commands on `aicore` (done) |
 | P10 | `orch` on `aicore`; bridges as hub units (`bridges/`); work-source port with an evidence gate; `exec/v1` protocol fields; run-policy packs and engine choice in `[orch]`; `orch.run.*` events; engine conformance (done) |
-| P11 | hub modules (`maind`, `analyst`, `harness`) on `aicore` and new state places; `core/` and `artifex` removed |
+| P11 | hub modules (`maind`, `analyst`, `harness`) on `aicore` and new state places; `core/` and `artifex` removed, `check --strict` green and in CI (done) |
 | P12 | hub: umbrella CLI, marketplace and plugin set, CI matrix, module documentation |
 | P13 | cutover: `swissknifeman upgrade`, upgrade guide, rehearsal, merge, tag, rollback |
 

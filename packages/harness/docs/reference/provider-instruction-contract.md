@@ -54,7 +54,6 @@ are forbidden.
 | `maind` | `packages/maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` |
 | `analyst` | `packages/analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` |
 | `planner` | `packages/planner` | `packages/planner/CLAUDE.md` | `packages/planner/AGENTS.md` |
-| `artifex` | `packages/artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` |
 | `brain` | `packages/brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` |
 | `orch` | `packages/orch` | `packages/orch/CLAUDE.md` | `packages/orch/AGENTS.md` |
 
@@ -92,7 +91,6 @@ The initial ordered common inventories are frozen as follows:
 | `maind` | `maind.identity` · `maind.three-planes` · `maind.layout` · `maind.module-boundaries` · `maind.orchestration` · `maind.engineering-invariants` · `maind.validation-release` |
 | `analyst` | `analyst.identity-human-gate` · `analyst.layer-boundary` · `analyst.layout` · `analyst.module-boundaries` · `analyst.data-lifecycle` · `analyst.privacy` · `analyst.engineering-invariants` · `analyst.validation-release` |
 | `planner` | `planner.identity` · `planner.command-catalog` · `planner.plan-protocol` · `planner.plan-files` · `planner.layout` · `planner.schema-ownership` · `planner.engineering-invariants` · `planner.configuration` · `planner.events-and-extensions` · `planner.validation-release` |
-| `artifex` | `artifex.identity` · `artifex.layout` · `artifex.runtime-boundaries` · `artifex.provenance` · `artifex.engineering-invariants` · `artifex.validation-release` |
 | `brain` | `brain.identity` · `brain.layout` · `brain.module-boundaries` · `brain.vault-safety` · `brain.engineering-invariants` · `brain.validation-release` |
 | `orch` | `orch.identity` · `orch.module-boundaries` · `orch.engineering-invariants` · `orch.validation-release` |
 
@@ -106,7 +104,6 @@ The initial provider-extension inventories are:
 | `maind` | `maind.claude-code.plugin-and-mcp` · `maind.claude-code.workspace-trust` | empty |
 | `analyst` | `analyst.claude-code.capture-surfaces` · `analyst.claude-code.plugin` | empty |
 | `planner` | `planner.claude-code.slash-projection` · `planner.claude-code.model-pins` | empty |
-| `artifex` | `artifex.claude-code.package-scope` | `artifex.codex.package-scope` |
 | `brain` | empty | empty |
 | `orch` | empty | empty |
 

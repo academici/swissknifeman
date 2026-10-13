@@ -1103,14 +1103,12 @@ class RealRepositoryTests(unittest.TestCase):
     def run_script(self, *args):
         return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, cwd=ROOT)
 
-    def test_baseline_is_current_and_strict_fails(self):
+    def test_baseline_is_empty_and_strict_passes(self):
         self.assertEqual(self.run_script("check").returncode, 0)
-        self.assertEqual(self.run_script("check", "--strict").returncode, 1)
-        baseline = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["violations"]
-        # maind reaches harness only through its JSON commands: no violation of its own is in the baseline
-        self.assertFalse(any(k.split("|")[1].startswith("packages/maind/") for k in baseline))
-        # analyst stays inside its boundaries since P11.2: no violation of its own is in the baseline
-        self.assertFalse(any(k.split("|")[1].startswith("packages/analyst/") for k in baseline))
+        self.assertEqual(self.run_script("check", "--strict").returncode, 0)
+        baseline = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))
+        self.assertEqual(baseline["violations"], {})
+        self.assertEqual({v for v in baseline["standalone"].values()}, {"pass"})
 
     def test_ownership_doc_is_current(self):
         self.assertEqual(self.run_script("render", "--check").returncode, 0)
@@ -1126,7 +1124,15 @@ class RealRepositoryTests(unittest.TestCase):
                          ["aicore", "analyst", "brain", "harness", "maind", "orch", "planner", "skiller"])
         self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] == "bridge"),
                          ["orch-harness", "orch-skiller", "planner-orch"])
-        self.assertFalse((ROOT / "packages/artifex/unit.json").exists())
+        self.assertFalse((ROOT / "packages/artifex").exists())
+        self.assertFalse((ROOT / "core").exists())
+
+    def test_strict_check_on_the_repository_tree_is_clean(self):
+        result = subprocess.run([sys.executable, str(SCRIPT), "check", "--strict", "--json"],
+                                capture_output=True, text=True, cwd=ROOT)
+        data = json.loads(result.stdout)
+        self.assertEqual(data["violations"], [], data["violations"])
+        self.assertEqual(result.returncode, 0, result.stdout)
 
 
 class StandaloneTests(unittest.TestCase):

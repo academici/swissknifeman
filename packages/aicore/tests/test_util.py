@@ -20,7 +20,7 @@ from aicore.util.io import (atomic_write_json, atomic_write_text, backup_file, l
                             read_ndjson, read_ndjson_iter, safe_load_json)
 from aicore.util.block import content_hash, managed_block, upsert_block
 from aicore.util.repo import find_monorepo_root, find_repo_root, sibling_bin
-from aicore.util.paths import is_within, is_within_lexical, state_dir
+from aicore.util.paths import is_within, is_within_lexical
 from aicore.util.term import now_iso, parse_iso
 from aicore.util.cli import parse_args, parse_flags, run_cmd
 from aicore.util.proc import pid_alive
@@ -291,18 +291,6 @@ class TestPaths(unittest.TestCase):
                 with self.subTest(check=check.__name__):
                     self.assertFalse(check(loop / "child", root))
                     self.assertFalse(check(root / "child", loop))
-
-    def test_state_dir_umbrella_root(self):
-        home = Path("/home/u")
-        self.assertEqual(state_dir(home), home / ".swissknifeman")
-
-    def test_state_dir_app_subdir(self):
-        home = Path("/home/u")
-        self.assertEqual(state_dir(home, "analyst"), home / ".swissknifeman" / "analyst")
-
-    def test_state_dir_accepts_str_home(self):
-        self.assertEqual(state_dir("/home/u", "analyst"),
-                         Path("/home/u") / ".swissknifeman" / "analyst")
 
 
 class TestRepoRoot(unittest.TestCase):

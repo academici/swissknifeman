@@ -15,14 +15,14 @@ SELF = "tests/test_boundary.py"
 ALLOWLIST = "tests/boundary_allowlist.json"
 BOOTSTRAP = "skills/repository-bootstrap"
 
-PACKAGE_NAMES = "planner|orch|harness|maind|analyst|artifex|skiller"
-PARTNER_NAMES = "planner|orch|harness|maind|analyst|artifex"
+PACKAGE_NAMES = "planner|orch|harness|maind|analyst|skiller"
+PARTNER_NAMES = "planner|orch|harness|maind|analyst"
 PATH_TOKEN = re.compile(rf"packages/({PACKAGE_NAMES})\b")
 CODE_TOKENS = (
     ("C1", PATH_TOKEN),
     ("C2", re.compile(rf"^\s*(from|import)\s+({PARTNER_NAMES})\b")),
     # maind is a declared partner: `skiller topology` is an alias reaching it by process.
-    ("C3", re.compile(r"\b(orch|harness|analyst|artifex)\b")),
+    ("C3", re.compile(r"\b(orch|harness|analyst)\b")),
     ("C4", re.compile(r"[\"']planner[\"']|/planner:")),
     ("C5", re.compile(rf"\.\./({PARTNER_NAMES})\b")),
     ("C6", re.compile(r"find_monorepo_root|sibling_bin")),
@@ -154,7 +154,7 @@ class BoundaryScannerTests(unittest.TestCase):
             "skm", "adapters", "provider-skills", "prompts", ".swissknifeman.example")]
         paths += ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "SKILL_TEMPLATE.md"]
         for relative in paths:
-            self.write(relative, "orch harness maind analyst artifex 'planner' /planner:dev\n")
+            self.write(relative, "orch harness maind analyst 'planner' /planner:dev\n")
         self.assertEqual(violations(self.root), {})
         for relative in paths:
             self.write(relative, "packages/planner/commands\n")

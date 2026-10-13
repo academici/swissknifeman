@@ -13,23 +13,15 @@
     "bridges/planner-orch",
     "bridges/orch-skiller",
     "bridges/orch-harness",
-    "hub",
-    "retired"
+    "hub"
   ],
   "module_aliases": {},
-  "retired": [
-    "artifex"
-  ],
+  "retired": [],
   "foundation": {
     "id": "aicore",
-    "aliases": [
-      "core"
-    ]
+    "aliases": []
   },
-  "transitional_roots": [
-    "core/",
-    "packages/artifex/"
-  ],
+  "transitional_roots": [],
   "version_sources": {
     "analyst": {"path": "packages/analyst/package.json", "read": "json:version"},
     "brain": {"path": "packages/brain/lib/brain/__init__.py", "read": "python:__version__"},
@@ -41,25 +33,24 @@
   },
   "path_patterns": [
     {"id": "sibling-package", "regex": "packages/(?P<target>[a-z][a-z0-9-]*)/", "reason": "a module must not name another module's folder; use a bridge or an event"},
-    {"id": "repo-escape", "regex": "\\.\\./(?:\\.\\./)*(?P<target>core|configs|scripts|bin)\\b", "reason": "a module must not reach into hub-level folders through relative paths", "climb": true}
+    {"id": "repo-escape", "regex": "\\.\\./(?:\\.\\./)*(?P<target>configs|scripts|bin)\\b", "reason": "a module must not reach into hub-level folders through relative paths", "climb": true}
   ],
   "path_suffixes": [".py", ".sh", ".js", ".mjs", ".json", ".toml", ".yml", ".yaml"],
   "path_allow": [
     {"path": "packages/aicore/configs/provider-capabilities.json", "reason": "evidence[].source are pointers to the documents and checks of other modules, kept as data of the manifest; no code reads them as paths"},
     {"path": "packages/harness/configs/common/instructions/catalog.json", "reason": "hub instruction catalog: the target paths of module instruction files are data the hub generator writes; harness code names no module"},
     {"path": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json", "reason": "snapshot of the hub instruction catalog"},
-    {"path": "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json", "reason": "snapshot of the hub instruction catalog"}
+    {"path": "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json", "reason": "snapshot of the hub instruction catalog"},
+    {"path": "packages/planner/tests/test_boundary.py", "reason": "boundary test: the forbidden path samples are test data"},
+    {"path": "packages/skiller/tests/test_boundary.py", "reason": "boundary test: the forbidden path samples are test data"},
+    {"path": "packages/skiller/package.json", "reason": "hub site build scripts hosted in the skiller npm package until the hub owns the site build"}
   ],
   "standalone": {
-    "foundation_paths": ["core"],
-    "foundation_free": ["skiller", "planner", "orch", "analyst", "harness", "maind"],
+    "foundation_paths": [],
     "unset_env": ["PYTHONPATH", "SKILLER_HOST_CONFIG"],
     "timeout_s": 1800
   },
   "ownership": [
-    {"path": "core/__init__.py", "target": "aicore", "subsystem": "shim", "phase": "P11", "confidence": "fixed", "note": "transitional alias package; deleted with core/"},
-    {"path": "core/tests/test_shim.py", "target": "aicore", "subsystem": "shim", "phase": "P11", "confidence": "fixed", "note": "deleted with core/"},
-    {"path": "packages/artifex/", "target": "retired", "phase": "P11", "confidence": "fixed", "note": "module is retired and not scanned by the boundary check"},
     {"path": "scripts/ecosystem-units.py", "target": "aicore", "subsystem": "unit", "phase": "P12", "confidence": "hypothesis", "note": "becomes the aicore unit check"}
   ]
 }

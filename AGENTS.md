@@ -2,7 +2,7 @@
 <!-- semantic:root.module-folders -->
 <!-- instruction:root.module-folders -->
 ## root.module-folders
-Every `packages/<id>/` folder is an independent module described by its `unit.json`. A module imports only its own `lib/<id>/` and the foundation it declares in `requires` (`aicore`; `core/` until it is removed), and reaches other modules only through bridges (`bridges/`) or events, never by import or path. Modules with `destination: own-repo` will move to their own repositories. Check boundaries with `python3 scripts/ecosystem-units.py check`.
+Every `packages/<id>/` folder is an independent module described by its `unit.json`. A module imports only its own `lib/<id>/` and the foundation it declares in `requires` (`aicore`), and reaches other modules only through bridges (`bridges/`) or events, never by import or path. Modules with `destination: own-repo` will move to their own repositories. Check boundaries with `python3 scripts/ecosystem-units.py check`.
 <!-- swissknifeman:instructions:root:codex:common:end -->
 <!-- swissknifeman:instructions:root:codex:extension:begin -->
 <!-- semantic:root.codex.bootstrap -->

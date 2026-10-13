@@ -8,7 +8,7 @@ package WITHOUT touching that same package's docs in the same change-set.
 Trigger is measured rule C (`research/24-P8.4-refine-2026-07-27.md` §1-2), not "any surface
 edit": status A/D/R on a surface path always triggers; status M triggers ONLY on interface
 paths (`packages/*/{bin,commands,configs}/**`, root `bin/**`, `install.sh`). Editing the body
-of `lib/**`/`core/*.py`/`scripts/*.{sh,py}` is NOT a trigger — the gate does not catch a
+of `lib/**`/`scripts/*.{sh,py}` is NOT a trigger — the gate does not catch a
 behavior change to an existing module without a new file and without an interface edit
 (19 of 30 commits red under the rejected rule A on tree `cd93dbc8`); the strong form (rule D)
 is deferred to `roadmap.md`. Coverage boundary is intentional, not a gap to silently widen.
@@ -34,7 +34,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # --- surfaces (DATA card - research/24 §2-3, D119/D120) --------------------------
 SURFACE_PKG = re.compile(r"^packages/([^/]+)/(bin|lib|commands|configs)/")
-SURFACE_CORE = re.compile(r"^core/.*\.py$")
 SURFACE_ROOT = re.compile(r"^(bin/|install\.sh$|scripts/[^/]+\.(sh|py)$)")
 
 # NOT surfaces - checked FIRST. Exception `.md` narrowed to DOC-md:
@@ -57,9 +56,7 @@ INTERFACE = re.compile(r"^(packages/[^/]+/(bin|commands|configs)/|bin/|install\.
 
 DOCS_NOT_NEEDED_RE = re.compile(r"^Docs-Not-Needed:[ \t]*(.*)$", re.MULTILINE)
 
-SURFACE_DOCS_HINT = {
-    "core": "core/ (docs/core/**)",
-}
+SURFACE_DOCS_HINT: dict[str, str] = {}
 
 
 def surface(path: str) -> str | None:
@@ -68,8 +65,6 @@ def surface(path: str) -> str | None:
     m = SURFACE_PKG.match(path)
     if m:
         return "pkg:" + m.group(1)
-    if SURFACE_CORE.match(path):
-        return "core"
     if SURFACE_ROOT.match(path):
         return "root"
     return None

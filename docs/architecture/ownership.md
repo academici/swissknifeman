@@ -26,7 +26,4 @@ Files that move to another module. A path ending with `/` is a directory; the lo
 
 | path | current module | target | subsystem | phase | confidence | note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `core/__init__.py` | core (hub root) | aicore | shim | P11 | fixed | transitional alias package; deleted with core/ |
-| `core/tests/test_shim.py` | core (hub root) | aicore | shim | P11 | fixed | deleted with core/ |
-| `packages/artifex/` | artifex | retired | - | P11 | fixed | module is retired and not scanned by the boundary check |
 | `scripts/ecosystem-units.py` | scripts (hub root) | aicore | unit | P12 | hypothesis | becomes the aicore unit check |

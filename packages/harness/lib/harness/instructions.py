@@ -71,9 +71,6 @@ COMMON_IDS = {
                 "planner.layout", "planner.schema-ownership", "planner.engineering-invariants",
                 "planner.configuration", "planner.events-and-extensions",
                 "planner.validation-release"),
-    "artifex": ("artifex.identity", "artifex.layout", "artifex.runtime-boundaries",
-                 "artifex.provenance", "artifex.engineering-invariants",
-                 "artifex.validation-release"),
     "brain": ("brain.identity", "brain.layout", "brain.module-boundaries",
               "brain.vault-safety", "brain.engineering-invariants",
               "brain.validation-release"),
@@ -109,8 +106,6 @@ EXTENSION_IDS = {
                                  "analyst.claude-code.plugin"),
     ("planner", "claude-code"): ("planner.claude-code.slash-projection",
                                  "planner.claude-code.model-pins"),
-    ("artifex", "claude-code"): ("artifex.claude-code.package-scope",),
-    ("artifex", "codex"): ("artifex.codex.package-scope",),
 }
 for _scope in SCOPES:
     for _provider in PROVIDERS:
@@ -543,12 +538,29 @@ def apply_instructions(request: InstructionRequest, *,
             message="target order expected (alphabetical order target_path): "
                     + ",".join(action.target_path for action in writable))
     if not writable:
+        try:
+            _prune_retired_scope_records(Path(request.target_root))
+        except (OSError, ValueError) as error:
+            return _write_refusal(request, fresh, type(error).__name__)
         return replace(fresh, request=request, green=True)
     try:
         apply_plan(Path(request.target_root), fresh.artifact_plan)
+        _prune_retired_scope_records(Path(request.target_root))
     except (OSError, TypeError, ValueError) as error:
         return _write_refusal(request, fresh, type(error).__name__)
     return _completed_write(request, fresh, writable)
+
+
+def _prune_retired_scope_records(root: Path) -> None:
+    """Drop lock records of instruction scopes that left the catalog; other records stay."""
+    lock_path = root / LOCK_RELATIVE_PATH
+    if not lock_path.is_file():
+        return
+    existing = parse_lock(lock_path.read_bytes())
+    kept = tuple(record for record in existing.records
+                 if not _retired_scope_record(record.artifact_id))
+    if len(kept) != len(existing.records):
+        atomic_write_text(lock_path, serialize_lock(ArtifactLock(1, kept)).decode("utf-8"))
 
 
 def repair_instructions(request: InstructionRequest, *,
@@ -1521,6 +1533,14 @@ def _uncovered_bytes(raw: bytes, spans: tuple[tuple[int, int], ...]) -> bytes:
     return b"".join(pieces)
 
 
+def _retired_scope_record(artifact_id: str) -> bool:
+    """Whether the lock record belongs to an instruction scope that the catalog no longer has."""
+    prefix = "harness.instruction-projection."
+    if not artifact_id.startswith(prefix):
+        return False
+    return artifact_id[len(prefix):].split(".", 1)[0] not in SCOPES
+
+
 def _preserve_unselected_lock(plan_value: ArtifactPlan,
                               lock_bytes: bytes | None) -> ArtifactPlan:
     if plan_value.next_lock is None or lock_bytes is None:
@@ -1531,7 +1551,8 @@ def _preserve_unselected_lock(plan_value: ArtifactPlan,
         return plan_value
     selected = {action.artifact_id for action in plan_value.actions}
     records = tuple(record for record in existing.records
-                    if record.artifact_id not in selected) + plan_value.next_lock.records
+                    if record.artifact_id not in selected
+                    and not _retired_scope_record(record.artifact_id)) + plan_value.next_lock.records
     return replace(plan_value, next_lock=ArtifactLock(1, records))
 
 

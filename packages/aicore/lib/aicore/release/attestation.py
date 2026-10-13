@@ -274,9 +274,6 @@ def build(root, tag=None, *, ref=None, package_root=None):
                         roots.extend([value] if isinstance(value, str) else value)
             providers["claude-code"] = surface(source, claude_root, roots,
                                                 manifest=claude_manifest)
-        if name == "core":
-            providers["runtime"] = surface(source, "core", ["."],
-                                            manifest=None)
         expected, version_source = _expected_plugin_version(source, policy, name, version, package_root)
         actual = (provider_versions.get("codex") or provider_versions.get("claude-code")
                   or expected)

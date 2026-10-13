@@ -16,7 +16,7 @@ SUFFIXES = {".py", ".sh"}
 CORE_IMPORT = re.compile(r"^\s*(from\s+core(\.|\s)|import\s+core\b)")
 # built from parts: the acceptance grep for the old wrapper variable also reads compiled bytecode of this file
 MONOREPO_PATH_LOGIC = re.compile("|".join(("_".join(("MONOREPO", "ROOT")), "(?<!find_)monorepo_root")))
-OTHER_MODULE_PATH = re.compile(r"packages/(maind|analyst|skiller|planner|brain|orch|aicore|artifex)\b")
+OTHER_MODULE_PATH = re.compile(r"packages/(maind|analyst|skiller|planner|brain|orch|aicore)\b")
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 
 

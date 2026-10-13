@@ -61,6 +61,12 @@
           "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
           "type": "integer"
         },
+        "kinds": {
+          "description": "Kinds of checks the conductor runs in a piece of work: `[\"acceptance\"]` is the quick pass (the gate needs evidence of the acceptance checks only), the default `[\"acceptance\", \"impact\"]` the full one. Heavy repository-wide checks belong to `impact` and run in the full pass (the closing piece of a phase, or on request).",
+          "type": "array",
+          "items": {"type": "string", "enum": ["acceptance", "impact"]},
+          "minItems": 1
+        },
         "red_first": {
           "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default false.",
           "type": "boolean"

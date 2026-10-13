@@ -79,7 +79,7 @@ def _relative(path: Path, project: Path) -> str:
 
 def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: Path, timeout_s: int,
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
-               parallel: int = 1, on_result=None, first=()) -> list:
+               parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
@@ -87,13 +87,14 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
     the same time (they must not share files; the order of the rows does not change). ``on_result`` is called with each row
     as soon as its check ends (from a worker thread). ``first`` names checks (the ones that were red before) to run before
     all others: when one of them is still red the others are not run (``skipped``) — a correction that did not mend the
-    red check does not need a half-hour run of everything else.
+    red check does not need a half-hour run of everything else. ``kinds`` limits the run to these kinds (a quick pass
+    runs ``acceptance`` only; the ``impact`` checks wait for the full pass).
     """
     project = Path(project)
     candidate = {"head": head(project), "dirty_digest": dirty_digest(project)}
     subject = subject_of(input_doc)
     reported = {row["id"]: row for row in (report or {}).get("checks_run", [])}
-    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in RUN_KINDS]
+    wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", []) if check.get("kind") in kinds]
 
     def run_one(check: dict) -> dict:
         row = run_check(check)

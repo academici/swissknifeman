@@ -848,7 +848,7 @@ class Conductor:
                 timeout_s=item.options["limits"]["check_timeout_s"],
                 evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
                 executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
-                on_result=on_result, first=self._red_before(item, number))
+                on_result=on_result, first=self._red_before(item, number), kinds=tuple(item.options["checks"]["kinds"]))
         except (RuntimeError, ValueError, OSError) as error:
             raise Stop("CHECKS_FAILED", str(error)) from None
 

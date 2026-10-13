@@ -21,7 +21,8 @@ DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_cor
                   "audit_scope": "corrected"}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": []}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
-                  "red_first": False}
+                  "red_first": False,
+                  "kinds": ["acceptance", "impact"]}
 CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,

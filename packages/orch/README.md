@@ -24,8 +24,10 @@ The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|arg
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
 The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
 writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; `{orch}` in an argv is this package root.
-The claude-code `executor` and `triager` run under it too (shell allowed with `--allowedTools Bash`; the executor writes only
-to `{cwd}`, the triager nowhere), and the `registrar` may run only `python3 *orch.py source register *`.
+The claude-code `executor`, `bounded-implementer` and `triager` run under it too (shell allowed with `--allowedTools Bash`; the
+executor and the bounded-implementer write only to `{cwd}`, the triager nowhere), and the `registrar` may run only
+`python3 *orch.py source register *`. Every headless claude-code role starts with `--permission-prompts none` (what would ask
+is denied, nobody answers) and never with `--bare`, which does not read the subscription login.
 Incompatible versions return `CONTRACT_VERSION` before schema validation.
 The `[orch]` configuration (engine, per-role engine, default profile, work source, capability freshness, pack
 folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as

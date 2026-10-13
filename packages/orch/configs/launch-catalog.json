@@ -15,6 +15,8 @@
      "{effort}",
      "--tools",
      "Read,Grep,Glob",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 300,
@@ -68,6 +70,8 @@
      "acceptEdits",
      "--allowedTools",
      "Bash",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 3600,
@@ -113,6 +117,11 @@
     "effort": "medium",
     "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}",
+     "--",
      "claude",
      "-p",
      "--output-format",
@@ -122,8 +131,14 @@
      "{model}",
      "--effort",
      "{effort}",
+     "--tools",
+     "Bash,Read,Edit,Write,Grep,Glob",
      "--permission-mode",
      "acceptEdits",
+     "--allowedTools",
+     "Bash",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 1800,
@@ -182,6 +197,8 @@
      "Bash,Read,Grep,Glob",
      "--disallowedTools",
      "Edit,Write,NotebookEdit",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 1800,
@@ -264,6 +281,8 @@
      "Bash",
      "--disallowedTools",
      "Edit,Write,NotebookEdit",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 1800,
@@ -310,6 +329,8 @@
      "Bash,Read",
      "--allowedTools",
      "Bash(python3 *orch.py source register *)",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 600,
@@ -354,6 +375,8 @@
      "{effort}",
      "--tools",
      "",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 600,

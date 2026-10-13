@@ -210,6 +210,11 @@ a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}`
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.
 
+The grok `reviewer` runs under `scripts/ro-run.py` (Landlock): it may write only to temporary directories, `~/.grok` and
+`{cwd}/vendor`. `{cwd}/vendor` is there because the tests of PHP projects keep their caches in it (commit `5addff330`);
+the argv is not widened for anything else. Claude Code roles never use `--bare` (it does not read the subscription login) and
+start with `--permission-prompts none`, so a request that would ask for permission is denied instead of waiting.
+
 ## Plan engines without `orchestration.options`
 
 The planner declares `orchestration.options` as an extension slot and keeps no copy of this contract: the planner

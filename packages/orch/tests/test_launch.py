@@ -10,7 +10,8 @@ import unittest
 from orch import launch
 
 ROOT = Path(__file__).resolve().parents[1]
-CLAUDE_SCOUT = ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "Read,Grep,Glob", "--no-session-persistence"]
+CLAUDE_SCOUT = ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "Read,Grep,Glob",
+                "--permission-prompts", "none", "--no-session-persistence"]
 CODEX_SCOUT = ["codex", "-a", "never", "exec", "--sandbox", "read-only", "--model", "gpt-5.6-luna", "-c",
                'model_reasoning_effort="low"', "--ephemeral", "-"]
 
@@ -70,6 +71,23 @@ class LaunchCatalogTests(unittest.TestCase):
             argv = launch.build_argv(self.catalog, role, "claude-code", model="sonnet")
             self.assertIn("--tools", argv, role)
             self.assertEqual(argv[argv.index("--tools") + 1], tools, role)
+
+    def test_claude_code_print_roles_never_prompt(self):
+        # --permission-prompts none: a headless role must not wait for an answer nobody gives (denied instead).
+        claude = [(role, entry) for role, providers in self.catalog["launch"].items()
+                  for provider, entry in providers.items() if provider == "claude-code" and "-p" in entry["argv"]]
+        self.assertTrue(claude)
+        for role, entry in claude:
+            argv = entry["argv"]
+            self.assertEqual(argv[argv.index("--permission-prompts") + 1], "none", role)
+            self.assertNotIn("--bare", argv, role)  # D15: bare does not read the subscription OAuth
+
+    def test_bounded_implementer_is_confined_like_executor(self):
+        argv = launch.build_argv(self.catalog, "bounded-implementer", "claude-code", model="sonnet", cwd="/w")
+        self.assertTrue(argv[1].endswith("ro-run.py"))
+        self.assertEqual(argv[argv.index("--rw") + 1], "/w")
+        self.assertEqual(argv[argv.index("--tools") + 1], "Bash,Read,Edit,Write,Grep,Glob")
+        self.assertEqual(argv[argv.index("--allowedTools") + 1], "Bash")
 
     def test_bare_is_forbidden(self):
         self.assertIn("--bare", self.broken(lambda l: l["scout"]["codex"]["argv"].append("--bare")))

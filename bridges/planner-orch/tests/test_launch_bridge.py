@@ -32,6 +32,10 @@ class LaunchBridge(unittest.TestCase):
                 out = json.loads(done.stdout)
                 values = {"model": entry["model"], "effort": entry["effort"], "cwd": "/work"}
                 expected = [re.sub(r"\{(\w+)\}", lambda m: values[m[1]], arg) for arg in entry["argv"]]
+                # The catalog adds --permission-prompts none to every headless claude-code role (PLAN4.P1.4); the
+                # planner's legacy scout list predates it, so the pair is the only allowed difference.
+                if provider == "claude-code":
+                    expected[-1:-1] = ["--permission-prompts", "none"]
                 self.assertEqual(out["argv"], expected)
                 self.assertEqual(out["model"], entry["model"])
                 self.assertEqual(out["timeout_s"], entry["timeout_s"])
@@ -40,7 +44,7 @@ class LaunchBridge(unittest.TestCase):
     def test_scout_literals(self):
         out = json.loads(launch("scout", "claude-code").stdout)
         self.assertEqual(out["argv"], ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools",
-                                       "Read,Grep,Glob",
+                                       "Read,Grep,Glob", "--permission-prompts", "none",
                                        "--no-session-persistence"])
         self.assertEqual(json.loads(launch("scout", "codex").stdout)["model"], "gpt-5.6-luna")
 

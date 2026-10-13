@@ -27,11 +27,13 @@ the git directory (``affected-tests/``) and is never used by ``--tier all``, the
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
 import subprocess
 import sys
+import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -191,6 +193,21 @@ def bridge_env() -> dict:
     return env
 
 
+@contextlib.contextmanager
+def command_env(folder: str, command: list):
+    """The environment of one command. ``validate.sh`` of a module calls the guarded CLIs of the clone (``skiller registry
+    --check``), which refuse the real HOME, so it runs with a throwaway one, as scripts/dev-sandbox.sh sets it up."""
+    env = bridge_env() if folder.startswith("bridges/") else dict(os.environ)
+    if command[-1:] != ["scripts/validate.sh"]:
+        yield env
+        return
+    with tempfile.TemporaryDirectory(prefix="skm-validate-home-") as home:
+        env.update({"HOME": home, "XDG_CONFIG_HOME": f"{home}/.config", "XDG_STATE_HOME": f"{home}/.local/state",
+                    "XDG_DATA_HOME": f"{home}/.local/share", "XDG_CACHE_HOME": f"{home}/.cache",
+                    "SKM_HOME": f"{home}/.swissknifeman-home", "GIT_CONFIG_GLOBAL": f"{home}/.gitconfig"})
+        yield env
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--base")
@@ -235,9 +252,9 @@ def main(argv=None) -> int:
         if key and key in green:
             return folder, command, None, key
         cwd = ROOT if folder == "hub" else ROOT / folder
-        env = bridge_env() if folder.startswith("bridges/") else dict(os.environ)
-        env.setdefault("SKM_TEST_JOBS", share)
-        done = subprocess.run(command, cwd=cwd, capture_output=True, text=True, env=env)
+        with command_env(folder, command) as env:
+            env.setdefault("SKM_TEST_JOBS", share)
+            done = subprocess.run(command, cwd=cwd, capture_output=True, text=True, env=env)
         return folder, command, done, key
 
     failed = 0

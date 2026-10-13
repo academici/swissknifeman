@@ -25,6 +25,19 @@ class AffectedTestsTests(unittest.TestCase):
         for name in ("PLANNER_ROOT", "PLANNER_PLAN_PY", "SKM_ORCH_ROOT", "SKM_SKILLER_ROOT", "SKM_HARNESS_ROOT", "AICORE_ROOT"):
             self.assertTrue(Path(env[name]).exists(), name)
 
+    def test_validate_runs_with_a_throwaway_home_so_the_dev_clone_guard_lets_it_pass(self):
+        import importlib.util
+        import os
+        spec = importlib.util.spec_from_file_location("affected_tests", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with module.command_env("packages/skiller", ["bash", "scripts/validate.sh"]) as env:
+            self.assertNotEqual(os.path.realpath(env["HOME"]), os.path.realpath(os.path.expanduser("~")))
+            self.assertTrue(Path(env["HOME"]).is_dir())
+            self.assertEqual(env["GIT_CONFIG_GLOBAL"], str(Path(env["HOME"]) / ".gitconfig"))
+        with module.command_env("packages/skiller", ["bash", "scripts/test.sh"]) as env:
+            self.assertEqual(env["HOME"], os.environ["HOME"])
+
     def test_a_tool_is_tested_when_its_own_files_change(self):
         self.assertEqual(plan("packages/maind/lib/maind/x.py")["units"], ["packages/maind"])
 

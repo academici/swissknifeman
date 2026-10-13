@@ -31,6 +31,12 @@ class _Fixture(unittest.TestCase):
         (self.home / ".swissknifeman").mkdir(parents=True)
         (self.tmp / "outside").mkdir()
         self.cfg_path = self.home / ".swissknifeman" / "safe-dirs.json"
+        # the registries are looked up under the fixture HOME: a machine or integration SKM_HOME would redirect them
+        environ = unittest.mock.patch.dict(os.environ)
+        environ.start()
+        self.addCleanup(environ.stop)
+        for name in ("SKM_HOME", "XDG_STATE_HOME", "XDG_CONFIG_HOME"):
+            os.environ.pop(name, None)
         self.write_config()
 
     def write_config(self, **over):

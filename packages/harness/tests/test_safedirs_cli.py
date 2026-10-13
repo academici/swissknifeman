@@ -39,6 +39,9 @@ class SafedirsCliCase(unittest.TestCase):
             os.environ, {"SKM_SAFE_DIRS_CONFIG": str(self.state)})
         patcher.start()
         self.addCleanup(patcher.stop)
+        # the registries are looked up under the fixture HOME: a machine or integration SKM_HOME would redirect them
+        for name in ("SKM_HOME", "XDG_STATE_HOME", "XDG_CONFIG_HOME"):
+            os.environ.pop(name, None)
 
     def tearDown(self):
         self._tmp.cleanup()

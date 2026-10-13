@@ -62,6 +62,15 @@ class LaunchCatalogTests(unittest.TestCase):
             self.assertEqual(grok[grok.index(flag) + 1], value)
         self.assertEqual(launch.entry(self.catalog, "reviewer", "grok")["transport"], "jsonl")
 
+    def test_claude_code_roles_list_their_tools(self):
+        # --tools cuts the start-up context of an isolated role from ≈14 K to ≈7 K tokens (measured, P12 prep);
+        # --allowedTools alone only skips the permission prompt and leaves every tool definition in the context.
+        for role, tools in {"executor": "Bash,Read,Edit,Write,Grep,Glob", "reviewer": "Bash,Read,Grep,Glob",
+                            "triager": "Bash,Read,Grep,Glob"}.items():
+            argv = launch.build_argv(self.catalog, role, "claude-code", model="sonnet")
+            self.assertIn("--tools", argv, role)
+            self.assertEqual(argv[argv.index("--tools") + 1], tools, role)
+
     def test_bare_is_forbidden(self):
         self.assertIn("--bare", self.broken(lambda l: l["scout"]["codex"]["argv"].append("--bare")))
 

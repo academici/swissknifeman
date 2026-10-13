@@ -357,3 +357,12 @@ python3 scripts/ecosystem-units.py check   # manifests and boundaries of all mod
 ```
 
 The tests need nothing but `aicore` itself, so the folder can be tested as a standalone repository.
+
+### Parallel test runs
+
+`python3 -m aicore.util.par_unittest discover -s tests [-t TOP] [-p PATTERN] [-v] [-j N]` runs a `unittest discover` suite in
+parallel worker processes: tests are found by `discover` itself, grouped by test class, dealt out heaviest-first, and each worker
+has its own throwaway `HOME`. The output and the exit code are those of `unittest`; a shard that fails is repeated alone, and a
+pass there is reported as a clash between parallel tests. The test runners of the modules use it when `aicore` is importable
+(`SKM_TEST_JOBS` sets the workers, default `min(8, cpu_count)`; `1` is the old sequential run). A suite whose tests depend on
+what other modules did earlier in the same process keeps `SKM_TEST_JOBS=1` as its default (maind).

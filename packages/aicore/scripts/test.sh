@@ -4,6 +4,11 @@
 # Tests run against a throwaway HOME and never touch the real one. This runner is also
 # the standalone entry point of the module (no monorepo files are needed).
 set -euo pipefail
+# Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
+# SKM_TEST_JOBS=1 gives the old sequential run.
+_unittest() {
+  if python3 -c "import aicore.util.par_unittest" 2>/dev/null; then python3 -m aicore.util.par_unittest "$@"; else python3 -m unittest "$@"; fi
+}
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -26,9 +31,9 @@ verbose=""
 
 cd "$REPO_ROOT"
 if [[ -n "$verbose" ]]; then
-  python3 -m unittest discover -s tests -t . -p "test_*.py" -v
+  _unittest discover -s tests -t . -p "test_*.py" -v
 else
-  out="$(python3 -m unittest discover -s tests -t . -p "test_*.py" 2>&1)" || {
+  out="$(_unittest discover -s tests -t . -p "test_*.py" 2>&1)" || {
     echo "$out" >&2
     echo "ERROR: tests failed" >&2
     exit 1

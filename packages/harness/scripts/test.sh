@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
+# SKM_TEST_JOBS=1 gives the old sequential run.
+_unittest() {
+  if python3 -c "import aicore.util.par_unittest" 2>/dev/null; then python3 -m aicore.util.par_unittest "$@"; else python3 -m unittest "$@"; fi
+}
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
@@ -29,4 +34,4 @@ unset -f _aicore_ok
 # --- end aicore locator ---
 
 PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
-  python3 -m unittest discover -s "$REPO_ROOT/tests" -t "$REPO_ROOT" "$@"
+  _unittest discover -s "$REPO_ROOT/tests" -t "$REPO_ROOT" "$@"

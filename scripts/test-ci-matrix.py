@@ -289,7 +289,7 @@ class StepTests(unittest.TestCase):
         subprocess.run(["git", "init", "-q"], cwd=self.fx.root, check=True)
         subprocess.run(["git", "add", "-A"], cwd=self.fx.root, check=True)
         self.assertEqual(self.fx.run("run", "--unit", "mod", "--step", "secrets").returncode, 0)
-        self.fx.write("packages/mod/notes.md", "see plan 2026.10.07-№1-SKM-ECOSYSTEM\n")
+        self.fx.write("packages/mod/notes.md", "see plan " + "2026.10.07" + "-№1-SKM-ECOSYSTEM\n")  # not a literal: the gate reads this file too
         subprocess.run(["git", "add", "-A"], cwd=self.fx.root, check=True)
         out = self.fx.run("run", "--unit", "mod", "--step", "secrets")
         self.assertEqual(out.returncode, 1, out.stdout + out.stderr)

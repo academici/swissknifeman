@@ -1,35 +1,96 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.1",
-  "title": "Prompt manifest: prompts/<step>.manifest.json с блоками origin, sha256, tokens; conduct.py prompt explain; промпт байт-в-байт тот же",
+  "title": "Prompt manifest: сборщики prompts.py на блоках Block(kind, origin, text) с байт-в-байт тем же промптом; prompt-manifest/v1 рядом с промптом; conduct.py prompt explain; observer — топ блоков; проверка E7",
   "status": "todo",
-  "summary": "Схема prompt-manifest в orch/schemas/conductor/v1/; оценка токенов aicore.content.budget; observer — топ блоков; проверка E7.",
-  "why": "Аудит П8.1. Риск: изменение текста промпта — golden prompt-тесты байт-в-байт.",
+  "summary": "Рефактор сборщиков на блоки и render; схема prompt-manifest; запись manifest в _role; prompt explain; observer; проверка E7 по команде knowledge/p9-prompt#manifest.",
+  "why": "Аудит П8.1. Риск: изменение текста промпта — golden prompt-тесты байт-в-байт до и после.",
   "scope": {
     "include": [
-      "orch conductor prompts.py",
-      "схема prompt-manifest"
+      "packages/orch/lib/orch/conductor/prompts.py",
+      "engine.py (_role: manifest)",
+      "cli.py (prompt explain)",
+      "observer.py",
+      "packages/orch/schemas/conductor/v1/prompt-manifest.schema.json",
+      "tests"
     ],
-    "exclude": []
+    "exclude": [
+      "исключения skills (P9.2)",
+      "изменение текста промптов"
+    ]
   },
+  "depends_on": [
+    "P8.6"
+  ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 8. Сборка промпта и prompt profiles (мысли 6, 15)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p9-prompt#manifest",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.5 Сборка промпта (prompt compiler)",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p9-prompt#facts",
+      "why": "код",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "why": "сборщики",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/observer.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/prompt-manifest.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы и run-options — только аддитивно (D1)",
+    "Golden промптов в этом пункте не перезахватываются"
+  ],
+  "guidance": "Исполнитель: implementation/high. Сначала сверка facts. Порядок: тест «сумма блоков = промпт» и golden → блоки → manifest → explain → observer → E7 → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "prompt manifest",
+    "prompt explain"
   ],
   "route": {
     "class": "implementation",
@@ -46,5 +107,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:46Z"
+  "updated_at": "2026-10-13T19:55:22Z"
 }

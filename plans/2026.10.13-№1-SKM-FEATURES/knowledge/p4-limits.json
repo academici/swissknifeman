@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "p4-limits",
+  "title": "P4: время run и лимиты review на batch",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Факты кода",
+      "text": "Код на HEAD aed8924b9:\n\n- `options.py`: `DEFAULT_LIMITS` (review_rounds 2, corrections 1, check_fixes 1, retries 1, tokens_max 0, stage_timeout_s 0, stage_idle_timeout_s 0, check_timeout_s 0, ceiling_factor 2, repairs 1, stage_warn_s 2700, stage_idle_warn_s 600, check_warn_s 900), `LIMIT_BOUNDS`; схема `run-options.schema.json` `limits` (закрыта) + зеркало моста.\n- `engine._loop` (~288): `started = time.monotonic()` только текущего процесса; `resume` — новый процесс. `_pieces` (~311) — цикл пунктов run (`--items` или `--batch [--max-items]`), `state[\"claims\"]`, `state[\"items\"]`.\n- `engine._allowance(item, name, used, progress, emit)` (~518): цель `limits[name]`, потолок `target × ceiling_factor`, после цели — только при прогрессе, маяк `LIMIT_OVER` + plan note. Вызовы — раунды review, corrections, check_fixes.\n- `engine._beacons(item, key, role, raw)` (~951) → `tick(elapsed, idle, pid)` — маяки `STAGE_SLOW`, `STAGE_IDLE`; вызывается из `process._wait` через `on_tick`. Проверки (`checks.py`) — свой тик `CHECK_SLOW`.\n- `_defer_minor` — Minor/Nit уходят в заметки; Blocker и Major — в коррекцию по `review.correct_min_severity`.\n- Observer (`observer.py`) читает `progress.jsonl` и пишет отчёт; рекомендации — текст."
+    },
+    {
+      "id": "runslow",
+      "title": "RUN_SLOW и run_timeout_s",
+      "text": "**P4.1.** Время run = **активное** время: `state[\"active_s\"]` накапливается по сегментам процесса (`_loop`: при выходе прибавляется `monotonic − segment_start`; при входе — новый сегмент), чтобы `resume` через сутки не давал мгновенного маяка.\n\n- Новые limits (аддитивно, схема + `DEFAULT_LIMITS` + `LIMIT_BOUNDS` + зеркало): `run_warn_s` (int ≥ 0, умолч. 7200; 0 — выкл.), `run_timeout_s` (int ≥ 0, умолч. 0 — выкл.).\n- Проверка `_run_clock()` — из тиков ролей (`_beacons.tick`), тиков проверок и на границах шагов (`_step`): `active = state.active_s + (monotonic − segment_start)`; каждые `run_warn_s` — маяк `RUN_SLOW` (`message`: активное время, число закрытых/оставшихся пунктов, текущий шаг) и plan note один раз на порог; маяк никогда не останавливает run. `run_timeout_s > 0` и превышение → отмена текущей роли через существующий `cancel` и `Stop(\"RUN_TIMEOUT\")` (resume продолжает).\n- Observer: при `RUN_SLOW` в отчёте раздел «long run» с фактами (активное время, доля retries/review/checks по времени шагов) — без советов в свободной форме.\n- Событие `orch.run.warning` — в P12 (журнал событий); здесь только progress-line.\n- Тесты: фейковое время (`time.monotonic` подменяется) — RUN_SLOW эмитится по порогам, run не останавливается; resume складывает active_s; run_timeout_s → RUN_TIMEOUT."
+    },
+    {
+      "id": "batch",
+      "title": "Лимиты batch",
+      "text": "**P4.2.** Лимиты уровня run (batch): limits `review_rounds_batch`, `corrections_batch`, `findings_batch` (int ≥ 0, умолч. 0 = нет лимита; аддитивно, схема + options + зеркало). Счётчики `state[\"batch\"] = {\"review_rounds\", \"corrections\", \"findings\"}` увеличиваются там же, где пункт считает свои раунды (findings — число принятых triage находок).\n\n- `_allowance` сначала проверяет batch-лимит той же семантикой цели и потолка (`target × ceiling_factor`, после цели — только при прогрессе), маяк `LIMIT_OVER` с `message` «batch: …» и plan note.\n- Отказ allowance при открытой находке Blocker (после triage) → `Stop(\"REVIEW_LIMIT\")` с перечнем находок; Major/Minor — прежний путь (заметки, done_with_deviations).\n- Тесты: `--batch` с тремя пунктами и `review_rounds_batch = 2` → третий пункт получает LIMIT_OVER batch; Blocker при исчерпании → REVIEW_LIMIT."
+    },
+    {
+      "id": "checks",
+      "title": "Проверки фазы",
+      "text": "Фаза P4: пункты — `python3 scripts/affected-tests.py --run` + сверка зеркала run-options (`SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check`). Широкий прогон — phase.validation (пункт P4.2). Первый пункт сверяет knowledge/p4-limits#facts с кодом после P2/P3."
+    }
+  ],
+  "applies_to": [
+    "P4"
+  ]
+}

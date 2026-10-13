@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "p12-observability",
+  "title": "P12: наблюдаемость — события orch, редакция, отчёты analyst, экспорт телеметрии",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Факты кода",
+      "text": "Код на HEAD aed8924b9:\n\n- `packages/orch/lib/orch/events.py`: `EVENT_TYPES = (orch.run.started, orch.run.stage.finished, orch.run.finished, orch.run.refused)`, `emit(event_type, data, subject, causationid)` → `aicore.ext.journal`; схемы данных `orch/schemas/event-data/v1/<type>.schema.json`; включение — `[orch] events.enabled` (`settings.events_enabled`).\n- aicore `ext/events.py`: `build_event`/`emit` (CloudEvents event/v1: id, source, type, subject, time, specversion, traceparent, causationid, correlationid, data), `_contains_secret` отвергает `Secret` в данных; append-only журнал под flock, доставка подписчикам, dead-letter.\n- Редакция известных значений секретов — приватные `aicore/ext/process.py:_redact_bytes/_redact_text/_redact_document` (по списку значений). progress-lines conductor и `detail` ошибок ролей (хвост stderr) не редактируются.\n- `aicore/configs/telemetry-conventions.json` — имена `skm.run`, `skm.stage`, `skm.agent.execute` (с полем `genai` для маппинга), экспортёра нет.\n- analyst: `run_reports.py`, `token_report.py`, `telemetry.py`, `runs.py`, `metrics.py`, `readers/` (Claude/Codex/Cursor сессии) — отчёты по сессиям провайдеров; conductor-журнал (`progress.jsonl`, `events.jsonl`) не читает.\n- После P6.2: `agent_run_id`, каталоги агентов; после P9.1: `prompt_sha256` в manifest; после P3.5: `config_digest`, `options_digest`; после P2: error/v1 ролей."
+    },
+    {
+      "id": "fields",
+      "title": "Поля событий и orch.agent.*",
+      "text": "**P12.1 (D14).** Новые типы `orch.agent.started`, `orch.agent.finished`, `orch.agent.failed` (схемы event-data/v1) и аддитивные поля существующих: `run_id`, `work_id` (= `input_id`), `item?`, `agent_run_id?`, `role?`, `route {provider, model_class, model?, effort?}`, `prompt_sha256?`, `config_digest?`, `options_digest?`, `error {class, code}?`, `tokens {input, cached, output}?`, `attempt?`. `subject` = `<run>/<item>/<agent_run_id>`; `causationid` = id события-причины (stage.finished → agent.*; advisor → исходная проблема); `correlationid` = run_id. Без gen_ai.* в ядре (D14)."
+    },
+    {
+      "id": "types",
+      "title": "Маяки → события",
+      "text": "**P12.2.** Соответствие маяков и событий (эмиссия рядом с маяком, тем же кодом; только при `events.enabled`):\n\n| Маяк / момент | Событие |\n|---|---|\n| `RUN_SLOW`, `LIMIT_OVER` (batch) | `orch.run.warning` (`reason_code`) |\n| блокирующий вопрос (P6.4) | `orch.agent.questioned`, `orch.run.waiting` |\n| пункт blocked | `orch.work.blocked` (escalation код) |\n| `REVIEW_ADDED` | `orch.review.added` (score, features) |\n| deviation в отчёте | `orch.deviation.recorded` (class, outcome); автоисправление/follow-up закрыт — `orch.deviation.resolved` (`corrects` = id recorded) |\n| `PROVIDER_WAIT` rate_limit / quota, `CAPACITY_GATED` | `orch.provider.rate_limited` / `orch.provider.quota_exhausted` (until) |\n| `ROUTE_FALLBACK` | `orch.provider.fallback` (from, to, reason_codes) |\n| `INPUT_REBUILT` | `orch.input.rebuilt` |\n\nСхема данных на каждый тип; контрактные фикстуры (как P6.10 PLAN3); тест: сценарий characterization P11 → ожидаемая последовательность типов."
+    },
+    {
+      "id": "redact",
+      "title": "Редакция секретов",
+      "text": "**P12.3.** Публичный `aicore.util.redact`: `redact_text(text, *, secrets=(), patterns=True) -> str` — известные значения (из `secret_ref` эффективного конфига и `Secret`) + шаблоны токенов (`sk-[A-Za-z0-9_-]{20,}`, `ghp_[A-Za-z0-9]{30,}`, `github_pat_…`, `xox[abp]-…`, `AKIA[0-9A-Z]{16}`, `Bearer\\s+\\S{20,}`, `(?i)(api[_-]?key|token|secret|password)\\s*[=:]\\s*\\S+`) → `‹redacted›`; `redact_document`. Приватные функции `ext/process.py` делегируют ему. Применение: progress-lines (`progress.emit` — message, detail), `RoleRun.detail` (хвост stderr), данные событий orch, отчёт observer. Сырые потоки (`streams/`) не трогаются — только ignored state (проверка `.gitignore` проекта через `aicore.state.gitignore` — предупреждение в `orch.py doctor`, если `.swissknifeman/state/` не игнорируется). Тесты Т7: секрет в env роли и в stderr → нет ни в progress.jsonl, ни в events.jsonl, ни в observer-отчёте."
+    },
+    {
+      "id": "analyst",
+      "title": "Отчёты analyst",
+      "text": "**P12.4.** analyst читает только контракты (D14): `events.jsonl` (event/v1, orch.*) и артефакты пункта (`stage-report.json`, `review-verdict.json`, manifest промптов, `risk.json`) — новый reader `analyst/readers/orch.py`. Отчёты `analyst orch report [--plan P] [--run R] [--json]`: токены по модели/роли/skill (manifest), выход review (находки по severity, раунды), deviation по классам и исходам, fallback и ожидания провайдеров, долгие стадии, бюджеты промпта, план против факта (время/токены пунктов). Golden на фикстуре журнала. Сравнение с baseline P1.1 (`plan3_deviations`) — раздел отчёта."
+    },
+    {
+      "id": "otel",
+      "title": "Экспорт телеметрии",
+      "text": "**P12.5 (D14, D6).** Плагин-подписчик `aicore:telemetry-exporter` (отдельный модуль/папка `plugins/telemetry-exporter/` с `unit.json`, подписка на `orch.*` через механизм подписок aicore) пишет OTLP-JSON (spans/logs) в файл или stdout; маппинг: run → `invoke_workflow` (INTERNAL), work → прикладной span `skm.stage`, agent → `invoke_agent` (INTERNAL), атрибуты `gen_ai.*` по зафиксированному коммиту `open-telemetry/semantic-conventions-genai` (Development), `error.type` (Stable). Ядро без зависимостей; плагин тоже stdlib (OTLP-JSON — формат, не SDK). Вход пункта — появление потребителя телеметрии (D6); иначе пункт ждёт с записью в журнал."
+    },
+    {
+      "id": "checks",
+      "title": "Проверки фазы",
+      "text": "Фаза P12: пункты — `python3 scripts/affected-tests.py --run`; широкий прогон — phase.validation (P12.5 или P12.4, если P12.5 отложен по D6: тогда P12.4 закрывает фазу, а P12.5 переносится решением). Первый пункт сверяет knowledge/p12-observability#facts."
+    }
+  ],
+  "applies_to": [
+    "P12"
+  ]
+}

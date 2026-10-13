@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P10",
   "title": "Research и advisor: источники research в конфиге, роль researcher, политика conditional, роль advisor",
-  "design": "skeleton",
-  "goal": "orch.research.policy (required | conditional | off), orch.research.sources.<id> (argv только machine), адаптеры command и filesystem; роль researcher с research-result в plans/<plan>/research/; триггеры conditional; роль advisor с результатом advice, human_gate и causation к исходной проблеме.",
-  "context": "audits/perplexity-audit.md — Фаза 9 (П9.1–П9.3) и П5.5, 2.12, 2.13. Вход фазы (D6): протокол вопросов P6 работает и в журналах есть blocking-вопросы или повторно красные checks, которые advisor/research закрыли бы; иначе фаза остаётся каркасом. Детализируется перед исполнением.",
+  "design": "detailed",
+  "goal": "[orch.research] policy и sources (command, filesystem, mcp-stdio; argv только machine) с Perplexity через MCP stdio; роль researcher с research-result/v1; стадия research по rag.need пункта (без эвристик); роль advisor с advice/v1, human_gate и causation.",
+  "context": "audits/perplexity-audit.md — Фаза 9 (П9.1–П9.3), П5.5, 2.12, 2.13; дизайн — knowledge/p10-research; D6 (вход по измеренной потребности).",
   "scope": {
     "include": [
       "orch config research",
@@ -19,6 +19,29 @@
     "P3",
     "P6"
   ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
   "deliverables": [
     "research по конфигу",
     "advisor"
@@ -31,29 +54,11 @@
   ],
   "batches": [
     {
-      "id": "BP10-1",
+      "id": "B1",
       "items": [
-        "P10.1"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP10-2",
-      "items": [
-        "P10.2"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP10-3",
-      "items": [
-        "P10.3"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP10-4",
-      "items": [
+        "P10.1",
+        "P10.2",
+        "P10.3",
         "P10.4"
       ],
       "mode": "recommended"

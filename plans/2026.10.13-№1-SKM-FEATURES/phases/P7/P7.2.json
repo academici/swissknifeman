@@ -1,13 +1,19 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.2",
-  "title": "Risk score conductor: чистая функция, веса в конфиге, review.dynamic и review.dynamic_threshold, REVIEW_ADDED",
+  "title": "Risk score conductor: risk.score (чистая), [orch.conductor.risk] веса и шаблоны, review.dynamic и dynamic_threshold, REVIEW_ADDED и risk.json; закрытие фазы P7",
   "status": "todo",
-  "summary": "Признаки 2.14 (публичные API/CLI, schemas, миграции, auth/security, shared-модули, размер diff, красный check, deviation, выход за write set, рекомендация executor); превышение порога → reviewer+triager даже в solo/scout-solo; маяк REVIEW_ADDED, событие orch.review.added.",
-  "why": "Аудит П6.2, N10: review окупается. Риск: лишний review удорожает run — порог в конфиге, измерение по журналу.",
+  "summary": "orch/lib/orch/conductor/risk.py; сбор фактов после executor-раунда; config [orch.conductor.risk]; run-options review.dynamic, review.dynamic_threshold; при пороге — маршруты reviewer/triager и штатный цикл review; маяк REVIEW_ADDED, plan note, risk.json; тесты unit и e2e. Пункт закрывает фазу: phase.validation P7.",
+  "why": "Аудит П6.2, N10: review окупается. Риски: (1) лишний review удорожает run — веса и порог в конфиге, risk.json для измерения; (2) маршруты reviewer в solo не разрешены — разрешать с проверкой доступности и gate.",
   "scope": {
     "include": [
-      "orch risk.py, engine.py, run-options review.dynamic*"
+      "packages/orch/lib/orch/conductor/risk.py",
+      "engine.py (факты, _review_enabled, маршруты)",
+      "options.py",
+      "packages/orch/configs/config.schema.json",
+      "run-options схема и зеркало",
+      "tests, docs",
+      "phase.validation P7"
     ],
     "exclude": [
       "LLM-оценка риска"
@@ -18,22 +24,94 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 6. Динамический review (мысль 17; N10)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p7-review#risk",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p7-review#checks",
+      "why": "проверки фазы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_review_enabled",
+      "required": true,
+      "section": "_review_enabled"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/risk.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/test_risk.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты stage-report, config, run-options — только аддитивно (D1)",
+    "risk.score — чистая функция без I/O",
+    "phase.validation P7 — после V1–V2, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: unit risk → e2e solo+schema (падает) → config и options → engine → docs → V1–V2 → phase.validation P7.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "динамический review"
   ],
   "route": {
     "class": "implementation",
@@ -50,5 +128,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:44Z"
+  "updated_at": "2026-10-13T19:52:08Z"
 }

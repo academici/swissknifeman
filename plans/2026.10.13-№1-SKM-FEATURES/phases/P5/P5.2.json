@@ -1,38 +1,99 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
-  "title": "write_set_suggestions от context-scout: ожидаемые пути передаются executor, deviation с expected: true",
+  "title": "Подсказка write set: блок json write-set context-scout, раздел Expected paths у executor, class write_set для ожидаемых путей; plan.py check — write_set_no_tests",
   "status": "todo",
-  "summary": "Результат scout — write_set_suggestions[]; conductor передаёт executor как ожидаемо затронутые и при scope.outside deviation пишет class write_set, expected true; plan.py check предупреждает, если у пункта с кодом нет тестов в task_files.",
-  "why": "Аудит П4.2: 29% deviation PLAN3 — вне write set; эффект измеряется против baseline.",
+  "summary": "context-scout.md и схема scout-write-set; _scout извлекает блок (без блока — RESULT_HEALED); prompts.executor — раздел Expected paths; deviation о путях вне write set помечает ожидаемые; planner check — warning write_set_no_tests.",
+  "why": "Аудит П4.2: 29% deviation PLAN3 — вне write set. Риск: подсказка не расширяет write set (авторизация плана не меняется).",
   "scope": {
     "include": [
-      "orch scout контракт, engine.py",
-      "planner check"
+      "packages/orch/roles/context-scout.md",
+      "packages/orch/schemas/conductor/v1/scout-write-set.schema.json",
+      "packages/orch/lib/orch/conductor/engine.py (_scout, _execute)",
+      "packages/orch/lib/orch/conductor/prompts.py (executor)",
+      "packages/planner/lib/planner (check)"
     ],
-    "exclude": []
+    "exclude": [
+      "автоматическое расширение write set"
+    ]
   },
   "depends_on": [
     "P5.1"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 4. Deviations и write set (мысль 1; N9)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p5-deviations#writeset",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.9 Deviations",
-      "why": "целевая архитектура",
-      "required": true
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_scout",
+      "required": true,
+      "section": "_scout"
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/roles/context-scout.md",
+      "why": "контракт scout",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/roles/context-scout.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/scout-write-set.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/golden/**",
+      "change": "any",
+      "note": "промпты, захват с --reason"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify",
+      "note": "check"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы stage-report, log-event, read-* — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты → роль и схема → _scout → промпт → check → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "подсказка write set"
   ],
   "route": {
     "class": "implementation",
@@ -49,5 +110,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:42Z"
+  "updated_at": "2026-10-13T19:49:03Z"
 }

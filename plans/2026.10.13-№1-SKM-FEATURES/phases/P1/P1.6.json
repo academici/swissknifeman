@@ -1,22 +1,26 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.6",
-  "title": "orch: правдивая декларация сети — поле network в launch-catalog, network в dry-run с предупреждением, contracts.md; закрытие фазы P1",
+  "title": "orch: песочницы провайдеров — проба bubblewrap, instructions.sandbox off|prefer|require, --settings sandbox для Claude-ролей с Bash, SANDBOX_UNAVAILABLE для Codex, network declared/enforced в dry-run; закрытие фазы P1",
   "status": "todo",
-  "summary": "launch-catalog: необязательное поле network (sandboxed | unrestricted) у записей, валидация в launch._validate_entry, вывод в orch.py launch list; conduct.py run --dry-run: network {role: {declared, enforced}} и warnings для declared none при unrestricted; docs/contracts.md — network как заявленное намерение. Пункт закрывает фазу: phase.validation P1.",
-  "why": "N5, D5, C7: сеть процесса агента ограничить нельзя (обрывает API модели); честная отчётность вместо ложной декларации. Риск: поле в закрытом каталоге — validate_catalog и тесты launch.",
+  "summary": "Новый packages/orch/lib/orch/sandbox.py (probe bwrap userns+netns, socat); orch.py doctor — check orch.sandbox; run-options instructions.sandbox (off|prefer|require, умолч. prefer) и instructions.sandbox_domains; engine._role_argv добавляет --settings с блоком sandbox для Claude-ролей с Bash; prefer+недоступно → ISOLATION_PARTIAL, require → SANDBOX_UNAVAILABLE до работы; codex-маршрут при недоступной песочнице недоступен; dry-run показывает sandbox и network declared/enforced; docs. Пункт закрывает фазу: phase.validation P1.",
+  "why": "N5, D5, C7, C14: сеть процесса агента ограничить нельзя; штатные песочницы ограничивают инструменты. На машине песочницы не стартуют (AppArmor userns) — отчётность это показывает, живая проверка — после действия владельца. Риски: (1) --settings сливается с настройками пользователя — передаётся только блок sandbox; (2) strictAllowlist без доменов ломает сетевые тесты проекта — домены задаются instructions.sandbox_domains; (3) зеркало run-options моста.",
   "scope": {
     "include": [
-      "packages/orch/configs/launch-catalog.json",
-      "packages/orch/lib/orch/launch.py",
-      "packages/orch/lib/orch/cli.py (launch list)",
+      "packages/orch/lib/orch/sandbox.py",
+      "packages/orch/lib/orch/cli.py (doctor)",
+      "packages/orch/lib/orch/conductor/engine.py (_role_argv, _preflight)",
       "packages/orch/lib/orch/conductor/cli.py (_preview)",
-      "packages/orch/docs/contracts.md",
-      "тесты launch и conductor",
+      "packages/orch/lib/orch/conductor/options.py",
+      "run-options схема и зеркало моста",
+      "docs contracts.md, conductor.md",
+      "тесты",
       "phase.validation P1"
     ],
     "exclude": [
-      "Landlock TCP, network namespace (D5)"
+      "Landlock TCP (D5)",
+      "переписывание argv codex",
+      "изменение системной конфигурации AppArmor (действие владельца)"
     ]
   },
   "depends_on": [
@@ -32,7 +36,12 @@
   "reads": [
     {
       "ref": "knowledge/p1-fixes#network",
-      "why": "дизайн поля и вывода",
+      "why": "дизайн пробы, опции, argv и отчётности",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-13#claude",
+      "why": "ключи песочницы Claude и поведение --settings",
       "required": true
     },
     {
@@ -41,9 +50,9 @@
       "required": true
     },
     {
-      "path": "packages/orch/lib/orch/launch.py",
-      "section": "_validate_entry",
-      "why": "валидация записи",
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "section": "_role_argv",
+      "why": "ISOLATION_ARGS и _knows",
       "required": true
     },
     {
@@ -54,15 +63,15 @@
   ],
   "task_files": [
     {
-      "path": "packages/orch/configs/launch-catalog.json",
-      "change": "modify"
-    },
-    {
-      "path": "packages/orch/lib/orch/launch.py",
-      "change": "modify"
+      "path": "packages/orch/lib/orch/sandbox.py",
+      "change": "create"
     },
     {
       "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
       "change": "modify"
     },
     {
@@ -70,8 +79,21 @@
       "change": "modify"
     },
     {
-      "path": "packages/orch/tests/test_launch.py",
+      "path": "packages/orch/lib/orch/conductor/options.py",
       "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/test_sandbox.py",
+      "change": "create"
     },
     {
       "path": "packages/orch/tests/test_conductor.py",
@@ -82,9 +104,13 @@
       "change": "modify"
     },
     {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
       "path": "tests/golden/**",
       "change": "any",
-      "note": "orch launch list, захват с --reason"
+      "note": "orch doctor/help, захват с --reason"
     },
     {
       "path": "CHANGELOG.md",
@@ -93,10 +119,12 @@
   ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
-    "codex --sandbox: sandboxed только если `codex exec --help` и документация Codex подтверждают запрет сети в этом режиме; иначе unrestricted",
-    "phase.validation P1 — после V1 пункта, один раз"
+    "Проба только читает и запускает bwrap с true; системные файлы не меняет",
+    "Тесты подменяют probe; реальный bwrap в тестах не нужен",
+    "run-options меняется аддитивно; зеркало моста — sync-schema.py",
+    "phase.validation P1 — после V1–V2 пункта, один раз"
   ],
-  "guidance": "Исполнитель: implementation/medium. Порядок: тесты (падают) → поле и валидация → launch list → dry-run → docs → V1 → phase.validation P1 (knowledge/p1-fixes#checks).",
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты (падают) → sandbox.py и doctor → схема и options (+ sync-schema) → _role_argv и _preflight → _preview → docs → V1–V2 → phase.validation P1.",
   "validation": [
     {
       "id": "V1",
@@ -104,10 +132,19 @@
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
     }
   ],
   "deliverables": [
-    "network в launch-catalog и dry-run"
+    "проба песочницы",
+    "instructions.sandbox",
+    "network declared/enforced"
   ],
   "route": {
     "class": "implementation",
@@ -124,5 +161,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:26:51Z"
+  "updated_at": "2026-10-13T19:41:21Z"
 }

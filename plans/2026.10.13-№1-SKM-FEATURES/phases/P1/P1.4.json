@@ -1,9 +1,9 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.4",
-  "title": "orch launch-catalog: ro-run и --tools у bounded-implementer на Claude, --permission-prompts none у всех ролей Claude, причина записи Grok-reviewer в vendor/",
+  "title": "orch launch-catalog: ro-run и --tools у bounded-implementer на Claude, --permission-prompts none у ролей Claude, запрет --bare, причина записи Grok-reviewer в vendor/",
   "status": "todo",
-  "summary": "launch-catalog.json: bounded-implementer.claude-code по образцу executor (ro-run.py --rw {cwd}, --tools Bash,Read,Edit,Write,Grep,Glob, --allowedTools Bash); --permission-prompts none во всех записях claude-code с -p; docs/conductor.md — причина --rw {cwd}/vendor у grok reviewer; обновить тесты launch, render, моста planner-orch и golden.",
+  "summary": "launch-catalog.json: bounded-implementer.claude-code по образцу executor (ro-run.py --rw {cwd}, --tools Bash,Read,Edit,Write,Grep,Glob, --allowedTools Bash); --permission-prompts none во всех записях claude-code с -p; тест: ни одной записи claude-code с --bare (D15); docs/conductor.md — причина --rw {cwd}/vendor у grok reviewer; обновить тесты launch, render, моста planner-orch и golden.",
   "why": "Аудит П0.3 (N4), П0.4 (C4), П0.6 (N17, C3). Риск: изменение argv ломает golden и тесты моста planner-orch (test_launch_bridge.py) — захват golden только с --reason.",
   "scope": {
     "include": [
@@ -19,6 +19,9 @@
       "argv grok reviewer"
     ]
   },
+  "decisions": [
+    "D15"
+  ],
   "reads": [
     {
       "ref": "knowledge/p1-fixes#launch",
@@ -113,5 +116,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:26:51Z"
+  "updated_at": "2026-10-13T19:41:20Z"
 }

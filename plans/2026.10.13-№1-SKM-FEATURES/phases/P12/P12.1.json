@@ -1,37 +1,80 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.1",
-  "title": "Поля событий orch: agent_run_id, work_id, route, prompt_digest, config_digest, error_class, токены; orch/schemas/event-data/v1/",
+  "title": "События orch.agent.started/finished/failed и поля run_id, work_id, agent_run_id, route, prompt_sha256, config/options digest, error, tokens в событиях orch",
   "status": "todo",
-  "summary": "Схемы data событий orch.run.* и orch.agent.*.",
-  "why": "Аудит П11.1.",
+  "summary": "По knowledge/p12-observability#fields: схемы event-data/v1, EVENT_TYPES, эмиссия в _role и стадиях, subject/causationid/correlationid; контрактные фикстуры.",
+  "why": "Аудит П11.1, мысли 5, 10.",
   "scope": {
     "include": [
-      "orch events, схемы event-data"
+      "packages/orch/lib/orch/events.py",
+      "packages/orch/schemas/event-data/v1/",
+      "conductor (эмиссия)",
+      "tests"
     ],
     "exclude": []
   },
   "depends_on": [
-    "P6.2"
+    "P11.3"
+  ],
+  "decisions": [
+    "D14"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p12-observability#fields",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.8 События, журнал, логи",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p12-observability#facts",
+      "why": "код",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/lib/orch/events.py",
+      "why": "эмиссия",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/events.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/event-data/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала сверка facts. Порядок: фикстуры → схемы → эмиссия → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "события агентов"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +91,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:50Z"
+  "updated_at": "2026-10-13T19:58:49Z"
 }

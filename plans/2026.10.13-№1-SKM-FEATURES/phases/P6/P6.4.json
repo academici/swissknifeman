@@ -1,38 +1,136 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.4",
-  "title": "Протокол вопросов: stage-report.questions[], orch.conductor.questions (queue|deny|defaults), conduct.py answer, resume с INPUT_REBUILT, QUESTION_WAIT",
+  "title": "Протокол вопросов (D11): stage-report.questions[], orch.conductor.questions queue|deny|defaults, questions.json с binding input_digest, conduct.py answer и questions, resume с QUESTION_STALE",
   "status": "todo",
-  "summary": "Контракт 2.10.2; blocking false → assumption в журнал плана; blocking true → blocked с escalation QUESTION, события orch.agent.questioned, orch.run.waiting; conduct.py answer --run R --item I --question Q --text …; question_warn_s.",
-  "why": "Аудит П5.4, мысль 3. Режим advisor — после P10.4; interactive — только для запуска человеком.",
+  "summary": "Контракт и поведение по knowledge/p6-work#questions: схема stage-report (if/then assumed), config orch.conductor.questions и limits.question_warn_s, сохранение вопроса с binding, escalation QUESTION / QUESTION_DENIED, defaults один раз, conduct.py answer/questions, resume применяет ответ при совпадении digest, раздел # Answers в промпте executor; executor.md — когда задавать вопрос; e2e-тест.",
+  "why": "Аудит П5.4, мысль 3, D11, research-2026-10-13#hitl. Риски: (1) ответ к устаревшему входу — binding и QUESTION_STALE; (2) defaults — не больше одного автоматического ответа на вопрос; (3) вопрос не держит процесс.",
   "scope": {
     "include": [
-      "stage-report схема",
-      "orch conductor cli.py, engine.py",
-      "config orch.conductor.questions"
+      "packages/orch/schemas/conductor/v1/stage-report.schema.json",
+      "packages/orch/configs/config.schema.json",
+      "packages/orch/lib/orch/conductor/engine.py, cli.py, prompts.py, options.py, observer.py",
+      "packages/orch/roles/executor.md",
+      "run-options схема и зеркало (limits.question_warn_s)",
+      "tests, docs"
     ],
     "exclude": [
-      "режим advisor (P10.4)"
+      "режим advisor (P10.4)",
+      "интерактивный TTY-режим"
     ]
   },
+  "depends_on": [
+    "P6.3"
+  ],
+  "decisions": [
+    "D11"
+  ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p6-work#questions",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.10 Вопросы и диалог (мысль 3)",
-      "why": "целевая архитектура",
+      "ref": "knowledge/research-2026-10-13#hitl",
+      "why": "принципы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_refresh_input и resume",
+      "required": true,
+      "section": "_refresh_input"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/conductor/v1/stage-report.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/observer.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/executor.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help, промпты; захват с --reason"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты exec/v1, work-source/v1, stage-report, progress-line, config — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: e2e и фикстуры (падают) → схема → config → engine (blocked, state, files) → answer/questions → resume и binding → промпт → docs → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "протокол вопросов",
+    "conduct.py answer"
   ],
   "route": {
     "class": "implementation",
@@ -49,5 +147,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:43Z"
+  "updated_at": "2026-10-13T19:51:22Z"
 }

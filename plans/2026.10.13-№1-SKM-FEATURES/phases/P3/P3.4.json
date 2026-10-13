@@ -1,14 +1,15 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.4",
-  "title": "swissknifeman config explain --all: значение, слой, файл, строка каждого ключа, --json",
+  "title": "aicore config explain --all: все модули, значение, слой, файл, строка; --json",
   "status": "todo",
-  "summary": "Фасад maind/umbrella над aicore config explain: все ключи effective config с источником; --json; golden на фикстуре machine+project+plan.",
-  "why": "Аудит П2.5.",
+  "summary": "aicore config explain --all [--root] [--config] [--json] по всем модулям discover_units(); module и --all взаимоисключимы; маскирование секретов как в explain; golden на фикстуре machine+project+invocation; umbrella проксирует.",
+  "why": "Аудит П2.5; критерий 1 части 9.",
   "scope": {
     "include": [
-      "umbrella/maind config",
-      "aicore config explain"
+      "packages/aicore/lib/aicore/config/cli.py",
+      "packages/aicore/tests/config/**",
+      "tests/golden/**"
     ],
     "exclude": []
   },
@@ -17,22 +18,62 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p3-config#explain",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.3 Конфигурация",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/aicore/lib/aicore/config/cli.py",
+      "why": "explain",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/config/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "захват с --reason"
+    },
+    {
+      "path": "packages/aicore/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Секреты не печатаются (secret_ref маскируется)"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тест (падает) → --all → golden → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "H=$(mktemp -d) && HOME=$H PYTHONPATH=packages/aicore/lib python3 -m aicore config explain --all --json | python3 -c 'import json,sys; d=json.load(sys.stdin); mods={m[\"module\"] for m in d}; assert {\"aicore\",\"orch\",\"planner\",\"skiller\"} <= mods, mods'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "config explain --all"
   ],
   "route": {
     "class": "economy",
@@ -49,5 +90,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:40Z"
+  "updated_at": "2026-10-13T19:46:21Z"
 }

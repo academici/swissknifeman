@@ -1,40 +1,106 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.1",
-  "title": "Источники research и политика: orch.research.policy, orch.research.sources (argv только machine), адаптеры command и filesystem",
+  "title": "[orch.research] policy и sources: адаптеры command, filesystem, mcp-stdio (Perplexity через perplexity-web-mcp), повтор при BROWSER_BUSY; orch.py research query/sources",
   "status": "todo",
-  "summary": "Ключи 2.3.6; project задаёт argv → CONFIG_LAYER_FORBIDDEN.",
-  "why": "Аудит П9.1, мысль 16. Вход фазы — D6. Имя бинарника Perplexity — решение владельца (часть 7, п. 7).",
+  "summary": "Config и адаптеры по knowledge/p10-research#sources; обобщённый stdlib MCP stdio-клиент; CLI research; пример machine-конфига Perplexity в docs; тесты (CONFIG_LAYER_FORBIDDEN, фейковый mcp-stdio сервер).",
+  "why": "Аудит П9.1, мысль 16; ответ на вопрос 7 части 7 (Perplexity — MCP stdio, а не отдельный бинарник). Риски: (1) проект задаёт исполняемый argv — запрещено слоями; (2) перегрузка daemon — concurrency и повтор.",
   "scope": {
     "include": [
-      "orch config.schema",
-      "адаптеры источников"
+      "packages/orch/configs/config.schema.json",
+      "packages/orch/lib/orch/research/",
+      "packages/orch/lib/orch/cli.py (research)",
+      "tests и фикстура mcp-stdio",
+      "docs"
     ],
     "exclude": [
-      "http, mcp, vector"
+      "http, vector адаптеры",
+      "реальные запросы к Perplexity в тестах"
     ]
   },
+  "depends_on": [
+    "P9.4"
+  ],
   "decisions": [
     "D6"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 9. Research / RAG (мысль 16)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p10-research#sources",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.12 Research / RAG (мысль 16)",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p10-research#facts",
+      "why": "код",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/docs/research/tools/pplx_stdio.py",
+      "why": "образец MCP stdio-клиента",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/research/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/research/sources.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_research.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/fixtures/research/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты и config — только аддитивно (D1)",
+    "argv источников — только machine/invocation/flags"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала проверить вход фазы (D6) и сверить facts. Порядок: тесты → config → адаптеры → CLI → docs → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "источники research"
   ],
   "route": {
     "class": "implementation",
@@ -51,5 +117,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:48Z"
+  "updated_at": "2026-10-13T19:56:40Z"
 }

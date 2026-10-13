@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P13",
   "title": "Eval на реальных моделях: матрица, волна B skills, prompt profiles",
-  "design": "skeleton",
-  "goal": "Матрица economy / implementation / frontier × доступные провайдеры × no-skill / minimal / текущий профиль; метрики success, токены, latency, tool errors, conflicts, false activation; волна B SLIM/MERGE/SPLIT skills с eval-отчётом; orch/configs/prompt-profiles.json — только transforms с A/B-выигрышем; обновление kind и decision skills.",
-  "context": "audits/perplexity-audit.md — Фаза 12 (П12.1–П12.3), П7.7, П8.3, 2.4.2, 2.4.3, 2.6.8. Вход — подтверждённый владельцем бюджет платных прогонов (D8). Детализируется перед исполнением.",
+  "design": "detailed",
+  "goal": "Раннеры eval по провайдерам и skiller eval matrix с отказом по бюджету; волна B skills только с eval-доказательством (без удаления id); prompt-profiles.json только с A/B-доказательством каждого transform; обновление решений по результатам.",
+  "context": "audits/perplexity-audit.md — Фаза 12 (П12.1–П12.3), П7.7, П8.3, 2.4.2, 2.4.3, 2.6.8; дизайн — knowledge/p13-eval; D8 (бюджет владельца), D6.",
   "scope": {
     "include": [
       "aicore.content.eval",
@@ -18,6 +18,29 @@
     "P8",
     "P9"
   ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
   "deliverables": [
     "отчёт сравнения моделей и skills"
   ],
@@ -29,29 +52,11 @@
   ],
   "batches": [
     {
-      "id": "BP13-1",
+      "id": "B1",
       "items": [
-        "P13.1"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP13-2",
-      "items": [
-        "P13.2"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP13-3",
-      "items": [
-        "P13.3"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP13-4",
-      "items": [
+        "P13.1",
+        "P13.2",
+        "P13.3",
         "P13.4"
       ],
       "mode": "recommended"

@@ -1,23 +1,18 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.2",
-  "title": "retry.decide в conductor: retry, retry_after с PROVIDER_WAIT, fallback_route с ROUTE_FALLBACK, reconcile, коды PROVIDER_AUTH/QUOTA/REFUSED/CONTEXT; run-options on_error, fallback_routes, limits.provider_wait_max_s",
+  "title": "orch: адаптеры потоков — сигналы отказа Claude (result.is_error, api_error_status, api_retry, rate_limit_event) и Codex (turn.failed), RoleRun.error_doc; фейковый провайдер",
   "status": "todo",
-  "summary": "engine._role: провайдерный отказ решается retry.decide по knowledge/provider-errors#flow (CONDUCTOR_ON_ERROR unknown → retry; длинное или неизвестное ожидание quota → fallback_route); промпт «# Your previous answer was rejected» только для ROLE_OUTPUT_INVALID; reconcile — повтор с секцией об оставленных изменениях; run-options on_error и fallback_routes (с role), limits.provider_wait_max_s (900); схема, зеркало моста, options.py, docs/conductor.md (Stops, Beacons); тесты conductor по knowledge/provider-errors#tests.",
-  "why": "Аудит П1.2, 2.16, N2: conductor повторяет любую ошибку как невалидный ответ, квота превращается в ROLE_FAILED. Риски: (1) ожидание retry_after блокирует run — прерывается cancel, ограничено provider_wait_max_s; (2) fallback на маршрут ниже класса работы — проверка _route_minimum для нового маршрута; (3) повтор пишущей роли на грязном дереве — только с секцией об изменениях.",
+  "summary": "conductor/process.py: parse_stream собирает сигналы таблицы knowledge/provider-errors#signals (Claude: result.is_error при любом subtype, api_error_status, последнее system/api_retry, rate_limit_event; Codex: turn.failed, error-события игнорируются; exit 143); run_role при неуспехе вызывает aicore classify_signals и заполняет RoleRun.error_doc (error/v1) и api_retries; fake_role.py — ключи stream, stderr, is_error, api_error_status, codex_failed. Решение conductor не меняется.",
+  "why": "Аудит П1.1, N2, D7. Риски: (1) subtype success с is_error — успех определяется только по is_error и terminal; (2) error-события Codex не отказ; (3) текст инструментов не попадает в сигналы.",
   "scope": {
     "include": [
-      "packages/orch/lib/orch/conductor/engine.py (_role и помощники маршрута)",
-      "packages/orch/lib/orch/conductor/options.py",
-      "packages/orch/schemas/conductor/v1/run-options.schema.json",
-      "bridges/planner-orch/schemas/run-options.schema.json (sync-schema.py)",
-      "packages/orch/docs/conductor.md",
-      "packages/orch/tests/test_conductor.py, фикстуры run-options"
+      "packages/orch/lib/orch/conductor/process.py",
+      "packages/orch/tests/fixtures/conductor/fake_role.py",
+      "packages/orch/tests/test_conductor_process.py"
     ],
     "exclude": [
-      "пересборка промпта для context_limit (P9)",
-      "события журнала aicore (P12)",
-      "fallback reviewer по умолчанию (P2.3)"
+      "решение (P2.5)"
     ]
   },
   "depends_on": [
@@ -28,67 +23,32 @@
   ],
   "reads": [
     {
-      "ref": "knowledge/provider-errors#flow",
-      "why": "алгоритм, действия, коды, ключи",
-      "required": true
-    },
-    {
-      "ref": "knowledge/provider-errors#tests",
-      "why": "сценарии",
+      "ref": "knowledge/provider-errors#signals",
+      "why": "сигналы по провайдерам",
       "required": true
     },
     {
       "ref": "knowledge/provider-errors#facts",
-      "why": "retry.py, options.py, схемы",
+      "why": "process.py и fake_role.py",
       "required": true
     },
     {
-      "path": "packages/orch/lib/orch/conductor/engine.py",
-      "section": "_role",
-      "why": "строки 848–904",
-      "required": true
-    },
-    {
-      "path": "packages/orch/lib/orch/retry.py",
-      "why": "decide и RetryInputs",
-      "required": true
-    },
-    {
-      "path": "packages/orch/docs/conductor.md",
-      "section": "Stops",
-      "why": "таблицы Stops и Beacons",
+      "path": "packages/orch/lib/orch/conductor/process.py",
+      "why": "parse_stream, run_role",
       "required": true
     }
   ],
   "task_files": [
     {
-      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "path": "packages/orch/lib/orch/conductor/process.py",
       "change": "modify"
     },
     {
-      "path": "packages/orch/lib/orch/conductor/options.py",
+      "path": "packages/orch/tests/fixtures/conductor/fake_role.py",
       "change": "modify"
     },
     {
-      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
-      "change": "modify"
-    },
-    {
-      "path": "bridges/planner-orch/schemas/run-options.schema.json",
-      "change": "modify",
-      "note": "только через sync-schema.py"
-    },
-    {
-      "path": "packages/orch/tests/test_conductor.py",
-      "change": "modify"
-    },
-    {
-      "path": "packages/orch/tests/fixtures/**",
-      "change": "any",
-      "note": "valid/invalid run-options"
-    },
-    {
-      "path": "packages/orch/docs/conductor.md",
+      "path": "packages/orch/tests/test_conductor_process.py",
       "change": "modify"
     },
     {
@@ -98,11 +58,9 @@
   ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
-    "run-options меняется аддитивно; aicore schema compat зелёный",
-    "retry.py не меняется (чистая функция, общая с conformance)",
-    "Ожидание проверяет cancel каждую секунду; ROLE_OUTPUT_INVALID — прежний путь"
+    "orch импортирует aicore.provider.errors; существующие поля RoleRun не меняются"
   ],
-  "guidance": "Исполнитель: implementation/high. Порядок: тесты сценариев (падают) → схема и options.py (+ sync-schema.py) → _role → fallback-маршрут → docs → V1–V2.",
+  "guidance": "Исполнитель: implementation/high. Порядок: fake_role → тесты извлечения сигналов (падают) → parse_stream → run_role → V1.",
   "validation": [
     {
       "id": "V1",
@@ -110,18 +68,10 @@
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "."
-    },
-    {
-      "id": "V2",
-      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
-      "expect": "exit 0: зеркало run-options совпадает",
-      "kind": "acceptance",
-      "cwd": "."
     }
   ],
   "deliverables": [
-    "retry.decide в conductor",
-    "fallback_routes"
+    "сигналы отказа в RoleRun"
   ],
   "route": {
     "class": "implementation",
@@ -138,5 +88,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:27:05Z"
+  "updated_at": "2026-10-13T19:43:52Z"
 }

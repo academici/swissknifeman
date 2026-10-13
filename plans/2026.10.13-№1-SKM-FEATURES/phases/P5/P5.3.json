@@ -1,43 +1,104 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
-  "title": "Минимальный lifecycle deviation: accepted | follow_up (новый пункт через API planner) | owner_decision; orch.deviation.recorded/resolved",
+  "title": "Исходы deviation: follow_up и owner_decision в result.pending; plan.py followups с закрытием через link resolves-followup; без автосоздания пунктов; закрытие фазы P5",
   "status": "todo",
-  "summary": "Исходы 2.9.2; follow_up создаёт пункт через мост planner-orch (plan.py add-item), не прямой записью; события orch.deviation.recorded/resolved с corrects_event_id.",
-  "why": "Аудит П4.3. Риск: мутация плана из conductor — только через API work source.",
+  "summary": "Мост register: outcome follow_up/owner_decision → finish --pending с префиксом и log --data outcome; planner: read-глагол plan.py followups [--open] [--json] и схема read-followups; закрытие follow-up связью related/resolves-followup; тесты. Пункт закрывает фазу: phase.validation P5.",
+  "why": "Аудит П4.3 с поправкой D16: автоматическое add-item создаёт петли и расширяет scope без полномочия; работа не теряется через pending.",
   "scope": {
     "include": [
-      "orch engine.py, мост planner-orch"
+      "bridges/planner-orch/register.py",
+      "packages/planner/lib/planner/plan/ (followups)",
+      "packages/planner/schemas/plan/v1/read-followups.schema.json",
+      "tests",
+      "docs planner",
+      "phase.validation P5"
     ],
     "exclude": [
-      "полный 8-статусный lifecycle"
+      "автоматическое создание пунктов",
+      "события orch.deviation.* (P12)"
     ]
   },
   "depends_on": [
-    "P5.1"
+    "P5.2"
+  ],
+  "decisions": [
+    "D16"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 4. Deviations и write set (мысль 1; N9)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p5-deviations#lifecycle",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.9 Deviations",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p5-deviations#checks",
+      "why": "проверки фазы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "path": "packages/planner/lib/planner/plan/lifecycle.py",
+      "why": "finish и result.pending",
+      "required": true,
+      "section": "finish"
     }
+  ],
+  "task_files": [
+    {
+      "path": "bridges/planner-orch/register.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/test_register.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/schemas/plan/v1/read-followups.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/planner/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help plan.py, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы stage-report, log-event, read-* — только аддитивно (D1)",
+    "phase.validation P5 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты → мост → followups → docs → V1 → phase.validation P5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "plan.py followups"
   ],
   "route": {
     "class": "implementation",
-    "effort": "high"
+    "effort": "medium"
   },
   "review": {
     "mode": "none"
@@ -50,5 +111,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:42Z"
+  "updated_at": "2026-10-13T19:49:14Z"
 }

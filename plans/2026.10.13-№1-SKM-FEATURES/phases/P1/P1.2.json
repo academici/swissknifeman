@@ -1,9 +1,9 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.2",
-  "title": "aicore.util.paths: resolve_path без опоры на исключение Path.resolve; is_within fail-closed на Python ≥3.13; units, overlays, plugins, materialize; Python 3.14 в CI-матрице",
+  "title": "aicore.util.paths: resolve_path на stdlib realpath(strict=ALLOW_MISSING); is_within fail-closed на 3.9–3.14; units, overlays, plugins, materialize; Python 3.14 в CI-матрице",
   "status": "todo",
-  "summary": "Добавить aicore.util.paths.resolve_path (обход компонентов, лимит 40 ссылок → OSError ELOOP), перевести на него is_within, is_within_lexical, aicore/ext/units.py, overlays.py, plugins.py; safe_copy_skill пропускает ELOOP-записи с предупреждением; тесты эмулируют нестрогий resolve Python 3.13; TEST_PYTHONS = 3.9,3.13,3.14 и перегенерация workflow.",
+  "summary": "Добавить aicore.util.paths.resolve_path по knowledge/p1-fixes#paths (os.path.realpath strict=ALLOW_MISSING, fallback — strict resolve существующего префикса без '..' в хвосте), перевести на него is_within, is_within_lexical (родитель), aicore/ext/units.py _inside, overlays.py, plugins.py; safe_copy_skill пропускает элементы с ELOOP через ignore copytree; тесты цикла, висячей ссылки, ветки без ALLOW_MISSING и эмуляции нестрогого resolve 3.13; TEST_PYTHONS = 3.9,3.13,3.14 и перегенерация workflow.",
   "why": "N1 (аудит 1.3.3), D3, C1. Риск безопасности: fail-open проверки вложенности путей на Python ≥3.13 — symlink escape при доставке skills и обнаружении модулей. Риск: resolve_path меняет нормализацию путей для всех вызовов is_within — существующие тесты aicore и skiller (connect, vendor, module_skills, doctor) должны остаться зелёными.",
   "scope": {
     "include": [
@@ -101,7 +101,7 @@
     "Fail closed: любая ошибка разрешения пути → False/пропуск, никогда True",
     "Сначала тест эмуляции, который падает на текущем коде, затем исправление"
   ],
-  "guidance": "Исполнитель: implementation/high. Порядок: тест-эмуляция (patch Path.resolve без исключения на цикле) → падает → resolve_path → is_within/is_within_lexical → units/overlays/plugins → materialize ELOOP → ci-matrix TEST_PYTHONS и workflow → V1–V3. Python 3.13 на машине нет — живой прогон не делать.",
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты (эмуляция 3.13 и ветка без ALLOW_MISSING падают на текущем коде) → resolve_path → is_within/is_within_lexical → units/overlays/plugins → materialize → ci-matrix и workflow → V1–V3. Своего обходчика symlink не писать (D3).",
   "validation": [
     {
       "id": "V1",
@@ -144,5 +144,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:26:50Z"
+  "updated_at": "2026-10-13T19:41:20Z"
 }

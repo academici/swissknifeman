@@ -1,0 +1,101 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.4",
+  "title": "orch capacity gate: provider-gates.json в машинном состоянии под flock, проверка при выборе маршрута, conduct.py gates",
+  "status": "todo",
+  "summary": "Новый conductor/gates.py по knowledge/provider-errors#gates: файл state_dir('orch')/provider-gates.json (provider-gates/v1), set/blocked/clear, read-modify-write под fcntl.flock и atomic_write_json; conduct.py gates [--json] [--clear [PROVIDER]]; тесты истечения, конкурентной записи, CLI.",
+  "why": "research-2026-10-13#resilience: исчерпанная квота аккаунта не переоткрывается. Риски: (1) гонка двух conductor-ов — flock на запись, атомарная замена; (2) устаревшая запись — игнор по until.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/gates.py",
+      "packages/orch/lib/orch/conductor/cli.py (gates)",
+      "packages/orch/tests/test_gates.py",
+      "golden conduct.py help"
+    ],
+    "exclude": [
+      "использование в _route (P2.5)"
+    ]
+  },
+  "decisions": [
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/provider-errors#gates",
+      "why": "инвариант, принуждение, конкурентность",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/io.py",
+      "section": "atomic_write_json",
+      "why": "атомарная запись",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/journal.py",
+      "why": "образец flock",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/gates.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_gates.py",
+      "change": "create"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help conduct.py, захват с --reason"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Тесты — временный HOME/XDG_STATE_HOME; реальное состояние машины не трогать",
+    "POSIX flock; без новых зависимостей"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты (падают) → gates.py → CLI → docs → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "capacity gate"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:43:53Z"
+}

@@ -1,37 +1,74 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.4",
-  "title": "Отчёты analyst по событиям и артефактам: токены по модели/роли/skill, review, deviation, fallback, долгие стадии",
+  "title": "analyst: reader журнала и артефактов orch, analyst orch report (токены, review, deviation, fallback, долгие стадии, бюджеты, план против факта, сравнение с baseline); golden",
   "status": "todo",
-  "summary": "Список 2.8.5; analyst читает только события и артефакты; golden на фикстуре журнала.",
+  "summary": "По knowledge/p12-observability#analyst: readers/orch.py только по контрактам, отчёты, golden на фикстуре журнала. Если P12.5 отложен по D6 — пункт закрывает фазу: phase.validation P12.",
   "why": "Аудит П11.4, мысль 14.",
   "scope": {
     "include": [
-      "packages/analyst"
+      "packages/analyst/lib/analyst/readers/orch.py",
+      "analyst cli",
+      "tests"
     ],
-    "exclude": []
+    "exclude": [
+      "чтение внутренних файлов orch вне контрактов"
+    ]
   },
   "depends_on": [
-    "P12.2"
+    "P12.3"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p12-observability#analyst",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.8 События, журнал, логи",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/analyst/lib/analyst/run_reports.py",
+      "why": "образец отчётов",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/analyst/lib/analyst/readers/orch.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: фикстура журнала → reader → отчёты → golden → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "analyst orch report"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +85,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:51Z"
+  "updated_at": "2026-10-13T19:58:51Z"
 }

@@ -1,16 +1,17 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.2",
-  "title": "Вынос engine.py по одному модулю в conductor/{application,domain,stages,policies,infrastructure}",
+  "title": "Вынос engine.py по слоям: domain → infrastructure/files → policies → infrastructure/roles → stages → application; реэкспорт публичных имён; модули ≤ 600 строк",
   "status": "todo",
-  "summary": "Классы только stateful (Conductor, RunStore); risk score, merge, heal — функции; после каждого шага — те же snapshot и orch test.sh.",
-  "why": "Аудит П10.2, мысль 7. Риск: регрессия поведения — characterization P11.1.",
+  "summary": "По knowledge/p11-refactor#extract: шаг за шагом с зелёными characterization и тестами после каждого; классы только Conductor и RunStore; функции для правил; engine.py — фасад с реэкспортом.",
+  "why": "Аудит П10.2, мысль 7. Риски: (1) регрессия — characterization; (2) поломка импортов CLI и мостов — реэкспорт и `rg -n 'from orch.conductor.engine import|engine\\.' packages bridges` до и после.",
   "scope": {
     "include": [
       "packages/orch/lib/orch/conductor/**"
     ],
     "exclude": [
-      "изменение поведения"
+      "изменение поведения",
+      "изменение контрактов"
     ]
   },
   "depends_on": [
@@ -18,22 +19,52 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 10. Рефакторинг `engine.py` (мысль 7) — после фаз 1, 3, 5, 6",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p11-refactor#extract",
+      "why": "дизайн",
       "required": true
     },
     {
       "path": "audits/perplexity-audit.md",
-      "section": "2.19 Рефакторинг Python (мысль 7)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "why": "принципы",
+      "required": true,
+      "section": "2.19 Рефакторинг Python (мысль 7)"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any",
+      "note": "только импорты"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Поведение conductor не меняется: characterization и существующие тесты зелёные после каждого шага",
+    "Один слой — один коммит (plan.py commit с юнитом при необходимости)"
+  ],
+  "guidance": "Исполнитель: frontier/high. Порядок слоёв как в дизайне; после каждого: characterization + affected-tests; затем V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c \"import pathlib,sys; big=[(p,sum(1 for _ in open(p))) for p in pathlib.Path('packages/orch/lib/orch/conductor').rglob('*.py')]; bad=[x for x in big if x[1]>600]; assert not bad, bad\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "engine.py разделён"
   ],
   "route": {
     "class": "frontier",
@@ -50,5 +81,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:49Z"
+  "updated_at": "2026-10-13T19:57:33Z"
 }

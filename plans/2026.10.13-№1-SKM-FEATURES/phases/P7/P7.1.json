@@ -1,37 +1,69 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.1",
-  "title": "review_recommendation в stage-report: recommended, reason_codes, focus, suggested_model_class",
+  "title": "review_recommendation в stage-report (recommended, reason_codes, focus, suggested_model_class); правило в executor.md; фикстуры",
   "status": "todo",
-  "summary": "Поле 2.14 в stage-report.schema.json (аддитивно), roles/executor.md; fixtures valid/invalid.",
+  "summary": "Поле review_recommendation по knowledge/p7-review#recommendation в stage-report.schema.json (аддитивно), правило в roles/executor.md, valid/invalid фикстуры; conductor сохраняет его в отчёте без интерпретации (интерпретация — P7.2).",
   "why": "Аудит П6.1, мысль 17.",
   "scope": {
     "include": [
-      "orch stage-report схема, roles/executor.md"
+      "packages/orch/schemas/conductor/v1/stage-report.schema.json",
+      "packages/orch/roles/executor.md",
+      "фикстуры"
     ],
-    "exclude": []
+    "exclude": [
+      "risk score (P7.2)"
+    ]
   },
   "depends_on": [
-    "P5.1"
+    "P6.6"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 6. Динамический review (мысль 17; N10)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p7-review#recommendation",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p7-review#facts",
+      "why": "код",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/conductor/v1/stage-report.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/executor.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты stage-report, config, run-options — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: economy/high. Сначала сверка facts. Порядок: фикстуры → схема → executor.md → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "review_recommendation"
   ],
   "route": {
     "class": "economy",
@@ -48,5 +80,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:44Z"
+  "updated_at": "2026-10-13T19:52:07Z"
 }

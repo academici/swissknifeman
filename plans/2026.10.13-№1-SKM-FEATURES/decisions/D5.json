@@ -1,25 +1,30 @@
 {
   "$schema": "urn:swissknifeman:task:plan:decision:v1",
   "id": "D5",
-  "title": "Сетевая изоляция ролей (N5)",
+  "title": "Изоляция сети и ФС ролей: песочницы провайдеров, опция orch, честная отчётность",
   "date": "2026-10-13",
   "status": "accepted",
-  "question": "Роли объявляют permissions.network = none, но ro-run.py ограничивает только ФС. Аудит предлагает Landlock ABI 4 (TCP). Как сделать декларацию правдивой?",
+  "question": "Роли объявляют permissions.network = none, а ro-run.py ограничивает только ФС процесса-агента. Как обеспечить заявленное без костылей?",
   "options": [
     {
       "id": "A",
-      "text": "Не ограничивать сеть процесса агента: ro-run.py оборачивает весь CLI провайдера, и TCP-ограничение блокирует его API; сделать правдивой отчётность — orch.py launch matrix и dry-run показывают network_enforced (yes для codex --sandbox read-only/workspace-write, no для claude/grok), docs/contracts.md описывает, что network — заявленное намерение, обеспечиваемое песочницей провайдера; принуждение через песочницу Bash провайдера — roadmap с триггером «инцидент или требование безопасности»",
-      "pros": "честно и без поломки ролей",
-      "cons": "сеть executor на Claude не ограничена"
+      "text": "Ограничивать команды инструментов, а не процесс агента: Claude — песочница Bash через --settings (sandbox.enabled, allowUnsandboxedCommands false, failIfUnavailable true, network.strictAllowlist true, allowedDomains из политики роли); Codex — --sandbox read-only|workspace-write (сеть выключена по умолчанию); ro-run.py остаётся для записи ФС процесса; опция run-options instructions.sandbox: off | prefer | require (умолч. prefer: при недоступной песочнице роль идёт под ro-run с маяком ISOLATION_PARTIAL и network.enforced false; require — Stop SANDBOX_UNAVAILABLE до работы); dry-run и orch.py launch показывают declared/enforced. Предусловие на этой машине — разрешить bubblewrap user namespaces (AppArmor, Ubuntu 24.04) — действие владельца",
+      "pros": "документированные механизмы провайдеров; API модели не блокируется; гибко (off/prefer/require)",
+      "cons": "до действия владельца реального ограничения нет — отчётность честно показывает это"
     },
     {
       "id": "B",
       "text": "Landlock ABI 4 TCP в ro-run.py",
-      "cons": "обрывает соединение CLI с API модели — роль не работает"
+      "cons": "обрывает API модели"
+    },
+    {
+      "id": "C",
+      "text": "Только документация",
+      "cons": "декларация остаётся неисполняемой"
     }
   ],
-  "decision": "A — Не ограничивать сеть процесса агента: ro-run.py оборачивает весь CLI провайдера, и TCP-ограничение блокирует его API; сделать правдивой отчётность — orch.py launch matrix и dry-run показывают network_enforced (yes для codex --sandbox read-only/workspace-write, no для claude/grok), docs/contracts.md описывает, что network — заявленное намерение, обеспечиваемое песочницей провайдера; принуждение через песочницу Bash провайдера — roadmap с триггером «инцидент или требование безопасности»",
-  "rationale": "Ограничение сети процесса-агента ломает сам вызов модели; ограничивать можно только инструменты внутри агента силами провайдера.",
+  "decision": "A — песочницы провайдеров с опцией instructions.sandbox off|prefer|require и честной отчётностью",
+  "rationale": "Claude sandbox ограничивает только Bash и потомков, не процесс Claude (code.claude.com/docs/en/sandboxing; Perplexity R03); Codex sandbox — штатный режим; на машине apparmor_restrict_unprivileged_userns=1 и codex sandbox падает (bwrap RTM_NEWADDR) — нужен профиль AppArmor для bwrap.",
   "applies_to": [
     "P1.6"
   ],

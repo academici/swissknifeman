@@ -1,15 +1,19 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P13.2",
-  "title": "Волна B skills: SLIM/MERGE/SPLIT для групп php-architecture, vue-core, vitest, js-style и самых дорогих по tokens × частота",
+  "title": "Волна B skills: SLIM/MERGE/SPLIT для групп php-architecture, vue-core, vitest, js-style и самых дорогих — только с eval-отчётом (success не ниже, токены ниже), старые id через DEPRECATE/replaced_by",
   "status": "todo",
-  "summary": "На каждый изменённый skill — eval-отчёт: success не ниже, токены ниже; критерии удаления 2.6.8.",
-  "why": "Аудит П7.7; D8.",
+  "summary": "По knowledge/p13-eval#waveb: изменения skills, eval до/после, откат без выигрыша, evidence в selection.json.",
+  "why": "Аудит П7.7, 2.6.8; D8, D1.",
   "scope": {
     "include": [
-      "skiller skills"
+      "packages/skiller/skills/** (группы)",
+      "selection.json",
+      "отчёты eval"
     ],
-    "exclude": []
+    "exclude": [
+      "удаление id"
+    ]
   },
   "depends_on": [
     "P13.1"
@@ -19,22 +23,59 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 7. Skills: метаданные, выбор, диета (мысль 15; часть 3)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p13-eval#waveb",
+      "why": "дизайн",
       "required": true
     },
     {
       "path": "audits/perplexity-audit.md",
-      "section": "3.3 Группы взаимоисключения (`exclusive_group`) и последовательности",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "why": "группы",
+      "required": true,
+      "section": "3.3 Группы взаимоисключения (`exclusive_group`) и последовательности"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "modify",
+      "note": "только через skiller registry"
+    },
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P13.2/**",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Платные прогоны — только в пределах бюджета владельца (D8); id skills не удаляются (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: baseline eval → изменение → eval → сравнение → оставить/откатить → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) SKM_VALIDATE_SKIP_TESTS=1 bash packages/skiller/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "волна B"
   ],
   "route": {
     "class": "implementation",
@@ -53,5 +94,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:52Z"
+  "updated_at": "2026-10-13T19:59:47Z"
 }

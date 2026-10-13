@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D10",
+  "title": "Метаданные выбора skills — отдельный sidecar, не вложенный metadata",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Аудит (2.6.5) кладёт политику выбора в metadata.selection внутри frontmatter SKILL.md. Стандарт Agent Skills задаёт metadata как строка→строка. Куда класть kind, roles, triggers, conflicts, exclusive_group, max_tokens?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Sidecar-файл selection.json рядом с SKILL.md (схема skill-selection/v1 в aicore, namespaced, версионируемая); frontmatter остаётся по стандарту; пути Claude — стандартное поле paths там, где нужно; skiller registry переносит sidecar в skills.json",
+      "pros": "skills остаются переносимыми; схема проверяема"
+    },
+    {
+      "id": "B",
+      "text": "metadata.selection во frontmatter",
+      "cons": "нарушает стандарт agentskills.io; другие клиенты отвергнут или потеряют"
+    }
+  ],
+  "decision": "A — Sidecar-файл selection.json рядом с SKILL.md (схема skill-selection/v1 в aicore, namespaced, версионируемая); frontmatter остаётся по стандарту; пути Claude — стандартное поле paths там, где нужно; skiller registry переносит sidecar в skills.json",
+  "rationale": "agentskills.io/specification: metadata — string→string; research-2026-10-13#skills.",
+  "applies_to": [
+    "P8"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

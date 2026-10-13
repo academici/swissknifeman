@@ -1,38 +1,97 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.2",
-  "title": "Папка и lineage на каждый вызов агента: <run>/<work>/agents/<agent_run_id>/ request, result, usage; agent_run_id в progress-lines; orch.agent.started/finished/failed",
+  "title": "Каталог и lineage каждого вызова агента: agents/<agent_run_id>/ request, result, usage; поле agent в progress-line; status --json и observer по агентам",
   "status": "todo",
-  "summary": "agent_run_id в каждой progress-line и в event/v1 subject, causationid — событие-причина; conduct.py status --json — дерево агентов; observer считает токены по agent_run_id.",
+  "summary": "agent_run_id в _role (включая report-fixer, parent_agent_run_id); файлы request/result/usage по knowledge/p6-work#agents; progress-line.agent (аддитивно); conduct.py status --json — agents; observer — токены по ролям и агентам; тесты.",
   "why": "Аудит П5.2, мысли 1 и 10.",
   "scope": {
     "include": [
-      "orch engine.py, progress.py, observer.py, cli.py"
+      "packages/orch/lib/orch/conductor/engine.py (_role)",
+      "progress.py, observer.py, cli.py (status)",
+      "packages/orch/schemas/conductor/v1/progress-line.schema.json",
+      "tests, docs"
     ],
-    "exclude": []
+    "exclude": [
+      "события журнала aicore (P12)",
+      "перенос prompts/ и streams/"
+    ]
   },
+  "depends_on": [
+    "P6.1"
+  ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p6-work#agents",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.7 Единица работы, артефакты, lineage",
-      "why": "целевая архитектура",
-      "required": true
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_role",
+      "required": true,
+      "section": "_role"
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/lib/orch/conductor/observer.py",
+      "why": "отчёт",
       "required": true
     }
   ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/progress.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/observer.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/progress-line.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты exec/v1, work-source/v1, stage-report, progress-line, config — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты → agent_run_id и файлы → progress-line → status/observer → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "agents/<agent_run_id>/"
+  ],
   "route": {
     "class": "implementation",
-    "effort": "high"
+    "effort": "medium"
   },
   "review": {
     "mode": "none"
@@ -45,5 +104,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:42Z"
+  "updated_at": "2026-10-13T19:51:20Z"
 }

@@ -1,42 +1,72 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.5",
-  "title": "Экспорт телеметрии: плагин aicore:telemetry-exporter (JSONL/OTel-compatible sink)",
+  "title": "Плагин telemetry-exporter: подписчик orch.* → OTLP-JSON, маппинг на gen_ai.* по зафиксированному коммиту semconv; вход по D6; закрытие фазы P12",
   "status": "todo",
-  "summary": "Отдельный плагин, не зависимость ядра; вход — появление потребителя телеметрии (D6).",
-  "why": "Аудит П11.5; D6.",
+  "summary": "По knowledge/p12-observability#otel: модуль-плагин с unit.json, подписка, OTLP-JSON без SDK, тест на фикстуре журнала. Пункт закрывает фазу: phase.validation P12.",
+  "why": "Аудит П11.5, D14, D6: только при появлении потребителя.",
   "scope": {
     "include": [
-      "плагин telemetry-exporter"
+      "plugins/telemetry-exporter/ (или packages/<id> по правилам ecosystem-units)",
+      "tests",
+      "phase.validation P12"
     ],
     "exclude": [
-      "зависимость opentelemetry в aicore"
+      "зависимость opentelemetry"
     ]
   },
   "depends_on": [
-    "P12.2"
+    "P12.4"
   ],
   "decisions": [
-    "D6"
+    "D6",
+    "D14"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p12-observability#otel",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.20 Библиотеки",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p12-observability#checks",
+      "why": "проверки фазы",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/telemetry-exporter/**",
+      "change": "create",
+      "note": "размещение — по правилам module-folders и ecosystem-units"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)",
+    "Новый модуль — по правилу module-folders (unit.json, requires aicore)",
+    "phase.validation P12 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала проверить вход (D6). Порядок: фикстура → маппинг → плагин → V1 → phase.validation P12.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "telemetry-exporter"
   ],
   "route": {
     "class": "implementation",
@@ -53,5 +83,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:51Z"
+  "updated_at": "2026-10-13T19:58:52Z"
 }

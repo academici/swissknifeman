@@ -1,38 +1,78 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.4",
-  "title": "Фокус review: focus[] и suggested_model_class рекомендации executor в промпт и routing reviewer",
+  "title": "Фокус review: блок focus из review_recommendation и risk.json в промпте reviewer; suggested_model_class повышает маршрут reviewer при допуске (ROUTE_UPGRADED); закрытие фазы P9",
   "status": "todo",
-  "summary": "Не выше класса, разрешённого политикой; manifest reviewer содержит блок focus.",
-  "why": "Аудит П6.3.",
+  "summary": "По knowledge/p9-prompt#focus: блок focus, повышение класса reviewer только вверх и с проверкой допуска, маяк ROUTE_UPGRADED, manifest reviewer с focus; тесты. Пункт закрывает фазу: phase.validation P9.",
+  "why": "Аудит П6.3. Риск: понижение класса reviewer — запрещено.",
   "scope": {
     "include": [
-      "orch prompts.py, engine.py routing"
+      "prompts.py (reviewer)",
+      "engine.py (маршрут reviewer)",
+      "tests",
+      "phase.validation P9"
     ],
     "exclude": []
   },
   "depends_on": [
-    "P9.1",
-    "P7.2"
+    "P9.3"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 6. Динамический review (мысль 17; N10)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p9-prompt#focus",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p9-prompt#checks",
+      "why": "проверки фазы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p7-review#risk",
+      "why": "risk.json",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы и run-options — только аддитивно (D1)",
+    "phase.validation P9 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тесты → блок → маршрут → V1 → phase.validation P9.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "фокус review"
   ],
   "route": {
     "class": "economy",
@@ -49,5 +89,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:47Z"
+  "updated_at": "2026-10-13T19:55:24Z"
 }

@@ -1,37 +1,102 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.2",
-  "title": "Роль researcher и research-result в plans/<plan>/research/",
+  "title": "Роль researcher (read-only, network) с research-result/v1; launch-catalog; сохранение в plans/<plan>/research через мост или в orch-artifacts",
   "status": "todo",
-  "summary": "Read-only, сеть разрешена, класс implementation; схема research-result; события orch.agent.*.",
-  "why": "Аудит П9.2.",
+  "summary": "roles/researcher.json|md, launch-catalog claude-code (allowedTools только orch.py research query), схема research-result, стадия в engine, регистрация результата; e2e на фейковом источнике.",
+  "why": "Аудит П9.2. Риск: утверждения без источника — только в unknowns (контракт).",
   "scope": {
     "include": [
-      "orch roles, схемы, launch-catalog"
+      "packages/orch/roles/researcher.*",
+      "packages/orch/configs/launch-catalog.json",
+      "packages/orch/schemas/conductor/v1/research-result.schema.json",
+      "engine.py (стадия research)",
+      "bridges/planner-orch (сохранение)",
+      "tests"
     ],
-    "exclude": []
+    "exclude": [
+      "codex-маршрут researcher"
+    ]
   },
   "depends_on": [
     "P10.1"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 9. Research / RAG (мысль 16)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p10-research#researcher",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.12 Research / RAG (мысль 16)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/roles/context-scout.json",
+      "why": "образец read-only роли",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/roles/researcher.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/roles/researcher.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/configs/launch-catalog.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/research-result.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/register.py",
+      "change": "any"
+    },
+    {
+      "path": "bridges/planner-orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты и config — только аддитивно (D1)",
+    "argv источников — только machine/invocation/flags"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: e2e (падает) → роль и каталог → схема → стадия → сохранение → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "роль researcher"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +113,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:48Z"
+  "updated_at": "2026-10-13T19:56:41Z"
 }

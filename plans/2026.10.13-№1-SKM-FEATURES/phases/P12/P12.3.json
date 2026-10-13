@@ -1,37 +1,97 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.3",
-  "title": "Redaction: секреты не попадают в события и progress-lines; сырые потоки только в ignored state",
+  "title": "aicore.util.redact (известные секреты + шаблоны токенов) в progress-lines, ошибках ролей, событиях и отчёте observer; doctor проверяет игнор state; тесты Т7",
   "status": "todo",
-  "summary": "Тесты Т7 части 5 (секрет в событии, redaction сырого лога).",
-  "why": "Аудит П11.3; риск утечки секретов.",
+  "summary": "По knowledge/p12-observability#redact: публичный модуль, делегирование приватных функций ext/process.py, применение в orch, предупреждение doctor; тесты утечки.",
+  "why": "Аудит П11.3, Т7: хвост stderr в ошибках ролей может содержать токены. Риск: ложные срабатывания шаблонов — только явные форматы токенов.",
   "scope": {
     "include": [
-      "orch events, progress"
+      "packages/aicore/lib/aicore/util/redact.py",
+      "packages/aicore/lib/aicore/ext/process.py",
+      "packages/orch/lib/orch/conductor/progress.py, process.py, observer.py",
+      "packages/orch/lib/orch/events.py",
+      "orch doctor",
+      "tests"
     ],
-    "exclude": []
+    "exclude": [
+      "редакция сырых потоков"
+    ]
   },
   "depends_on": [
     "P12.2"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p12-observability#redact",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.8 События, журнал, логи",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "path": "packages/aicore/lib/aicore/ext/process.py",
+      "why": "приватная редакция",
+      "required": true,
+      "section": "_redact_text"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/util/redact.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/process.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/progress.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/process.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/observer.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/events.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты утечки (падают) → redact → применение → doctor → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "редакция секретов"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +108,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:51Z"
+  "updated_at": "2026-10-13T19:58:50Z"
 }

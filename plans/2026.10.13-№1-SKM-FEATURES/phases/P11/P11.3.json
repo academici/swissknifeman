@@ -1,13 +1,15 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P11.3",
-  "title": "Мутации плана только через work source: нет записей в plans/ вне infrastructure/work_source.py",
+  "title": "Запись артефактов и переходы плана только в infrastructure/work_source.py; архитектурный тест; закрытие фазы P11",
   "status": "todo",
-  "summary": "Тест: rg \"open\\(.*plans/\" packages/orch/lib/orch/conductor пусто вне infrastructure/work_source.py.",
+  "summary": "По knowledge/p11-refactor#fs: вынос записи stage-report/review-verdict/orch-artifacts в work_source.py; архитектурный тест запрета записи вне него. Пункт закрывает фазу: phase.validation P11 и conformance на фейковых движках.",
   "why": "Аудит П10.3, критерий 14.",
   "scope": {
     "include": [
-      "orch conductor"
+      "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+      "packages/orch/tests/test_boundaries.py",
+      "phase.validation P11"
     ],
     "exclude": []
   },
@@ -16,22 +18,52 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 10. Рефакторинг `engine.py` (мысль 7) — после фаз 1, 3, 5, 6",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p11-refactor#fs",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.19 Рефакторинг Python (мысль 7)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p11-refactor#checks",
+      "why": "проверки фазы",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+      "change": "any",
+      "note": "создан в P11.2"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Поведение conductor не меняется: characterization и существующие тесты зелёные после каждого шага",
+    "phase.validation P11 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: архитектурный тест (падает) → вынос → V1 → phase.validation P11.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "инвариант work source"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +80,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:50Z"
+  "updated_at": "2026-10-13T20:00:34Z"
 }

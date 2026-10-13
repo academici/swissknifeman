@@ -1,38 +1,85 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.6",
-  "title": "Автоисправление deviation: work.kind deviation_fix при условиях 2.9.3 в рамках correction budget; иначе отдельная работа или owner_decision",
+  "title": "Автоисправление deviation внутри пункта: auto_fixable + evidence в write set + acceptance checks + бюджет corrections → correction-раунд и повтор checks; закрытие фазы P6",
   "status": "todo",
-  "summary": "Все условия 2.9.3 одновременно (write set, acceptance и публичный API не меняются, есть детерминированная проверка, бюджет есть) → deviation_fix; связь corrects_event_id.",
-  "why": "Аудит П4.4.",
+  "summary": "После executor-раунда deviation с auto_fixable и условиями knowledge/p6-work#autofix → correction-раунд с разделом # Fix this deviation и повтор checks; результат — outcome accepted с note или прежний deviation; executor.md — критерии auto_fixable (аудит 2.9.3); тесты. Пункт закрывает фазу: phase.validation P6.",
+  "why": "Аудит П4.4. Риски: (1) петля исправлений — бюджет corrections и _allowance; (2) conductor не судит о публичном API — это декларация роли, проверяется только проверяемое.",
   "scope": {
     "include": [
-      "orch engine.py"
+      "packages/orch/lib/orch/conductor/engine.py, prompts.py",
+      "packages/orch/roles/executor.md",
+      "tests, docs",
+      "phase.validation P6"
     ],
-    "exclude": []
+    "exclude": [
+      "отдельная работа deviation_fix через --input (доступна вручную после P6.1)"
+    ]
   },
   "depends_on": [
-    "P6.1",
-    "P5.3"
+    "P6.5"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 4. Deviations и write set (мысль 1; N9)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p6-work#autofix",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.9 Deviations",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p6-work#checks",
+      "why": "проверки фазы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_allowance и коррекции",
+      "required": true,
+      "section": "_allowance"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/executor.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты exec/v1, work-source/v1, stage-report, progress-line, config — только аддитивно (D1)",
+    "phase.validation P6 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты → условие → раунд → итог → V1 → phase.validation P6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "автоисправление deviation"
   ],
   "route": {
     "class": "implementation",
@@ -49,5 +96,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:44Z"
+  "updated_at": "2026-10-13T19:51:23Z"
 }

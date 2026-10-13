@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "p5-deviations",
+  "title": "P5: deviations — классы, подсказка write set, исходы",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Факты кода",
+      "text": "Код на HEAD aed8924b9:\n\n- `packages/orch/schemas/conductor/v1/stage-report.schema.json`: `issue = {text, kind ∈ pending|deviation|blocker|difficulty|assumption|note|escalation, impact?, next?}` (`next` — свободный текст), `additionalProperties: false`. Проверку дополняют `engine.report_problems` и `heal.py` (heal добавляет note о починке формы).\n- `engine._execute` (~1083–1110): `_outside(item)` = `scope.outside(changed, write_set)`; при `scope.outside == \"block\"` — `OUTSIDE_WRITE_SET` (blocked), по умолчанию `deviation` (DEFAULT_SCOPE) — conductor записывает deviation о путях вне write set.\n- Мост `bridges/planner-orch/register.py`: `_ISSUE_FIELDS = (text, kind, impact, next)`, лишние поля → `REGISTER_REPORT_INVALID` (тест `issue-extra`); `plan_calls` → `plan.py log --type <kind> --summary … [--impact] [--next]` для `LOG_KINDS`, затем `finish --status … --deviation TEXT --pending TEXT`; deviation ⇔ `done_with_deviations`, escalation ⇔ `blocked` (`REGISTER_STATUS_MISMATCH`).\n- planner: `log-event.schema.json` — `data` свободный объект; CLI `plan.py log` — `--type --summary --impact --next --ref --actor` (без `--data`); `finish --pending TEXT` хранит `result.pending` (`planner/plan/lifecycle.py:892`, `context.py RESULT_KEYS`); `plan.py link --kind related --relation <text>` — типизированная связь.\n- context-scout: транспорт `text` (`launch-catalog`), результат — свободный текст (`roles/context-scout.md` «You return»), кэш `.../cache/scout/<item>/<key>.txt`; текст целиком уходит в промпт executor.\n- Данные PLAN3 (N9, baseline P1.1): 167 deviation, 134 без impact/next; по ключевым словам: вне write set 29%, тесты 26%, спецификация 13%."
+    },
+    {
+      "id": "classes",
+      "title": "Поля deviation (D12)",
+      "text": "**P5.1 (D12).** `issue` (аддитивно, `if kind == deviation then required [class, impact, outcome]`):\n\n| Поле | Тип |\n|---|---|\n| `class` | `write_set | spec_mismatch | test_env | docs | dependency | environment | other` |\n| `severity` | `low | medium | high | critical` (необязательно) |\n| `outcome` | `accepted | follow_up | owner_decision` |\n| `auto_fixable` | bool (необязательно) |\n| `evidence` | массив строк `path:line` или `V#` (необязательно) |\n\n`next` остаётся свободным текстом. heal (`heal.py`): если deviation без `class` — `other`; без `outcome` — `accepted`; без `impact` — текст «not stated by the executor»; каждая починка — в note о форме (как сейчас). Deviation, который пишет сам conductor (пути вне write set), — `class: write_set`, `outcome: accepted`, `evidence` — пути. `roles/executor.md` — правило заполнения полей с примерами. Мост register: `_ISSUE_FIELDS` + новые поля; `log` передаёт их через новый флаг planner `plan.py log --data JSON` (аддитивно: объект кладётся в `data` события, валидация — объект). Фикстуры stage-report valid/invalid; тест моста — новые поля доходят до `log.jsonl data`."
+    },
+    {
+      "id": "writeset",
+      "title": "Подсказка write set от scout",
+      "text": "**P5.2.** context-scout завершает ответ необязательным закрытым блоком ```` ```json write-set ```` `{\"paths\": [\"glob\", …], \"tests\": [\"path\", …]}` (контракт в `roles/context-scout.md`; схема `scout-write-set` в `orch/schemas/conductor/v1/` — аддитивно). conductor (`_scout`) извлекает блок (`prompts.json_block`), невалидный/отсутствующий — игнорирует с маяком `RESULT_HEALED`; executor получает раздел промпта «Expected paths» (подсказка, не расширение write set). При `scope.outside == deviation` пути вне write set, совпавшие с подсказкой, пишутся `class: write_set` и `evidence` с пометкой `expected` (в тексте). planner `plan.py check`: warning `write_set_no_tests` — у пункта, чьи `task_files` меняют код (`*.py`, `*.php`, `*.ts`, `*.js`) без пути тестов (`tests/`, `test_`, `.test.`, `Test.php`). Эффект — доля `class: write_set` в следующей фазе против baseline (диагностика, не приёмка)."
+    },
+    {
+      "id": "lifecycle",
+      "title": "Исходы и follow-up",
+      "text": "**P5.3.** Исходы deviation: `accepted` — запись в журнал (как сейчас); `owner_decision` — escalation не меняется (это `kind: escalation`), а deviation с `outcome: owner_decision` дополнительно попадает в `finish --pending \"owner_decision(<class>): <text>\"`; `follow_up` — `finish --pending \"follow_up(<class>): <text>\"` и `log --data {\"outcome\": \"follow_up\", ...}`. **Пункты автоматически не создаются** (иначе deviation → пункт → deviation — петля и рост scope без полномочия).\n\nНовый read-глагол planner `plan.py followups <plan> [--open] [--json]`: открытые follow_up/owner_decision из `result.pending` закрытых пунктов; закрыт, если есть связь `plan.py link <plan> <new-item> <origin-item> --kind related --relation resolves-followup` (или `--note`). Envelope-схема ответа — `planner/schemas/plan/v1/read-followups.schema.json`. События `orch.deviation.recorded/resolved` — в P12 (журнал событий).\n\nТесты: мост — deviation follow_up → pending и data.outcome; planner — followups показывает открытый, после link — закрытый; check — write_set_no_tests."
+    },
+    {
+      "id": "checks",
+      "title": "Проверки фазы",
+      "text": "Фаза P5: пункты — `python3 scripts/affected-tests.py --run`; P5.1 и P5.3 трогают planner, orch и мост — affected-tests выберет все три. Широкий прогон — phase.validation (пункт P5.3). Первый пункт сверяет knowledge/p5-deviations#facts с кодом."
+    }
+  ],
+  "applies_to": [
+    "P5"
+  ]
+}

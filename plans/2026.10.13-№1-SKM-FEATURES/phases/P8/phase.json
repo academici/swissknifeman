@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P8",
   "title": "Skills: метаданные выбора, селектор для orch-ролей, волна A, перенос hooks, расширения, карантин импорта",
-  "design": "skeleton",
-  "goal": "metadata.selection (kind, roles, triggers, requires_tools, conflicts, exclusive_group, max_tokens) в skill-descriptor/v1; skiller select --role --paths --deps --model-class --explain; волна A без eval (ROUTER_ONLY, PERSONA, REFERENCE уходят из runtime ролей); git-safety → hook harness, preflight-скрипты; skiller.custom_dirs и EXTENSION_AMBIGUOUS; карантин импортированных skills.",
-  "context": "audits/perplexity-audit.md — Фаза 7 (П7.1–П7.6), 2.6, часть 3 (решения по 209 skills), N11, N12, N16; волна B (П7.7) — P13.2 (D8). Детализируется перед исполнением.",
+  "design": "detailed",
+  "goal": "selection.json рядом с SKILL.md по схеме skill-selection/v1 (D10) для всех 209 skills; skiller select --explain и conductor skills [auto] через мост orch-skiller; волна A без удаления (D1); переносы в hooks harness, схемы и preflight-скрипты; custom_dirs и EXTENSION_AMBIGUOUS; карантин импорта с compat-report.",
+  "context": "audits/perplexity-audit.md — Фаза 7 (П7.1–П7.6), 2.6, часть 3; дизайн — knowledge/p8-skills; D10, D1. Волна B — P13.2.",
   "scope": {
     "include": [
       "frontmatter SKILL.md и генератор skills.json",
@@ -18,6 +18,36 @@
   },
   "depends_on": [
     "P1"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V14",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p8-bud-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash packages/skiller/bin/skiller budget --first-turn'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; first-turn ≤ 23K",
+      "kind": "acceptance",
+      "cwd": "."
+    }
   ],
   "deliverables": [
     "skiller select --explain",
@@ -34,43 +64,19 @@
   ],
   "batches": [
     {
-      "id": "BP8-1",
+      "id": "B1",
       "items": [
-        "P8.1"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP8-2",
-      "items": [
-        "P8.2"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP8-3",
-      "items": [
+        "P8.1",
+        "P8.2",
         "P8.3"
       ],
       "mode": "recommended"
     },
     {
-      "id": "BP8-4",
+      "id": "B2",
       "items": [
-        "P8.4"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP8-5",
-      "items": [
-        "P8.5"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP8-6",
-      "items": [
+        "P8.4",
+        "P8.5",
         "P8.6"
       ],
       "mode": "recommended"

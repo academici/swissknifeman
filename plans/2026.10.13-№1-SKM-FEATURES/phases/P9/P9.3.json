@@ -1,39 +1,91 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.3",
-  "title": "Бюджеты core/supporting/retrieval: измерение в manifest, BUDGET_OVER с блоком",
+  "title": "Бюджеты core/supporting/retrieval: измерение в manifest, limits.prompt_*_tokens, BUDGET_OVER с блоком, сводка observer",
   "status": "todo",
-  "summary": "2.5.5: сначала только измерение; лимиты — после 2–3 фаз данных.",
-  "why": "Аудит П8.4, мысль 6.",
+  "summary": "По knowledge/p9-prompt#budgets: классы блоков, лимиты в run-options, маяк BUDGET_OVER с блоком без изменения промпта, observer.",
+  "why": "Аудит П8.4, мысль 6: сначала измерять, лимиты — после данных.",
   "scope": {
     "include": [
-      "orch prompts.py, manifest"
+      "prompts.py",
+      "engine.py",
+      "options.py",
+      "observer.py",
+      "run-options схема и зеркало",
+      "tests"
     ],
     "exclude": [
-      "включение лимитов"
+      "урезание промпта"
     ]
   },
   "depends_on": [
-    "P9.1"
+    "P9.2"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 8. Сборка промпта и prompt profiles (мысли 6, 15)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
-      "required": true
-    },
-    {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.5 Сборка промпта (prompt compiler)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p9-prompt#budgets",
+      "why": "дизайн",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/observer.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы и run-options — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тесты → классы → маяк → observer → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "бюджеты в manifest"
   ],
   "route": {
     "class": "economy",
@@ -50,5 +102,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:47Z"
+  "updated_at": "2026-10-13T19:55:23Z"
 }

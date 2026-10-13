@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P7",
   "title": "Динамический review: рекомендация executor и risk score conductor",
-  "design": "skeleton",
-  "goal": "stage-report.review_recommendation; чистая функция risk score по признакам аудита 2.14 с весами в конфиге и порогом review.dynamic_threshold; добавление reviewer+triager даже в пакетах без review, маяк REVIEW_ADDED.",
-  "context": "audits/perplexity-audit.md — Фаза 6 (П6.1, П6.2), 2.14, N10; П6.3 (фокус в промпте reviewer) — P9.4. Детализируется перед исполнением.",
+  "design": "detailed",
+  "goal": "stage-report.review_recommendation; чистая risk.score с весами и шаблонами в [orch.conductor.risk]; review.dynamic и dynamic_threshold; добавление reviewer+triager в пакетах без review при пороге, маяк REVIEW_ADDED, risk.json.",
+  "context": "audits/perplexity-audit.md — Фаза 6 (П6.1, П6.2), 2.14, N10; дизайн — knowledge/p7-review. П6.3 — P9.4.",
   "scope": {
     "include": [
       "stage-report review_recommendation",
@@ -18,6 +18,29 @@
   "depends_on": [
     "P5"
   ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
   "deliverables": [
     "динамический review"
   ],
@@ -27,15 +50,9 @@
   ],
   "batches": [
     {
-      "id": "BP7-1",
+      "id": "B1",
       "items": [
-        "P7.1"
-      ],
-      "mode": "recommended"
-    },
-    {
-      "id": "BP7-2",
-      "items": [
+        "P7.1",
         "P7.2"
       ],
       "mode": "recommended"

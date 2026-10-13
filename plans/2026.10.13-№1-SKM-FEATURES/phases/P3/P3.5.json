@@ -1,37 +1,86 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.5",
-  "title": "config_digest и options_digest в run.json и событии orch.run.started",
+  "title": "config_digest, config_layers, options_digest в run.json, options.json и событиях orch; закрытие фазы P3",
   "status": "todo",
-  "summary": "Проверить, что orchestration.options плана/фазы/пункта идут слоями run-options; записать config_digest и options_digest в run.json и data события orch.run.started.",
-  "why": "Аудит П2.6; воспроизводимость run (критерий 2 части 9).",
+  "summary": "run.json: config_digest (эффективные [orch] и [aicore.providers]), config_layers; <item>/options.json: digest; данные orch.run.started и orch.run.stage.finished: config_digest, options_digest, project_resolution (схемы event-data/v1 аддитивно); тест различия digest. Пункт закрывает фазу: phase.validation P3.",
+  "why": "Аудит П2.6; воспроизводимость run (критерий 2).",
   "scope": {
     "include": [
-      "orch conductor engine.py, events"
+      "packages/orch/lib/orch/conductor/engine.py",
+      "packages/orch/schemas/event-data/v1/*.json",
+      "packages/orch/tests/test_conductor.py, test_events.py",
+      "phase.validation P3"
     ],
-    "exclude": []
+    "exclude": [
+      "prompt digest (P9)"
+    ]
   },
   "depends_on": [
-    "P3.2"
+    "P3.2",
+    "P3.3",
+    "P3.4"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 2. Единый control plane конфигурации (мысль 2)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p3-config#digest",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.3 Конфигурация",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p3-config#checks",
+      "why": "проверки фазы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/schemas/event-data/v1/orch.run.started.schema.json",
+      "why": "схема события",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/event-data/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_events.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — аддитивно",
+    "phase.validation P3 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тесты → run.json/options.json → события → V1 → phase.validation P3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "digest конфига и options"
   ],
   "route": {
     "class": "economy",
@@ -48,5 +97,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:40Z"
+  "updated_at": "2026-10-13T19:46:22Z"
 }

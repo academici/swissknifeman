@@ -1,38 +1,95 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.2",
-  "title": "Дедупликация и конфликты промпта: skill ↔ контракт роли, правила 2.5.4, PROMPT_CONFLICT",
+  "title": "Проверки набора skills роли: duplicated_by_role_contract, tool_missing, interactive_in_headless, persona_duplicate, exclusive_group, over_budget без обрезки, PROMPT_CONFLICT по объявленным конфликтам",
   "status": "todo",
-  "summary": "Таблица соответствий; excluded duplicated_by_role_contract; исходы resolved/warning/error/ambiguous; error блокирует запуск.",
-  "why": "Аудит П8.2.",
+  "summary": "Таблица knowledge/p9-prompt#dedupe перед сборкой промпта; manifest.excluded; limits.skill_tokens_max (5000); маяк SKILL_EXCLUDED; Stop PROMPT_CONFLICT; удаление [:12000] в _skill_texts; тесты на каждый исход; golden промптов перезахват с --reason.",
+  "why": "Аудит П8.2, 2.5.4. Риски: (1) молчаливая обрезка процедуры — заменена исключением; (2) смысловые противоречия текста не детектируются — честно вне scope.",
   "scope": {
     "include": [
-      "orch prompts.py"
+      "packages/orch/lib/orch/conductor/engine.py (_skill_texts)",
+      "prompts.py",
+      "options.py",
+      "run-options схема и зеркало",
+      "tests"
     ],
-    "exclude": []
+    "exclude": [
+      "анализ смысла текста skills"
+    ]
   },
   "depends_on": [
-    "P9.1",
-    "P8.1"
+    "P9.1"
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 8. Сборка промпта и prompt profiles (мысли 6, 15)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p9-prompt#dedupe",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.5 Сборка промпта (prompt compiler)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p8-skills#meta",
+      "why": "поля selection.json",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы и run-options — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты исходов → проверки → удаление обрезки → manifest.excluded → docs → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "проверки skills роли"
   ],
   "route": {
     "class": "implementation",
@@ -49,5 +106,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:47Z"
+  "updated_at": "2026-10-13T19:55:22Z"
 }

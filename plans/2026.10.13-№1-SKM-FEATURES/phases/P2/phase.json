@@ -3,20 +3,22 @@
   "id": "P2",
   "title": "Ошибки провайдеров: классификация error/v1 в conductor, retry.decide, fallback_routes, коды остановки",
   "design": "detailed",
-  "goal": "Ошибка роли в conductor классифицируется классом error/v1 (aicore.provider.errors + структурные сигналы потока), реакция выбирается retry.decide (retry, retry_after с ожиданием, fallback_route, replan, reconcile, stop) вместо безусловного повтора; коды остановки PROVIDER_QUOTA, PROVIDER_AUTH, PROVIDER_CONTEXT, RECONCILE_REQUIRED; run-options fallback_routes; fallback reviewer по умолчанию.",
-  "context": "audits/perplexity-audit.md — Фаза 1 (П1.1–П1.3), 2.16, N2, E6; дизайн — knowledge/provider-errors. Решение D7 (источник правил классификации). Зависит от baseline P1.1.",
+  "goal": "Отказ роли классифицируется по структурным сигналам и текстам из первичных источников (aicore classify_signals, D7); решение — одна чистая retry.decide (+ max_wait_s); capacity gate исчерпанной квоты аккаунта; continuation для пишущих ролей; коды PROVIDER_AUTH/AUTHZ/QUOTA/REFUSED/CONTEXT, MODEL_UNAVAILABLE; run-options on_error, fallback_routes, provider_wait_max_s; fallback reviewer по умолчанию.",
+  "context": "audits/perplexity-audit.md — Фаза 1 (П1.1–П1.3), 2.16, N2, E6; дизайн — knowledge/provider-errors; исследование — knowledge/research-2026-10-13#claude, #codex, #resilience; D7, D9.",
   "scope": {
     "include": [
-      "orch conductor process.py: класс ошибки и сигналы rate_limit_event",
-      "orch conductor engine.py _role: retry.decide",
-      "aicore configs/provider-errors.json и aicore.provider.errors",
-      "run-options fallback_routes и on_error",
-      "маяки PROVIDER_WAIT, ROUTE_FALLBACK",
+      "aicore.provider.errors и provider-errors.json",
+      "orch process.py адаптеры потоков",
+      "orch retry.py (max_wait_s)",
+      "orch conductor gates.py",
+      "orch engine._role, _route, _preflight",
+      "run-options и зеркало моста",
       "docs conductor.md"
     ],
     "exclude": [
-      "события orch.provider.* в журнале aicore (P12)",
-      "advisor при потере возможностей (P10)"
+      "события журнала aicore (P12)",
+      "advisor (P10)",
+      "пересборка промпта при context_limit (P9)"
     ]
   },
   "depends_on": [
@@ -53,7 +55,10 @@
   "items": [
     "P2.1",
     "P2.2",
-    "P2.3"
+    "P2.3",
+    "P2.4",
+    "P2.5",
+    "P2.6"
   ],
   "batches": [
     {
@@ -61,7 +66,16 @@
       "items": [
         "P2.1",
         "P2.2",
-        "P2.3"
+        "P2.3",
+        "P2.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P2.5",
+        "P2.6"
       ],
       "mode": "recommended"
     }

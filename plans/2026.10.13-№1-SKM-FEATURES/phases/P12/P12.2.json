@@ -1,13 +1,16 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.2",
-  "title": "Новые типы событий orch.* по списку 2.8.2",
+  "title": "Новые типы событий по таблице маяки → события: run.warning, run.waiting, work.blocked, agent.questioned, review.added, deviation.recorded/resolved, provider.rate_limited/quota_exhausted/fallback, input.rebuilt",
   "status": "todo",
-  "summary": "orch.run.warning, waiting; orch.work.blocked; orch.agent.*; orch.review.*; orch.deviation.*; orch.provider.rate_limited, quota_exhausted, fallback; orch.input.rebuilt.",
+  "summary": "Схемы, эмиссия рядом с маяками, контрактные фикстуры, тест последовательности на сценариях characterization.",
   "why": "Аудит П11.2.",
   "scope": {
     "include": [
-      "orch events"
+      "packages/orch/schemas/event-data/v1/",
+      "events.py",
+      "conductor",
+      "tests"
     ],
     "exclude": []
   },
@@ -16,22 +19,49 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 11. Наблюдаемость (мысли 5, 10, 14)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
-      "required": true
-    },
-    {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.8 События, журнал, логи",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p12-observability#types",
+      "why": "таблица",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/event-data/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/events.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: фикстуры → схемы → эмиссия → тест последовательности → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "типы событий orch"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +78,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:50Z"
+  "updated_at": "2026-10-13T19:58:49Z"
 }

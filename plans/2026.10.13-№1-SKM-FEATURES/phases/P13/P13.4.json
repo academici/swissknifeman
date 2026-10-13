@@ -1,14 +1,16 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P13.4",
-  "title": "Решения по результатам eval: kind и decision skills, prompt profiles; отчёт сравнения",
+  "title": "Решения по результатам eval: selection.json и профили обновлены, отчёт сравнения, откат недоказанного; закрытие фазы P13 и плана",
   "status": "todo",
-  "summary": "Обновить записи решений; изменения P13.2/P13.3 подтверждены или откачены.",
-  "why": "Аудит П12.3.",
+  "summary": "По knowledge/p13-eval#decisions: обновление решений, отчёт artifacts/P13.4/report.md, откат. Пункт закрывает фазу: phase.validation P13.",
+  "why": "Аудит П12.3; критерии 12–13 части 9.",
   "scope": {
     "include": [
-      "skiller записи решений",
-      "orch prompt-profiles"
+      "selection.json",
+      "prompt-profiles.json",
+      "отчёт",
+      "phase.validation P13"
     ],
     "exclude": []
   },
@@ -21,16 +23,52 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 12. Eval на реальных моделях — только с бюджетом владельца",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p13-eval#decisions",
+      "why": "дизайн",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "ref": "knowledge/p13-eval#checks",
+      "why": "проверки фазы",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/**/selection.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/configs/prompt-profiles.json",
+      "change": "any",
+      "note": "создан в P13.3"
+    },
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P13.4/**",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Платные прогоны — только в пределах бюджета владельца (D8); id skills не удаляются (D1)",
+    "phase.validation P13 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: сведение → откат недоказанного → отчёт → V1 → phase.validation P13.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "отчёт сравнения"
   ],
   "route": {
     "class": "implementation",
@@ -47,5 +85,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:53Z"
+  "updated_at": "2026-10-13T20:00:35Z"
 }

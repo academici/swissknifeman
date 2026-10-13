@@ -1,13 +1,18 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
-  "title": "Лимиты review на batch: review_rounds_batch, corrections_batch, findings_batch; LIMIT_OVER scope batch; Blocker → REVIEW_LIMIT",
+  "title": "Лимиты review на batch: review_rounds_batch, corrections_batch, findings_batch в _allowance; Blocker при исчерпании → REVIEW_LIMIT; закрытие фазы P4",
   "status": "todo",
-  "summary": "Счётчики уровня run в state.json; превышение → LIMIT_OVER (scope batch), далее target/ceiling; Blocker не обрезается — stop REVIEW_LIMIT.",
-  "why": "Аудит П3.2, мысль 8.",
+  "summary": "limits *_batch (0 = нет); state.batch счётчики; _allowance проверяет batch той же семантикой цели/потолка, LIMIT_OVER batch + plan note; открытый Blocker при отказе allowance → Stop REVIEW_LIMIT; тесты --batch. Пункт закрывает фазу: phase.validation P4.",
+  "why": "Аудит П3.2, мысль 8. Риск: тихий пропуск Blocker — запрещён, только stop.",
   "scope": {
     "include": [
-      "orch options.py, engine.py, state.json"
+      "packages/orch/lib/orch/conductor/engine.py (_allowance, review)",
+      "options.py",
+      "run-options схема и зеркало",
+      "docs",
+      "tests",
+      "phase.validation P4"
     ],
     "exclude": []
   },
@@ -16,22 +21,76 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 3. Лимиты времени и batch (мысли 8, 13)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p4-limits#batch",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.14 Динамический review (мысль 17) и лимиты (мысль 8)",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p4-limits#checks",
+      "why": "проверки фазы",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
-      "required": true
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_allowance",
+      "required": true,
+      "section": "_allowance"
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "phase.validation P4 — после V1–V2, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты (падают) → счётчики → _allowance → REVIEW_LIMIT → docs → V1–V2 → phase.validation P4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "batch-лимиты review"
   ],
   "route": {
     "class": "implementation",
@@ -48,5 +107,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:41Z"
+  "updated_at": "2026-10-13T19:47:26Z"
 }

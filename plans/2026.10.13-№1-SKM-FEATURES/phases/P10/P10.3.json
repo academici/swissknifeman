@@ -1,14 +1,16 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.3",
-  "title": "Триггеры conditional research и перенос лесенки context7 → perplexity → WebSearch в конфиг источников",
+  "title": "Стадия research по rag пункта: execution-input.research (мост brief), policy required|conditional|off, блок research в промпте executor; golden",
   "status": "todo",
-  "summary": "Design-фаза, внешний API, security/compliance, выбор технологии, явное требование; golden: локальный rename → нет research.",
-  "why": "Аудит П9.3.",
+  "summary": "exec/v1 research (аддитивно), brief.py переносит item.rag, engine добавляет стадию по политике, блок промпта kind research; golden need none/required.",
+  "why": "Аудит П9.3 с поправкой: триггер — решение проектировщика (rag пункта), не эвристика conductor.",
   "scope": {
     "include": [
-      "orch research policy",
-      "skills verify-claims, query-craft"
+      "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "bridges/planner-orch/brief.py",
+      "engine.py, prompts.py",
+      "tests"
     ],
     "exclude": []
   },
@@ -17,26 +19,67 @@
   ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 9. Research / RAG (мысль 16)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p10-research#triggers",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.12 Research / RAG (мысль 16)",
-      "why": "целевая архитектура",
-      "required": true
-    },
-    {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "bridges/planner-orch/brief.py",
+      "why": "построение input",
       "required": true
     }
   ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты и config — только аддитивно (D1)",
+    "argv источников — только machine/invocation/flags"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: golden → схема → мост → стадия → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "стадия research"
+  ],
   "route": {
-    "class": "implementation",
-    "effort": "medium"
+    "class": "economy",
+    "effort": "high"
   },
   "review": {
     "mode": "none"
@@ -49,5 +92,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:48Z"
+  "updated_at": "2026-10-13T19:56:41Z"
 }

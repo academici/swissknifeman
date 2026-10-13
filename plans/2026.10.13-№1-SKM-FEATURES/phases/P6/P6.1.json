@@ -1,35 +1,130 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
-  "title": "conduct.py run --input FILE: adhoc execution-input без плана; provenance.kind plan_support, phase_support, review_followup, deviation_fix, research, advisor",
+  "title": "FileWorkSource и conduct.py run --input FILE; provenance plan_support, phase_support, review_followup, deviation_fix, research, advisor; артефакты в orch-artifacts; операция note моста planner-orch",
   "status": "todo",
-  "summary": "Work source «file»; --input взаимоисключим с --plan; артефакты .swissknifeman/orch-artifacts/<run>/<input_id>/; для plan_support — note с refs в журнал плана через мост.",
-  "why": "Аудит П5.1, E3, мысль 12.",
+  "summary": "orch/lib/orch/worksource_file.py по knowledge/p6-work#adhoc; conduct.py run --input (взаимоисключим с --plan), orch.py source --input; exec/v1 provenance — новые ветки oneOf и orch.py input adhoc --provenance; work-source/v1 op note (необязательная) и её реализация в мосте planner-orch; e2e-тест на фейковых ролях.",
+  "why": "Аудит П5.1, E3, мысль 12. Риски: (1) commit по умолчанию выключен — не коммитить чужие изменения; (2) новые ветки oneOf — аддитивно, schema compat; (3) мост без note не блокирует работу.",
   "scope": {
     "include": [
-      "orch conductor cli.py, engine.py, worksource.py",
-      "exec/v1 provenance.kind (аддитивно)"
+      "packages/orch/lib/orch/worksource_file.py",
+      "packages/orch/lib/orch/conductor/cli.py, engine.py (source)",
+      "packages/orch/lib/orch/cli.py (source --input, input adhoc --provenance)",
+      "packages/orch/lib/orch/adhoc.py",
+      "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "packages/orch/schemas/work-source/v1/*.json",
+      "bridges/planner-orch (note)",
+      "tests, docs"
     ],
-    "exclude": []
+    "exclude": [
+      "роли researcher/advisor (P10)"
+    ]
   },
+  "depends_on": [
+    "P5.3"
+  ],
   "reads": [
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "Фаза 5. Работа вне пунктов, папки агентов, вопросы, advisor (мысли 1, 3, 4, 10, 12, 20)",
-      "why": "пункт аудита: файлы, шаги, приёмка",
+      "ref": "knowledge/p6-work#adhoc",
+      "why": "дизайн",
       "required": true
     },
     {
-      "path": "audits/perplexity-audit.md",
-      "section": "2.7 Единица работы, артефакты, lineage",
-      "why": "целевая архитектура",
+      "ref": "knowledge/p6-work#facts",
+      "why": "код",
       "required": true
     },
     {
-      "ref": "knowledge/audit-review#source",
-      "why": "соответствие пунктов аудиту и поправки",
+      "path": "packages/orch/lib/orch/worksource.py",
+      "why": "протокол и PluginWorkSource",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/adhoc.py",
+      "why": "построение input",
       "required": true
     }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/worksource_file.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/worksource.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/adhoc.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/work-source/v1/input.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/work-source/v1/output.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/worksource.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help, захват с --reason"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты exec/v1, work-source/v1, stage-report, progress-line, config — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/high. Сначала сверка facts. Порядок: e2e-тест (падает) → схемы → FileWorkSource → CLI → note в мосте → docs → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "run --input",
+    "новые provenance"
   ],
   "route": {
     "class": "implementation",
@@ -46,5 +141,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:28:42Z"
+  "updated_at": "2026-10-13T19:51:19Z"
 }

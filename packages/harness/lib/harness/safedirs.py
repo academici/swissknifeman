@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from aicore.state import config_dir
+from aicore.state import config_dir, state_dir
 from aicore.util.cli import parse_args
 from aicore.util.io import safe_load_json
 from aicore.util.repo import find_monorepo_root
@@ -27,6 +27,16 @@ DEFAULT_CONFIG = {
     "protect_git": True,
     "allow_globs": True,
 }
+
+
+def _registry_file(home, owner, name):
+    """The registry file of another module: its own state file (``<state>/<owner>/<name>``), else the legacy
+    ``~/.swissknifeman/<name>`` while only that one exists (never under ``SKM_HOME``, which switches legacy lookups off)."""
+    new = state_dir(owner, home=home) / name
+    legacy = Path(home) / ".swissknifeman" / name
+    if new.exists() or os.environ.get("SKM_HOME") or not legacy.exists():
+        return new
+    return legacy
 
 
 def new_state_file(env):
@@ -105,8 +115,8 @@ def cmd_init(env, opts):
         print(f"already exists: {f}")
         return
     write_json(f, DEFAULT_CONFIG, opts["dry_run"])
-    print("  default: include_registered_projects=true (registry ~/.swissknifeman/"
-          "projects.json); explicit roots - harness safe-dirs add <path>")
+    print("  default: include_registered_projects=true (the skiller project registry, "
+          "<state>/skiller/projects.json); explicit roots - harness safe-dirs add <path>")
     print(f"  sample roots: {env.root / 'configs' / 'safe-dirs.example.json'}")
 
 
@@ -189,7 +199,7 @@ def cmd_prune_ask(env, opts):
     if opts["target"]:
         targets.append(Path(opts["target"]).expanduser())
     if opts["all_projects"]:
-        reg = safe_load_json(env.home / ".swissknifeman" / "projects.json", {}) or {}
+        reg = safe_load_json(_registry_file(env.home, "skiller", "projects.json"), {}) or {}
         targets += [Path(p["path"]) for p in reg.get("projects", [])
                     if isinstance(p, dict) and isinstance(p.get("path"), str)]
     for t in targets:
@@ -269,7 +279,7 @@ def cmd_safedirs(env, argv):
     }, max_pos=64)
     if opts["help"] or not pos:
         print("harness safe-dirs <init|list|add|remove|prune-ask|delete>\n"
-              "  init                          create ~/.swissknifeman/safe-dirs.json\n"
+              "  init                          create <config>/harness/safe-dirs.json\n"
               "  list                          effective allowlist through the eyes of a hook\n"
               "  add <path> [--exclude]        add root (or withdrawal)\n"
               "  remove <path> [--exclude]     remove root (or withdrawal)\n"

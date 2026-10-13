@@ -93,16 +93,31 @@ def load_allowlist(home, path=None):
             "protect_git": bool(cfg.get("protect_git", True))}
 
 
+def _state_file(home, owner, name):
+    """Candidate files of an owner's registry, first the owner's own state file (the XDG state directory of
+    swissknifeman, or ``$SKM_HOME/state``), then the legacy ``~/.swissknifeman/<name>`` (not under ``SKM_HOME``).
+    The same ladder as ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
+    skm_home = os.environ.get("SKM_HOME", "")
+    if skm_home and os.path.isabs(skm_home):
+        return [os.path.join(skm_home, "state", owner, name)]
+    base = os.environ.get("XDG_STATE_HOME", "")
+    if not (base and os.path.isabs(base)):
+        base = os.path.join(home, ".local", "state")
+    return [os.path.join(base, "swissknifeman", owner, name),
+            os.path.join(home, ".swissknifeman", name)]
+
+
 def _registered_projects(home):
-    """Internal documentation."""
-    try:
-        with open(os.path.join(home, ".swissknifeman", "projects.json"),
-                  encoding="utf-8") as f:
-            data = json.load(f)
-        return [p["path"] for p in data.get("projects", [])
-                if isinstance(p, dict) and isinstance(p.get("path"), str)]
-    except (OSError, ValueError, AttributeError):
-        return []
+    """Paths of the projects the skiller registry knows (first existing file of the ladder)."""
+    for path in _state_file(home, "skiller", "projects.json"):
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+            return [p["path"] for p in data.get("projects", [])
+                    if isinstance(p, dict) and isinstance(p.get("path"), str)]
+        except (OSError, ValueError, AttributeError):
+            continue
+    return []
 
 
 def _expand_tilde(path, home):

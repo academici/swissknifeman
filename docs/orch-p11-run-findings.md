@@ -771,3 +771,18 @@
 | P11.15 | `ed69e40e` | done_with_deviations | 27 | аудит RED, 6 находок |
 
 Коммитов в ветке за прогон: 94 (17 коммитов пунктов P11.x; остальное — правки движка, журналы, скилл, голдены). Главные нерешённые для разбора Opus вопросы — в разделах «Спорные решения» (1–36), «Что поправить в инструкциях» (I1–I13) и «Идеи по схеме»; ключевой вывод: время фазы определяла верификация (проверки пунктов), а не исполнение; схема «быстро на пункт, полно один раз в конце» и параллелизм тестов — первые меры (см. «P11.14 — итог и главный вывод»).
+
+### Коррекция по аудиту P11.15 (вне пунктов, по плану: одна коррекция владельцев)
+
+Все шесть находок исправлены наблюдателем сразу после вердикта (фаза и план разрешают одну коррекцию без нового пункта), с тестами:
+
+| # | Что сделано |
+| --- | --- |
+| F1 (средняя) | хук `auto-approve/lib/safedirs.py` и CLI `harness/lib/harness/safedirs.py` читают файл реестра проектов владельца (`<state>/skiller/projects.json`, при `SKM_HOME` — `$SKM_HOME/state/...`) первым, устаревший `~/.swissknifeman/projects.json` — запасной, пока он единственный; хук памяти (`memory/lib/common.sh`) — то же для `topology.json` (maind) и `projects.json` (skiller). Тесты: 3 на хук (владелец-файл, приоритет владельца над устаревшим, под `SKM_HOME` устаревший не читается), 1 на CLI (`prune-ask --all-projects`), 3 на bash-лестницу (`test_memory_registry_ladder.py`); существующие тесты устаревшего пути проходят |
+| F2 | `skiller/install.sh`: подсказка «настроить карту окружения» проверяет путь maind (`<state>/maind/topology.json`), а не устаревший |
+| F3 | `harness safe-dirs` называет `<config>/harness/safe-dirs.json` и реестр `<state>/skiller/projects.json` |
+| F4 | `docs/core/index.md`: убрана команда `unittest discover -s core/tests` |
+| F5 | `bootstrap/skills/package-architecture/SKILL.md` (проекции регенерированы `skiller registry`, golden перезахвачен), `skiller` docs/README/SECURITY, `harness/docs/index.md`: `<state>/skiller/projects.json`, `<state>/maind/topology.json`, `skiller topology` как псевдоним `maind topology` |
+| F6 | `core.provider.*` → `aicore.provider.*` в `docs/reference*.md` и `_doc` aicore-конфигов |
+
+Проверено: тесты harness (846), skiller (861), aicore (1478), `golden.py check`, `ecosystem-units.py check`, `public-hygiene` — зелёные. Не прогонялись полные V-проверки пункта закрытия (они уже были зелёными на `5bff4d61`; коррекция не трогает их входы, кроме перечисленных тестов) — полный прогон остаётся владельцу по схеме «один раз в конце фазы».

@@ -37,5 +37,4 @@ The operational layer of this is [Development §9](/develop#_9-performance-measu
 
 ```bash
 bash packages/aicore/scripts/test.sh                       # aicore tests
-PYTHONPATH=. python3 -m unittest discover -s core/tests   # shim and the modules still in core
 ```

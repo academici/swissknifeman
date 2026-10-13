@@ -158,7 +158,7 @@ and `laravel-test-writer` (see skill `laravel-subagents`).
 :::
 
 Each connection automatically registers the project in
-`~/.swissknifeman/projects.json` — this includes `skiller list` and
+`<state>/skiller/projects.json` — this includes `skiller list` and
 `skiller update --all`.
 
 ## Project with Laravel Boost (multi-agent, single source of truth)

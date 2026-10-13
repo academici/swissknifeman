@@ -211,7 +211,7 @@ fields measured only on Claude Code, and codex-thread deliberately continues to 
 unproven understatement.
 | `swissknifeman version` | git SHA + path to the registry |
 
-## Project map: `~/.swissknifeman/projects.json`
+## Project map: `<state>/skiller/projects.json`
 
 Replenishes automatically when `connect`/`vendor`/`update`. Records with a key
 (path, channel):

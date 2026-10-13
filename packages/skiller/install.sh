@@ -119,10 +119,16 @@ install_link() {  # $1 — name in BIN_DIR
 
 install_link skiller          # main CLI (alias swissknifeman — umbrella install.sh)
 
-# Local Environment Map (~/.swissknifeman/topology.json) — machine-specific
+# Local Environment Map (<state>/maind/topology.json, `maind topology`) — machine-specific
 # (path to Brain-volta, swissknifeman and project database), is therefore created
 # interactive, rather than sitting silently. We suggest setting it up immediately if available. TTY.
-if [[ ! -f "$HOME/.swissknifeman/topology.json" && -t 0 ]]; then
+_topology_state="${SKM_HOME:+$SKM_HOME/state}"
+if [[ -z "$_topology_state" ]]; then
+  _topology_state="${XDG_STATE_HOME:-}"
+  [[ "$_topology_state" == /* ]] || _topology_state="$HOME/.local/state"
+  _topology_state="$_topology_state/swissknifeman"
+fi
+if [[ ! -f "$_topology_state/maind/topology.json" && ( -n "${SKM_HOME:-}" || ! -f "$HOME/.swissknifeman/topology.json" ) && -t 0 ]]; then
   read -r -p "Configure local environment map (skiller topology init)? [y/N] " ans
   [[ "$ans" =~ ^[yY] ]] && "$CLI" topology init || true
 fi

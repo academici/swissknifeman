@@ -2,7 +2,7 @@
 
 Cross-package SSOT for **how each provider projects shared semantics** (instructions
 and command invocation). Packages read this catalog through
-`core.provider.projection`; they must not hardcode provider-specific `if/elif` dispatch.
+`aicore.provider.projection`; they must not hardcode provider-specific `if/elif` dispatch.
 
 ## Location
 

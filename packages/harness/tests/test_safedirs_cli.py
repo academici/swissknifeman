@@ -150,6 +150,18 @@ class SafedirsCliCase(unittest.TestCase):
         self.assertNotIn("ask", after["permissions"])
 
 
+    def test_prune_ask_all_projects_via_the_owner_state_file(self):
+        proj = self.tmp / "owner-proj"
+        (proj / ".claude").mkdir(parents=True)
+        (proj / ".claude" / "settings.local.json").write_text(
+            json.dumps({"permissions": {"ask": ["Bash(rm -r *)"]}}), encoding="utf-8")
+        registry = self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json"
+        registry.parent.mkdir(parents=True)
+        registry.write_text(json.dumps({"version": 1, "projects": [{"path": str(proj)}]}), encoding="utf-8")
+        out = run(self.env, ["prune-ask", "--all-projects"])
+        self.assertIn("total rules removed: 1", out)
+
+
 class SafedirsDeleteCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

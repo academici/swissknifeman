@@ -91,7 +91,7 @@ harness safe-dirs prune-ask --global --all-projects     # remove old ones ask-ru
 ```
 
 Default `include_registered_projects=true` — onboarded projects from
-`~/.swissknifeman/projects.json` fall into allowlist automatically.
+`<state>/skiller/projects.json` (legacy `~/.swissknifeman/projects.json` while it is the only one) fall into allowlist automatically.
 
 ::: warning bypass clears confirmations
 Mode `bypass` auto-approves everything except hard denylist — only for

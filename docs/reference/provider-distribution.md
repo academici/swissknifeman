@@ -1,7 +1,7 @@
 # Provider distribution channels
 
 Cross-package SSOT for **which skill-distribution channels each provider supports**.
-Packages read this catalog through `core.provider.distribution`; they must not hardcode
+Packages read this catalog through `aicore.provider.distribution`; they must not hardcode
 provider-specific `if provider == "cursor"` skips in Python.
 
 ## Location

@@ -183,6 +183,41 @@ class TestAllowlistLoading(_Fixture):
             "rm -rf dist", str(proj), self.load(), str(self.home)))
 
 
+    def _registry(self, where, proj):
+        where.parent.mkdir(parents=True, exist_ok=True)
+        where.write_text(json.dumps({"version": 1, "projects": [{"path": str(proj)}]}), encoding="utf-8")
+
+    def test_registered_projects_read_from_the_owner_state_file(self):
+        proj = self.tmp / "elsewhere" / "owner-repo"
+        proj.mkdir(parents=True)
+        self._registry(self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json", proj)
+        self.write_config(dirs=[], include_registered_projects=True)
+        with unittest.mock.patch.dict(os.environ, {}, clear=False):
+            for name in ("SKM_HOME", "XDG_STATE_HOME"):
+                os.environ.pop(name, None)
+            self.assertEqual(self.roots(), [str(proj.resolve())])
+
+    def test_the_owner_state_file_wins_over_the_legacy_one(self):
+        old, new = self.tmp / "old" / "repo", self.tmp / "new" / "repo"
+        old.mkdir(parents=True)
+        new.mkdir(parents=True)
+        self._registry(self.home / ".swissknifeman" / "projects.json", old)
+        self._registry(self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json", new)
+        self.write_config(dirs=[], include_registered_projects=True)
+        with unittest.mock.patch.dict(os.environ, {}, clear=False):
+            for name in ("SKM_HOME", "XDG_STATE_HOME"):
+                os.environ.pop(name, None)
+            self.assertEqual(self.roots(), [str(new.resolve())])
+
+    def test_under_skm_home_the_legacy_file_is_not_read(self):
+        proj = self.tmp / "legacy-only" / "repo"
+        proj.mkdir(parents=True)
+        self._registry(self.home / ".swissknifeman" / "projects.json", proj)
+        self.write_config(dirs=[], include_registered_projects=True)
+        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(self.tmp / "skm")}):
+            self.assertEqual(self.roots(), [])
+
+
 class TestConfigPathLadder(_Fixture):
     """Internal documentation."""
 

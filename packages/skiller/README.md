@@ -93,7 +93,7 @@ skiller doctor
 
 Then everything is done **from the project directory** — the root is searched automatically,
 the registry doesn't need to know about your projects (connection map is accumulated in
-`~/.swissknifeman/projects.json`). Command reference: [docs/guide/cli.md](docs/guide/cli.md).
+`<state>/skiller/projects.json`). Command reference: [docs/guide/cli.md](docs/guide/cli.md).
 
 ### Claude Code: plugin marketplace (recommended)
 

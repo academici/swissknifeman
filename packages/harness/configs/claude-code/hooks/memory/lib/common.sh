@@ -65,8 +65,17 @@ brain_store()   { expandtilde "$(cfg ".brains[\"$1\"].store")"; }
 brain_am_url()  { cfg ".brains[\"$1\"].agentmemory.url"; }
 brain_am_ns()   { local v; v="$(cfg ".brains[\"$1\"].agentmemory.namespace")"; printf '%s' "${v:-$1}"; }
 
-MEM_TOPO="$HOME/.swissknifeman/topology.json"
-MEM_PROJDB="$HOME/.swissknifeman/projects.json"
+# An owner's registry file: its own state file (the XDG state directory of swissknifeman, or $SKM_HOME/state), else the
+# legacy ~/.swissknifeman/<name> while only that one exists (not under SKM_HOME). Same ladder as aicore.state.locations.
+mem_state_file() {
+  local owner="$1" name="$2" base new
+  if [ -n "${SKM_HOME:-}" ]; then printf '%s' "$SKM_HOME/state/$owner/$name"; return; fi
+  base="${XDG_STATE_HOME:-}"; case "$base" in /*) ;; *) base="$HOME/.local/state" ;; esac
+  new="$base/swissknifeman/$owner/$name"
+  if [ ! -f "$new" ] && [ -f "$HOME/.swissknifeman/$name" ]; then printf '%s' "$HOME/.swissknifeman/$name"; else printf '%s' "$new"; fi
+}
+MEM_TOPO="$(mem_state_file maind topology.json)"
+MEM_PROJDB="$(mem_state_file skiller projects.json)"
 
 topo_node_path() { [ -f "$MEM_TOPO" ] && jq -r ".nodes[\"$1\"].path // empty" "$MEM_TOPO" 2>/dev/null; }
 

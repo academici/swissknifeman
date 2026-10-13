@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "_doc": "Cross-package provider projection policies. Consumed via core.provider.projection; packages must not hardcode provider-specific if/elif dispatch.",
+  "_doc": "Cross-package provider projection policies. Consumed via aicore.provider.projection; packages must not hardcode provider-specific if/elif dispatch.",
   "providers": {
     "claude-code": {
       "instructions": {"project_common": true},

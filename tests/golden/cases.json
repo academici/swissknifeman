@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "ae5110fd445a",
-  "reason": "module boundary sections of maind, analyst and harness use partner commands",
+  "captured_from": "97088100531d",
+  "reason": "package-architecture: пути реестра проектов и топологии (коррекция по аудиту P11.15)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

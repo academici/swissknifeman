@@ -100,7 +100,7 @@ Two-way sync `docs/`/`docs-public` between the project and Obsidian-volt Brain.
 ## Prerequisites (once per machine)
 
 The wizard checks them and suggests executing:
-- **Topology** — `skiller topology init` (`~/.swissknifeman/topology.json`);
+- **Topology** — `maind topology init` (`<state>/maind/topology.json`; `skiller topology` is an alias);
   memory and coordinator depend on it (resolve nodes/members).
 - **Hook files** — `./scripts/apply-permissions.sh --global` puts
   `~/.claude/hooks/{notify,auto-approve,memory}` (notify/logs are active immediately,

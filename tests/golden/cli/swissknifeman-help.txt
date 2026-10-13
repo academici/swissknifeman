@@ -1,23 +1,35 @@
 exit: 0
 --- stdout ---
-swissknifeman — umbrella root control layer (router + setup-facade).
-Umbrella = unified control; packages = capabilities. Subtle dispatcher: knows three
-package and cross-package onboarding, does not implement the logic itself (delegates).
+swissknifeman — umbrella over the module CLIs (finds modules by unit.json; holds no module logic).
 
-Groups (canonical):
-  skills <args>   → skiller  (skill registry: connect, vendor, registry, …)
-  env <args>      → harness  (environment: permissions, mcp, hooks — full passthrough)
-  maind <args>    → maind    (hub: memory, graph, onboard, deploy, sync, health, …)
-  analyst <args>  → analyst  (training: digest, review, promote, deprecate, doctor)
-  config <args>   → aicore    (layered config: show, explain, set, unset, init, example, paths)
-  setup <project> → maind onboard (full onboarding: skills+environment+memory+graph)
-  setup --machine → scripts/bootstrap-machine.sh (deploying a machine with one command)
-  doctor          → diagnostics of all packages (fan-out)
-  status [<id>]   → single 4-layer project inventory/fleet (maind projects status:
-                    skills+packs+mcp+memory + drift→fix); bare/--target → skiller status
-  wf <args>       → harness   (detailed background status workflow-run: wf status)
-  release <args>  → skiller   (monorepo release proposal: [Unreleased]+conventional commits)
-  release-fleet   → validated local post-tag delivery + fleet sync (never pushes/publishes)
-  -V, --version   → umbrella version (git describe)
+Usage: swissknifeman <command> [args]
+
+Built-in:
+  units [list|show <id>] [--json]  modules found by unit.json
+  doctor                           diagnostics of every module that declares provides.doctor (fan-out)
+  help, -h, --help                 this text
+  -V, --version, version           umbrella version (git describe)
+
+Aliases (configs/umbrella.json):
+  config         layered config: show, explain, set, unset, init, example, paths
+  env            environment: permissions, mcp, hooks (full passthrough)
+  hub            same as the maind group
+  release        monorepo release proposal: [Unreleased] and conventional commits
+  release-fleet  validated local post-tag delivery and fleet sync (never pushes or publishes)
+  setup          setup <project>: full onboarding; setup --machine: deploy a machine with one command
+  skills         skill registry: connect, vendor, registry, ...
+  status         status [<id>]: four-layer project inventory or fleet; bare or a skiller flag: skills of the project
+  wf             detailed background status of a workflow run: wf status
+  other aliases: connect init integrate list lock registry sync topology update vendor
+
+Modules (provides.cli in unit.json):
+  aicore   Shared foundation: contracts and, later, utilities, providers and content delivery
+  analyst  Session and usage analysis
+  brain    Obsidian vault: lookup, document sync and notes from ecosystem events
+  harness  Provider environment setup: permissions, MCP, hooks, instructions
+  maind    Project memory and code graph hub
+  orch     Engine-neutral orchestration of agent runs
+  planner  Planner: plans, phases, items and execution commands
+  skiller  Skill registry, delivery and quality gates
 --- stderr ---
 

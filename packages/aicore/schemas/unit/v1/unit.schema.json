@@ -79,7 +79,7 @@
           "description": "Claude plugins shipped by the module.",
           "items": {
             "type": "object",
-            "description": "One plugin.",
+            "description": "One plugin: exactly one of manifest, source or catalog.",
             "properties": {
               "name": {
                 "type": "string",
@@ -89,11 +89,28 @@
               "manifest": {
                 "$ref": "#/$defs/relpath",
                 "description": "Path of the plugin.json relative to the module root."
+              },
+              "source": {
+                "$ref": "#/$defs/relpath",
+                "description": "Plugin folder relative to the module root."
+              },
+              "catalog": {
+                "$ref": "#/$defs/relpath",
+                "description": "Plugin catalog (plugin-catalog/v1) relative to the module root, for a module that ships several plugins."
               }
             },
-            "required": ["name", "manifest"],
+            "required": ["name"],
+            "oneOf": [
+              {"required": ["manifest"], "description": "A plugin described by its plugin.json."},
+              {"required": ["source"], "description": "A plugin given by its folder."},
+              {"required": ["catalog"], "description": "Plugins listed in a catalog file."}
+            ],
             "additionalProperties": false
           }
+        },
+        "install": {
+          "$ref": "#/$defs/argv",
+          "description": "Installer command, run from the module root; it accepts --bin-dir DIR and --force."
         },
         "contracts": {
           "type": "array",

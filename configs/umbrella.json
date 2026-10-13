@@ -1,0 +1,66 @@
+{
+  "schema": "umbrella-config/v1",
+  "_doc": "Aliases of the swissknifeman umbrella CLI: a first word that is not a built-in command and not a module id. A target is a module (unit) or a hub script; routes are tried in order, a route without when always matches.",
+  "version": {
+    "fallback_file": "packages/planner/configs/command-routing.json",
+    "fallback_key": "plugin_version"
+  },
+  "doctor": {
+    "fanout": ["skiller", "harness", "maind", "analyst"]
+  },
+  "aliases": {
+    "skills": {
+      "description": "skill registry: connect, vendor, registry, ...",
+      "routes": [{"unit": "skiller"}]
+    },
+    "env": {
+      "description": "environment: permissions, mcp, hooks (full passthrough)",
+      "routes": [{"unit": "harness"}]
+    },
+    "wf": {
+      "description": "detailed background status of a workflow run: wf status",
+      "routes": [{"unit": "harness", "argv_prefix": ["wf"]}]
+    },
+    "release": {
+      "description": "monorepo release proposal: [Unreleased] and conventional commits",
+      "routes": [{"unit": "skiller", "argv_prefix": ["release"]}]
+    },
+    "release-fleet": {
+      "description": "validated local post-tag delivery and fleet sync (never pushes or publishes)",
+      "routes": [{"script": "scripts/release-fleet.sh"}]
+    },
+    "hub": {
+      "description": "same as the maind group",
+      "routes": [{"unit": "maind"}]
+    },
+    "config": {
+      "description": "layered config: show, explain, set, unset, init, example, paths",
+      "routes": [{"unit": "aicore", "argv_prefix": ["config"]}]
+    },
+    "setup": {
+      "description": "setup <project>: full onboarding; setup --machine: deploy a machine with one command",
+      "routes": [
+        {"when": {"first_in": ["--machine"]}, "script": "scripts/bootstrap-machine.sh", "drop_first": true},
+        {"unit": "maind", "argv_prefix": ["onboard"]}
+      ]
+    },
+    "status": {
+      "description": "status [<id>]: four-layer project inventory or fleet; bare or a skiller flag: skills of the project",
+      "routes": [
+        {"when": {"first_in": ["--all", "--namespace", "--project"]}, "unit": "maind", "argv_prefix": ["projects", "status"]},
+        {"when": {"first_empty_or_flag": true}, "unit": "skiller", "argv_prefix": ["status"]},
+        {"unit": "maind", "argv_prefix": ["projects", "status", "--project"]}
+      ]
+    },
+    "connect": {"routes": [{"unit": "skiller", "argv_prefix": ["connect"]}]},
+    "vendor": {"routes": [{"unit": "skiller", "argv_prefix": ["vendor"]}]},
+    "integrate": {"routes": [{"unit": "skiller", "argv_prefix": ["integrate"]}]},
+    "update": {"routes": [{"unit": "skiller", "argv_prefix": ["update"]}]},
+    "init": {"routes": [{"unit": "skiller", "argv_prefix": ["init"]}]},
+    "sync": {"routes": [{"unit": "skiller", "argv_prefix": ["sync"]}]},
+    "lock": {"routes": [{"unit": "skiller", "argv_prefix": ["lock"]}]},
+    "list": {"routes": [{"unit": "skiller", "argv_prefix": ["list"]}]},
+    "registry": {"routes": [{"unit": "skiller", "argv_prefix": ["registry"]}]},
+    "topology": {"routes": [{"unit": "skiller", "argv_prefix": ["topology"]}]}
+  }
+}

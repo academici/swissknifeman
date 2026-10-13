@@ -1,26 +1,7 @@
 #!/usr/bin/env bash
-# swissknifeman — umbrella root control layer (router + setup-facade).
-# Umbrella = unified control; packages = capabilities. Subtle dispatcher: knows three
-# package and cross-package onboarding, does not implement the logic itself (delegates).
-#
-# Groups (canonical):
-#   skills <args>   → skiller  (skill registry: connect, vendor, registry, …)
-#   env <args>      → harness  (environment: permissions, mcp, hooks — full passthrough)
-#   maind <args>    → maind    (hub: memory, graph, onboard, deploy, sync, health, …)
-#   analyst <args>  → analyst  (training: digest, review, promote, deprecate, doctor)
-#   config <args>   → aicore    (layered config: show, explain, set, unset, init, example, paths)
-#   setup <project> → maind onboard (full onboarding: skills+environment+memory+graph)
-#   setup --machine → scripts/bootstrap-machine.sh (deploying a machine with one command)
-#   doctor          → diagnostics of all packages (fan-out)
-#   status [<id>]   → single 4-layer project inventory/fleet (maind projects status:
-#                     skills+packs+mcp+memory + drift→fix); bare/--target → skiller status
-#   wf <args>       → harness   (detailed background status workflow-run: wf status)
-#   release <args>  → skiller   (monorepo release proposal: [Unreleased]+conventional commits)
-#   release-fleet   → validated local post-tag delivery + fleet sync (never pushes/publishes)
-#   -V, --version   → umbrella version (git describe)
-#
-# Back-compat: historical commands swissknifeman = skiller (alias saved):
-#   connect vendor integrate update init sync lock status list registry topology
+# swissknifeman — umbrella CLI: a thin launcher for scripts/umbrella.py.
+# Modules and their command groups are found by unit.json; aliases of former groups are data in
+# configs/umbrella.json. Run `swissknifeman help` for the generated list.
 set -euo pipefail
 # --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
 _skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
@@ -37,62 +18,5 @@ unset _skm_guard_dir _skm_real_home
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
-SKILLER="$ROOT/packages/skiller/bin/skiller"
-HARNESS="$ROOT/packages/harness/bin/harness"
-MAIND="$ROOT/packages/maind/bin/maind"
-ANALYST="$ROOT/packages/analyst/bin/analyst"
-AICORE="$ROOT/packages/aicore/bin/aicore"
-
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,21p'; }
-
-need() {  # $1 — path to package launcher
-  [[ -x "$1" ]] || { echo "ERROR: package launcher not found: $1" >&2
-    echo "Repository is corrupted/is incomplete - restart ./install.sh." >&2; exit 1; }
-}
-
-CMD="${1:-help}"
-case "$CMD" in
-  -h|--help|help) usage; exit 0 ;;
-  -V|--version|version)
-    shift; need "$SKILLER"; exec "$SKILLER" version "$@" ;;
-  skills)  shift; need "$SKILLER"; exec "$SKILLER" "$@" ;;
-  env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
-  wf)      shift; need "$HARNESS"; exec "$HARNESS" wf "$@" ;;
-  release) shift; need "$SKILLER"; exec "$SKILLER" release "$@" ;;
-  release-fleet) shift; exec "$ROOT/scripts/release-fleet.sh" "$@" ;;
-  maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
-  analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
-  config)  shift; need "$AICORE"; exec "$AICORE" config "$@" ;;
-  setup)
-    shift
-    if [[ "${1:-}" == "--machine" ]]; then
-      shift; exec "$ROOT/scripts/bootstrap-machine.sh" "$@"
-    fi
-    need "$MAIND"; exec "$MAIND" onboard "$@" ;;
-  doctor)
-    # fan-out for all packages. NOT through need() — he hits exit 1 on the first
-    # missing launcher and does not allow you to check the others; here we aggregate rc.
-    rc=0
-    for entry in "skiller:$SKILLER" "harness:$HARNESS" "maind:$MAIND" "analyst:$ANALYST"; do
-      name="${entry%%:*}"; pkg="${entry#*:}"
-      echo "== $name =="
-      if [[ -x "$pkg" ]]; then "$pkg" doctor || rc=$?
-      else echo "ERROR: package launcher not found: $pkg" >&2; rc=1; fi
-      echo
-    done
-    exit "$rc" ;;
-  status)
-    # Umbrella status: <project-id> or --all/--namespace/--project → single 4-layer
-    # inventory (maind projects status: skills+packs+mcp+memory + drift→fix). No argument
-    # or with skiller-flag (--target/--json) → skiller status (back-compat: project skills).
-    shift; first="${1:-}"
-    case "$first" in
-      --all|--namespace|--project) need "$MAIND"; exec "$MAIND" projects status "$@" ;;
-      ""|-*)                       need "$SKILLER"; exec "$SKILLER" status "$@" ;;
-      *) need "$MAIND"; shift; exec "$MAIND" projects status --project "$first" "$@" ;;
-    esac ;;
-  # back-compat: old alias swissknifeman → skiller (onboarded projects/habit)
-  connect|vendor|integrate|update|init|sync|lock|list|registry|topology)
-    need "$SKILLER"; exec "$SKILLER" "$@" ;;
-  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
-esac
+export PYTHONPATH="$ROOT/packages/aicore/lib${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 "$ROOT/scripts/umbrella.py" "$@"

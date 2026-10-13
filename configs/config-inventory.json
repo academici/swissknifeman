@@ -265,6 +265,25 @@
       "released": false
     },
     {
+      "path": "configs/umbrella.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/umbrella.py",
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "aliases of the umbrella CLI (umbrella-config/v1); the hub reads module groups from unit.json"
+    },
+    {
+      "path": "configs/umbrella.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "schema of configs/umbrella.json; the umbrella-units/v1 schema lives in configs/schemas/"
+    },
+    {
       "path": "configs/repository-bootstrap-skills.json",
       "owner": "root",
       "consumers": [

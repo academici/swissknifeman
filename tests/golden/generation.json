@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "beda3f9c81a9",
-  "reason": "planner skill wording",
+  "captured_from": "0d72f5cc74e1",
+  "reason": "umbrella reads unit.json",
   "generators": [
     {
       "id": "skiller-registry",

@@ -43,7 +43,7 @@ package, and leaves a record that a later reviewer can audit. Never activate it 
 
 ## Per item loop
 
-1. **Preflight.** Tree clean (or `--adopt` on purpose), item `todo`, `conduct.py run --dry-run --scenario S --options F`
+1. **Preflight.** Decide per item whether review is needed and with which settings (`review.*`, model, effort, rounds), pass them with `--options FILE` and write the choice with its reason into the journal; never take the default by habit. Tree clean (or `--adopt` on purpose), item `todo`, `conduct.py run --dry-run --scenario S --options F`
    shows every route with `available: true` and the isolation flags. The run itself refuses to start a piece when a
    required role cannot start. Monitors: `tail -n0 -F err | grep --line-buffered -E '"event": "(stage.end|info|item.end|run.end)"'`
    (no `cut` in the pipe: it buffers and the events never arrive); one monitor per run, stop the old one first.

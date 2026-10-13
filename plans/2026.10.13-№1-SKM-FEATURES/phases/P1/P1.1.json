@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.1",
   "title": "Базовая линия: baseline.json — шаги ci-matrix, тесты модулей, skills в токенах, первый ход, провайдеры, deviations PLAN3",
-  "status": "todo",
+  "status": "done",
   "summary": "Собрать plans/2026.10.13-№1-SKM-FEATURES/artifacts/P1.1/baseline.json по схеме knowledge/p1-fixes#baseline разовым скриптом artifacts/P1.1/collect.py и зарегистрировать как output-артефакт пункта; ничего в продукте не менять.",
   "why": "Аудит П0.0; мерило для P5 (доля deviation без impact/next, N9), P8/P13 (токены skills, N12) и P2 (провайдеры). Риск: шаг ci-matrix красный из-за окружения — записать как есть, не чинить в пункте.",
   "scope": {
@@ -44,6 +44,12 @@
       "change": "create"
     }
   ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P1.1/baseline.json",
+      "role": "output"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "Все CLI модулей — с временным HOME/SKM_HOME",
@@ -76,6 +82,23 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:26:50Z"
+  "result": {
+    "started_at": "2026-10-13T20:16:56Z",
+    "finished_at": "2026-10-13T20:27:14Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f7b77ea6-4f64-4c2b-a08e-d6d608f212f2"
+    },
+    "notes": "baseline.json: 9 модулей ci-matrix 42 ok / 11 skip (lint без ruff), тесты 5421, 209 skills / 285761 токенов, first-turn 2790 OK, 167/167 deviation PLAN3 без impact/next",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:27:14Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T20:27:14Z"
 }

@@ -342,6 +342,15 @@ degrades; a test that needs a partner is skipped when none is found. `bash scrip
 of being skipped. `maind` is an auxiliary tool outside the core verification (`standalone.tools` in `configs/ecosystem-units.json`):
 `standalone --baseline` and the integration run skip it unless `--with-tools` is given, and CI tests it in a separate job that never blocks the core. There is no `core/` folder any more; code that imported it imports `aicore`.
 
+**Which tests to run.** Develop one module, test that module: `python3 scripts/affected-tests.py --run` (fast tier, `dev.test`
+of the touched units and of the bridges that require them; `--tier full` adds `dev.validate`; `--base REF` takes the changed paths from a
+diff; without `--run` it only prints the commands). A change of the foundation (`aicore`) affects every unit, a change of any other
+module affects only itself and its bridges: no module requires another one, so their tests never need to run for each other. A *tool*
+(`standalone.tools`, now `maind`) is tested only when its own files change, because it only reads and writes data and is not part of
+the core; its tests run when `maind` itself is developed (`bash packages/maind/scripts/test.sh`). The full pass of every non-tool unit
+(`--tier all --run`, plus `scripts/test-integration.sh`) is for the end of a phase or a release, not for each item; the quick pass runs
+for each item.
+
 **Bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to
 its partners through their public CLI/JSON and finds them by environment variable or command on `PATH`, never by a

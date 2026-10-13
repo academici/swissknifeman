@@ -169,6 +169,12 @@ bash scripts/test-integration.sh   # from the hub root: tests with partners wire
 npm run docs:dev         # documentation (VitePress)
 ```
 
+**Scope of the tests.** maind is an auxiliary tool: it reads and writes data (memory, graph, registry) and is not part of the core.
+Its tests are run **only while maind itself is developed** (`scripts/test.sh`, `scripts/validate.sh` here); they are not part of the
+verification of the core: `ecosystem-units standalone --baseline` and `scripts/test-integration.sh` skip it unless `--with-tools` is
+given, CI tests it in a separate job that does not block the core, and `scripts/affected-tests.py` adds it only when its own files
+changed (`standalone.tools` in `configs/ecosystem-units.json`).
+
 Conventions: stdlib-only Python, context via `Env` (without modular globals), atomic
 entry JSON, Russian-language messages. More details - [CONTRIBUTING.md](CONTRIBUTING.md).
 

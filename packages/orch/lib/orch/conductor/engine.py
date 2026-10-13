@@ -700,7 +700,7 @@ class Conductor:
             attempt += 1
             suffix = "" if attempt == 1 else f"-a{attempt}"
             raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
-            run = process.run_role(route["argv"], prompt, transport=route["transport"], cwd=self.project,
+            run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
                                    timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
                                    idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel)
             self._tokens(item, run.usage)
@@ -739,6 +739,15 @@ class Conductor:
     # a role process. Claude Code reads both by itself; grok was probed and does not read the repository CLAUDE.md; codex
     # would need its own CODEX_HOME (not used by a run so far).
     ISOLATION_ENV = {"claude-code": {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}}
+
+    # Arguments that start a role with no customizations at all: no CLAUDE.md, project memory, plugins, MCP servers, user
+    # skills or hooks (a measured start-up context of 6 K instead of 16 K tokens, and none of the developer-session rules).
+    ISOLATION_ARGS = {"claude-code": ["--safe-mode"]}
+
+    def _role_argv(self, item: Item, role: str, route: dict) -> list:
+        isolated = role in item.options["instructions"]["isolate_roles"]
+        extra = self.ISOLATION_ARGS.get(route.get("provider")) if isolated else None
+        return list(route["argv"]) + (extra or [])
 
     def _role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
         """The environment of a role process. A role named in ``instructions.isolate_roles`` starts without the project

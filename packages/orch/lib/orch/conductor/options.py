@@ -19,7 +19,7 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "stage_timeout_s": 0, "stage_idle_timeout_s": 1800, "check_timeout_s": 1800}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected"}
-DEFAULT_INSTRUCTIONS = {"isolate_roles": []}
+DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar"]}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": False,
                   "kinds": ["acceptance", "impact"]}

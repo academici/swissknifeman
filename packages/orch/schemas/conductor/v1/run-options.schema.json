@@ -42,7 +42,7 @@
       "type": "object",
       "properties": {
         "isolate_roles": {
-          "description": "Roles that start without the project instructions of their provider (for Claude Code: the repository CLAUDE.md and the project memory), so that each role gets only the instructions of its own prompt. Default none.",
+          "description": "Roles that start without the project instructions of their provider (for Claude Code: started with `--safe-mode`, so no repository CLAUDE.md, project memory, plugins, MCP servers, user skills or hooks), so that each role gets only the instructions of its own prompt. Default: every role.",
           "type": "array",
           "items": {
             "type": "string",

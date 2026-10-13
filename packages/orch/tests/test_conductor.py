@@ -236,6 +236,10 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(env["PATH"], "/bin")
         self.assertEqual(eng._role_env(item, "reviewer", {"provider": "claude-code"}), {"PATH": "/bin"})
         self.assertEqual(eng._role_env(item, "executor", {"provider": "grok"}), {"PATH": "/bin"})
+        self.assertEqual(eng._role_argv(item, "executor", {"provider": "claude-code", "argv": ["claude", "-p"]}),
+                         ["claude", "-p", "--safe-mode"])
+        self.assertEqual(eng._role_argv(item, "reviewer", {"provider": "claude-code", "argv": ["claude", "-p"]}), ["claude", "-p"])
+        self.assertEqual(eng._role_argv(item, "executor", {"provider": "grok", "argv": ["grok"]}), ["grok"])
 
     def test_the_executor_is_told_to_run_only_the_tests_of_its_change_unless_asked_otherwise(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})

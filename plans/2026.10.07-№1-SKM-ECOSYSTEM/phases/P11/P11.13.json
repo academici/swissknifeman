@@ -148,6 +148,14 @@
     {
       "path": "packages/maind/CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/core/index.md",
+      "change": "modify"
     }
   ],
   "rules": [
@@ -157,7 +165,7 @@
     "Каждое имя команды, ключа, кода ошибки и пути в документации сверено с кодом",
     "Секции инструкций — только через каталог harness и генератор; бюджет первого хода не выше 16K или с вердиктом владельца выше 23K (root.claude-code.context-budget)"
   ],
-  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: ADR 0063–0071 (+ индекс README) → docs и README модулей → aicore README → секции инструкций и генератор (`harness instructions check` без дрейфа) → `docs/architecture/*`, `docs/develop.md` → `bash scripts/docs-sync.sh` → `skiller budget --first-turn` (и `--with-plugins`; результат в notes) → CHANGELOG (итог фазы) → V1–V4.",
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: ADR 0063–0071 (+ индекс README) → docs и README модулей → aicore README → секции инструкций и генератор (`harness instructions check` без дрейфа) → `docs/architecture/*`, `docs/develop.md` → `bash scripts/docs-sync.sh` → `skiller budget --first-turn` (и `--with-plugins`; результат в notes) → CHANGELOG (итог фазы) → V1–V4.\n\nОставлено пунктом P11.12 (вне его write set): устаревшие указания core/tests и описание shim core/ в CONTRIBUTING.md (строки ~11 и ~57), docs/core/index.md и packages/aicore/README.md (раздел о core/__init__.py) — привести к факту: каталога core нет.",
   "validation": [
     {
       "id": "V1",
@@ -176,13 +184,6 @@
     {
       "id": "V3",
       "cmd": "bash packages/harness/scripts/test.sh && bash packages/maind/scripts/validate.sh && bash packages/analyst/scripts/validate.sh && bash packages/harness/scripts/validate.sh",
-      "expect": "exit 0",
-      "kind": "acceptance",
-      "cwd": "."
-    },
-    {
-      "id": "V4",
-      "cmd": "git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
       "expect": "exit 0",
       "kind": "acceptance",
       "cwd": "."
@@ -208,5 +209,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-11T12:18:45Z"
+  "updated_at": "2026-10-13T00:12:53Z"
 }

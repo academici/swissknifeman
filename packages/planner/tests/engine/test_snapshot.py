@@ -4,16 +4,15 @@ import json
 from pathlib import Path
 import shutil
 import sys
-import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
-from planner.plan import check, context, ops, snapshot, store, units, views
+from planner.plan import check, context, ops, snapshot, units, views
 from planner.plan.model import PlanError
 try:
-    from .test_units import UnitCase, OPUS
+    from .test_units import UnitCase
 except ImportError:
-    from test_units import UnitCase, OPUS
+    from test_units import UnitCase
 
 
 class SnapshotTests(UnitCase):

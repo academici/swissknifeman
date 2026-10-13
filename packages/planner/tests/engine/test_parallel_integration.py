@@ -1,5 +1,4 @@
 """Two lanes in two worktrees: claim -> finish+commit in each -> sequential merge or rebase -> reconcile."""
-import copy
 import os
 from pathlib import Path
 import shutil

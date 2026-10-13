@@ -16,7 +16,7 @@ from aicore.util.io import atomic_write_json, atomic_write_text
 from aicore.util.repo import find_repo_root
 from aicore.util.term import die
 from .host import load_host
-from .release_attestation import build, check
+from .release_attestation import check
 from .settings import configured_skills_paths
 from aicore.release.attestation import digest
 from .state import load_db

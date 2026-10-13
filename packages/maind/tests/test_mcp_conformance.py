@@ -17,7 +17,7 @@ try:
 except ImportError:
     if os.environ.get("SKM_REQUIRE_MCP_SDK") == "1":
         raise
-    raise unittest.SkipTest("official MCP SDK not installed")
+    raise unittest.SkipTest("official MCP SDK not installed") from None
 
 from maind import mcp as server
 

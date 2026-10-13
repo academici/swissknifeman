@@ -1,7 +1,6 @@
 """Plan store: snapshot, canonical JSON, atomic validated saves, lock, event log."""
 import json
 import multiprocessing
-import os
 import sys
 import tempfile
 import unittest

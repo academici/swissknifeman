@@ -1,5 +1,6 @@
 """Tests for aicore.provider.mcp: pure MCP projection over caller-supplied documents."""
 import json
+import dataclasses
 import tempfile
 import unittest
 from pathlib import Path
@@ -172,7 +173,7 @@ class ArtifactCase(unittest.TestCase):
 class ValueCase(unittest.TestCase):
     def test_projection_is_immutable(self):
         projection = McpProjection(ProviderId.CODEX, "project", ".codex/config.toml", (), ())
-        with self.assertRaises(Exception):
+        with self.assertRaises(dataclasses.FrozenInstanceError):
             projection.target_path = "x"
 
 

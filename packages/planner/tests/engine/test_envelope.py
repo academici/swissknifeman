@@ -51,7 +51,7 @@ class VerbCoverageTests(EnvelopeCase):
     """One case per verb; a new verb without a case fails ``test_every_verb_has_a_case``."""
 
     def cases(self, tmp: Path):
-        root, plan = str(self.root), str(self.root)
+        plan = str(self.root)
         snapshot = tmp / "snapshot.json"
         patch = tmp / "patch.json"
         patch.write_text(json.dumps([{"ref": "P1.1", "patch": {"summary": "changed"}}]))

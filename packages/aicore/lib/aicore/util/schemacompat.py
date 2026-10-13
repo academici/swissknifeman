@@ -417,7 +417,7 @@ def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, s
     try:
         relroot = root.relative_to(repo).as_posix()
     except ValueError:
-        raise _Refusal("SCHEMA_COMPAT_ROOT", f"{root} is outside the repository {repo}")
+        raise _Refusal("SCHEMA_COMPAT_ROOT", f"{root} is outside the repository {repo}") from None
     unit_path = Path(options.unit).resolve() if options.unit else root.parent / "unit.json"
     stabilities, module_stability = _read_stabilities(unit_path)
     current = _contracts(root)
@@ -432,7 +432,7 @@ def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, s
         try:
             base_relroot = base_dir.relative_to(repo).as_posix()
         except ValueError:
-            raise _Refusal("SCHEMA_COMPAT_ROOT", f"{base_dir} is outside the repository {repo}")
+            raise _Refusal("SCHEMA_COMPAT_ROOT", f"{base_dir} is outside the repository {repo}") from None
     base_files = _base_files(repo, base_relroot, options.base, env)
     if options.base_root and not base_files:
         raise _Refusal("SCHEMA_COMPAT_BASE_ROOT", f"{options.base} holds no contract schemas under {base_relroot!r}")
@@ -488,11 +488,11 @@ def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str,
     try:
         old, old_kinds = _load(base_dir, single, base_foundation)
     except SchemaProfileError as exc:
-        raise _Refusal("SCHEMA_COMPAT_BASE_INVALID", f"{label} at the base: {exc}", 1)
+        raise _Refusal("SCHEMA_COMPAT_BASE_INVALID", f"{label} at the base: {exc}", 1) from None
     try:
         new, new_kinds = _load(current_dir, single, foundation)
     except SchemaProfileError as exc:
-        raise _Refusal("SCHEMA_COMPAT_INVALID", f"{label}: {exc}", 1)
+        raise _Refusal("SCHEMA_COMPAT_INVALID", f"{label}: {exc}", 1) from None
     found: List[Tuple[Optional[str], Change]] = []
     try:
         for kind in old_kinds:
@@ -505,7 +505,7 @@ def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str,
             if kind not in old_kinds:
                 found.append((kind, Change("", "kind-added", RULES["kind-added"], f"document {kind!r} added")))
     except RefError as exc:
-        raise _Refusal("SCHEMA_COMPAT_INVALID", f"{label}: {exc}", 1)
+        raise _Refusal("SCHEMA_COMPAT_INVALID", f"{label}: {exc}", 1) from None
     return found
 
 
@@ -588,7 +588,7 @@ def _read_stabilities(unit_path: Path) -> Tuple[Dict[Tuple[str, str], str], str]
     try:
         unit = json.loads(unit_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        raise _Refusal("SCHEMA_COMPAT_UNIT", f"cannot read {unit_path}: {exc}")
+        raise _Refusal("SCHEMA_COMPAT_UNIT", f"cannot read {unit_path}: {exc}") from None
     stabilities = {}
     for contract in (unit.get("provides") or {}).get("contracts") or ():
         name = str(contract.get("id", "")).rpartition(":")[2]
@@ -601,9 +601,9 @@ def _git(repo: Path, arguments: Sequence[str], env: Optional[Mapping[str, str]])
         result = subprocess.run(["git", "-C", str(repo)] + list(arguments), capture_output=True,
                                 timeout=GIT_TIMEOUT, env=dict(env) if env is not None else None)
     except FileNotFoundError:
-        raise _Refusal("SCHEMA_COMPAT_NO_GIT", "git is not installed")
+        raise _Refusal("SCHEMA_COMPAT_NO_GIT", "git is not installed") from None
     except subprocess.TimeoutExpired:
-        raise _Refusal("SCHEMA_COMPAT_GIT_FAILED", f"git {arguments[0]} did not finish in {GIT_TIMEOUT}s")
+        raise _Refusal("SCHEMA_COMPAT_GIT_FAILED", f"git {arguments[0]} did not finish in {GIT_TIMEOUT}s") from None
     if result.returncode != 0:
         detail = result.stderr.decode("utf-8", "replace").strip()
         raise _Refusal("SCHEMA_COMPAT_GIT_FAILED", f"git {' '.join(arguments[:2])} failed: {detail}")
@@ -615,7 +615,7 @@ def _git_toplevel(cwd: Path, env: Optional[Mapping[str, str]]) -> Path:
         result = _git(cwd, ["rev-parse", "--show-toplevel"], env)
     except _Refusal as refusal:
         if refusal.code == "SCHEMA_COMPAT_GIT_FAILED":
-            raise _Refusal("SCHEMA_COMPAT_NO_GIT", f"{cwd} is not inside a git repository")
+            raise _Refusal("SCHEMA_COMPAT_NO_GIT", f"{cwd} is not inside a git repository") from None
         raise
     return Path(result.stdout.decode("utf-8").strip()).resolve()
 
@@ -628,7 +628,7 @@ def _base_files(repo: Path, relroot: str, ref: str, env: Optional[Mapping[str, s
         _git(repo, ["rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"], env)
     except _Refusal as refusal:
         if refusal.code == "SCHEMA_COMPAT_GIT_FAILED":
-            raise _Refusal("SCHEMA_COMPAT_BAD_REF", f"{ref!r} is not a commit of {repo}")
+            raise _Refusal("SCHEMA_COMPAT_BAD_REF", f"{ref!r} is not a commit of {repo}") from None
         raise
     listing = _git(repo, ["ls-tree", "-r", "--name-only", ref, "--", relroot], env).stdout.decode("utf-8")
     prefix = "" if relroot == "." else relroot + "/"

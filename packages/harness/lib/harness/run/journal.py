@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import subprocess
-from pathlib import Path
 
 from harness.run import plan_reader, task_paths, worker
 

@@ -392,7 +392,6 @@ class RootBootstrapCompletenessCase(unittest.TestCase):
 
     def test_undeclared_directory_is_named_as_a_failure(self):
         package_root = Path(__file__).resolve().parents[1]
-        repo_root = find_repo_root(package_root) or package_root
         env = Env(package_root)
         artifacts = build_repository_bootstrap_publication(env)
         with tempfile.TemporaryDirectory() as tmp:

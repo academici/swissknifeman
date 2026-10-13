@@ -95,7 +95,7 @@ def resolve_overlays(slot: str, *, project: Optional[PathLike] = None, env: Opti
         path = Path(raw)
         shown = _line(_settings.collapse_home(raw, environment, home))
 
-        def warn(code: str, message: str) -> None:
+        def warn(code: str, message: str, shown: str = shown) -> None:
             warnings.append({"code": code, "path": shown, "message": f"{shown}: {message}"})
 
         if layer == "project" and (project is None or not _inside(Path(project), path)):

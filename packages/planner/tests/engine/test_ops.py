@@ -317,7 +317,7 @@ class MutationContractTests(DemoCase):
         ops.add_decision(self.plan, "Q")
         ops.push(self.plan, "P1.2", "rules", "r")
         fresh = store.load_plan(self.root)
-        for kind, key, rel, doc in check._Context(fresh, []).docs():
+        for kind, _key, rel, doc in check._Context(fresh, []).docs():
             with self.subTest(rel):
                 self.assertEqual(schema.validate(doc, kind), [])
                 self.assertEqual((self.root / rel).read_text(encoding="utf-8"), store.canonical_dump(doc, kind))

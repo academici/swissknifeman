@@ -5,7 +5,7 @@ from pathlib import Path
 from aicore.artifacts.artifact import ArtifactSource, sha256_digest
 from aicore.provider import mcp as projection
 from aicore.provider.mcp import (McpProjection, McpServer, parse_mcp_catalog,
-                                 render_mcp_projection)
+                                 render_mcp_projection)  # noqa: F401  (re-exported: provider_audit and tests import it from here)
 from aicore.provider.values import ProviderId
 
 from aicore.util.cli import parse_flags

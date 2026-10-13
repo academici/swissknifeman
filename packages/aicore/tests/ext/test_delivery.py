@@ -10,7 +10,6 @@ import sys
 import time
 import unittest
 from contextlib import redirect_stderr
-from pathlib import Path
 
 from aicore.ext import delivery, events, journal, process
 from aicore.ext.errors import CODES, ExtError

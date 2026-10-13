@@ -194,7 +194,7 @@ def load_contract_set(contract_dir: Path, *, foundation: Path | None = None) -> 
             try:
                 registry.resolve(ref, schema_id)
             except RefError as exc:
-                raise SchemaProfileError(f"{directory.parent.name}/{version}: unresolved reference {ref!r}: {exc}")
+                raise SchemaProfileError(f"{directory.parent.name}/{version}: unresolved reference {ref!r}: {exc}") from None
     return registry, kinds
 
 

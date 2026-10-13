@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from aicore import cli, config
-from aicore.config import example, model
+from aicore.config import example
 
 from .support import FIXTURES, Workspace
 

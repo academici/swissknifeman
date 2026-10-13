@@ -1,5 +1,6 @@
 """aicore.delivery.distribution: vendor and connect plans, the Codex bundle, the native install."""
 import contextlib
+import dataclasses
 import hashlib
 import io
 import json
@@ -205,7 +206,7 @@ class DistributionArtifactCase(Base):
 
     def test_the_plan_type_is_a_frozen_dataclass(self):
         plan = ProviderDistributionPlan("codex", "vendor", self.target, "t", "", "")
-        with self.assertRaises(Exception):
+        with self.assertRaises(dataclasses.FrozenInstanceError):
             plan.channel = "x"
 
 

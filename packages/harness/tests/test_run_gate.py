@@ -11,7 +11,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from harness.run import gate  # noqa: E402
-from tests.plan_fixture import ACTOR, run_plan, write_plan  # noqa: E402
+from tests.plan_fixture import run_plan, write_plan  # noqa: E402
 
 PHASE_ID = "P1"
 ITEM_ID = "P1.1"

@@ -2,7 +2,6 @@
 import json
 import os
 import subprocess
-import sys
 import unittest
 from pathlib import Path
 
@@ -66,7 +65,7 @@ def write_plan(root, *, codename="FIXTURE", items, design="detailed", phase="P1"
         plans_root=plans)
     run_plan("add-phase", "PLAN1", "--title", "Fixture phase", plans_root=plans)
     item_ids = []
-    for index, (status, route) in enumerate(items, start=1):
+    for index, (_status, route) in enumerate(items, start=1):
         item_id = f"{phase}.{index}"
         item_ids.append(item_id)
         run_plan("add-item", "PLAN1", phase, "--title", f"Fixture item {index}", plans_root=plans)

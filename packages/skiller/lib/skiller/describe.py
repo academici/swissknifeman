@@ -26,7 +26,7 @@ def cmd_describe(env, argv):
         descriptor = describe_skill(entry["skill_dir"], skill_id=identity)
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
     if not descriptor.license:
         descriptor = dataclasses.replace(descriptor, license=_package_license(env.root))
     document = descriptor.to_json()

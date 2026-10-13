@@ -259,7 +259,7 @@ class ReferenceTests(CheckCase):
                         "sections": [{"id": "validation", "title": "Validation", "text": "t"}]}, "document")
         for section in ("validation", "Validation", "missing"):
             with self.subTest(section=section):
-                self.edit(P1 + "P1.2.json", lambda d: d.update(reads=[
+                self.edit(P1 + "P1.2.json", lambda d, section=section: d.update(reads=[
                     {"ref": "knowledge/design", "section": section, "why": "w", "required": True}]))
                 if section == "missing":
                     self.assertFound("ref_unknown", "P1.2.json/reads/0/section", count=1)

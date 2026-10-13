@@ -3,7 +3,6 @@ import ast
 import io
 import json
 import os
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -19,6 +18,7 @@ if (_AICORE_LIB / "aicore" / "__init__.py").is_file() and str(_AICORE_LIB) not i
     sys.path.insert(1, str(_AICORE_LIB))
 
 from planner import integration  # noqa: E402
+from planner.plan.model import PlanError  # noqa: E402
 from planner.integration import events as emission  # noqa: E402
 from planner.plan import lifecycle, ops, store  # noqa: E402
 
@@ -121,7 +121,7 @@ class EmissionTests(EventCase):
     def test_a_refused_command_emits_nothing(self):
         before = self.types()
         self.refused("NOT_STARTED", lifecycle.finish, "P1.1", "done", checks={"V1": 0})
-        with self.assertRaises(Exception):
+        with self.assertRaises(PlanError):
             self.start("P2.1")
         self.assertEqual(self.types(), before)
 

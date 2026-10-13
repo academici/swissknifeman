@@ -1,10 +1,7 @@
 """Context pack (dossier §7): golden pack, section extraction, reads, lessons, decisions, start integration."""
 import json
-import os
-import shutil
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,7 +9,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from planner.plan import context, lifecycle, ops, store  # noqa: E402
+from planner.plan import context, lifecycle, ops  # noqa: E402
 from planner.plan.model import PlanError  # noqa: E402
 
 try:

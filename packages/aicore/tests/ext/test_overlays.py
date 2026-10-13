@@ -153,7 +153,7 @@ class TestWarnings(OverlayCase):
 
     def test_the_project_cannot_pull_in_files_outside_itself(self):
         outside = self.write(self.tmp / "secret.md", "SENTINEL\n")
-        inside = self.write(self.project / "docs" / "ok.md", "ok\n")
+        self.write(self.project / "docs" / "ok.md", "ok\n")
         escape = self.project / "docs" / "escape.md"
         escape.symlink_to(outside)
         self.project_file(f'[aicore.overlays]\n"{SLOT}" = [{json.dumps(str(outside))}, "../../../skm/x.md", '

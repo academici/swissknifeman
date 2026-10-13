@@ -1,6 +1,5 @@
 """The ``providers`` table of the aicore config: provider selection of a project (project layer only)."""
 import unittest
-from pathlib import Path
 
 from aicore import config
 from aicore.config.units import foundation_root

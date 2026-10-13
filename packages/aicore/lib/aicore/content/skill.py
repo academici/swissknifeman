@@ -260,7 +260,7 @@ def _read_upstream(skill_dir):
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        raise _invalid(path, f"upstream.json is unreadable ({exc})")
+        raise _invalid(path, f"upstream.json is unreadable ({exc})") from None
     if not isinstance(data, dict):
         raise _invalid(path, "upstream.json is not an object")
     return data

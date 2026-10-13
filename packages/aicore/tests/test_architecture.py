@@ -234,7 +234,7 @@ class TestImportBoundary(unittest.TestCase):
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
 
-            def function_of(node):
+            def function_of(node, parents=parents):
                 while node in parents:
                     node = parents[node]
                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

@@ -12,7 +12,7 @@ from unittest import mock
 
 from aicore.config import Secret
 from aicore.ext import delivery, events, journal
-from aicore.ext.errors import CODES, ExtError, reset_warnings
+from aicore.ext.errors import CODES, ExtError
 
 from tests.ext.support import TempCase
 

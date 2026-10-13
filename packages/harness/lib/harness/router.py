@@ -10,8 +10,8 @@ from .settings import write_json
 
 _STOPWORDS = {
     "the", "a", "an", "and", "or", "for", "with", "use", "this", "that", "when",
-    "and", "in", "in", "on", "by", "for", "with", "with", "from", "to", "from", "like", "what",
-    "this", "or", "when", "over", "under", "without", "if",
+    "in", "on", "by", "from", "to", "like", "what",
+    "over", "under", "without", "if",
 }
 
 

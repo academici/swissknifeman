@@ -2695,7 +2695,6 @@ def _block_codex_gates(env, target, opts, *, provider="codex"):
 
     Codex and Grok share the dispatcher; only the state dir (`.codex` / `.grok`) changes.
     """
-    state_dir = ".codex" if provider == "codex" else ".grok"
     provider_id = ProviderId.CODEX if provider == "codex" else ProviderId.GROK
     surfaces = []
     if opts["observer"]:

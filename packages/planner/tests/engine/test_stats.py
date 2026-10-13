@@ -1,11 +1,9 @@
 """``plan.py stats``: aggregates of scout, delegate and friction events; pure reading of ``log.jsonl``."""
-import itertools
 import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
 _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:

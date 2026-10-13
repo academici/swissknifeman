@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from planner.plan import cli, gitops, lifecycle, store, units
+from planner.plan import gitops, lifecycle, store, units
 from planner.plan.model import PlanError
 
 try:

@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from typing import Iterable, Mapping
 
-from . import check as _check, lifecycle, store, views
+from . import check as _check, lifecycle, store
 from .model import ITEM_ID, PlanError, id_sort_key
 
 UNIT_STATUSES = ("todo", "dispatched", "returned", "accepted", "reworked", "rejected")

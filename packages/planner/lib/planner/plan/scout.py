@@ -17,7 +17,7 @@ from typing import Callable
 
 from planner.command_catalog import SCOUT_PLACEHOLDERS, load_routing_metadata
 
-from . import context, lifecycle, store, views
+from . import context, lifecycle, store
 from .model import PlanError
 
 _ENTRY = re.compile(r"^(?:- |[\w@./\\-]+(?::[\w.<>-]+)?\s+[—–-]\s+\S)")

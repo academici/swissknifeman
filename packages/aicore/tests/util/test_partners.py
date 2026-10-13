@@ -2,7 +2,6 @@
 import contextlib
 import io
 import os
-import stat
 import sys
 import tempfile
 import unittest

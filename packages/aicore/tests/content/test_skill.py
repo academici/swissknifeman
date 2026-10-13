@@ -1,5 +1,6 @@
 """aicore.content.skill: skill model, content hash, requires resolution and the skill-descriptor/v1 descriptor."""
 import contextlib
+import dataclasses
 import hashlib
 import io
 import json
@@ -245,7 +246,7 @@ class DescriptorCase(unittest.TestCase):
     def test_descriptor_is_frozen_and_to_json_does_not_alias(self):
         directory = make_skill(self.root, "name: demo\ndescription: d\nmetadata:\n  a: b\n")
         descriptor = skill.describe_skill(directory, skill_id="x/demo")
-        with self.assertRaises(Exception):
+        with self.assertRaises(dataclasses.FrozenInstanceError):
             descriptor.name = "other"
         document = descriptor.to_json()
         document["metadata"]["a"] = "changed"

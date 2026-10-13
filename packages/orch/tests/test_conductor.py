@@ -1081,6 +1081,31 @@ class SandboxTests(ConductorCase):
             code, _, err = self.run_items("W1", extra=("--options", self.options(sandbox="require")))
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
 
+    def test_require_stops_when_the_claude_cli_cannot_take_settings(self):
+        fake = self.project.parent / "bin" / "claude"
+        fake.parent.mkdir()
+        fake.write_text("#!/bin/sh\necho 'usage: claude -p --safe-mode'\n", encoding="utf-8")
+        fake.chmod(0o755)
+        argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        argv["executor"] = [str(fake), "--tools", "Bash,Read"]
+        self.write_config(argv)
+        with mock.patch("orch.sandbox.probe", return_value=self.UP):
+            code, _, err = self.run_items("W1", extra=("--options", self.options(sandbox="require")))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "SANDBOX_UNAVAILABLE")), err)
+        message = [line for line in self.lines(err) if line["event"] == "run.end"][0]["message"]
+        self.assertIn("does not list --settings", message)
+        self.assertEqual(self.calls("executor"), 0)
+
+    def test_the_manifest_of_a_role_is_found_by_its_conductor_name(self):
+        self.assertEqual(engine.Conductor.declared_network("context-scout"), "none")
+        with mock.patch.object(engine, "ORCH_ROOT", self.project):  # no roles/ folder: the fallback
+            self.assertEqual(engine.Conductor.declared_network("executor"), "none")
+        manifest = self.project / "roles"
+        manifest.mkdir()
+        (manifest / "context-scout.json").write_text(json.dumps({"tools": {"network": "allowed"}}), encoding="utf-8")
+        with mock.patch.object(engine, "ORCH_ROOT", self.project):
+            self.assertEqual(engine.Conductor.declared_network("context-scout"), "allowed")
+
     def test_a_codex_route_is_unavailable_without_the_sandbox(self):
         argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         argv["executor"] += ["--sandbox", "workspace-write"]

@@ -50,6 +50,13 @@ class ProbeTests(unittest.TestCase):
         result = self.probe({"bwrap": "/b"}, mock.Mock(return_value=done(0)))
         self.assertEqual(result["reason"], "socat not found on PATH")
 
+    def test_undecodable_stderr_is_a_failure_not_a_crash(self):
+        def run(argv, **kwargs):
+            self.assertEqual(kwargs.get("errors"), "replace")
+            return done(1, "\ufffd\ufffd")
+        result = self.probe({"bwrap": "/b", "socat": "/s"}, run)
+        self.assertFalse(result["available"])
+
     def test_a_timeout_is_a_failure(self):
         run = mock.Mock(side_effect=subprocess.TimeoutExpired("bwrap", 10))
         result = self.probe({"bwrap": "/b", "socat": "/s"}, run)

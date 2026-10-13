@@ -818,6 +818,10 @@ class Conductor:
                        for role, route in codex]
             if claude:
                 blocked.append(f"instructions.sandbox is require, and the sandbox cannot start ({reason})")
+        elif claude:  # the sandbox starts, but a CLI that does not list --settings would run the role unconfined
+            blocked = [f"{role}: instructions.sandbox is require, and the claude CLI does not list --settings"
+                       for role, route in required.items()
+                       if self._claude_bash(route) and not self._knows(route["argv"], ["--settings"])]
         if blocked:
             raise Stop("SANDBOX_UNAVAILABLE", "; ".join(blocked))
         missing = [f"{role} ({route['argv'][0]})" for role, route in item.routes.items()
@@ -1043,7 +1047,7 @@ class Conductor:
     def declared_network(role: str) -> str:
         """``tools.network`` of the role manifest: what the role is meant to reach (``none`` when it has no manifest)."""
         try:
-            manifest = json.loads((ORCH_ROOT / "roles" / f"{LAUNCH_ROLE.get(role, role)}.json").read_text(encoding="utf-8"))
+            manifest = json.loads((ORCH_ROOT / "roles" / f"{role}.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return "none"
         return (manifest.get("tools") or {}).get("network", "none")

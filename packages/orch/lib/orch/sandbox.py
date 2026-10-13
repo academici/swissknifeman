@@ -44,7 +44,8 @@ def _probe() -> dict:
 def _try_namespaces(bwrap: str) -> dict:
     name = "bwrap-user-net-namespaces"
     try:
-        done = subprocess.run([bwrap, *BWRAP_TRY], capture_output=True, text=True, timeout=TIMEOUT_S)
+        done = subprocess.run([bwrap, *BWRAP_TRY], capture_output=True, text=True, errors="replace",
+                              timeout=TIMEOUT_S)
     except subprocess.TimeoutExpired:
         return {"name": name, "ok": False, "detail": f"bwrap did not finish in {TIMEOUT_S} s"}
     except OSError as error:

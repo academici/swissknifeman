@@ -40,6 +40,7 @@ class RetryInputs:
     budget_left: int            # retries_budget.total_max minus the retries already used
     retry_after_s: int | None = None
     current_route: dict | None = None
+    max_wait_s: int | None = None   # the longest wait the caller accepts; None = no limit (the earlier behaviour)
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,13 @@ def class_of(kind_or_status: str, error: dict | None = None) -> str:
 
 def _same_route(left: dict | None, right: dict) -> bool:
     return left is not None and all(left.get(key) == right.get(key) for key in ("provider", "model_class"))
+
+
+def _other_route(inputs: RetryInputs, policy: dict) -> dict | None:
+    for route in policy.get("fallback_routes") or ():
+        if not _same_route(inputs.current_route, route):
+            return dict(route)
+    return None
 
 
 def decide(inputs: RetryInputs, policy: dict) -> RetryDecision:
@@ -89,15 +97,24 @@ def decide(inputs: RetryInputs, policy: dict) -> RetryDecision:
             return RetryDecision("stop", tuple(reasons + ["BUDGET_EXHAUSTED"]))
     if action == "retry_after":
         wait = inputs.retry_after_s
-        if wait is None:
-            if cls == "quota":
-                return RetryDecision("stop", tuple(reasons + ["RETRY_AFTER_UNKNOWN"]))
-            wait = RATE_LIMIT_DEFAULT_WAIT_S
+        why = None
+        if wait is None and cls == "quota":
+            why = "RETRY_AFTER_UNKNOWN"
+        else:
+            wait = RATE_LIMIT_DEFAULT_WAIT_S if wait is None else wait
+            if inputs.max_wait_s is not None and wait > inputs.max_wait_s:
+                why = "WAIT_TOO_LONG"
+        if why is not None:
+            # A reset that is unknown or too far away is not waited for: another declared route, else a stop.
+            route = _other_route(inputs, policy) if inputs.max_wait_s is not None else None
+            if route is not None:
+                return RetryDecision("fallback_route", tuple(reasons + [why, "FALLBACK_ROUTE"]), route=route)
+            return RetryDecision("stop", tuple(reasons + [why]))
         return RetryDecision("retry_after", tuple(reasons), wait_s=wait)
     if action == "fallback_route":
-        for route in policy.get("fallback_routes") or ():
-            if not _same_route(inputs.current_route, route):
-                return RetryDecision("fallback_route", tuple(reasons + ["FALLBACK_ROUTE"]), route=dict(route))
+        route = _other_route(inputs, policy)
+        if route is not None:
+            return RetryDecision("fallback_route", tuple(reasons + ["FALLBACK_ROUTE"]), route=route)
         return RetryDecision("stop", tuple(reasons + ["FALLBACK_UNDECLARED"]))
     if action == "replan":
         reasons.append("CONTEXT_LIMIT")

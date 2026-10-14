@@ -119,6 +119,60 @@ class RetryTableTests(unittest.TestCase):
         limit = decide(inputs("rate_limit"), {})
         self.assertEqual((limit.action, limit.wait_s), ("retry_after", RATE_LIMIT_DEFAULT_WAIT_S))
 
+    def test_wait_within_max_wait_is_waited(self):
+        for wait in (0, 900):
+            decision = decide(inputs("quota", retry_after_s=wait, max_wait_s=900, current_route=dict(CLAUDE)),
+                              {"fallback_routes": [CODEX]})
+            self.assertEqual((decision.action, decision.wait_s), ("retry_after", wait))
+
+    def test_a_wait_over_max_wait_goes_to_another_declared_route(self):
+        policy = {"fallback_routes": [CLAUDE, CODEX]}
+        decision = decide(inputs("quota", retry_after_s=901, max_wait_s=900, current_route=dict(CLAUDE)), policy)
+        self.assertEqual((decision.action, decision.route, decision.wait_s), ("fallback_route", CODEX, None))
+        self.assertEqual(decision.reason_codes, ("ACTION_DEFAULT", "WAIT_TOO_LONG", "FALLBACK_ROUTE"))
+        self.assertIsNot(decision.route, policy["fallback_routes"][1])
+
+    def test_a_wait_over_max_wait_without_another_route_stops(self):
+        for policy in ({}, {"fallback_routes": [CLAUDE]}):
+            decision = decide(inputs("rate_limit", retry_after_s=3600, max_wait_s=900, current_route=dict(CLAUDE)), policy)
+            self.assertEqual((decision.action, decision.route, decision.reason_codes),
+                             ("stop", None, ("ACTION_DEFAULT", "WAIT_TOO_LONG")))
+
+    def test_quota_with_an_unknown_reset_falls_back_or_stops_when_max_wait_is_set(self):
+        routes = {"fallback_routes": [CODEX]}
+        decision = decide(inputs("quota", max_wait_s=900, current_route=dict(CLAUDE)), routes)
+        self.assertEqual((decision.action, decision.route, decision.reason_codes),
+                         ("fallback_route", CODEX, ("ACTION_DEFAULT", "RETRY_AFTER_UNKNOWN", "FALLBACK_ROUTE")))
+        decision = decide(inputs("quota", max_wait_s=900, current_route=dict(CLAUDE)), {})
+        self.assertEqual((decision.action, decision.reason_codes), ("stop", ("ACTION_DEFAULT", "RETRY_AFTER_UNKNOWN")))
+
+    def test_unknown_rate_limit_wait_is_the_default_and_obeys_max_wait(self):
+        within = decide(inputs("rate_limit", max_wait_s=900), {})
+        self.assertEqual((within.action, within.wait_s), ("retry_after", RATE_LIMIT_DEFAULT_WAIT_S))
+        over = decide(inputs("rate_limit", max_wait_s=RATE_LIMIT_DEFAULT_WAIT_S - 1), {})
+        self.assertEqual((over.action, over.reason_codes[-1]), ("stop", "WAIT_TOO_LONG"))
+
+    def test_without_max_wait_nothing_changes(self):
+        policy = {"fallback_routes": [CODEX]}
+        self.assertEqual(decide(inputs("quota", retry_after_s=10**6, current_route=dict(CLAUDE)), policy).action,
+                         "retry_after")
+        decision = decide(inputs("quota", current_route=dict(CLAUDE)), policy)
+        self.assertEqual((decision.action, decision.route, decision.reason_codes[-1]),
+                         ("stop", None, "RETRY_AFTER_UNKNOWN"))
+
+    def test_max_wait_does_not_touch_other_actions_or_the_earlier_rules(self):
+        self.assertEqual(decide(inputs("transport", max_wait_s=0), {}).action, "retry")
+        dirty = decide(inputs("quota", retry_after_s=10**6, max_wait_s=900, stage_writes=True, worktree_dirty=True,
+                              current_route=dict(CLAUDE)), {"fallback_routes": [CODEX]})
+        self.assertEqual((dirty.action, dirty.reason_codes[-1]), ("reconcile", "PARTIAL_CHANGES"))
+        spent = decide(inputs("quota", retry_after_s=10**6, max_wait_s=900, budget_left=0), {"fallback_routes": [CODEX]})
+        self.assertEqual((spent.action, spent.reason_codes[-1]), ("stop", "BUDGET_EXHAUSTED"))
+
+    def test_a_policy_fallback_action_ignores_max_wait(self):
+        policy = {"on_error": {"quota": {"action": "fallback_route"}}, "fallback_routes": [CODEX]}
+        decision = decide(inputs("quota", max_wait_s=900, current_route=dict(CLAUDE)), policy)
+        self.assertEqual((decision.action, decision.reason_codes), ("fallback_route", ("ACTION_FROM_POLICY", "FALLBACK_ROUTE")))
+
     def test_fallback_route_picks_the_first_other_route(self):
         policy = {"on_error": {"model_unavailable": {"action": "fallback_route"}},
                   "fallback_routes": [CLAUDE, CODEX]}

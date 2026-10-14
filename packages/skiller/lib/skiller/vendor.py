@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 
+from .quality.compat import is_quarantined
 from .boost import sync_boost_json
 from .common import apply_permissions
 from aicore.content.skill import (
@@ -51,6 +52,8 @@ def collect_skills(env, buckets, exclude):
         bucket_dir = root / "skills" / bucket
         for skill_md in sorted(bucket_dir.rglob("SKILL.md")):
             d = skill_md.parent
+            if is_quarantined(d):  # compat-report.json verdict quarantine: not delivered (P8.6)
+                continue
             rel = d.relative_to(bucket_dir)
             all_skill_rels.setdefault(bucket, []).append(str(rel))
             fm_name = parse_frontmatter_fields(skill_md)["name"]
@@ -326,7 +329,7 @@ def do_vendor(env, target, opts, register=True):
         for bucket in buckets:
             bucket_dir = root / "skills" / bucket
             for item in sorted(bucket_dir.rglob("*")):
-                if item.is_dir() or item.name in ("SKILL.md", "upstream.json"):
+                if item.is_dir() or item.name in ("SKILL.md", "upstream.json", "compat-report.json"):
                     continue
                 # SKILL.*.md — non-canonical localized/reference alternates, not a vendor
                 if item.name.startswith("SKILL.") and item.name.endswith(".md"):

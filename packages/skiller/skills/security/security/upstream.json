@@ -20,5 +20,17 @@
     "by": "vendor audit",
     "upstream_sha": "3baf94cbdf9269c41f3b3ffbf2df915123415489d78bc9d9f9fe1d3929bd4209",
     "note": "defense reference: corps of attack lines by purpose (INJ_*/EXF_*/EXE_* always trigger on it), contents - inert markdown; the rule under the bundle is not weakened - constant redness is a PROPERTY of the gate"
-  }
+  },
+  "compat_accepted": [
+    {
+      "file": "references/full.md",
+      "checks": [
+        "injection",
+        "pipe-to-shell",
+        "secret-read",
+        "prompt-injection"
+      ],
+      "reason": "defense reference: attack lines quoted as examples to detect, inert markdown (reviewed P8.6)"
+    }
+  ]
 }

@@ -3,7 +3,7 @@
 A custom directory has the layout of the library: `<bucket>/<folder>/SKILL.md` with an optional `selection.json`.
 Layers in order of precedence: library < machine < project. A custom skill with the id of an earlier one overrides
 it only when its `selection.replaces` names that id; otherwise the load fails with `EXTENSION_AMBIGUOUS`.
-Notes (never errors): `OVERRIDE`, `TRIGGER_OVERLAP` (another id with the same triggers), `DEPRECATED_REPLACED`,
+Notes (never errors): `OVERRIDE`, `NAME_COLLISION`, `TRIGGER_OVERLAP` (another id with the same triggers), `DEPRECATED_REPLACED`,
 `DEPRECATED`."""
 from pathlib import Path
 
@@ -32,6 +32,8 @@ def scan(root, origin):
     entries = []
     for skill_md in sorted(Path(root).glob("*/*/SKILL.md")):
         skill_dir = skill_md.parent
+        if skill_md.is_symlink() or skill_dir.is_symlink() or skill_dir.parent.is_symlink():
+            continue  # a link could pull a file from outside the custom tree into the prompt
         bucket, folder = skill_dir.parent.name, skill_dir.name
         try:
             name = read_frontmatter(skill_md).get("name") or folder
@@ -79,6 +81,10 @@ def merge(library, layers):
                               "detail": "the replaced skill is deprecated"})
             notes.append({"code": "OVERRIDE", "id": sid, "detail": f"{entry['origin']} replaces {table[sid]['origin']}"})
         else:
+            clash = sorted(other for other, row in table.items() if row.get("name") == entry["name"])
+            if clash:
+                notes.append({"code": "NAME_COLLISION", "id": sid,
+                              "detail": f"same name as {', '.join(clash)}; a lookup by name keeps the earlier skill, use the id"})
             overlap = sorted(other for other, row in table.items() if _triggers(entry) and _triggers(entry) == _triggers(row))
             if overlap:
                 notes.append({"code": "TRIGGER_OVERLAP", "id": sid, "detail": "same triggers as " + ", ".join(overlap)})

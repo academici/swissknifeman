@@ -16,6 +16,7 @@ from aicore.util.text import parse_inline_list
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .host import host_plugin_dirs, load_host
 from .module_skills import check_collisions, host_bucket_plugins
+from .quality.compat import is_quarantined
 from .selection import read_sidecar, registry_selection
 from aicore.content.publication import manifest_bytes
 
@@ -95,6 +96,9 @@ def build_registry(env):
             die(f"broken selection.json: {exc}")
         if sidecar:
             entry["selection"] = registry_selection(sidecar)
+        # Quarantine (P8.6): compat-report.json with verdict quarantine keeps the skill out of the runtime.
+        if is_quarantined(skill_md.parent):
+            entry["quarantined"] = True
         # Provenance: upstream.json next to SKILL.md marks an external skill
         upstream_file = skill_md.parent / "upstream.json"
         if upstream_file.exists():

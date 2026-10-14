@@ -8,6 +8,7 @@ from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
 from .describe import cmd_describe
+from .quality.compat import cmd_compat
 from .doctor import cmd_doctor
 from .quality.analyze import cmd_analyze_run
 from .quality.audit import cmd_bucket_audit
@@ -47,6 +48,7 @@ COMMANDS = {
     "registry": cmd_registry,
     "resolve": cmd_resolve,
     "describe": cmd_describe,
+    "compat": cmd_compat,
     "selection": cmd_selection,
     "select": cmd_select,
     "doctor": cmd_doctor,

@@ -114,6 +114,9 @@ def _registry_index(env):
             continue
         if bucket in private_buckets:
             continue
+        if s.get("quarantined"):
+            warn(f"skills.json: '{name}' is quarantined (compat-report.json) - not resolvable")
+            continue
         skill_dir = (env.root / path).parent
         # rel inside the bucket: skills/<bucket>/<rel>/SKILL.md → <rel>
         rel = ""

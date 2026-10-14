@@ -25,9 +25,10 @@ from ..util.text import parse_frontmatter, parse_inline_list
 # skillset.sync copy through it (used to be duplicated and skillset lost
 # SKILL.*.md/evals → leak RU-source).
 # selection.json — selection policy sidecar (skill-selection/v1): read by skiller from the library,
-# not part of the skill content, so it is neither copied to consumers nor hashed.
+# not part of the skill content, so it is neither copied to consumers nor hashed. compat-report.json (quarantine
+# report of an imported skill) is likewise maintainer-side.
 SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
-                "__pycache__", "*.pyc", "*.provider-artifact.bak", "selection.json")
+                "__pycache__", "*.pyc", "*.provider-artifact.bak", "selection.json", "compat-report.json")
 
 
 # --- frontmatter --------------------------------------------------------------
@@ -182,7 +183,7 @@ def skill_content_hash(skill_dir):
         if not f.is_file():
             continue
         name = f.name
-        if name in ("upstream.json", "selection.json"):
+        if name in ("upstream.json", "selection.json", "compat-report.json"):
             continue
         if name.startswith("SKILL.") and name.endswith(".md") and name != "SKILL.md":
             continue

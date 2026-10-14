@@ -92,6 +92,14 @@
     "provenance": {
       "$ref": "#/$defs/provenance",
       "description": "Where the skill came from."
+    },
+    "origin": {
+      "enum": [
+        "library",
+        "machine",
+        "project"
+      ],
+      "description": "Where `skiller describe` found the skill: the library, a machine custom directory or the project's `.swissknifeman/skills`; absent when the descriptor comes from `describe_skill` alone."
     }
   },
   "required": [

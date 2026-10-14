@@ -22,8 +22,17 @@ def _find_custom(env, args):
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         raise SystemExit(1) from None
-    found = [e for _, entries in layers for e in entries if args.skill in (e["id"], e["name"])]
-    return found[-1] if found else None
+    entries = [e for _, es in layers for e in es]
+    by_id = [e for e in entries if e["id"] == args.skill]
+    if by_id:
+        return by_id[-1]
+    by_name = [e for e in entries if e["name"] == args.skill]
+    return by_name[-1] if by_name and not _library_has_name(env, args.skill) else None
+
+
+def _library_has_name(env, name):
+    by_key, by_name = _registry_index(env)
+    return _match(name, by_key, by_name) is not None
 
 
 def cmd_describe(env, argv):

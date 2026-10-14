@@ -152,6 +152,7 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
     raw_skills = registry.get("skills")
     if not isinstance(raw_skills, list):
         raise ValueError("registry skills must be a list")
+    raw_skills = [item for item in raw_skills if not (isinstance(item, dict) and item.get("quarantined"))]
     skills = tuple(sorted((_skill_from_registry(item) for item in raw_skills),
                           key=lambda item: item.semantic_id))
     by_id = {skill.semantic_id: skill for skill in skills}

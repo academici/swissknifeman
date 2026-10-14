@@ -86,6 +86,26 @@ class CollisionCase(unittest.TestCase):
         _, notes = custom.merge([], [deprecated])
         self.assertTrue(any(n["code"] == "DEPRECATED" for n in notes))
 
+    def test_symlinked_skill_is_not_loaded(self):
+        root = self.tmp_path / "project"
+        outside = self.tmp_path / "outside"
+        write_skill(outside, "x", "secret")
+        (root / "team").mkdir(parents=True)
+        (root / "team" / "notes").symlink_to(outside / "x" / "secret")
+        self.assertEqual(custom.scan(root, "project"), [])
+
+    def test_name_shared_with_another_id_notes_and_keeps_the_library_name(self):
+        library = [library_entry("general", "git-safety")]
+        merged, notes = custom.merge(library, [self.layer("project", "team", "notes")])
+        self.assertEqual(len(merged), 2)
+        scanned = custom.scan(self.tmp_path / "project", "project")[0]
+        scanned["name"] = "git-safety"
+        _, notes = custom.merge(library, [[scanned]])
+        self.assertTrue(any(n["code"] == "NAME_COLLISION" for n in notes))
+        result = sel.select(custom.merge(library, [[scanned]])[0], {"role": "executor", "include": ["git-safety"]}, {},
+                            lambda sid: 1)
+        self.assertEqual([r["id"] for r in result["included"]], ["general/git-safety"])
+
     def test_origin_and_digest_of_a_scanned_skill(self):
         entry = self.layer("machine", "team", "style")[0]
         self.assertEqual((entry["origin"], entry["id"]), ("machine", "team/style"))

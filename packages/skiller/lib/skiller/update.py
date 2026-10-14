@@ -369,7 +369,7 @@ def _equivalent_skill_tree(source, candidate):
         return {
             path.relative_to(root): path
             for path in root.rglob("*")
-            if path.is_file() and path.name not in ("upstream.json", "selection.json")
+            if path.is_file() and path.name not in ("upstream.json", "selection.json", "compat-report.json")
         }
 
     source_files = files(source)

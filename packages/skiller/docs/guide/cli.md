@@ -87,6 +87,16 @@ Steps: explicit `--include` → path and dependency triggers (only under the pol
 
 **Custom skills.** Beside the library, `select` and `describe` read user skills of the layout `<bucket>/<folder>/SKILL.md`: the machine directories of `[skiller] custom_dirs` (machine, invocation and flag layers only; `--custom-dirs DIR…` adds more) and the project's `<project>/.swissknifeman/skills/`. Precedence: library < machine < project. Every row carries `origin` (`library|machine|project`) and `digest`; `describe` prints both. A custom skill with the id of an earlier skill overrides it only when its `selection.replaces` names that id; otherwise the command fails with `EXTENSION_AMBIGUOUS`. Notes (`notes` in `--json`, `explain.custom`): `OVERRIDE`, `TRIGGER_OVERLAP` (another id with the same triggers), `DEPRECATED_REPLACED`, `DEPRECATED`.
 
+### `skiller compat`
+
+Quarantine checks of vendored skills (those with an `upstream.json`), deterministic and offline: `license` (allowed list `configs/licenses.json`), `provenance` (`audit.upstream_sha` and `files[]` well-formed; a `kind: reference-only` upstream passes with a warning), `injection` (patterns: reading `~/.ssh`, `~/.aws`, `.env`; disabling checks; `curl … | sh`; hiding actions from the user; ignoring instructions — a line that forbids the action is not flagged), `budget` (`selection.max_tokens` or 8000 tokens) and `tools` (unknown `allowed-tools` warn only).
+
+```bash
+skiller compat [bucket/folder…] [--write] [--json]   # exit 1 when something is quarantined (0 with --write)
+```
+
+`--write` saves `compat-report.json` (`{checks: [{id, status, detail}], verdict: clean|quarantine}`) beside `upstream.json`. A `quarantine` report makes `skiller registry` write `quarantined: true` into `skills.json`; `skiller select` excludes the skill (reason `quarantined`, even when included explicitly) and the resolver of `connect`/`vendor`/`sync` does not find it. No LLM scan.
+
 ### `skiller selection`
 
 The selection policy of the library (`selection.json` beside each `SKILL.md`, contract `skill-selection/v1`; `skiller registry` copies it to `skills.json` as `selection`).

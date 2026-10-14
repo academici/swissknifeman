@@ -2,7 +2,7 @@
 
 `select` is a pure function of the registry entries, the group table and one request; `cmd_select` reads the files.
 Steps (audit 2.6.6): explicit include (the caller adds what the role always needs) → path and dependency triggers (only
-under the policy `auto`) → per-skill filters (`role_not_allowed`, `tool_missing`, `excluded`, `kind_not_preloaded`,
+under the policy `auto`) → per-skill filters (`quarantined`, `role_not_allowed`, `tool_missing`, `excluded`, `kind_not_preloaded`,
 `duplicated_by_role_contract`) → exclusive groups → token budget (`over_budget`). Nothing is cut: a skill either
 enters with its whole body or is excluded with a reason. An explicit include is exempt from every filter but `exclude`
 and is never dropped by the budget."""
@@ -146,7 +146,9 @@ def select(entries, request, groups, tokens):
     rows are `{id, name, reason, tokens}` in selection order and `excluded` rows `{id, reason, detail?}`."""
     policy = request.get("policy", "explicit")
     by_id = {skill_id(e): e for e in entries}
-    by_name = {e["name"]: skill_id(e) for e in entries}
+    by_name = {}
+    for e in entries:
+        by_name.setdefault(e["name"], skill_id(e))  # the earlier skill (library) keeps the name
 
     def resolve(token):
         return token if token in by_id else by_name.get(token)
@@ -189,7 +191,9 @@ def select(entries, request, groups, tokens):
         meta, exempt = selection(sid), reason == "explicit"
         missing = sorted(set(meta.get("requires_tools") or ()) - tools)
         allowed = meta.get("roles") or ()
-        if sid in excluded_by_request:
+        if by_id[sid].get("quarantined"):
+            excluded.append({"id": sid, "reason": "quarantined", "detail": "compat-report.json"})
+        elif sid in excluded_by_request:
             excluded.append({"id": sid, "reason": "excluded"})
         elif allowed and request["role"] not in allowed and not exempt:
             excluded.append({"id": sid, "reason": "role_not_allowed", "detail": ", ".join(allowed)})

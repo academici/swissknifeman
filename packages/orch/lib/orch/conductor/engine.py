@@ -68,6 +68,11 @@ def _mono() -> float:
     return time.monotonic()
 
 
+# The limits of the whole run (``limits.<name>_batch``) and the field of a piece's state that each one counts.
+BATCH_FIELDS = {"review_rounds": "review_rounds_used", "corrections": "corrections_at", "findings": "findings_at"}
+BATCH_LIMITS = tuple(BATCH_FIELDS)
+
+
 class Stop(Exception):
     """An honest stop of the run: a stable code and what happened."""
 
@@ -545,11 +550,15 @@ class Conductor:
                     break
                 # progress: fewer findings to correct than the round before, or other ones (a first round has
                 # nothing to compare with, so it never goes past a target on its own)
+                state["review_rounds_used"] = review_round
+                state.setdefault("findings_at", {})[str(review_round)] = len(triage["confirmed"])
                 places = sorted(self._place(findings, entry["finding"]) for entry in major)
                 progress = earlier is not None and (len(places) < len(earlier) or places != earlier)
                 earlier = places
                 replayed = review_round in state["corrections_at"]
                 rounds_why = self._allowance(item, "review_rounds", review_round, progress, emit=not replayed)
+                rounds_why = rounds_why or self._batch_allowance(item, "findings", self._piece_count(state, "findings_at"),
+                                                                 progress, emit=not replayed)
                 if review_round in state.get("combined_done", []):  # corrected together with the red checks
                     if rounds_why:
                         self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
@@ -561,6 +570,17 @@ class Conductor:
                 final = bool(rounds_why) and item.options["review"]["final_correction"]  # correct, but audit no more
                 done_before = len([number for number in state["corrections_at"] if number != review_round])
                 fixes_why = None if replayed else self._allowance(item, "corrections", done_before, progress)
+                batch_why = next((why for why in (rounds_why, fixes_why) if why and why.startswith("batch:")), None)
+                if not replayed and batch_why and not final:
+                    blockers = [entry["finding"] for entry in major
+                                if self._severity_of(findings, entry["finding"]) == "blocker"]
+                    if blockers:
+                        raise Stop("REVIEW_LIMIT", f"open Blocker finding(s) {', '.join(blockers)} remain and the "
+                                                   f"batch limit is spent: {batch_why}")
+                    self._defer_minor(item, findings, major)
+                    self._plan_note(item, f"{batch_why}; the confirmed findings of review round {review_round} "
+                                          "are noted, not corrected")
+                    break
                 if not replayed and ((rounds_why and not final) or fixes_why):
                     ids = ", ".join(entry["finding"] for entry in major)
                     return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
@@ -588,6 +608,11 @@ class Conductor:
         return self._finish(item, report, rows)
 
     @staticmethod
+    def _severity_of(findings: dict, finding_id: str) -> str:
+        found = next((entry for entry in findings.get("findings", []) if entry.get("id") == finding_id), {})
+        return str(found.get("severity", "")).lower()
+
+    @staticmethod
     def _place(findings: dict, finding_id: str) -> str:
         found = next((entry for entry in findings.get("findings", []) if entry.get("id") == finding_id), {})
         return f"{found.get('location', '-')}|{str(found.get('failure_scenario', ''))[:80]}"
@@ -598,20 +623,51 @@ class Conductor:
         progress, up to ``ceiling_factor`` times the target; every such round prints a LIMIT_OVER beacon and leaves a
         plan note, so a long fight with a piece of work is visible, and a correction that changes nothing ends it."""
         limits = item.options["limits"]
-        target = limits[name]
+        why = self._over_target(item, name, limits[name], used, progress, emit, limits["ceiling_factor"])
+        if why or name not in BATCH_LIMITS:
+            return why
+        return self._batch_allowance(item, name, used, progress, emit)
+
+    def _over_target(self, item: Item, name: str, target: int, used: int, progress: bool, emit: bool, factor: int,
+                     scope: str = "") -> Optional[str]:
+        """The target and ceiling rule of ``_allowance`` for one limit (``scope`` "batch: " for a limit of the run)."""
         if used < target:
             return None
-        ceiling = target * limits["ceiling_factor"]
+        ceiling = target * factor
         if used >= ceiling:
-            return f"the ceiling of {ceiling} for {name} (target {target} × {limits['ceiling_factor']}) is reached"
+            return f"{scope}the ceiling of {ceiling} for {name} (target {target} × {factor}) is reached"
         if not progress:
-            return f"past the target of {target} for {name} the last correction made no progress"
+            return f"{scope}past the target of {target} for {name} the last correction made no progress"
         if emit:
-            text = (f"{name}: round {used + 1} goes past the target of {target} (ceiling {ceiling}) because the last "
+            text = (f"{scope}{name}: round {used + 1} goes past the target of {target} (ceiling {ceiling}) because the last "
                     "correction made progress")
             self.progress.emit("info", item=item.ref, reason_code="LIMIT_OVER", message=text)
             self._plan_note(item, text)
         return None
+
+    def _batch_used(self, item: Item, name: str, own: int) -> int:
+        """What the whole run has used of ``name`` (``review_rounds``, ``corrections``, ``findings``): the other pieces
+        from their own state, this piece as ``own``. Derived from piece state, so a resume does not count twice."""
+        key = BATCH_FIELDS[name]
+        others = sum(self._piece_count(row, key) for ref, row in self.state["items"].items() if ref != item.ref)
+        return others + own
+
+    @staticmethod
+    def _piece_count(row: dict, key: str) -> int:
+        value = row.get(key, 0)
+        return sum(value.values()) if isinstance(value, dict) else len(value) if isinstance(value, list) else int(value)
+
+    def _batch_allowance(self, item: Item, name: str, used: int, progress: bool, emit: bool = True) -> Optional[str]:
+        """The limit ``<name>_batch`` of the whole run, with the same target and ceiling rule; 0 has no limit.
+        The refusal text starts with ``batch:``."""
+        limits = item.options["limits"]
+        target = limits.get(f"{name}_batch", 0)
+        if not target:
+            return None
+        total = self._batch_used(item, name, used)
+        self.state["batch"] = {key: self._batch_used(item, key, self._piece_count(item.state, BATCH_FIELDS[key]))
+                               for key in BATCH_LIMITS}
+        return self._over_target(item, f"{name}_batch", target, total, progress, emit, limits["ceiling_factor"], "batch: ")
 
     @staticmethod
     def _red_signature(rows: list) -> tuple:

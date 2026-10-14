@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
   "title": "Лимиты review на batch: review_rounds_batch, corrections_batch, findings_batch в _allowance; Blocker при исчерпании → REVIEW_LIMIT; закрытие фазы P4",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "limits *_batch (0 = нет); state.batch счётчики; _allowance проверяет batch той же семантикой цели/потолка, LIMIT_OVER batch + plan note; открытый Blocker при отказе allowance → Stop REVIEW_LIMIT; тесты --batch. Пункт закрывает фазу: phase.validation P4.",
   "why": "Аудит П3.2, мысль 8. Риск: тихий пропуск Blocker — запрещён, только stop.",
   "scope": {
@@ -106,6 +106,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:47:26Z"
+  "result": {
+    "started_at": "2026-10-14T09:06:28Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "ded8e872-3e56-461a-abfa-4938ad4ba9fa"
+    }
+  },
+  "updated_at": "2026-10-14T09:06:28Z"
 }

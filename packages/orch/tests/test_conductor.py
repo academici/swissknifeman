@@ -866,6 +866,35 @@ class RunClockTests(ConductorCase):
         self.assertGreaterEqual(self.state(err)["active_s"], 300)
 
 
+class BatchLimitTests(ConductorCase):
+    """``limits.*_batch``: the target and ceiling rule over the whole run; an open Blocker stops it."""
+
+    def batch(self, severity: str, **limits):
+        finding = {"result": {"verdict": "ATTENTION", "findings": [dict(FINDING["result"]["findings"][0], severity=severity)]}}
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": dict(ceiling_factor=1, **limits)}}]},
+                        "W2": {}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [finding, GREEN],
+                     "triager": [TRIAGE_F1]})
+        return self.run_items("W1", "W2")
+
+    def test_a_blocker_after_the_batch_limit_stops_with_review_limit(self):
+        code, _, err = self.batch("Blocker", review_rounds_batch=1)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "REVIEW_LIMIT")), err)
+        self.assertIn("batch:", self.state(err)["stop"]["message"])
+        self.assertEqual(self.calls("executor"), 1)
+
+    def test_a_major_after_the_batch_limit_is_noted_not_corrected(self):
+        code, _, err = self.batch("Major", review_rounds_batch=1)
+        self.assertEqual(self.calls("executor"), 2, err)  # W1 once, W2 once: no correction round
+        self.assertTrue(any("batch:" in i["text"] for i in self.source()["items"]["W1"]["report"]["open_issues"]))
+
+    def test_without_a_batch_limit_the_correction_runs(self):
+        code, _, err = self.batch("Major")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.calls("executor"), 3)  # W1, its correction, W2
+        self.assertNotIn("batch", self.state(err))
+
+
 class RepositoryRulesTests(ConductorCase):
     def test_an_isolated_role_gets_the_module_rules_and_nothing_else_of_claude_md(self):
         (self.project / "CLAUDE.md").write_text("# Rules\n\n## root.module-folders\nEvery module is a folder. <!-- swissknifeman:marker --> <!-- semantic:x -->\n\n"

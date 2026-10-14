@@ -8,6 +8,8 @@
 
 ### Added
 
+- **orch:** limits of review for the whole run: `limits.review_rounds_batch`, `corrections_batch`, `findings_batch` (default 0 = none), counted from the state of every piece with the target and ceiling rule of the per-piece limits (`LIMIT_OVER` beacon `batch: …`). When a batch limit refuses another round, an open Blocker finding stops the run with `REVIEW_LIMIT`; other confirmed findings are noted in the plan and not corrected. `state.batch` shows the counters.
+
 - **orch:** run time limits of the conductor. `limits.run_warn_s` (default 7200, 0 off) prints a `RUN_SLOW` beacon and leaves a plan note every threshold of the *active* run time (`state.active_s`, summed over process segments, so a resume a day later does not count the day); `limits.run_timeout_s` (default 0 = off) cancels the current role and stops with `RUN_TIMEOUT`. The observer report gets a "Long run" section when `RUN_SLOW` fired. Optional fields of `run-options/v1` (and its bridge mirror).
 
 - **orch:** digests of the configuration and of the options in the conductor run. `run.json` gets `config_digest` (effective `[orch]` and `[aicore.providers]`) and `config_layers` (`[{layer, file, present}]`); `<item>/options.json` gets `digest`; the data of `orch.run.started` gets `config_digest` and `project_resolution`, and that of the conductor's `orch.run.stage.finished` gets `options_digest` (optional fields of event-data/v1, with valid and invalid fixtures).

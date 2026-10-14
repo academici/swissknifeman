@@ -355,6 +355,18 @@
         "run_timeout_s": {
           "description": "Ceiling on the active time of a run in seconds: the current role is cancelled and the run stops with RUN_TIMEOUT (resume continues; raise the limit first); 0 (default) has none.",
           "type": "integer"
+        },
+        "review_rounds_batch": {
+          "description": "Target for review rounds of the whole run (all pieces of a `--batch` or `--items` run together); the rule of `review_rounds`: a round past the target goes on only while the last correction made progress, up to `ceiling_factor` times it, with a LIMIT_OVER beacon (`batch: …`); 0 (default) has no limit.",
+          "type": "integer"
+        },
+        "corrections_batch": {
+          "description": "Target for corrections of the whole run, with the target and ceiling rule of `corrections`; 0 (default) has no limit.",
+          "type": "integer"
+        },
+        "findings_batch": {
+          "description": "Target for confirmed review findings of the whole run (those accepted by triage), with the target and ceiling rule; when the run is refused more rounds, an open Blocker stops it with REVIEW_LIMIT and other findings become plan notes; 0 (default) has no limit.",
+          "type": "integer"
         }
       },
       "required": [],

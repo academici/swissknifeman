@@ -82,6 +82,7 @@ def _conductor(resolved: ResolvedConfig) -> dict:
                  "patterns": {key: list(resolved.get(f"conductor.risk.patterns.{key}") or [])
                               for key in risk.DEFAULT_PATTERNS},
                  "diff_lines": resolved.get("conductor.risk.diff_lines")},
+        "skills_bridge": list(resolved.get("conductor.skills_bridge") or []),
         "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
     }
 

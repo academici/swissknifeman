@@ -240,6 +240,29 @@
           ]
         }
       }
+    },
+    "selection": {
+      "type": "object",
+      "description": "Selection of skills for orchestration roles (`skiller select`).",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string",
+          "enum": [
+            "explicit",
+            "auto"
+          ],
+          "default": "explicit",
+          "description": "explicit: only included skills and those the role requires; auto: also the skills whose path or dependency triggers match the work.",
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "env",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
     }
   }
 }

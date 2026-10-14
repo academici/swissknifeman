@@ -4,5 +4,12 @@
   "decision": "KEEP",
   "also": [
     "SLIM"
-  ]
+  ],
+  "triggers": {
+    "paths": [
+      "pyproject.toml",
+      "requirements*.txt",
+      "setup.py"
+    ]
+  }
 }

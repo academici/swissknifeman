@@ -60,3 +60,8 @@ schema_version = 1
 # Whether the skills folder gets a .gitignore that lists only the managed copies. Boolean.
 # Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
 # gitignore_managed = false
+
+[skiller.selection]
+# explicit: only included skills and those the role requires; auto: also the skills whose path or dependency triggers match the work. One of: "explicit", "auto".
+# Allowed in layers: defaults, project, env, invocation, flags.
+# policy = "explicit"

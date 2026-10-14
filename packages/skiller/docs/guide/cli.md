@@ -70,6 +70,17 @@ skiller describe SKILL [--json]
 
 `SKILL` is a name or `bucket/rel`. An unknown skill exits 1. See [Skill metadata](./configuration#skill-metadata).
 
+### `skiller select`
+
+The skills an orchestration role gets for a piece of work: a pure function over `skills.json` (the `selection` sidecars) and `configs/exclusive-groups.json`.
+
+```bash
+skiller select --role ROLE [--paths P…] [--deps D…] [--project DIR] [--include ID…] [--exclude ID…] [--tools T…] \
+  [--budget TOKENS] [--model-class C] [--provider P] [--policy explicit|auto] [--json] [--explain]
+```
+
+Steps: explicit `--include` → path and dependency triggers (only under the policy `auto`) → filters: `role_not_allowed` (`selection.roles`), `excluded` (`--exclude`, wins over include), `tool_missing` (`requires_tools` against `--tools`), `kind_not_preloaded` (`router`, `reference`, `persona`: listed in `discoverable`), `duplicated_by_role_contract` (`replaced_by`) → `exclusive_group` (the group `max`) → `over_budget` (`--budget`; a body is never cut). An explicit include is exempt from the filters except `--exclude` and from the budget. `--project` adds the dependencies of its `composer.json`, `package.json` and `pyproject.toml`; the policy comes from `[skiller.selection] policy` (`explicit`, the default, or `auto`) unless `--policy` is given. The answer is `{included: [{id, name, path, reason, tokens}], excluded: [{id, reason, detail?}], discoverable, tokens, request}`; `--explain` adds the trace of every step. `--provider` and `--model-class` are echoed in `request` and do not change the selection yet.
+
 ### `skiller selection`
 
 The selection policy of the library (`selection.json` beside each `SKILL.md`, contract `skill-selection/v1`; `skiller registry` copies it to `skills.json` as `selection`).

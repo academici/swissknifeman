@@ -50,6 +50,10 @@ schema_version = 1
 # What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for conduct.py answer), deny (blocked QUESTION_DENIED, no answer expected) or defaults (a question with a default is answered by it once, by policy; without one it is queued). One of: "queue", "deny", "defaults".
 # questions = "queue"
 
+# Command of the skills bridge, run as a process with `--select ...` when the run options give a role `skills: ["auto"]`; empty means no bridge, and `auto` then stops the piece with SKILLS_BRIDGE_UNAVAILABLE. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# skills_bridge = []
+
 [orch.conductor.limits]
 # Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none. Integer >= 0.
 # tokens_max = 0

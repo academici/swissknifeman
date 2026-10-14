@@ -1688,14 +1688,14 @@ class Conductor:
             "plan": (item.input_doc.get("provenance") or {}).get("source_digest"),
             "route": [route["provider"], route["model"], route["effort"]],
             "role": render.load_role("context-scout", self.roles_dir)[0].get("instructions"),
-            "skills": item.options["skills"].get("context-scout", [])}))
+            "skills": self._skills(item, "context-scout")}))
         cache = runs_root(self.project) / "cache" / "scout" / safe(item.ref) / f"{key[:32]}.txt"
 
         def run() -> dict:
             if cache.is_file():
                 return {"text": cache.read_text(encoding="utf-8"), "cache": self._relative(cache), "hit": True}
             prompt = prompts.scout(item.input_doc, item=item.ref, step="scout", roles_dir=self.roles_dir,
-                                   skills=item.options["skills"].get("context-scout", []),
+                                   skills=self._skills(item, "context-scout"),
                                    skill_texts=self._skill_texts(item, "context-scout"))
             text, meta = self._role(item, "scout", "context-scout", prompt, None)
             cache.parent.mkdir(parents=True, exist_ok=True)
@@ -1745,7 +1745,7 @@ class Conductor:
             prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                       rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir,
                                       targeted_tests=not item.options["checks"]["executor_runs_checks"],
-                                      skills=item.options["skills"].get("executor", []),
+                                      skills=self._skills(item, "executor"),
                                       repo_rules=self._repo_rules(item, "executor"),
                                       skill_texts=self._skill_texts(item, "executor"),
                                       expected=item.state.get("expected"),
@@ -1991,16 +1991,73 @@ class Conductor:
                     size += len(body)
         return "\n".join(lines)
 
+    def _skills(self, item: Item, role: str) -> list:
+        """The skill names of a role: the list of the run options, or for ``["auto"]`` what the skills bridge chose from
+        the write set of the piece (once per piece, kept in ``state.skills_auto``)."""
+        names = item.options["skills"].get(role, [])
+        if names != [opts.AUTO_SKILLS]:
+            return list(names)
+        return [row["name"] for row in self._auto_skills(item, role)["skills"]]
+
+    def _auto_skills(self, item: Item, role: str) -> dict:
+        """``{"skills": [{name, id, path, reason, tokens}], "excluded", "discoverable", "tokens"}`` of the skills bridge
+        for ``role``: its command is ``[orch.conductor] skills_bridge``, run as a process (orch imports no other module);
+        the answer is kept in the state, so a resume and every later round see the same skills."""
+        kept = item.state.setdefault("skills_auto", {})
+        if role in kept:
+            return kept[role]
+        bridge = list(self.conductor.get("skills_bridge") or [])
+        if not bridge:
+            raise Stop("SKILLS_BRIDGE_UNAVAILABLE", f"skills.{role} is [\"auto\"] but [orch.conductor] skills_bridge names no command "
+                       "(a command that answers --select, see the bridge docs)")
+        provider = opts.stage_route(item.options, role).get("provider") or self.conductor.get("provider") or "claude-code"
+        argv = bridge + ["--select", "--role", role, "--provider", provider, "--project", str(self.project)]
+        paths = self._work_paths(item)
+        if paths:
+            argv += ["--paths", *paths]
+        try:
+            done = subprocess.run(argv, cwd=str(self.project), capture_output=True, text=True, env=self.env, timeout=120)
+            chosen = json.loads(done.stdout)
+        except (OSError, subprocess.SubprocessError, ValueError) as error:
+            raise Stop("SKILLS_SELECT_FAILED", f"skills bridge for {role}: {error.__class__.__name__}: {error}") from None
+        if done.returncode != 0 or not isinstance(chosen.get("skills"), list):
+            raise Stop("SKILLS_SELECT_FAILED", f"skills bridge for {role} exited {done.returncode}: {done.stderr.strip()[:300]}")
+        kept[role] = {key: chosen.get(key, []) for key in ("skills", "excluded", "discoverable")} | {"tokens": chosen.get("tokens", 0)}
+        self.progress.emit("info", item=item.ref, role=role, reason_code="SKILLS_SELECTED",
+                           message=f"skills of {role}: " + (", ".join(row["id"] for row in chosen["skills"]) or "none")
+                           + f" ({chosen.get('tokens', 0)} tokens, {len(chosen.get('excluded', []))} excluded)")
+        return kept[role]
+
+    def _work_paths(self, item: Item) -> list:
+        """The paths the piece will touch, for the triggers of the skill selection: the files the write set patterns own in
+        the repository (at most 300) plus the patterns themselves, so a file the piece creates still counts."""
+        patterns = [p for p in (item.input_doc.get("scope") or {}).get("write_set") or [] if isinstance(p, str) and p]
+        if not patterns:
+            return []
+        try:
+            tracked = subprocess.run(["git", "ls-files"], cwd=str(self.project), capture_output=True, text=True,
+                                     timeout=30).stdout.splitlines()
+        except (OSError, subprocess.SubprocessError):
+            tracked = []
+        owned = [path for path in tracked if any(scopes.matches(path, pattern) for pattern in patterns)][:300]
+        return list(dict.fromkeys(owned + patterns))
+
     def _skill_texts(self, item: Item, role: str) -> dict:
         """The text of the skills a role is given, when the role runs isolated (its provider then loads no skill by
-        name): the SKILL.md of the project's skill folders, without its front matter."""
+        name): the SKILL.md of the project's skill folders, or for ``["auto"]`` the file the bridge named, without its
+        front matter."""
         names = item.options["skills"].get(role, [])
         if not names or role not in item.options["instructions"]["isolate_roles"]:
             return {}
+        sources = {}
+        if names == [opts.AUTO_SKILLS]:
+            sources = {row["name"]: [Path(row["path"])] for row in self._auto_skills(item, role)["skills"]}
+        else:
+            sources = {name: [self.project / folder / name / "SKILL.md" for folder in (".claude/skills", ".agents/skills")]
+                       for name in names}
         texts = {}
-        for name in names:
-            for folder in (".claude/skills", ".agents/skills"):
-                path = self.project / folder / name / "SKILL.md"
+        for name, candidates in sources.items():
+            for path in candidates:
                 if path.is_file():
                     body = path.read_text(encoding="utf-8", errors="replace")
                     if body.startswith("---"):
@@ -2194,7 +2251,7 @@ class Conductor:
                                       diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
                                       pre_final=number > 1 and item.options["review"]["pre_final"],
                                       min_severity=item.options["review"]["correct_min_severity"],
-                                      roles_dir=self.roles_dir, skills=item.options["skills"].get("reviewer", []),
+                                      roles_dir=self.roles_dir, skills=self._skills(item, "reviewer"),
                                       checks_pending=pending, outside=self._outside(item),
                                       repo_rules=self._repo_rules(item, "reviewer"),
                                       skill_texts=self._skill_texts(item, "reviewer"))
@@ -2216,7 +2273,7 @@ class Conductor:
         def run() -> dict:
             base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
             prompt = prompts.triager(item.input_doc, item=item.ref, step=key, base=base, findings=findings,
-                                     roles_dir=self.roles_dir, skills=item.options["skills"].get(role, []),
+                                     roles_dir=self.roles_dir, skills=self._skills(item, role),
                                      repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role))
             triage, meta = self._role(item, key, role, prompt, "triage-result",
                                       extra=lambda doc: contract.triage_problems(findings, doc))

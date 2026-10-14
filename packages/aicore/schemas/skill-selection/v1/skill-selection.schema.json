@@ -81,7 +81,7 @@
     "roles": {
       "type": "array",
       "uniqueItems": true,
-      "description": "Orchestration roles that take the skill as required, such as `reviewer`; empty or absent means no role requires it.",
+      "description": "Orchestration roles the skill is allowed for, such as `reviewer`; absent or empty means every role. Which skills a role must always get is the list of its bridge (`role-skills.json`), not this field.",
       "items": {
         "type": "string",
         "pattern": "^[a-z][a-z0-9-]*$",

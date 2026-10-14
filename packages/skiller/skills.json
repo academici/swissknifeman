@@ -434,7 +434,12 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "KEEP"
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "**/*.schema.json"
+          ]
+        }
       },
       "source": "local"
     },
@@ -2461,6 +2466,11 @@
       "selection": {
         "kind": "domain",
         "decision": "SLIM",
+        "triggers": {
+          "paths": [
+            "**/*.vue"
+          ]
+        },
         "exclusive_group": "vue-core"
       },
       "source": "github",
@@ -3634,7 +3644,12 @@
         "decision": "SCRIPT",
         "also": [
           "POLICY"
-        ]
+        ],
+        "triggers": {
+          "paths": [
+            "database/migrations/**"
+          ]
+        }
       },
       "source": "local"
     },
@@ -5051,7 +5066,14 @@
         "decision": "KEEP",
         "also": [
           "SLIM"
-        ]
+        ],
+        "triggers": {
+          "paths": [
+            "pyproject.toml",
+            "requirements*.txt",
+            "setup.py"
+          ]
+        }
       },
       "source": "local"
     },

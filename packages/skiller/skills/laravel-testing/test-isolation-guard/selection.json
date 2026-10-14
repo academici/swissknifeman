@@ -4,5 +4,10 @@
   "decision": "SCRIPT",
   "also": [
     "POLICY"
-  ]
+  ],
+  "triggers": {
+    "paths": [
+      "database/migrations/**"
+    ]
+  }
 }

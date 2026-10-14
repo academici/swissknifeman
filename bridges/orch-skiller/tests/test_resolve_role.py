@@ -27,6 +27,13 @@ def run(*args: str) -> subprocess.CompletedProcess:
                           encoding="utf-8", check=False)
 
 
+def can_select() -> bool:
+    if not SKILLER:
+        return False
+    probe = subprocess.run([str(SKILLER), "select", "--help"], capture_output=True, text=True, check=False)
+    return probe.returncode == 0
+
+
 @unittest.skipUnless(SKILLER and ORCH, "skiller or orch partner not found")
 class ResolveRole(unittest.TestCase):
     def resolve(self, role: str, provider: str) -> dict:
@@ -198,3 +205,41 @@ class PartnerLookup(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(SKILLER and ORCH and can_select(), "skiller with `select` or orch partner not found")
+class SelectRole(unittest.TestCase):
+    def select(self, role: str, *args: str) -> dict:
+        done = run("--select", "--role", role, "--provider", "claude-code", *args)
+        self.assertEqual(done.returncode, 0, done.stderr + done.stdout)
+        return json.loads(done.stdout)
+
+    def test_migration_work_gets_the_triggered_skill_with_a_readable_path(self):
+        out = self.select("executor", "--paths", "database/migrations/2026_01_01_create_users.php")
+        ids = [skill["id"] for skill in out["skills"]]
+        self.assertIn("php/database", ids)
+        skill = next(s for s in out["skills"] if s["id"] == "php/database")
+        self.assertEqual(skill["reason"], "trigger_path")
+        self.assertTrue(Path(skill["path"]).is_file())
+        self.assertEqual(out["tokens"], sum(s["tokens"] for s in out["skills"]))
+
+    def test_no_signal_means_no_skills_for_a_role_without_a_list(self):
+        out = self.select("executor", "--paths", "docs/guide.md")
+        self.assertEqual(out["skills"], [])
+
+    def test_the_role_list_is_included_explicitly(self):
+        out = self.select("reviewer", "--paths", "docs/guide.md")
+        by_id = {skill["id"]: skill["reason"] for skill in out["skills"]}
+        self.assertEqual(by_id.get("quality/code-review"), "explicit")
+
+    def test_exclude_wins_over_include_and_budget_excludes_without_cutting(self):
+        out = self.select("reviewer", "--exclude", "quality/code-review")
+        self.assertNotIn("quality/code-review", [s["id"] for s in out["skills"]])
+        self.assertIn({"id": "quality/code-review", "reason": "excluded"}, out["excluded"])
+        over = self.select("executor", "--paths", "database/migrations/x.php", "--budget", "10")
+        self.assertEqual(over["skills"], [])
+        self.assertEqual({row["reason"] for row in over["excluded"]}, {"over_budget"})
+
+    def test_select_needs_a_role(self):
+        done = run("--select", "--manifest", "x.json", "--provider", "codex")
+        self.assertEqual(done.returncode, 2)

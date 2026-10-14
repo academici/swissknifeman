@@ -16,6 +16,7 @@
 #   lock      update skills-lock.json project (external skill map: skm + boost)
 #   resolve   resolve skill IDs and transitive requirements (read-only; --json)
 #   describe  skill descriptor: license, version, digest, provenance (read-only; --json)
+#   select    skills of an orchestration role: --role R [--paths --deps --budget --include --exclude --policy] --json [--explain]
 #   selection selection.json sidecars: `report [--json]` against the audit summary, `check` (read-only)
 #   status    report on the current project (read-only)
 #   budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
@@ -71,7 +72,7 @@ CMD="${1:-help}"
 case "$CMD" in
   -h|--help|help) usage; exit 0 ;;
   validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
-  connect|vendor|integrate|update|init|sync|lock|resolve|describe|selection|status|budget|eval|analyze-run|bucket-audit|list|profiles|registry|doctor|topology|release|attest|version|deliver) ;;
+  connect|vendor|integrate|update|init|sync|lock|resolve|describe|selection|select|status|budget|eval|analyze-run|bucket-audit|list|profiles|registry|doctor|topology|release|attest|version|deliver) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

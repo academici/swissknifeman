@@ -394,7 +394,7 @@
           "pattern": "^[a-z][a-z0-9-]*$"
         },
         "names": {
-          "description": "Skill names.",
+          "description": "Skill names, or the single name `auto`: the skills bridge chooses the skills of the role from the write set of the piece (`skills_bridge` of `[orch.conductor]`); `auto` is not listed with other names.",
           "type": "array",
           "uniqueItems": true,
           "items": {

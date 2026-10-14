@@ -342,6 +342,21 @@
               "minimum": 1
             }
           }
+        },
+        "skills_bridge": {
+          "type": "array",
+          "description": "Command of the skills bridge, run as a process with `--select ...` when the run options give a role `skills: [\"auto\"]`; empty means no bridge, and `auto` then stops the piece with SKILLS_BRIDGE_UNAVAILABLE. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
         }
       }
     }

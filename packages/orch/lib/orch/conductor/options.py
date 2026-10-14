@@ -42,6 +42,7 @@ SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 # A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.
 # A layer with its own ``fallback_routes`` replaces this list, ``fallback_routes: []`` ends it.
 DEFAULT_FALLBACK_ROUTES = [{"role": "reviewer", "provider": "claude-code", "model_class": "frontier", "effort": "high"}]
+AUTO_SKILLS = "auto"  # the one name of a role's skills that asks the skills bridge to choose them from the work
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
             "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
@@ -205,6 +206,9 @@ def limit_problems(layer: dict) -> list:
     for key, value in (layer.get("checks") or {}).items():
         if key in CHECKS_BOUNDS and not CHECKS_BOUNDS[key][0] <= value <= CHECKS_BOUNDS[key][1]:
             issues.append(f"/checks/{key}: {value} is outside {CHECKS_BOUNDS[key][0]}..{CHECKS_BOUNDS[key][1]}")
+    for entry in layer.get("skills") or []:
+        if AUTO_SKILLS in entry["names"] and len(entry["names"]) > 1:
+            issues.append(f"/skills/{entry['role']}: \"auto\" cannot be listed together with other skills")
     for key, value in (layer.get("review") or {}).items():
         if key in REVIEW_BOUNDS and not REVIEW_BOUNDS[key][0] <= value <= REVIEW_BOUNDS[key][1]:
             issues.append(f"/review/{key}: {value} is outside {REVIEW_BOUNDS[key][0]}..{REVIEW_BOUNDS[key][1]}")

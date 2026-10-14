@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.2",
   "title": "skiller select --role --paths --deps --model-class --budget --explain; skiller.selection.policy; мост orch-skiller --select; conductor skills [auto] и _skill_texts по пути из моста; golden 5 задач",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Чистая select по knowledge/p8-skills#select (порядок и причины исключения), чтение deps из манифестов проекта; config skiller.selection.policy; resolve_role.py --select; run-options skills роли [\"auto\"] (аддитивно); _skill_texts читает SKILL.md по пути из ответа моста; golden: Laravel-миграция, Vue-компонент, Python CLI, docs-only, изменение схемы.",
   "why": "Аудит П7.2, мысль 15. Риски: (1) модули не импортируют друг друга — conductor вызывает мост процессом; (2) бюджет не обрезает текст — исключает с over_budget.",
   "scope": {
@@ -143,6 +143,38 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:54:11Z"
+  "result": {
+    "started_at": "2026-10-14T15:53:54Z",
+    "finished_at": "2026-10-14T16:05:23Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0da2629f-5c4d-41fc-9bfc-ca2039bc857c"
+    },
+    "notes": "skiller select (+--explain, policy explicit|auto), resolve_role.py --select, run-options skills [auto] + SKILLS_* коды, golden 5 задач в tests/test_select.py. V1–V3 зелёные.",
+    "deviations": [
+      "select: roles в selection.json трактуется как «допустимо для ролей» (аудит 2.6.5, review-only skills), обязательные по роли приходят include'ом из моста (role-skills.json); схема skill-selection/v1 уточнена; шаг role_required убран, добавлена причина role_not_allowed",
+      "select: фильтры tool/exclude/kind/replaced_by применяются до exclusive_group, чтобы исключённый skill не занимал слот группы; причины и их порядок для одного skill — как в дизайне; --tools, --project, --policy добавлены (роль не знает свои tools, deps берутся из проекта)",
+      "orch: config skills_bridge (machine-wide argv моста) — способ вызвать мост процессом без импорта; вне task_files: config.schema.json/settings.py/docs/config.example.toml orch и skiller; триггеры для golden-задач добавлены в 4 selection.json"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T16:05:23Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T16:05:23Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T16:05:23Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T16:05:23Z"
 }

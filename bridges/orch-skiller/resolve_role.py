@@ -12,6 +12,12 @@ Output with ``--json``: ``{"role", "provider", "skills": [{"name", "id", "bucket
 "required_by"}], "delivery": {"mode", "source"}, "diagnostics": []}``. ``required`` is true for a manifest-required
 skill and for anything a required skill needs. Exit 1 on an error diagnostic.
 
+``--select --role ID --provider P [--paths P…] [--project DIR] [--budget N] [--include ID…] [--exclude ID…] --json``
+asks ``skiller select`` (policy ``auto``) for the skills of a role from the work it is given: the role's own list (the
+manifest or ``role-skills.json``) goes in as explicit includes. Output: ``{"role", "provider", "skills": [{"name", "id",
+"path", "reason", "tokens"}], "excluded": [{"id", "reason"}], "discoverable": [id], "tokens", "diagnostics": []}``; ``path``
+is the absolute path of the ``SKILL.md`` the conductor reads. Exit 1 when ``skiller select`` fails.
+
 ``--all-roles --provider P [--binding B]`` resolves every role manifest of orch and prints ``{role_id: [{"name",
 "digest"}]}`` as JSON: the input of ``orch.py prepare --skills``. A skill without a digest is left out and its
 warning goes to stderr.
@@ -40,6 +46,12 @@ def parser() -> argparse.ArgumentParser:
     source.add_argument("--manifest", type=Path, help="path to a role manifest")
     source.add_argument("--all-roles", action="store_true", dest="all_roles",
                         help="every role of orch; prints {role_id: [{name, digest}]} as JSON")
+    p.add_argument("--select", action="store_true", help="select the skills of --role for the work given by --paths")
+    p.add_argument("--paths", nargs="+", default=[], metavar="P", help="--select: project paths the work touches")
+    p.add_argument("--project", help="--select: project directory (its manifests give the dependencies)")
+    p.add_argument("--budget", type=int, help="--select: token limit of the preloaded bodies")
+    p.add_argument("--include", nargs="+", default=[], metavar="ID", help="--select: skills to take")
+    p.add_argument("--exclude", nargs="+", default=[], metavar="ID", help="--select: skills never to take")
     p.add_argument("--provider", required=True, choices=PROVIDERS)
     p.add_argument("--binding", default="native", choices=BINDINGS, help="capability seed binding (default native)")
     p.add_argument("--json", action="store_true", dest="json_output")
@@ -108,6 +120,35 @@ def run_describe(skill_id: str) -> str | None:
     except (ValueError, KeyError, TypeError):
         return None
     return digest if isinstance(digest, str) and DIGEST.match(digest) else None
+
+
+def select_role(role: str, provider: str, paths: list[str], project: str | None, budget: int | None,
+                include: list[str], exclude: list[str]) -> tuple[dict, bool]:
+    """``skiller select`` for a role: its own list as explicit includes, the policy ``auto`` for the triggers."""
+    try:
+        listed = load_manifest(role, None).get("skills") or role_skills(role)
+    except RoleRefused as error:
+        if not str(error).startswith("ROLE_UNKNOWN"):
+            raise
+        listed = role_skills(role)
+    own = [item["name"].replace(":", "/", 1) for item in listed]
+    argv = [str(require_skiller()), "select", "--role", role, "--provider", provider, "--policy", "auto", "--json"]
+    for flag, values in (("--paths", paths), ("--include", [*own, *include]), ("--exclude", exclude)):
+        if values:
+            argv += [flag, *values]
+    if project:
+        argv += ["--project", project]
+    if budget is not None:
+        argv += ["--budget", str(budget)]
+    done = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", check=False)
+    try:
+        chosen = json.loads(done.stdout)
+    except ValueError as error:
+        raise RoleRefused("SELECT_FAILED", (done.stderr.strip() or f"skiller exit {done.returncode}: {error}")) from error
+    skills = [{key: row[key] for key in ("name", "id", "path", "reason", "tokens")} for row in chosen["included"]]
+    out = {"role": role, "provider": provider, "skills": skills, "excluded": chosen["excluded"],
+           "discoverable": chosen["discoverable"], "tokens": chosen["tokens"], "diagnostics": []}
+    return out, done.returncode != 0
 
 
 def required_closure(declared: dict[str, bool], found: list[dict]) -> set[str]:
@@ -181,6 +222,14 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(delivered, ensure_ascii=False, indent=2))
         return 1 if failed else 0
     try:
+        if args.select:
+            if not args.role:
+                print("SELECT_NEEDS_ROLE: --select takes --role", file=sys.stderr)
+                return 2
+            out, failed = select_role(args.role, args.provider, args.paths, args.project, args.budget,
+                                      args.include, args.exclude)
+            print(json.dumps(out, ensure_ascii=False, indent=2))
+            return 1 if failed else 0
         out, failed = resolve_role(load_manifest(args.role, args.manifest), args.provider, args.binding)
     except RoleRefused as error:
         print(error, file=sys.stderr)

@@ -17,6 +17,8 @@ when_to_use: "Use when preparing Laravel tests that can write to databases or fi
 
 # Skill: Test isolation guard
 
+Executable: `python3 scripts/preflight.py [--root DIR]` statically checks lines 1–2 of the guard (phpunit.xml, bootstrap.php, guard class, TestCase wiring) and prints a `check-result/v1` JSON (exit 1 on fail).
+
 Triggers: setting up test env for new project/package; protecting CI (runner must fail with clear message, not silently wipe data); suspecting tests hit dev/prod DB or shared parallel-test storage. Four boundaries: bootstrap, app boot, framework-selected parallel DB, and process filesystem before writes. Version-agnostic testing basics (Feature/Unit/Pest, Docker/local detect) live in `laravel-testing/laravel-testing` (`requires`).
 
 ## Algorithm

@@ -25,7 +25,10 @@ The project is `--project DIR`, else `SKM_PROJECT_ROOT`, else the nearest folder
 or `.swissknifeman` (`aicore.state.resolve_project`; the home directory does not count through `.swissknifeman`). Without one
 the commands stop with `PROJECT_CONTEXT_REQUIRED` and the hint `--project DIR`; a project that is not a git repository is
 `PROJECT_NOT_GIT` for the conductor. `orch.py` takes the same global `--project`, and its run cycle (`source …`) needs a
-project. The roles always start in the project folder, wherever the conductor was started. `run.json` records
+project. A named project (`--project`, `SKM_PROJECT_ROOT`) that is not a folder is `PROJECT_CONTEXT_REQUIRED`, never replaced
+by a search. The conductor tells every `orch.py` it starts the project (`--project`) and how it found it
+(`--project-resolution`), so the run cycle cannot land in another repository. The roles always start in the project folder,
+wherever the conductor was started. `run.json` records
 `project_resolution` (`flag`, `environment`, `marker` or `git`) and `working_directory`.
 
 ## Digests of a run
@@ -161,7 +164,9 @@ route with the layer each of `provider`, `model_class`, `effort` and `model` cam
 fallback), the `stop` when no route can start, the `aicore.providers.available` value and layer of each provider
 involved, and the `gates` in force. Without `--plan` and `--item` the options are those of the configuration, the
 scenario and the pack; with them they are the recorded options of the newest conductor run of that item
-(`ITEM_UNKNOWN` when there is none).
+(`ITEM_UNKNOWN` when there is none), including the minimum class and effort the work required. A candidate or the selected
+route that a run would refuse before any work (the minimum of the work, `instructions.sandbox = require`) is reported with its
+code, and `stop` names it.
 
 ### Capacity gates
 

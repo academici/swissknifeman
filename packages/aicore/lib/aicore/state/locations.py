@@ -137,36 +137,52 @@ class ProjectContextRequired(LookupError):
 
     code = "PROJECT_CONTEXT_REQUIRED"
 
-    def __init__(self, start: PathLike):
-        super().__init__(f"PROJECT_CONTEXT_REQUIRED: no project found above {start} (no .git or .swissknifeman); "
-                         f"go into the project or pass --project DIR")
+    def __init__(self, start: PathLike, reason: Optional[str] = None):
+        super().__init__(f"PROJECT_CONTEXT_REQUIRED: " + (reason or f"no project found above {start} (no .git or "
+                         f".swissknifeman); go into the project or pass --project DIR"))
+
+
+def _marker_found(candidate: Path, marker: Union[str, tuple]) -> bool:
+    """Whether ``candidate`` holds the marker: a name (any entry; ``.swissknifeman`` only as a directory) or
+    ``(name, kind)`` with kind ``file``, ``dir`` or ``any``."""
+    name, kind = (marker, "dir" if marker == PROJECT_DIRNAME else "any") if isinstance(marker, str) else marker
+    path = candidate / name
+    return path.is_file() if kind == "file" else path.is_dir() if kind == "dir" else path.exists()
 
 
 def resolve_project(start: PathLike, *, explicit: Optional[PathLike] = None,
                     env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
-                    markers: Iterable[str] = DEFAULT_MARKERS,
+                    markers: Iterable[Union[str, tuple]] = DEFAULT_MARKERS,
                     stop_at_home: bool = False) -> Optional[ProjectContext]:
     """The project of a command: ``explicit`` (the ``--project`` flag), else ``SKM_PROJECT_ROOT``, else the nearest ancestor
-    of ``start`` (inclusive) that holds one of ``markers`` (checked in the order given; ``.git`` may be a file), else ``None``.
+    of ``start`` (inclusive) that holds one of ``markers`` (checked in the order given; a marker is a name, or
+    ``(name, "file"|"dir"|"any")``; ``.git`` may be a file), else ``None``.
 
-    The user's home directory does not count through ``.swissknifeman`` (the legacy machine state directory has that
-    name); with ``stop_at_home`` the search ends at the home directory (it is checked, nothing above it is).
+    A named project that is not a directory is refused (``ProjectContextRequired``), never replaced by a search. The user's
+    home directory does not count through ``.swissknifeman`` (the legacy machine state directory has that name); with
+    ``stop_at_home`` the search ends at the home directory (it is checked, nothing above it is).
     """
     environment = os.environ if env is None else env
+    named, resolution, label = None, "", ""
     if explicit is not None and str(explicit) != "":
-        return ProjectContext(Path(os.path.abspath(os.path.expanduser(explicit))), "flag")
-    named = environment.get(ENV_PROJECT_ROOT, "")
-    if named:
-        return ProjectContext(Path(os.path.abspath(os.path.expanduser(named))), "environment")
+        named, resolution, label = explicit, "flag", "--project"
+    elif environment.get(ENV_PROJECT_ROOT, ""):
+        named, resolution, label = environment[ENV_PROJECT_ROOT], "environment", ENV_PROJECT_ROOT
+    if named is not None:
+        root = Path(os.path.abspath(os.path.expanduser(named)))
+        if not root.is_dir():
+            raise ProjectContextRequired(root, f"{label} {root} is not a directory; name the project folder or "
+                                               f"go into the project")
+        return ProjectContext(root, resolution)
     begin = Path(os.path.abspath(start))
     user = _home(environment, home)
     for candidate in (begin, *begin.parents):
         for marker in markers:
-            if marker == PROJECT_DIRNAME and candidate == user:
+            name = marker if isinstance(marker, str) else marker[0]
+            if name == PROJECT_DIRNAME and candidate == user:
                 continue
-            found = (candidate / marker).is_dir() if marker == PROJECT_DIRNAME else (candidate / marker).exists()
-            if found:
-                return ProjectContext(candidate, "git" if marker == ".git" else "marker", marker)
+            if _marker_found(candidate, marker):
+                return ProjectContext(candidate, "git" if name == ".git" else "marker", name)
         if stop_at_home and candidate == user:
             break
     return None
@@ -174,8 +190,14 @@ def resolve_project(start: PathLike, *, explicit: Optional[PathLike] = None,
 
 def find_project_root(start: PathLike, *, env: Optional[Mapping[str, str]] = None,
                       home: Optional[PathLike] = None) -> Path:
-    """The root of :func:`resolve_project` for ``start``; without a project, ``start`` itself."""
-    context = resolve_project(start, env=env, home=home)
+    """The root of :func:`resolve_project` for ``start``; without a project, ``start`` itself. It never raises: a
+    ``SKM_PROJECT_ROOT`` that is not a directory is ignored and the markers decide."""
+    try:
+        context = resolve_project(start, env=env, home=home)
+    except ProjectContextRequired:
+        environment = dict(os.environ if env is None else env)
+        environment.pop(ENV_PROJECT_ROOT, None)
+        context = resolve_project(start, env=environment, home=home)
     return context.root if context else Path(start)
 
 

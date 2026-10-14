@@ -183,7 +183,9 @@ class Conductor:
 
     def _orch(self, *args: str) -> tuple:
         """``(exit, JSON stdout or None, stderr)`` of this package's own ``orch.py``."""
-        argv = [sys.executable, str(ORCH_ROOT / "scripts" / "orch.py")]
+        argv = [sys.executable, str(ORCH_ROOT / "scripts" / "orch.py"), "--project", str(self.project)]
+        if self.project_resolution:  # the child is told the project; it records how the conductor found it
+            argv += ["--project-resolution", self.project_resolution]
         if self.config_file:
             argv += ["--config", str(self.config_file)]
         done = subprocess.run(argv + list(args), cwd=str(self.project), capture_output=True, text=True,
@@ -768,7 +770,8 @@ class Conductor:
         if persist:
             self.state["on_blocked"] = item.options["on_blocked"]
             write_json(item.directory / "options.json", {"scenario": scenario, "options": item.options,
-                                                         "sources": item.sources, "digest": opts.digest(item.options)})
+                                                         "sources": item.sources, "digest": opts.digest(item.options),
+                                                         "claim_route": item.claim.get("route")})
 
     def _prepare(self, item: Item) -> dict:
         provider = opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \

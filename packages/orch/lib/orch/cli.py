@@ -615,7 +615,8 @@ def _source_command(args: argparse.Namespace) -> int:
                "register": _source_register, "commit": _source_commit, "release": _source_release}[args.action]
     try:
         context = project_mod.require(getattr(args, "project", None))  # the cycle writes the state of a project
-        project, args.project_resolution = context.root, context.resolution
+        project = context.root
+        args.project_resolution = getattr(args, "named_resolution", None) or context.resolution
         current = settings.load(project=project, config_file=args.config)  # the configuration is read once
         return handler(args, current, project)
     except ProjectContextRequired as error:
@@ -676,11 +677,22 @@ def _source_parser(verbs) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _main(argv)
+    except ProjectContextRequired as error:  # a named project that is not a folder, or the cycle without a project
+        print(str(error), file=sys.stderr)
+        return 1
+
+
+def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="orch.py")
     parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
     parser.add_argument("--project", type=Path, metavar="DIR",
                         help="the project; default: SKM_PROJECT_ROOT, else the nearest .git or .swissknifeman above the "
                              "working directory (the run cycle needs one: PROJECT_CONTEXT_REQUIRED)")
+    parser.add_argument("--project-resolution", dest="named_resolution", choices=("flag", "environment", "marker", "git"),
+                        help="with --project: how the caller found the project (the conductor passes its own answer; "
+                             "recorded in orch.run.started)")
     verbs = parser.add_subparsers(dest="verb", required=True)
     command = verbs.add_parser("validate", help="validate an exec/v1 or conductor/v1 JSON document")
     command.add_argument("kind")

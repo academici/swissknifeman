@@ -165,8 +165,12 @@ class ResolveProjectTests(unittest.TestCase):
         self.assertEqual(self.resolve(work).root, self.home)
 
     def test_a_relative_flag_is_made_absolute_and_a_blank_environment_is_ignored(self):
-        context = loc.resolve_project(self.deep, explicit="rel", env={"SKM_PROJECT_ROOT": ""}, home=self.home)
-        self.assertEqual(context.root, Path(os.path.abspath("rel")))
+        context = loc.resolve_project(self.deep, explicit=self.deep.parent, env={"SKM_PROJECT_ROOT": ""}, home=self.home)
+        self.assertEqual(context.root, self.deep.parent)
+        previous = os.getcwd()
+        os.chdir(self.base)
+        self.addCleanup(os.chdir, previous)
+        self.assertEqual(loc.resolve_project(self.deep, explicit="proj", env={}, home=self.home).root, self.project)
         self.assertEqual(self.resolve(env={"SKM_PROJECT_ROOT": ""}).resolution, "git")
 
     def test_own_markers_and_the_stop_at_home(self):
@@ -180,6 +184,28 @@ class ResolveProjectTests(unittest.TestCase):
         (self.project / ".swissknifeman").mkdir()
         (self.project / ".swissknifeman" / "config.toml").write_text("x")
         self.assertEqual(self.resolve(markers=markers, stop_at_home=True).marker, ".swissknifeman/config.toml")
+
+    def test_a_named_project_that_is_not_a_directory_is_refused_not_searched_around(self):
+        file = self.base / "file.txt"
+        file.write_text("x")
+        for kwargs in ({"explicit": file}, {"env": {"SKM_PROJECT_ROOT": str(file)}},
+                       {"explicit": self.base / "missing"}):
+            with self.assertRaises(loc.ProjectContextRequired) as caught:
+                self.resolve(**kwargs)
+            self.assertIn("is not a directory", str(caught.exception))
+        # the wrapper never raises: a stale SKM_PROJECT_ROOT is ignored and the markers decide
+        self.assertEqual(loc.find_project_root(self.deep, env={"SKM_PROJECT_ROOT": str(file)}, home=self.home),
+                         self.project)
+
+    def test_typed_markers_tell_a_file_from_a_directory(self):
+        mid = self.project / "mid"
+        mid.mkdir()
+        (mid / ".claude").write_text("a file, not a settings folder")
+        markers = ((".claude", "dir"), (".git", "any"))
+        self.assertEqual(self.resolve(mid, markers=markers).root, self.project)
+        (mid / ".claude").unlink()
+        (mid / ".claude").mkdir()
+        self.assertEqual(self.resolve(mid, markers=markers).root, mid)
 
     def test_find_project_root_is_the_wrapper(self):
         self.assertEqual(loc.find_project_root(self.deep, env={}, home=self.home), self.project)

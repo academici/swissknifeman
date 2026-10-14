@@ -1,6 +1,7 @@
 exit: 0
 --- stdout ---
 usage: orch.py [-h] [--config FILE] [--project DIR]
+               [--project-resolution {flag,environment,marker,git}]
                {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,doctor}
                ...
 
@@ -29,5 +30,9 @@ options:
                         nearest .git or .swissknifeman above the working
                         directory (the run cycle needs one:
                         PROJECT_CONTEXT_REQUIRED)
+  --project-resolution {flag,environment,marker,git}
+                        with --project: how the caller found the project (the
+                        conductor passes its own answer; recorded in
+                        orch.run.started)
 --- stderr ---
 

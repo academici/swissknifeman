@@ -9,14 +9,14 @@ from aicore.state import ProjectContext, ProjectContextRequired, resolve_project
 
 
 def find(explicit: str | Path | None = None) -> ProjectContext | None:
-    """The project context of the working directory, or ``None`` (a named folder that does not exist is no project)."""
-    context = resolve_project(Path.cwd(), explicit=explicit)
-    return context if context is not None and context.root.is_dir() else None
+    """The project context of the working directory, or ``None`` without one. A named project that is not a directory
+    raises ``ProjectContextRequired``."""
+    return resolve_project(Path.cwd(), explicit=explicit)
 
 
 def require(explicit: str | Path | None = None) -> ProjectContext:
     """:func:`find`, or ``ProjectContextRequired`` (``PROJECT_CONTEXT_REQUIRED``) with the hint to pass ``--project DIR``."""
     context = find(explicit)
     if context is None:
-        raise ProjectContextRequired(explicit if explicit else Path.cwd())
+        raise ProjectContextRequired(Path.cwd())
     return context

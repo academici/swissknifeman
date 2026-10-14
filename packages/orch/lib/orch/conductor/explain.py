@@ -82,7 +82,7 @@ def _row(conductor: engine.Conductor, item: engine.Item, role: str, origin: str,
     except engine.Stop as stop:
         return {**row, **{key: (override or {}).get(key) for key in ("provider", "model_class", "effort")},
                 "available": False, "problem": f"{stop.code}: {stop.message}"}
-    problem = conductor._admit(item, role, route) if override else conductor.route_problem(route)
+    problem = conductor._admit(item, role, route)  # the rules of a run: start, gate, sandbox, and the minimum of the work
     return {**row, "provider": route["provider"], "model": route["model"], "model_class": route["model_class"],
             "effort": route["effort"], "transport": route["transport"], "available": problem is None,
             "problem": problem}
@@ -107,6 +107,8 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
                                    "omit --plan and --item to explain the configuration")
             run_id, doc = recorded
             claim["scenario"] = doc.get("scenario") or claim["scenario"]
+            if doc.get("claim_route"):
+                claim["route"] = doc["claim_route"]  # the class and effort the work requires of its executor
             conductor._resolve(item, persist=False)  # the policy of the scenario; the options are the recorded ones
             item.options, item.sources, origin = doc["options"], doc.get("sources") or {}, f"run {run_id}"
         else:
@@ -114,11 +116,12 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
         stages = [stage["role"] for stage in item.policy.get("stages", [])]
         rows = []
         stage = opts.stage_route(item.options, role)
-        if stage:
+        named = any(stage.get(key) for key in ("provider", "model", "model_class", "effort"))  # not a bare role entry
+        if named:
             rows.append(_row(conductor, item, role, "stages", item.sources.get(f"stages.{role}"), None))
         if role == "reviewer":
             rows.append(_row(conductor, item, role, "reviewer", item.sources.get("reviewer", DEFAULT_SOURCE), None))
-        elif not stage:
+        elif not named:
             layer = _provider_layer(conductor) if conductor.conductor.get("provider") else f"launch-catalog ({DEFAULT_SOURCE})"
             rows.append(_row(conductor, item, role, "orch.conductor" if conductor.conductor.get("provider")
                              else "launch-catalog", layer, None))
@@ -132,6 +135,10 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
             selected["sources"] = _field_sources(conductor, item, role)
             moved = next((note for note in item.route_notes if note["role"] == role), None)
             selected["moved"] = moved
+            problem = conductor._admit(item, role, route)  # what the preflight would refuse before any work
+            if problem:
+                code, _, message = problem.partition(": ")
+                stop = {"code": code, "message": message}
         except engine.Stop as error:
             stop = {"code": error.code, "message": error.message}
     except engine.Stop as error:

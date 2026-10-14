@@ -99,9 +99,22 @@ class SettingsCase(unittest.TestCase):
         work.mkdir(parents=True)
         self.assertEqual(find_project_root(self.env, work), (None, None))
         (home / ".claude").mkdir(exist_ok=True)
-        self.assertEqual(find_project_root(self.env, work), (home, ".claude"))
+        self.assertEqual(find_project_root(self.env, work), (home, ".claude/"))
         (home / "scratch" / ".git").mkdir()
         self.assertEqual(find_project_root(self.env, work), (home / "scratch", ".git"))
+        # a marker of the wrong kind does not stop the walk (a file named .claude, a directory named config.toml)
+        proj = home / "proj"
+        (proj / ".git").mkdir(parents=True)
+        mid = proj / "mid"
+        mid.mkdir()
+        (mid / ".claude").write_text("x")
+        self.assertEqual(find_project_root(self.env, mid), (proj, ".git"))
+        (mid / ".claude").unlink()
+        (mid / ".claude").mkdir()
+        self.assertEqual(find_project_root(self.env, mid), (mid, ".claude/"))
+        (mid / ".claude").rmdir()
+        (mid / ".swissknifeman" / "config.toml").mkdir(parents=True)
+        self.assertEqual(find_project_root(self.env, mid), (proj, ".git"))
         named = self.tmp / "named"
         named.mkdir()
         with mock.patch.dict(os.environ, {"SKM_PROJECT_ROOT": str(named)}):

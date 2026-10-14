@@ -1597,6 +1597,31 @@ class ProjectContextTests(ConductorCase):
         doc = self.run_doc(err)
         self.assertEqual((doc["project_resolution"], doc["working_directory"]), ("git", str(sub)))
 
+    def test_the_spawned_orch_works_in_the_project_of_the_flag_not_the_environment(self):
+        """Review finding: the child ``orch.py`` resolved the project again; with ``SKM_PROJECT_ROOT`` naming another
+        repository it wrote the claim there and the run stopped BRIEF_UNAVAILABLE."""
+        from aicore.ext import events as journal
+        decoy = self.project.parent / "decoy"
+        (decoy / ".git").mkdir(parents=True)
+        self.elsewhere()
+        with mock.patch.dict(os.environ, {"SKM_PROJECT_ROOT": str(decoy)}):
+            code, out, err = self.conduct("--project", self.project, "run", "--plan", "T", "--items", "W1", "--json-lines")
+        self.assertEqual(self.outcome(err)[0], "finished", err)
+        self.assertEqual(self.run_doc(err)["project_resolution"], "flag")
+        started = [e.data for e in journal.read_events(self.project)[0] if e.type == "orch.run.started"]
+        self.assertEqual([data["project_resolution"] for data in started], ["flag"])
+        self.assertFalse((decoy / ".swissknifeman").exists())
+
+    def test_a_named_project_that_is_not_a_folder_is_refused_with_its_own_message(self):
+        not_a_dir = self.project.parent / "file.txt"
+        not_a_dir.write_text("x", encoding="utf-8")
+        for named in (["--project", not_a_dir], []):
+            with mock.patch.dict(os.environ, {} if named else {"SKM_PROJECT_ROOT": str(not_a_dir)}):
+                code, out, err = self.conduct(*named, "status")
+            self.assertEqual(code, 1)
+            self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
+            self.assertIn("is not a directory", err)
+
     def test_a_project_that_is_not_a_git_repository_is_refused(self):
         plain = self.project.parent / "plain"
         plain.mkdir()
@@ -1661,6 +1686,27 @@ class RouteExplainTests(ConductorCase):
         found = self.explain("--role", "executor", "--plan", "T", "--item", "W1", "--scenario", self.scenario)
         self.assertTrue(found["source"].startswith("run cnd-"), found["source"])
         self.assertEqual(found["selected"]["provider"], "claude-code")
+
+    def test_the_recorded_minimum_of_the_work_is_applied(self):
+        self.set_items({"W1": {"route": {"class": "frontier", "effort": "high"}}})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(self.outcome(err), ("stopped", "ROUTE_UNDERSHOOT"), err)
+        found = self.explain("--role", "executor", "--plan", "T", "--item", "W1")
+        self.assertEqual(found["stop"]["code"], "ROUTE_UNDERSHOOT")
+        self.assertFalse(found["candidates"][0]["available"])
+
+    def test_the_sandbox_rule_of_the_preflight_is_applied_to_the_selected_route(self):
+        self.set_items({"W1": {"options": [{"source": "plan", "options": {"instructions": {"sandbox": "require"}}}]}})
+        self.write_config(argv={role: ["claude", "-p", "--tools", "Bash,Read"] for role in ROLES})
+        code, out, err = self.run_items("W1")
+        with mock.patch.object(engine.sandbox, "probe", return_value={"available": False, "reason": "no bwrap"}), \
+                mock.patch.object(engine.process, "available", return_value=True):
+            found = self.explain("--role", "executor", "--plan", "T", "--item", "W1")
+        self.assertEqual(found["stop"]["code"], "SANDBOX_UNAVAILABLE")
+
+    def test_a_bare_stage_entry_is_not_a_candidate_of_its_own(self):
+        found = self.explain("--role", "executor")
+        self.assertEqual([row["origin"] for row in found["candidates"]], ["orch.conductor"])
 
     def test_an_unknown_role_or_item_is_refused(self):
         from orch import cli as orch_cli

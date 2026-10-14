@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **orch, aicore, skiller:** fixes after the review of PLAN4 P3. The conductor passes `--project` and `--project-resolution` to the `orch.py` it starts (the run cycle no longer resolves the project again, so `SKM_PROJECT_ROOT` of another repository cannot receive the claim and the event reports the conductor's resolution); a named project that is not a directory is refused with its own message instead of being searched around (`find_project_root` still never raises); `resolve_project` markers can be typed `(name, "file"|"dir"|"any")` and skiller keeps its old kinds and the `.claude/` via; `route explain` applies the minimum class and effort recorded for the work, the sandbox rule of the preflight and drops bare stage entries from the candidates.
+
 ### Added
 
 - **orch:** digests of the configuration and of the options in the conductor run. `run.json` gets `config_digest` (effective `[orch]` and `[aicore.providers]`) and `config_layers` (`[{layer, file, present}]`); `<item>/options.json` gets `digest`; the data of `orch.run.started` gets `config_digest` and `project_resolution`, and that of the conductor's `orch.run.stage.finished` gets `options_digest` (optional fields of event-data/v1, with valid and invalid fixtures).

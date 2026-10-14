@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "16da01afab4c",
-  "reason": "PLAN4 P3.3: orch.py route explain в справке",
+  "captured_from": "c325ec04f7cb",
+  "reason": "PLAN4 P3 fix: --project-resolution в orch.py",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

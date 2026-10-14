@@ -99,5 +99,42 @@ class AgentRunTests(ConductorCase):
         self.assertEqual(agents.agent_id("cnd-x", 4), "agent-x-4")
 
 
+class SilentDenialTests(ConductorCase):
+    DENIED = [{"tool_name": "Bash", "tool_use_id": "t1", "tool_input": {"command": "make secret"}},
+              {"tool_name": "Bash", "tool_use_id": "t2", "tool_input": {}},
+              {"tool_name": "WebFetch", "tool_use_id": "t3", "tool_input": {}}]
+
+    def test_denied_tools_are_a_beacon_and_a_note_in_the_report_of_the_executor(self):
+        self.script({"executor": [dict(executor_ok("W1"), permission_denials=self.DENIED)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        beacons = [line for line in self.lines(err) if line.get("reason_code") == "RESULT_SILENT_DENIAL"]
+        self.assertEqual([(line["stage"], line["role"]) for line in beacons], [("executor.1", "executor")])
+        self.assertIn("Bash×2, WebFetch", beacons[0]["message"])
+        self.assertNotIn("secret", json.dumps(beacons))
+        notes = [issue for issue in self.source()["items"]["W1"]["report"]["open_issues"]
+                 if issue["text"].startswith("tools denied without a prompt")]
+        self.assertEqual(len(notes), 1)
+        self.assertEqual(notes[0]["text"], "tools denied without a prompt: Bash×2, WebFetch")
+        self.assertEqual((notes[0]["kind"], notes[0]["impact"]), ("note", "the role could not use them"))
+        self.assertIn("allowedTools", notes[0]["next"])
+        self.assertNotIn("secret", json.dumps(self.source()))
+
+    def test_a_reviewer_denial_is_a_beacon_only(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [dict(GREEN, permission_denials=self.DENIED[:1])]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        beacons = [line for line in self.lines(err) if line.get("reason_code") == "RESULT_SILENT_DENIAL"]
+        self.assertEqual([line["role"] for line in beacons], ["reviewer"])
+        issues = self.source()["items"]["W1"]["report"]["open_issues"]
+        self.assertFalse([issue for issue in issues if "denied" in issue["text"]])
+
+    def test_no_denials_no_beacon_no_note(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        _, _, err = self.run_items("W1")
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "RESULT_SILENT_DENIAL"])
+        self.assertEqual(self.source()["items"]["W1"]["report"]["open_issues"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

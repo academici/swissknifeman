@@ -46,6 +46,7 @@ class RoleRun:
     lingered: bool = False  # the final result was out but the process did not exit: it was reaped after the grace
     error_doc: Optional[dict] = None  # error/v1 of a failed role the rules of aicore recognize (``provider`` known)
     api_retries: int = 0  # how many times the provider CLI itself repeated the request (claude ``api_retry`` events)
+    denials: list = field(default_factory=list)  # ``[{tool_name}]``: tool calls refused without a prompt (never their input)
 
 
 def available(argv: list) -> bool:
@@ -69,17 +70,20 @@ def _usage(found: object) -> dict:
 
 
 def parse_stream(transport: str, data: str) -> dict:
-    """``{text, session, model, usage, is_error, signals}`` of a captured stdout.
+    """``{text, session, model, usage, is_error, signals, denials}`` of a captured stdout.
 
     ``is_error`` rests on ``result.is_error`` whatever its ``subtype`` (``success`` can come with ``is_error: true``)
     or on a codex ``turn.failed``; codex ``error`` events are notifications, not a failure. ``signals`` holds only the
-    normalized failure signals the stream gives (see ``aicore.provider.errors.SIGNAL_TYPES``).
+    normalized failure signals the stream gives (see ``aicore.provider.errors.SIGNAL_TYPES``). ``denials`` are the tool
+    calls Claude refused without asking (``--permission-prompts none``): the ``permission_denied`` system messages and
+    ``result.permission_denials``, once per ``tool_use_id``; only the tool name is kept, ``tool_input`` may hold secrets.
     """
     if transport == "text":
         return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
-                "is_error": False, "signals": {}}
+                "is_error": False, "signals": {}, "denials": []}
     found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False,
-             "signals": {}}
+             "signals": {}, "denials": []}
+    denied: dict = {}  # tool_use_id -> tool name, in order of first sight
     signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
     messages = []
     for raw in data.splitlines():
@@ -93,7 +97,11 @@ def parse_stream(transport: str, data: str) -> dict:
         if kind == "system" and doc.get("subtype") == "init":
             found["session"] = doc.get("session_id") or found["session"]
             found["model"] = doc.get("model") or found["model"]
+        elif kind == "system" and doc.get("subtype") == "permission_denied":
+            _deny(denied, doc)
         elif kind == "result":
+            for entry in doc.get("permission_denials") if isinstance(doc.get("permission_denials"), list) else []:
+                _deny(denied, entry)
             found["text"] = doc.get("result") if isinstance(doc.get("result"), str) else found["text"]
             found["session"] = doc.get("session_id") or found["session"]
             found["usage"] = _usage(doc.get("usage"))
@@ -134,6 +142,7 @@ def parse_stream(transport: str, data: str) -> dict:
             last = {"terminal": True}
             usage = _usage(doc.get("usage"))
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
+    found["denials"] = [{"tool_name": name} for name in denied.values()]
     if not found["text"] and messages:
         found["text"] = messages[-1]
     signals.update(last)
@@ -144,6 +153,13 @@ def parse_stream(transport: str, data: str) -> dict:
     if found["is_error"]:
         signals["is_error"] = True
     return found
+
+
+def _deny(denied: dict, doc: object) -> None:
+    """Note one refused tool call; the system message and the final result name the same call by ``tool_use_id``."""
+    if isinstance(doc, dict) and isinstance(doc.get("tool_name"), str) and doc["tool_name"]:
+        denied.setdefault(doc.get("tool_use_id") if isinstance(doc.get("tool_use_id"), str) else f"#{len(denied)}",
+                          doc["tool_name"])
 
 
 def _is_int(value: object) -> bool:
@@ -364,7 +380,7 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
                   usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered,
-                  api_retries=parsed["signals"].get("api_retries", 0))
+                  api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"])
     if lingered:
         run.exit = 0
     if (process.returncode != 0 and not lingered) or parsed["is_error"]:

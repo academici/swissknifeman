@@ -7,7 +7,7 @@ the working directory first; an absolute path is written as it is), ``run_comman
 the prompt, the way the registrar does) , ``exit`` and ``usage``. Failure shapes: ``stream`` (raw JSON lines printed before
 the result, for example ``api_retry`` system events and ``rate_limit_event``; each is a document or a string), ``stderr`` (text on
 stderr), ``is_error`` (the result is an error; its text is the answer text), ``api_error_status`` (put into the result),
-``codex`` (print the event stream of codex instead of claude's) and ``codex_failed`` (a message: codex ``turn.failed``
+``permission_denials`` (put into the result), ``codex`` (print the event stream of codex instead of claude's) and ``codex_failed`` (a message: codex ``turn.failed``
 instead of ``turn.completed``).
 Every call is counted and its prompt kept in ``$FAKE_ROLE_STATE/<role>-<n>.md``. The context-scout answers in plain
 text (the text transport); the other roles print stream-json like claude-code.
@@ -72,6 +72,8 @@ else:
     else:
         result = {"type": "result", "subtype": "success", "is_error": bool(answer.get("is_error")), "result": text,
                   "session_id": session, "usage": usage}
+        if "permission_denials" in answer:  # claude: calls refused without a prompt (--permission-prompts none)
+            result["permission_denials"] = answer["permission_denials"]
         if "api_error_status" in answer:
             result["api_error_status"] = answer["api_error_status"]
         print(json.dumps(result))

@@ -82,6 +82,25 @@ class FailureSignalTests(unittest.TestCase):
                          ("model_unavailable", "MODEL_UNAVAILABLE", "structured"))
         self.assertNotIn("nope-9", json.dumps(run.error_doc))
 
+    def test_denied_calls_are_counted_once_by_tool_use_id_and_keep_only_the_tool_name(self):
+        # claude --permission-prompts none: system permission_denied messages and result.permission_denials name the same calls
+        stream = "\n".join(json.dumps(doc) for doc in (
+            {"type": "system", "subtype": "permission_denied", "tool_name": "Grep", "tool_use_id": "toolu_1",
+             "decision_reason_type": "workingDir", "message": "Claude requested permissions to read /tmp/x"},
+            {"type": "result", "subtype": "success", "is_error": False, "result": "done", "usage": {},
+             "permission_denials": [{"tool_name": "Grep", "tool_use_id": "toolu_1", "tool_input": {"pattern": "SECRET"}},
+                                    {"tool_name": "Bash", "tool_use_id": "toolu_2", "tool_input": {"command": "rm x"}}]}))
+        parsed = process.parse_stream("jsonl", stream)
+        self.assertEqual(parsed["denials"], [{"tool_name": "Grep"}, {"tool_name": "Bash"}])
+        self.assertNotIn("SECRET", json.dumps(parsed["denials"]))
+        self.assertEqual(process.parse_stream("text", "x")["denials"], [])
+        self.assertEqual(process.parse_stream("jsonl", '{"type":"result","result":"ok","usage":{}}')["denials"], [])
+
+    def test_a_run_reports_its_denials(self):
+        run = self.run_fake({"result": {"verdict": "GREEN", "findings": []},
+                             "permission_denials": [{"tool_name": "Bash", "tool_use_id": "t1", "tool_input": {}}]})
+        self.assertEqual((run.error, run.denials), (None, [{"tool_name": "Bash"}]))
+
     def test_claude_is_error_with_exit_zero_is_still_a_failure(self):
         run = self.run_fake({"is_error": True, "api_error_status": 401, "text": "invalid key"})
         self.assertEqual((run.error, run.error_doc["code"]), ("ROLE_FAILED", "PROVIDER_AUTH"))

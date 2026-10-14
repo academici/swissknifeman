@@ -1196,6 +1196,17 @@ class Conductor:
         self._agent_end(handle)
         return doc, {**meta, "agent": handle["id"]}
 
+    DENIAL_NOTE_ROLES = ("executor", "bounded-implementer")
+
+    @staticmethod
+    def _denied(denials: list) -> str:
+        """``Bash×2, Grep``: the tools of the refused calls with their counts, most refused first."""
+        counts: dict = {}
+        for entry in denials:
+            counts[entry["tool_name"]] = counts.get(entry["tool_name"], 0) + 1
+        return ", ".join(name if number == 1 else f"{name}×{number}"
+                         for name, number in sorted(counts.items(), key=lambda row: (-row[1], row[0])))
+
     def _role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
                    extra: Optional[Callable[[dict], list]], cancel, handle: dict) -> tuple:
         """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None).
@@ -1210,7 +1221,7 @@ class Conductor:
         (item.directory / "prompts" / f"{key}.md").write_text(prompt, encoding="utf-8")
         attempt = 0
         first_prompt = prompt
-        trail = handle["trail"] = {"decisions": [], "error": None, "api_retries": 0}
+        trail = handle["trail"] = {"decisions": [], "error": None, "api_retries": 0, "denials": []}
         base = self._tree_mark() if self._writes(role) else None  # the tree this step started from
         route = self._start_route(item, key, role, route, cancel)
         while True:
@@ -1224,6 +1235,11 @@ class Conductor:
             self._tokens(item, run.usage)
             trail["api_retries"] += run.api_retries
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=handle["lingered"] or run.lingered)
+            if run.denials:  # a tool call refused without a prompt: the role could not do what it meant to
+                trail["denials"] += run.denials
+                self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
+                                   reason_code="RESULT_SILENT_DENIAL", agent=handle["id"],
+                                   message=f"{self._denied(run.denials)} denied without a prompt")
             if run.lingered:
                 self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
                                    reason_code="ROLE_LINGERED",
@@ -1251,6 +1267,11 @@ class Conductor:
                 if healed:
                     self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="RESULT_HEALED",
                                        message="; ".join(healed))
+                if trail["denials"] and kind == "stage-report" and role in self.DENIAL_NOTE_ROLES:
+                    doc = dict(doc, open_issues=list(doc.get("open_issues") or []) + [
+                        {"text": f"tools denied without a prompt: {self._denied(trail['denials'])}"[:900], "kind": "note",
+                         "impact": "the role could not use them",
+                         "next": "widen allowedTools in the launch catalog or change the plan"}])
                 return (doc if kind else run.text), meta
             item.state["retries_used"] = item.state.get("retries_used", 0) + 1  # the total of the piece, for the report
             by_stage = item.state.setdefault("retries_by_stage", {})

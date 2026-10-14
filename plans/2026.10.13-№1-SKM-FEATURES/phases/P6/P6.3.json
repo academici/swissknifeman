@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.3",
   "title": "RESULT_SILENT_DENIAL: permission_denials и permission_denied потока Claude → маяк и note в отчёте executor",
-  "status": "todo",
+  "status": "done",
   "summary": "process.parse_stream собирает denials (tool_name без tool_input); _role — маяк RESULT_SILENT_DENIAL и note-issue для пишущих ролей; фикстура потока; docs Beacons.",
   "why": "Аудит П5.3, E2: тихий отказ в headless — реальный риск. Риск: tool_input может содержать секреты — не сохранять.",
   "scope": {
@@ -80,6 +80,23 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:51:21Z"
+  "result": {
+    "started_at": "2026-10-14T11:30:43Z",
+    "finished_at": "2026-10-14T11:51:44Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "10bfd74b-2666-49dd-adce-d1e7a0bf145f"
+    },
+    "notes": "parse_stream collects permission_denied + result.permission_denials by tool_use_id (tool names only); RoleRun.denials; RESULT_SILENT_DENIAL beacon for any role; note issue for executor/bounded-implementer; tests (process, e2e), docs, CHANGELOG. V1 green.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T11:51:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T11:51:44Z"
 }

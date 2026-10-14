@@ -119,6 +119,23 @@ def check(root):
     return problems
 
 
+DEPRECATED_DECISIONS = ("DEPRECATE", "DELETE")
+
+
+def deprecated(root):
+    """Skills kept for compatibility only (D1: nothing is deleted): the audit decision is DEPRECATE or DELETE, or the
+    content lives elsewhere now (`replaced_by`). Rows `{id, decision, replaced_by}` sorted by id."""
+    rows = []
+    for skill_id, skill_dir in skill_ids(root).items():
+        document = read_sidecar(skill_dir)
+        if document is None:
+            continue
+        if document.get("decision") in DEPRECATED_DECISIONS or document.get("replaced_by"):
+            rows.append({"id": skill_id, "decision": document["decision"],
+                         "replaced_by": document.get("replaced_by")})
+    return rows
+
+
 def _summary(root):
     path = Path(root) / SUMMARY_FILE
     if not path.is_file():

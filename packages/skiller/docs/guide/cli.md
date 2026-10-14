@@ -70,6 +70,10 @@ skiller describe SKILL [--json]
 
 `SKILL` is a name or `bucket/rel`. An unknown skill exits 1. See [Skill metadata](./configuration#skill-metadata).
 
+### `skiller list --deprecated`
+
+Lists the skills kept for compatibility (nothing is deleted): the audit decision is `DEPRECATE` or `DELETE`, or the content lives elsewhere now (`selection.replaced_by`). `--json` prints `{"deprecated": [{id, decision, replaced_by}]}`. Plain `skiller list` still lists registered projects.
+
 ### `skiller select`
 
 The skills an orchestration role gets for a piece of work: a pure function over `skills.json` (the `selection` sidecars) and `configs/exclusive-groups.json`.

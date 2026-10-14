@@ -62,7 +62,7 @@ skiller sync              # apply → .claude/skills/ + skills-lock.json
 | front+arch | `figma-to-frontend` | frontend-figma + architect/figma-mcp-core |
 | architect | `agents-eval` · `api-data` · `system-design` · `compliance-security` | agents/rating · API/data · arch./stack/observability · security/compliance |
 | pm | `pm-discovery` · `pm-strategy` · `pm-delivery` · `pm-metrics` | BRD/PMF · GTM/monetization · PRD/roadmap · unit-economics |
-| general | `agent-context` · `agent-tasks` · `project-conventions` | context-discipline · task setting · project conventions |
+| general | `agent-context` · `agent-tasks` · `project-conventions` | empty, kept for projects that name it (its skills moved to the orchestration contracts, see `skiller list --deprecated`) · cross-layer checklist and issue breakdown · project conventions |
 | quality | `code-quality` · `testing-quality` | review/refactoring/debt · strategy/mutations/E2E |
 
 ## Add preset

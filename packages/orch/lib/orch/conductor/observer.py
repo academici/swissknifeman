@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 import time
 
-from orch.conductor import agents as agents_mod, progress as progress_mod
+from orch.conductor import agents as agents_mod, progress as progress_mod, questions as questions_mod
 
 IDLE_S = 30
 EVENT_TYPES = ("orch.run.*", "planner.*")
@@ -128,6 +128,7 @@ def build(directory: Path, project: Path) -> dict:
         "idle": {"total_s": round(idle_total, 1), "max_s": round(idle_max, 1), "max_between": idle_where},
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
         "tokens_by_agent": by_agent,
+        "open_questions": questions_mod.listing(directory, time.time()),
         "seconds_by_role": {role: round(value, 1) for role, value in sorted(seconds.items())},
         "scout_cache": {"runs": scout_runs, "hits": scout_hits},
         "items": items, "events": counts, "event_problems": problems,
@@ -169,6 +170,11 @@ def proposals(report: dict) -> list:
             found.append(f"{item['item']} is blocked: answer its escalation, then resume or run it again.")
         elif item["outcome"] == "stopped" and item.get("stop"):
             found.append(f"{item['item']} stopped with {item['stop']['code']}: fix the cause, then resume.")
+    overdue = [row for row in report.get("open_questions", []) if row["overdue"]]
+    if overdue:
+        found.append(f"{len(overdue)} question(s) wait for an answer past limits.question_warn_s: "
+                     + ", ".join(f"{row['item']} {row['id']}" for row in overdue)
+                     + "; conduct.py answer, then resume --retry.")
     tokens = report["tokens_by_role"]
     total = sum(value["input"] + value["output"] for value in tokens.values())
     for role, value in tokens.items():
@@ -209,6 +215,10 @@ def markdown(report: dict) -> str:
                   "| --- | --- | --- | --- | --- | --- |"]
         lines += [f"| {row['agent_run_id']} | {row['item']} | {row['role']} | {row['step']} | {row['status']} | "
                   f"{row['tokens']['input']}/{row['tokens']['output']} |" for row in report["tokens_by_agent"]]
+    if report.get("open_questions"):
+        lines += ["", "## Open questions", "", "| Item | Question | Revision | Age s | Overdue |", "| --- | --- | --- | --- | --- |"]
+        lines += [f"| {row['item']} | {row['id']}: {row['text']} | {row['revision']} | {row['age_s']} | "
+                  f"{'yes' if row['overdue'] else 'no'} |" for row in report["open_questions"]]
     lines += ["", "## Events", ""]
     lines += [f"- {name}: {count}" for name, count in report["events"].items()] or ["- none"]
     lines += [f"- not read: {problem}" for problem in report["event_problems"]]

@@ -32,6 +32,12 @@ A `deviation` issue also carries `class` (`write_set | spec_mismatch | test_env 
 `impact` and `outcome` (`accepted | follow_up | owner_decision`); any issue may add `severity` (`low | medium | high |
 critical`), `auto_fixable` (boolean) and `evidence` (a list of `path:line` or `V<n>`).
 
+Ask a question only when the work cannot go on without a decision, an approval or a credential that only the owner can
+give, and the input does not answer it. Put it in `questions`: `[{"id": "Q1", "revision": 1, "kind": "clarification |
+decision | approval | credential", "text": "…", "options": [{"id": "a", "label": "…"}], "default": "…", "blocking":
+true, "risk": "low | medium | high"}]`. A blocking question needs `status` `blocked` (and an `escalation` issue); a
+question with `"blocking": false` names what you `assumed` and you go on with it. `default` is only your proposal.
+
 `status` is `blocked` whenever the work needs something only the owner can give (a decision, a path outside
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
 thing as an `escalation` issue. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`
@@ -167,9 +173,19 @@ def _conductor_commands(input_doc: dict) -> str:
             + "\n".join(f"- `{command}`" for command in commands) + "\n")
 
 
+def _answers(answers) -> str:
+    """The "Answers" section: what the owner (or the policy) answered to the questions of earlier rounds."""
+    lines = []
+    for row in answers:
+        value = row["answer"] if isinstance(row["answer"], str) else json.dumps(row["answer"], ensure_ascii=False)
+        lines.append(f"- {row['id']}: {row['text']}\n  Answer: {value} (by {row['by']})")
+    return ("# Answers\n\nYou asked these questions in an earlier round; they are answered. Go on from the answers, keep "
+            "your earlier work in the tree, and do not ask them again.\n\n" + "\n".join(lines))
+
+
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
-             skill_texts=None, expected=None) -> str:
+             skill_texts=None, expected=None, answers=()) -> str:
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
     if scout_text:
         parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
@@ -184,6 +200,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append(_RUN_CHECKS)
     if rules:
         parts.append("## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))
+    if answers:
+        parts.append(_answers(answers))
     if correction:
         parts.append("## Correction\n\nYour previous attempt is in the working tree. Make exactly this correction, "
                      "inside the same scope" + (" and re-run the tests of what you touched" if targeted_tests

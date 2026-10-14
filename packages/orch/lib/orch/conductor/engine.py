@@ -39,7 +39,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_hex
 from orch import catalog as catalogs, events, launch, policies, render, retry, sandbox
 from orch import settings as settings_mod
 from orch.conductor import agents, checks as checks_mod, contract, gates, heal, observer, options as opts, process, prompts
-from orch.conductor import scope as scopes
+from orch.conductor import questions as questions_mod, scope as scopes
 from orch.conductor.progress import Progress, human_duration
 from orch.settings import ORCH_ROOT
 from orch.worksource import WorkSourceError
@@ -534,6 +534,7 @@ class Conductor:
             item.state["source_paths"] = sorted(set(self._dirty_paths()) - set(item.state.get("adopted") or []))
             self._save()
         self._resolve(item)
+        self._sync_questions(item)
         self._routes(item, persist=False)
         self._refuse_acp(item)  # before prepare: the binding would refuse an acp route with a less telling code
         item.launch_plan = self._step(item, "prepare", lambda: self._prepare(item))
@@ -1716,11 +1717,25 @@ class Conductor:
         return shown
 
     def _execute(self, item: Item, number: int, scout_text: str, correction: str) -> dict:
+        """One executor round. A blocking question is queued, denied or, with a default, answered by policy once and the
+        round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round."""
+        again = 0
+        while True:
+            key = f"executor.{number}" + (f"-q{again}" if again else "")
+            report = self._round(item, key, number, again > 0, scout_text, correction)
+            if report.get("questions") and f"executor.{number}-q{again + 1}" in item.state.get("steps", {}):
+                again += 1  # a resume walks the closed rounds again
+                continue
+            report, rerun = self._questioned(item, key, report)
+            if not rerun:
+                return report
+            again += 1
+
+    def _round(self, item: Item, key: str, number: int, refresh: bool, scout_text: str, correction: str) -> dict:
         route = item.routes["executor"]
-        key = f"executor.{number}"
 
         def run() -> dict:
-            if number > 1:
+            if number > 1 or refresh:
                 self._refresh_input(item)
             prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                       rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir,
@@ -1728,7 +1743,8 @@ class Conductor:
                                       skills=item.options["skills"].get("executor", []),
                                       repo_rules=self._repo_rules(item, "executor"),
                                       skill_texts=self._skill_texts(item, "executor"),
-                                      expected=item.state.get("expected"))
+                                      expected=item.state.get("expected"),
+                                      answers=questions_mod.answers_text(self._questions(item)))
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}
@@ -1741,6 +1757,75 @@ class Conductor:
             report = self._blocked(report, "OUTSIDE_WRITE_SET", "the executor changed paths the write set does not own: "
                                    + ", ".join(outside[:20]) + "; widen the write set in the plan or set them aside, then retry")
         return report
+
+    # ------------------------------------------------------------------ questions of the executor (D11)
+
+    def _questions(self, item: Item) -> dict:
+        return self.state.setdefault("questions", {}).setdefault(item.ref, {})
+
+    def _save_questions(self, item: Item) -> None:
+        store = self._questions(item)
+        self._save()
+        if store:
+            write_json(questions_mod.path(item.directory), questions_mod.document(self.run_id, item.ref, store))
+
+    def _questioned(self, item: Item, key: str, report: dict) -> tuple:
+        """``(report, rerun)``: the questions of a round recorded with their binding; a blocking one that waits turns the
+        report into a blocked one (``QUESTION`` or, under ``questions = deny``, ``QUESTION_DENIED``); ``rerun`` when
+        ``questions = defaults`` answered all of them from their defaults."""
+        asked = report.get("questions") or []
+        if not asked:
+            return report, False
+        store = self._questions(item)
+        binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest")}
+        questions_mod.record(store, asked, binding, utc_now())
+        waiting = questions_mod.blocking_open(store, asked)
+        mode = self.conductor.get("questions") or "queue"
+        if waiting and mode == "deny":
+            for entry in waiting:
+                entry["status"] = "denied"
+        elif waiting and mode == "defaults":
+            now = utc_now()
+            for entry in list(waiting):
+                if questions_mod.resolve_default(entry, now):
+                    waiting.remove(entry)
+                    self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DEFAULT",
+                                       message=f"question {entry['id']} answered by policy with its default")
+        self._save_questions(item)
+        if not waiting:
+            return report, any(entry["status"] == "applied" and entry["binding"]["step"] == key
+                               for entry in store.values())
+        said = "; ".join(f"{entry['id']} {entry['text']}" for entry in waiting)
+        if mode == "deny":
+            self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
+            return self._blocked(report, "QUESTION_DENIED", said), False
+        self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_QUEUED",
+                           message=f"{said[:240]}; answer with conduct.py answer, then resume --retry {item.ref}")
+        blocked = report
+        for entry in waiting:
+            blocked = self._blocked(blocked, "QUESTION", f"{entry['id']} {entry['text']}")
+        return blocked, False
+
+    def _sync_questions(self, item: Item) -> None:
+        """Take the answers written by ``conduct.py answer`` into the state and hand them to the executor, when the input
+        is still the one they were asked on; an answer to another input is stale, its question is asked again."""
+        store = self._questions(item)
+        if not store:
+            return
+        questions_mod.merge_file(store, questions_mod.read(item.directory))
+        applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), utc_now())
+        for name in applied:
+            self.progress.emit("info", item=item.ref, reason_code="QUESTION_ANSWERED",
+                               message=f"question {name} answered by {store[name]['resolution']['by']}")
+        for name in stale:
+            self.progress.emit("info", item=item.ref, reason_code="QUESTION_STALE",
+                               message=f"the answer to {name} was given for an earlier input and is not used; it is asked "
+                                       f"again as revision {store[name]['revision']}")
+        waiting = [name for name, entry in store.items() if entry["status"] == "open"]
+        if waiting:
+            self.progress.emit("info", item=item.ref, reason_code="QUESTION_OPEN",
+                               message=f"no answer yet to {', '.join(waiting)}")
+        self._save_questions(item)
 
     # ------------------------------------------------------------------ what the roles really changed
 
@@ -2089,9 +2174,13 @@ class Conductor:
         notes = self._notes(item)
         if notes:
             report = dict(report, open_issues=list(report.get("open_issues", [])) + notes)
+        assumed = [issue for issue in questions_mod.assumptions(self._questions(item))
+                   if issue not in report.get("open_issues", [])]
+        if assumed:
+            report = dict(report, open_issues=list(report.get("open_issues", [])) + assumed)
         status = report["status"]
         write_json(item.artifacts / "stage-report.json", report)
-        body = {key: value for key, value in report.items() if key != "status"}
+        body = {key: value for key, value in report.items() if key not in ("status", "questions")}
         if status != "blocked":
             body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]
         else:  # a blocked registration takes no deviation issue (the register verb pairs it with done_with_deviations)
@@ -2163,6 +2252,10 @@ def report_problems(report: dict) -> list:
         issues.append("/status: blocked needs an escalation issue naming what is missing")
     if report["status"] != "blocked" and "escalation" in kinds:
         issues.append("/open_issues: an escalation belongs to a blocked report")
+    if report["status"] != "blocked" and any(question["blocking"] for question in report.get("questions", [])):
+        issues.append("/questions: a blocking question belongs to a blocked report")
+    ids = [question["id"] for question in report.get("questions", [])]
+    issues += [f"/questions: id {name} repeats" for name in sorted(set(ids)) if ids.count(name) > 1]
     return issues
 
 

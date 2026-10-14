@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``conduct.py run|resume|settle|release|status|observe|gates``.
+"""Command line of the conductor: ``conduct.py run|resume|settle|release|status|observe|answer|questions|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -6,6 +6,7 @@ message`` on stderr), 2 usage, 130 interrupted (resume continues).
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 from pathlib import Path
 import sys
@@ -15,7 +16,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, gates, observer, progress
+from orch.conductor import agents, engine, gates, observer, progress, questions
 
 
 def _project(args):
@@ -92,6 +93,44 @@ def _network(conductor, role: str, route: dict, isolation: list, probed: dict) -
     elif route.get("provider") == "claude-code" and not conductor._claude_bash(route):
         by = "claude-tools"  # no shell tool: its commands cannot reach anything
     return {"declared": declared, "enforced": by is not None, "by": by}
+
+
+def _questions(args, project: Path) -> int:
+    """``answer``: write a resolution into ``questions.json`` of the piece (nothing else: the run is not touched);
+    ``questions``: the open questions with their age."""
+    run_id = args.run or _latest(project)
+    directory = engine.runs_root(project) / (run_id or "-")
+    if not run_id or not (directory / engine.RUN_FILE).is_file():
+        print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
+        return 1
+    if args.verb == "questions":
+        rows = questions.listing(directory, time.time())
+        if args.json:
+            print(json.dumps({"run": run_id, "questions": rows}, ensure_ascii=False, indent=2))
+            return 0
+        for row in rows:
+            print(f"{row['item']} {row['id']} (revision {row['revision']}, {row['kind']}): {row['text']} — "
+                  + ("answered, waits for resume; " if row["answered"] else "") + f"{row['age_s']} s"
+                  + (" OVERDUE" if row["overdue"] else ""))
+        if not rows:
+            print("no open questions")
+        return 0
+    folder = directory / engine.safe(args.item)
+    doc = questions.read(folder)
+    if doc is None:
+        print(f"QUESTION_UNKNOWN: {args.item} has no questions in run {run_id}", file=sys.stderr)
+        return 1
+    try:
+        entry = questions.answer(doc, args.question, option=args.option, text=args.text,
+                                 by=args.by or getpass.getuser(), now=engine.utc_now())
+    except questions.QuestionError as error:
+        print(f"{error.code}: {error.message}", file=sys.stderr)
+        return 1
+    engine.write_json(questions.path(folder), doc)
+    print(json.dumps({"run": run_id, "item": args.item, "question": entry["id"], "revision": entry["revision"],
+                      "resolution": entry["resolution"],
+                      "next": f"conduct.py resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
+    return 0
 
 
 def _gates(args) -> int:
@@ -177,6 +216,18 @@ def main(argv: list | None = None) -> int:
     observe = verbs.add_parser("observe", help="write the observer report of a run, or --follow a running one")
     observe.add_argument("--run", metavar="RUN")
     observe.add_argument("--follow", action="store_true")
+    answer = verbs.add_parser("answer", help="answer a question of the executor of a blocked piece (written into its "
+                                              "questions.json); resume --retry ITEM then gives the answer to the executor")
+    answer.add_argument("--run", required=True, metavar="RUN")
+    answer.add_argument("--item", required=True, metavar="REF")
+    answer.add_argument("--question", required=True, metavar="ID")
+    chosen = answer.add_mutually_exclusive_group(required=True)
+    chosen.add_argument("--option", metavar="ID", help="one of the options of the question")
+    chosen.add_argument("--text", help="a free answer (for a question without options, or a clarification)")
+    answer.add_argument("--by", metavar="WHO", help="who answers (default: the user of the shell)")
+    listed = verbs.add_parser("questions", help="open questions of a run and their age (default: the latest run)")
+    listed.add_argument("--run", metavar="RUN")
+    listed.add_argument("--json", action="store_true")
     gate_list = verbs.add_parser("gates", help="provider capacity gates of this machine (exhausted account quotas); "
                                                "--clear removes them")
     gate_list.add_argument("--json", action="store_true")
@@ -197,6 +248,8 @@ def main(argv: list | None = None) -> int:
     if context is None:
         return 1
     project = context.root
+    if args.verb in ("answer", "questions"):
+        return _questions(args, project)
     if args.verb in ("status", "observe"):
         run_id = args.run or _latest(project)
         directory = engine.runs_root(project) / (run_id or "-")

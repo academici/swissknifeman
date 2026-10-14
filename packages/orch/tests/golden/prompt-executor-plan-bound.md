@@ -29,6 +29,15 @@ choosing the next work belong to the coordinator and the registrar.
 - Stop and return when a condition in `escalation` occurs, or when the work needs a decision,
   a path outside `write_set`, an owner action or an external resource.
 
+## Questions
+
+Ask only when the work cannot go on without something only the owner can give (a decision, an approval, a
+credential, a clarification the input does not contain). Put the question in `questions` of the stage-report
+(`id`, `revision` 1, `kind`, `text`, `options`, `default`, `blocking`, `risk`). A blocking question comes with status
+`blocked` and an `escalation` issue; the run stops and your question is answered later (the answers reach you in a
+section `# Answers` of a later round: do not ask those again). A question that does not block names what you `assumed` and
+you go on with it. `default` is your proposal, not an assumption.
+
 ## You never
 
 - Read or edit plan source files, generated views or plan state; run plan lifecycle commands.

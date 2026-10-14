@@ -36,9 +36,9 @@
       "minLength": 1
     },
     "stage": {
-      "description": "Step key: the stage kind and its round, such as executor.1 or review.2.",
+      "description": "Step key: the stage kind and its round, such as executor.1 or review.2; executor.1-q1 is the round asked again after a question was answered by policy.",
       "type": "string",
-      "pattern": "^[a-z][a-z0-9-]*(\\.[0-9]+)?$"
+      "pattern": "^[a-z][a-z0-9-]*(\\.[0-9]+(-q[0-9]+)?)?$"
     },
     "role": {
       "description": "Role id, or deterministic.",

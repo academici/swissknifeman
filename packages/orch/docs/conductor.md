@@ -13,6 +13,8 @@ conduct.py [--config FILE] [--project DIR] run --input FILE [--commit] [--scenar
            [--quiet | --json-lines] [--model-catalog FILE]
 conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
 conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
+conduct.py answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
+conduct.py questions [--run RUN] [--json]
 conduct.py status [--run RUN] [--json]
 conduct.py observe [--run RUN] [--follow]
 conduct.py gates [--json] [--clear [PROVIDER]]
@@ -246,6 +248,34 @@ When the provider of a role is gated as the routes of a piece are chosen, the ro
 `fallback_routes` entry (`CAPACITY_GATED`, `ROUTE_FALLBACK`); without one the piece stops with `PROVIDER_QUOTA` before any
 work (an optional context scout is skipped instead, when its stage allows it).
 
+### Questions of the executor (D11)
+
+The executor asks in `stage-report.questions[]` (`id`, `revision` ≥ 1, `kind` `clarification|decision|approval|credential`,
+`text`, `options[{id,label}]?`, `answer_schema?`, `default?`, `blocking`, `assumed?`, `risk?`; `blocking: false` needs
+`assumed`). A question is a decision tied to a saved continuation, never a waiting process (headless roles have no
+stdin). `default` (a proposal), `assumed` (what the executor went on with) and a timeout are three different things:
+nothing is ever answered on a timeout.
+
+- `blocking: false`: an `assumption` issue "question Q: text — assumed: V" goes into the registered report; the work goes on.
+- `blocking: true` needs a `blocked` report (an `escalation` issue; a report that says otherwise is repaired or repeated).
+  `[orch.conductor] questions` decides (default `queue`):
+  `queue`: the piece is `blocked` with the escalation `QUESTION: <id> <text>` and the run stops with `ITEM_BLOCKED`;
+  `deny`: blocked at once with `QUESTION_DENIED: <id> <text>`, nobody is expected to answer;
+  `defaults`: a question with a `default` is answered by it **once**, by `policy`, and the round is asked again as
+  `executor.<n>-q<k>`; a question without one, or one the executor asks again, is queued.
+- The question is saved in `state.questions[<item>]` and in `<run>/<item>/questions.json` with its binding
+  `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
+  `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
+  `QUESTION_DENIED`, `QUESTION_DEFAULT`, `QUESTION_ANSWERED`, `QUESTION_OPEN` (retry without an answer), `QUESTION_STALE`.
+- `conduct.py answer` writes only the resolution into `questions.json` (`QUESTION_UNKNOWN`, `QUESTION_NOT_OPEN`,
+  `ANSWER_INVALID`: a decision takes one of its options, a clarification may take `--text`); it never touches the run.
+  `conduct.py questions [--run R] [--json]` lists the open ones with their age; one older than `limits.question_warn_s`
+  (default 1800, 0 off) is `OVERDUE`, in the observer report too.
+- `resume --run R --retry ITEM` merges the answers into the state. An answer is applied only while the input is the one the
+  question was asked on; otherwise it is `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
+  `revision + 1` and the executor, which is not told that answer, asks it again. The executor of every later round gets the
+  section `# Answers` (question, answer, who answered).
+
 ### Resume
 
 `resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
@@ -285,6 +315,8 @@ effect.
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `on_blocked` | `stop` or `report` |
+
+`limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its
 model stages, `review.triage`, `max_rounds`, `max_corrections`, `retries_budget`) → the layers of the work source (the
@@ -379,7 +411,7 @@ The `report-fixer` role runs on the conductor's provider by default (an economy 
 a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}` moves it, and `limits.repairs: 0` turns it off.
 
 `[orch.conductor]` (`configs/config.schema.json`): `provider` (default `claude-code`), `reviewer`
-(`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `limits.tokens_max`,
+(`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `questions` (`queue` default, `deny`, `defaults`), `limits.tokens_max`,
 `limits.stage_timeout_s`, `limits.check_timeout_s`, and `argv.<role>`: the command line of a role instead of the
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.

@@ -352,6 +352,10 @@
           "description": "A RUN_SLOW beacon (and one plan note) is printed every this many seconds of the ACTIVE time of a run (the segments of its processes: a resume a day later does not count the day); nothing is stopped; 0 switches it off; default 7200.",
           "type": "integer"
         },
+        "question_warn_s": {
+          "description": "A question of the executor that waits this many seconds for an answer is marked overdue by `conduct.py questions` and the observer; nothing is answered or stopped; 0 switches it off; default 1800.",
+          "type": "integer"
+        },
         "run_timeout_s": {
           "description": "Ceiling on the active time of a run in seconds: the current role is cancelled and the run stops with RUN_TIMEOUT (resume continues; raise the limit first); 0 (default) has none.",
           "type": "integer"

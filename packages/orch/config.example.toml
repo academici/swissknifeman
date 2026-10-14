@@ -47,6 +47,9 @@ schema_version = 1
 # What a blocked piece of work does to the run: stop it, or report it and go on. One of: "stop", "report".
 # on_blocked = "stop"
 
+# What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for conduct.py answer), deny (blocked QUESTION_DENIED, no answer expected) or defaults (a question with a default is answered by it once, by policy; without one it is queued). One of: "queue", "deny", "defaults".
+# questions = "queue"
+
 [orch.conductor.limits]
 # Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none. Integer >= 0.
 # tokens_max = 0

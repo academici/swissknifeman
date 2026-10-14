@@ -137,6 +137,16 @@
             "report"
           ]
         },
+        "questions": {
+          "type": "string",
+          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for conduct.py answer), deny (blocked QUESTION_DENIED, no answer expected) or defaults (a question with a default is answered by it once, by policy; without one it is queued).",
+          "default": "queue",
+          "enum": [
+            "queue",
+            "deny",
+            "defaults"
+          ]
+        },
         "limits": {
           "type": "object",
           "description": "Default limits of a run.",

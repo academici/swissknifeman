@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.4",
   "title": "Протокол вопросов (D11): stage-report.questions[], orch.conductor.questions queue|deny|defaults, questions.json с binding input_digest, conduct.py answer и questions, resume с QUESTION_STALE",
-  "status": "todo",
+  "status": "done",
   "summary": "Контракт и поведение по knowledge/p6-work#questions: схема stage-report (if/then assumed), config orch.conductor.questions и limits.question_warn_s, сохранение вопроса с binding, escalation QUESTION / QUESTION_DENIED, defaults один раз, conduct.py answer/questions, resume применяет ответ при совпадении digest, раздел # Answers в промпте executor; executor.md — когда задавать вопрос; e2e-тест.",
   "why": "Аудит П5.4, мысль 3, D11, research-2026-10-13#hitl. Риски: (1) ответ к устаревшему входу — binding и QUESTION_STALE; (2) defaults — не больше одного автоматического ответа на вопрос; (3) вопрос не держит процесс.",
   "scope": {
@@ -146,6 +146,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:51:22Z"
+  "result": {
+    "started_at": "2026-10-14T13:06:35Z",
+    "finished_at": "2026-10-14T13:29:28Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "b455794f-a801-4bf3-a97a-6a6172481e5a"
+    },
+    "notes": "questions[] in stage-report, orch.conductor.questions queue|deny|defaults, questions.py (binding, stale, defaults once), conduct.py answer/questions, resume --retry applies answers by input_digest, # Answers in executor prompt, limits.question_warn_s, observer; step key executor.N-qK (progress-line stage pattern widened); executor.json hash and golden prompt updated. V1 green (affected: orch, 3 bridges, hub), V2 green.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T13:29:28Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T13:29:28Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T13:29:28Z"
 }

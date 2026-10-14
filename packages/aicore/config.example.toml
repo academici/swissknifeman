@@ -78,3 +78,11 @@ schema_version = 1
 # Roll the provider surfaces out into the project. Boolean.
 # Allowed in layers: project.
 # enabled = <boolean>
+
+[aicore.providers.available]
+# Provider availability for routing by provider id. A provider that is not listed is available.
+# [aicore.providers.available.example]
+
+# Let orch route roles to the provider; false makes every route on it unavailable (PROVIDER_DISABLED). Delivery of provider surfaces (selection) is not affected. Boolean.
+# Allowed in layers: defaults, machine, invocation, flags.
+# enabled = true

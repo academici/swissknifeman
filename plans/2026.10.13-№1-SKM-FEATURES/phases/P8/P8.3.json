@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.3",
   "title": "Волна A без удаления: selection.json kind/replaced_by/DEPRECATE для мета-skills (аудит 3.2), routers и roles/*; пресеты agent-context и agent-tasks без них; skiller list --deprecated; harness laravel-subagents",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "По knowledge/p8-skills#wavea: kind и replaced_by для таблицы 3.2, router для super-skills, persona для roles/*; пресеты пересобраны; skiller list --deprecated; ссылки harness обновлены; golden P8.2 подтверждает отсутствие в included изолированных ролей.",
   "why": "Аудит П7.3, 2.6.7: пять слоёв мета-инструкций конкурируют за внимание сильной модели. Риск: удаление сломает проекты, включающие skill по имени — только deprecated (D1).",
   "scope": {
@@ -112,6 +112,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:54:12Z"
+  "result": {
+    "started_at": "2026-10-14T15:53:54Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0da2629f-5c4d-41fc-9bfc-ca2039bc857c"
+    }
+  },
+  "updated_at": "2026-10-14T15:53:54Z"
 }

@@ -1,13 +1,27 @@
 {
   "schema_version": "provider-errors/v1",
   "rules": [
-    {
-      "provider": "claude-code",
-      "class": "quota",
-      "code": "PROVIDER_QUOTA",
-      "scope": "account",
-      "safe_message": "provider quota exhausted",
-      "match": {"text_contains_any": ["session limit", "weekly limit"]}
-    }
+    {"provider": "claude-code", "class": "quota", "code": "PROVIDER_QUOTA", "scope": "account", "match": {"signal_not_in": {"limit_status": ["allowed", "allowed_warning"]}, "signal_any": {"is_error": [true]}}, "safe_message": "provider quota exhausted", "retry_after_from": "limit_resets_at"},
+    {"provider": "claude-code", "class": "authentication", "code": "PROVIDER_AUTH", "scope": "account", "match": {"signal_any": {"http_status": [401], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "authorization", "code": "PROVIDER_AUTHZ", "scope": "account", "match": {"signal_any": {"http_status": [403], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "rate_limit", "code": "PROVIDER_RATE_LIMIT", "scope": "account", "match": {"signal_any": {"http_status": [429], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "provider_internal", "code": "PROVIDER_OVERLOADED", "scope": "provider", "match": {"signal_any": {"http_status": [500, 502, 503, 529], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "model_unavailable", "code": "MODEL_UNAVAILABLE", "scope": "request", "match": {"signal_any": {"http_status": [404], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "authentication", "code": "PROVIDER_AUTH", "scope": "account", "match": {"signal_any": {"retry_category": ["authentication_failed", "cloud_credential_error"], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "authorization", "code": "PROVIDER_AUTHZ", "scope": "account", "match": {"signal_any": {"retry_category": ["oauth_org_not_allowed", "account_on_hold", "billing_error"], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "rate_limit", "code": "PROVIDER_RATE_LIMIT", "scope": "account", "match": {"signal_any": {"retry_category": ["rate_limit"], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "provider_internal", "code": "PROVIDER_OVERLOADED", "scope": "provider", "match": {"signal_any": {"retry_category": ["overloaded", "server_error"], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "model_unavailable", "code": "MODEL_UNAVAILABLE", "scope": "request", "match": {"signal_any": {"retry_category": ["model_not_found"], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "invalid_request", "code": "PROVIDER_INVALID_REQUEST", "scope": "request", "match": {"signal_any": {"retry_category": ["invalid_request"], "is_error": [true]}}},
+    {"provider": "claude-code", "class": "quota", "code": "PROVIDER_QUOTA", "scope": "account", "match": {"text_contains_any": ["session limit", "weekly limit"]}, "safe_message": "provider quota exhausted"},
+    {"provider": "codex", "class": "quota", "code": "PROVIDER_QUOTA", "scope": "account", "match": {"text_contains_any": ["You’ve hit your usage limit"]}},
+    {"provider": "codex", "class": "quota", "code": "PROVIDER_QUOTA", "scope": "account", "match": {"text_contains_any": ["Quota exceeded"]}},
+    {"provider": "codex", "class": "authorization", "code": "PROVIDER_AUTHZ", "scope": "account", "match": {"text_contains_any": ["To use Codex with your ChatGPT plan"]}},
+    {"provider": "codex", "class": "context_limit", "code": "PROVIDER_CONTEXT", "scope": "request", "match": {"text_contains_any": ["ran out of room in the model's context window"]}},
+    {"provider": "codex", "class": "model_unavailable", "code": "MODEL_UNAVAILABLE", "scope": "provider", "match": {"text_contains_any": ["Selected model is at capacity"]}},
+    {"provider": "codex", "class": "rate_limit", "code": "PROVIDER_RATE_LIMIT", "scope": "account", "match": {"text_contains_any": ["rate limit exceeded"]}},
+    {"provider": "codex", "class": "provider_internal", "code": "PROVIDER_OVERLOADED", "scope": "provider", "match": {"text_contains_any": ["experiencing high demand"]}},
+    {"provider": "codex", "class": "content_policy", "code": "PROVIDER_REFUSED", "scope": "request", "match": {"text_contains_any": ["reason: content_filter"]}},
+    {"provider": "codex", "class": "transport", "code": "PROVIDER_TRANSPORT", "scope": "provider", "match": {"text_contains_any": ["stream disconnected before completion"]}}
   ]
 }

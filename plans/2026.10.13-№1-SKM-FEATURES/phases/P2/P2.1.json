@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.1",
   "title": "aicore: classify_signals по нормализованным сигналам, правила signal_any/signal_not_in, evidence в error/v1, правила Claude и Codex из первичных источников",
-  "status": "todo",
+  "status": "done",
   "summary": "aicore.provider.errors: classify_signals(provider_id, signals, now, rules) и расширение match правил (signal_any, signal_not_in, retry_after_from); classify_failure остаётся обёрткой; error/v1 — необязательное evidence; provider-errors.json — правила таблицы knowledge/provider-errors#signals (структурные раньше текстовых) с источником в тесте каждого правила.",
   "why": "Аудит П1.1, 2.16, N2, E6, D7. Риск: правило без источника классифицирует чужую ошибку — каждое правило с тестом на точной строке/сигнале из документации или исходника.",
   "scope": {
@@ -82,6 +82,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P2.1/review-verdict.json",
+      "role": "output"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "Только stdlib; error/v1 и provider-errors/v1 меняются аддитивно",
@@ -115,6 +121,23 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:44:00Z"
+  "result": {
+    "started_at": "2026-10-14T02:32:44Z",
+    "finished_at": "2026-10-14T03:17:08Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "8f5319ab-6291-4ee5-aed3-9ecc37393022"
+    },
+    "notes": "classify_signals + signal_any/signal_not_in/retry_after_from + error/v1 evidence; 21 packaged rules (Claude structured, Codex text), each tested on its source string/signal; Grok review round 1: 6 findings reproduced, 5 fixed (is_error gate, terminal status first, typed not_in, empty maps, per-signal text, content_filter rule), 1 pre-existing text rule kept (note P2.5). Deviation: Claude 'prompt is too long' context rule not added (no primary source in the pack); changelog in packages/aicore/CHANGELOG.md and docs/architecture/contracts.md (aicore has no docs/).",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T03:17:08Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T03:17:08Z"
 }

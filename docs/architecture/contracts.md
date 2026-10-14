@@ -163,7 +163,14 @@ aicore schema is `aicore.util.schema`; the hub script `scripts/ecosystem-units.p
 `error` has twelve classes. `unknown` means the failure could not be classified; it is not the orchestration status
 `unknown_outcome` (the request may have been executed). The raw provider text never enters a record: `diagnostic_ref`
 points to an artifact. Classification is by data (`provider-errors.json`), and `aicore.provider` neither waits nor
-retries; the run policy decides. `capability-support` separates what a provider can do (`feature`) from what is
+retries; the run policy decides. The optional `evidence` (`structured` | `text`) tells what a classification rests on.
+`aicore.provider.errors.classify_signals(provider, signals, now=)` matches normalized signals (`exit_code`,
+`fatal_text`, `stderr_tail`, `is_error`, `http_status`, `retry_category`, `api_retries`, `limit_status`,
+`limit_window`, `limit_resets_at`, `terminal`; extracted by the orchestrator, never by aicore); a rule's `match` holds
+`text_contains_any` (compared with `fatal_text` and `stderr_tail`, case- and apostrophe-folded), `exit_code_any`,
+`signal_any` (one of the values) and `signal_not_in` (the signal is present and none of the values); an absent signal makes
+a condition false. A rule may set `retry_after_from: limit_resets_at` to date `retry_after_s`. A rule without a primary
+source in its test is not added. `capability-support` separates what a provider can do (`feature`) from what is
 available now (`resource`), allowed (`policy`) and working (`health`); only a feature can be `unsupported`.
 
 ### config-explain/v1 and module config sections

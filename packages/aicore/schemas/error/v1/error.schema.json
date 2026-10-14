@@ -45,6 +45,13 @@
       "type": "string",
       "minLength": 1,
       "description": "Reference to an artifact that holds the raw provider output; the text itself is never copied here."
+    },
+    "evidence": {
+      "enum": [
+        "structured",
+        "text"
+      ],
+      "description": "What the classification rests on: structured (a field of the provider stream, such as an HTTP status or a limit event) or text (a marker in the provider output). Structured evidence is stronger."
     }
   },
   "required": [

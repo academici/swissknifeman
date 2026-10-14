@@ -14,7 +14,7 @@ from orch import render
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
                 "triager": "triage-result"}
-_BLOCK = re.compile(r"(?P<fence>`{3,})(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
+_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+)?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 
 _STAGE_REPORT = """\
 End your answer with exactly one fenced block tagged `stage-report` holding one JSON object and nothing else:
@@ -87,6 +87,38 @@ def json_block(text: str, tag: str):
     return doc, None
 
 
+def write_set_block(text: str):
+    """``(document, error, shown)``: the JSON object of the last fenced ``write-set`` block of a scout answer (the
+    ``json write-set`` form is the same block), and the answer without its ``write-set`` blocks. No fallback to
+    another ``json`` block: a hint is only what the scout tagged as one."""
+    found = [match for match in _BLOCK.finditer(text or "") if match["tag"] == "write-set"]
+    if not found:
+        return None, "no fenced `write-set` block in the answer", text
+    shown = text
+    for match in reversed(found):
+        shown = shown[:match.start()] + shown[match.end():]
+    try:
+        doc = json.loads(found[-1]["body"])
+    except ValueError as error:
+        return None, f"the `write-set` block is not JSON: {error}", shown.rstrip() + "\n"
+    if not isinstance(doc, dict):
+        return None, "the `write-set` block is not a JSON object", shown.rstrip() + "\n"
+    return doc, None, shown.rstrip() + "\n"
+
+
+def _expected(expected: dict) -> str:
+    """The "Expected paths" section: the scout's hint, never a widening of the write set."""
+    def lines(rows):
+        return "\n".join(f"- `{row}`" for row in rows[:50]) + (f"\n- … {len(rows) - 50} more" if len(rows) > 50 else "")
+    parts = ["## Expected paths\n\nThe read-only scout expects the change to touch these. It is a hint: it does not widen "
+             "`scope.write_set`, and a path outside the write set stays a deviation."]
+    if expected.get("paths"):
+        parts.append("Paths:\n" + lines(expected["paths"]))
+    if expected.get("tests"):
+        parts.append("Tests:\n" + lines(expected["tests"]))
+    return "\n\n".join(parts)
+
+
 def _fence(text: str, tag: str = "") -> str:
     longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
     mark = "`" * max(3, longest + 1)
@@ -137,11 +169,13 @@ def _conductor_commands(input_doc: dict) -> str:
 
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
-             skill_texts=None) -> str:
+             skill_texts=None, expected=None) -> str:
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
     if scout_text:
         parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
                      + _fence(scout_text, "text"))
+    if expected and (expected.get("paths") or expected.get("tests")):
+        parts.append(_expected(expected))
     if targeted_tests:
         commands = _conductor_commands(input_doc)
         if commands:

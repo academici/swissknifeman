@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
   "title": "Подсказка write set: блок json write-set context-scout, раздел Expected paths у executor, class write_set для ожидаемых путей; plan.py check — write_set_no_tests",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "context-scout.md и схема scout-write-set; _scout извлекает блок (без блока — RESULT_HEALED); prompts.executor — раздел Expected paths; deviation о путях вне write set помечает ожидаемые; planner check — warning write_set_no_tests.",
   "why": "Аудит П4.2: 29% deviation PLAN3 — вне write set. Риск: подсказка не расширяет write set (авторизация плана не меняется).",
   "scope": {
@@ -109,6 +109,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:49:03Z"
+  "result": {
+    "started_at": "2026-10-14T09:29:23Z",
+    "finished_at": "2026-10-14T09:55:26Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "49b99fb7-8127-4a51-9732-3c393da4551b"
+    },
+    "notes": "scout-write-set schema+kind+fixtures; context-scout.md block; _hint takes it into state.expected (invalid/missing: RESULT_HEALED); executor 'Expected paths' section; outside-write-set deviation names expected paths; plan.py check write_set_no_tests; tests, docs, CHANGELOG. affected-tests green.",
+    "deviations": [
+      "fence tag 'json write-set' needed a fence-regex extension; extra files: docs, role manifest sha, fixtures, contract kinds"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T09:55:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T09:55:26Z"
 }

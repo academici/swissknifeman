@@ -49,7 +49,7 @@ Every step has a key and is recorded in `state.json` once it closes; the work so
 | claim | work source | `source claim` with a submission of this run; `--batch` claims the next ready piece each time |
 | `brief` | work source | `source brief`; the execution-input is read from the artifact store; the base revision is recorded |
 | `prepare` | orch | `source prepare` writes the launch-plan of the scenario's pack (routes, policy decision) |
-| `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map |
+| `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map; its optional closing ```` ```json write-set ```` block (`scout-write-set`: `paths`, `tests`) is taken out of the map into the executor's "Expected paths" section, a missing or invalid block is ignored with a `RESULT_HEALED` beacon, and the hint never widens `scope.write_set` |
 | `executor.N` | executor | the execution-input, the context map, the run rules, the repository rules of an isolated role and, for a correction, its package; returns a closed `stage-report`; the conductor then reads the changed paths from git |
 | `checks.N` | deterministic | every `acceptance`/`impact` command check of the cadences asked for, with a check-evidence file per check |
 | `review.N` | reviewer (default `grok/grok-4.7/high`) | read-only, the diff against the base and the check results; returns `review-findings` |
@@ -90,7 +90,7 @@ what the work source wrote when it claimed, the artifact folder, the plan folder
 reports. The union over the rounds is the `changed_paths` of the registered report and the paths of the commit (a
 correction round lists only its own paths; the conductor does not lose the first round's). Paths that
 `scope.write_set` does not own are, with `scope.outside: deviation` (default), listed to the reviewer, recorded as a
-`deviation` (`class: write_set`, `outcome: accepted`, `evidence`: the paths) and committed with the piece; with `block` the piece is blocked right after the executor
+`deviation` (`class: write_set`, `outcome: accepted`, `evidence`: the paths; the paths the scout expected are named in the text) and committed with the piece; with `block` the piece is blocked right after the executor
 (`OUTSIDE_WRITE_SET`).
 
 **A result outside its contract** goes through three steps: healing by rule (`heal.py`: one honest reading of a form

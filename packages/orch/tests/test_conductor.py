@@ -677,6 +677,42 @@ class ScopeTests(ConductorCase):
         self.assertIn("`docs/extra.md`", self.prompt("reviewer", 1))
         self.assertIn("docs/extra.md", self.source()["commits"][0]["paths"])
 
+    def test_the_scout_hint_reaches_the_executor_and_marks_the_expected_deviation(self):
+        hint = '```json write-set\n{"paths": ["docs/**"], "tests": ["tests/test_w1.py"]}\n```\n'
+        self.script({"context-scout": [{"text": "out/W1.txt — the output\nUnknowns:\n- none\n" + hint}],
+                     "executor": [{"write": {"out/W1.txt": "ok\n", "docs/extra.md": "x\n", "lib/other.py": "y\n"},
+                                   "result": report("W1")}], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        prompt = self.prompt("executor", 1)
+        self.assertIn("## Expected paths", prompt)
+        self.assertIn("- `docs/**`", prompt)
+        self.assertIn("- `tests/test_w1.py`", prompt)
+        self.assertIn("does not widen `scope.write_set`", prompt)
+        self.assertNotIn("write-set", prompt.split("## Context map", 1)[1].split("## Expected paths", 1)[0])
+        deviation = next(i for i in self.source()["items"]["W1"]["report"]["open_issues"] if i["kind"] == "deviation")
+        self.assertEqual((deviation["class"], deviation["evidence"]), ("write_set", ["docs/extra.md", "lib/other.py"]))
+        self.assertIn("expected by the scout: docs/extra.md", deviation["text"])
+        self.assertNotIn("lib/other.py", deviation["text"].split("expected by the scout:", 1)[1])
+
+    def ignored_hint(self, answer):
+        self.script({"context-scout": [{"text": answer}], "executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("## Expected paths", self.prompt("executor", 1))
+        beacons = [line for line in self.lines(err) if line.get("reason_code") == "RESULT_HEALED"
+                   and "write-set" in line["message"]]
+        self.assertEqual(len(beacons), 1, err)
+
+    def test_a_scout_without_a_hint_block_is_said_and_runs_on(self):
+        self.ignored_hint("out/W1.txt — the output\nUnknowns:\n- none\n")
+
+    def test_a_scout_hint_of_the_wrong_shape_is_ignored(self):
+        self.ignored_hint('x\n```json write-set\n{"paths": "docs/**", "tests": []}\n```\n')
+
+    def test_a_scout_hint_that_is_not_json_is_ignored(self):
+        self.ignored_hint('x\n```json write-set\n{not json}\n```\n')
+
     def test_scope_outside_block_stops_the_piece_right_after_the_executor(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"scope": {"outside": "block"}}}]}})
         self.script({"executor": [{"write": {"out/W1.txt": "ok\n", "docs/extra.md": "x\n"}, "result": report("W1")}]})

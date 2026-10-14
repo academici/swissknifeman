@@ -591,6 +591,35 @@ class AdvisoryTests(CheckCase):
         self.assertEqual([h.where.rsplit("/", 2)[-2] for h in hits], ["0"])
 
 
+class WriteSetNoTestsTests(CheckCase):
+    def hits(self, files, status=None):
+        def change(doc):
+            doc.update(reads=[], task_files=files)
+            if status:
+                doc["status"] = status
+        self.edit(P1 + "P1.2.json", change)
+        return [h for h in self.found("write_set_no_tests", level="warning") if "P1.2" in h.where]
+
+    def test_code_files_without_a_test_path_warn_once_for_the_item(self):
+        hits = self.hits([{"path": "lib/pkg/a.py", "change": "create"}, {"path": "lib/pkg/b.ts", "change": "create"}])
+        self.assertEqual(len(hits), 1, hits)
+        self.assertIn("lib/pkg/a.py", hits[0].message)
+
+    def test_a_test_path_among_the_task_files_silences_it(self):
+        for test in ("tests/test_a.py", "lib/pkg/test_a.py", "src/a.test.ts", "tests/Feature/AaTest.php", "tests/**"):
+            with self.subTest(test=test):
+                self.assertEqual(self.hits([{"path": "lib/pkg/a.py", "change": "create"},
+                                            {"path": test, "change": "any"}]), [])
+
+    def test_docs_data_and_test_only_items_do_not_warn(self):
+        self.assertEqual(self.hits([{"path": "docs/a.md", "change": "modify"}, {"path": "data/a.json", "change": "create"},
+                                    {"path": "tests/test_a.py", "change": "create"}]), [])
+        self.assertEqual(self.hits([{"path": "lib/pkg/gone.py", "change": "delete"}]), [])
+
+    def test_a_closed_item_is_not_warned_about(self):
+        self.assertEqual(self.hits([{"path": "lib/pkg/a.py", "change": "create"}], status="done"), [])
+
+
 class ContextScopeTests(CheckCase):
     def add_doc(self, doc_id, **extra):
         doc = {"$schema": "urn:swissknifeman:task:plan:document:v1", "id": doc_id, "title": doc_id, "sections": [{"id": "s", "title": "S", "text": "t"}], **extra}

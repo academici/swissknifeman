@@ -31,6 +31,15 @@ _TARGETED_EVENTS = frozenset({"start", "finish", "design_done", "phase_closed", 
 HEAVY_CHECK_MARKS = ("--tier all", "standalone --baseline", "test-integration.sh", "origin/", "ecosystem-units.py standalone",
                      "docs-impact.py --base", "schema compat --base")
 
+CODE_SUFFIXES = (".py", ".php", ".ts", ".js")
+
+
+def is_test_path(path: str) -> bool:
+    """A repository path that names tests: a ``tests/`` folder, ``test_*``, ``*.test.*`` or ``*Test.php``."""
+    name = path.rsplit("/", 1)[-1]
+    return "tests/" in f"/{path}" or name.startswith("test_") or ".test." in name or name.endswith("Test.php")
+
+
 class Issue(NamedTuple):
     level: str  # "error" | "warning"
     code: str
@@ -581,6 +590,19 @@ class _Context:
                         and not _GLOB.search(hint["path"]) and not self.exists(hint["path"])):
                     self.warn("modify_missing", f"{rel}/task_files/{index}/path",
                               f"{hint['path']} is marked modify but does not exist")
+            self.write_set_no_tests(key, item, rel)
+
+    def write_set_no_tests(self, key: str, item: dict, rel: str) -> None:
+        """Warn once when an open item's ``task_files`` create or modify code and name no test path."""
+        hints = [h for h in item.get("task_files", []) if isinstance(h, dict) and isinstance(h.get("path"), str)] \
+            if isinstance(item.get("task_files"), list) else []
+        if item.get("status") in TERMINAL or any(is_test_path(h["path"]) for h in hints):
+            return
+        code = [h["path"] for h in hints if h.get("change") in ("create", "modify") and h["path"].endswith(CODE_SUFFIXES)]
+        if code:
+            self.warn("write_set_no_tests", f"{rel}/task_files",
+                      f"task_files change code ({', '.join(code[:3])}{', …' if len(code) > 3 else ''}) "
+                      "but name no test path (tests/, test_*, *.test.*, *Test.php)")
 
     def read_targets(self) -> tuple[set[str], set[str]]:
         """Knowledge ids and decision ids that some item reads or (decisions) names, from plan data only."""

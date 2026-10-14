@@ -1602,7 +1602,21 @@ class Conductor:
 
         found = self._step(item, "scout", run, role="context-scout", route=self.label(route),
                            verdict=lambda result: "cache" if result.get("hit") else "mapped")
-        return found["text"]
+        return self._hint(item, found["text"])
+
+    def _hint(self, item: Item, text: str) -> str:
+        """The scout's ``write-set`` block taken out of its answer into ``state.expected`` (a hint for the executor and
+        for the deviation label); a missing or invalid block is ignored and said. Returns the answer without the block."""
+        doc, error, shown = prompts.write_set_block(text)
+        if doc is not None:
+            problems = contract.problems(doc, "scout-write-set")
+            if problems:
+                doc, error = None, "; ".join(problems[:3])
+        item.state["expected"] = doc
+        if doc is None:
+            self.progress.emit("info", item=item.ref, stage="scout", role="context-scout", reason_code="RESULT_HEALED",
+                               message=f"context-scout write-set hint ignored: {error}"[:300])
+        return shown
 
     def _execute(self, item: Item, number: int, scout_text: str, correction: str) -> dict:
         route = item.routes["executor"]
@@ -1616,7 +1630,8 @@ class Conductor:
                                       targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                       skills=item.options["skills"].get("executor", []),
                                       repo_rules=self._repo_rules(item, "executor"),
-                                      skill_texts=self._skill_texts(item, "executor"))
+                                      skill_texts=self._skill_texts(item, "executor"),
+                                      expected=item.state.get("expected"))
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}
@@ -1655,6 +1670,12 @@ class Conductor:
 
     def _outside(self, item: Item) -> list:
         return scopes.outside(self._changed(item), (item.input_doc.get("scope") or {}).get("write_set"))
+
+    @staticmethod
+    def _expected_outside(item: Item, outside: list) -> list:
+        """The paths outside the write set that the scout's hint (``state.expected``) names."""
+        patterns = [row for key in ("paths", "tests") for row in ((item.state.get("expected") or {}).get(key) or [])]
+        return [path for path in outside if any(scopes.matches(path, pattern) for pattern in patterns)]
 
     def _adopted(self, item: Item) -> list:
         """``run --adopt``: the changed paths taken over must lie in the write set of the piece. The artifact folder of
@@ -1960,7 +1981,9 @@ class Conductor:
             report = dict(report, changed_paths=changed)  # git, not the report of the last round
         outside = self._outside(item)
         if outside and report["status"] != "blocked":
-            issue = {"text": "changed outside the write set: " + ", ".join(outside)[:800], "kind": "deviation",
+            expected = self._expected_outside(item, outside)
+            note = f" (expected by the scout: {', '.join(expected)})"[:400] if expected else ""
+            issue = {"text": "changed outside the write set: " + ", ".join(outside)[:800] + note, "kind": "deviation",
                      "impact": "the commit takes these paths with the piece; the reviewer saw them",
                      "next": "widen the write set of later items like this one",
                      "class": "write_set", "outcome": "accepted", "evidence": list(outside)[:20]}

@@ -68,3 +68,48 @@ schema_version = 1
 # Command and arguments. Array of strings.
 # Allowed in layers: defaults, machine, invocation, flags.
 # example = []
+
+[orch.conductor.risk]
+# Changed lines past which the diff_size feature counts. Integer >= 1.
+# diff_lines = 400
+
+[orch.conductor.risk.weights]
+# A path of `patterns.public_cli` changed (a public command line). Integer >= 0 and <= 100.
+# public_cli = 25
+
+# A path of `patterns.schema` changed. Integer >= 0 and <= 100.
+# schema = 25
+
+# A path of `patterns.security` changed. Integer >= 0 and <= 100.
+# security = 30
+
+# A path of `patterns.shared` changed (a module others import). Integer >= 0 and <= 100.
+# shared = 15
+
+# More lines changed than `diff_lines`. Integer >= 0 and <= 100.
+# diff_size = 10
+
+# An acceptance check was red in the first executor round. Integer >= 0 and <= 100.
+# red_first = 10
+
+# The executor reported a deviation. Integer >= 0 and <= 100.
+# deviation = 10
+
+# Paths outside the write set changed. Integer >= 0 and <= 100.
+# outside_write_set = 15
+
+# The executor recommended a review (`review_recommendation.recommended`). Integer >= 0 and <= 100.
+# executor_recommended = 30
+
+[orch.conductor.risk.patterns]
+# Patterns of the public_cli feature. Array of strings.
+# public_cli = ["bin/**", "**/cli.py", "packages/*/scripts/*.py"]
+
+# Patterns of the schema feature. Array of strings.
+# schema = ["**/schemas/**", "**/migrations/**"]
+
+# Patterns of the security feature. Array of strings.
+# security = ["**/auth/**", "**/security/**", "**/permissions*", "**/*secret*"]
+
+# Patterns of the shared feature. Array of strings.
+# shared = ["packages/aicore/**"]

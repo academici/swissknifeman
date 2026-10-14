@@ -16,6 +16,7 @@ from aicore.config import ResolvedConfig, resolve
 from aicore.config.units import foundation_root
 from aicore.util import digest as _digest
 
+from orch.conductor import risk
 from orch.port import BINDINGS
 
 ORCH_ROOT = Path(__file__).resolve().parents[2]
@@ -77,6 +78,10 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "questions": resolved.get("conductor.questions"),
         "limits": {key: resolved.get(f"conductor.limits.{key}")
                    for key in ("tokens_max", "stage_timeout_s", "stage_idle_timeout_s", "check_timeout_s")},
+        "risk": {"weights": {key: resolved.get(f"conductor.risk.weights.{key}") for key in risk.DEFAULT_WEIGHTS},
+                 "patterns": {key: list(resolved.get(f"conductor.risk.patterns.{key}") or [])
+                              for key in risk.DEFAULT_PATTERNS},
+                 "diff_lines": resolved.get("conductor.risk.diff_lines")},
         "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
     }
 

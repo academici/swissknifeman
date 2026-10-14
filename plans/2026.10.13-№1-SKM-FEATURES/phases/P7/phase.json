@@ -57,5 +57,10 @@
       ],
       "mode": "recommended"
     }
-  ]
+  ],
+  "closed": {
+    "at": "2026-10-14T15:39:41Z",
+    "result": "done_with_deviations",
+    "summary": "2 item(s): 1 done, 1 done_with_deviations"
+  }
 }

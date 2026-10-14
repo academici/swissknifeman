@@ -33,6 +33,30 @@ def dirty(project: Path) -> list:
     return sorted(set(found))
 
 
+def diff_lines(project: Path, paths) -> int:
+    """Lines added and deleted in ``paths`` against HEAD, an untracked file counting all its lines."""
+    paths = sorted(set(paths))
+    if not paths:
+        return 0
+    total = 0
+    for row in checks_mod.git(project, "diff", "--numstat", "HEAD", "--", *paths).splitlines():
+        added, deleted = row.split("\t")[:2]
+        total += (int(added) if added.isdigit() else 0) + (int(deleted) if deleted.isdigit() else 0)  # "-": binary
+    for path in set(paths) & set(checks_mod.untracked(project)):
+        # like numstat of the staged file: a symlink is one line, a binary file none
+        file = project / path
+        if file.is_symlink():
+            total += 1
+            continue
+        try:
+            data = file.read_bytes()
+        except OSError:
+            continue
+        if b"\0" not in data[:8000]:
+            total += len(data.decode("utf-8", errors="replace").splitlines())
+    return total
+
+
 def _normal(pattern: str) -> str:
     parts = [part for part in str(pattern).split("/") if part and part != "."]
     return "/".join(parts) + ("/" if str(pattern).endswith("/") else "")

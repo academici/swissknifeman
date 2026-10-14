@@ -141,6 +141,14 @@
         "pre_final": {
           "description": "A review round after a correction is a pre-final audit that looks only for findings of correct_min_severity or higher. Default true.",
           "type": "boolean"
+        },
+        "dynamic": {
+          "description": "A piece whose run policy has no review gets one when its risk score ([orch.conductor.risk]) reaches dynamic_threshold after the executor round (beacon REVIEW_ADDED, risk.json). Default true; set false, with the reason in rules, to never add a review.",
+          "type": "boolean"
+        },
+        "dynamic_threshold": {
+          "description": "Risk score 0..100 at which a review is added. Default 60.",
+          "type": "integer"
         }
       },
       "required": [],

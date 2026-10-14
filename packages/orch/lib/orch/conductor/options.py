@@ -27,7 +27,8 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "run_warn_s": 7200, "run_timeout_s": 0, "review_rounds_batch": 0, "corrections_batch": 0,
                   "findings_batch": 0, "question_warn_s": 1800}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
-                  "audit_scope": "corrected"}
+                  "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60}
+REVIEW_BOUNDS = {"dynamic_threshold": (0, 100)}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
@@ -204,6 +205,9 @@ def limit_problems(layer: dict) -> list:
     for key, value in (layer.get("checks") or {}).items():
         if key in CHECKS_BOUNDS and not CHECKS_BOUNDS[key][0] <= value <= CHECKS_BOUNDS[key][1]:
             issues.append(f"/checks/{key}: {value} is outside {CHECKS_BOUNDS[key][0]}..{CHECKS_BOUNDS[key][1]}")
+    for key, value in (layer.get("review") or {}).items():
+        if key in REVIEW_BOUNDS and not REVIEW_BOUNDS[key][0] <= value <= REVIEW_BOUNDS[key][1]:
+            issues.append(f"/review/{key}: {value} is outside {REVIEW_BOUNDS[key][0]}..{REVIEW_BOUNDS[key][1]}")
     return issues
 
 

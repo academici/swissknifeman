@@ -198,6 +198,150 @@
               ]
             }
           }
+        },
+        "risk": {
+          "type": "object",
+          "description": "The risk score of a piece after its executor round (P7.2): a piece whose run policy has no review gets one when the score reaches `review.dynamic_threshold` of the run options. Weights add up (capped at 100); a weight of 0 turns a feature off.",
+          "additionalProperties": false,
+          "properties": {
+            "weights": {
+              "type": "object",
+              "description": "Weight of each feature.",
+              "additionalProperties": false,
+              "properties": {
+                "public_cli": {
+                  "type": "integer",
+                  "description": "A path of `patterns.public_cli` changed (a public command line).",
+                  "default": 25,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "schema": {
+                  "type": "integer",
+                  "description": "A path of `patterns.schema` changed.",
+                  "default": 25,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "security": {
+                  "type": "integer",
+                  "description": "A path of `patterns.security` changed.",
+                  "default": 30,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "shared": {
+                  "type": "integer",
+                  "description": "A path of `patterns.shared` changed (a module others import).",
+                  "default": 15,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "diff_size": {
+                  "type": "integer",
+                  "description": "More lines changed than `diff_lines`.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "red_first": {
+                  "type": "integer",
+                  "description": "An acceptance check was red in the first executor round.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "deviation": {
+                  "type": "integer",
+                  "description": "The executor reported a deviation.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "outside_write_set": {
+                  "type": "integer",
+                  "description": "Paths outside the write set changed.",
+                  "default": 15,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "executor_recommended": {
+                  "type": "integer",
+                  "description": "The executor recommended a review (`review_recommendation.recommended`).",
+                  "default": 30,
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            },
+            "patterns": {
+              "type": "object",
+              "description": "Repository path patterns of the features (`*` inside a segment, `**` any segments, a trailing `/` owns everything below).",
+              "additionalProperties": false,
+              "properties": {
+                "public_cli": {
+                  "type": "array",
+                  "description": "Patterns of the public_cli feature.",
+                  "default": [
+                    "bin/**",
+                    "**/cli.py",
+                    "packages/*/scripts/*.py"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "schema": {
+                  "type": "array",
+                  "description": "Patterns of the schema feature.",
+                  "default": [
+                    "**/schemas/**",
+                    "**/migrations/**"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "security": {
+                  "type": "array",
+                  "description": "Patterns of the security feature.",
+                  "default": [
+                    "**/auth/**",
+                    "**/security/**",
+                    "**/permissions*",
+                    "**/*secret*"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "shared": {
+                  "type": "array",
+                  "description": "Patterns of the shared feature.",
+                  "default": [
+                    "packages/aicore/**"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                }
+              }
+            },
+            "diff_lines": {
+              "type": "integer",
+              "description": "Changed lines past which the diff_size feature counts.",
+              "default": 400,
+              "minimum": 1
+            }
+          }
         }
       }
     }

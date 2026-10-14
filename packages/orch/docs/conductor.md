@@ -264,6 +264,34 @@ and a plan note "deviation fixed in correction N: …"; when the executor report
 registered as the executor reported it. That the change is safe (no public interface, no product decision, no security
 boundary) is the declaration of the role (`roles/executor.md`): the conductor checks only the write set and the checks.
 
+### Dynamic review (risk score)
+
+A pack without review (`solo`, `scout-solo`) still gets one for a risky piece. After the executor and check rounds the
+engine collects facts (`risk.py` is a pure function, no model is asked): the changed paths (git), the paths outside
+the write set, the changed lines, a red check in the first round, a deviation (reported or auto-fixed) and
+`review_recommendation.recommended` of the executor. `risk.score(facts, config)` adds the weights of the features
+that hold, at most 100:
+
+| Feature | Holds when | Weight |
+| --- | --- | --- |
+| `public_cli` | a path matches `patterns.public_cli` (`bin/**`, `**/cli.py`, `packages/*/scripts/*.py`) | 25 |
+| `schema` | `patterns.schema` (`**/schemas/**`, `**/migrations/**`) | 25 |
+| `security` | `patterns.security` (`**/auth/**`, `**/security/**`, `**/permissions*`, `**/*secret*`) | 30 |
+| `shared` | `patterns.shared` (`packages/aicore/**`) | 15 |
+| `diff_size` | more than `diff_lines` (400) changed lines | 10 |
+| `red_first` | an acceptance check was red in the first round | 10 |
+| `deviation` | a deviation | 10 |
+| `outside_write_set` | paths outside the write set | 15 |
+| `executor_recommended` | the executor recommended a review | 30 |
+
+`[orch.conductor.risk]` (`weights.<feature>`, `patterns.<feature>`, `diff_lines`) changes them in any config layer; a
+weight of 0 turns a feature off. Score and features (with their evidence) go to `<run>/<item>/risk.json` and
+`state.risk`; a resume reads them again. At `review.dynamic_threshold` (default 60) `state.dynamic_review` is set, the
+`reviewer` and the triage role are resolved on the spot (availability, gate, preflight, `routes.json`), the beacon
+`REVIEW_ADDED` and a plan note name the score and the features, and the usual review → triage → correction cycle runs
+within the limits. Below the threshold nothing changes. `review.dynamic: false` (give the reason in `rules`) or
+`limits.review_rounds: 0` never adds a review; a pack with a review is not scored.
+
 ### Questions of the executor (D11)
 
 The executor asks in `stage-report.questions[]` (`id`, `revision` ≥ 1, `kind` `clarification|decision|approval|credential`,
@@ -326,7 +354,7 @@ effect.
 | `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`); `module_rules` (default `["module-folders", "module-boundaries", "engineering-invariants"]`: the instruction sections, by the last part of their `## <scope>.<name>` heading, that a role still gets from the CLAUDE.md or AGENTS.md of the root and of every folder on the way to a write-set path, as a short Repository rules block). An isolated role gets the text of its `skills` in the prompt, because its provider loads none by name; `sandbox` (`off` \| `prefer` default \| `require`: the provider sandbox for shell commands, see Sandboxes) and `sandbox_domains` (default `[]`: the domains a sandboxed Claude Code role may reach) |
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set` |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
-| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60) |
 | `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s` |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
@@ -427,7 +455,7 @@ The `report-fixer` role runs on the conductor's provider by default (an economy 
 a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}` moves it, and `limits.repairs: 0` turns it off.
 
 `[orch.conductor]` (`configs/config.schema.json`): `provider` (default `claude-code`), `reviewer`
-(`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `questions` (`queue` default, `deny`, `defaults`), `limits.tokens_max`,
+(`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `questions` (`queue` default, `deny`, `defaults`), `risk` (weights, patterns and `diff_lines` of the dynamic review), `limits.tokens_max`,
 `limits.stage_timeout_s`, `limits.check_timeout_s`, and `argv.<role>`: the command line of a role instead of the
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.

@@ -39,7 +39,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_hex
 from orch import catalog as catalogs, events, launch, policies, render, retry, sandbox
 from orch import settings as settings_mod
 from orch.conductor import agents, checks as checks_mod, contract, gates, heal, observer, options as opts, process, prompts
-from orch.conductor import questions as questions_mod, scope as scopes
+from orch.conductor import questions as questions_mod, risk as risk_mod, scope as scopes
 from orch.conductor.progress import Progress, human_duration
 from orch.settings import ORCH_ROOT
 from orch.worksource import WorkSourceError
@@ -558,7 +558,8 @@ class Conductor:
         rows, report, round_no = self._green(item, rows, report, round_no, scout_text, 1 if overlap else None)
         if report["status"] == "blocked":
             return self._finish(item, report, rows)
-        if self._review_enabled(item):
+        self._dynamic_review(item, report)
+        if self._reviewing(item):
             review_round, earlier = 1, None
             while True:
                 findings = self._review(item, review_round, rows)
@@ -921,7 +922,7 @@ class Conductor:
         roles = ["executor"]
         if self._scout_stage(item) is not None:
             roles.insert(0, "context-scout")
-        if self._review_enabled(item):
+        if self._reviewing(item):
             roles += ["reviewer", self._triage_role(item)]
         if self._closer_named(item):
             roles.append("registrar")
@@ -2102,6 +2103,66 @@ class Conductor:
     def _review_enabled(self, item: Item) -> bool:
         review = item.policy.get("review") or {}
         return bool(review.get("enabled")) and item.options["limits"]["review_rounds"] > 0
+
+    def _reviewing(self, item: Item) -> bool:
+        """The run policy asks for a review, or the risk score of the piece added one (``state.dynamic_review``)."""
+        return self._review_enabled(item) or bool(item.state.get("dynamic_review"))
+
+    def _dynamic_review(self, item: Item, report: dict) -> None:
+        """P7.2: a piece whose policy has no review gets one when its risk score reaches ``review.dynamic_threshold``.
+        The score is computed once from the facts after the executor and check rounds and kept in ``state.risk`` and
+        ``<item>/risk.json``; a resume reads it again instead of asking the tree."""
+        review, limits = item.options["review"], item.options["limits"]
+        if self._review_enabled(item) or not review["dynamic"] or limits["review_rounds"] <= 0:
+            return
+        found = item.state.get("risk")
+        if found is None:
+            facts = self._risk_facts(item, report)
+            found = dict(risk_mod.score(facts, self.conductor.get("risk")), facts=facts,
+                         threshold=review["dynamic_threshold"])
+            found["added"] = found["score"] >= found["threshold"]
+            item.state["risk"] = found
+            if found["added"]:
+                item.state["dynamic_review"] = True
+            self._save()
+        write_json(item.directory / "risk.json", dict(found, item=item.ref, run=self.run_id))
+        if not found["added"] or found.get("announced"):
+            return
+        if not item.routes.get("reviewer"):
+            for role in ("reviewer", self._triage_role(item)):
+                item.routes[role] = self._selected(item, role, True)
+            self._route_minimum(item)
+            self._preflight(item)
+            write_json(item.directory / "routes.json", item.routes)
+        names = ", ".join(f"{row['name']}+{row['weight']}" for row in found["features"])
+        text = (f"risk score {found['score']} reached {found['threshold']} ({names}); the policy has no review, "
+                "so a review and its triage were added")
+        self.progress.emit("info", item=item.ref, reason_code="REVIEW_ADDED", message=text)
+        self._plan_note(item, text)
+        found["announced"] = True  # a stop at the preflight above leaves it open: the resume announces it
+        self._save()
+
+    @staticmethod
+    def _first_checks(steps: dict) -> list:
+        """The rows of the first check round that ran (an auto-fix round can come before ``checks.1``)."""
+        rounds = sorted(int(key.split(".", 1)[1]) for key in steps if key.startswith("checks.") and key[7:].isdigit())
+        return (steps.get(f"checks.{rounds[0]}") or {}).get("result") or [] if rounds else []
+
+    @staticmethod
+    def _recommended(steps: dict) -> bool:
+        """Any executor round advised a review: a later round that omits the optional field does not take it back."""
+        return any(bool(((step.get("result") or {}).get("report") or {}).get("review_recommendation", {}).get("recommended"))
+                   for key, step in steps.items() if key.startswith("executor.") and isinstance(step.get("result"), dict))
+
+    def _risk_facts(self, item: Item, report: dict) -> dict:
+        changed = self._changed(item)
+        steps = item.state.get("steps", {})
+        return {"changed": changed, "outside": self._outside(item), "diff_lines": scopes.diff_lines(self.project, changed),
+                "red_first": any(not row.get("green") and not row.get("skipped") for row in self._first_checks(steps)),
+                "deviation": bool(item.state.get("autofixed")) or any(
+                    issue.get("kind") == "deviation" for issue in report.get("open_issues", [])),
+                "recommended": self._recommended(steps)
+                or bool((report.get("review_recommendation") or {}).get("recommended"))}
 
     @staticmethod
     def _closer_named(item: Item) -> bool:

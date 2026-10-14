@@ -1070,6 +1070,113 @@ class SoloTests(ConductorCase):
         self.assertFalse((self.project / "plans/T/artifacts/W1/review-verdict.json").exists())
 
 
+class DynamicReviewTests(ConductorCase):
+    """P7.2: a piece of a pack without review gets one when its risk score reaches the threshold."""
+
+    scenario = "scout-solo"
+    SCHEMA = {"write": {"out/W1.txt": "ok\n", "out/schemas/W1.json": "{}\n"},
+              "result": report("W1", changed_paths=["out/W1.txt", "out/schemas/W1.json"])}
+
+    def piece(self, options=None, extra: str = "") -> None:
+        self.write_config(extra=extra)
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "out/schemas/*.json"],
+                               **({"options": [{"source": "item:W1", "options": options}]} if options else {})}})
+
+    def risk(self, err: str) -> dict:
+        return json.loads((self.run_dir(err) / "W1" / "risk.json").read_text(encoding="utf-8"))
+
+    def test_a_schema_change_at_the_threshold_adds_the_review_and_leaves_risk_json(self):
+        self.piece(extra="[orch.conductor.risk.weights]\nschema = 70")
+        self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual((self.calls("reviewer"), self.calls("triager")), (1, 0))
+        found = self.risk(err)
+        self.assertEqual((found["score"], found["added"], found["threshold"]), (70, True, 60))
+        self.assertEqual([row["name"] for row in found["features"]], ["schema"])
+        self.assertTrue(self.state(err)["items"]["W1"]["dynamic_review"])
+        added = [line for line in self.lines(err) if line.get("reason_code") == "REVIEW_ADDED"]
+        self.assertEqual(len(added), 1, err)
+        self.assertIn("schema+70", added[0]["message"])
+        self.assertTrue(json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())["reviewer"])
+        self.assertTrue((self.project / "plans/T/artifacts/W1/review-verdict.json").exists())
+        notes = [issue["text"] for issue in self.source()["items"]["W1"]["report"]["open_issues"]]
+        self.assertTrue([text for text in notes if "risk score 70" in text], notes)
+
+    def test_below_the_threshold_no_review_runs_and_the_score_is_still_kept(self):
+        self.piece()  # schema weighs 25 by default
+        self.script({"executor": [self.SCHEMA]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.calls("reviewer"), 0)
+        found = self.risk(err)
+        self.assertEqual((found["score"], found["added"]), (25, False))
+        self.assertEqual([line for line in self.lines(err) if line.get("reason_code") == "REVIEW_ADDED"], [])
+        self.assertNotIn("dynamic_review", self.state(err)["items"]["W1"])
+
+    def test_the_threshold_of_the_options_moves_the_line(self):
+        self.piece({"review": {"dynamic_threshold": 25}})
+        self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 1), err)
+
+    def test_dynamic_false_never_adds_a_review(self):
+        self.piece({"review": {"dynamic": False}}, extra="[orch.conductor.risk.weights]\nschema = 100")
+        self.script({"executor": [self.SCHEMA]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 0), err)
+        self.assertFalse((self.run_dir(err) / "W1" / "risk.json").exists())
+
+    def test_a_pack_with_review_is_not_scored(self):
+        self.scenario = "full"
+        self.piece(extra="[orch.conductor.risk.weights]\nschema = 100")
+        self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 1), err)
+        self.assertFalse((self.run_dir(err) / "W1" / "risk.json").exists())
+
+    def test_red_first_and_a_recommendation_of_the_first_round_count_though_a_correction_omits_it(self):
+        advice = {"recommended": True, "reason_codes": ["low_confidence"]}
+        later = {"write": {"out/W1.txt": "ok\n", "out/auth/a.py": "x = 1\n"},
+                 "result": report("W1", changed_paths=["out/W1.txt", "out/auth/a.py"])}
+        first = {"result": report("W1", changed_paths=[], review_recommendation=advice)}  # the file is missing: V1 is red
+        self.write_config()
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "out/auth/*.py"]}})
+        self.script({"executor": [first, later], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        found = self.risk(err)
+        self.assertEqual(sorted(row["name"] for row in found["features"]),
+                         ["executor_recommended", "red_first", "security"])
+        self.assertEqual((found["score"], self.calls("reviewer")), (70, 1))
+
+    def test_the_first_check_round_is_the_lowest_one_that_ran(self):
+        steps = {"checks.2": {"result": [{"id": "V1", "green": False}]}, "checks.3": {"result": [{"id": "V1", "green": True}]},
+                 "executor.1": {}}  # an auto-fix round took number 1 before any checks
+        self.assertEqual(engine.Conductor._first_checks(steps), [{"id": "V1", "green": False}])
+        self.assertEqual(engine.Conductor._first_checks({}), [])
+
+    def test_a_resume_after_a_stop_at_the_preflight_still_announces_the_added_review(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] if role != "reviewer"
+                           else ["/nonexistent/reviewer-cli"] for role in ROLES},
+                          extra="[orch.conductor.risk.weights]\nschema = 70")
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "out/schemas/*.json"]}})
+        self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_UNAVAILABLE")), err)
+        self.assertEqual([line for line in self.lines(err) if line.get("reason_code") == "REVIEW_ADDED"], [])
+        self.write_config(extra="[orch.conductor.risk.weights]\nschema = 70")
+        code, _, err2 = self.conduct("resume", "--run", self.run_dir(err).name, "--json-lines")
+        self.assertEqual((code, self.calls("reviewer")), (0, 1), err2)
+        self.assertEqual(len([line for line in self.lines(err2) if line.get("reason_code") == "REVIEW_ADDED"]), 1)
+        notes = [issue["text"] for issue in self.source()["items"]["W1"]["report"]["open_issues"]]
+        self.assertTrue([text for text in notes if "risk score 70" in text], notes)
+
+    def test_the_threshold_stays_inside_0_to_100(self):
+        self.assertEqual(opts.limit_problems({"review": {"dynamic_threshold": 100}}), [])
+        self.assertEqual(len(opts.limit_problems({"review": {"dynamic_threshold": 101}})), 1)
+
+
 class ClosingTests(ConductorCase):
     """A layer of the options that names the registrar adds the closing stage: a model records the result."""
 

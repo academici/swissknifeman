@@ -362,6 +362,7 @@ effect.
 | `on_blocked` | `stop` or `report` |
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
+`limits.skill_tokens_max` (default 5000; 0 off) is the largest text of one skill that an isolated role gets in its prompt (see Skill checks).
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its
 model stages, `review.triage`, `max_rounds`, `max_corrections`, `retries_budget`) → the layers of the work source (the
@@ -402,12 +403,35 @@ A prompt is built from blocks `Block(kind, origin, text)` (`conductor/prompts.py
 the prompt byte for byte (a separator belongs to the block it follows). Every model role step writes
 `<item>/prompts/<step>.manifest.json` (`prompt-manifest/v1`) beside `<step>.md`: `step`, `role`, `route` (`provider`,
 `model`, `effort`), `blocks` (`kind`, `origin`, `sha256`, `tokens` estimated by `aicore.content.budget`, `id` for a skill),
-`excluded` (`id`, `reason`; empty until the skill checks of P9.2), `estimated_tokens` and `prompt_sha256` of the whole prompt.
+`excluded` (`id`, `reason`: the skills the checks of P9.2 left out, see Skill checks), `estimated_tokens` and `prompt_sha256` of the whole prompt.
 The `tokens` of the blocks add up to `estimated_tokens` within one token per block. Kinds: `role_text`, `input`,
 `repository_rules`, `skill`, `skill_names`, `context_map`, `expected_paths`, `verification`, `run_rules`, `answers`,
 `correction`, `progress`, `result_contract`, and for the roles that review, triage and close: `candidate`, `review_scope`,
 `diff`, `findings`, `instruction`. `origin` is the role file, `input.json`, `questions.json`, `skill:<id>`,
 `scout-cache:<rel>` or `conductor`.
+
+### Skill checks
+
+Before the prompt of a role is built, the skills of the role (`skills` of the run options, or what `["auto"]` chose) are
+checked deterministically, from what each skill declares in the `selection.json` beside its `SKILL.md` and from the tools of
+the route (`--tools` of its argv; a route that names no list is not judged by tools, `--tools ""` is a role with no tools).
+Nothing in the text of a skill is read for meaning, and no text is cut (the old cut at 12000 characters is gone). A skill is
+left out of the prompt, in this order of checks, as:
+
+| Reason | When |
+|---|---|
+| `duplicated_by_role_contract` | `replaced_by` points at a role contract (a path under `roles/`) or a schema (under `schemas/` or `*.schema.json`); a script or a hook does not replace the text |
+| `interactive_in_headless` | `requires_tools` has `AskUserQuestion`: every conductor role runs headless |
+| `tool_missing` | a tool of `requires_tools` is not among the `--tools` of the route |
+| `over_budget` | the text is above `max_tokens` of the sidecar or above `limits.skill_tokens_max` (only for an isolated role, which gets the text in its prompt; the size is estimated by `aicore.content.budget`) |
+| `persona_duplicate` | a second skill of `kind: persona` |
+| `exclusive_group` | more skills of one `exclusive_group` than the group allows (one; `php-architecture` two) |
+
+Each exclusion is listed in `manifest.excluded` of the step (`id`, `reason`) and is a beacon `SKILL_EXCLUDED` with the detail
+(for example the missing tool or the size). A skill left out is not named in the prompt either. If two kept skills are a pair
+of `conflicts` (by id, by name, or by the folder of a `<bucket>/<folder>` entry), the role does not start: the piece stops
+`PROMPT_CONFLICT` with the pair. The verdict is made once per piece and kept in the state (`skills_checked`). Contradictions
+between the texts of skills ("must" against "never") are not detected: that cannot be done deterministically.
 
 `conduct.py prompt explain --item REF --step STEP [--run RUN] [--json]` prints the blocks of one step as a table (kind,
 origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)

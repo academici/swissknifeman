@@ -1193,7 +1193,8 @@ class Conductor:
         prompt_file = item.directory / "prompts" / f"{key}.md"
         prompt_file.parent.mkdir(parents=True, exist_ok=True)
         write_json(prompt_file.with_name(f"{key}.manifest.json"),
-                   prompts.manifest(blocks, step=key, role=role, route=item.routes[role]))
+                   prompts.manifest(blocks, step=key, role=role, route=item.routes[role],
+                                    excluded=self._skills_excluded(item, role)))
         attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
         handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt)
         try:
@@ -1999,12 +2000,10 @@ class Conductor:
         return "\n".join(lines)
 
     def _skills(self, item: Item, role: str) -> list:
-        """The skill names of a role: the list of the run options, or for ``["auto"]`` what the skills bridge chose from
-        the write set of the piece (once per piece, kept in ``state.skills_auto``)."""
-        names = item.options["skills"].get(role, [])
-        if names != [opts.AUTO_SKILLS]:
-            return list(names)
-        return [row["name"] for row in self._auto_skills(item, role)["skills"]]
+        """The skill names of a role that its prompt keeps: the list of the run options, or for ``["auto"]`` what the skills
+        bridge chose from the write set of the piece (once per piece, kept in ``state.skills_auto``), less what the
+        checks of :meth:`_skill_set` left out."""
+        return list(self._skill_set(item, role)["names"])
 
     def _auto_skills(self, item: Item, role: str) -> dict:
         """``{"skills": [{name, id, path, reason, tokens}], "excluded", "discoverable", "tokens"}`` of the skills bridge
@@ -2053,30 +2052,83 @@ class Conductor:
                                message=f"write set owns {len(owned)} files; the first 300 choose the skills")
         return list(dict.fromkeys(owned[:300] + patterns))
 
-    def _skill_texts(self, item: Item, role: str) -> dict:
-        """The text of the skills a role is given, when the role runs isolated (its provider then loads no skill by
-        name): the SKILL.md of the project's skill folders, or for ``["auto"]`` the file the bridge named, without its
-        front matter."""
+    def _skill_files(self, item: Item, role: str) -> list:
+        """``[(name, id, SKILL.md path or None)]`` of the skills a role is given: the skill folders of the project for a
+        list of names, the file the bridge named for ``["auto"]`` (its ``id`` is the bridge id, else the name)."""
         names = item.options["skills"].get(role, [])
-        if not names or role not in item.options["instructions"]["isolate_roles"]:
-            return {}
-        sources = {}
         if names == [opts.AUTO_SKILLS]:
-            sources = {row["name"]: [Path(row["path"])] for row in self._auto_skills(item, role)["skills"]}
-        else:
-            sources = {name: [self.project / folder / name / "SKILL.md" for folder in (".claude/skills", ".agents/skills")]
-                       for name in names}
-        texts = {}
-        for name, candidates in sources.items():
-            for path in candidates:
-                if path.is_file():
-                    body = path.read_text(encoding="utf-8", errors="replace")
-                    if body.startswith("---"):
-                        end = body.find("\n---", 3)
-                        body = body[end + 4:] if end != -1 else body
-                    texts[name] = body.strip()[:12000]
-                    break
-        return texts
+            return [(row["name"], row.get("id") or row["name"], Path(row["path"])) for row in self._auto_skills(item, role)["skills"]]
+        return [(name, name, next((path for path in (self.project / folder / name / "SKILL.md"
+                                                    for folder in (".claude/skills", ".agents/skills")) if path.is_file()), None))
+                for name in names]
+
+    @staticmethod
+    def _skill_body(path: Path) -> str:
+        """The text of a ``SKILL.md`` without its front matter; never cut."""
+        body = path.read_text(encoding="utf-8", errors="replace")
+        if body.startswith("---"):
+            end = body.find("\n---", 3)
+            body = body[end + 4:] if end != -1 else body
+        return body.strip()
+
+    @staticmethod
+    def _route_tools(route: Optional[dict]) -> Optional[set]:
+        """The tools a route names with ``--tools`` (``--tools ""`` is none); None when the route names no list."""
+        argv = (route or {}).get("argv") or []
+        if "--tools" not in argv[:-1]:
+            return None
+        return {tool for tool in str(argv[argv.index("--tools") + 1]).split(",") if tool}
+
+    def _skill_set(self, item: Item, role: str) -> dict:
+        """``{"names", "excluded"}``: the skills a role keeps after the checks of ``prompts.check_skills`` (what each
+        skill declares in its ``selection.json`` against the tools of the route and the budget; no text is cut and no
+        meaning is judged), and the rows ``{id, reason}`` left out. The verdict is made once per piece and kept in
+        ``state.skills_checked``, so a resume and every later round see the same skills; every exclusion is a beacon
+        ``SKILL_EXCLUDED``, a declared conflict of two kept skills stops the role with ``PROMPT_CONFLICT``."""
+        if not item.options["skills"].get(role):
+            return {"names": [], "excluded": []}
+        kept = item.state.setdefault("skills_checked", {})
+        if role in kept:
+            return kept[role]
+        weigh = role in item.options["instructions"]["isolate_roles"]  # only an isolated role gets the text in its prompt
+        candidates = []
+        for name, skill_id, path in self._skill_files(item, role):
+            selection = {}
+            if path is not None:
+                try:
+                    loaded = json.loads((path.parent / "selection.json").read_text(encoding="utf-8"))
+                    selection = loaded if isinstance(loaded, dict) else {}
+                except (OSError, ValueError):
+                    selection = {}
+            tokens = prompts.estimate_tokens(self._skill_body(path)) if weigh and path is not None else None
+            candidates.append({"name": name, "id": skill_id, "selection": selection, "tokens": tokens})
+        budget = int(item.options.get("limits", {}).get("skill_tokens_max", opts.DEFAULT_LIMITS["skill_tokens_max"]))
+        survivors, rows, conflict = prompts.check_skills(candidates, tools=self._route_tools(item.routes.get(role)), budget=budget)
+        if conflict:
+            first, second = conflict
+            raise Stop("PROMPT_CONFLICT", f"skills {first['id']} and {second['id']} of {role} declare a conflict in their "
+                       "selection.json; list only one of them for the role")
+        for row in rows:
+            self.progress.emit("info", item=item.ref, role=role, reason_code="SKILL_EXCLUDED",
+                               message=f"skill {row['id']} left out of the {role} prompt: {row['reason']}"
+                               + (f" ({row['detail']})" if row["detail"] else ""))
+        kept[role] = {"names": [skill["name"] for skill in survivors],
+                      "excluded": [{"id": row["id"], "reason": row["reason"]} for row in rows]}
+        return kept[role]
+
+    def _skills_excluded(self, item: Item, role: str) -> list:
+        """The rows ``{id, reason}`` of the skills left out of the prompt of a role, for ``manifest.excluded``."""
+        return list(self._skill_set(item, role)["excluded"])
+
+    def _skill_texts(self, item: Item, role: str) -> dict:
+        """The text of the skills a role keeps, when the role runs isolated (its provider then loads no skill by name):
+        the SKILL.md of the project's skill folders, or for ``["auto"]`` the file the bridge named, without its front
+        matter and whole: a text over its budget was left out by :meth:`_skill_set`, not cut."""
+        if not item.options["skills"].get(role) or role not in item.options["instructions"]["isolate_roles"]:
+            return {}
+        kept = set(self._skill_set(item, role)["names"])
+        return {name: self._skill_body(path) for name, _id, path in self._skill_files(item, role)
+                if name in kept and path is not None}
 
     @staticmethod
     def _red_before(item: Item, number: int) -> list:

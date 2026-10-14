@@ -364,6 +364,10 @@
           "description": "A question of the executor that waits this many seconds for an answer is marked overdue by `conduct.py questions` and the observer; nothing is answered or stopped; 0 switches it off; default 1800.",
           "type": "integer"
         },
+        "skill_tokens_max": {
+          "description": "Largest text of one skill, in estimated tokens, that an isolated role gets in its prompt: a longer skill is left out whole (`excluded: over_budget` in the prompt manifest, beacon SKILL_EXCLUDED), never cut; the `max_tokens` of its `selection.json` is checked as well; 0 switches the limit off; default 5000.",
+          "type": "integer"
+        },
         "run_timeout_s": {
           "description": "Ceiling on the active time of a run in seconds: the current role is cancelled and the run stops with RUN_TIMEOUT (resume continues; raise the limit first); 0 (default) has none.",
           "type": "integer"

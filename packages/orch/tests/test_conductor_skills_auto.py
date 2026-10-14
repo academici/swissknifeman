@@ -49,7 +49,7 @@ class SkillsAutoTests(unittest.TestCase):
         self.eng.progress = Progress()
         self.eng.conductor = {"provider": "claude-code", "skills_bridge": [sys.executable, str(self.dir / "bridge.py")]}
         self.item = type("I", (), {
-            "ref": "W1", "state": {},
+            "ref": "W1", "state": {}, "routes": {},
             "options": {"skills": {"executor": ["auto"]}, "stages": [],
                         "instructions": {"isolate_roles": ["executor"]}},
             "input_doc": {"scope": {"write_set": ["database/migrations/**"]}}})()

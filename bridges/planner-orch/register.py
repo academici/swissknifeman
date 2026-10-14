@@ -215,6 +215,9 @@ def plan_calls(report: dict, args) -> list[list[str]]:
         for issue in issues:
             if issue["kind"] == kind:
                 finish += [flag, issue["text"]]
+    for issue in issues:  # a deviation that is not simply accepted leaves its work in result.pending (D16)
+        if issue["kind"] == "deviation" and issue.get("outcome") in ("follow_up", "owner_decision"):
+            finish += ["--pending", f"{issue['outcome']}({issue.get('class', 'other')}): {issue['text']}"]
     escalations = [issue["text"] for issue in issues if issue["kind"] == "escalation"]
     if escalations:
         finish += ["--escalation", "; ".join(escalations)]

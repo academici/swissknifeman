@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "c325ec04f7cb",
-  "reason": "PLAN4 P3 fix: --project-resolution в orch.py",
+  "captured_from": "f70540b34913",
+  "reason": "plan.py followups verb (PLAN4 P5.3): help and the unknown-subcommand choices list it",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

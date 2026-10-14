@@ -119,6 +119,12 @@ by `Plan` trailers (read-only JSON envelope, schema `plan.py schema read-commits
 includes its units. A named bridge may return the same commit in its partner's result format
 (see the bridge's README).
 
+`plan.py followups PLAN1 [--open]` reads the leftovers of closed items: the `follow_up(<class>): …` and
+`owner_decision(<class>): …` entries of `result.pending` that a registered deviation with that outcome leaves
+(read-only JSON envelope, schema `plan.py schema read-followups`). An entry is open until another item follows it up
+with `plan.py link <new-item> <origin-item> --kind related --relation follows_up`; that link closes every follow-up
+of the origin item. Nothing creates an item from a deviation: the owner or the plan author decides what becomes work.
+
 `start --registrar` records the caller separately from the executor; `finish --executed-by` records and validates the executor's route.
 A matching `--attempt-id` with the same status/checks/evidence registers once; conflicting results return `ATTEMPT_CONFLICT`.
 `finish` / `unit accept --evidence V#=PATH` accept check evidence; `settings.evidence: required` makes finish require evidence for every acceptance check (default: optional).

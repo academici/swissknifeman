@@ -20,7 +20,7 @@ from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
 _UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
-_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "commits")
+_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "commits", "followups")
 
 
 class UsageError(Exception):
@@ -193,6 +193,10 @@ def cmd_events(args) -> int:
 
 def cmd_commits(args) -> int:
     return _read_result(gitops.list_commits(_plan_dir(args), args.ref, role=args.role), "read-commits")
+
+
+def cmd_followups(args) -> int:
+    return _read_result(query.followups(store.load_plan(_plan_dir(args)), open_only=args.open), "read-followups")
 
 
 def cmd_artifact(args) -> int:
@@ -688,6 +692,10 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("commits", cmd_commits, "read commits linked to a plan by Plan trailers (JSON envelope)")
     p.add_argument("ref", nargs="?", help="local Pn.m or Pn.m/U# (an item includes its units)")
     p.add_argument("--role", choices=("executor", "reviewer", "fix"))
+    p.add_argument("--json", action="store_true", help="accepted for symmetry; output is always JSON")
+
+    p = verb("followups", cmd_followups, "read the follow_up and owner_decision leftovers of closed items (JSON envelope)")
+    p.add_argument("--open", action="store_true", help="only those no other item follows up (related, follows_up)")
     p.add_argument("--json", action="store_true", help="accepted for symmetry; output is always JSON")
 
     p = verb("artifact", cmd_artifact, "read artifact metadata and optional content (JSON envelope)")

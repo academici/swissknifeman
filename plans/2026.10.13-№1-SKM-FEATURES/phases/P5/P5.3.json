@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
   "title": "Исходы deviation: follow_up и owner_decision в result.pending; plan.py followups с закрытием через link resolves-followup; без автосоздания пунктов; закрытие фазы P5",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Мост register: outcome follow_up/owner_decision → finish --pending с префиксом и log --data outcome; planner: read-глагол plan.py followups [--open] [--json] и схема read-followups; закрытие follow-up связью related/resolves-followup; тесты. Пункт закрывает фазу: phase.validation P5.",
   "why": "Аудит П4.3 с поправкой D16: автоматическое add-item создаёт петли и расширяет scope без полномочия; работа не теряется через pending.",
   "scope": {
@@ -110,6 +110,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:49:14Z"
+  "result": {
+    "started_at": "2026-10-14T09:29:23Z",
+    "finished_at": "2026-10-14T10:36:42Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "49b99fb7-8127-4a51-9732-3c393da4551b"
+    },
+    "notes": "bridge register: follow_up/owner_decision deviations go to finish --pending as outcome(class): text (no items created); plan.py followups [--open] with read-followups schema, catalog/golden; follows_up link closes; tests, docs, CHANGELOG. Phase P5: V11 ci-matrix --all exit 0 (first run had one flaky harness test, aicore backups race, noted; rerun clean), V12 0, V13 0 (compat 0 errors).",
+    "deviations": [
+      "closing relation is follows_up (existing enum value) instead of resolves-followup"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T10:36:42Z"
 }

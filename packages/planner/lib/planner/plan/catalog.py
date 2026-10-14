@@ -15,7 +15,7 @@ VERB_DATA = {
     "add-document": None, "link": None, "unlink": None, "add-artifact": None, "push": None, "add-phase": None, "add-item": None, "add-decision": None,
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
-    "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits",
+    "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits", "followups": "read-followups",
     "config": None, "overlays": None,
 }
 
@@ -29,7 +29,7 @@ VERB_MODES = {
     "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "reconcile": "write",
-    "archive": "write", "commit": "write", "commits": "read", "config": "read",
+    "archive": "write", "commit": "write", "commits": "read", "followups": "read", "config": "read",
     "overlays": "read",
 }
 
@@ -114,6 +114,7 @@ VERB_ERRORS = {
     "archive": _PLAN | _WRITE | {"ALREADY_ARCHIVED", "ARCHIVE_EXISTS", "PLAN_NOT_DONE", "REASON_REQUIRED"},
     "config": _PLAN,
     "overlays": {"OVERLAY_SLOT_UNKNOWN", "OVERLAY_TOO_LARGE", "VERB_FAILED"},
+    "followups": _PLAN,
     "commits": _PLAN | _TARGET | {"CONTENT_INVALID", "GIT_UNAVAILABLE", "GIT_FAILED", "SCHEMA_INVALID"},
     "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",
                        "GIT_UNAVAILABLE", "GIT_BUSY", "GIT_CONFLICT", "GIT_FAILED", "OUTSIDE_SCOPE", "NOTHING_TO_COMMIT"},

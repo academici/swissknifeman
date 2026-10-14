@@ -3,4 +3,4 @@ exit: 2
 
 --- stderr ---
 usage: plan.py [-h] [--output {text,json}] [--config FILE] VERB ...
-plan.py: error: argument VERB: invalid choice: 'no-such-subcommand' (choose from 'new', 'config', 'overlays', 'show', 'get', 'list', 'events', 'commits', 'artifact', 'links', 'neighborhood', 'schema', 'bridge', 'set', 'apply', 'export', 'import', 'add-document', 'link', 'unlink', 'add-artifact', 'push', 'add-phase', 'add-item', 'add-decision', 'batches', 'check', 'render', 'next', 'commit', 'start', 'context', 'finish', 'unit', 'stats', 'log', 'decide', 'supersede', 'grant', 'design-done', 'reopen', 'reconcile', 'archive')
+plan.py: error: argument VERB: invalid choice: 'no-such-subcommand' (choose from 'new', 'config', 'overlays', 'show', 'get', 'list', 'events', 'commits', 'followups', 'artifact', 'links', 'neighborhood', 'schema', 'bridge', 'set', 'apply', 'export', 'import', 'add-document', 'link', 'unlink', 'add-artifact', 'push', 'add-phase', 'add-item', 'add-decision', 'batches', 'check', 'render', 'next', 'commit', 'start', 'context', 'finish', 'unit', 'stats', 'log', 'decide', 'supersede', 'grant', 'design-done', 'reopen', 'reconcile', 'archive')

@@ -17,6 +17,8 @@ positional arguments:
     events              read journal events with filters (JSON envelope)
     commits             read commits linked to a plan by Plan trailers (JSON
                         envelope)
+    followups           read the follow_up and owner_decision leftovers of
+                        closed items (JSON envelope)
     artifact            read artifact metadata and optional content (JSON
                         envelope)
     links               read typed links around a reference (JSON envelope)

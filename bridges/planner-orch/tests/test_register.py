@@ -119,6 +119,26 @@ class PlanCallsTests(unittest.TestCase):
                                    args(ref="P2.1/U1", status=None, attempt_id="u"))
         self.assertEqual(json.loads(flag_values(unit[0], "--data")[0])["class"], "write_set")
 
+    def test_follow_up_and_owner_decision_deviations_leave_pending_entries_and_no_items(self):
+        issues = [dict(ALL_ISSUES[0]),
+                  {"text": "widen the write set", "kind": "deviation", "impact": "later items", "class": "write_set",
+                   "outcome": "follow_up"},
+                  {"text": "pick the wording", "kind": "deviation", "impact": "docs", "class": "docs",
+                   "outcome": "owner_decision"},
+                  {"text": "no class given", "kind": "deviation", "impact": "x", "outcome": "follow_up"},
+                  {"text": "just recorded", "kind": "deviation", "impact": "x", "class": "docs", "outcome": "accepted"},
+                  {"text": "a note", "kind": "note", "outcome": "follow_up"}]
+        calls = register.plan_calls(report(open_issues=issues), args(status="done_with_deviations", attempt_id="a"))
+        finish = calls[-1]
+        self.assertEqual(flag_values(finish, "--pending"),
+                         ["polish names later", "follow_up(write_set): widen the write set",
+                          "owner_decision(docs): pick the wording", "follow_up(other): no class given"])
+        self.assertEqual(flag_values(finish, "--deviation"), ["widen the write set", "pick the wording", "no class given",
+                                                              "just recorded"])
+        self.assertTrue(all(argv[0] in ("log", "finish") for argv in calls))  # no add-item, no other verb
+        data = [json.loads(flag_values(argv, "--data")[0]) for argv in calls[:-1] if "--data" in argv]
+        self.assertEqual([d["outcome"] for d in data], ["follow_up", "owner_decision", "follow_up", "accepted", "follow_up"])
+
     def test_deviation_fields_are_checked(self):
         for name, change in {"class": {"class": "typo"}, "severity": {"severity": "urgent"},
                              "outcome": {"outcome": "later"}, "auto-fixable": {"auto_fixable": "yes"},
@@ -254,6 +274,18 @@ class RegisterCliTests(CliCase):
         self.assertEqual(code, 0, err)
         [event] = [e for e in self.events("P2.1", "deviation") if e["summary"] == deviation["text"]]
         self.assertEqual(event["data"], {"class": "write_set", "outcome": "follow_up", "evidence": ["V1"]})
+
+    def test_a_follow_up_deviation_lands_in_result_pending_and_followups_lists_it(self):
+        deviation = dict(ALL_ISSUES[1], **{"class": "write_set", "outcome": "follow_up"})
+        code, _, err = self.register(report(open_issues=[deviation]), "P2.1", "--status", "done_with_deviations",
+                                     "--attempt-id", "run-f")
+        self.assertEqual(code, 0, err)
+        entry = f"follow_up(write_set): {deviation['text']}"
+        self.assertEqual(self.get("P2.1")["result"]["pending"], [entry])
+        done = self.plan_py("--output", "json", "followups", self.plan, "--open")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        [row] = json.loads(done.stdout)["data"]["followups"]
+        self.assertEqual((row["item"], row["kind"], row["class"], row["status"]), ("P2.1", "follow_up", "write_set", "open"))
 
     def test_repeat_with_the_same_attempt_registers_once(self):
         argv = ("--status", "done_with_deviations", "--attempt-id", "run-1")

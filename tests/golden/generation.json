@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "c325ec04f7cb",
-  "reason": "PLAN4 P3 fix: --project-resolution в orch.py",
+  "captured_from": "f70540b34913",
+  "reason": "plan.py followups verb (PLAN4 P5.3): help and the unknown-subcommand choices list it",
   "generators": [
     {
       "id": "skiller-registry",

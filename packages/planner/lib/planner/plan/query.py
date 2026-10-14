@@ -5,10 +5,11 @@ import copy
 from datetime import datetime
 from hashlib import sha256
 import json
+import re
 from typing import Mapping, Sequence
 
 from . import context, edges, refs, store
-from .model import PHASE_ID, PlanError, parse_ref
+from .model import PHASE_ID, PlanError, id_sort_key, parse_ref
 
 
 def _target(plan: store.Plan, ref: str, repos: Mapping[str, str] | None = None):
@@ -142,6 +143,36 @@ def events(plan: store.Plan, *, item: str | None = None, types: Sequence[str] | 
             if (item is None or e.get("item") == item) and (types is None or e.get("type") in types)
             and (after is None or _timestamp(e["ts"]) >= after)]
     return rows if limit is None else (rows[-limit:] if limit else [])
+
+
+_FOLLOWUP = re.compile(r"(follow_up|owner_decision)\(([a-z_]+)\): (.+)", re.S)
+
+
+def followups(plan: store.Plan, *, open_only: bool = False) -> dict:
+    """The ``follow_up(<class>): text`` and ``owner_decision(<class>): text`` entries of ``result.pending``, in item order.
+
+    An entry is resolved when another item of the plan has a ``related`` link to its item with the relation
+    ``follows_up`` (``plan.py link <new> <origin> --kind related --relation follows_up``); the link closes every
+    follow-up of the origin item. Nothing is created or changed: work is never added without a decision.
+    """
+    resolved: dict[str, list[str]] = {}
+    for edge in edges.edges(plan):
+        if edge.kind == "related" and edge.relation == "follows_up" and edge.source != edge.target \
+                and edge.source in plan.items and edge.target in plan.items:
+            resolved.setdefault(edge.target, []).append(edge.source)
+    rows = []
+    for item_id in sorted(plan.items, key=id_sort_key):
+        pending = (plan.items[item_id].get("result") or {}).get("pending")
+        for entry in pending if isinstance(pending, list) else []:
+            match = _FOLLOWUP.fullmatch(entry) if isinstance(entry, str) else None
+            if match is None:
+                continue
+            by = sorted(set(resolved.get(item_id, [])), key=id_sort_key)
+            if open_only and by:
+                continue
+            rows.append({"item": item_id, "phase": item_id.split(".")[0], "kind": match[1], "class": match[2],
+                         "text": match[3], "entry": entry, "status": "resolved" if by else "open", "resolved_by": by})
+    return {"plan": plan.plan.get("id"), "followups": rows}
 
 
 def artifact(plan: store.Plan, ref: str, *, inline: bool = False,

@@ -10,7 +10,7 @@ import unittest
 from aicore.content.budget import estimate_tokens
 from aicore.util.digest import sha256_hex
 
-from orch.conductor import engine, observer, prompts
+from orch.conductor import contract, engine, observer, options as opts, prompts
 from tests.test_conductor import GREEN, ConductorCase, executor_ok
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -144,6 +144,68 @@ class ManifestTests(unittest.TestCase):
         self.assertIn("estimated tokens", table)
 
 
+class BudgetTests(unittest.TestCase):
+    """PLAN4 P9.3 (knowledge/p9-prompt#budgets): blocks have a class, the manifest measures it against a limit, nothing is cut."""
+
+    LIMITS = {"core": 12000, "supporting": 30000, "retrieval": 50000}
+
+    def test_every_kind_has_one_class_and_the_listed_ones_are_where_the_design_puts_them(self):
+        for kind in prompts.KINDS:
+            with self.subTest(kind=kind):
+                self.assertIn(prompts.budget_class(kind), ("core", "supporting", "retrieval"))
+        for kind in ("role_text", "input", "verification", "result_contract", "answers", "correction"):
+            self.assertEqual(prompts.budget_class(kind), "core", kind)
+        for kind in ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules"):
+            self.assertEqual(prompts.budget_class(kind), "supporting", kind)
+
+    def test_the_manifest_adds_up_the_tokens_of_each_class(self):
+        blocks = cases()["executor-full"]
+        doc = prompts.manifest(blocks, step="executor.1", role="executor", route={}, limits=self.LIMITS)
+        self.assertEqual(sorted(doc["budgets"]), ["core", "retrieval", "supporting"])
+        for name, row in doc["budgets"].items():
+            self.assertEqual(row["limit"], self.LIMITS[name])
+            self.assertEqual(row["tokens"], sum(item["tokens"] for item in doc["blocks"]
+                                                if prompts.budget_class(item["kind"]) == name), name)
+        self.assertEqual(doc["budgets"]["retrieval"]["tokens"], 0)
+        self.assertEqual(sum(row["tokens"] for row in doc["budgets"].values()), sum(item["tokens"] for item in doc["blocks"]))
+        self.assertEqual(contract.problems(doc, "prompt-manifest"), [])
+
+    def test_a_manifest_without_limits_has_no_budgets(self):
+        self.assertNotIn("budgets", prompts.manifest(cases()["scout"], step="s", role="context-scout", route={}))
+
+    def test_the_prompt_is_the_same_whatever_the_limits(self):
+        blocks = cases()["executor-full"]
+        before = prompts.render(blocks)
+        prompts.manifest(blocks, step="s", role="executor", route={}, limits={"core": 1, "supporting": 1, "retrieval": 1})
+        self.assertEqual(prompts.render(blocks), before)
+
+    def test_a_class_past_its_limit_names_its_heaviest_block(self):
+        blocks = [prompts.Block("role_text", "roles/x.md", "word " * 100 + "\n\n"), prompts.Block("input", "input.json", "word " * 400 + "\n\n"),
+                  prompts.Block("skill", "skill:big", "word " * 300, id="big")]
+        over = prompts.over_budget(blocks, {"core": 100, "supporting": 100, "retrieval": 0})
+        self.assertEqual([(name, block.kind, block.origin) for name, block, _tokens, _limit in over],
+                         [("core", "input", "input.json"), ("supporting", "skill", "skill:big")])
+        name, block, tokens, limit = over[0]
+        self.assertEqual((tokens, limit), (estimate_tokens(blocks[0].text) + estimate_tokens(blocks[1].text), 100))
+
+    def test_a_limit_of_zero_is_off_and_a_class_at_its_limit_is_not_over(self):
+        blocks = [prompts.Block("input", "input.json", "word " * 400)]
+        self.assertEqual(prompts.over_budget(blocks, {"core": 0}), [])
+        self.assertEqual(prompts.over_budget(blocks, {"core": estimate_tokens(blocks[0].text)}), [])
+
+    def test_the_limits_are_run_options_with_defaults_bounds_and_a_closed_schema(self):
+        self.assertEqual({key: opts.DEFAULT_LIMITS[key] for key in ("prompt_core_tokens", "prompt_supporting_tokens",
+                                                                       "prompt_retrieval_tokens")},
+                         {"prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000})
+        for key in ("prompt_core_tokens", "prompt_supporting_tokens", "prompt_retrieval_tokens"):
+            with self.subTest(key=key):
+                self.assertEqual(opts.limit_problems({"limits": {key: 0}}), [])
+                self.assertEqual(len(opts.limit_problems({"limits": {key: -1}})), 1)
+                self.assertEqual(contract.problems({"limits": {key: 9000}}, "run-options"), [])
+                self.assertTrue(contract.problems({"limits": {key: "9000"}}, "run-options"))
+        self.assertTrue(contract.problems({"limits": {"prompt_other_tokens": 1}}, "run-options"))
+
+
 class RunManifestTests(ConductorCase):
     def prompts_dir(self, err: str) -> Path:
         return self.run_dir(err) / "W1" / "prompts"
@@ -212,6 +274,62 @@ class RunManifestTests(ConductorCase):
             self.assertEqual([row["tokens"] for row in rows], sorted((row["tokens"] for row in rows), reverse=True))
         self.assertIn("## Prompt blocks", observer.markdown(report))
         self.assertIn("| executor | ", observer.markdown(report))
+
+    def limit(self, **limits) -> None:
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": limits}}]}})
+
+    def test_the_manifest_of_a_step_measures_the_classes_against_the_default_limits(self):
+        folder = self.prompts_dir(self.finished())
+        doc = json.loads((folder / "executor.1.manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual({name: row["limit"] for name, row in doc["budgets"].items()},
+                         {"core": 12000, "supporting": 30000, "retrieval": 50000})
+        self.assertEqual(sum(row["tokens"] for row in doc["budgets"].values()), sum(row["tokens"] for row in doc["blocks"]))
+        self.assertEqual(contract.problems(doc, "prompt-manifest"), [])
+
+    def test_a_class_past_its_limit_is_a_beacon_with_the_block_and_the_prompt_is_not_changed(self):
+        self.limit(prompt_core_tokens=50, prompt_supporting_tokens=0)
+        err = self.finished()
+        beacons = [line for line in self.lines(err) if line.get("reason_code") == "BUDGET_OVER"]
+        executor = [line for line in beacons if line.get("role") == "executor"]
+        self.assertEqual(len(executor), 1, beacons)
+        folder = self.prompts_dir(err)
+        doc = json.loads((folder / "executor.1.manifest.json").read_text(encoding="utf-8"))
+        heaviest = max((row for row in doc["blocks"] if prompts.budget_class(row["kind"]) == "core"),
+                       key=lambda row: row["tokens"])
+        self.assertEqual(executor[0]["message"], f"block {heaviest['kind']} {heaviest['origin']} {heaviest['tokens']}")
+        self.assertEqual(doc["budgets"]["core"]["limit"], 50)
+        text = (folder / "executor.1.md").read_text(encoding="utf-8")  # nothing is cut: the whole prompt is there
+        self.assertEqual(sha256_hex(text.encode("utf-8")), doc["prompt_sha256"])
+        self.assertEqual(text, self.prompt("executor", 1))
+        self.assertIn("## Result", text)  # the last block, the result contract, is whole
+        self.assertEqual(sum(row["tokens"] for row in doc["blocks"]) - doc["estimated_tokens"] <= len(doc["blocks"]), True)
+
+    def test_a_limit_of_zero_gives_no_beacon(self):
+        self.limit(prompt_core_tokens=0, prompt_supporting_tokens=0, prompt_retrieval_tokens=0)
+        err = self.finished()
+        self.assertEqual([line for line in self.lines(err) if line.get("reason_code") == "BUDGET_OVER"], [])
+
+    def test_the_observer_sums_the_budgets_by_role(self):
+        self.limit(prompt_core_tokens=50)
+        directory = self.run_dir(self.finished())
+        report = observer.build(directory, self.project)
+        budgets = report["prompt_budgets_by_role"]
+        self.assertEqual(sorted(budgets), ["context-scout", "executor", "reviewer"])
+        core = budgets["executor"]["core"]
+        self.assertEqual(core["limit"], 50)
+        self.assertGreater(core["max_tokens"], 50)
+        self.assertEqual((core["steps"], core["over"]), (1, 1))
+        self.assertEqual(budgets["executor"]["retrieval"]["max_tokens"], 0)
+        self.assertIn("## Prompt budgets", observer.markdown(report))
+        self.assertTrue(any("prompt_core_tokens" in text for text in report["proposals"]), report["proposals"])
+
+    def test_the_observer_has_no_budgets_for_a_manifest_without_them(self):
+        directory = self.run_dir(self.finished())
+        for file in (directory / "W1" / "prompts").glob("*.manifest.json"):
+            doc = json.loads(file.read_text(encoding="utf-8"))
+            doc.pop("budgets", None)
+            file.write_text(json.dumps(doc), encoding="utf-8")
+        self.assertEqual(observer.build(directory, self.project)["prompt_budgets_by_role"], {})
 
     def test_the_observer_skips_a_manifest_it_cannot_read(self):
         err = self.finished()

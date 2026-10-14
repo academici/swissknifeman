@@ -5,7 +5,8 @@ project's aicore event journal since the run started, and writes ``observer.json
 reports folder (``.swissknifeman/orch/reports/<run>/``, ignored run output): repeats and resumes, red checks, review
 findings by class, idle time between stages, tokens and time by role, the beacons and mends of the run (slow or
 silent steps, rounds past a target, healed and repaired results), the share of the wall time spent in checks, stops,
-the blocks that cost the most prompt tokens by role (from ``prompts/*.manifest.json``), and proposals to improve the run
+the blocks that cost the most prompt tokens by role and the prompt budget classes against their limits (both from
+``prompts/*.manifest.json``), and proposals to improve the run
 options.
 ``follow`` prints the notable lines of a run that is still going.
 """
@@ -17,7 +18,7 @@ import json
 from pathlib import Path
 import time
 
-from orch.conductor import agents as agents_mod, progress as progress_mod, questions as questions_mod
+from orch.conductor import agents as agents_mod, progress as progress_mod, prompts as prompts_mod, questions as questions_mod
 
 IDLE_S = 30
 TOP_BLOCKS = 5
@@ -64,6 +65,26 @@ def prompt_blocks(directory: Path) -> dict:
     return {role: [{"kind": kind, "origin": origin, **({"id": ident} if ident else {}), **entry}
                    for (kind, origin, ident), entry in sorted(found.items(), key=lambda row: (-row[1]["tokens"], row[0]))[:TOP_BLOCKS]]
             for role, found in sorted(totals.items())}
+
+
+def prompt_budgets(directory: Path) -> dict:
+    """``{role: {class: {max_tokens, limit, steps, over}}}``: for each budget class of a role's prompts, the largest
+    estimated tokens of a step, its limit, the steps measured and how many of them were past the limit (a limit of 0 is
+    none). Manifests without ``budgets`` or that cannot be read are skipped."""
+    found: dict = defaultdict(dict)
+    for file in sorted(Path(directory).glob("*/prompts/*.manifest.json")):
+        try:
+            doc = json.loads(file.read_text(encoding="utf-8"))
+            rows = {name: (int(row["tokens"]), int(row["limit"])) for name, row in doc["budgets"].items()}
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            continue
+        for name, (tokens, limit) in rows.items():
+            entry = found[doc.get("role", "-")].setdefault(name, {"max_tokens": 0, "limit": limit, "steps": 0, "over": 0})
+            entry["max_tokens"] = max(entry["max_tokens"], tokens)
+            entry["limit"] = limit
+            entry["steps"] += 1
+            entry["over"] += 1 if limit and tokens > limit else 0
+    return {role: dict(sorted(classes.items())) for role, classes in sorted(found.items())}
 
 
 def build(directory: Path, project: Path) -> dict:
@@ -150,6 +171,7 @@ def build(directory: Path, project: Path) -> dict:
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
         "tokens_by_agent": by_agent,
         "prompt_blocks_by_role": prompt_blocks(directory),
+        "prompt_budgets_by_role": prompt_budgets(directory),
         "open_questions": questions_mod.listing(directory, time.time()),
         "seconds_by_role": {role: round(value, 1) for role, value in sorted(seconds.items())},
         "scout_cache": {"runs": scout_runs, "hits": scout_hits},
@@ -192,6 +214,12 @@ def proposals(report: dict) -> list:
             found.append(f"{item['item']} is blocked: answer its escalation, then resume or run it again.")
         elif item["outcome"] == "stopped" and item.get("stop"):
             found.append(f"{item['item']} stopped with {item['stop']['code']}: fix the cause, then resume.")
+    for role, classes in (report.get("prompt_budgets_by_role") or {}).items():
+        for name, row in classes.items():
+            if row["over"]:
+                found.append(f"The {name} part of the {role} prompt was past limits.{prompts_mod.BUDGET_LIMITS[name]} ({row['limit']}) in "
+                             f"{row['over']} of {row['steps']} step(s), up to {row['max_tokens']} tokens: read it with "
+                             "conduct.py prompt explain, then shorten its source or raise the limit; the conductor cuts nothing.")
     overdue = [row for row in report.get("open_questions", []) if row["overdue"]]
     if overdue:
         found.append(f"{len(overdue)} question(s) wait for an answer past limits.question_warn_s: "
@@ -242,6 +270,12 @@ def markdown(report: dict) -> str:
                   "| Role | Kind | Origin | Tokens | Steps |", "| --- | --- | --- | --- | --- |"]
         lines += [f"| {role} | {row['kind']}{' ' + row['id'] if row.get('id') else ''} | {row['origin']} | {row['tokens']} | "
                   f"{row['steps']} |" for role, rows in report["prompt_blocks_by_role"].items() for row in rows]
+    if report.get("prompt_budgets_by_role"):
+        lines += ["", "## Prompt budgets", "", "Largest estimated tokens of a step by class of blocks, against the limit "
+                  "(0 is none); a prompt is never cut.", "", "| Role | Class | Max tokens | Limit | Steps | Steps over |",
+                  "| --- | --- | --- | --- | --- | --- |"]
+        lines += [f"| {role} | {name} | {row['max_tokens']} | {row['limit']} | {row['steps']} | {row['over']} |"
+                  for role, classes in report["prompt_budgets_by_role"].items() for name, row in classes.items()]
     if report.get("open_questions"):
         lines += ["", "## Open questions", "", "| Item | Question | Revision | Age s | Overdue |", "| --- | --- | --- | --- | --- |"]
         lines += [f"| {row['item']} | {row['id']}: {row['text']} | {row['revision']} | {row['age_s']} | "

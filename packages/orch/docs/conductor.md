@@ -163,6 +163,7 @@ instead; `conduct.py status` shows the latest one of the running step:
 | `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check | the check id and its processes |
 | `RUN_SLOW` | every `limits.run_warn_s` (default 7200; 0 off) of the **active** time of the run (segments of its processes: a resume a day later does not count the day) | active time, closed and left pieces, the current step; one plan note per threshold; never stops the run |
 | `BUDGET_OVER` | once, when the fresh tokens of a piece pass `limits.tokens_max` | the tokens used |
+| `BUDGET_OVER` (`block …`) | a class of the blocks of a role prompt is past its `limits.prompt_*_tokens` (see Prompt manifest) | `block <kind> <origin> <tokens>`: the heaviest block of the class; the prompt is not changed |
 | `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
 | `LIMIT_OVER` (`batch: …`) | a round past `limits.review_rounds_batch`, `corrections_batch` or `findings_batch` (whole run, default 0 = none; same target and ceiling rule, counted from the state of every piece) | the target and why it goes on; when the ceiling refuses more rounds, an open **Blocker** stops the run with `REVIEW_LIMIT`, other confirmed findings become plan notes (no correction) |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
@@ -363,6 +364,8 @@ effect.
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
 `limits.skill_tokens_max` (default 5000; 0 off) is the largest text of one skill that an isolated role gets in its prompt (see Skill checks).
+`limits.prompt_core_tokens` (12000), `limits.prompt_supporting_tokens` (30000) and `limits.prompt_retrieval_tokens` (50000) are the
+measures of the classes of prompt blocks (see Prompt manifest); 0 switches the beacon off. They only measure: nothing is cut.
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its
 model stages, `review.triage`, `max_rounds`, `max_corrections`, `retries_budget`) → the layers of the work source (the
@@ -409,6 +412,15 @@ The `tokens` of the blocks add up to `estimated_tokens` within one token per blo
 `correction`, `progress`, `result_contract`, and for the roles that review, triage and close: `candidate`, `review_scope`,
 `diff`, `findings`, `instruction`. `origin` is the role file, `input.json`, `questions.json`, `skill:<id>`,
 `scout-cache:<rel>` or `conductor`.
+
+The optional `budgets` of the manifest measures the prompt by class of blocks: `{core, supporting, retrieval}`, each `{tokens, limit}`
+(the sum of the estimated tokens of its blocks against `limits.prompt_core_tokens`, `prompt_supporting_tokens` or
+`prompt_retrieval_tokens`; 0 is no limit). **core**: `role_text`, `input`, `verification`, `result_contract`, `answers`, `correction`
+and the frame of the review, triage and closing roles (`progress`, `candidate`, `review_scope`, `diff`, `findings`, `instruction`);
+**supporting**: `repository_rules`, `skill`, `skill_names`, `context_map`, `expected_paths`, `focus`, `run_rules`; **retrieval**:
+references, no block of this class exists yet. A class past its limit is a beacon `BUDGET_OVER` with `message` `block <kind> <origin>
+<tokens>` for its heaviest block. This is a measure and a beacon only: the prompt is never cut, and the limits are for tuning from the data
+(observer: Prompt budgets).
 
 ### Skill checks
 
@@ -487,7 +499,7 @@ for.
 The observer only reads: the journal and state of the run and the `orch.run.*` and `planner.*` events of the
 project's aicore event journal since the run started. At the end of every run (also a stopped one) the conductor
 writes `observer.json` and `observer.md`: repeats and resumes, red checks per check id, review findings by severity,
-triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role (from the prompt manifests), the outcome of
+triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role and the prompt budget classes against their limits (`prompt_budgets_by_role`: largest tokens of a step, limit, steps, steps over; from the prompt manifests), the outcome of
 each piece and proposals to improve the run options. `conduct.py observe --follow` prints the notable lines of a run
 that is still going from another terminal; `conduct.py observe` writes the report again.
 

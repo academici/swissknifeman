@@ -368,6 +368,18 @@
           "description": "Largest text of one skill, in estimated tokens, that an isolated role gets in its prompt: a longer skill is left out whole (`excluded: over_budget` in the prompt manifest, beacon SKILL_EXCLUDED), never cut; the `max_tokens` of its `selection.json` is checked as well; 0 switches the limit off; default 5000.",
           "type": "integer"
         },
+        "prompt_core_tokens": {
+          "description": "Largest total of the core blocks of one role prompt (role text, input, verification, result contract, answers, correction and the frame of the review roles), in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut (`budgets` of the prompt manifest); 0 switches the beacon off; default 12000.",
+          "type": "integer"
+        },
+        "prompt_supporting_tokens": {
+          "description": "Largest total of the supporting blocks of one role prompt (repository rules, skills, context map, expected paths, run rules), in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; 0 switches the beacon off; default 30000.",
+          "type": "integer"
+        },
+        "prompt_retrieval_tokens": {
+          "description": "Largest total of the retrieval blocks (references) of one role prompt, in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; no block has this class yet; 0 switches the beacon off; default 50000.",
+          "type": "integer"
+        },
         "run_timeout_s": {
           "description": "Ceiling on the active time of a run in seconds: the current role is cancelled and the run stops with RUN_TIMEOUT (resume continues; raise the limit first); 0 (default) has none.",
           "type": "integer"

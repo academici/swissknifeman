@@ -1192,9 +1192,14 @@ class Conductor:
         prompt = prompts.render(blocks)
         prompt_file = item.directory / "prompts" / f"{key}.md"
         prompt_file.parent.mkdir(parents=True, exist_ok=True)
+        limits = {name: int(item.options.get("limits", {}).get(option, opts.DEFAULT_LIMITS[option]))
+                  for name, option in prompts.BUDGET_LIMITS.items()}
         write_json(prompt_file.with_name(f"{key}.manifest.json"),
                    prompts.manifest(blocks, step=key, role=role, route=item.routes[role],
-                                    excluded=self._skills_excluded(item, role)))
+                                    excluded=self._skills_excluded(item, role), limits=limits))
+        for _name, block, _tokens, _limit in prompts.over_budget(blocks, limits):  # a beacon: the prompt is not cut
+            self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="BUDGET_OVER",
+                               message=f"block {block.kind} {block.origin} {prompts.estimate_tokens(block.text)}")
         attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
         handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt)
         try:

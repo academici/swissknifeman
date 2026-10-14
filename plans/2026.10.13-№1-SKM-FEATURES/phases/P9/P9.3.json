@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.3",
   "title": "Бюджеты core/supporting/retrieval: измерение в manifest, limits.prompt_*_tokens, BUDGET_OVER с блоком, сводка observer",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "По knowledge/p9-prompt#budgets: классы блоков, лимиты в run-options, маяк BUDGET_OVER с блоком без изменения промпта, observer.",
   "why": "Аудит П8.4, мысль 6: сначала измерять, лимиты — после данных.",
   "scope": {
@@ -71,6 +71,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/b65195abc7bd8e9b12d90546a2034d73cc7acfcd400c17bb2fb5f00a6412c101",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "Схемы и run-options — только аддитивно (D1)"
@@ -109,6 +115,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T17:51:23Z"
+  "result": {
+    "started_at": "2026-10-14T18:18:46Z",
+    "finished_at": "2026-10-14T19:11:54Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-0e49c78554c06d0fd243a722-P9.3",
+    "notes": "Бюджеты промпта: классы блоков core/supporting/retrieval (prompts.budget_class, budgets, over_budget), manifest.budgets {tokens, limit}, limits.prompt_core/supporting/retrieval_tokens (12000/30000/50000, 0 — выкл.) в options и схеме run-options с зеркалом моста, маяк BUDGET_OVER 'block <kind> <origin> <tokens>' для самого тяжёлого блока класса (промпт не меняется и не режется), observer: prompt_budgets_by_role, таблица Prompt budgets и предложение по превышению. Основная часть кода и тестов уже была в рабочем дереве к началу; я починил два красных теста бюджетов (ожидания в тесте), дописал docs/conductor.md и CHANGELOG.md.\nChanged: CHANGELOG.md, bridges/planner-orch/schemas/run-options.schema.json, packages/orch/docs/conductor.md, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/observer.py, packages/orch/lib/orch/conductor/options.py, packages/orch/lib/orch/conductor/prompts.py, packages/orch/schemas/conductor/v1/run-options.schema.json, packages/orch/tests/test_conductor_prompts.py",
+    "deviations": [
+      "Виды блоков вне списка дизайна (progress, candidate, review_scope, diff, findings, instruction) отнесены к классу core как рамка и материал задачи ролей review/triage/closer; неизвестный вид считается supporting. Дизайн p9-prompt#budgets их не перечисляет."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T19:11:54Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T19:11:54Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.3/evidence/V2.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.3/evidence/V1.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.3/evidence/V2.json"
+    ]
+  },
+  "updated_at": "2026-10-14T19:11:54Z"
 }

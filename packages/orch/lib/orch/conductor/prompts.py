@@ -25,6 +25,18 @@ KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "cont
          "findings", "instruction")
 CONDUCTOR = "conductor"
 
+# Budget classes of the blocks (knowledge/p9-prompt#budgets). Only the measure and a beacon: nothing is cut. The kinds the
+# design does not list belong to the frame or the task material of their role (progress, candidate, review_scope, diff,
+# findings, instruction), so they count as core; ``retrieval`` has no block yet.
+BUDGET_CLASSES = {
+    "core": ("role_text", "input", "verification", "result_contract", "answers", "correction", "progress", "candidate",
+             "review_scope", "diff", "findings", "instruction"),
+    "supporting": ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules"),
+    "retrieval": (),
+}
+BUDGET_LIMITS = {"core": "prompt_core_tokens", "supporting": "prompt_supporting_tokens",
+                 "retrieval": "prompt_retrieval_tokens"}  # the ``limits`` keys of the run options
+
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
                 "triager": "triage-result"}
 _FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
@@ -129,9 +141,34 @@ def _then(blocks: list, block: Block) -> None:
     blocks.append(block)
 
 
-def manifest(blocks, *, step: str, role: str, route: dict, excluded=()) -> dict:
+def budget_class(kind: str) -> str:
+    """``core``, ``supporting`` or ``retrieval``: the budget class of a block kind (a kind nobody listed is supporting)."""
+    return next((name for name, kinds in BUDGET_CLASSES.items() if kind in kinds), "supporting")
+
+
+def budgets(blocks, limits: dict) -> dict:
+    """``{class: {tokens, limit}}``: the estimated tokens of the blocks of each class against ``limits[class]``."""
+    tokens = {name: 0 for name in BUDGET_CLASSES}
+    for block in blocks:
+        tokens[budget_class(block.kind)] += estimate_tokens(block.text)
+    return {name: {"tokens": tokens[name], "limit": int(limits.get(name) or 0)} for name in BUDGET_CLASSES}
+
+
+def over_budget(blocks, limits: dict) -> list:
+    """``[(class, block, class_tokens, limit)]`` for each class above its limit (0 is no limit), with the heaviest block of
+    the class, the first of equals. A report only: the blocks are not touched."""
+    found = []
+    for name, row in budgets(blocks, limits).items():
+        if row["limit"] and row["tokens"] > row["limit"]:
+            members = [block for block in blocks if budget_class(block.kind) == name]
+            found.append((name, max(members, key=lambda block: estimate_tokens(block.text)), row["tokens"], row["limit"]))
+    return found
+
+
+def manifest(blocks, *, step: str, role: str, route: dict, excluded=(), limits=None) -> dict:
     """The ``prompt-manifest/v1`` document of a prompt: its blocks (kind, origin, digest, estimated tokens), what was left
-    out and why, and the digest and size of the whole prompt."""
+    out and why, the digest and size of the whole prompt, and, when ``limits`` (``{class: tokens}``) is given, the tokens
+    of each budget class against its limit."""
     text = render(blocks)
     rows = []
     for block in blocks:
@@ -140,10 +177,13 @@ def manifest(blocks, *, step: str, role: str, route: dict, excluded=()) -> dict:
         if block.id:
             row["id"] = block.id
         rows.append(row)
-    return {"schema": "prompt-manifest/v1", "step": step, "role": role,
-            "route": {key: route[key] for key in ("provider", "model", "effort") if route.get(key)},
-            "blocks": rows, "excluded": [dict(row) for row in excluded], "estimated_tokens": estimate_tokens(text),
-            "prompt_sha256": sha256_hex(text.encode("utf-8"))}
+    doc = {"schema": "prompt-manifest/v1", "step": step, "role": role,
+           "route": {key: route[key] for key in ("provider", "model", "effort") if route.get(key)},
+           "blocks": rows, "excluded": [dict(row) for row in excluded], "estimated_tokens": estimate_tokens(text),
+           "prompt_sha256": sha256_hex(text.encode("utf-8"))}
+    if limits is not None:
+        doc["budgets"] = budgets(blocks, limits)
+    return doc
 
 
 def top_blocks(doc: dict, limit: int = 5) -> list:

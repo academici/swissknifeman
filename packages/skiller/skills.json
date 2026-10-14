@@ -1230,8 +1230,8 @@
       "path": "skills/devops/db-test-preflight/SKILL.md",
       "version": "0.1.0",
       "description": "Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (docker compose ps / pg_isready), target DB exists and its name ends with _test (not dev/prod), migrations applied; distinguishes host vs docker connection. Activate when running Postgres tests, wiring hooks/CI, or when 'tests fail on DB connection'.",
-      "sha256": "a8faa69b7d8f94d85c70dc31bb6f61902b0eabfe59aa3fd701427721b32a70b0",
-      "content_sha256": "830be16b0167572ba789e23b687253bf6abd365dd8abac5970b9cef441f79aba",
+      "sha256": "81b30ee1ac6b675c25d082e9d745719264407658c71f893fdae6f9d1aaae25d1",
+      "content_sha256": "48d8dbc110991db1d76fed06e08e26b375930462595808d0faac40e0a272f78e",
       "license": "MIT",
       "tags": [
         "postgres",
@@ -1479,8 +1479,8 @@
       "path": "skills/devops/node-pnpm-preflight/SKILL.md",
       "version": "0.1.0",
       "description": "Check Node/pnpm availability on host before commands and git hooks that use pnpm (commitlint, lint, build).",
-      "sha256": "57f7dc9fc7f8c9487a31dd0a23af6fdd5d67522a2a3dc8fa6fde2d162083779f",
-      "content_sha256": "099b0b20c724867560d65f3d161d83847a1179aeed544f1dfea5415a52aef011",
+      "sha256": "eb49f03fc665e3d4a74e26d57f5fcdb532ce1f4213c4c39096521cc9a38f2025",
+      "content_sha256": "6b57a9efa1b31b757a6b6a2513b340d0c2b65cd960109dfeb8be94bb9e39d705",
       "license": "MIT",
       "tags": [
         "node",
@@ -2782,8 +2782,8 @@
       "path": "skills/general/git-safety/SKILL.md",
       "version": "0.1.0",
       "description": "Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/reset --hard/clean -f/branch -D/checkout ./rebase --onto BEFORE execution. Activate on project init (esp. production/embedded) or when asked to add git guardrails / forbid dangerous git.",
-      "sha256": "6dd3ba44728433fb6dc145338d6ad67981b43356b7ce5206f222f769275d5048",
-      "content_sha256": "9001634deb745c6332102e9b45fc8771cfcce7eae626ae32c82bf9123cbcccaa",
+      "sha256": "46253a5176db84b55d569bedeb9224d534564ae219aeba359be145258eb40ce9",
+      "content_sha256": "3438313f35198198fca60ffacf685a2a11b258e651395c21b420b64903085c91",
       "license": "MIT",
       "tags": [
         "git",
@@ -2793,7 +2793,7 @@
         "init"
       ],
       "selection": {
-        "kind": "procedure",
+        "kind": "reference",
         "decision": "SCRIPT",
         "replaced_by": "harness/configs/claude-code/hooks/git-guardrails"
       },
@@ -2965,8 +2965,8 @@
       "path": "skills/general/session-handoff/SKILL.md",
       "version": "0.3.0",
       "description": "Cross-session/agent handoff: compress a session into state, decisions, open items.",
-      "sha256": "0ea2cbf5eb20fe32dfb39323b0185793df618264934388db11c4cf1d4307a270",
-      "content_sha256": "845d7ae06243d5544b7194237c0b5af6c8877866e4c290525cdc1f5d2b027622",
+      "sha256": "b60c9d8efc2e1fad350eabcf8ee57bdce0acafcc9e294f396b92611bd6a149a9",
+      "content_sha256": "bbb0f70a0b2fb9e02d90389ea88420e8856d9c06507480936d3eaf608acf42f0",
       "license": "MIT",
       "tags": [
         "workflow",
@@ -3056,8 +3056,8 @@
       "path": "skills/general/task-brief-template/SKILL.md",
       "version": "0.5.0",
       "description": "Brief template for complex tasks: goal, scope, invariants, assumptions, out of scope, acceptance criteria, definition of done, loop fields.",
-      "sha256": "eb3646d6c9a15210706b46624a630717ae7eb73a18716e2663725b8a3f6724dd",
-      "content_sha256": "bd41ce9db12070c8fd293d45c6f598f735254550373c399a70db0ab81e380f86",
+      "sha256": "b0c943912f076b7827d7c93d1261c0f65f10f60e587fd16c4a1ac566caf15015",
+      "content_sha256": "3304b3222d94f132f4d51009bf94f93d9ab7dd611cae194d8569a0eb7b1b1923",
       "license": "MIT",
       "tags": [
         "workflow",
@@ -3633,8 +3633,8 @@
       "path": "skills/laravel-testing/test-isolation-guard/SKILL.md",
       "version": "0.1.1",
       "description": "Use before Laravel tests that can mutate DB/files: prove isolated serial or parallel targets.",
-      "sha256": "9eb27fb142b2040acdf5ca46cd0815169e708a20f488db334cdf5a7be662ebb6",
-      "content_sha256": "de2591841d53cfb86bf28110ffc00cb686d407d36b9a9ba12a6acce253be6819",
+      "sha256": "6bdfe96e11d4f914f6d73c9a02984b73bfcef49ab9e248008749f657d72f8521",
+      "content_sha256": "6d777cb2b043265b2b26defb4bb44aaecfdbd98dbf018ee54dc66ee895ed898b",
       "license": "MIT",
       "tags": [
         "php",

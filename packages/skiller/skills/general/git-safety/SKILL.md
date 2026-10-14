@@ -18,6 +18,8 @@ sha256: ""
 
 # Git Safety (guardrails)
 
+The rules live in the harness hook `hooks/git-guardrails` (covered by its own test in harness); this skill only explains and enables it.
+
 Sets PreToolUse-hook that blocks dangerous git-commands **to** execution. In our ecosystem
 the hook script itself belongs to the package **harness** (source of truth hooks), and this skill is the entry point:
 explains and helps enable.

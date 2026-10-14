@@ -68,7 +68,7 @@ flowchart LR
   end
   subgraph devops["devops"]
     ci_cd["ci-cd<br/>⊕55 ↻1123"]:::warm
-    db_test_preflight["db-test-preflight<br/>⊕104 ↻1676"]:::hot
+    db_test_preflight["db-test-preflight<br/>⊕104 ↻1758"]:::hot
     docker["docker<br/>⊕66 ↻400"]:::warm
     docker_dev_prod["docker-dev-prod<br/>⊕42 ↻924"]:::warm
     docker_php["docker-php<br/>⊕40 ↻767"]:::warm
@@ -77,7 +77,7 @@ flowchart LR
     docker_vite["docker-vite<br/>⊕39 ↻679"]:::mild
     gitops["gitops<br/>⊕35 ↻715"]:::mild
     makefile["makefile<br/>⊕43 ↻732"]:::warm
-    node_pnpm_preflight["node-pnpm-preflight<br/>⊕38 ↻228"]:::mild
+    node_pnpm_preflight["node-pnpm-preflight<br/>⊕38 ↻266"]:::mild
   end
   subgraph finance["finance"]
     finance_super_skill["finance-super-skill<br/>⊕105 ↻740"]:::hot
@@ -160,18 +160,18 @@ flowchart LR
     context_economy["context-economy<br/>⊕39 ↻488"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻432"]:::mild
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1077"]:::cool
-    git_safety["git-safety<br/>⊕84 ↻565"]:::warm
+    git_safety["git-safety<br/>⊕84 ↻605"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻858"]:::hot
     implement["implement<br/>⊕83 ↻543"]:::warm
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
     project_map["project-map<br/>⊕83 ↻618"]:::warm
-    session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
+    session_handoff["session-handoff<br/>⊕29 ↻627"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
     skills_ssot["skills-ssot<br/>⊕34 ↻942"]:::mild
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
-    task_brief_template["task-brief-template<br/>⊕47 ↻1176"]:::warm
+    task_brief_template["task-brief-template<br/>⊕47 ↻1212"]:::warm
     verify_claims["verify-claims<br/>⊕41 ↻341"]:::warm
     writing_style["writing-style<br/>⊕98 ↻1819"]:::hot
   end
@@ -207,7 +207,7 @@ flowchart LR
     health_checks["health-checks<br/>⊕31 ↻2298"]:::cool
     laravel_dusk["laravel-dusk<br/>⊕30 ↻980"]:::cool
     laravel_testing["laravel-testing<br/>⊕33 ↻3024"]:::mild
-    test_isolation_guard["test-isolation-guard<br/>⊕34 ↻1965"]:::mild
+    test_isolation_guard["test-isolation-guard<br/>⊕34 ↻2027"]:::mild
   end
   subgraph legal["legal"]
     legal_super_skill["legal-super-skill<br/>⊕93 ↻615"]:::warm
@@ -405,17 +405,17 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 209 skills · ⊕ always **10920** current (is always resident if you include the entire registry) · ↻ bodies 256165 current · ⌥ on-demand 823694 current (snippets + references).
+**Total:** 209 skills · ⊕ always **10920** current (is always resident if you include the entire registry) · ↻ bodies 256460 current · ⌥ on-demand 823694 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1186 | 19476 | 7557 |
+| `general` | 20 | 1186 | 19589 | 7557 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
-| `devops` | 11 | 553 | 8909 | 16736 |
+| `devops` | 11 | 553 | 9029 | 16736 |
 | `php` | 17 | 531 | 18231 | 54365 |
 | `pm` | 10 | 462 | 10775 | 23510 |
 | `founder` | 10 | 430 | 14976 | 577 |
@@ -433,7 +433,7 @@ flowchart LR
 | `blender` | 2 | 146 | 2231 | 1821 |
 | `research` | 2 | 132 | 826 | 20472 |
 | `laravel-livewire` | 1 | 128 | 1256 | 1071 |
-| `laravel-testing` | 4 | 128 | 8267 | 16534 |
+| `laravel-testing` | 4 | 128 | 8329 | 16534 |
 | `voice-ai` | 1 | 125 | 3165 | 0 |
 | `creative` | 1 | 111 | 687 | 26239 |
 | `sales` | 1 | 108 | 719 | 25593 |

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.4",
   "title": "Переносы: git-safety в hook git-guardrails harness, task-brief-template и session-handoff → replaced_by контрактов, preflight-skills → скрипты с check-result/v1",
-  "status": "todo",
+  "status": "done",
   "summary": "По knowledge/p8-skills#transfer: расширение hooks/git-guardrails правилами git-safety с тестом; replaced_by для task-brief-template и session-handoff; preflight-скрипты рядом с test-isolation-guard, db-test-preflight, node-pnpm-preflight с JSON check-result/v1 и тестами; skills ссылаются на новое место.",
   "why": "Аудит П7.4: детерминированное — в исполняемое. Риск: hook меняет поведение сессий владельца — только правила, уже описанные в git-safety.",
   "scope": {
@@ -108,6 +108,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:54:13Z"
+  "result": {
+    "started_at": "2026-10-14T16:33:14Z",
+    "finished_at": "2026-10-14T16:37:12Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "301cfed7-08af-4ae7-960e-8ac5e83ad291"
+    },
+    "notes": "git-guardrails hook test, preflight.py x3 with check-result/v1 and fixture tests, git-safety kind reference, pointers in task-brief-template/session-handoff, registry regenerated.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T16:37:12Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T16:37:12Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T16:37:12Z"
 }

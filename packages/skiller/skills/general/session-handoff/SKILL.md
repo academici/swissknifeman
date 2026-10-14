@@ -17,6 +17,8 @@ sha256: ""
 
 # Session Handoff
 
+Machine form: `orch/schemas/conductor/v1/stage-report.schema.json` (`replaced_by`); this protocol stays the human handoff.
+
 ## Activate when
 - Session context near limit (or compaction imminent).
 - Work handed to another agent (Claude → Cursor, local → CI).

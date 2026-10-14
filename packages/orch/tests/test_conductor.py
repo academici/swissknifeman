@@ -707,6 +707,13 @@ class ScopeTests(ConductorCase):
     def test_a_scout_without_a_hint_block_is_said_and_runs_on(self):
         self.ignored_hint("out/W1.txt — the output\nUnknowns:\n- none\n")
 
+    def test_a_skipped_scout_leaves_no_stale_hint(self):
+        conductor = engine.Conductor.__new__(engine.Conductor)
+        conductor._scout_stage = lambda _item: None  # no scout stage in the pack: the early return of _scout
+        item = mock.Mock(state={"expected": {"paths": ["old.py"], "tests": []}})
+        self.assertEqual(conductor._scout(item), "")
+        self.assertIsNone(item.state["expected"])
+
     def test_a_scout_hint_of_the_wrong_shape_is_ignored(self):
         self.ignored_hint('x\n```json write-set\n{"paths": "docs/**", "tests": []}\n```\n')
 

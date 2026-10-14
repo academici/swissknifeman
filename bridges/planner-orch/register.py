@@ -341,8 +341,13 @@ def run_plan(argv: list[str]) -> subprocess.CompletedProcess:
                           check=False)
 
 
-def journal(plan: str, plans_root, item: str | None, types) -> tuple[set[tuple[str, str]] | None, dict]:
-    """``{(type, summary)}`` already in the journal (of ``item`` when given), and the receipt entry of the read."""
+def _data_key(data) -> str:
+    return json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":")) if data else ""
+
+
+def journal(plan: str, plans_root, item: str | None, types) -> tuple[set[tuple[str, str, str]] | None, dict]:
+    """``{(type, summary, data)}`` already in the journal (of ``item`` when given; ``data`` is its canonical JSON or
+    empty), and the receipt entry of the read."""
     argv = ["--output", "json", "events", plan, "--type", ",".join(sorted(types))]
     if item:
         argv += ["--item", item]
@@ -353,14 +358,15 @@ def journal(plan: str, plans_root, item: str | None, types) -> tuple[set[tuple[s
     if done.returncode:
         entry.update(result="refused", error=(done.stderr or done.stdout).strip())
         return None, entry
-    return {(e.get("type"), e.get("summary")) for e in json.loads(done.stdout)["data"]}, entry
+    return {(e.get("type"), e.get("summary"), _data_key(e.get("data"))) for e in json.loads(done.stdout)["data"]}, entry
 
 
-def execute(calls: list[list[str]], seen: set[tuple[str, str]], receipt: dict) -> int:
+def execute(calls: list[list[str]], seen: set[tuple[str, str, str]], receipt: dict) -> int:
     """Run ``calls`` in order; a ``log`` already in ``seen`` is a no-op; the first refusal stops (exit 1)."""
     for argv in calls:
         if argv[0] == "log":
-            key = (argv[argv.index("--type") + 1], argv[argv.index("--summary") + 1])
+            given = json.loads(argv[argv.index("--data") + 1]) if "--data" in argv else None
+            key = (argv[argv.index("--type") + 1], argv[argv.index("--summary") + 1], _data_key(given))
             if key in seen:
                 receipt["calls"].append({"argv": argv, "exit": 0, "result": "no-op"})
                 continue
@@ -439,7 +445,7 @@ def main(argv: list[str] | None = None) -> int:
     receipt = {"plan": args.plan, "ref": args.ref, "calls": []}
     if gate is not None:
         receipt["gate"] = gate
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, str, str]] = set()
     types = {argv[argv.index("--type") + 1] for argv in calls if argv[0] == "log"}
     if types:
         seen, entry = journal(args.plan, args.plans_root, item, types)

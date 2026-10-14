@@ -1566,6 +1566,7 @@ class Conductor:
                      if stage.get("role") in ("scout", "context-scout")), None)
 
     def _scout(self, item: Item) -> str:
+        item.state["expected"] = None  # the hint belongs to the scout answer read below; a skipped or retried scout leaves none
         stage = self._scout_stage(item)
         if stage is None:
             return ""

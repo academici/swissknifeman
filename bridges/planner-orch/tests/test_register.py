@@ -287,6 +287,19 @@ class RegisterCliTests(CliCase):
         [row] = json.loads(done.stdout)["data"]["followups"]
         self.assertEqual((row["item"], row["kind"], row["class"], row["status"]), ("P2.1", "follow_up", "write_set", "open"))
 
+    def test_two_deviations_with_the_same_text_and_other_data_are_both_journaled(self):
+        text = "same words"
+        issues = [{"text": text, "kind": "deviation", "impact": "x", "class": "docs", "outcome": "follow_up"},
+                  {"text": text, "kind": "deviation", "impact": "x", "class": "write_set", "outcome": "owner_decision"}]
+        argv = ("--status", "done_with_deviations", "--attempt-id", "run-same")
+        code, receipt, err = self.register(report(open_issues=issues), "P2.1", *argv)
+        self.assertEqual(code, 0, err)
+        self.assertEqual([c["result"] for c in receipt["calls"]], ["recorded"] * 3)
+        rows = [e for e in self.events("P2.1", "deviation") if e["summary"] == text]
+        self.assertEqual([e["data"]["class"] for e in rows], ["docs", "write_set"])
+        code, receipt, err = self.register(report(open_issues=issues), "P2.1", *argv)
+        self.assertEqual((code, [c["result"] for c in receipt["calls"]]), (0, ["no-op"] * 3), err)
+
     def test_repeat_with_the_same_attempt_registers_once(self):
         argv = ("--status", "done_with_deviations", "--attempt-id", "run-1")
         self.assertEqual(self.register(report(open_issues=ALL_ISSUES), "P2.1", *argv)[0], 0)

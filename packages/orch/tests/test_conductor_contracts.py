@@ -35,6 +35,15 @@ class FixtureTests(unittest.TestCase):
                 issues = contract.problems(json.loads(path.read_text(encoding="utf-8")), kind)
                 self.assertEqual(bool(issues), category == "invalid", issues)
 
+    def test_json_block_reads_a_json_fence_with_trailing_blanks_and_the_json_write_set_form(self):
+        for fence in ("```json\n", "```json \n", "```json\t\n", "```json  \n"):
+            with self.subTest(fence=fence):
+                self.assertEqual(prompts.json_block(f"x\n{fence}{{\"a\": 1}}\n```\n", "stage-report"), ({"a": 1}, None))
+        text = 'x\n```json write-set\n{"paths": [], "tests": []}\n```\n```json\n{"b": 2}\n```\n'
+        self.assertEqual(prompts.write_set_block(text)[0], {"paths": [], "tests": []})
+        self.assertEqual(prompts.json_block(text, "stage-report"), ({"b": 2}, None))
+        self.assertEqual(prompts.write_set_block("```write-set\n{\"paths\": [], \"tests\": []}\n```\n")[1], None)
+
     def test_the_validate_command_knows_the_conductor_kinds(self):
         out, err = io.StringIO(), io.StringIO()
         with redirect_stdout(out), redirect_stderr(err):

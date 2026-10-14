@@ -14,7 +14,7 @@ from orch import render
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
                 "triager": "triage-result"}
-_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+)?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
+_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 
 _STAGE_REPORT = """\
 End your answer with exactly one fenced block tagged `stage-report` holding one JSON object and nothing else:

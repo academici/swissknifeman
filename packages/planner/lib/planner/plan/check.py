@@ -37,7 +37,7 @@ CODE_SUFFIXES = (".py", ".php", ".ts", ".js")
 def is_test_path(path: str) -> bool:
     """A repository path that names tests: a ``tests/`` folder, ``test_*``, ``*.test.*`` or ``*Test.php``."""
     name = path.rsplit("/", 1)[-1]
-    return "tests/" in f"/{path}" or name.startswith("test_") or ".test." in name or name.endswith("Test.php")
+    return "tests" in path.split("/")[:-1] or name.startswith("test_") or ".test." in name or name.endswith("Test.php")
 
 
 class Issue(NamedTuple):

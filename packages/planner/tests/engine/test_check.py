@@ -616,6 +616,13 @@ class WriteSetNoTestsTests(CheckCase):
                                     {"path": "tests/test_a.py", "change": "create"}]), [])
         self.assertEqual(self.hits([{"path": "lib/pkg/gone.py", "change": "delete"}]), [])
 
+    def test_a_folder_that_only_ends_in_tests_is_not_a_test_path(self):
+        for path in ("notests/a.py", "mytests/a.py", "foo_tests/a.py"):
+            with self.subTest(path=path):
+                self.assertEqual(len(self.hits([{"path": "lib/a.py", "change": "create"},
+                                                {"path": path, "change": "create"}])), 1)
+        self.assertEqual(self.hits([{"path": "lib/a.py", "change": "create"}, {"path": "pkg/tests/sub/b.py", "change": "create"}]), [])
+
     def test_a_closed_item_is_not_warned_about(self):
         self.assertEqual(self.hits([{"path": "lib/pkg/a.py", "change": "create"}], status="done"), [])
 

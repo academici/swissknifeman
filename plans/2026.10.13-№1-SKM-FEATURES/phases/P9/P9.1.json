@@ -73,6 +73,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/fe3d07d752a5653e925ea62c4685f62e1ed45e420fb6636ad0c442a2494c3576",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "Схемы и run-options — только аддитивно (D1)",
@@ -107,5 +113,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:55:22Z"
+  "updated_at": "2026-10-14T17:27:55Z"
 }

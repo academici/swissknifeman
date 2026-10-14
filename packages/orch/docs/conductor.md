@@ -143,6 +143,18 @@ on it is `PROVIDER_DISABLED: aicore.providers.available.<id>.enabled = false (<l
 the preflight stops the run with `PROVIDER_UNAVAILABLE` before any work (an optional scout or report-fixer is skipped). A role
 is routable when the provider is enabled, its CLI is found, the transport and sandbox work and no capacity gate is open.
 
+### Route explain
+
+`orch.py route explain --role R [--plan P --item I] [--scenario S] [--json]` shows why a role runs where it does, without
+starting anything: the `candidates` (the `stages` of the options, the reviewer selector, `[orch.conductor]` or the launch
+catalog, and the `fallback_routes` of the role) each with `available` and the `problem` that rules it out
+(`PROVIDER_DISABLED`, `TRANSPORT_UNSUPPORTED`, `SANDBOX_UNAVAILABLE`, `PROVIDER_UNAVAILABLE`, `PROVIDER_QUOTA`), the `selected`
+route with the layer each of `provider`, `model_class`, `effort` and `model` came from (and `moved` when route choice took a
+fallback), the `stop` when no route can start, the `aicore.providers.available` value and layer of each provider
+involved, and the `gates` in force. Without `--plan` and `--item` the options are those of the configuration, the
+scenario and the pack; with them they are the recorded options of the newest conductor run of that item
+(`ITEM_UNKNOWN` when there is none).
+
 ### Capacity gates
 
 A provider whose account quota is known to be exhausted is not started again before its reset. `conductor/gates.py` keeps

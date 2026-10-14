@@ -14,6 +14,7 @@ except ModuleNotFoundError:  # Python 3.9/3.10 compatibility
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.models import load_model_catalog, select_model
 from harness.agentpacks import (agent_model_trace, compare_agent_inventory, cursor_consumer_target,
                                 expected_agent_inventory,
                                 cursor_consumer_targets, load_claude_role_bindings,
@@ -131,9 +132,7 @@ class ProviderAgentpackCase(unittest.TestCase):
                 assert_codex_role_contract(
                     self,
                     actual.decode("utf-8"),
-                    model={"economy": "gpt-5.6-luna",
-                           "implementation": "gpt-5.6-terra",
-                           "frontier": "gpt-5.6-sol"}[role.model_class],
+                    model=select_model(load_model_catalog(), "codex", role.model_class),
                     skills=list(role.skills),
                     command_requirements=list(role.command_ids),
                 )

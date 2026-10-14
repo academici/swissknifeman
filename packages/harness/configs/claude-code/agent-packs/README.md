@@ -81,7 +81,7 @@ discrepancies (see).
 Each profile (`packages/skiller/profiles/<type>.json`) calls `agent_pack` (string OR
 list - **composition**: stack pack + `_common`). Fullstack = composition by concern
 (`backend-laravel` + `node-frontend`). Roles are universal, stack selects profile; model
-shooting ranges - from `profile.model_tiers`. PostToolUse-validators (tsc/eslint, dart analyze, ruff) —
+shooting ranges - from `profile.model_tiers` (a model class — `economy`, `implementation`, `frontier` — resolved through the aicore model catalog at render time; a model name stays valid). PostToolUse-validators (tsc/eslint, dart analyze, ruff) —
 advisory (inject errors, do not block).
 
 ### Role-packs (`role-*`) — cross-stack, by person

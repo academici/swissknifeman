@@ -223,6 +223,30 @@ def _project_root(args: argparse.Namespace | None = None) -> Path | None:
     return context.root if context else None
 
 
+def _route_explain(args: argparse.Namespace) -> int:
+    from orch.conductor import engine, explain
+    try:
+        context = project_mod.require(getattr(args, "project", None))
+        current = settings.load(project=context.root, config_file=args.config)
+        found = explain.explain(engine.Conductor(project=context.root, settings=current, config_file=args.config,
+                                                 project_resolution=context.resolution),
+                                args.role, scenario=args.scenario, plan=args.plan, ref=args.item)
+    except ProjectContextRequired as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    except ConfigError as error:
+        print(f"CONFIG_INVALID: {error}", file=sys.stderr)
+        return 1
+    except explain.ExplainError as error:
+        print(f"{error.code}: {error.message}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(found, ensure_ascii=False, indent=2))
+    else:
+        sys.stdout.write(explain.text(found))
+    return 0
+
+
 def _policy(args: argparse.Namespace) -> int:
     try:
         current = settings.load(project=_project_root(args), config_file=args.config)
@@ -715,6 +739,15 @@ def main(argv: list[str] | None = None) -> int:
     test = actions.add_parser("test", help="run the cases of packs (all packs without an id)")
     test.add_argument("policy_id", nargs="*")
     test.add_argument("--json", action="store_true")
+    command = verbs.add_parser("route", help="routes of the conductor roles: explain (read-only)")
+    actions = command.add_subparsers(dest="action", required=True)
+    explain = actions.add_parser("explain", help="why a role runs on its route: the candidates and their availability, "
+                                                 "the selected route and the layer of each of its fields")
+    explain.add_argument("--role", required=True, help="context-scout, executor, reviewer, triager, registrar or report-fixer")
+    explain.add_argument("--plan", help="with --item: the options of the newest conductor run of this plan and item")
+    explain.add_argument("--item", help="with --plan: the piece of work")
+    explain.add_argument("--scenario", help="the scenario to explain (default: default_profile)")
+    explain.add_argument("--json", action="store_true")
     command = verbs.add_parser("conformance", help="engine conformance scenarios; covered ones run, declared ones are listed")
     command.add_argument("--binding", choices=sorted(BINDINGS), help="only this binding (default: every binding)")
     command.add_argument("--json", action="store_true")
@@ -728,6 +761,8 @@ def main(argv: list[str] | None = None) -> int:
         return _source_command(args)
     if args.verb == "policy":
         return _policy(args)
+    if args.verb == "route":
+        return _route_explain(args)
     if args.verb == "conformance":
         return _conformance(args)
     if args.verb == "launch":

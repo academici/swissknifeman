@@ -119,9 +119,12 @@
     {
       "id": "MODEL_REVIEWER",
       "q": "Model reviewer-agent (Lean-tiered: Opus — judges BC/risk)?",
-      "default": "opus",
+      "default": "frontier",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -130,9 +133,12 @@
     {
       "id": "MODEL_SLICE_BUILDER",
       "q": "Model slice-builder (Lean-tiered: Sonnet — mass implementation)?",
-      "default": "sonnet",
+      "default": "implementation",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -141,9 +147,12 @@
     {
       "id": "MODEL_TEST_WRITER",
       "q": "Model test-writer (Lean-tiered: Sonnet)?",
-      "default": "sonnet",
+      "default": "implementation",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -152,9 +161,12 @@
     {
       "id": "MODEL_SPEC_WRITER",
       "q": "Model spec-writer (Lean-tiered: Opus — design/synthesis)?",
-      "default": "opus",
+      "default": "frontier",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -163,9 +175,12 @@
     {
       "id": "MODEL_RECON",
       "q": "Model read-only recon-subagents (api-surface/test-verifier/security-review — cheap intelligence)?",
-      "default": "haiku",
+      "default": "economy",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"

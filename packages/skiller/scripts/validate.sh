@@ -670,7 +670,7 @@ PROJECT_TYPE_IDS = {
 }
 AA_MODES = {"strict", "permissive", "bypass", "off"}
 MEM_MODES = {"file", "federation", "agentmemory", "off"}
-MODEL_TIERS = {"inherit", "opus", "sonnet", "haiku"}
+MODEL_TIERS = {"inherit", "economy", "implementation", "frontier", "opus", "sonnet", "haiku"}  # classes (aicore model catalog) or names
 # Host-selected publisher; no repository partner names or fixed package layout.
 hc_dir = None
 _host = None

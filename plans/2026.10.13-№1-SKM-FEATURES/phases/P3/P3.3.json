@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.3",
   "title": "Классы моделей вместо имён: harness на каталоге aicore (дрейф codex), agent-pack MODEL_* по классам, skiller model_tiers по классам; orch.py route explain",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "harness agentpacks: _MODEL_SELECTORS → aicore select_model; pack.json MODEL_*: enum + классы, default — класс, рендер подставляет модель каталога; skiller profiles model_tiers → классы (валидатор принимает класс или имя); orch.py route explain --role R [--plan P --item I] [--json] — кандидаты, доступность, выбор, слой.",
   "why": "Аудит П2.3, N7; найден реальный дрейф: harness codex gpt-5.6-terra/sol ≠ каталог gpt-6-sol/astra. Риск: golden рендеров agent-packs и maind sync — обновить, имена остаются допустимыми (D1).",
   "scope": {
@@ -131,6 +131,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:46:20Z"
+  "result": {
+    "started_at": "2026-10-14T06:44:55Z",
+    "finished_at": "2026-10-14T07:09:43Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0068d0be-1d1f-4fdc-8ee8-a533f18299ad"
+    },
+    "notes": "harness: _MODEL_SELECTORS удалён, model_for_class через aicore select_model (HARNESS_MODEL_CLASS_UNKNOWN), MODEL_* в pack.json: классы+имена, default класс, рендер подставляет модель Claude; skiller profiles model_tiers классами, валидатор принимает оба; orch.py route explain (conductor/explain.py): кандидаты, доступность, selected, слои; golden, docs, CHANGELOG.",
+    "deviations": [
+      "explain.py, новые тесты, provider-harness.md, README packs вне task_files; версии packs не повышены"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T07:09:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T07:09:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T07:09:43Z"
 }

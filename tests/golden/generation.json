@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "78d46ac23cf6",
-  "reason": "PLAN4 P3.2: глобальный --project DIR в orch.py и conduct.py",
+  "captured_from": "16da01afab4c",
+  "reason": "PLAN4 P3.3: orch.py route explain в справке",
   "generators": [
     {
       "id": "skiller-registry",

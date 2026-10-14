@@ -62,6 +62,11 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
       "description": "Digest of the stage input."
+    },
+    "options_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the merged run options of the piece of work the stage belongs to."
     }
   },
   "required": [

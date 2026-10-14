@@ -37,6 +37,7 @@ from aicore.state import blobs, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
 from orch import catalog as catalogs, events, launch, policies, render, retry, sandbox
+from orch import settings as settings_mod
 from orch.conductor import checks as checks_mod, contract, gates, heal, observer, options as opts, process, prompts
 from orch.conductor import scope as scopes
 from orch.conductor.progress import Progress, human_duration
@@ -211,7 +212,8 @@ class Conductor:
                    "adopt": bool(adopt),
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
                    "project": str(self.project), "project_resolution": self.project_resolution,
-                   "working_directory": os.getcwd()}
+                   "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
+                   "config_layers": settings_mod.config_layers(self.settings)}
         self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
         write_json(self.directory / RUN_FILE, run_doc)
         self._save()
@@ -720,9 +722,11 @@ class Conductor:
 
     def _stage_event(self, item: Item, key: str, status: str) -> None:
         kind, _, number = key.partition(".")
-        events.emit("orch.run.stage.finished", {"run_id": item.orch_run, "stage_id": kind,
-                                                 "attempt": int(number) if number.isdigit() else 1,
-                                                 "status": status, "attempt_id": item.claim.get("attempt_id")},
+        data = {"run_id": item.orch_run, "stage_id": kind, "attempt": int(number) if number.isdigit() else 1,
+                "status": status, "attempt_id": item.claim.get("attempt_id"),
+                # none before the options are resolved (the brief step)
+                "options_digest": opts.digest(item.options) if item.options else None}
+        events.emit("orch.run.stage.finished", {key: value for key, value in data.items() if value is not None},
                     subject=item.orch_run, settings=self.settings, project=self.project,
                     config_file=self.config_file)
 
@@ -764,7 +768,7 @@ class Conductor:
         if persist:
             self.state["on_blocked"] = item.options["on_blocked"]
             write_json(item.directory / "options.json", {"scenario": scenario, "options": item.options,
-                                                         "sources": item.sources})
+                                                         "sources": item.sources, "digest": opts.digest(item.options)})
 
     def _prepare(self, item: Item) -> dict:
         provider = opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \

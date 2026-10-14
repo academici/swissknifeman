@@ -45,6 +45,21 @@
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
       "description": "Run-policy scenario of the run."
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the effective [orch] and [aicore.providers] configuration the run started under."
+    },
+    "project_resolution": {
+      "type": "string",
+      "enum": [
+        "flag",
+        "environment",
+        "marker",
+        "git"
+      ],
+      "description": "How the project of the run was found: --project, SKM_PROJECT_ROOT, a marker folder or a git repository."
     }
   },
   "required": [

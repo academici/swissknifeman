@@ -14,6 +14,8 @@ from __future__ import annotations
 import copy
 import re
 
+from aicore.util.digest import digest_json
+
 from orch.conductor import contract
 
 # Limits are targets and beacons, not walls: no role and no check is stopped for being long (the owner or an observer
@@ -198,6 +200,11 @@ def limit_problems(layer: dict) -> list:
         if key in CHECKS_BOUNDS and not CHECKS_BOUNDS[key][0] <= value <= CHECKS_BOUNDS[key][1]:
             issues.append(f"/checks/{key}: {value} is outside {CHECKS_BOUNDS[key][0]}..{CHECKS_BOUNDS[key][1]}")
     return issues
+
+
+def digest(options: dict) -> str:
+    """Tagged digest of the merged options of a piece of work: the same layers give the same digest."""
+    return digest_json(options)
 
 
 def stage_route(options: dict, role: str) -> dict:

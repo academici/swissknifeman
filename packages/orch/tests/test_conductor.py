@@ -20,7 +20,7 @@ import time
 import unittest
 from unittest import mock
 
-from orch.conductor import cli, engine, gates, progress
+from orch.conductor import cli, engine, gates, options as opts, progress
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "conductor"
@@ -1608,6 +1608,136 @@ class ProjectContextTests(ConductorCase):
         code, out, err = self.conduct("--project", self.project.parent / "missing", "status")
         self.assertEqual(code, 1)
         self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
+
+
+class RouteExplainTests(ConductorCase):
+    """``orch.py route explain``: the candidates, their availability, the selected route and the layer of its fields."""
+
+    def explain(self, *argv) -> dict:
+        from orch import cli as orch_cli
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = orch_cli.main(["route", "explain", *[str(item) for item in argv], "--json"])
+        self.assertEqual(code, 0, err.getvalue())
+        return json.loads(out.getvalue())
+
+    def test_the_executor_has_a_selected_route_and_candidates(self):
+        found = self.explain("--role", "executor")
+        self.assertEqual(found["source"], "configuration")
+        self.assertEqual((found["selected"]["provider"], found["selected"]["model_class"]), ("claude-code", "implementation"))
+        self.assertTrue(found["candidates"] and all(row["available"] for row in found["candidates"]), found["candidates"])
+        self.assertEqual(set(found["selected"]["sources"]), {"provider", "model_class", "effort", "model"})
+        self.assertEqual(found["providers"]["claude-code"], {"enabled": True, "layer": "defaults"})
+
+    def test_the_reviewer_names_its_selector_layer_and_its_fallback(self):
+        found = self.explain("--role", "reviewer")
+        self.assertEqual([row["origin"] for row in found["candidates"]], ["reviewer", "fallback_routes"])
+        self.assertEqual(found["selected"]["sources"]["provider"], "config:orch.conductor")
+        self.assertEqual(found["candidates"][1]["provider"], "claude-code")
+
+    def test_a_disabled_provider_is_unavailable_and_the_role_moves(self):
+        self.write_config(extra='[orch.conductor]\nreviewer = "codex/gpt-6-sol/high"\n\n'
+                                '[aicore.providers.available.codex]\nenabled = false\n')
+        found = self.explain("--role", "reviewer")
+        first = found["candidates"][0]
+        self.assertEqual((first["provider"], first["available"]), ("codex", False))
+        self.assertEqual(first["problem"],
+                         "PROVIDER_DISABLED: aicore.providers.available.codex.enabled = false (machine)")
+        self.assertEqual(found["selected"]["provider"], "claude-code")
+        self.assertEqual(found["selected"]["moved"]["reason_code"], "PROVIDER_DISABLED")
+        self.assertEqual(found["providers"]["codex"], {"enabled": False, "layer": "machine"})
+
+    def test_a_gated_provider_leaves_no_selected_route_and_names_the_stop(self):
+        gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        found = self.explain("--role", "executor")
+        self.assertIsNone(found["selected"])
+        self.assertEqual(found["stop"]["code"], "PROVIDER_QUOTA")
+        self.assertEqual([row["provider"] for row in found["gates"]], ["claude-code"])
+
+    def test_the_options_of_a_run_of_the_item_are_explained(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, out, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        found = self.explain("--role", "executor", "--plan", "T", "--item", "W1", "--scenario", self.scenario)
+        self.assertTrue(found["source"].startswith("run cnd-"), found["source"])
+        self.assertEqual(found["selected"]["provider"], "claude-code")
+
+    def test_an_unknown_role_or_item_is_refused(self):
+        from orch import cli as orch_cli
+        for argv, code in ((["--role", "nobody"], "ROLE_UNKNOWN"),
+                           (["--role", "executor", "--plan", "T", "--item", "NOPE"], "ITEM_UNKNOWN"),
+                           (["--role", "executor", "--plan", "T"], "ARGUMENTS_INVALID")):
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                status = orch_cli.main(["route", "explain", *argv])
+            self.assertEqual(status, 1)
+            self.assertIn(code, err.getvalue())
+
+
+class DigestTests(ConductorCase):
+    """``config_digest`` and ``config_layers`` in ``run.json``, ``digest`` in ``options.json`` and the digests in the events:
+    two runs under the same configuration and options give the same digests, a changed item option gives another one."""
+
+    REFS = ("W1", "W2", "W3", "W4")
+
+    def setUp(self):
+        super().setUp()
+        self.set_items({ref: {} for ref in self.REFS})
+        self.script({"executor": [executor_ok(ref) for ref in self.REFS], "reviewer": [GREEN]})
+        self.used = 0
+
+    def run_with(self, layer=None, extra_config=None):
+        """Run the next piece of work (each run takes the next ref) and return its ``run.json`` and ``options.json``."""
+        if extra_config:
+            self.write_config(extra=extra_config)
+        ref = self.REFS[self.used]
+        self.used += 1
+        extra = ()
+        if layer is not None:
+            options = self.project.parent / "digest-options.json"
+            options.write_text(json.dumps(layer), encoding="utf-8")
+            extra = ("--options", options)
+        code, out, err = self.run_items(ref, extra=extra)
+        self.assertEqual(self.outcome(err)[0], "finished", err)
+        directory = self.run_dir(err)
+        return (json.loads((directory / engine.RUN_FILE).read_text(encoding="utf-8")),
+                json.loads((directory / ref / "options.json").read_text(encoding="utf-8")))
+
+    def test_run_json_records_the_configuration_digest_and_its_layers(self):
+        run, options = self.run_with()
+        self.assertRegex(run["config_digest"], r"^sha256:[0-9a-f]{64}$")
+        layers = {layer["layer"]: layer for layer in run["config_layers"]}
+        self.assertTrue(layers["machine"]["present"])
+        self.assertEqual(layers["machine"]["file"], str(self.home / "skm" / "config" / "config.toml"))
+        self.assertFalse(layers["flags"]["present"])
+        self.assertEqual(options["digest"], opts.digest(options["options"]))
+
+    def test_the_same_options_give_the_same_digest_and_an_item_override_another(self):
+        first = self.run_with()[1]["digest"]
+        again = self.run_with()[1]["digest"]
+        changed = self.run_with({"limits": {"repairs": 0}})[1]["digest"]
+        self.assertEqual(first, again)
+        self.assertNotEqual(first, changed)
+
+    def test_the_configuration_digest_follows_the_configuration(self):
+        before = self.run_with()[0]["config_digest"]
+        self.assertEqual(self.run_with()[0]["config_digest"], before)
+        changed = self.run_with(extra_config="[aicore.providers.available.codex]\nenabled = false\n")[0]["config_digest"]
+        self.assertNotEqual(changed, before)
+
+    def test_the_events_carry_the_digests(self):
+        from aicore.ext import events as journal
+        run, options = self.run_with()
+        stored, problems = journal.read_events(self.project)
+        self.assertEqual(problems, [])
+        started = [event.data for event in stored if event.type == "orch.run.started"]
+        self.assertEqual(len(started), 1)
+        self.assertEqual((started[0]["config_digest"], started[0]["project_resolution"]),
+                         (run["config_digest"], "git"))
+        stages = [event.data for event in stored if event.type == "orch.run.stage.finished"
+                  and "options_digest" in event.data]  # the stages of the conductor; the run cycle does not know the options
+        self.assertTrue(stages)
+        self.assertEqual({data["options_digest"] for data in stages}, {options["digest"]})
 
 
 class PreviewAndStatusTests(ConductorCase):

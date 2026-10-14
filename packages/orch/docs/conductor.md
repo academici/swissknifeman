@@ -28,6 +28,14 @@ the commands stop with `PROJECT_CONTEXT_REQUIRED` and the hint `--project DIR`; 
 project. The roles always start in the project folder, wherever the conductor was started. `run.json` records
 `project_resolution` (`flag`, `environment`, `marker` or `git`) and `working_directory`.
 
+## Digests of a run
+
+`run.json` holds `config_digest`, the tagged digest of the effective `[orch]` and `[aicore.providers]` (`orch.settings.config_digest`),
+and `config_layers`, `[{layer, file, present}]` of the layers behind it. Each piece of work has `options_digest`: the digest of its
+merged run options, written as `digest` in `<item>/options.json`. The events carry them: `orch.run.started` has `config_digest` and
+`project_resolution`, the `orch.run.stage.finished` events of the conductor have `options_digest` (event-data/v1, optional fields).
+The same configuration and options give the same digests; a changed override gives another one.
+
 ## The cycle of one piece of work
 
 Every step has a key and is recorded in `state.json` once it closes; the work source is reached only through

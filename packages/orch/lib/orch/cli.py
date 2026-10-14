@@ -493,7 +493,9 @@ def _source_claim(args, current, project) -> int:
         if before is None or before.get("attempt_id") != doc["attempt_id"]:
             _emit("orch.run.started", {"run_id": run_id, "submission_id": submission, "attempt_id": doc["attempt_id"],
                                        "source": {"plugin": current.work_source, "ref": doc["ref"]},
-                                       "scenario": doc["scenario"]}, subject=run_id, **emit)
+                                       "scenario": doc["scenario"], "config_digest": settings.config_digest(current),
+                                       "project_resolution": getattr(args, "project_resolution", None)},
+                  subject=run_id, **emit)
         return 0
     if answer["status"] == "blocked":
         _emit("orch.run.refused", {"submission_id": submission, "step": "claim", "run_id": run_id,
@@ -612,7 +614,8 @@ def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
                "register": _source_register, "commit": _source_commit, "release": _source_release}[args.action]
     try:
-        project = project_mod.require(getattr(args, "project", None)).root  # the cycle writes the state of a project
+        context = project_mod.require(getattr(args, "project", None))  # the cycle writes the state of a project
+        project, args.project_resolution = context.root, context.resolution
         current = settings.load(project=project, config_file=args.config)  # the configuration is read once
         return handler(args, current, project)
     except ProjectContextRequired as error:

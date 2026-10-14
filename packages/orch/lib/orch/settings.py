@@ -123,6 +123,21 @@ def digest(settings: Settings) -> str:
     return _digest.sha256_hex(_digest.canonical_json_bytes(affecting(settings)))
 
 
+def config_digest(settings: Settings) -> str:
+    """Tagged digest of the effective ``[orch]`` and ``[aicore.providers]`` (``None`` for a part that was not resolved):
+    two runs with the same digest ran under the same configuration."""
+    providers = settings.aicore.get("providers") if settings.aicore is not None else None
+    return _digest.digest_json({"orch": settings.resolved.as_dict() if settings.resolved is not None else None,
+                                "aicore.providers": providers})
+
+
+def config_layers(settings: Settings) -> list:
+    """The configuration layers behind the digest: ``[{layer, file, present}]``, lowest first."""
+    if settings.resolved is None:
+        return []
+    return [{"layer": layer.name, "file": layer.file, "present": layer.present} for layer in settings.resolved.layers]
+
+
 def select_engine(settings: Settings, role: str, *, flag: str | None = None, stage_id: str = "*") -> tuple:
     """``(binding, decision)``: the flag, else ``engine_by_role[role]``, else ``engine``.
 

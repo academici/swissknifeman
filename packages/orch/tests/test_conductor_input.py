@@ -11,10 +11,10 @@ import json
 from pathlib import Path
 import unittest
 
-from orch import adhoc, cli as orch_cli
+from orch import adhoc, cli as orch_cli, journal
 from orch.conductor import engine
 from orch.contracts import canonical_digest, validate
-from orch.worksource import WorkSourceError
+from orch.worksource import WorkSourceError, problems
 from orch.worksource_file import FileWorkSource
 from tests.test_conductor import ConductorCase, GREEN, report
 
@@ -180,6 +180,62 @@ class SupportProvenanceTests(InputCase):
         code, _, err = self.run_input(path)
         self.assertEqual(code, 0, err)
         self.assertEqual(self.source().get("notes", []), [])
+
+
+class ReviewFindingsTests(InputCase):
+    """Findings of the grok-4.7 review of P6.1–P6.3, each with the reproduction of the reviewer."""
+
+    def git_repo(self) -> Path:
+        return self.project
+
+    def test_a_commit_takes_literally_named_paths_only(self):  # F2
+        path = self.write_input()
+        (self.project / "item1.txt").write_text("tracked\n", encoding="utf-8")
+        self.git("add", "item1.txt")
+        self.git("commit", "-q", "-m", "tracked")
+        (self.project / "item1.txt").write_text("foreign change\n", encoding="utf-8")  # unstaged work of the owner
+        (self.project / "item[1].txt").write_text("mine\n", encoding="utf-8")
+        source = FileWorkSource(path, project=self.project, commit=True)
+        answer = source.commit(plan=str(path), ref=self.input_doc["input_id"], run_id="run-x", attempt_id="att-run-x-a",
+                               paths=["item[1].txt"])
+        self.assertEqual(answer["outcome"], "committed")
+        self.assertEqual(self.git("show", "--name-only", "--format=", "HEAD").split(), ["item[1].txt"])
+        self.assertIn(" M item1.txt", self.git("status", "--porcelain"))
+
+    def test_an_input_id_that_is_not_one_path_component_is_refused(self):  # F3
+        path = self.write_input()
+        doc = json.loads(path.read_text())
+        doc["input_id"] = "a/../../../OUTSIDE@" + "0" * 12
+        doc["digest"] = canonical_digest(doc)
+        doc["input_id"] = "a/../../../OUTSIDE@" + doc["digest"][:12]
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        code, _, err = self.run_input(path)
+        self.assertEqual(code, 1)
+        self.assertIn("INPUT_INVALID", err)
+        self.assertFalse((self.project.parent / "OUTSIDE").exists() or list(self.project.parent.glob("OUTSIDE*")))
+
+    def test_the_register_receipt_stays_inside_work_source_v1(self):  # F4
+        path = self.write_input(adhoc.support_provenance("phase_support", plan="T", phase="P1"))
+        self.script({"executor": [EXECUTOR], "reviewer": [GREEN]})
+        code, _, err = self.run_input(path)
+        self.assertEqual(code, 0, err)
+        run = self.state(err)["items"][self.input_doc["input_id"]]["orch_run"]
+        receipts = journal.run_dir(run, project=self.project) / "receipts"
+        self.assertEqual(problems(json.loads((receipts / "register.json").read_text()), "output"), [])
+        self.assertEqual(json.loads((receipts / "note.json").read_text()), {"outcome": "recorded"})
+
+    def test_a_refused_commit_leaves_the_index_as_it_was(self):  # F5
+        path = self.write_input()
+        hook = self.project / ".git" / "hooks" / "pre-commit"
+        hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        hook.chmod(0o755)
+        (self.project / "wanted.txt").write_text("x\n", encoding="utf-8")
+        source = FileWorkSource(path, project=self.project, commit=True)
+        answer = source.commit(plan=str(path), ref=self.input_doc["input_id"], run_id="run-x", attempt_id="att-run-x-a",
+                               paths=["wanted.txt"])
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "COMMIT_REFUSED"))
+        self.assertEqual(self.git("diff", "--cached", "--name-only").strip(), "")
+        self.assertIn("?? wanted.txt", self.git("status", "--porcelain"))
 
 
 class ProvenanceKindTests(unittest.TestCase):

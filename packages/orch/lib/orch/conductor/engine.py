@@ -1170,10 +1170,11 @@ class Conductor:
         self._local.agent = handle
         return handle
 
-    def _agent_end(self, handle: dict, error: Optional[dict] = None) -> None:
-        """The result of the agent run, whatever its end; the agent of the thread is the parent again."""
+    def _agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool = False) -> None:
+        """The result of the agent run, whatever its end; the agent of the thread is the parent again. A run that went
+        on after a failure of the provider and succeeded has no error: its ``decisions`` tell the repeat."""
         trail = handle["trail"]
-        agents.finish(handle, exit_code=handle["last_exit"], error=trail.get("error") or error,
+        agents.finish(handle, exit_code=handle["last_exit"], error=None if succeeded else trail.get("error") or error,
                       decisions=trail.get("decisions") or [], duration_s=time.monotonic() - handle["began"],
                       stream=handle["stream"], lingered=handle["lingered"])
         self._local.agent = handle["previous"]
@@ -1193,7 +1194,7 @@ class Conductor:
         except BaseException as error:  # an interrupt or a crash still leaves the record of the run
             self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})
             raise
-        self._agent_end(handle)
+        self._agent_end(handle, succeeded=True)
         return doc, {**meta, "agent": handle["id"]}
 
     DENIAL_NOTE_ROLES = ("executor", "bounded-implementer")

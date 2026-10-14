@@ -94,7 +94,7 @@ check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (t
 `.swissknifeman/orch-artifacts/<run_id>/<input_id>/`; `commit` commits nothing unless `--commit`, then only the given paths with
 `adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal. For provenance
 `plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source
-(`register` answer `note: {outcome: recorded | unsupported | refused, message?}`). `run.json` of the cycle gets
+(the CLI prints the answer with `note: {outcome: recorded | unsupported | refused, message?}`; `receipts/register.json` keeps the pure answer of the source and the note goes to `receipts/note.json`). The `input_id` of a file input names the artifact folder, so it must be one path component (`INPUT_INVALID` otherwise); `commit` uses literal git pathspecs, and a commit refused by a hook leaves the index as it was. `run.json` of the cycle gets
 `source = {kind: file, path, commit}` and `plugin: file`; the later commands read it.
 
 ## Ownership and integrity

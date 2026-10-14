@@ -91,6 +91,17 @@ class AgentRunTests(ConductorCase):
         self.assertTrue(executor)
         self.assertTrue(all("result.json" in doc and doc["result.json"].get("error") for doc in executor), executor)
 
+    def test_a_provider_failure_that_a_repeat_overcame_is_not_an_error_of_the_agent_run(self):  # review F1
+        self.script({"executor": [{"exit": 1, "stderr": "something odd"}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        executor = next(doc for doc in self.agent_dirs(err).values() if doc["request.json"]["role"] == "executor")
+        self.assertEqual(executor["result.json"]["exit"], 0)
+        self.assertNotIn("error", executor["result.json"])
+        self.assertTrue(executor["result.json"]["decisions"])  # the repeat itself stays recorded
+        listed = json.loads(self.conduct("status", "--json")[1])["agents"]
+        self.assertTrue(all(row["status"] == "ok" for row in listed), listed)
+
     def test_the_counter_is_kept_in_the_state_and_the_id_follows_the_run(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         _, _, err = self.run_items("W1")

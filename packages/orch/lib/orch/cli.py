@@ -405,6 +405,7 @@ RUN_DOC = "run.json"
 LAUNCH_PLAN_DOC = "launch-plan.json"
 REGISTER_RECEIPT = "receipts/register.json"
 COMMIT_RECEIPT = "receipts/commit.json"
+NOTE_RECEIPT = "receipts/note.json"
 RELEASE_RECEIPT = "receipts/release.json"
 STAGE_STATUS = {"done": "completed", "done_with_deviations": "completed", "blocked": "failed"}
 
@@ -620,11 +621,12 @@ def _source_register(args, current, project) -> int:
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], status=args.status, report=report, evidence=evidence,
                    registrar=args.actor, executed_by=args.executed_by or args.actor)
+    journal.write_doc(directory, REGISTER_RECEIPT, answer)  # the receipt is the answer of the source, as the contract has it
     if answer["outcome"] == "recorded":
         note = _support_note(args, current, project, doc, report)
         if note:
-            answer = {**answer, "note": note}
-    journal.write_doc(directory, REGISTER_RECEIPT, answer)
+            journal.write_doc(directory, NOTE_RECEIPT, note)
+            answer = {**answer, "note": note}  # printed for the conductor; not part of the work-source answer
     _print(answer)
     emit = dict(current=current, project=project, config_file=args.config)
     if answer["outcome"] == "refused":

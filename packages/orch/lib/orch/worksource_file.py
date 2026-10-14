@@ -31,6 +31,7 @@ from orch.worksource import WorkSourceError, problems
 ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
 RECEIPT = "register.json"
 _UNSAFE = re.compile(r"[^A-Za-z0-9._-]+")
+_INPUT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._@-]*$")  # one path component: the id names the artifact folder
 TITLE_LIMIT = 100
 
 
@@ -53,6 +54,9 @@ def read_input(path: str | Path) -> dict:
     if not isinstance(doc, dict):
         raise WorkSourceError("INPUT_INVALID", f"the input {path} is not a JSON object")
     errors = [issue for issue in contracts.validate(doc, "execution-input") if issue.level == "error"]
+    if not errors and (not _INPUT_ID.match(doc["input_id"]) or ".." in doc["input_id"]):
+        raise WorkSourceError("INPUT_INVALID", f"the input {path} has the input_id {doc['input_id']!r}: it names the "
+                              "folder of the artifacts and must be one path component of letters, digits, . _ - @")
     if errors:
         raise WorkSourceError("INPUT_INVALID", f"the input {path} is outside exec/v1: "
                               + "; ".join(f"{issue.path or '/'} {issue.code}: {issue.message}" for issue in errors[:3]))
@@ -197,7 +201,9 @@ class FileWorkSource:
                 "receipt": {"artifacts": folder.relative_to(self.project).as_posix(), "evidence_copied": copied}}
 
     def _git(self, *args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["git", "-C", str(self.project), *args], capture_output=True, text=True, check=False)
+        # literal pathspecs: a path such as ``item[1].txt`` is that file, never a pattern that takes foreign files along
+        return subprocess.run(["git", "--literal-pathspecs", "-C", str(self.project), *args], capture_output=True,
+                              text=True, check=False)
 
     def _commit(self, request: dict) -> dict:
         if not self.commit_enabled:
@@ -207,6 +213,7 @@ class FileWorkSource:
         paths = sorted(set(request["paths"]))
         if not paths:
             return {"op": "commit", "outcome": "no-op", "message": "no paths to commit"}
+        staged = set(self._git("diff", "--cached", "--name-only", "-z", "--", *paths).stdout.split("\0"))
         added = self._git("add", "-A", "--", *paths)
         if added.returncode:
             return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_REFUSED",
@@ -215,6 +222,10 @@ class FileWorkSource:
             return {"op": "commit", "outcome": "no-op", "message": "nothing left to commit"}
         done = self._git("commit", "-q", "-m", f"adhoc({doc['input_id']}): {title_of(doc)}", "--", *paths)
         if done.returncode:
+            fresh = [path for path in self._git("diff", "--cached", "--name-only", "-z", "--", *paths).stdout.split("\0")
+                     if path and path not in staged]
+            if fresh:  # a refused commit (a hook) leaves the index of the owner as it was
+                self._git("reset", "-q", "--", *fresh)
             return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_REFUSED",
                     "message": (done.stderr or done.stdout).strip() or "git commit failed"}
         sha = self._git("rev-parse", "HEAD").stdout.strip()

@@ -982,11 +982,14 @@ def reconcile(plan, actor: Mapping | None = None) -> ReconcileResult:
 # ---------------------------------------------------------------- log, decisions, grants
 
 def log(plan, target: str, type: str, summary: str, impact: str | None = None,  # noqa: A002
-        next: str | None = None, refs: Iterable[str] = (), actor: Mapping | None = None) -> dict:  # noqa: A002
-    """Append a friction event for an item or a phase; returns the event."""
+        next: str | None = None, refs: Iterable[str] = (), actor: Mapping | None = None,  # noqa: A002
+        data: Mapping | None = None) -> dict:
+    """Append a friction event for an item or a phase; returns the event. ``data`` is the event's free-form object."""
     with _mutation(plan) as (p, lock):
         if type not in FRICTION_TYPES:
             raise PlanError("LOG_TYPE_INVALID", f"type must be one of {', '.join(FRICTION_TYPES)}")
+        if data is not None and not isinstance(data, Mapping):
+            raise PlanError("LOG_DATA_INVALID", "data must be a JSON object")
         if ITEM_ID.fullmatch(target):
             _need_item(p, target)
             where = {"item": target, "phase": _item_phase(target)}
@@ -996,7 +999,7 @@ def log(plan, target: str, type: str, summary: str, impact: str | None = None,  
         else:
             raise PlanError("REF_INVALID", f"target must be an item or a phase, received {target!r}")
         event = store.new_event(type, summary, _actor_doc(p, actor, where.get("item")), impact=impact, next=next,
-                                refs=list(refs), **where)
+                                refs=list(refs), data=dict(data) if data is not None else None, **where)
         _commit(p, [], [event], lock)
         return event
 

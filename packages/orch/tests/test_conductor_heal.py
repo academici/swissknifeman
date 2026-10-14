@@ -41,6 +41,39 @@ class StageReportTests(unittest.TestCase):
         self.assertEqual(kinds, ["note", "difficulty", "note"])
         self.assertIn("where: a.py", fixed["open_issues"][1]["text"])
 
+    def test_a_deviation_without_class_outcome_or_impact_is_filled_and_said(self):
+        fixed, notes, problems = self.healed(report(status="done_with_deviations",
+                                                    open_issues=[{"text": "t", "kind": "deviation"}]))
+        self.assertEqual(problems, [])
+        issue = fixed["open_issues"][0]
+        self.assertEqual((issue["class"], issue["outcome"], issue["impact"]),
+                         ("other", "accepted", "not stated by the executor"))
+        self.assertTrue(any("class" in note and "outcome" in note and "impact" in note for note in notes), notes)
+
+    def test_a_deviation_that_names_its_fields_is_kept_and_words_are_matched(self):
+        given = {"text": "t", "kind": "deviation", "impact": "api", "class": "Write-Set", "outcome": "Follow up",
+                 "severity": "HIGH", "auto_fixable": "true", "evidence": "a.py:3"}
+        fixed, notes, problems = self.healed(report(status="done_with_deviations", open_issues=[given]))
+        self.assertEqual(problems, [])
+        issue = fixed["open_issues"][0]
+        self.assertEqual((issue["class"], issue["outcome"], issue["severity"], issue["impact"]),
+                         ("write_set", "follow_up", "high", "api"))
+        self.assertEqual((issue["auto_fixable"], issue["evidence"]), (True, ["a.py:3"]))
+
+    def test_an_unknown_class_or_outcome_becomes_the_default_and_the_word_is_not_lost(self):
+        given = {"text": "t", "kind": "deviation", "impact": "api", "class": "typo", "outcome": "later"}
+        fixed, notes, problems = self.healed(report(status="done_with_deviations", open_issues=[given]))
+        self.assertEqual(problems, [])
+        issue = fixed["open_issues"][0]
+        self.assertEqual((issue["class"], issue["outcome"]), ("other", "accepted"))
+        self.assertIn("class: typo", issue["text"])
+        self.assertIn("outcome: later", issue["text"])
+
+    def test_deviation_fields_on_another_kind_are_kept_when_valid_and_nothing_is_added(self):
+        fixed, _, problems = self.healed(report(open_issues=[{"text": "t", "kind": "note", "severity": "low"}]))
+        self.assertEqual(problems, [])
+        self.assertEqual(fixed["open_issues"][0], {"text": "t", "kind": "note", "severity": "low"})
+
     def test_what_has_no_honest_reading_is_left_for_the_repair(self):
         _, _, problems = self.healed(report(checks_run=[{"id": "V1", "cmd": "x", "exit": "zero"}]))
         self.assertTrue(problems)

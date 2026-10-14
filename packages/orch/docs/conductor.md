@@ -79,13 +79,18 @@ sees the plan or the plan's command line. It runs the tests of what it changed; 
 checks (their commands are listed in the prompt so the executor does not repeat them) unless
 `checks.executor_runs_checks` asks it to. A gap that needs the owner is `blocked` with one `escalation` issue per
 missing thing; `done_with_deviations` needs a `deviation` issue.
+A `deviation` issue carries `class` (`write_set`, `spec_mismatch`, `test_env`, `docs`, `dependency`, `environment`,
+`other`), `impact` and `outcome` (`accepted`, `follow_up`, `owner_decision`); `severity`, `auto_fixable` and `evidence`
+are optional and `next` stays free text. Healing fills a missing `class` with `other`, `outcome` with `accepted` and
+`impact` with "not stated by the executor" (said in the note issue); the registration bridge writes the fields to the
+`data` of the work source's journal event.
 
 **What changed is read from git.** After every executor round the conductor lists the dirty paths of the tree, minus
 what the work source wrote when it claimed, the artifact folder, the plan folder of the input and the conductor
 reports. The union over the rounds is the `changed_paths` of the registered report and the paths of the commit (a
 correction round lists only its own paths; the conductor does not lose the first round's). Paths that
 `scope.write_set` does not own are, with `scope.outside: deviation` (default), listed to the reviewer, recorded as a
-`deviation` and committed with the piece; with `block` the piece is blocked right after the executor
+`deviation` (`class: write_set`, `outcome: accepted`, `evidence`: the paths) and committed with the piece; with `block` the piece is blocked right after the executor
 (`OUTSIDE_WRITE_SET`).
 
 **A result outside its contract** goes through three steps: healing by rule (`heal.py`: one honest reading of a form

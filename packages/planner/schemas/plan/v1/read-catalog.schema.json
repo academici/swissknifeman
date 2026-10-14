@@ -169,6 +169,7 @@
                 "KIND_UNKNOWN",
                 "LIMIT_INVALID",
                 "LINK_INVALID",
+                "LOG_DATA_INVALID",
                 "LOG_INVALID",
                 "LOG_TYPE_INVALID",
                 "MESSAGE_REQUIRED",

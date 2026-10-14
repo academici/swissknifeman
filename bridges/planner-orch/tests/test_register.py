@@ -106,6 +106,29 @@ class PlanCallsTests(unittest.TestCase):
         self.assertEqual(flag_values(finish, "--pending"), ["polish names later"])
         self.assertNotIn("--attempt-id", logs[0])
 
+    def test_deviation_fields_reach_the_log_call_as_data(self):
+        deviation = {"text": "edited docs/x.md", "kind": "deviation", "impact": "commit", "class": "write_set",
+                     "outcome": "accepted", "severity": "low", "auto_fixable": False, "evidence": ["docs/x.md", "V1"]}
+        calls = register.plan_calls(report(open_issues=[deviation, ALL_ISSUES[4]]),
+                                    args(status="done_with_deviations", attempt_id="a"))
+        data = json.loads(flag_values(calls[0], "--data")[0])
+        self.assertEqual(data, {"class": "write_set", "outcome": "accepted", "severity": "low",
+                                "auto_fixable": False, "evidence": ["docs/x.md", "V1"]})
+        self.assertNotIn("--data", calls[1])  # an issue without the fields carries no data
+        unit = register.plan_calls(report(open_issues=[dict(deviation, kind="difficulty")]),
+                                   args(ref="P2.1/U1", status=None, attempt_id="u"))
+        self.assertEqual(json.loads(flag_values(unit[0], "--data")[0])["class"], "write_set")
+
+    def test_deviation_fields_are_checked(self):
+        for name, change in {"class": {"class": "typo"}, "severity": {"severity": "urgent"},
+                             "outcome": {"outcome": "later"}, "auto-fixable": {"auto_fixable": "yes"},
+                             "evidence-string": {"evidence": "a.py:1"}, "evidence-empty": {"evidence": []},
+                             "evidence-blank": {"evidence": [""]}}.items():
+            with self.subTest(name):
+                issue = dict(ALL_ISSUES[1], **change)
+                self.refused("REGISTER_REPORT_INVALID", report(open_issues=[issue]), attempt_id="a",
+                             status="done_with_deviations")
+
     def test_escalation_goes_with_blocked(self):
         issues = [{"text": "owner must pick a license", "kind": "escalation"},
                   {"text": "and a name", "kind": "escalation"}]
@@ -223,6 +246,14 @@ class RegisterCliTests(CliCase):
         self.assertEqual(result["attempt_id"], "run-1")
         logged = {(e["type"], e["summary"]) for e in self.events("P2.1", *register.LOG_KINDS)}
         self.assertTrue({(i["kind"], i["text"]) for i in ALL_ISSUES if i["kind"] in register.LOG_KINDS} <= logged)
+
+    def test_deviation_fields_land_in_the_journal_data(self):
+        deviation = dict(ALL_ISSUES[1], **{"class": "write_set", "outcome": "follow_up", "evidence": ["V1"]})
+        code, _, err = self.register(report(open_issues=[deviation]), "P2.1", "--status", "done_with_deviations",
+                                     "--attempt-id", "run-d")
+        self.assertEqual(code, 0, err)
+        [event] = [e for e in self.events("P2.1", "deviation") if e["summary"] == deviation["text"]]
+        self.assertEqual(event["data"], {"class": "write_set", "outcome": "follow_up", "evidence": ["V1"]})
 
     def test_repeat_with_the_same_attempt_registers_once(self):
         argv = ("--status", "done_with_deviations", "--attempt-id", "run-1")

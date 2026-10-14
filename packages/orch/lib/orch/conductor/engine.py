@@ -1962,7 +1962,8 @@ class Conductor:
         if outside and report["status"] != "blocked":
             issue = {"text": "changed outside the write set: " + ", ".join(outside)[:800], "kind": "deviation",
                      "impact": "the commit takes these paths with the piece; the reviewer saw them",
-                     "next": "widen the write set of later items like this one"}
+                     "next": "widen the write set of later items like this one",
+                     "class": "write_set", "outcome": "accepted", "evidence": list(outside)[:20]}
             report = dict(report, status="done_with_deviations",
                           open_issues=list(report.get("open_issues", [])) + [issue])
         notes = self._notes(item)

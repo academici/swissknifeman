@@ -32,7 +32,11 @@ LOG_KINDS = ("deviation", "blocker", "difficulty", "assumption", "note")
 STATUSES = ("done", "done_with_deviations", "blocked")
 GATES = ("evidence",)
 REPORT_FIELDS = ("summary", "changed_paths", "checks_run", "evidence", "open_issues")
-_ISSUE_FIELDS = ("text", "kind", "impact", "next")
+DEVIATION_CLASSES = ("write_set", "spec_mismatch", "test_env", "docs", "dependency", "environment", "other")
+DEVIATION_OUTCOMES = ("accepted", "follow_up", "owner_decision")
+ISSUE_SEVERITIES = ("low", "medium", "high", "critical")
+_DATA_FIELDS = ("class", "severity", "outcome", "auto_fixable", "evidence")  # kept in the journal event's data
+_ISSUE_FIELDS = ("text", "kind", "impact", "next") + _DATA_FIELDS
 _CHECK_ID = re.compile(r"^V[0-9]+$", re.ASCII)
 _REF = re.compile(r"^(P[0-9]+\.[0-9]+)(?:/(U[0-9]+))?$", re.ASCII)
 
@@ -118,7 +122,18 @@ def check_report(report) -> dict:
                                                    f"{', '.join(ISSUE_KINDS)}")
         extra = sorted(set(issue) - set(_ISSUE_FIELDS))
         if extra or any(key in issue and not _text(issue[key]) for key in ("impact", "next")):
-            raise invalid(f"{where} carries text, kind and optional non-empty impact, next only")
+            raise invalid(f"{where} carries text, kind and optional non-empty impact, next, "
+                          f"{', '.join(_DATA_FIELDS)} only")
+        for key, allowed in (("class", DEVIATION_CLASSES), ("severity", ISSUE_SEVERITIES),
+                             ("outcome", DEVIATION_OUTCOMES)):
+            if key in issue and issue[key] not in allowed:
+                raise invalid(f"{where} {key} {issue[key]!r} is not one of {', '.join(allowed)}")
+        if "auto_fixable" in issue and not isinstance(issue["auto_fixable"], bool):
+            raise invalid(f"{where} auto_fixable must be true or false")
+        evidence = issue.get("evidence", [])
+        if not isinstance(evidence, list) or not evidence and "evidence" in issue \
+                or not all(_text(row) for row in evidence):
+            raise invalid(f"{where} evidence must be a non-empty list of non-empty strings")
     out["open_issues"] = list(issues)
     return out
 
@@ -135,6 +150,9 @@ def _log(args, item: str, issue: dict, kind: str | None = None, prefix: str = ""
     for key in ("impact", "next"):
         if issue.get(key):
             argv += [f"--{key}", issue[key]]
+    data = {key: issue[key] for key in _DATA_FIELDS if key in issue}
+    if data:  # class, severity, outcome, auto_fixable, evidence: the event keeps them in its data object
+        argv += ["--data", json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))]
     return argv + _tail(args, executed=False)
 
 

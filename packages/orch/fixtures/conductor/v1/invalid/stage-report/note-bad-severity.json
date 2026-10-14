@@ -1,0 +1,23 @@
+{
+  "status": "done_with_deviations",
+  "summary": "Changed a file outside the write set.",
+  "changed_paths": [
+    "a.py",
+    "docs/x.md"
+  ],
+  "checks_run": [
+    {
+      "id": "V1",
+      "cmd": "python3 -m unittest",
+      "exit": 0
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "text": "t",
+      "kind": "note",
+      "severity": "urgent"
+    }
+  ]
+}

@@ -17,6 +17,11 @@ import re
 CHECK_ID = re.compile(r"V[0-9]+")
 FINDING_ID = re.compile(r"F[0-9]+")
 ISSUE_KINDS = ("pending", "deviation", "blocker", "difficulty", "assumption", "note", "escalation")
+DEVIATION_CLASSES = ("write_set", "spec_mismatch", "test_env", "docs", "dependency", "environment", "other")
+DEVIATION_OUTCOMES = ("accepted", "follow_up", "owner_decision")
+ISSUE_SEVERITIES = ("low", "medium", "high", "critical")
+ISSUE_FIELDS = ("text", "kind", "impact", "next", "class", "severity", "outcome", "auto_fixable", "evidence")
+NO_IMPACT = "not stated by the executor"
 STATUSES = ("done", "done_with_deviations", "blocked")
 VERDICTS = ("GREEN", "ATTENTION", "RED")
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")
@@ -72,7 +77,7 @@ def _issue(raw, notes: list):
         return {"text": raw.strip(), "kind": "note"}
     if not isinstance(raw, dict):
         return raw
-    issue = {key: value for key, value in raw.items() if key in ("text", "kind", "impact", "next")}
+    issue = {key: value for key, value in raw.items() if key in ISSUE_FIELDS}
     dropped = sorted(set(raw) - set(issue))
     if dropped:
         extra = "; ".join(f"{key}: {raw[key]}" for key in dropped if raw[key] not in (None, ""))
@@ -85,7 +90,53 @@ def _issue(raw, notes: list):
     for key in ("impact", "next"):
         if key in issue and (not isinstance(issue[key], str) or not issue[key].strip()):
             issue.pop(key)
+    _deviation_fields(issue, notes)
     return issue
+
+
+def _deviation_fields(issue: dict, notes: list) -> None:
+    """The class, severity, outcome, auto_fixable and evidence of an issue mended; a deviation gets what it lacks.
+
+    A word that matches no option is not guessed: it is folded into the text and the field takes its default
+    (a deviation) or is dropped (any other kind). The defaults are the plainest honest reading: ``other``,
+    ``accepted`` (it is already in the report), and an impact that says nobody stated it.
+    """
+    folded = []
+    for key, allowed in (("class", DEVIATION_CLASSES), ("severity", ISSUE_SEVERITIES), ("outcome", DEVIATION_OUTCOMES)):
+        if key not in issue:
+            continue
+        word = _word(issue[key], allowed)
+        if word:
+            issue[key] = word
+        else:
+            folded.append(f"{key}: {issue.pop(key)}")
+    if "auto_fixable" in issue and not isinstance(issue["auto_fixable"], bool):
+        word = _word(issue["auto_fixable"], ("true", "false"))
+        if word:
+            issue["auto_fixable"] = word == "true"
+        else:
+            folded.append(f"auto_fixable: {issue.pop('auto_fixable')}")
+    if "evidence" in issue:
+        value = issue["evidence"]
+        rows = [value] if isinstance(value, str) else value
+        if isinstance(rows, list) and all(isinstance(row, str) and row.strip() for row in rows) and rows:
+            issue["evidence"] = [row.strip() for row in rows]
+        else:
+            folded.append(f"evidence: {issue.pop('evidence')}")
+    if folded and isinstance(issue.get("text"), str):
+        issue["text"] = f"{issue['text']} ({'; '.join(folded)})"
+        notes.append("open issue values " + ", ".join(entry.split(":")[0] for entry in folded) + " matched no option "
+                     "and were folded into its text")
+    if issue.get("kind") != "deviation":
+        return
+    filled = []
+    for key, default in (("class", "other"), ("outcome", "accepted"), ("impact", NO_IMPACT)):
+        if key not in issue:
+            issue[key] = default
+            filled.append(key)
+    if filled:
+        notes.append(f"a deviation lacked {', '.join(filled)}; the defaults are other, accepted and "
+                     f"'{NO_IMPACT}'")
 
 
 def _check_row(raw, notes: list):

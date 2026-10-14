@@ -670,6 +670,9 @@ class ScopeTests(ConductorCase):
         self.assertEqual(item["status"], "done_with_deviations")
         self.assertEqual(item["report"]["changed_paths"], ["docs/extra.md", "out/W1.txt"])
         self.assertTrue(any(i["kind"] == "deviation" and "docs/extra.md" in i["text"] for i in item["report"]["open_issues"]))
+        deviation = next(i for i in item["report"]["open_issues"] if i["kind"] == "deviation")
+        self.assertEqual((deviation["class"], deviation["outcome"], deviation["evidence"]),
+                         ("write_set", "accepted", ["docs/extra.md"]))
         self.assertIn("## Changed outside the write set", self.prompt("reviewer", 1))
         self.assertIn("`docs/extra.md`", self.prompt("reviewer", 1))
         self.assertIn("docs/extra.md", self.source()["commits"][0]["paths"])

@@ -28,6 +28,10 @@ End your answer with exactly one fenced block tagged `stage-report` holding one 
  "open_issues": [{"text": "…", "kind": "pending | deviation | blocker | difficulty | assumption | note | escalation", "impact": "…", "next": "…"}]}
 ```
 
+A `deviation` issue also carries `class` (`write_set | spec_mismatch | test_env | docs | dependency | environment | other`),
+`impact` and `outcome` (`accepted | follow_up | owner_decision`); any issue may add `severity` (`low | medium | high |
+critical`), `auto_fixable` (boolean) and `evidence` (a list of `path:line` or `V<n>`).
+
 `status` is `blocked` whenever the work needs something only the owner can give (a decision, a path outside
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
 thing as an `escalation` issue. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`

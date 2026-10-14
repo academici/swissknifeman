@@ -56,6 +56,13 @@ Return the stage-report with exactly the fields listed in `result_contract.repor
 - `evidence`: paths of output files and evidence documents you produced.
 - `open_issues`: every plan-relevant surprise: a deviation from the input, a blocker, a difficulty,
   an assumption you made, skipped work, residual risk. Leave nothing that changes the plan unsaid.
+  A `deviation` issue always carries `class` (`write_set`, `spec_mismatch`, `test_env`, `docs`,
+  `dependency`, `environment` or `other`), `impact` (what it affects) and `outcome` (`accepted`: the
+  report is the record; `follow_up`: work for later; `owner_decision`: the owner must decide).
+  Optional on any issue: `severity` (`low`, `medium`, `high`, `critical`), `auto_fixable` (boolean)
+  and `evidence` (a list of `path:line` or `V<n>`); `next` stays free text. Example:
+  `{"text": "edited docs/x.md outside the write set", "kind": "deviation", "class": "write_set",
+  "impact": "the commit takes docs/x.md", "outcome": "accepted", "evidence": ["docs/x.md"]}`.
 <!-- export:end handoff -->
 
 ## You return

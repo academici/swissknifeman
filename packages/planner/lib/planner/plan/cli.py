@@ -491,8 +491,11 @@ def cmd_stats(args) -> int:
 
 
 def cmd_log(args) -> int:
+    data = _json_value(args.data, None, required=False)
+    if data is not None and not isinstance(data, dict):
+        raise UsageError("--data must be a JSON object")
     lifecycle.log(_plan_dir(args), args.target, args.type, args.summary, impact=args.impact, next=args.next,
-                  refs=args.ref, actor=args.actor)
+                  refs=args.ref, actor=args.actor, data=data)
     print(f"logged {args.type} for {args.target}")
     return 0
 
@@ -866,6 +869,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--impact")
     p.add_argument("--next")
     p.add_argument("--ref", action="append", default=[], metavar="REF")
+    p.add_argument("--data", metavar="JSON", help="a JSON object (inline or @file) kept in the event's data")
     actor_arg(p)
 
     p = verb("decide", cmd_decide, "accept an open decision")

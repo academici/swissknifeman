@@ -155,13 +155,89 @@
           "description": "What should happen next.",
           "type": "string",
           "minLength": 1
+        },
+        "class": {
+          "description": "Class of a deviation: what it deviates from. Required for kind deviation.",
+          "type": "string",
+          "enum": [
+            "write_set",
+            "spec_mismatch",
+            "test_env",
+            "docs",
+            "dependency",
+            "environment",
+            "other"
+          ]
+        },
+        "severity": {
+          "description": "How serious it is.",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "outcome": {
+          "description": "How the deviation ends: accepted as is, a follow-up for later work, or a decision of the owner. Required for kind deviation.",
+          "type": "string",
+          "enum": [
+            "accepted",
+            "follow_up",
+            "owner_decision"
+          ]
+        },
+        "auto_fixable": {
+          "description": "True when the deviation can be repaired without a decision.",
+          "type": "boolean"
+        },
+        "evidence": {
+          "description": "Where it shows: path:line or a check id V<n>.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       },
       "required": [
         "text",
         "kind"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "description": "A deviation names its class, impact and outcome.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "deviation"
+              ]
+            }
+          },
+          "required": [
+            "class",
+            "impact",
+            "outcome"
+          ]
+        },
+        {
+          "description": "Any other issue.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "pending",
+                "blocker",
+                "difficulty",
+                "assumption",
+                "note",
+                "escalation"
+              ]
+            }
+          }
+        }
+      ]
     }
   }
 }

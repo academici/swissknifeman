@@ -153,6 +153,21 @@ class LifecycleFlowTests(CliCase):
     def item_path(self):
         return self.plans / "2026.10.05-№1-DEMO" / "phases" / "P1" / "P1.1.json"
 
+    def test_log_data_takes_inline_json_or_a_file_and_lands_in_the_event(self):
+        self.designed_plan()
+        self.verb("log", "PLAN1", "P1.1", "--type", "deviation", "--summary", "inline", "--data",
+                  '{"class": "write_set", "outcome": "follow_up"}')
+        payload = self.tmp / "data.json"
+        payload.write_text('{"class": "docs"}', encoding="utf-8")
+        self.verb("log", "PLAN1", "P1.1", "--type", "deviation", "--summary", "file", "--data", f"@{payload}")
+        events = [json.loads(line) for line in self.read("PLAN1", "log.jsonl").splitlines()]
+        by_summary = {e["summary"]: e for e in events if e["type"] == "deviation"}
+        self.assertEqual(by_summary["inline"]["data"], {"class": "write_set", "outcome": "follow_up"})
+        self.assertEqual(by_summary["file"]["data"], {"class": "docs"})
+        for bad in ("{not json", "[1]", "@/nonexistent/data.json"):
+            with self.subTest(data=bad):
+                self.verb("log", "PLAN1", "P1.1", "--type", "note", "--summary", "x", "--data", bad, expect=2)
+
     def test_help_lists_the_lifecycle_verbs(self):
         out = self.run_plan("--help").stdout
         for verb in ("start", "finish", "log", "decide", "supersede", "grant", "design-done", "reopen", "archive"):

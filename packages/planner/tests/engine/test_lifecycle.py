@@ -398,6 +398,13 @@ class LogDecideGrantTests(LifeCase):
         self.assertEqual(events[1]["actor"], OPUS)  # plan authoring when nobody else is known
         self.assertIn("tests import config", (self.root / "views/handoff.md").read_text(encoding="utf-8"))
 
+    def test_log_keeps_a_data_object_in_the_event(self):
+        event = lifecycle.log(self.root, "P1.1", "deviation", "outside", data={"class": "write_set", "outcome": "accepted"})
+        self.assertEqual(event["data"], {"class": "write_set", "outcome": "accepted"})
+        self.assertEqual(self.events("deviation")[0]["data"]["class"], "write_set")
+        self.assertNotIn("data", lifecycle.log(self.root, "P1.1", "note", "plain"))
+        self.refused("LOG_DATA_INVALID", lambda root, *a: lifecycle.log(root, "P1.1", "note", "x", data=["not", "an", "object"]))
+
     def test_log_takes_the_item_executor_as_default_actor(self):
         self.start("P1.1", actor=SONNET)
         self.assertEqual(lifecycle.log(self.root, "P1.1", "assumption", "a")["actor"], SONNET)

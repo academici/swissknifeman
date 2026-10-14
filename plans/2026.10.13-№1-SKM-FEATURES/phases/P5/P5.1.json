@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.1",
   "title": "Поля deviation: class, outcome, impact обязательны для deviation; severity, auto_fixable, evidence; heal; мост register и plan.py log --data",
-  "status": "todo",
+  "status": "done",
   "summary": "stage-report issue: class, severity, outcome, auto_fixable, evidence (if/then для deviation); heal заполняет недостающее с note; conductor пишет свои deviation с class write_set; executor.md — правило полей; мост register передаёт поля; planner plan.py log --data JSON в data события; фикстуры и тесты.",
   "why": "Аудит П4.1, N9 (134 из 167 deviation без impact/next), D12. Риски: (1) изменение закрытой схемы — только аддитивно, next остаётся текстом; (2) мост refuse лишних полей — расширить _ISSUE_FIELDS вместе со схемой.",
   "scope": {
@@ -125,6 +125,23 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:49:02Z"
+  "result": {
+    "started_at": "2026-10-14T09:29:23Z",
+    "finished_at": "2026-10-14T09:45:08Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "49b99fb7-8127-4a51-9732-3c393da4551b"
+    },
+    "notes": "issue gets class/severity/outcome/auto_fixable/evidence (oneOf: deviation requires class, impact, outcome); heal fills and folds, conductor write_set deviation classified, executor.md+prompt rule, plan.py log --data (LOG_DATA_INVALID, catalog), bridge register passes fields as data; fixtures/tests/golden/docs/CHANGELOG. affected-tests green.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T09:45:08Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T09:45:08Z"
 }

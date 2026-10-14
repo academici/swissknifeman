@@ -39,7 +39,7 @@ Open questions are decisions with status `open`; the owner answers, then `plan.p
    A route refusal stops before any product write.
 2. Read JSON from `plan.py context … --stdout` and supporting files as needed; get more state with `plan.py show`.
 3. Implement inside the item's scope; `task_files` are hints, not limits. Use the item's rules and decisions.
-4. When reality changes the plan or an assumption/blocker appears: `plan.py log … --type deviation|blocker|difficulty|assumption|note`.
+4. When reality changes the plan or an assumption/blocker appears: `plan.py log … --type deviation|blocker|difficulty|assumption|note`. `--data JSON` (inline or `@file`) keeps a small object in the event's `data` (a deviation's `class`, `outcome`).
 5. Run each validation check once per relevant change; long output goes to a file, only the result to context.
 6. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…"` (`done_with_deviations` with
    `--deviation`, `blocked` with `--escalation`). The last item closes its phase.

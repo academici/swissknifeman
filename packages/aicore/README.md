@@ -176,7 +176,9 @@ PATH)`) and `run_partner_json(name, args)` returns the decoded stdout or raises 
 The `[aicore.providers]` table of the project configuration selects the provider surfaces rolled out into a project:
 `contract_version` and `[aicore.providers.selection.<provider>]` with `enabled`. It is allowed only in the project layer; its
 owner is `aicore.provider`, and `maind` and `harness` read it (the legacy `.swissknife.json#/providers` is still read with a
-warning). `aicore.provider.mcp` holds the pure MCP projection (`McpServer`, `McpProjection`, `parse_mcp_catalog`,
+warning). `[aicore.providers.available.<provider>]` with `enabled` (default true; layers defaults, machine, invocation, flags — never
+the project) says whether orch may route roles to a provider; it is independent of `selection` (delivery of surfaces), and
+`aicore.provider.config.routing_available(provider_id, resolved=...)` returns `(available, layer)`. `aicore.provider.mcp` holds the pure MCP projection (`McpServer`, `McpProjection`, `parse_mcp_catalog`,
 `plan_mcp_projection`, `plan_mcp_artifact`, `render_mcp_projection`); the caller passes parsed documents and the artifact
 sources, so the foundation names no module path.
 

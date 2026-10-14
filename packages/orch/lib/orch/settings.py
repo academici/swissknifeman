@@ -13,6 +13,7 @@ from pathlib import Path
 import tempfile
 
 from aicore.config import ResolvedConfig, resolve
+from aicore.config.units import foundation_root
 from aicore.util import digest as _digest
 
 from orch.port import BINDINGS
@@ -46,6 +47,7 @@ class Settings:
     events_enabled: bool
     resolved: ResolvedConfig | None = None
     conductor: Mapping[str, object] = field(default_factory=dict)
+    aicore: ResolvedConfig | None = None  # the ``aicore`` module: ``providers.available`` is read from it (routing)
 
     def explain_text(self, key: str | None = None) -> str:
         """Where each value comes from (empty when the settings were built by hand)."""
@@ -84,6 +86,8 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
     """Resolve ``[orch]`` for a project (``None``: no project layer). Raises ``aicore.config.ConfigError``."""
     resolved = resolve("orch", unit_root=ORCH_ROOT, project=project, config_file=config_file, env=env, home=home,
                        flags=flags)
+    foundation = resolve("aicore", schema=foundation_root() / "configs" / "config.schema.json", project=project,
+                         config_file=config_file, env=env, home=home)
     return Settings(
         engine=resolved.get("engine"),
         engine_by_role=dict(resolved.get("engine_by_role") or {}),
@@ -94,6 +98,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         events_enabled=resolved.get("events.enabled"),
         resolved=resolved,
         conductor=_conductor(resolved),
+        aicore=foundation,
     )
 
 

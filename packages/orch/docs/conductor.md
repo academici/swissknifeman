@@ -125,6 +125,15 @@ A person who runs the conductor sees them on stderr; an observer agent reads the
 the run is healthy (a long test run is) or needs a look. `stage_timeout_s`, `stage_idle_timeout_s` and
 `check_timeout_s` still set hard ceilings when asked for; all are off by default.
 
+### Provider availability
+
+`aicore.providers.available.<provider>.enabled = false` (machine, `--config` file or flags; the project layer cannot set it,
+`CONFIG_LAYER_FORBIDDEN`) switches a provider off for routing, whatever `providers.selection` rolled out into the project. A route
+on it is `PROVIDER_DISABLED: aicore.providers.available.<id>.enabled = false (<layer>)`: `run --dry-run` lists it under
+`unavailable`, route choice moves the role to the first admissible `fallback_routes` entry (`ROUTE_FALLBACK`), and without one
+the preflight stops the run with `PROVIDER_UNAVAILABLE` before any work (an optional scout or report-fixer is skipped). A role
+is routable when the provider is enabled, its CLI is found, the transport and sandbox work and no capacity gate is open.
+
 ### Capacity gates
 
 A provider whose account quota is known to be exhausted is not started again before its reset. `conductor/gates.py` keeps

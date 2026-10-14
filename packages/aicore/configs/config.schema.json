@@ -137,7 +137,7 @@
     },
     "providers": {
       "type": "object",
-      "description": "Provider selection of the project: which provider surfaces (Claude Code, Codex, ...) are rolled out into it. Read from the project layer; the owner of the form is aicore.provider.",
+      "description": "Provider settings. selection (project layer): which provider surfaces (Claude Code, Codex, ...) are rolled out into the project. available (machine, invocation, flags): whether orch may route roles to a provider, independent of selection. The owner of the form is aicore.provider.",
       "additionalProperties": false,
       "properties": {
         "contract_version": {
@@ -161,6 +161,26 @@
                   "type": "boolean",
                   "description": "Roll the provider surfaces out into the project.",
                   "x-skm-layers": ["project"]
+                }
+              }
+            }
+          }
+        },
+        "available": {
+          "type": "object",
+          "description": "Provider availability for routing by provider id. A provider that is not listed is available.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "Availability of one provider.",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Let orch route roles to the provider; false makes every route on it unavailable (PROVIDER_DISABLED). Delivery of provider surfaces (selection) is not affected.",
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
                 }
               }
             }

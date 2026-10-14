@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.1",
   "title": "aicore.providers.available.<id>.enabled (machine/invocation/flags) — доступность маршрутизации orch независимо от selection; PROVIDER_DISABLED в dry-run и preflight",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Раздел [aicore.providers.available.<id>] (enabled, умолч. true, x-skm-layers defaults/machine/invocation/flags) в схеме aicore и _validate_layer; API routing_available; orch учитывает его в _route, _preflight, _preview (PROVIDER_DISABLED, fallback_routes); docs aicore и orch.",
   "why": "Аудит П2.1, E1, D13, D1. Риск: связать маршрутизацию с selection (доставкой) — запрещено D13; проект не может включить провайдера, выключенного на машине.",
   "scope": {
@@ -127,6 +127,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:46:19Z"
+  "result": {
+    "started_at": "2026-10-14T06:44:55Z",
+    "finished_at": "2026-10-14T06:55:37Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0068d0be-1d1f-4fdc-8ee8-a533f18299ad"
+    },
+    "notes": "providers.available.<id>.enabled (defaults/machine/invocation/flags) в схеме; routing_available(provider_id, resolved) -> (bool, layer); _validate_layer принимает available; orch: Settings.aicore, provider_disabled -> PROVIDER_DISABLED в route_problem (dry-run unavailable, fallback), preflight PROVIDER_UNAVAILABLE; docs, CHANGELOG.",
+    "deviations": [
+      "settings.py, test_maps.py, README/CHANGELOG aicore вне task_files; аддитивно"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T06:55:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T06:55:37Z"
 }

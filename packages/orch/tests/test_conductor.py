@@ -1373,6 +1373,7 @@ class ProviderErrorTests(ConductorCase):
 
     def test_a_fallback_must_pass_the_sandbox_rule_the_preflight_applies(self):
         eng = engine.Conductor.__new__(engine.Conductor)
+        eng.settings = None  # no aicore configuration: every provider is routable
         item = engine.Item(ref="W1", orch_run="-", state={}, directory=Path(), claim={},
                            options={"instructions": {"sandbox": "require"}})
         route = {"role": "executor", "provider": "claude-code", "model_class": "implementation", "transport": "jsonl",
@@ -1492,6 +1493,62 @@ class ReviewerFallbackTests(ConductorCase):
         self.assertEqual([line["role"] for line in fallback], ["reviewer"], err)
         routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
         self.assertEqual(routes["reviewer"]["provider"], "claude-code")
+
+
+class ProviderAvailabilityTests(ConductorCase):
+    """``aicore.providers.available.<id>.enabled`` decides whether a role may be routed to a provider, independent of
+    ``providers.selection``: a disabled provider is unavailable in the dry run, goes to a fallback route and stops the
+    preflight when there is none."""
+
+    CODEX_REVIEWER = {"reviewer": "codex/gpt-6-sol/high"}
+    real_reviewer = ReviewerFallbackTests.real_reviewer
+    dry_run = ReviewerFallbackTests.dry_run
+
+    def disable(self, provider="codex", file=None) -> None:
+        text = f"[aicore.providers.available.{provider}]\nenabled = false\n"
+        if file is None:
+            self.write_config(extra=text)
+        else:
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text("schema_version = 1\n" + text, encoding="utf-8")
+
+    def test_a_provider_off_on_the_machine_is_unavailable_with_its_layer(self):
+        self.real_reviewer()
+        self.disable()
+        preview = self.dry_run(dict(self.CODEX_REVIEWER, fallback_routes=[]))
+        self.assertIs(preview["available"]["reviewer"], False)
+        self.assertEqual(preview["unavailable"]["reviewer"],
+                         "PROVIDER_DISABLED: aicore.providers.available.codex.enabled = false (machine)")
+
+    def test_a_disabled_provider_goes_to_the_fallback_route(self):
+        self.real_reviewer()
+        self.disable()
+        preview = self.dry_run(self.CODEX_REVIEWER)
+        self.assertEqual(preview["routes"]["reviewer"]["provider"], "claude-code")
+        self.assertIs(preview["available"]["reviewer"], True)
+        note = preview["route_notes"][0]
+        self.assertEqual((note["role"], note["reason_code"]), ("reviewer", "PROVIDER_DISABLED"))
+        self.assertTrue(note["from"].startswith("codex/"), note)
+
+    def test_a_disabled_provider_without_a_fallback_stops_the_preflight(self):
+        self.real_reviewer()
+        self.disable()
+        options = self.project.parent / "layer.json"
+        options.write_text(json.dumps(dict(self.CODEX_REVIEWER, fallback_routes=[])), encoding="utf-8")
+        code, out, err = self.run_items("W1", extra=("--options", options))
+        self.assertEqual(self.outcome(err)[1], "PROVIDER_UNAVAILABLE", err)
+        self.assertIn("PROVIDER_DISABLED", err)
+        self.assertEqual(self.calls("executor"), 0)
+
+    def test_the_project_cannot_enable_what_the_machine_disabled_and_selection_does_not_route(self):
+        self.disable(file=self.project / ".swissknifeman" / "config.toml")
+        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")
+        self.assertEqual(code, 1, out)
+        self.assertIn("CONFIG_LAYER_FORBIDDEN", err)
+        (self.project / ".swissknifeman" / "config.toml").write_text(
+            "schema_version = 1\n[aicore.providers.selection.claude-code]\nenabled = false\n", encoding="utf-8")
+        preview = self.dry_run()
+        self.assertTrue(all(preview["available"].values()), preview["unavailable"])
 
 
 class PreviewAndStatusTests(ConductorCase):

@@ -32,6 +32,7 @@ import threading
 import time
 from typing import Any, Callable, Optional
 
+from aicore.provider.config import routing_available
 from aicore.state import blobs, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
@@ -809,6 +810,9 @@ class Conductor:
         """Why a route cannot run, as ``CODE: text``; ``None`` when it can. An ``acp`` role is never driven by the
         conductor (D4), whatever command line stands in for it; a Codex route confined by ``--sandbox`` needs the
         provider sandbox to start on this machine."""
+        disabled = self.provider_disabled(route["provider"])
+        if disabled:
+            return disabled
         if route["transport"] == "acp":
             return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
         if self._codex_sandboxed(route) and not sandbox.probe()["available"]:
@@ -819,6 +823,18 @@ class Conductor:
         if gate:
             return f"PROVIDER_QUOTA: {route['provider']} is gated until {gate['until']}"
         return None
+
+    def provider_disabled(self, provider: str) -> str | None:
+        """``PROVIDER_DISABLED: ...`` with the layer that set it when ``aicore.providers.available.<provider>.enabled`` is
+        false (machine, invocation or flags: a project cannot enable what the machine disabled); ``None`` otherwise. The
+        axis is independent of ``providers.selection``, which only decides which surfaces are rolled out."""
+        found = self.settings.aicore if self.settings is not None else None
+        if found is None:
+            return None
+        available, layer = routing_available(provider, resolved=found)
+        if available:
+            return None
+        return f"PROVIDER_DISABLED: aicore.providers.available.{provider}.enabled = false ({layer})"
 
     def _selected(self, item: Item, role: str, persist: bool) -> dict:
         """The route of ``role`` that can start: its own, or, when its provider is gated (the account quota is known to
@@ -932,6 +948,10 @@ class Conductor:
                        if self._claude_bash(route) and not self._knows(route["argv"], ["--settings"])]
         if blocked:
             raise Stop("SANDBOX_UNAVAILABLE", "; ".join(blocked))
+        off = [f"{role}: {self.provider_disabled(route['provider'])}" for role, route in required.items()
+               if self.provider_disabled(route["provider"])]
+        if off:
+            raise Stop("PROVIDER_UNAVAILABLE", f"cannot start {'; '.join(off)}")
         missing = [f"{role} ({route['argv'][0]})" for role, route in item.routes.items()
                    if role not in self.OPTIONAL_ROLES and not process.available(route["argv"])]
         if missing:
@@ -1271,7 +1291,7 @@ class Conductor:
         if item.options["limits"]["repairs"] <= 0 or "report-fixer" not in item.routes:
             return doc, healed, issues, None
         route = item.routes["report-fixer"]
-        if not process.available(route["argv"]):
+        if self.provider_disabled(route["provider"]) or not process.available(route["argv"]):
             return doc, healed, issues, None
         for number in range(1, item.options["limits"]["repairs"] + 1):
             problem = "; ".join(issues[:5])
@@ -1443,8 +1463,10 @@ class Conductor:
             return ""
         route = item.routes["context-scout"]
         gate = gates.blocked(route["provider"], wall())
-        if gate or not process.available(route["argv"]):
+        disabled = self.provider_disabled(route["provider"])
+        if gate or disabled or not process.available(route["argv"]):
             code, why = ("PROVIDER_QUOTA", f"{route['provider']} is gated until {gate['until']}") if gate else \
+                ("PROVIDER_DISABLED", disabled.split(": ", 1)[1]) if disabled else \
                 ("PROVIDER_UNAVAILABLE", f"{route['argv'][0]} not found")
             if stage.get("on_unavailable") == "skip" and not stage.get("required"):
                 self.progress.emit("stage.skip", item=item.ref, stage="scout", role="context-scout",

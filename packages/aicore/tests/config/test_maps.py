@@ -504,7 +504,7 @@ class TestAicoreSchema(Workspace):
         self.assertEqual({"subscriptions": {}, "plugins": {}, "overlays": {}},
                          {name: cfg.get(name) for name in ("subscriptions", "plugins", "overlays")})
         self.assertEqual({"events", "subscriptions", "plugins", "overlays", "providers"}, set(cfg.as_dict()))
-        self.assertEqual({"contract_version": "1.0.0", "selection": {}}, cfg.get("providers"))
+        self.assertEqual({"contract_version": "1.0.0", "selection": {}, "available": {}}, cfg.get("providers"))
 
     def test_a_subscription_and_an_overlay_from_the_machine_file(self):
         self.machine('[aicore.subscriptions.notes]\non = ["planner.plan.closed"]\nrun = ["true"]\n'

@@ -106,7 +106,7 @@ def resolve_provider_config(*, catalog: ProviderConfigCatalog,
         if layer is None:
             continue
         source = layer.source
-        selection = layer.value["selection"]
+        selection = layer.value.get("selection", {})
         for provider_text, provider_value in selection.items():
             provider = ProviderId(provider_text)
             target = selections[provider]
@@ -138,6 +138,20 @@ def resolve_provider_config(*, catalog: ProviderConfigCatalog,
     return _result(catalog, tuple(effective), tuple(sorted(provenance)), diagnostics)
 
 
+def routing_available(provider_id: str, *, resolved) -> tuple[bool, str]:
+    """``(available, layer)``: whether roles may be routed to ``provider_id``, from ``aicore.providers.available``.
+
+    ``resolved`` is the :class:`aicore.config.ResolvedConfig` of the ``aicore`` module. A provider without an entry is
+    available (layer ``defaults``). The axis is independent of ``selection`` (delivery of provider surfaces): the
+    routing result of a caller is this flag and what the caller itself checks (binary, transport, capacity gate).
+    """
+    key = f"providers.available.{provider_id}.enabled"
+    if resolved.get(key) is None:
+        return True, "defaults"
+    entry = resolved.explain(key)[0]
+    return bool(entry.value), entry.layer
+
+
 def effective_projection(result: ResolvedProviderConfig) -> dict[str, object] | None:
     if result.effective is None:
         return None
@@ -151,11 +165,15 @@ def _validate_layer(layer: ProviderConfigLayer, catalog: ProviderConfigCatalog) 
     value, source, out = layer.value, layer.source, []
     if not isinstance(value, Mapping):
         return [_diagnostic("PCFG_SCHEMA_INVALID", source.path, source)]
-    unknown = set(value) - {"contract_version", "selection"}
+    unknown = set(value) - {"contract_version", "selection", "available"}
     for key in sorted(unknown): out.append(_diagnostic("PCFG_UNKNOWN_FIELD", f"{source.path}/{key}", source))
     version = value.get("contract_version")
     if version is None: out.append(_diagnostic("PCFG_VERSION_REQUIRED", f"{source.path}/contract_version", source))
     elif not _is_v1_version(version): out.append(_diagnostic("PCFG_VERSION_UNSUPPORTED", f"{source.path}/contract_version", source))
+    if "available" in value:
+        out.extend(_validate_available(value["available"], source, catalog))
+        if "selection" not in value:  # availability alone is a complete layer
+            return out
     selection = value.get("selection")
     if not isinstance(selection, Mapping) or not selection:
         out.append(_diagnostic("PCFG_SCHEMA_INVALID", f"{source.path}/selection", source)); return out
@@ -188,6 +206,24 @@ def _validate_layer(layer: ProviderConfigLayer, catalog: ProviderConfigCatalog) 
                     out.append(_diagnostic("PCFG_UNKNOWN_CAPABILITY", item_path, source))
                 elif values[key] and supports[(provider, key)] is SupportLevel.UNSUPPORTED:
                     out.append(_diagnostic("PCFG_CAPABILITY_UNSUPPORTED", item_path, source))
+    return out
+
+
+def _validate_available(available: object, source: ConfigSource, catalog: ProviderConfigCatalog) -> list[ProviderDiagnostic]:
+    path = f"{source.path}/available"
+    if not isinstance(available, Mapping) or not available:
+        return [_diagnostic("PCFG_SCHEMA_INVALID", path, source)]
+    out, known = [], {item.value for item in catalog.providers}
+    for provider_text in sorted(available):
+        item_path, record = f"{path}/{provider_text}", available[provider_text]
+        if provider_text not in known:
+            out.append(_diagnostic("PCFG_UNKNOWN_PROVIDER", item_path, source)); continue
+        if not isinstance(record, Mapping) or not record:
+            out.append(_diagnostic("PCFG_SCHEMA_INVALID", item_path, source)); continue
+        for field in sorted(set(record) - {"enabled"}):
+            out.append(_diagnostic("PCFG_UNKNOWN_FIELD", f"{item_path}/{field}", source))
+        if "enabled" in record and not isinstance(record["enabled"], bool):
+            out.append(_diagnostic("PCFG_SCHEMA_INVALID", f"{item_path}/enabled", source))
     return out
 
 

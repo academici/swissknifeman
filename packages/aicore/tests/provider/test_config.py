@@ -163,3 +163,24 @@ class TestProviderConfigResolution(unittest.TestCase):
                 result = resolve_provider_config(catalog=catalog(), project=layer("project", value))
                 self.assertIsNone(result.effective)
                 self.assertEqual(result.diagnostics[0].code, code)
+
+    def test_available_key_is_accepted_and_validated(self):
+        merged = {"contract_version": "1.0.0", "available": {"codex": {"enabled": False}}}
+        result = resolve_provider_config(catalog=catalog(), fleet_defaults=layer("fleet-defaults", merged))
+        self.assertEqual(result.diagnostics, ())  # availability alone is a complete layer; selection is unaffected
+        self.assertEqual(effective_projection(result)["codex"]["enabled"], False)
+        both = {**config({"codex": {"enabled": True}}), "available": {"codex": {"enabled": False}}}
+        result = resolve_provider_config(catalog=catalog(), project=layer("project", both))
+        self.assertTrue(effective_projection(result)["codex"]["enabled"])
+        cases = (
+            ({"chatgpt": {"enabled": False}}, "PCFG_UNKNOWN_PROVIDER"),
+            ({"codex": {"enabled": "no"}}, "PCFG_SCHEMA_INVALID"),
+            ({"codex": {"auth": "x"}}, "PCFG_UNKNOWN_FIELD"),
+            ({}, "PCFG_SCHEMA_INVALID"),
+        )
+        for available, code in cases:
+            with self.subTest(available=available):
+                result = resolve_provider_config(catalog=catalog(), project=layer(
+                    "project", {**config({"codex": {"enabled": True}}), "available": available}))
+                self.assertIsNone(result.effective)
+                self.assertEqual(result.diagnostics[0].code, code)

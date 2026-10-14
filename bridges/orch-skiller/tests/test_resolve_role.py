@@ -231,6 +231,7 @@ class SelectRole(unittest.TestCase):
         out = self.select("reviewer", "--paths", "docs/guide.md")
         by_id = {skill["id"]: skill["reason"] for skill in out["skills"]}
         self.assertEqual(by_id.get("quality/code-review"), "explicit")
+        self.assertNotIn("quality/artifact-review", by_id)  # optional in the role list: not forced, same exclusive group
 
     def test_exclude_wins_over_include_and_budget_excludes_without_cutting(self):
         out = self.select("reviewer", "--exclude", "quality/code-review")

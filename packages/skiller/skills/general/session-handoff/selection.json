@@ -1,5 +1,6 @@
 {
   "schema": "skill-selection/v1",
   "kind": "contract",
-  "decision": "CONTRACT"
+  "decision": "CONTRACT",
+  "replaced_by": "orch/schemas/conductor/v1/stage-report.schema.json"
 }

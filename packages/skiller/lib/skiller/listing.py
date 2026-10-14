@@ -25,10 +25,29 @@ def projects_document(db):
     return {"$schema": SCHEMA_ID, "projects": projects}
 
 
+def _list_deprecated(env, as_json):
+    """`skiller list --deprecated`: skills kept for compatibility, with where their content lives now."""
+    from .selection import deprecated
+    rows = deprecated(env.root)
+    if as_json:
+        print(json.dumps({"deprecated": rows}, indent=2, ensure_ascii=False))
+        return
+    if not rows:
+        print("No deprecated skills.")
+        return
+    width = max(len(row["id"]) for row in rows)
+    for row in rows:
+        print(f"{row['id']:{width}}  {row['decision']:13} {row['replaced_by'] or '-'}")
+
+
 def cmd_list(env, argv):
-    opts = parse_flags(argv, {"--prune": "bool", "--json": "bool"})
+    opts = parse_flags(argv, {"--prune": "bool", "--json": "bool", "--deprecated": "bool"})
     if opts["help"]:
-        print("skiller list [--prune] [--json]")
+        print("skiller list [--prune] [--json]\n"
+              "skiller list --deprecated [--json]   skills kept for compatibility (decision DEPRECATE/DELETE or replaced_by)")
+        return
+    if opts["deprecated"]:
+        _list_deprecated(env, opts["json"])
         return
     db = load_db(env)
     if opts["json"] and not opts["prune"]:

@@ -154,6 +154,21 @@ class GlobAndDepsCase(unittest.TestCase):
                 "composer:laravel/framework", "composer:pestphp/pest", "npm:vite", "npm:vue", "pip:click", "pip:rich"])
             self.assertEqual(sel.project_deps(root / "missing"), [])
 
+    def test_pyproject_fallback_of_python_below_3_11(self):
+        text = ('[project]\nname = "x"\ndependencies = ["foo[bar]>=1", "click>=8"]\n'
+                '[tool.poetry.dependencies]\npython = "^3.9"\nrich = "^13"\n[other]\nz = 1\n')
+        self.assertEqual(sel._pyproject_fallback(text), ["foo", "click", "rich"])
+
+    def test_sidecar_does_not_make_a_published_copy_differ(self):
+        from skiller.update import _equivalent_skill_tree
+        with tempfile.TemporaryDirectory() as tmp:
+            a, b = Path(tmp) / "a", Path(tmp) / "b"
+            for d in (a, b):
+                d.mkdir()
+                (d / "SKILL.md").write_text("x")
+            (a / "selection.json").write_text("{}")
+            self.assertTrue(_equivalent_skill_tree(a, b))
+
     def test_broken_manifests_are_ignored(self):
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "composer.json").write_text("{")

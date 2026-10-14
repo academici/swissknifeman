@@ -364,12 +364,12 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
 
 
 def _equivalent_skill_tree(source, candidate):
-    """Compare skill content while ignoring non-runtime import provenance."""
+    """Compare skill content while ignoring non-runtime import provenance and the selection sidecar."""
     def files(root):
         return {
             path.relative_to(root): path
             for path in root.rglob("*")
-            if path.is_file() and path.name != "upstream.json"
+            if path.is_file() and path.name not in ("upstream.json", "selection.json")
         }
 
     source_files = files(source)

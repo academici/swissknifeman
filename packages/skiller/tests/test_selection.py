@@ -8,6 +8,7 @@ from pathlib import Path
 
 import tests.fixtures as fx
 from skiller import selection
+from skiller.common import Env
 from skiller.registry import build_registry
 
 PKG_ROOT = Path(__file__).resolve().parents[1]
@@ -136,3 +137,70 @@ class SelectionLibraryCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WaveACase(unittest.TestCase):
+    """Audit 3.2, wave A, without deletion (D1): the meta-skills stay, select does not preload them."""
+
+    WAVE_A = ("general/implement", "general/complex-task-orchestrator", "general/task-brief-template",
+              "general/context-economy", "general/compact-responses", "ai/performance", "general/session-handoff",
+              "general/anti-drift", "general/git-safety", "general/spec-interview", "general/grill-with-docs",
+              "general/mcp-advisor")
+
+    def sidecars(self):
+        return {sid: selection.read_sidecar(path) for sid, path in selection.skill_ids(PKG_ROOT).items()}
+
+    def test_wave_a_skills_exist_and_are_never_selected_without_an_explicit_include(self):
+        found = self.sidecars()
+        for sid in self.WAVE_A:
+            with self.subTest(skill=sid):
+                self.assertIn(sid, found)
+                doc = found[sid]
+                self.assertTrue(doc.get("replaced_by") or not doc.get("triggers"),
+                                "needs replaced_by or no triggers, so select cannot reach it")
+        self.assertTrue(found["general/implement"]["replaced_by"].endswith("roles/executor.md"))
+
+    def test_every_replaced_by_that_is_a_repository_path_exists(self):
+        repo = PKG_ROOT.parent.parent
+        for sid, doc in self.sidecars().items():
+            dest = doc.get("replaced_by")
+            if dest and "/" in dest:
+                with self.subTest(skill=sid):
+                    self.assertTrue((repo / "packages" / dest).exists(), dest)
+
+    def test_routers_and_personas_have_their_kind(self):
+        for sid, doc in self.sidecars().items():
+            if doc["decision"] == "ROUTER_ONLY":
+                with self.subTest(skill=sid):
+                    self.assertEqual(doc["kind"], "router")
+            if doc["decision"] == "PERSONA" or sid.startswith("roles/"):
+                with self.subTest(skill=sid):
+                    self.assertEqual(doc["kind"], "persona")
+
+    def test_deprecated_list(self):
+        rows = {row["id"]: row for row in selection.deprecated(PKG_ROOT)}
+        self.assertEqual(rows["php/laravel-best-practices"]["decision"], "DEPRECATE")
+        self.assertEqual(rows["general/compact-responses"]["decision"], "DELETE")
+        self.assertTrue(rows["general/git-safety"]["replaced_by"].endswith("hooks/git-guardrails"))
+        self.assertNotIn("quality/code-review", rows)
+
+    def test_presets_of_wave_a_hold_none_of_its_skills(self):
+        for name in ("agent-context", "agent-tasks"):
+            doc = json.loads((PKG_ROOT / "presets" / f"{name}.json").read_text(encoding="utf-8"))
+            with self.subTest(preset=name):
+                self.assertFalse(set(doc.get("include", [])) & set(self.WAVE_A))
+        tasks = json.loads((PKG_ROOT / "presets" / "agent-tasks.json").read_text(encoding="utf-8"))
+        self.assertEqual(tasks["include"], ["general/cross-layer-change-checklist", "oss-dev/to-issues"])
+
+    def test_list_deprecated_prints_json_and_text(self):
+        from skiller.listing import cmd_list
+        env = Env(PKG_ROOT, "list")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cmd_list(env, ["--deprecated", "--json"])
+        ids = [row["id"] for row in json.loads(out.getvalue())["deprecated"]]
+        self.assertIn("general/implement", ids)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cmd_list(env, ["--deprecated"])
+        self.assertIn("general/anti-drift", out.getvalue())

@@ -96,10 +96,39 @@ def _pyproject_deps(path):
         names = [m.group(1) for m in map(_PEP508_NAME.match, entries) if m]
         names.extend(name for name in ((data.get("tool") or {}).get("poetry") or {}).get("dependencies", {}) if name != "python")
         return names
-    block = re.search(r"^dependencies\s*=\s*\[(.*?)\]", text, re.S | re.M)
-    if block:
-        names = [m.group(1) for m in (_PEP508_NAME.match(item.strip().strip("\"'")) for item in block.group(1).split(",")) if m]
+    return _pyproject_fallback(text)
+
+
+def _pyproject_fallback(text):
+    """Python < 3.11 has no tomllib: the `dependencies = [...]` list of `[project]` (quoted entries, brackets inside an
+    entry such as `foo[bar]>=1` kept) and the keys of `[tool.poetry.dependencies]`."""
+    names = []
+    start = re.search(r"^dependencies\s*=\s*\[", text, re.M)
+    if start:
+        entries = re.findall(r"\"([^\"]+)\"|'([^']+)'", _bracket_body(text, start.end()))
+        names = [m.group(1) for m in (_PEP508_NAME.match(a or b) for a, b in entries) if m]
+    poetry = re.search(r"^\[tool\.poetry\.dependencies\]\s*$(.*?)(?=^\[|\Z)", text, re.S | re.M)
+    if poetry:
+        keys = re.findall(r"^([A-Za-z0-9][A-Za-z0-9._-]*)\s*=", poetry.group(1), re.M)
+        names.extend(key for key in keys if key != "python")
     return names
+
+
+def _bracket_body(text, position):
+    """The text of a TOML array from just after its `[` to the matching `]`, skipping brackets inside strings."""
+    depth, quote, i = 1, None, position
+    while i < len(text) and depth:
+        char = text[i]
+        if quote:
+            quote = None if char == quote else quote
+        elif char in "\"'":
+            quote = char
+        elif char == "[":
+            depth += 1
+        elif char == "]":
+            depth -= 1
+        i += 1
+    return text[position:i - 1]
 
 
 # --- the pure function -------------------------------------------------------------------------------------

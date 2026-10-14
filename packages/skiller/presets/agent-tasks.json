@@ -1,13 +1,8 @@
 {
   "name": "agent-tasks",
-  "description": "Setting tasks for the agent: orchestration, brief template, spec interview, cross-layer checklist",
+  "description": "Setting tasks for the agent: cross-layer checklist and issue breakdown (the orchestration, brief, interview and implement skills moved to the orchestration contracts)",
   "include": [
-    "general/complex-task-orchestrator",
-    "general/task-brief-template",
-    "general/spec-interview",
-    "general/grill-with-docs",
     "general/cross-layer-change-checklist",
-    "general/implement",
     "oss-dev/to-issues"
   ]
 }

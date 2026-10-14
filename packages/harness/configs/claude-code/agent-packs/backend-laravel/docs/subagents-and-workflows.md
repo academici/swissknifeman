@@ -1,8 +1,8 @@
 # Guideline: subagents and workflow in {{PACK_PREFIX}}
 
 How {{PACK_PREFIX}} uses subagents and Workflow-orchestration. Operationalizes
-skill `php:laravel-subagents` + lessons overnight-run under the project canon.
-Context and references - skill `php:laravel-subagents`.
+skill `laravel-architecture:laravel-subagents` + lessons overnight-run under the project canon.
+Context and references - skill `laravel-architecture:laravel-subagents`.
 
 > [!info] Artifacts in the repository
 > - Agents (build): `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md` (+ opt. `spec-writer`)
@@ -52,7 +52,7 @@ coding. Delegate heavy reconnaissance recon-subagents - they read in their windo
 ## When to call subagents
 
 Subagent value - **context isolation and fresh perspective**, is not parallelism.
-Threshold (from `php:laravel-subagents`):
+Threshold (from `laravel-architecture:laravel-subagents`):
 
 - **Yes:** task ≥3 domains/layers; whole feature (migrations→models→logic→routes→tests);
   extensive examination of dozens of files; review of risky (authorization, money,

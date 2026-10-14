@@ -298,7 +298,8 @@
         "decision": "MERGE",
         "also": [
           "DELETE"
-        ]
+        ],
+        "replaced_by": "orch/lib/orch/conductor/prompts.py"
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
@@ -2647,7 +2648,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "WORKFLOW"
+        "decision": "WORKFLOW",
+        "replaced_by": "orch/lib/orch/conductor/progress.py"
       },
       "source": "local"
     },
@@ -2693,7 +2695,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "WORKFLOW"
+        "decision": "WORKFLOW",
+        "replaced_by": "orch/configs/run-policies"
       },
       "source": "local"
     },
@@ -2718,7 +2721,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "WORKFLOW"
+        "decision": "WORKFLOW",
+        "replaced_by": "orch/lib/orch/conductor/prompts.py"
       },
       "source": "local"
     },
@@ -2790,7 +2794,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "SCRIPT"
+        "decision": "SCRIPT",
+        "replaced_by": "harness/configs/claude-code/hooks/git-guardrails"
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/misc/git-guardrails-claude-code/SKILL.md",
@@ -2822,7 +2827,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "WORKFLOW"
+        "decision": "WORKFLOW",
+        "replaced_by": "planner/commands/plan-design.md"
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md",
@@ -2848,7 +2854,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "WORKFLOW"
+        "decision": "WORKFLOW",
+        "replaced_by": "orch/roles/executor.md"
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md",
@@ -2969,7 +2976,8 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "CONTRACT"
+        "decision": "CONTRACT",
+        "replaced_by": "orch/schemas/conductor/v1/stage-report.schema.json"
       },
       "source": "local"
     },
@@ -3037,7 +3045,8 @@
       ],
       "selection": {
         "kind": "procedure",
-        "decision": "WORKFLOW"
+        "decision": "WORKFLOW",
+        "replaced_by": "planner/commands/plan-design.md"
       },
       "source": "local"
     },
@@ -3061,7 +3070,8 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "SCHEMA"
+        "decision": "SCHEMA",
+        "replaced_by": "orch/schemas/exec/v1/execution-input.schema.json"
       },
       "source": "local"
     },

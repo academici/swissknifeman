@@ -284,7 +284,7 @@ class Conductor:
         for key in [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
                     or steps[key].get("ended", "") > since]:
             steps.pop(key)
-        for key in ("outcome", "stop", "partial"):
+        for key in ("outcome", "stop", "partial", "skills_auto"):  # the skills are chosen again from the amended write set
             item.pop(key, None)
         self._save()
         self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated")
@@ -2030,7 +2030,8 @@ class Conductor:
 
     def _work_paths(self, item: Item) -> list:
         """The paths the piece will touch, for the triggers of the skill selection: the files the write set patterns own in
-        the repository (at most 300) plus the patterns themselves, so a file the piece creates still counts."""
+        the repository (the first 300) plus the patterns themselves, so a file the piece creates still counts; a directory pattern with no
+        file yet only matches a trigger written for that directory, so name the skills when the piece starts empty."""
         patterns = [p for p in (item.input_doc.get("scope") or {}).get("write_set") or [] if isinstance(p, str) and p]
         if not patterns:
             return []
@@ -2039,8 +2040,11 @@ class Conductor:
                                      timeout=30).stdout.splitlines()
         except (OSError, subprocess.SubprocessError):
             tracked = []
-        owned = [path for path in tracked if any(scopes.matches(path, pattern) for pattern in patterns)][:300]
-        return list(dict.fromkeys(owned + patterns))
+        owned = [path for path in tracked if any(scopes.matches(path, pattern) for pattern in patterns)]
+        if len(owned) > 300:
+            self.progress.emit("info", item=item.ref, reason_code="SKILLS_PATHS_CUT",
+                               message=f"write set owns {len(owned)} files; the first 300 choose the skills")
+        return list(dict.fromkeys(owned[:300] + patterns))
 
     def _skill_texts(self, item: Item, role: str) -> dict:
         """The text of the skills a role is given, when the role runs isolated (its provider then loads no skill by

@@ -13,8 +13,8 @@ Output with ``--json``: ``{"role", "provider", "skills": [{"name", "id", "bucket
 skill and for anything a required skill needs. Exit 1 on an error diagnostic.
 
 ``--select --role ID --provider P [--paths P…] [--project DIR] [--budget N] [--include ID…] [--exclude ID…] --json``
-asks ``skiller select`` (policy ``auto``) for the skills of a role from the work it is given: the role's own list (the
-manifest or ``role-skills.json``) goes in as explicit includes. Output: ``{"role", "provider", "skills": [{"name", "id",
+asks ``skiller select`` (policy ``auto``) for the skills of a role from the work it is given: the role's required skills (the
+manifest or ``role-skills.json``) go in as explicit includes. Output: ``{"role", "provider", "skills": [{"name", "id",
 "path", "reason", "tokens"}], "excluded": [{"id", "reason"}], "discoverable": [id], "tokens", "diagnostics": []}``; ``path``
 is the absolute path of the ``SKILL.md`` the conductor reads. Exit 1 when ``skiller select`` fails.
 
@@ -131,7 +131,7 @@ def select_role(role: str, provider: str, paths: list[str], project: str | None,
         if not str(error).startswith("ROLE_UNKNOWN"):
             raise
         listed = role_skills(role)
-    own = [item["name"].replace(":", "/", 1) for item in listed]
+    own = [item["name"].replace(":", "/", 1) for item in listed if item.get("required")]  # optional ones are not forced
     argv = [str(require_skiller()), "select", "--role", role, "--provider", provider, "--policy", "auto", "--json"]
     for flag, values in (("--paths", paths), ("--include", [*own, *include]), ("--exclude", exclude)):
         if values:

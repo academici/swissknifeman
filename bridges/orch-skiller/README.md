@@ -29,7 +29,7 @@ python3 bridges/orch-skiller/resolve_role.py (--role ID | --manifest PATH | --al
   (manifest is not `exec/v1`), `RESOLVE_FAILED`. An error diagnostic from the partner (`SKILL_UNKNOWN`,
   `SKILL_AMBIGUOUS`) is reported with the partial result and exit 1.
 - `--select --role ID --provider P [--paths P…] [--project DIR] [--budget N] [--include ID…] [--exclude ID…]` asks
-  `skiller select --policy auto --json`: the role's own list (manifest or `role-skills.json`) goes in as explicit
+  `skiller select --policy auto --json`: the role's required skills (manifest or `role-skills.json`, `required: true`) go in as explicit
   includes, path and dependency triggers add the rest. Output `{"role", "provider", "skills": [{"name", "id", "path",
   "reason", "tokens"}], "excluded": [{"id", "reason"}], "discoverable", "tokens", "diagnostics"}`; `path` is the
   absolute `SKILL.md` the conductor reads. `SELECT_FAILED` (exit 1) when `skiller select` gives no JSON. The

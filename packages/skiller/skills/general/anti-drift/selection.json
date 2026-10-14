@@ -1,5 +1,6 @@
 {
   "schema": "skill-selection/v1",
   "kind": "procedure",
-  "decision": "WORKFLOW"
+  "decision": "WORKFLOW",
+  "replaced_by": "orch/lib/orch/conductor/progress.py"
 }

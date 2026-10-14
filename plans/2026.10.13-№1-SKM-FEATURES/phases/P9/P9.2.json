@@ -11,7 +11,11 @@
       "prompts.py",
       "options.py",
       "run-options схема и зеркало",
-      "tests"
+      "tests",
+      "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "bridges/planner-orch/schemas/run-options.schema.json",
+      "packages/orch/docs/conductor.md",
+      "CHANGELOG.md"
     ],
     "exclude": [
       "анализ смысла текста skills"
@@ -106,5 +110,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:55:22Z"
+  "updated_at": "2026-10-14T17:51:22Z"
 }

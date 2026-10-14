@@ -13,8 +13,9 @@ import sys
 from pathlib import Path
 
 from aicore.content.budget import estimate_tokens
-from aicore.content.skill import split_frontmatter
+from aicore.content.skill import skill_digest, split_frontmatter
 
+from . import custom
 from .selection import read_groups
 
 POLICIES = ("explicit", "auto")
@@ -133,8 +134,7 @@ def _bracket_body(text, position):
 
 # --- the pure function -------------------------------------------------------------------------------------
 def skill_id(entry):
-    parts = Path(entry["path"]).parts  # skills/<bucket>/<folder>/SKILL.md
-    return f"{parts[1]}/{parts[2]}" if len(parts) >= 4 else f"{entry['bucket']}/{entry['name']}"
+    return custom.entry_id(entry)  # skills/<bucket>/<folder>/SKILL.md, or the id of a custom skill
 
 
 def select(entries, request, groups, tokens):
@@ -226,7 +226,8 @@ def select(entries, request, groups, tokens):
             excluded.append({"id": sid, "reason": "over_budget", "detail": f"{cost} tokens, {max(budget - used, 0)} left"})
             continue
         used += cost
-        included.append({"id": sid, "name": by_id[sid]["name"], "reason": candidates[sid], "tokens": cost})
+        included.append({"id": sid, "name": by_id[sid]["name"], "reason": candidates[sid], "tokens": cost,
+                         "origin": by_id[sid].get("origin", "library")})
     trace.append({"step": "budget", "limit": budget, "used": used})
     discoverable = sorted(row["id"] for row in excluded if row["reason"] == "kind_not_preloaded")
     return {"included": included, "excluded": excluded, "discoverable": discoverable, "tokens": used,
@@ -235,9 +236,12 @@ def select(entries, request, groups, tokens):
 
 
 # --- the command -----------------------------------------------------------------------------------------
-def _body_tokens(root):
+def _body_tokens(root, entries=()):
+    custom_dirs = {skill_id(e): Path(e["skill_dir"]) for e in entries if e.get("skill_dir")}
+
     def count(sid):
-        text = (Path(root) / "skills" / sid / "SKILL.md").read_text(encoding="utf-8-sig")
+        skill_dir = custom_dirs.get(sid) or Path(root) / "skills" / sid
+        text = (skill_dir / "SKILL.md").read_text(encoding="utf-8-sig")
         return estimate_tokens(split_frontmatter(text)[1])
     return count
 
@@ -261,10 +265,18 @@ def _parser():
     p.add_argument("--include", nargs="+", default=[], metavar="ID", help="skills to take (name or bucket/folder)")
     p.add_argument("--exclude", nargs="+", default=[], metavar="ID", help="skills never to take; wins over include")
     p.add_argument("--tools", nargs="+", default=[], metavar="T", help="tools of the role (for requires_tools)")
+    p.add_argument("--custom-dirs", nargs="+", default=[], dest="custom_dirs", metavar="DIR",
+                   help="extra directories of custom skills (machine layer, added to skiller.custom_dirs)")
     p.add_argument("--policy", choices=POLICIES, help="explicit: no triggers; auto: path and dependency triggers")
     p.add_argument("--json", action="store_true", dest="json_output")
     p.add_argument("--explain", action="store_true", help="add the trace of every step")
     return p
+
+
+def _custom_dirs(env, project, given):
+    from . import settings
+    configured = settings.load(project, env=env, strict=False).values.get("custom_dirs") or []
+    return [*configured, *given]
 
 
 def cmd_select(env, argv):
@@ -275,10 +287,19 @@ def cmd_select(env, argv):
     policy = _policy(env, project, args.policy)
     request = {"role": args.role, "paths": args.paths, "deps": deps, "tools": args.tools, "include": args.include,
                "exclude": args.exclude, "budget": args.budget, "policy": policy}
-    result = select(registry["skills"], request, read_groups(env.root), _body_tokens(env.root))
-    by_id = {skill_id(e): e for e in registry["skills"]}
+    try:
+        entries, notes = custom.merge(registry["skills"], custom.discover(project, _custom_dirs(env, project, args.custom_dirs)))
+    except (custom.ExtensionAmbiguous, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(1) from None
+    result = select(entries, request, read_groups(env.root), _body_tokens(env.root, entries))
+    by_id = {skill_id(e): e for e in entries}
     for row in result["included"]:
         row["path"] = str((env.root / by_id[row["id"]]["path"]).resolve())
+        row["digest"] = by_id[row["id"]].get("digest") or skill_digest(Path(row["path"]).parent)
+    if notes:
+        result["notes"] = notes
+        result.setdefault("explain", {})["custom"] = notes
     result["request"] = {"role": args.role, "provider": args.provider, "model_class": args.model_class,
                          "budget": args.budget, "policy": policy}
     if not args.explain:
@@ -288,9 +309,11 @@ def cmd_select(env, argv):
         return
     print(f"role {args.role}, policy {policy}: {len(result['included'])} skills, {result['tokens']} tokens")
     for row in result["included"]:
-        print(f"  + {row['id']}  {row['reason']}  {row['tokens']}")
+        print(f"  + {row['id']}  {row['reason']}  {row['tokens']}  {row['origin']}")
     for row in result["excluded"]:
         print(f"  - {row['id']}  {row['reason']}" + (f"  ({row['detail']})" if row.get("detail") else ""))
+    for note in result.get("notes", ()):
+        print(f"  ! {note['code']}  {note['id']}  ({note['detail']})")
     if result["discoverable"]:
         print("discoverable: " + ", ".join(result["discoverable"]))
     if args.explain:

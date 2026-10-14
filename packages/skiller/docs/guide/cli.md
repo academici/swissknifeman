@@ -65,7 +65,7 @@ Prints the `skill-descriptor/v1` of one skill of the library or of a host module
 provenance, `requires`, adapters, and `compatibility` and `allowed_tools` when the skill declares them.
 
 ```bash
-skiller describe SKILL [--json]
+skiller describe SKILL [--project DIR] [--json]
 ```
 
 `SKILL` is a name or `bucket/rel`. An unknown skill exits 1. See [Skill metadata](./configuration#skill-metadata).
@@ -80,10 +80,12 @@ The skills an orchestration role gets for a piece of work: a pure function over 
 
 ```bash
 skiller select --role ROLE [--paths P…] [--deps D…] [--project DIR] [--include ID…] [--exclude ID…] [--tools T…] \
-  [--budget TOKENS] [--model-class C] [--provider P] [--policy explicit|auto] [--json] [--explain]
+  [--budget TOKENS] [--model-class C] [--provider P] [--policy explicit|auto] [--custom-dirs DIR…] [--json] [--explain]
 ```
 
 Steps: explicit `--include` → path and dependency triggers (only under the policy `auto`) → filters: `role_not_allowed` (`selection.roles`), `excluded` (`--exclude`, wins over include), `tool_missing` (`requires_tools` against `--tools`), `kind_not_preloaded` (`router`, `reference`, `persona`: listed in `discoverable`), `duplicated_by_role_contract` (`replaced_by`) → `exclusive_group` (the group `max`) → `over_budget` (`--budget`; a body is never cut). An explicit include is exempt from the filters except `--exclude` and from the budget. `--project` adds the dependencies of its `composer.json`, `package.json` and `pyproject.toml`; the policy comes from `[skiller.selection] policy` (`explicit`, the default, or `auto`) unless `--policy` is given. The answer is `{included: [{id, name, path, reason, tokens}], excluded: [{id, reason, detail?}], discoverable, tokens, request}`; `--explain` adds the trace of every step. `--provider` and `--model-class` are echoed in `request` and do not change the selection yet.
+
+**Custom skills.** Beside the library, `select` and `describe` read user skills of the layout `<bucket>/<folder>/SKILL.md`: the machine directories of `[skiller] custom_dirs` (machine, invocation and flag layers only; `--custom-dirs DIR…` adds more) and the project's `<project>/.swissknifeman/skills/`. Precedence: library < machine < project. Every row carries `origin` (`library|machine|project`) and `digest`; `describe` prints both. A custom skill with the id of an earlier skill overrides it only when its `selection.replaces` names that id; otherwise the command fails with `EXTENSION_AMBIGUOUS`. Notes (`notes` in `--json`, `explain.custom`): `OVERRIDE`, `TRIGGER_OVERLAP` (another id with the same triggers), `DEPRECATED_REPLACED`, `DEPRECATED`.
 
 ### `skiller selection`
 

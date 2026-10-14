@@ -145,6 +145,11 @@
       "minimum": 1,
       "description": "Token budget of the skill body that selection counts; selection does not cut the text."
     },
+    "replaces": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$",
+      "description": "Id (`bucket/folder`) of the skill this custom skill overrides; a custom skill with an existing id and no matching `replaces` is an `EXTENSION_AMBIGUOUS` error."
+    },
     "replaced_by": {
       "type": "string",
       "minLength": 1,

@@ -32,6 +32,10 @@ schema_version = 1
 # Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
 # skills_path = ""
 
+# Machine directories with custom skills in the library layout (<bucket>/<folder>/SKILL.md); the project's own .swissknifeman/skills is always read. A custom skill with an existing id needs selection.replaces to override it (EXTENSION_AMBIGUOUS otherwise). Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# custom_dirs = []
+
 [skiller.sync]
 # Agent that receives the managed copies; empty means claude. String.
 # Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.

@@ -198,7 +198,7 @@ class PolicyAndCliCase(unittest.TestCase):
                                   "--provider", "claude-code", "--json"))
         self.assertEqual(sorted(doc), ["discoverable", "excluded", "included", "request", "tokens"])
         row = doc["included"][0]
-        self.assertEqual(sorted(row), ["id", "name", "path", "reason", "tokens"])
+        self.assertEqual(sorted(row), ["digest", "id", "name", "origin", "path", "reason", "tokens"])
         self.assertTrue(Path(row["path"]).is_file())
         self.assertEqual(doc["request"]["policy"], "auto")
 

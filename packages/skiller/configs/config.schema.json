@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:skiller:config:v1",
   "title": "skiller config",
-  "description": "Settings of the skiller module: which skills a project receives through the marketplace (connect) and through managed copies (sync). Selecting skills is a property of the project, so a machine file cannot set these keys.",
+  "description": "Settings of the skiller module: which skills a project receives through the marketplace (connect) and through managed copies (sync). Selecting skills is a property of the project, so a machine file cannot set these keys; only `custom_dirs` is a machine setting.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -263,6 +263,21 @@
           ]
         }
       }
+    },
+    "custom_dirs": {
+      "type": "array",
+      "description": "Machine directories with custom skills in the library layout (<bucket>/<folder>/SKILL.md); the project's own .swissknifeman/skills is always read. A custom skill with an existing id needs selection.replaces to override it (EXTENSION_AMBIGUOUS otherwise).",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "One directory; `~` is expanded."
+      },
+      "x-skm-layers": [
+        "defaults",
+        "machine",
+        "invocation",
+        "flags"
+      ]
     }
   }
 }

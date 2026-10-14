@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.5",
   "title": "Пользовательские skills: skiller.custom_dirs (machine), .swissknifeman/skills проекта, replaces и EXTENSION_AMBIGUOUS, origin и digest в select/describe",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "По knowledge/p8-skills#custom: config skiller.custom_dirs (x-skm-layers machine/invocation/flags), обнаружение проектных skills, политика коллизий, origin library|machine|project в explain и describe; тесты.",
   "why": "Аудит П7.5, мысль 2. Риск: проект подменяет skill без явного replaces — ошибка EXTENSION_AMBIGUOUS.",
   "scope": {
@@ -83,6 +83,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:54:13Z"
+  "result": {
+    "started_at": "2026-10-14T16:33:14Z",
+    "finished_at": "2026-10-14T16:42:45Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "301cfed7-08af-4ae7-960e-8ac5e83ad291"
+    },
+    "notes": "custom_dirs (machine/invocation/flags), project .swissknifeman/skills, EXTENSION_AMBIGUOUS, override via replaces, notes, origin+digest in select/describe; 16 new tests.",
+    "deviations": [
+      "aicore skill-selection/v1 gets optional replaces (additive)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T16:42:45Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T16:42:45Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T16:42:45Z"
 }

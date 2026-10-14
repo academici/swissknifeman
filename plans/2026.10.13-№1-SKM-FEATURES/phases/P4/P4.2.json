@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
   "title": "Лимиты review на batch: review_rounds_batch, corrections_batch, findings_batch в _allowance; Blocker при исчерпании → REVIEW_LIMIT; закрытие фазы P4",
-  "status": "in_progress",
+  "status": "done",
   "summary": "limits *_batch (0 = нет); state.batch счётчики; _allowance проверяет batch той же семантикой цели/потолка, LIMIT_OVER batch + plan note; открытый Blocker при отказе allowance → Stop REVIEW_LIMIT; тесты --batch. Пункт закрывает фазу: phase.validation P4.",
   "why": "Аудит П3.2, мысль 8. Риск: тихий пропуск Blocker — запрещён, только stop.",
   "scope": {
@@ -108,12 +108,41 @@
   },
   "result": {
     "started_at": "2026-10-14T09:06:28Z",
+    "finished_at": "2026-10-14T09:23:21Z",
     "executor": {
       "provider": "claude",
       "model": "claude-sonnet-5-5",
       "effort": "medium",
       "session": "ded8e872-3e56-461a-abfa-4938ad4ba9fa"
-    }
+    },
+    "notes": "limits.*_batch (review_rounds, corrections, findings; 0=off); счётчики из state пунктов + state.batch; Blocker при отказе → REVIEW_LIMIT, иначе заметки; схема+зеркало, docs, CHANGELOG, BatchLimitTests. Фаза P4: V11-V13 зелёные.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T09:23:21Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T09:23:21Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T09:23:21Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T09:23:21Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T09:23:21Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T09:06:28Z"
+  "updated_at": "2026-10-14T09:23:21Z"
 }

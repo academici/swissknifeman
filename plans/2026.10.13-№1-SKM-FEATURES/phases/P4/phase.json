@@ -56,5 +56,10 @@
       ],
       "mode": "recommended"
     }
-  ]
+  ],
+  "closed": {
+    "at": "2026-10-14T09:23:21Z",
+    "result": "done",
+    "summary": "2 item(s): 2 done"
+  }
 }

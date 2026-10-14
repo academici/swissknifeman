@@ -7,9 +7,11 @@ from pathlib import Path
 import sys
 
 from aicore.config import ConfigError
+from aicore.state import ProjectContextRequired
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import adhoc, catalog, conformance, events, journal, launch, policies, render, sandbox, settings
+from orch import (adhoc, catalog, conformance, events, journal, launch, policies, project as project_mod, render,
+                  sandbox, settings)
 from orch.bindings import BINDINGS, check_skills
 from orch.conductor import contract as conductor_contract
 from orch.contracts import validate
@@ -116,7 +118,7 @@ def _prepare(args: argparse.Namespace) -> int:
         if not args.dry_run:
             raise PortError("NOT_IMPLEMENTED", "prepare only supports --dry-run in this version")
         input_doc, policy = _load_json(args.input), _load_json(args.policy)
-        current = settings.load(project=_project_root(), config_file=args.config)  # the configuration is read once
+        current = settings.load(project=_project_root(args), config_file=args.config)  # the configuration is read once
         plan = _dry_run(input_doc, policy, current, out=args.out, provider=args.provider, binding_flag=args.binding,
                         model_catalog=args.model_catalog, roles_dir=args.roles_dir,
                         submission_id=args.submission_id, skills=_load_skills(args.skills))
@@ -214,16 +216,16 @@ def _explain(args: argparse.Namespace) -> int:
     return 0
 
 
-def _project_root() -> Path | None:
-    """The project the working directory belongs to: a git repository or a folder with ``.swissknifeman``."""
-    from aicore.state import find_project_root
-    root = find_project_root(Path.cwd())
-    return root if (root / ".git").exists() or (root / ".swissknifeman").is_dir() else None
+def _project_root(args: argparse.Namespace | None = None) -> Path | None:
+    """The project of the command: ``--project``, ``SKM_PROJECT_ROOT`` or the nearest ``.git`` or ``.swissknifeman`` above the
+    working directory; ``None`` without one."""
+    context = project_mod.find(getattr(args, "project", None))
+    return context.root if context else None
 
 
 def _policy(args: argparse.Namespace) -> int:
     try:
-        current = settings.load(project=_project_root(), config_file=args.config)
+        current = settings.load(project=_project_root(args), config_file=args.config)
         if args.action == "list":
             rows = [policies.describe(policy_id, current) for policy_id in policies.discover(current)]
             if args.json:
@@ -355,7 +357,7 @@ def _gitignore_checks(project: Path | None) -> list:
 
 
 def _doctor(args: argparse.Namespace) -> int:
-    rows = doctor_checks(_project_root())
+    rows = doctor_checks(_project_root(args))
     if args.json:
         print(json.dumps(rows, ensure_ascii=False, indent=2))
     else:
@@ -586,9 +588,12 @@ def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
                "register": _source_register, "commit": _source_commit, "release": _source_release}[args.action]
     try:
-        project = _project_root()
+        project = project_mod.require(getattr(args, "project", None)).root  # the cycle writes the state of a project
         current = settings.load(project=project, config_file=args.config)  # the configuration is read once
         return handler(args, current, project)
+    except ProjectContextRequired as error:
+        print(str(error), file=sys.stderr)
+        return 1
     except SourceRefusal as refusal:
         print(f"{refusal.code}: {refusal.message}", file=sys.stderr)
         return refusal.exit_code
@@ -646,6 +651,9 @@ def _source_parser(verbs) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="orch.py")
     parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
+    parser.add_argument("--project", type=Path, metavar="DIR",
+                        help="the project; default: SKM_PROJECT_ROOT, else the nearest .git or .swissknifeman above the "
+                             "working directory (the run cycle needs one: PROJECT_CONTEXT_REQUIRED)")
     verbs = parser.add_subparsers(dest="verb", required=True)
     command = verbs.add_parser("validate", help="validate an exec/v1 or conductor/v1 JSON document")
     command.add_argument("kind")

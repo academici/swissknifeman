@@ -118,22 +118,65 @@ def project_backups_dir(root: PathLike) -> Path:
     return project_dir(root) / "backups"
 
 
+ENV_PROJECT_ROOT = "SKM_PROJECT_ROOT"
+DEFAULT_MARKERS = (".git", PROJECT_DIRNAME)
+
+
+@dataclass(frozen=True)
+class ProjectContext:
+    """The project of a command and how it was found: ``resolution`` is ``flag``, ``environment``, ``marker`` or ``git``;
+    ``marker`` is the entry that matched (``None`` when the project was named, not searched for)."""
+
+    root: Path
+    resolution: str
+    marker: Optional[str] = None
+
+
+class ProjectContextRequired(LookupError):
+    """``PROJECT_CONTEXT_REQUIRED``: a command that needs a project found none above its start."""
+
+    code = "PROJECT_CONTEXT_REQUIRED"
+
+    def __init__(self, start: PathLike):
+        super().__init__(f"PROJECT_CONTEXT_REQUIRED: no project found above {start} (no .git or .swissknifeman); "
+                         f"go into the project or pass --project DIR")
+
+
+def resolve_project(start: PathLike, *, explicit: Optional[PathLike] = None,
+                    env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
+                    markers: Iterable[str] = DEFAULT_MARKERS,
+                    stop_at_home: bool = False) -> Optional[ProjectContext]:
+    """The project of a command: ``explicit`` (the ``--project`` flag), else ``SKM_PROJECT_ROOT``, else the nearest ancestor
+    of ``start`` (inclusive) that holds one of ``markers`` (checked in the order given; ``.git`` may be a file), else ``None``.
+
+    The user's home directory does not count through ``.swissknifeman`` (the legacy machine state directory has that
+    name); with ``stop_at_home`` the search ends at the home directory (it is checked, nothing above it is).
+    """
+    environment = os.environ if env is None else env
+    if explicit is not None and str(explicit) != "":
+        return ProjectContext(Path(os.path.abspath(os.path.expanduser(explicit))), "flag")
+    named = environment.get(ENV_PROJECT_ROOT, "")
+    if named:
+        return ProjectContext(Path(os.path.abspath(os.path.expanduser(named))), "environment")
+    begin = Path(os.path.abspath(start))
+    user = _home(environment, home)
+    for candidate in (begin, *begin.parents):
+        for marker in markers:
+            if marker == PROJECT_DIRNAME and candidate == user:
+                continue
+            found = (candidate / marker).is_dir() if marker == PROJECT_DIRNAME else (candidate / marker).exists()
+            if found:
+                return ProjectContext(candidate, "git" if marker == ".git" else "marker", marker)
+        if stop_at_home and candidate == user:
+            break
+    return None
+
+
 def find_project_root(start: PathLike, *, env: Optional[Mapping[str, str]] = None,
                       home: Optional[PathLike] = None) -> Path:
-    """Nearest ancestor of *start* (inclusive) holding ``.swissknifeman/`` or ``.git``.
-
-    The user's home directory does not count through ``.swissknifeman/`` (the legacy machine
-    state directory has that name); a ``.git`` there does. Without a match *start* itself is
-    returned.
-    """
-    begin = Path(os.path.abspath(start))
-    user = _home(os.environ if env is None else env, home)
-    for candidate in (begin, *begin.parents):
-        if (candidate / ".git").exists():
-            return candidate
-        if candidate != user and (candidate / PROJECT_DIRNAME).is_dir():
-            return candidate
-    return Path(start)
+    """The root of :func:`resolve_project` for ``start``; without a project, ``start`` itself."""
+    context = resolve_project(start, env=env, home=home)
+    return context.root if context else Path(start)
 
 
 _WARNED: set = set()

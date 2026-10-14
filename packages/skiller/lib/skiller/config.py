@@ -13,6 +13,7 @@ from aicore.provider.config import (
 from aicore.provider.manifest import (
     default_manifest_path, load_provider_manifest, provider_config_catalog)
 from aicore.provider.values import ConfigSource
+from aicore.state import resolve_project
 from aicore.util.project import detect_project_type
 
 from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fields
@@ -433,26 +434,18 @@ def resolve_profile_name(target, config, flag_profile):
 
 
 # --- project root discovery ----------------------------------------------------
+PROJECT_MARKERS = (".swissknifeman/config.toml", ".swissknife.json", ".swissknifeman/config.json", ".claude", ".git")
+
+
 def find_project_root(env, start=None):
-    """Nearest dir upward containing .swissknifeman/config.toml, .swissknife.json, .claude/ or .git."""
-    p = (start or Path.cwd()).resolve()
-    home = env.home.resolve()
-    while True:
-        if str(p) == p.root:
-            return None, None
-        if (p / ".swissknifeman" / "config.toml").is_file():
-            return p, ".swissknifeman/config.toml"
-        if (p / ".swissknife.json").is_file():
-            return p, ".swissknife.json"
-        if (p / ".swissknifeman" / "config.json").is_file():
-            return p, ".swissknifeman/config.json"
-        if (p / ".claude").is_dir():
-            return p, ".claude/"
-        if (p / ".git").exists():  # dir or file (worktree/submodule)
-            return p, ".git"
-        if p == home:
-            return None, None
-        p = p.parent
+    """``(root, via)`` of the nearest dir upward holding one of PROJECT_MARKERS (``via`` is the marker), else
+    ``(None, None)``. The search ends at the home directory; ``SKM_PROJECT_ROOT`` names the project outright. The
+    walk is ``aicore.state.resolve_project`` with these markers."""
+    context = resolve_project((start or Path.cwd()).resolve(), env=os.environ, home=env.home.resolve(),
+                              markers=PROJECT_MARKERS, stop_at_home=True)
+    if context is None:
+        return None, None
+    return context.root, context.marker or "SKM_PROJECT_ROOT"
 
 
 def resolve_target(env, opts, allow_home_confirm=False):

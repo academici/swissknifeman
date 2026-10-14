@@ -117,6 +117,84 @@ class ProjectLocationsTests(unittest.TestCase):
             self.assertEqual(loc.find_project_root(work, home=home), work)
 
 
+class ResolveProjectTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.base = Path(temporary.name).resolve()
+        self.home = self.base / "home"
+        self.home.mkdir()
+        self.project = self.base / "proj"
+        (self.project / ".git").mkdir(parents=True)
+        self.deep = self.project / "src" / "pkg"
+        self.deep.mkdir(parents=True)
+
+    def resolve(self, start=None, **kwargs):
+        kwargs.setdefault("env", {})
+        return loc.resolve_project(start or self.deep, home=self.home, **kwargs)
+
+    def test_a_flag_wins_over_the_environment_and_markers(self):
+        other = self.base / "other"
+        other.mkdir()
+        context = self.resolve(explicit=other, env={"SKM_PROJECT_ROOT": str(self.base)})
+        self.assertEqual((context.root, context.resolution), (other, "flag"))
+
+    def test_the_environment_wins_over_markers(self):
+        context = self.resolve(env={"SKM_PROJECT_ROOT": str(self.base)})
+        self.assertEqual((context.root, context.resolution), (self.base, "environment"))
+
+    def test_a_git_directory_and_a_marker_are_told_apart(self):
+        context = self.resolve()
+        self.assertEqual((context.root, context.resolution, context.marker), (self.project, "git", ".git"))
+        marked = self.base / "marked"
+        (marked / ".swissknifeman").mkdir(parents=True)
+        context = self.resolve(marked / "x")
+        self.assertEqual((context.root, context.resolution, context.marker), (marked, "marker", ".swissknifeman"))
+
+    def test_without_a_project_there_is_no_context(self):
+        loose = self.base / "loose" / "dir"
+        loose.mkdir(parents=True)
+        self.assertIsNone(self.resolve(loose))
+
+    def test_the_machine_state_directory_in_home_is_not_a_project(self):
+        (self.home / ".swissknifeman").mkdir()
+        work = self.home / "scratch"
+        work.mkdir()
+        self.assertIsNone(self.resolve(work))
+        (self.home / ".git").mkdir()
+        self.assertEqual(self.resolve(work).root, self.home)
+
+    def test_a_relative_flag_is_made_absolute_and_a_blank_environment_is_ignored(self):
+        context = loc.resolve_project(self.deep, explicit="rel", env={"SKM_PROJECT_ROOT": ""}, home=self.home)
+        self.assertEqual(context.root, Path(os.path.abspath("rel")))
+        self.assertEqual(self.resolve(env={"SKM_PROJECT_ROOT": ""}).resolution, "git")
+
+    def test_own_markers_and_the_stop_at_home(self):
+        (self.home / ".claude").mkdir()
+        work = self.home / "scratch"
+        work.mkdir()
+        markers = (".swissknifeman/config.toml", ".claude", ".git")
+        context = self.resolve(work, markers=markers, stop_at_home=True)
+        self.assertEqual((context.root, context.marker), (self.home, ".claude"))
+        self.assertIsNone(self.resolve(self.home.parent, markers=(".nothing",), stop_at_home=True))
+        (self.project / ".swissknifeman").mkdir()
+        (self.project / ".swissknifeman" / "config.toml").write_text("x")
+        self.assertEqual(self.resolve(markers=markers, stop_at_home=True).marker, ".swissknifeman/config.toml")
+
+    def test_find_project_root_is_the_wrapper(self):
+        self.assertEqual(loc.find_project_root(self.deep, env={}, home=self.home), self.project)
+        loose = self.base / "loose"
+        loose.mkdir()
+        self.assertEqual(loc.find_project_root(loose, env={}, home=self.home), loose)
+        self.assertEqual(loc.find_project_root(self.deep, env={"SKM_PROJECT_ROOT": str(loose)}, home=self.home), loose)
+
+    def test_the_error_names_the_flag(self):
+        error = loc.ProjectContextRequired(self.base)
+        self.assertEqual(error.code, "PROJECT_CONTEXT_REQUIRED")
+        self.assertIn("--project DIR", str(error))
+        self.assertIn(str(self.base), str(error))
+
+
 class ResolveWithLegacyTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()

@@ -91,6 +91,22 @@ class SettingsCase(unittest.TestCase):
         self.assertEqual(err, "")
         self.assertEqual(find_project_root(self.env, project), (project.resolve(), ".swissknifeman/config.toml"))
 
+    def test_the_project_root_search_is_the_shared_one(self):
+        """aicore.state.resolve_project with skiller's markers: own order, the home directory ends the walk,
+        SKM_PROJECT_ROOT names the project outright."""
+        home = self.env.home.resolve()
+        work = home / "scratch" / "deep"
+        work.mkdir(parents=True)
+        self.assertEqual(find_project_root(self.env, work), (None, None))
+        (home / ".claude").mkdir(exist_ok=True)
+        self.assertEqual(find_project_root(self.env, work), (home, ".claude"))
+        (home / "scratch" / ".git").mkdir()
+        self.assertEqual(find_project_root(self.env, work), (home / "scratch", ".git"))
+        named = self.tmp / "named"
+        named.mkdir()
+        with mock.patch.dict(os.environ, {"SKM_PROJECT_ROOT": str(named)}):
+            self.assertEqual(find_project_root(self.env, work), (named, "SKM_PROJECT_ROOT"))
+
     def test_section_as_a_whole_toml_wins_over_the_legacy_file(self):
         _toml(self.project, 'schema_version = 1\n[skiller]\nbuckets = ["quality"]\n')
         _json(self.project / ".swissknife.json",

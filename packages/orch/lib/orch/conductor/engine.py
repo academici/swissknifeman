@@ -144,8 +144,10 @@ class Conductor:
 
     def __init__(self, *, project: Path, settings, config_file: Optional[Path] = None, mode: str = "text",
                  stream=None, model_catalog: Optional[Path] = None, roles_dir: Optional[Path] = None,
-                 env: Optional[dict] = None, clock: Optional[Callable[[], str]] = None):
+                 env: Optional[dict] = None, clock: Optional[Callable[[], str]] = None,
+                 project_resolution: Optional[str] = None):
         self.project = Path(project).resolve()
+        self.project_resolution = project_resolution
         self.settings = settings
         self.config_file = Path(config_file).resolve() if config_file else None
         self.mode = mode
@@ -208,7 +210,8 @@ class Conductor:
                    "max_items": max_items, "options_file": str(options_file) if options_file else None,
                    "adopt": bool(adopt),
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
-                   "project": str(self.project)}
+                   "project": str(self.project), "project_resolution": self.project_resolution,
+                   "working_directory": os.getcwd()}
         self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
         write_json(self.directory / RUN_FILE, run_doc)
         self._save()

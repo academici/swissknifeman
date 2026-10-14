@@ -1551,6 +1551,65 @@ class ProviderAvailabilityTests(ConductorCase):
         self.assertTrue(all(preview["available"].values()), preview["unavailable"])
 
 
+class ProjectContextTests(ConductorCase):
+    """The project is ``--project DIR``, else ``SKM_PROJECT_ROOT``, else the nearest ``.git`` or ``.swissknifeman``; the run
+    records how it was found and where it was started."""
+
+    def elsewhere(self) -> Path:
+        other = self.project.parent / "elsewhere"
+        other.mkdir()
+        os.chdir(other)
+        return other
+
+    def setUp(self):
+        super().setUp()
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+
+    def run_doc(self, err: str) -> dict:
+        return json.loads((self.run_dir(err) / engine.RUN_FILE).read_text(encoding="utf-8"))
+
+    def test_without_a_project_the_run_is_refused_with_the_flag_named(self):
+        other = self.elsewhere()
+        code, out, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
+        self.assertIn("--project DIR", err)
+        self.assertIn(str(other), err)
+
+    def test_the_flag_names_the_project_from_anywhere_and_is_recorded(self):
+        other = self.elsewhere()
+        code, out, err = self.conduct("--project", self.project, "run", "--plan", "T", "--items", "W1", "--json-lines")
+        self.assertEqual(self.outcome(err)[0], "finished", err)
+        doc = self.run_doc(err)
+        self.assertEqual((doc["project_resolution"], doc["working_directory"]), ("flag", str(other)))
+
+    def test_the_environment_names_the_project(self):
+        self.elsewhere()
+        with mock.patch.dict(os.environ, {"SKM_PROJECT_ROOT": str(self.project)}):
+            code, out, err = self.run_items("W1")
+        self.assertEqual(self.run_doc(err)["project_resolution"], "environment", err)
+
+    def test_a_marker_finds_the_project_from_a_subfolder(self):
+        sub = self.project / "sub"
+        sub.mkdir()
+        os.chdir(sub)
+        code, out, err = self.run_items("W1")
+        doc = self.run_doc(err)
+        self.assertEqual((doc["project_resolution"], doc["working_directory"]), ("git", str(sub)))
+
+    def test_a_project_that_is_not_a_git_repository_is_refused(self):
+        plain = self.project.parent / "plain"
+        plain.mkdir()
+        code, out, err = self.conduct("--project", plain, "status")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_NOT_GIT", err)
+
+    def test_a_missing_project_folder_is_no_project(self):
+        code, out, err = self.conduct("--project", self.project.parent / "missing", "status")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
+
+
 class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_writes_nothing_and_shows_routes(self):
         code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")

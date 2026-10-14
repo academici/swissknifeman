@@ -12,15 +12,24 @@ import sys
 import time
 
 from aicore.config import ConfigError
+from aicore.state import ProjectContextRequired
 
-from orch import sandbox, settings as settings_mod
+from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import engine, gates, observer, progress
 
 
-def _project() -> Path | None:
-    from aicore.state import find_project_root
-    root = find_project_root(Path.cwd())
-    return root if (root / ".git").exists() else None
+def _project(args):
+    """The project context (``--project``, ``SKM_PROJECT_ROOT`` or the nearest marker), or ``None`` after the refusal was
+    printed: ``PROJECT_CONTEXT_REQUIRED`` without a project, ``PROJECT_NOT_GIT`` when it is not a git repository."""
+    try:
+        context = project_mod.require(args.project)
+    except ProjectContextRequired as error:
+        print(str(error), file=sys.stderr)
+        return None
+    if not (context.root / ".git").exists():
+        print(f"PROJECT_NOT_GIT: {context.root} is not a git repository; the conductor needs one", file=sys.stderr)
+        return None
+    return context
 
 
 def _mode(args) -> str:
@@ -115,6 +124,9 @@ def main(argv: list | None = None) -> int:
     parser = argparse.ArgumentParser(prog="conduct.py", description="Conduct pieces of work of a plan through "
                                      "the roles of their run-policy until green or an honest stop.")
     parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
+    parser.add_argument("--project", type=Path, metavar="DIR",
+                        help="the project (a git repository); default: SKM_PROJECT_ROOT, else the nearest .git or "
+                             ".swissknifeman above the working directory")
     verbs = parser.add_subparsers(dest="verb", required=True)
     run = verbs.add_parser("run", help="claim and conduct pieces of work")
     run.add_argument("--plan", required=True, help="collection of the work source, such as a plan id")
@@ -167,10 +179,10 @@ def main(argv: list | None = None) -> int:
     if args.verb == "gates":
         return _gates(args)
 
-    project = _project()
-    if project is None:
-        print("PROJECT_NOT_GIT: run the conductor inside a git repository", file=sys.stderr)
+    context = _project(args)
+    if context is None:
         return 1
+    project = context.root
     if args.verb in ("status", "observe"):
         run_id = args.run or _latest(project)
         directory = engine.runs_root(project) / (run_id or "-")
@@ -219,7 +231,8 @@ def main(argv: list | None = None) -> int:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
     conductor = engine.Conductor(project=project, settings=current, config_file=args.config, mode=_mode(args),
-                                 model_catalog=getattr(args, "model_catalog", None))
+                                 model_catalog=getattr(args, "model_catalog", None),
+                                 project_resolution=context.resolution)
     try:
         if args.verb == "run" and args.dry_run:
             print(json.dumps(_preview(conductor, args), ensure_ascii=False, indent=2))

@@ -2,7 +2,7 @@ exit: 2
 --- stdout ---
 
 --- stderr ---
-usage: orch.py [-h] [--config FILE]
+usage: orch.py [-h] [--config FILE] [--project DIR]
                {validate,launch,input,render-prompt,prepare,explain,policy,conformance,source,doctor}
                ...
 orch.py: error: argument verb: invalid choice: 'no-such-subcommand' (choose from 'validate', 'launch', 'input', 'render-prompt', 'prepare', 'explain', 'policy', 'conformance', 'source', 'doctor')

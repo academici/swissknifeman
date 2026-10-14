@@ -7,7 +7,7 @@ codes, on the verdicts of the closed role results (`schemas/conductor/v1`) and o
 Models are used only for the narrow roles: context scout, executor, reviewer, triager and, when asked for, the registrar that records the result.
 
 ```text
-conduct.py [--config FILE] run --plan P (--items REF… | --batch [--max-items N]) [--plans-root DIR]
+conduct.py [--config FILE] [--project DIR] run --plan P (--items REF… | --batch [--max-items N]) [--plans-root DIR]
            [--options FILE] [--adopt] [--dry-run [--scenario S]] [--quiet | --json-lines] [--model-catalog FILE]
 conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
 conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
@@ -18,6 +18,15 @@ conduct.py gates [--json] [--clear [PROVIDER]]
 
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
 130 interrupted (`resume` continues).
+
+## The project
+
+The project is `--project DIR`, else `SKM_PROJECT_ROOT`, else the nearest folder above the working directory that holds `.git`
+or `.swissknifeman` (`aicore.state.resolve_project`; the home directory does not count through `.swissknifeman`). Without one
+the commands stop with `PROJECT_CONTEXT_REQUIRED` and the hint `--project DIR`; a project that is not a git repository is
+`PROJECT_NOT_GIT` for the conductor. `orch.py` takes the same global `--project`, and its run cycle (`source …`) needs a
+project. The roles always start in the project folder, wherever the conductor was started. `run.json` records
+`project_resolution` (`flag`, `environment`, `marker` or `git`) and `working_directory`.
 
 ## The cycle of one piece of work
 

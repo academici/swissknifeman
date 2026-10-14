@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.2",
   "title": "aicore.state.resolve_project: --project → SKM_PROJECT_ROOT → маркер; PROJECT_CONTEXT_REQUIRED в orch; skiller на общей реализации; project_resolution в run.json",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "resolve_project(start, explicit, env, home, markers) → ProjectContext(root, resolution) в aicore.state.locations, find_project_root — обёртка; orch conduct.py и orch.py: глобальный --project и PROJECT_CONTEXT_REQUIRED; skiller config.find_project_root делегирует с своими маркерами; run.json — project_resolution, working_directory.",
   "why": "Аудит П2.2, 2.3.5. Риски: (1) изменение поведения CLI без проекта — только команды, которым проект нужен; (2) skiller сохраняет свои маркеры (.claude/, .swissknife.json) и сигнатуру (path, via).",
   "scope": {
@@ -129,6 +129,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:46:20Z"
+  "result": {
+    "started_at": "2026-10-14T06:44:55Z",
+    "finished_at": "2026-10-14T07:02:10Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0068d0be-1d1f-4fdc-8ee8-a533f18299ad"
+    },
+    "notes": "aicore.state.resolve_project/ProjectContext/ProjectContextRequired, find_project_root — обёртка; orch conduct.py и orch.py: глобальный --project, PROJECT_CONTEXT_REQUIRED; run.json project_resolution/working_directory; skiller find_project_root делегирует со своими маркерами и stop_at_home; golden help; docs, CHANGELOG.",
+    "deviations": [
+      "orch/project.py и tests/test_project.py вне task_files"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T07:02:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T07:02:10Z"
 }

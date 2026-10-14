@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "2d2117da0a9d",
-  "reason": "orch source release: новая подкоманда в справке",
+  "captured_from": "78d46ac23cf6",
+  "reason": "PLAN4 P3.2: глобальный --project DIR в orch.py и conduct.py",
   "generators": [
     {
       "id": "skiller-registry",

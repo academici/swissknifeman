@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P9.1",
   "title": "Prompt manifest: сборщики prompts.py на блоках Block(kind, origin, text) с байт-в-байт тем же промптом; prompt-manifest/v1 рядом с промптом; conduct.py prompt explain; observer — топ блоков; проверка E7",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Рефактор сборщиков на блоки и render; схема prompt-manifest; запись manifest в _role; prompt explain; observer; проверка E7 по команде knowledge/p9-prompt#manifest.",
   "why": "Аудит П8.1. Риск: изменение текста промпта — golden prompt-тесты байт-в-байт до и после.",
   "scope": {
@@ -12,6 +12,10 @@
       "cli.py (prompt explain)",
       "observer.py",
       "packages/orch/schemas/conductor/v1/prompt-manifest.schema.json",
+      "packages/orch/lib/orch/conductor/contract.py",
+      "packages/orch/fixtures/conductor/v1/**",
+      "CHANGELOG.md",
+      "packages/orch/docs/conductor.md",
       "tests"
     ],
     "exclude": [
@@ -71,11 +75,39 @@
     {
       "path": "CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/contract.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/fixtures/conductor/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/pending-schema/**",
+      "change": "modify"
     }
   ],
   "artifacts": [
     {
       "path": ".swissknifeman/state/artifacts/sha256/fe3d07d752a5653e925ea62c4685f62e1ed45e420fb6636ad0c442a2494c3576",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/74c4bda462f0e8db718112e681dfba0c1471554c61303c71f286458fac3ef245",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/ed70eadbabb8e64b88cd45bdeba0f429de1d731c85e10258f35db209025674e1",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/477cddede2bd040fec908b86fc176ada299d9cc9724f057601ecf7c63d86ced5",
       "role": "input"
     }
   ],
@@ -112,6 +144,34 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T17:27:55Z"
+  "result": {
+    "started_at": "2026-10-14T17:52:03Z",
+    "finished_at": "2026-10-14T18:01:15Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-dcc02c834e01e1678dbf5f55-P9.1",
+    "notes": "Prompt manifest finished. Builders in prompts.py return Block(kind, origin, text) lists and render() joins them byte-for-byte; the 13 golden prompts equal the output of the pre-change HEAD builders. engine._role writes prompts/<step>.manifest.json (prompt-manifest/v1). conduct.py prompt explain, observer prompt_blocks_by_role and docs/CHANGELOG were done by the earlier attempt. This round installed the parked schema, valid/invalid fixtures, the contract.py KINDS entry and the docs/contracts.md line, and removed tests/pending-schema. E7 check: no rule to pass whole artifacts found in the planner references, nothing replaced.\nChanged: CHANGELOG.md, packages/orch/docs/conductor.md, packages/orch/docs/contracts.md, packages/orch/fixtures/conductor/v1/invalid/prompt-manifest/block-no-origin.json, packages/orch/fixtures/conductor/v1/invalid/prompt-manifest/excluded-no-reason.json, packages/orch/fixtures/conductor/v1/invalid/prompt-manifest/extra-key.json, packages/orch/fixtures/conductor/v1/invalid/prompt-manifest/short-digest.json, packages/orch/fixtures/conductor/v1/invalid/prompt-manifest/wrong-schema.json, packages/orch/fixtures/conductor/v1/valid/prompt-manifest/executor.json, packages/orch/fixtures/conductor/v1/valid/prompt-manifest/minimal.json, packages/orch/lib/orch/conductor/cli.py, packages/orch/lib/orch/conductor/contract.py, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/observer.py, packages/orch/lib/orch/conductor/prompts.py, packages/orch/schemas/conductor/v1/prompt-manifest.schema.json, packages/orch/tests/golden/conductor-prompts/closer.md, packages/orch/tests/golden/conductor-prompts/executor-bounded.md, packages/orch/tests/golden/conductor-prompts/executor-checks.md, packages/orch/tests/golden/conductor-prompts/executor-full.md, packages/orch/tests/golden/conductor-prompts/executor-targeted.md, packages/orch/tests/golden/conductor-prompts/report-fixer-cut.md, packages/orch/tests/golden/conductor-prompts/report-fixer.md, packages/orch/tests/golden/conductor-prompts/reviewer-checks.md, packages/orch/tests/golden/conductor-prompts/reviewer-full.md, packages/orch/tests/golden/conductor-prompts/reviewer-pending.md, packages/orch/tests/golden/conductor-prompts/scout-plain.md, packages/orch/tests/golden/conductor-prompts/scout.md, packages/orch/tests/golden/conductor-prompts/triager.md, packages/orch/tests/test_conductor_prompts.py",
+    "deviations": [
+      "Block kinds go beyond the design list (candidate, review_scope, diff, findings, instruction) so reviewer, triager, closer and report-fixer prompts are fully covered by blocks; focus is left to P9.4."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T18:01:15Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.1/evidence/V1.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.1/evidence/V1.json"
+    ]
+  },
+  "updated_at": "2026-10-14T18:01:15Z"
 }

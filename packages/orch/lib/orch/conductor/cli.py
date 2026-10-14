@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``conduct.py run|resume|settle|release|status|observe|answer|questions|gates``.
+"""Command line of the conductor: ``conduct.py run|resume|settle|release|status|observe|answer|questions|prompt|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -16,7 +16,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, gates, observer, progress, questions
+from orch.conductor import agents, engine, gates, observer, progress, prompts, questions
 
 
 def _project(args):
@@ -133,6 +133,23 @@ def _questions(args, project: Path) -> int:
     return 0
 
 
+def _prompt(args, project: Path) -> int:
+    """``prompt explain``: the blocks of the prompt a role step was given (``prompts/<step>.manifest.json``), their
+    origin, size and digest, and what was left out."""
+    run_id = args.run or _latest(project)
+    directory = engine.runs_root(project) / (run_id or "-")
+    if not run_id or not (directory / engine.RUN_FILE).is_file():
+        print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
+        return 1
+    file = directory / engine.safe(args.item) / "prompts" / f"{args.step}.manifest.json"
+    doc = engine.read_json(file) if file.is_file() else None
+    if not isinstance(doc, dict):
+        print(f"MANIFEST_UNKNOWN: no prompt manifest for {args.item} {args.step} in run {run_id} ({file})", file=sys.stderr)
+        return 1
+    print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.explain_table(doc))
+    return 0
+
+
 def _gates(args) -> int:
     """List or clear the machine gates of providers; the gates do not depend on a project."""
     try:
@@ -228,6 +245,14 @@ def main(argv: list | None = None) -> int:
     listed = verbs.add_parser("questions", help="open questions of a run and their age (default: the latest run)")
     listed.add_argument("--run", metavar="RUN")
     listed.add_argument("--json", action="store_true")
+    prompt = verbs.add_parser("prompt", help="what a prompt of a role step was made of")
+    prompt_verbs = prompt.add_subparsers(dest="prompt_verb", required=True)
+    explain = prompt_verbs.add_parser("explain", help="the blocks of the prompt of one step: kind, origin, tokens, digest, "
+                                                      "and the skills left out (default run: the latest)")
+    explain.add_argument("--run", metavar="RUN")
+    explain.add_argument("--item", required=True, metavar="REF")
+    explain.add_argument("--step", required=True, metavar="STEP", help="such as scout, executor.1, review.1, triage.1, close")
+    explain.add_argument("--json", action="store_true")
     gate_list = verbs.add_parser("gates", help="provider capacity gates of this machine (exhausted account quotas); "
                                                "--clear removes them")
     gate_list.add_argument("--json", action="store_true")
@@ -250,6 +275,8 @@ def main(argv: list | None = None) -> int:
     project = context.root
     if args.verb in ("answer", "questions"):
         return _questions(args, project)
+    if args.verb == "prompt":
+        return _prompt(args, project)
     if args.verb in ("status", "observe"):
         run_id = args.run or _latest(project)
         directory = engine.runs_root(project) / (run_id or "-")

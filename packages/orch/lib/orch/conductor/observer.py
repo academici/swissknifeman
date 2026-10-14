@@ -5,7 +5,8 @@ project's aicore event journal since the run started, and writes ``observer.json
 reports folder (``.swissknifeman/orch/reports/<run>/``, ignored run output): repeats and resumes, red checks, review
 findings by class, idle time between stages, tokens and time by role, the beacons and mends of the run (slow or
 silent steps, rounds past a target, healed and repaired results), the share of the wall time spent in checks, stops,
-and proposals to improve the run options.
+the blocks that cost the most prompt tokens by role (from ``prompts/*.manifest.json``), and proposals to improve the run
+options.
 ``follow`` prints the notable lines of a run that is still going.
 """
 from __future__ import annotations
@@ -19,6 +20,7 @@ import time
 from orch.conductor import agents as agents_mod, progress as progress_mod, questions as questions_mod
 
 IDLE_S = 30
+TOP_BLOCKS = 5
 EVENT_TYPES = ("orch.run.*", "planner.*")
 
 
@@ -43,6 +45,25 @@ def _events(project: Path, since: str) -> tuple:
         if moment >= start:
             counts[event.type] += 1
     return dict(sorted(counts.items())), [f"{item.get('code')}: {item.get('message')}" for item in problems[:5]]
+
+
+def prompt_blocks(directory: Path) -> dict:
+    """``{role: rows}``: the ``TOP_BLOCKS`` prompt blocks with the most estimated tokens over the run, by role. Blocks of
+    one kind, origin and id add up over the steps (``steps`` counts them); a manifest that cannot be read is skipped."""
+    totals: dict = defaultdict(dict)
+    for file in sorted(Path(directory).glob("*/prompts/*.manifest.json")):
+        try:
+            doc = json.loads(file.read_text(encoding="utf-8"))
+            rows = [(row["kind"], row["origin"], row.get("id") or "", int(row["tokens"])) for row in doc["blocks"]]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        for kind, origin, ident, tokens in rows:
+            entry = totals[doc.get("role", "-")].setdefault((kind, origin, ident), {"tokens": 0, "steps": 0})
+            entry["tokens"] += tokens
+            entry["steps"] += 1
+    return {role: [{"kind": kind, "origin": origin, **({"id": ident} if ident else {}), **entry}
+                   for (kind, origin, ident), entry in sorted(found.items(), key=lambda row: (-row[1]["tokens"], row[0]))[:TOP_BLOCKS]]
+            for role, found in sorted(totals.items())}
 
 
 def build(directory: Path, project: Path) -> dict:
@@ -128,6 +149,7 @@ def build(directory: Path, project: Path) -> dict:
         "idle": {"total_s": round(idle_total, 1), "max_s": round(idle_max, 1), "max_between": idle_where},
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
         "tokens_by_agent": by_agent,
+        "prompt_blocks_by_role": prompt_blocks(directory),
         "open_questions": questions_mod.listing(directory, time.time()),
         "seconds_by_role": {role: round(value, 1) for role, value in sorted(seconds.items())},
         "scout_cache": {"runs": scout_runs, "hits": scout_hits},
@@ -215,6 +237,11 @@ def markdown(report: dict) -> str:
                   "| --- | --- | --- | --- | --- | --- |"]
         lines += [f"| {row['agent_run_id']} | {row['item']} | {row['role']} | {row['step']} | {row['status']} | "
                   f"{row['tokens']['input']}/{row['tokens']['output']} |" for row in report["tokens_by_agent"]]
+    if report.get("prompt_blocks_by_role"):
+        lines += ["", "## Prompt blocks", "", "Top blocks by estimated tokens, over the steps of the run.", "",
+                  "| Role | Kind | Origin | Tokens | Steps |", "| --- | --- | --- | --- | --- |"]
+        lines += [f"| {role} | {row['kind']}{' ' + row['id'] if row.get('id') else ''} | {row['origin']} | {row['tokens']} | "
+                  f"{row['steps']} |" for role, rows in report["prompt_blocks_by_role"].items() for row in rows]
     if report.get("open_questions"):
         lines += ["", "## Open questions", "", "| Item | Question | Revision | Age s | Overdue |", "| --- | --- | --- | --- | --- |"]
         lines += [f"| {row['item']} | {row['id']}: {row['text']} | {row['revision']} | {row['age_s']} | "

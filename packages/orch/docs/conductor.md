@@ -15,6 +15,7 @@ conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json
 conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 conduct.py answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
 conduct.py questions [--run RUN] [--json]
+conduct.py prompt explain [--run RUN] --item REF --step STEP [--json]
 conduct.py status [--run RUN] [--json]
 conduct.py observe [--run RUN] [--follow]
 conduct.py gates [--json] [--clear [PROVIDER]]
@@ -395,11 +396,28 @@ apart from the role it mended). The prompts and the streams stay in `prompts/` a
 folder without `result.json` is a role still running or one that died with the process. The `stage.end` lines and the
 `STAGE_SLOW`/`STAGE_IDLE` beacons carry the optional field `agent`; the observer report lists the tokens by agent run.
 
+### Prompt manifest
+
+A prompt is built from blocks `Block(kind, origin, text)` (`conductor/prompts.py`); `render(blocks)` joins their texts into
+the prompt byte for byte (a separator belongs to the block it follows). Every model role step writes
+`<item>/prompts/<step>.manifest.json` (`prompt-manifest/v1`) beside `<step>.md`: `step`, `role`, `route` (`provider`,
+`model`, `effort`), `blocks` (`kind`, `origin`, `sha256`, `tokens` estimated by `aicore.content.budget`, `id` for a skill),
+`excluded` (`id`, `reason`; empty until the skill checks of P9.2), `estimated_tokens` and `prompt_sha256` of the whole prompt.
+The `tokens` of the blocks add up to `estimated_tokens` within one token per block. Kinds: `role_text`, `input`,
+`repository_rules`, `skill`, `skill_names`, `context_map`, `expected_paths`, `verification`, `run_rules`, `answers`,
+`correction`, `progress`, `result_contract`, and for the roles that review, triage and close: `candidate`, `review_scope`,
+`diff`, `findings`, `instruction`. `origin` is the role file, `input.json`, `questions.json`, `skill:<id>`,
+`scout-cache:<rel>` or `conductor`.
+
+`conduct.py prompt explain --item REF --step STEP [--run RUN] [--json]` prints the blocks of one step as a table (kind,
+origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)
+means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer lists the five heaviest blocks by role.
+
 ## Files: what is committed
 
 | Path | Git | Content |
 | --- | --- | --- |
-| `.swissknifeman/state/orch/conductor/<run>/` | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/`, `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json` |
+| `.swissknifeman/state/orch/conductor/<run>/` | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/` (`<step>.md` and `<step>.manifest.json`), `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json` |
 | `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the digest of the brief, the plan version, the route and the role text |
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
@@ -445,7 +463,7 @@ for.
 The observer only reads: the journal and state of the run and the `orch.run.*` and `planner.*` events of the
 project's aicore event journal since the run started. At the end of every run (also a stopped one) the conductor
 writes `observer.json` and `observer.md`: repeats and resumes, red checks per check id, review findings by severity,
-triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the outcome of
+triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role (from the prompt manifests), the outcome of
 each piece and proposals to improve the run options. `conduct.py observe --follow` prints the notable lines of a run
 that is still going from another terminal; `conduct.py observe` writes the report again.
 

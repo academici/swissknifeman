@@ -1184,11 +1184,16 @@ class Conductor:
                       stream=handle["stream"], lingered=handle["lingered"])
         self._local.agent = handle["previous"]
 
-    def _role(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
+    def _role(self, item: Item, key: str, role: str, blocks: list, kind: Optional[str],
               extra: Optional[Callable[[dict], list]] = None, cancel=None) -> tuple:
         """``(result, meta)`` of a role as an agent run: the body is :meth:`_role_body`; the run gets its folder under
-        ``agents/`` and its result however the role ends, and ``meta`` names it (``agent``)."""
+        ``agents/`` and its result however the role ends, and ``meta`` names it (``agent``). The prompt is the ``blocks``
+        rendered; ``prompts/<key>.manifest.json`` (``prompt-manifest/v1``) says what each block is and where it came from."""
+        prompt = prompts.render(blocks)
         prompt_file = item.directory / "prompts" / f"{key}.md"
+        prompt_file.parent.mkdir(parents=True, exist_ok=True)
+        write_json(prompt_file.with_name(f"{key}.manifest.json"),
+                   prompts.manifest(blocks, step=key, role=role, route=item.routes[role]))
         attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
         handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt)
         try:
@@ -1490,7 +1495,7 @@ class Conductor:
             return doc, healed, issues, None
         for number in range(1, item.options["limits"]["repairs"] + 1):
             problem = "; ".join(issues[:5])
-            prompt = prompts.report_fixer(kind=kind, problem=problem, answer=answer, item=item.ref, step=key)
+            prompt = prompts.render(prompts.report_fixer(kind=kind, problem=problem, answer=answer, item=item.ref, step=key))
             raw = item.directory / "streams" / f"{key}-fix{number}.jsonl"
             prompt_file = item.directory / "prompts" / f"{key}-fix{number}.md"
             prompt_file.write_text(prompt, encoding="utf-8")
@@ -1742,6 +1747,7 @@ class Conductor:
         def run() -> dict:
             if number > 1 or refresh:
                 self._refresh_input(item)
+            scouted = ((item.state.get("steps") or {}).get("scout") or {}).get("result") or {}
             prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                       rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir,
                                       targeted_tests=not item.options["checks"]["executor_runs_checks"],
@@ -1749,7 +1755,8 @@ class Conductor:
                                       repo_rules=self._repo_rules(item, "executor"),
                                       skill_texts=self._skill_texts(item, "executor"),
                                       expected=item.state.get("expected"),
-                                      answers=questions_mod.answers_text(self._questions(item)), fix=fix)
+                                      answers=questions_mod.answers_text(self._questions(item)), fix=fix,
+                                      scout_origin=scouted.get("cache") or "")
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}

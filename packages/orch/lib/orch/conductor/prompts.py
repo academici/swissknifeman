@@ -4,17 +4,30 @@ A prompt is the role text and the task block of ``render.render_prompt`` (the ex
 sees the plan or the plan command line), followed by the conductor frame: the scout context, the run rules, a
 correction package, the candidate under review, and the result block the role must end with. Every role prints the
 same progress lines as the conductor (``[orch] <UTC time> <item> <step> <what>``) before each major step.
+
+Every builder returns the prompt as a list of ``Block(kind, origin, text)``; ``render`` joins them into the prompt byte for
+byte (a separator belongs to the block it follows), and ``manifest`` says what each block is and where it came from.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
 import json
 import re
+from typing import Optional
 
-from orch import render
+from aicore.content.budget import estimate_tokens
+from aicore.util.digest import sha256_hex
+
+from orch import render as role_render
+
+KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "context_map", "verification", "run_rules",
+         "correction", "answers", "progress", "result_contract", "expected_paths", "candidate", "review_scope", "diff",
+         "findings", "instruction")
+CONDUCTOR = "conductor"
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
                 "triager": "triage-result"}
-_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
+_FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 
 _STAGE_REPORT = """\
 End your answer with exactly one fenced block tagged `stage-report` holding one JSON object and nothing else:
@@ -83,9 +96,79 @@ Before each major step print one line to your output: `[orch] <UTC time> {item} 
 """
 
 
+@dataclass(frozen=True)
+class Block:
+    """A part of a prompt: what it is (``kind``), where it came from (``origin``: a role file, ``input.json``,
+    ``skill:<id>``, ``scout-cache:<rel>``, ``conductor``), its exact text with the separator that follows it, and ``id``
+    for a block that stands for one named thing (a skill)."""
+    kind: str
+    origin: str
+    text: str
+    id: Optional[str] = None
+
+
+def render(blocks) -> str:
+    """The prompt: the texts of the blocks one after the other."""
+    return "".join(block.text for block in blocks)
+
+
+def _join(groups: list) -> list:
+    """The blocks of the parts of a prompt: parts are separated by a blank line and the prompt ends with one newline;
+    each separator is part of the last block it follows."""
+    blocks = []
+    for number, group in enumerate(groups):
+        group = list(group)
+        group[-1] = replace(group[-1], text=group[-1].text.rstrip() + ("\n" if number == len(groups) - 1 else "\n\n"))
+        blocks += group
+    return blocks
+
+
+def _then(blocks: list, block: Block) -> None:
+    """``block`` after the last of ``blocks``, a blank line between them."""
+    blocks[-1] = replace(blocks[-1], text=blocks[-1].text + "\n\n")
+    blocks.append(block)
+
+
+def manifest(blocks, *, step: str, role: str, route: dict, excluded=()) -> dict:
+    """The ``prompt-manifest/v1`` document of a prompt: its blocks (kind, origin, digest, estimated tokens), what was left
+    out and why, and the digest and size of the whole prompt."""
+    text = render(blocks)
+    rows = []
+    for block in blocks:
+        row = {"kind": block.kind, "origin": block.origin, "sha256": sha256_hex(block.text.encode("utf-8")),
+               "tokens": estimate_tokens(block.text)}
+        if block.id:
+            row["id"] = block.id
+        rows.append(row)
+    return {"schema": "prompt-manifest/v1", "step": step, "role": role,
+            "route": {key: route[key] for key in ("provider", "model", "effort") if route.get(key)},
+            "blocks": rows, "excluded": [dict(row) for row in excluded], "estimated_tokens": estimate_tokens(text),
+            "prompt_sha256": sha256_hex(text.encode("utf-8"))}
+
+
+def top_blocks(doc: dict, limit: int = 5) -> list:
+    """The ``limit`` blocks of a manifest with the most tokens, the first of equals first."""
+    return sorted(doc.get("blocks", []), key=lambda row: -row["tokens"])[:limit]
+
+
+def explain_table(doc: dict) -> str:
+    """The manifest as a table: kind, origin, tokens and the start of the digest of each block, then what was excluded."""
+    route = "/".join(doc.get("route", {}).get(key, "") for key in ("provider", "model", "effort")
+                     if doc.get("route", {}).get(key))
+    lines = [f"{doc['step']} ({doc['role']}{', ' + route if route else ''}): {len(doc['blocks'])} block(s), "
+             f"{doc['estimated_tokens']} estimated tokens, prompt sha256 {doc['prompt_sha256'][:12]}", "",
+             "kind | origin | tokens | sha256"]
+    for row in doc["blocks"]:
+        name = row["kind"] + (f" {row['id']}" if row.get("id") else "")
+        lines.append(f"{name} | {row['origin']} | {row['tokens']} | {row['sha256'][:12]}")
+    if doc.get("excluded"):
+        lines += ["", "excluded:"] + [f"- {row['id']}: {row['reason']}" for row in doc["excluded"]]
+    return "\n".join(lines)
+
+
 def json_block(text: str, tag: str):
     """``(document, error)``: the JSON object of the last fenced block tagged ``tag`` (else the last ``json`` block)."""
-    blocks = list(_BLOCK.finditer(text or ""))
+    blocks = list(_FENCE_BLOCK.finditer(text or ""))
     chosen = [match for match in blocks if match["tag"] == tag] or [match for match in blocks if match["tag"] == "json"]
     if not chosen:
         return None, f"no fenced `{tag}` block in the answer"
@@ -102,7 +185,7 @@ def write_set_block(text: str):
     """``(document, error, shown)``: the JSON object of the last fenced ``write-set`` block of a scout answer (the
     ``json write-set`` form is the same block), and the answer without its ``write-set`` blocks. No fallback to
     another ``json`` block: a hint is only what the scout tagged as one."""
-    found = [match for match in _BLOCK.finditer(text or "") if match["tag"] == "write-set"]
+    found = [match for match in _FENCE_BLOCK.finditer(text or "") if match["tag"] == "write-set"]
     if not found:
         return None, "no fenced `write-set` block in the answer", text
     shown = text
@@ -136,26 +219,38 @@ def _fence(text: str, tag: str = "") -> str:
     return f"{mark}{tag}\n{text.rstrip()}\n{mark}"
 
 
-def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", skill_texts=None) -> str:
-    """Role text and task block, then the repository rules an isolated role still needs and its skills: by name when
-    the provider loads skills itself, as text when the role runs isolated (its provider loads none)."""
-    manifest, text = render.load_role(role, roles_dir)
-    prompt = render.render_prompt(input_doc, manifest, text)
+def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", skill_texts=None) -> list:
+    """Blocks of the role text and task block, then the repository rules an isolated role still needs and its skills: by
+    name when the provider loads skills itself, as text when the role runs isolated (its provider loads none)."""
+    manifest, text = role_render.load_role(role, roles_dir)
+    prompt = role_render.render_prompt(input_doc, manifest, text)
+    task = role_render.render_task_block(input_doc)
+    origin = ",".join(str(entry.get("path")) for entry in manifest.get("instructions") or []) or role
+    if prompt.endswith(task):
+        blocks = [Block("role_text", origin, prompt[:len(prompt) - len(task)]), Block("input", "input.json", task)]
+    else:  # a renderer that does not end with the task block: one block, nothing is guessed
+        blocks = [Block("role_text", origin, prompt)]
     if rules:
         rules = re.sub(r"\s*<!--.*?-->", "", rules, flags=re.S)  # instruction markers are for generators, not for roles
-        prompt += "\n\n## Repository rules\n\n" + rules.rstrip() + "\n"
+        _then(blocks, Block("repository_rules", "CLAUDE.md|AGENTS.md", "## Repository rules\n\n" + rules.rstrip() + "\n"))
     texts = dict(skill_texts or {})
     named = [name for name in skills if name not in texts]
     if named:
-        prompt += "\n\n## Skills\n\nLoad and apply these skills: " + ", ".join(f"`{name}`" for name in named) + ".\n"
+        _then(blocks, Block("skill_names", CONDUCTOR, "## Skills\n\nLoad and apply these skills: "
+                            + ", ".join(f"`{name}`" for name in named) + ".\n"))
     for name, body in texts.items():
-        prompt += f"\n\n## Skill `{name}`\n\n" + body.rstrip() + "\n"
-    return prompt
+        _then(blocks, Block("skill", f"skill:{name}", f"## Skill `{name}`\n\n" + body.rstrip() + "\n", id=name))
+    return blocks
 
 
-def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, skills=(), skill_texts=None) -> str:
-    return _head("context-scout", input_doc, roles_dir, list(skills), skill_texts=skill_texts) + "\n" \
-        + _PROGRESS.format(item=item, step=step)
+def _progress(item: str, step: str) -> Block:
+    return Block("progress", CONDUCTOR, _PROGRESS.format(item=item, step=step))
+
+
+def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, skills=(), skill_texts=None) -> list:
+    blocks = _head("context-scout", input_doc, roles_dir, list(skills), skill_texts=skill_texts)
+    blocks[-1] = replace(blocks[-1], text=blocks[-1].text + "\n")
+    return blocks + [_progress(item, step)]
 
 
 _RUN_CHECKS = """\
@@ -204,32 +299,34 @@ def _answers(answers) -> str:
 
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
-             skill_texts=None, expected=None, answers=(), fix: str = "") -> str:
+             skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "") -> list:
+    scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
     if scout_text:
-        parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
-                     + _fence(scout_text, "text"))
+        parts.append([Block("context_map", scout_from, "## Context map\n\nA read-only scout mapped the context; treat its "
+                            "lines as leads, not facts.\n\n" + _fence(scout_text, "text"))])
     if expected and (expected.get("paths") or expected.get("tests")):
-        parts.append(_expected(expected))
+        parts.append([Block("expected_paths", scout_from, _expected(expected))])
     if targeted_tests:
         commands = _conductor_commands(input_doc)
         if commands:
-            parts.append("## Verification\n" + commands)
+            parts.append([Block("verification", CONDUCTOR, "## Verification\n" + commands)])
     else:
-        parts.append(_RUN_CHECKS)
+        parts.append([Block("verification", CONDUCTOR, _RUN_CHECKS)])
     if rules:
-        parts.append("## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))
+        parts.append([Block("run_rules", CONDUCTOR, "## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))])
     if answers:
-        parts.append(_answers(answers))
+        parts.append([Block("answers", "questions.json", _answers(answers))])
     if fix:
-        parts.append(fix)
+        parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append("## Correction\n\nYour previous attempt is in the working tree. Make exactly this correction, "
-                     "inside the same scope" + (" and re-run the tests of what you touched" if targeted_tests
-                                                    else ", then run the acceptance checks again") + ".\n\n" + _fence(correction, "text"))
-    parts.append(_PROGRESS.format(item=item, step=step))
-    parts.append("## Result\n\n" + _STAGE_REPORT)
-    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+        parts.append([Block("correction", CONDUCTOR, "## Correction\n\nYour previous attempt is in the working tree. Make "
+                            "exactly this correction, inside the same scope"
+                            + (" and re-run the tests of what you touched" if targeted_tests
+                               else ", then run the acceptance checks again") + ".\n\n" + _fence(correction, "text"))])
+    parts.append([_progress(item, step)])
+    parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
+    return _join(parts)
 
 
 _PRE_FINAL = """\
@@ -252,21 +349,24 @@ def _corrected_scope(corrected) -> str:
 
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
              roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
-             checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None) -> str:
+             checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None) -> list:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
     parts = [_head("reviewer", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
-             f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the candidate is the working tree "
-             "(uncommitted changes, untracked files included). Read files as you need; do not change anything.",
-             *([_PRE_FINAL.format(floor=min_severity)] if pre_final else []),
-             *([_corrected_scope(corrected)] if corrected else []),
-             *([_outside_scope(outside)] if outside else []),
-             ("Acceptance checks run by the conductor on this candidate:\n\n" + summary) if not checks_pending else
-             "The conductor runs the acceptance checks on this candidate at the same time; their result is not known yet "
-             "and is not your concern: review the candidate itself.",
-             "Diff against the base:\n\n" + _fence(diff or "(no tracked changes; see the untracked files)", "diff"),
-             _PROGRESS.format(item=item, step=step),
-             "## Result\n\n" + _REVIEW_FINDINGS]
-    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+             [Block("candidate", CONDUCTOR, f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the "
+                    "candidate is the working tree (uncommitted changes, untracked files included). Read files as you "
+                    "need; do not change anything.")],
+             *([[Block("review_scope", CONDUCTOR, _PRE_FINAL.format(floor=min_severity))]] if pre_final else []),
+             *([[Block("review_scope", CONDUCTOR, _corrected_scope(corrected))]] if corrected else []),
+             *([[Block("review_scope", CONDUCTOR, _outside_scope(outside))]] if outside else []),
+             [Block("verification", CONDUCTOR, ("Acceptance checks run by the conductor on this candidate:\n\n" + summary)
+                    if not checks_pending else
+                    "The conductor runs the acceptance checks on this candidate at the same time; their result is not "
+                    "known yet and is not your concern: review the candidate itself.")],
+             [Block("diff", CONDUCTOR, "Diff against the base:\n\n"
+                    + _fence(diff or "(no tracked changes; see the untracked files)", "diff"))],
+             [_progress(item, step)],
+             [Block("result_contract", CONDUCTOR, "## Result\n\n" + _REVIEW_FINDINGS)]]
+    return _join(parts)
 
 
 def _outside_scope(outside) -> str:
@@ -276,37 +376,41 @@ def _outside_scope(outside) -> str:
 
 
 def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict, roles_dir=None, skills=(),
-            repo_rules: str = "", skill_texts=None) -> str:
+            repo_rules: str = "", skill_texts=None) -> list:
     parts = [_head("triager", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
-             f"## Candidate\n\nBase revision `{base}`; the candidate is the working tree. Scratch files go to a "
-             "temporary directory outside the repository.",
-             "## Review findings\n\n" + _fence(json.dumps(findings, ensure_ascii=False, indent=2), "json"),
-             _PROGRESS.format(item=item, step=step),
-             "## Result\n\n" + _TRIAGE_RESULT]
-    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+             [Block("candidate", CONDUCTOR, f"## Candidate\n\nBase revision `{base}`; the candidate is the working tree. "
+                    "Scratch files go to a temporary directory outside the repository.")],
+             [Block("findings", "review-findings", "## Review findings\n\n"
+                    + _fence(json.dumps(findings, ensure_ascii=False, indent=2), "json"))],
+             [_progress(item, step)],
+             [Block("result_contract", CONDUCTOR, "## Result\n\n" + _TRIAGE_RESULT)]]
+    return _join(parts)
 
 
-def closer(*, item: str, step: str, command: str) -> str:
+def closer(*, item: str, step: str, command: str) -> list:
     """The closing prompt: the registrar records the result with one command the conductor built, nothing else."""
     parts = [
-        "# Closing: record the result of " + item,
-        "You are the registrar of a conductor run. The work, its checks and its review are finished and closed; you "
-        "only record the result in the work source. You never judge, repair or extend the work, never change a file "
-        "and never commit.",
-        "## Do exactly this\n\nRun this command once with Bash. Copy it character for character: change no argument, "
-        "add none, and run nothing else (every other command is denied).\n\n" + _fence(command, "sh"),
-        _PROGRESS.format(item=item, step=step),
-        "## Result\n\nAnswer with the standard output of the command in one fenced `json` block, then one last line: "
-        "`RECORDED` when the command exited 0, else `REFUSED: <the CODE: message line of its standard error>`. If it "
-        "failed, do not run it again and do not look for another way.",
+        [Block("instruction", CONDUCTOR, "# Closing: record the result of " + item)],
+        [Block("instruction", CONDUCTOR,
+               "You are the registrar of a conductor run. The work, its checks and its review are finished and closed; you "
+               "only record the result in the work source. You never judge, repair or extend the work, never change a file "
+               "and never commit.")],
+        [Block("instruction", CONDUCTOR,
+               "## Do exactly this\n\nRun this command once with Bash. Copy it character for character: change no "
+               "argument, add none, and run nothing else (every other command is denied).\n\n" + _fence(command, "sh"))],
+        [_progress(item, step)],
+        [Block("result_contract", CONDUCTOR,
+               "## Result\n\nAnswer with the standard output of the command in one fenced `json` block, then one last "
+               "line: `RECORDED` when the command exited 0, else `REFUSED: <the CODE: message line of its standard "
+               "error>`. If it failed, do not run it again and do not look for another way.")],
     ]
-    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+    return _join(parts)
 
 
 CONTRACT_TEXT = {"stage-report": _STAGE_REPORT, "review-findings": _REVIEW_FINDINGS, "triage-result": _TRIAGE_RESULT}
 
 
-def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, limit: int = 40_000) -> str:
+def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, limit: int = 40_000) -> list:
     """The repair prompt: rewrite only the closed block of a role's answer so that it fits the contract."""
     shown = answer if len(answer) <= limit else "[… the start of the answer is cut …]\n" + answer[-limit:]
     parts = [
@@ -319,13 +423,13 @@ def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, 
         "a required fact is missing, use the closest honest statement of the answer (for example an issue that says "
         "what is missing).\n- Never raise a status: a blocked answer stays blocked.\n"
         "- Change only what the problem below names, plus what the contract needs for the block to be valid.",
-        "## The problem\n\n" + _fence(problem, "text"),
-        "## The contract\n\n" + CONTRACT_TEXT[kind],
-        "## The answer\n\n" + _fence(shown, "text"),
-        "## Result\n\nAnswer with exactly one fenced block tagged `" + kind + "` holding the corrected JSON object, and "
-        "nothing else.",
     ]
-    return "\n\n".join(part.rstrip() for part in parts) + "\n"
+    return _join([[Block("instruction", CONDUCTOR, text)] for text in parts]
+                 + [[Block("instruction", CONDUCTOR, "## The problem\n\n" + _fence(problem, "text"))],
+                    [Block("result_contract", CONDUCTOR, "## The contract\n\n" + CONTRACT_TEXT[kind])],
+                    [Block("instruction", "role-answer", "## The answer\n\n" + _fence(shown, "text"))],
+                    [Block("result_contract", CONDUCTOR, "## Result\n\nAnswer with exactly one fenced block tagged `"
+                           + kind + "` holding the corrected JSON object, and nothing else.")]])
 
 
 ADOPTED = """\

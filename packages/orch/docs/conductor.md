@@ -9,6 +9,8 @@ Models are used only for the narrow roles: context scout, executor, reviewer, tr
 ```text
 conduct.py [--config FILE] [--project DIR] run --plan P (--items REF… | --batch [--max-items N]) [--plans-root DIR]
            [--options FILE] [--adopt] [--dry-run [--scenario S]] [--quiet | --json-lines] [--model-catalog FILE]
+conduct.py [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
+           [--quiet | --json-lines] [--model-catalog FILE]
 conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
 conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 conduct.py status [--run RUN] [--json]
@@ -18,6 +20,23 @@ conduct.py gates [--json] [--clear [PROVIDER]]
 
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
 130 interrupted (`resume` continues).
+
+## Work outside a plan: `run --input FILE`
+
+`run --input FILE` conducts one piece of work without a plan: `FILE` is an `exec/v1` execution-input (`orch.py input adhoc`,
+with `--provenance` for support work, or written by hand) served by the built-in file source
+(`orch.worksource_file.FileWorkSource`, the same `work-source/v1` contract as the plugin). `--input` excludes `--plan`,
+`--items`, `--batch`, `--max-items` and `--adopt`; the scenario is `--scenario`, else `default_profile`, and `--options` layers on top.
+`run.json` records `source = {kind: file, path, commit}`, the piece's reference is the `input_id`, and `resume` reads the same file
+(a file that changed since the claim is `INPUT_CHANGED`: start a new run).
+
+- Artifacts (stage-report, review verdict, check evidence, the registration receipt `register.json`) live in
+  `.swissknifeman/orch-artifacts/<run>/<input_id>/`, never in `plans/`.
+- The changes stay in the tree: `commit` is a no-op unless `--commit`; then it commits the changed paths and the artifact folder
+  with the message `adhoc(<input_id>): <first line of the goal>` and nothing else.
+- Provenance `plan_support` and `phase_support` also add a note to the plan's journal: after the registration the CLI asks the
+  configured work source for the optional op `note` (`{collection, text, refs}`; the bridge of the plan engine writes it into the journal of the plan). A source without `note`, a refusal, or a plan without a phase (`refs` empty) is the
+  `WORK_SOURCE_NO_NOTE` beacon; the work is registered anyway.
 
 ## The project
 

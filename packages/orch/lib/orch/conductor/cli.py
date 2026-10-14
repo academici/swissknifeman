@@ -68,7 +68,7 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             and any(conductor._claude_bash(route) for route in item.routes.values()):
         warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
                         "a run stops with SANDBOX_UNAVAILABLE")
-    return {"plan": args.plan, "items": args.items or None, "batch": bool(args.batch),
+    return {"plan": args.plan or str(args.input), "items": args.items or None, "batch": bool(args.batch),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
             "review": item.policy.get("review"), "options": item.options, "sources": item.sources,
             "reviewer": {"selector": item.options["reviewer"], "source": item.sources.get("reviewer", "default")},
@@ -129,15 +129,22 @@ def main(argv: list | None = None) -> int:
                              ".swissknifeman above the working directory")
     verbs = parser.add_subparsers(dest="verb", required=True)
     run = verbs.add_parser("run", help="claim and conduct pieces of work")
-    run.add_argument("--plan", required=True, help="collection of the work source, such as a plan id")
+    where = run.add_mutually_exclusive_group(required=True)
+    where.add_argument("--plan", help="collection of the work source, such as a plan id")
+    where.add_argument("--input", type=Path, metavar="FILE",
+                       help="work outside a plan: one execution-input document (orch.py input adhoc), served by the "
+                            "built-in file source; its artifacts go to .swissknifeman/orch-artifacts")
+    run.add_argument("--commit", action="store_true",
+                     help="with --input: commit the changed paths of the work (default: they stay in the tree)")
     run.add_argument("--plans-root", dest="plans_root", metavar="DIR")
-    which = run.add_mutually_exclusive_group(required=True)
+    which = run.add_mutually_exclusive_group()
     which.add_argument("--items", nargs="+", metavar="REF", help="these pieces of work, in order")
     which.add_argument("--batch", action="store_true", help="the next ready pieces of the source, one by one")
     run.add_argument("--max-items", dest="max_items", type=int, default=0, metavar="N",
                      help="with --batch: at most N pieces (default: until none is ready)")
     run.add_argument("--options", type=Path, metavar="FILE", help="run-options JSON: the most specific layer")
-    run.add_argument("--scenario", help="with --dry-run: the scenario to preview (default: default_profile)")
+    run.add_argument("--scenario", help="the scenario to preview with --dry-run, or the scenario of a --input run "
+                                        "(default: default_profile)")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     run.add_argument("--adopt", action="store_true",
@@ -176,6 +183,13 @@ def main(argv: list | None = None) -> int:
     gate_list.add_argument("--clear", nargs="?", const="", default=None, metavar="PROVIDER",
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
     args = parser.parse_args(argv)
+    if args.verb == "run":
+        if args.input and (args.items or args.batch or args.max_items or args.adopt):
+            parser.error("--input is one piece of work: it takes no --items, --batch, --max-items or --adopt")
+        if not args.input and not (args.items or args.batch):
+            parser.error("one of --items or --batch is required with --plan")
+        if args.commit and not args.input:
+            parser.error("--commit belongs to --input: a plan source commits as its own policy says")
     if args.verb == "gates":
         return _gates(args)
 
@@ -240,7 +254,7 @@ def main(argv: list | None = None) -> int:
         if args.verb == "run":
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.batch, max_items=args.max_items, options_file=args.options,
-                                 adopt=args.adopt)
+                                 adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario)
         if args.verb == "release":
             return conductor.release(args.run, args.item, args.reason)
         if args.verb == "settle":

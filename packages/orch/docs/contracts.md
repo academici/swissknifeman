@@ -44,7 +44,7 @@ errors return exit 1. `--quiet` suppresses stdout while preserving diagnostics a
 | Field | Req. | Meaning |
 | --- | --- | --- |
 | `input_id`, `digest` | * | `<ref>@<digest[:12]>`; canonical digest of the document |
-| `provenance` | * | one of `plan` (plan, item, unit, source digest, generator), `adhoc`, `review` |
+| `provenance` | * | one of `plan` (plan, item, unit, source digest, generator), `adhoc`, `review`, or work outside the items of a plan: `plan_support {plan, phase?}`, `phase_support {plan, phase}`, `review_followup {plan?, item?, finding?}`, `deviation_fix {plan, item, event?}`, `research {plan?, question?}`, `advisor {plan?, item?, question?}` (`orch.py input adhoc --provenance KIND`) |
 | `goal`, `scope` | * | expected result; `include`, `exclude`, `write_set`, `read_only` |
 | `acceptance` | * | `checks` (each has exactly one of `cmd`/`procedure`), `deliverables` |
 | `route` | * | `minimum` route: class and effort, never bypassed |

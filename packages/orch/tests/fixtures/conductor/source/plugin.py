@@ -137,6 +137,14 @@ def release(state, given):
     return {"op": "release", "outcome": "released"}
 
 
+def note(state, given):
+    if "note" in state.get("refuse", []):
+        state["refuse"].remove("note")
+        return {"op": "note", "outcome": "refused", "reason_code": "NOTE_TEST_REFUSAL", "message": "once"}
+    state.setdefault("notes", []).append({"collection": given["collection"], "text": given["text"], "refs": given["refs"]})
+    return {"op": "note", "outcome": "recorded"}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -152,7 +160,7 @@ elif request.get("op") == "invoke":
     state.setdefault("calls", []).append(given)
     handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
                 "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
-                "release": lambda: release(state, given)}
+                "release": lambda: release(state, given), "note": lambda: note(state, given)}
     answer = handlers[given["op"]]()
     save(state)
     reply(request_id, output=answer)

@@ -463,6 +463,32 @@ class ReleaseTests(Case):
         self.assertEqual(self.release(run_id="run-other")["outcome"], "no-op")  # nothing left to give back
 
 
+class NoteTests(Case):
+    def note(self, **extra) -> dict:
+        fields = {"op": "note", "collection": self.plan, "text": "phase_support run-a (done): checked the config",
+                  "refs": ["P1"], "run_id": "run-a", "actor": ACTOR, **extra}
+        return self.op(worksource.op_note, **fields)
+
+    def journal(self) -> list:
+        path = self.project / "plans" / self.plan / "log.jsonl"
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    def test_a_note_lands_in_the_journal_of_the_phase(self):
+        self.assertEqual(self.note()["outcome"], "recorded")
+        found = [event for event in self.journal() if event.get("type") == "note"
+                 and event.get("summary") == "phase_support run-a (done): checked the config"]
+        self.assertEqual([event.get("phase") or event.get("item") for event in found], ["P1"])
+
+    def test_a_note_without_a_target_is_refused(self):
+        answer = self.note(refs=[])
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "NOTE_NO_TARGET"))
+
+    def test_an_unknown_phase_is_refused_with_the_planner_code(self):
+        answer = self.note(refs=["P99"])
+        self.assertEqual(answer["outcome"], "refused")
+        self.assertTrue(answer["reason_code"])
+
+
 class ProtocolTests(Case):
     """describe and invoke through aicore.ext.plugins with the plugin registered in a temporary machine config."""
 

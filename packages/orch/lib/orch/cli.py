@@ -18,6 +18,7 @@ from orch.contracts import validate
 from orch.port import PortError
 from orch.schema import SchemaProfileError
 from orch.worksource import PluginWorkSource, WorkSourceError
+from orch.worksource_file import FileWorkSource
 
 
 def _launch(args: argparse.Namespace) -> int:
@@ -44,9 +45,15 @@ def _launch(args: argparse.Namespace) -> int:
 def _input_adhoc(args: argparse.Namespace) -> int:
     route = {key: value for key, value in (("class", args.model_class), ("effort", args.effort)) if value}
     try:
+        provenance = None
+        if args.provenance:
+            provenance = adhoc.support_provenance(args.provenance, plan=args.plan, phase=args.phase, item=args.item,
+                                                  finding=args.finding, event=args.event, question=args.question)
+        elif any((args.plan, args.phase, args.item, args.finding, args.event, args.question)):
+            raise adhoc.AdhocError("USAGE", "--plan, --phase, --item, --finding, --event and --question need --provenance")
         doc = adhoc.build_adhoc_input(args.goal, args.include or [], args.exclude or [], args.check or [],
                                       args.procedure or [], args.read or [], route=route, review=args.review,
-                                      why=args.why, expect=args.expect)
+                                      why=args.why, expect=args.expect, provenance=provenance)
     except adhoc.AdhocError as error:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 2 if error.code == "USAGE" else 1
@@ -436,11 +443,15 @@ def run_id_of(submission: str) -> str:
     return "run-" + sha256_hex(submission.encode("utf-8"))[:24]
 
 
-def _source(current: settings.Settings, project, config_file) -> PluginWorkSource:
+def _source(current: settings.Settings, project, config_file, doc: dict | None = None):
+    """The work source of a claimed run: its input file (``run.json`` ``source``), else the plugin of the configuration."""
+    found = (doc or {}).get("source")
+    if isinstance(found, dict) and found.get("kind") == "file":
+        return FileWorkSource(found["path"], project=project, commit=bool(found.get("commit")))
     return PluginWorkSource(current.work_source, project=project, config_file=config_file)
 
 
-def _call(source: PluginWorkSource, op: str, **fields) -> dict:
+def _call(source, op: str, **fields) -> dict:
     try:
         return getattr(source, op)(**fields)
     except WorkSourceError as error:
@@ -467,6 +478,12 @@ def _print(doc: dict) -> None:
 
 def _source_claim(args, current, project) -> int:
     actor, items = args.actor, list(args.item or [])
+    file_source = None
+    if args.input:
+        args.plan = str(Path(args.input).resolve())
+        file_source = {"kind": "file", "path": args.plan, "commit": bool(args.commit)}
+    elif args.commit:
+        raise SourceRefusal("USAGE", "--commit belongs to --input: a plan source commits as its own policy says", 2)
     submission = args.submission_id or submission_id(args.plan, items, actor)
     run_id = run_id_of(submission)
     directory = journal.run_dir(run_id, project=project)
@@ -475,7 +492,8 @@ def _source_claim(args, current, project) -> int:
     # A repeated claim asks for the run's own item, so a run never moves on to other work once its item is closed.
     asked = [before["ref"]] if before is not None and before.get("ref") else items
     try:
-        answer = _call(_source(current, project, args.config), "claim", plan=args.plan, plans_root=args.plans_root,
+        answer = _call(_source(current, project, args.config, {"source": file_source}), "claim", plan=args.plan,
+                       plans_root=args.plans_root,
                        items=asked or None, run_id=run_id, submission_id=submission, actor=actor,
                        orch_config=str(Path(args.config).resolve()) if args.config else None)
     except SourceRefusal as refusal:
@@ -484,15 +502,18 @@ def _source_claim(args, current, project) -> int:
         raise
     _print({"run_id": run_id, "submission_id": submission, **answer})
     if answer["status"] == "claimed":
-        doc = {"run_id": run_id, "submission_id": submission, "plugin": current.work_source, "plan": args.plan,
+        plugin = "file" if file_source else current.work_source
+        doc = {"run_id": run_id, "submission_id": submission, "plugin": plugin, "plan": args.plan,
                "plans_root": args.plans_root, "ref": answer["ref"], "attempt_id": answer["attempt_id"],
                "scenario": answer.get("scenario"), "session": answer.get("session")}
+        if file_source:
+            doc["source"] = file_source
         if before is not None:  # a repeated claim keeps what later steps recorded (input_ref)
             doc = {**before, **doc}
         journal.write_doc(directory, RUN_DOC, doc)
         if before is None or before.get("attempt_id") != doc["attempt_id"]:
             _emit("orch.run.started", {"run_id": run_id, "submission_id": submission, "attempt_id": doc["attempt_id"],
-                                       "source": {"plugin": current.work_source, "ref": doc["ref"]},
+                                       "source": {"plugin": plugin, "ref": doc["ref"]},
                                        "scenario": doc["scenario"], "config_digest": settings.config_digest(current),
                                        "project_resolution": getattr(args, "project_resolution", None)},
                   subject=run_id, **emit)
@@ -507,7 +528,7 @@ def _source_claim(args, current, project) -> int:
 
 def _source_brief(args, current, project) -> int:
     directory, doc = _run(args.run, project)
-    answer = _call(_source(current, project, args.config), "brief", plan=doc["plan"], plans_root=doc.get("plans_root"),
+    answer = _call(_source(current, project, args.config, doc), "brief", plan=doc["plan"], plans_root=doc.get("plans_root"),
                    ref=doc["ref"], run_id=doc["run_id"])
     journal.write_doc(directory, RUN_DOC, {**doc, "input_ref": answer["input_ref"], "input_id": answer["input_id"]})
     _print(answer)
@@ -559,6 +580,33 @@ def _source_prepare(args, current, project) -> int:
     return 0
 
 
+SUPPORT_NOTE_KINDS = ("plan_support", "phase_support")
+
+
+def _support_note(args, current, project, doc: dict, report: dict) -> dict | None:
+    """The journal note of support work for a plan or phase: the file source has no journal, so the note goes to the
+    configured work source of the plan. ``{"outcome": recorded | unsupported | refused, "message"?}``, None for other
+    work. A source without ``note`` loses the note, never the work (the conductor prints ``WORK_SOURCE_NO_NOTE``)."""
+    if not isinstance(doc.get("source"), dict) or doc["source"].get("kind") != "file":
+        return None
+    try:
+        provenance = _brief_doc(doc, project).get("provenance") or {}
+    except SourceRefusal:
+        return None
+    if provenance.get("kind") not in SUPPORT_NOTE_KINDS:
+        return None
+    text = f"{provenance['kind']} {doc['ref']} ({args.status}): {report.get('summary') or 'no summary'}"
+    refs = [provenance["phase"]] if provenance.get("phase") else []
+    try:
+        answer = PluginWorkSource(current.work_source, project=project, config_file=args.config).note(
+            collection=provenance["plan"], text=text, refs=refs, run_id=doc["run_id"], actor=args.actor)
+    except WorkSourceError as error:
+        return {"outcome": "unsupported", "message": error.message}
+    if answer["outcome"] == "refused":
+        return {"outcome": "refused", "message": f"{answer.get('reason_code', 'NOTE_REFUSED')}: {answer.get('message', '')}".rstrip(": ")}
+    return {"outcome": answer["outcome"]}
+
+
 def _source_register(args, current, project) -> int:
     directory, doc = _run(args.run, project)
     try:
@@ -568,10 +616,14 @@ def _source_register(args, current, project) -> int:
     evidence = dict(args.evidence or [])
     if len(evidence) != len(args.evidence or []):
         raise SourceRefusal("INPUT_INVALID", "--evidence repeats a check id")
-    answer = _call(_source(current, project, args.config), "register", plan=doc["plan"],
+    answer = _call(_source(current, project, args.config, doc), "register", plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], status=args.status, report=report, evidence=evidence,
                    registrar=args.actor, executed_by=args.executed_by or args.actor)
+    if answer["outcome"] == "recorded":
+        note = _support_note(args, current, project, doc, report)
+        if note:
+            answer = {**answer, "note": note}
     journal.write_doc(directory, REGISTER_RECEIPT, answer)
     _print(answer)
     emit = dict(current=current, project=project, config_file=args.config)
@@ -592,7 +644,7 @@ def _source_register(args, current, project) -> int:
 
 def _source_commit(args, current, project) -> int:
     directory, doc = _run(args.run, project)
-    answer = _call(_source(current, project, args.config), "commit", plan=doc["plan"],
+    answer = _call(_source(current, project, args.config, doc), "commit", plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], paths=list(args.path or []), actor=args.actor)
     journal.write_doc(directory, COMMIT_RECEIPT, answer)
@@ -603,7 +655,7 @@ def _source_commit(args, current, project) -> int:
 def _source_release(args, current, project) -> int:
     """Give a claimed run back to the source (a piece stopped before any work began), so that a later run can claim it."""
     directory, doc = _run(args.run, project)
-    answer = _call(_source(current, project, args.config), "release", plan=doc["plan"], plans_root=doc.get("plans_root"),
+    answer = _call(_source(current, project, args.config, doc), "release", plan=doc["plan"], plans_root=doc.get("plans_root"),
                    ref=doc["ref"], run_id=doc["run_id"], reason=args.reason, actor=args.actor)
     journal.write_doc(directory, RELEASE_RECEIPT, answer)
     _print(answer)
@@ -640,7 +692,12 @@ def _source_parser(verbs) -> None:
     command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
-    claim.add_argument("--plan", required=True, help="collection of the work source, such as a plan id or path")
+    where = claim.add_mutually_exclusive_group(required=True)
+    where.add_argument("--plan", help="collection of the work source, such as a plan id or path")
+    where.add_argument("--input", type=Path, metavar="FILE",
+                       help="the built-in file source: one execution-input document, no plan")
+    claim.add_argument("--commit", action="store_true",
+                       help="with --input: commit the changed paths of the work (default: they stay in the tree)")
     claim.add_argument("--plans-root", dest="plans_root", metavar="DIR")
     claim.add_argument("--item", action="append", metavar="REF", help="candidate reference (repeatable)")
     claim.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="who runs the work")
@@ -723,6 +780,12 @@ def _main(argv: list[str] | None = None) -> int:
     command.add_argument("--class", dest="model_class", choices=("economy", "implementation", "frontier"))
     command.add_argument("--effort", choices=("low", "medium", "high", "xhigh", "max", "ultra"))
     command.add_argument("--review", metavar="BASE..HEAD")
+    command.add_argument("--provenance", choices=sorted(adhoc.SUPPORT_PROVENANCE),
+                         help="owner of work outside the items of a plan (default: adhoc)")
+    for flag, text in (("plan", "plan id"), ("phase", "phase, such as P6"), ("item", "item, such as P6.1"),
+                       ("finding", "finding id"), ("event", "journal event of the deviation"),
+                       ("question", "question to research or advise on")):
+        command.add_argument("--" + flag, help=f"with --provenance: {text}")
     command = verbs.add_parser("render-prompt", help="role prompt for a Claude-only run (Markdown)")
     command.add_argument("--input", type=Path, required=True)
     command.add_argument("--role", required=True)

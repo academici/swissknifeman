@@ -42,6 +42,8 @@ from orch.conductor import checks as checks_mod, contract, gates, heal, observer
 from orch.conductor import scope as scopes
 from orch.conductor.progress import Progress, human_duration
 from orch.settings import ORCH_ROOT
+from orch.worksource import WorkSourceError
+from orch.worksource_file import read_input
 
 CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 5}
@@ -216,10 +218,22 @@ class Conductor:
 
     # ------------------------------------------------------------------ public verbs
 
-    def run(self, *, plan: str, plans_root: Optional[str], items: list, batch: bool, max_items: int,
-            options_file: Optional[Path] = None, adopt: bool = False) -> int:
+    def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, batch: bool, max_items: int,
+            options_file: Optional[Path] = None, adopt: bool = False, input_file: Optional[Path] = None,
+            commit: bool = False, scenario: Optional[str] = None) -> int:
+        """Conduct the pieces of a plan, or with ``input_file`` the one piece of an execution-input document (the built-in
+        file source: no plan; ``scenario`` is then the scenario of the run, ``commit`` lets it commit its paths)."""
         run_id = new_run_id()
+        source = None
+        if input_file is not None:
+            try:
+                found = read_input(input_file)
+            except WorkSourceError as error:
+                raise Stop(error.code, error.message) from None
+            plan, plans_root, items, batch = str(Path(input_file).resolve()), None, [found["input_id"]], False
+            source = {"kind": "file", "path": plan, "commit": bool(commit)}
         run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
+                   "source": source, "scenario": scenario if source else None,
                    "max_items": max_items, "options_file": str(options_file) if options_file else None,
                    "adopt": bool(adopt),
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
@@ -451,7 +465,10 @@ class Conductor:
     def _claim(self, key: str, asked: list) -> Optional[dict]:
         actor = self._claim_actor()
         submission = f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
-        args = ["source", "claim", "--plan", self.run_doc["plan"], "--actor", actor, "--submission-id", submission]
+        file_source = self.run_doc.get("source") or {}
+        where = ["--input", file_source["path"]] + (["--commit"] if file_source.get("commit") else []) \
+            if file_source.get("kind") == "file" else ["--plan", self.run_doc["plan"]]
+        args = ["source", "claim", *where, "--actor", actor, "--submission-id", submission]
         if self.run_doc.get("plans_root"):
             args += ["--plans-root", self.run_doc["plans_root"]]
         for ref in asked:
@@ -848,7 +865,7 @@ class Conductor:
 
     def _resolve(self, item: Item, persist: bool = True) -> None:
         """The run-policy of the scenario and the merged options (configuration, pack, source layers, invocation)."""
-        scenario = item.claim.get("scenario") or self.settings.default_profile
+        scenario = item.claim.get("scenario") or self.run_doc.get("scenario") or self.settings.default_profile
         try:
             item.policy = policies.load(scenario, self.settings, warn=lambda message: None)
         except policies.PolicyError as error:
@@ -2019,6 +2036,10 @@ class Conductor:
             if not isinstance(answer, dict) or answer.get("outcome") not in ("recorded", "no-op"):
                 reason = (answer or {}).get("reason_code") or "REGISTER_REFUSED"
                 raise Stop("REGISTER_REFUSED", f"{reason}: {(answer or {}).get('message') or err}")
+            note = answer.get("note")
+            if isinstance(note, dict) and note.get("outcome") != "recorded":  # the work is registered; only its note is lost
+                self.progress.emit("info", item=item.ref, reason_code="WORK_SOURCE_NO_NOTE",
+                                   message=f"the work source of the plan did not take the note: {note.get('message') or note.get('outcome')}")
             return {"outcome": answer["outcome"], "gate": (answer.get("gate") or {}).get("verdict")}
 
         def said(result: dict) -> str:

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
   "title": "FileWorkSource и conduct.py run --input FILE; provenance plan_support, phase_support, review_followup, deviation_fix, research, advisor; артефакты в orch-artifacts; операция note моста planner-orch",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "orch/lib/orch/worksource_file.py по knowledge/p6-work#adhoc; conduct.py run --input (взаимоисключим с --plan), orch.py source --input; exec/v1 provenance — новые ветки oneOf и orch.py input adhoc --provenance; work-source/v1 op note (необязательная) и её реализация в мосте planner-orch; e2e-тест на фейковых ролях.",
   "why": "Аудит П5.1, E3, мысль 12. Риски: (1) commit по умолчанию выключен — не коммитить чужие изменения; (2) новые ветки oneOf — аддитивно, schema compat; (3) мост без note не блокирует работу.",
   "scope": {
@@ -140,6 +140,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:51:19Z"
+  "result": {
+    "started_at": "2026-10-14T11:30:43Z",
+    "finished_at": "2026-10-14T11:45:34Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "10bfd74b-2666-49dd-adce-d1e7a0bf145f"
+    },
+    "notes": "FileWorkSource, run --input/--commit, provenance kinds, orch.py input adhoc --provenance, work-source note op (+ bridge planner-orch), WORK_SOURCE_NO_NOTE beacon; tests test_conductor_input, bridge NoteTests; docs, CHANGELOG. V1 green.",
+    "deviations": [
+      "run --input takes --scenario; review-verdict.json is written by the conductor, not by register; plan_support without phase cannot be noted"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T11:45:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T11:45:34Z"
 }

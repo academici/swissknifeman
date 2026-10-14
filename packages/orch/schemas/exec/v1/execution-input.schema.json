@@ -137,6 +137,155 @@
             "target"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Support work for a plan, outside its items.",
+          "properties": {
+            "kind": {
+              "const": "plan_support",
+              "description": "Support work for a plan, outside its items input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "phase": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Phase the work supports."
+            }
+          },
+          "required": [
+            "kind",
+            "plan"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Support work for one phase of a plan.",
+          "properties": {
+            "kind": {
+              "const": "phase_support",
+              "description": "Support work for one phase of a plan input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "phase": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Phase the work supports."
+            }
+          },
+          "required": [
+            "kind",
+            "plan",
+            "phase"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Work that follows a review.",
+          "properties": {
+            "kind": {
+              "const": "review_followup",
+              "description": "Work that follows a review input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Item that was reviewed."
+            },
+            "finding": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Finding the work answers."
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Work that fixes a deviation of an item.",
+          "properties": {
+            "kind": {
+              "const": "deviation_fix",
+              "description": "Work that fixes a deviation of an item input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Item whose deviation is fixed."
+            },
+            "event": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Journal event of the deviation."
+            }
+          },
+          "required": [
+            "kind",
+            "plan",
+            "item"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Research outside the items of a plan.",
+          "properties": {
+            "kind": {
+              "const": "research",
+              "description": "Research outside the items of a plan input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "question": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Question the research answers."
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Advice asked of a stronger model.",
+          "properties": {
+            "kind": {
+              "const": "advisor",
+              "description": "Advice asked of a stronger model input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Item the advice is about."
+            },
+            "question": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Question asked."
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
         }
       ]
     },

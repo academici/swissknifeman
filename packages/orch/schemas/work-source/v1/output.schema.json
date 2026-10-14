@@ -8,7 +8,8 @@
     {"$ref": "#/$defs/brief"},
     {"$ref": "#/$defs/register"},
     {"$ref": "#/$defs/commit"},
-    {"$ref": "#/$defs/release"}
+    {"$ref": "#/$defs/release"},
+    {"$ref": "#/$defs/note"}
   ],
   "$defs": {
     "text": {
@@ -156,6 +157,18 @@
         "op": {"description": "Operation.", "const": "release"},
         "outcome": {"description": "released, no-op or refused.", "type": "string", "enum": ["released", "no-op", "refused"]},
         "reason_code": {"description": "Why the release was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "note": {
+      "description": "Outcome of a note: recorded, no-op (the same note is already there) or refused.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "note"},
+        "outcome": {"description": "recorded, no-op or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
+        "reason_code": {"description": "Why the note was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },
       "required": ["op", "outcome"],

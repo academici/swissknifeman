@@ -2,13 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:work-source:input:v1",
   "title": "work-source input",
-  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, or release it.",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, release it, or add a note to the journal of its collection.",
   "oneOf": [
     {"$ref": "#/$defs/claim"},
     {"$ref": "#/$defs/brief"},
     {"$ref": "#/$defs/register"},
     {"$ref": "#/$defs/commit"},
-    {"$ref": "#/$defs/release"}
+    {"$ref": "#/$defs/release"},
+    {"$ref": "#/$defs/note"}
   ],
   "$defs": {
     "text": {
@@ -152,6 +153,25 @@
         "actor": {"description": "Who releases.", "$ref": "#/$defs/actor"}
       },
       "required": ["op", "plan", "ref", "run_id"],
+      "additionalProperties": false
+    },
+    "note": {
+      "description": "Add a note to the journal of a collection of the source, for work that has no piece of its own there (support work of a plan or phase). Optional: a source without it answers that the operation is unsupported and the work goes on.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "note"},
+        "collection": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "text": {"description": "The note.", "$ref": "#/$defs/text"},
+        "refs": {
+          "description": "References inside the collection the note belongs to, such as a phase or an item.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work or of a group of them.", "$ref": "#/$defs/text"}
+        },
+        "run_id": {"description": "Run that writes the note.", "$ref": "#/$defs/runId"},
+        "actor": {"description": "Who writes the note.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "collection", "text", "refs"],
       "additionalProperties": false
     }
   }

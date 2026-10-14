@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.5",
   "title": "engine._role на retry.decide: retry, retry_after с PROVIDER_WAIT, fallback_route с проверкой допуска, continuation для пишущих ролей, коды PROVIDER_*; capacity gate в _route; run-options on_error, fallback_routes, provider_wait_max_s",
-  "status": "todo",
+  "status": "done",
   "summary": "engine._role решает провайдерный отказ одним вызовом retry.decide по knowledge/provider-errors#flow; «# Your previous answer was rejected» только для ROLE_OUTPUT_INVALID; задержка при api_retries; fallback с _route_minimum, доступностью и gate; reconcile = continuation с diff и никогда не отбрасывание; capacity gate пишется при quota и проверяется в _route/_preflight; run-options on_error, fallback_routes, limits.provider_wait_max_s (+ options.py, схема, зеркало моста); docs/conductor.md Stops и Beacons; тесты сценариев knowledge/provider-errors#tests.",
   "why": "Аудит П1.2, 2.16, N2, D7: conductor повторяет любую ошибку как невалидный ответ, квота превращается в ROLE_FAILED. Риски: (1) ожидание блокирует run — cancel и provider_wait_max_s; (2) fallback ниже класса работы — _route_minimum; (3) повтор пишущей роли на грязном дереве — только continuation; (4) умножение повторов CLI — задержка при api_retries.",
   "scope": {
@@ -139,6 +139,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:43:53Z"
+  "result": {
+    "started_at": "2026-10-14T05:03:44Z",
+    "finished_at": "2026-10-14T06:09:14Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "949e464e-1998-4533-8203-d85259d1789c"
+    },
+    "notes": "retry.decide in engine._role: retry with the original prompt (pause after api_retries), PROVIDER_WAIT, fallback_route with admission (class/effort, startable, sandbox, gate), continuation for writing roles, PROVIDER_* codes; capacity gate in _selected/_preflight/_start_route; run-options on_error, fallback_routes, limits.provider_wait_max_s (+ bridge mirror); Grok review: 5 findings fixed.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T06:09:14Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T06:09:14Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T06:09:14Z"
 }

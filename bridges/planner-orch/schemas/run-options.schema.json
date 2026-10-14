@@ -146,6 +146,34 @@
       "required": [],
       "additionalProperties": false
     },
+    "on_error": {
+      "description": "What to do after a role fails at the provider, by failure class of error/v1 (the shape of run-policy `on_error`); a class that is not listed has the default action of the conductor. Layers merge by class.",
+      "type": "object",
+      "properties": {
+        "authentication": {"$ref": "#/$defs/on_error_rule"},
+        "authorization": {"$ref": "#/$defs/on_error_rule"},
+        "quota": {"$ref": "#/$defs/on_error_rule"},
+        "rate_limit": {"$ref": "#/$defs/on_error_rule"},
+        "invalid_request": {"$ref": "#/$defs/on_error_rule"},
+        "model_unavailable": {"$ref": "#/$defs/on_error_rule"},
+        "content_policy": {"$ref": "#/$defs/on_error_rule"},
+        "transport": {"$ref": "#/$defs/on_error_rule"},
+        "provider_internal": {"$ref": "#/$defs/on_error_rule"},
+        "timeout": {"$ref": "#/$defs/on_error_rule"},
+        "context_limit": {"$ref": "#/$defs/on_error_rule"},
+        "unknown": {"$ref": "#/$defs/on_error_rule"},
+        "unknown_outcome": {"$ref": "#/$defs/on_error_rule"}
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "fallback_routes": {
+      "description": "Routes a role may move to when its provider cannot serve it (a quota whose reset is too far, an exhausted account gate, a provider that cannot start). A route is checked before it is taken: not below the class of the work, startable here, not gated. A layer replaces the list; `[]` switches the routes of the layers below off.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fallback_route"
+      }
+    },
     "on_blocked": {
       "description": "What a blocked piece of work does to the run: stop the run, or report it and go on with the next piece.",
       "type": "string",
@@ -215,6 +243,51 @@
       ],
       "additionalProperties": false
     },
+    "on_error_rule": {
+      "description": "Action for a failure class.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "What to do after a failure of the class.",
+          "type": "string",
+          "enum": ["stop", "retry", "retry_after", "fallback_route", "replan", "reconcile"]
+        },
+        "max": {
+          "description": "Maximum number of times the action may be taken; 0 or more.",
+          "type": "integer"
+        }
+      },
+      "required": ["action"],
+      "additionalProperties": false
+    },
+    "fallback_route": {
+      "description": "Another route of one role.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Role id.",
+          "type": "string",
+          "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer"]
+        },
+        "provider": {
+          "description": "Provider of the route, such as claude-code, codex or grok.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "model_class": {
+          "description": "Semantic model class, resolved through the model catalog.",
+          "type": "string",
+          "enum": ["economy", "implementation", "frontier"]
+        },
+        "effort": {
+          "description": "Reasoning effort.",
+          "type": "string",
+          "enum": ["low", "medium", "high", "xhigh"]
+        }
+      },
+      "required": ["role", "provider", "model_class"],
+      "additionalProperties": false
+    },
     "limits": {
       "description": "Limits of the run of the piece of work.",
       "type": "object",
@@ -265,6 +338,10 @@
         },
         "stage_idle_warn_s": {
           "description": "A STAGE_IDLE beacon is printed every this many seconds while the output of a role has not grown (a long test run or a silent model call); nothing is stopped; 0 switches it off; default 600.",
+          "type": "integer"
+        },
+        "provider_wait_max_s": {
+          "description": "The longest a role waits for a provider limit to reset (a PROVIDER_WAIT beacon, checked for cancel every second); a longer wait, or a quota whose reset is unknown, goes to `fallback_routes` or stops with PROVIDER_QUOTA; 0 or more, default 900.",
           "type": "integer"
         },
         "check_warn_s": {

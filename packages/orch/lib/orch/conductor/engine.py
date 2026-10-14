@@ -16,11 +16,13 @@ observer decides.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import calendar
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
+import random
 import re
 import secrets
 import shlex
@@ -33,8 +35,8 @@ from typing import Any, Callable, Optional
 from aicore.state import blobs, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import catalog as catalogs, events, launch, policies, render, sandbox
-from orch.conductor import checks as checks_mod, contract, heal, observer, options as opts, process, prompts
+from orch import catalog as catalogs, events, launch, policies, render, retry, sandbox
+from orch.conductor import checks as checks_mod, contract, gates, heal, observer, options as opts, process, prompts
 from orch.conductor import scope as scopes
 from orch.conductor.progress import Progress, human_duration
 from orch.settings import ORCH_ROOT
@@ -48,6 +50,15 @@ REPORTS = Path(".swissknifeman") / "orch" / "reports"  # observer reports: run o
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
 STATUS_EXIT = {"finished": 0, "stopped": 1}
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+# An unclassified failure was always repeated (within ``limits.retries``); retry.decide would stop on it by default.
+CONDUCTOR_ON_ERROR = {"unknown": {"action": "retry"}}
+# The stop code of a failure class; a class that is not listed keeps the code of the failed role (``ROLE_FAILED``, ...).
+PROVIDER_STOP_CODES = {"authentication": "PROVIDER_AUTH", "authorization": "PROVIDER_AUTHZ", "quota": "PROVIDER_QUOTA",
+                       "rate_limit": "PROVIDER_QUOTA", "invalid_request": "PROVIDER_REFUSED",
+                       "content_policy": "PROVIDER_REFUSED", "context_limit": "PROVIDER_CONTEXT",
+                       "model_unavailable": "MODEL_UNAVAILABLE"}
+TRANSIENT_CLASSES = ("provider_internal", "transport", "rate_limit")  # the provider CLI repeats these itself
+JITTER_CAP_S, JITTER_BASE_S = 300, 30
 
 
 class Stop(Exception):
@@ -57,6 +68,23 @@ class Stop(Exception):
         super().__init__(f"{code}: {message}")
         self.code = code
         self.message = message
+
+
+def sleep(seconds: float) -> None:
+    """One second of a wait (a seam for the tests)."""
+    time.sleep(seconds)
+
+
+def wall() -> float:
+    return time.time()
+
+
+def unit_random() -> float:
+    return random.random()
+
+
+def utc_stamp(epoch: float) -> str:
+    return datetime.fromtimestamp(epoch, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def utc_now() -> str:
@@ -107,6 +135,7 @@ class Item:
     sources: dict = field(default_factory=dict)
     routes: dict = field(default_factory=dict)
     launch_plan: dict = field(default_factory=dict)
+    route_notes: list = field(default_factory=list)  # routes moved at selection: gated or unavailable provider
 
 
 class Conductor:
@@ -765,10 +794,10 @@ class Conductor:
         if self._closer_named(item):
             roles.append("registrar")
         for role in roles:
-            item.routes[role] = self._route(item, role)
+            item.routes[role] = self._selected(item, role, persist)
         if item.options["limits"].get("repairs", 0) > 0:
             try:  # optional: without a launch entry or a model for it, results are only healed and repeated
-                item.routes["report-fixer"] = self._route(item, "report-fixer")
+                item.routes["report-fixer"] = self._selected(item, "report-fixer", persist)
             except Stop:
                 pass
         self._route_minimum(item)
@@ -786,6 +815,83 @@ class Conductor:
             return f"SANDBOX_UNAVAILABLE: {sandbox.probe()['reason']}"
         if not process.available(route["argv"]):
             return f"PROVIDER_UNAVAILABLE: {route['argv'][0]} not found"
+        gate = gates.blocked(route["provider"], wall())
+        if gate:
+            return f"PROVIDER_QUOTA: {route['provider']} is gated until {gate['until']}"
+        return None
+
+    def _selected(self, item: Item, role: str, persist: bool) -> dict:
+        """The route of ``role`` that can start: its own, or, when its provider is gated (the account quota is known to
+        be exhausted until a reset), the first declared fallback route that passes the admission. A gated route with no
+        such fallback stops the run with ``PROVIDER_QUOTA`` (the optional scout is left to its own step: it is skipped
+        when it may be)."""
+        kept = (item.state.get("route_overrides") or {}).get(role)  # a fallback taken before a stop: a resume keeps it
+        route = self._route(item, role, kept) if kept else self._route(item, role)
+        gate = gates.blocked(route["provider"], wall())
+        if gate is None:
+            return route
+        found, refused = self._fallback(item, role, route)
+        until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})"
+        if found is None:
+            if role == "context-scout":
+                return route
+            raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
+                       + "; resume after the reset, or remove the gate with conduct.py gates --clear")
+        if persist:
+            item.state.setdefault("route_overrides", {})[role] = {
+                key: found[key] for key in ("provider", "model_class", "effort") if found.get(key)}
+        item.route_notes.append({"role": role, "reason_code": "CAPACITY_GATED", "from": self.label(route),
+                                 "to": self.label(found), "until": gate["until"]})
+        if persist and self.progress is not None:
+            self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="CAPACITY_GATED",
+                               message=f"{role}: {until}")
+            self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="ROUTE_FALLBACK",
+                               message=f"{role}: {self.label(route)} -> {self.label(found)} (CAPACITY_GATED)")
+        return found
+
+    def _fallback(self, item: Item, role: str, current: dict, declared: Optional[dict] = None) -> tuple:
+        """``(route, refused)``: the first declared fallback route of ``role`` other than ``current`` that passes
+        ``_admit`` (``declared`` narrows the choice to the route retry.decide named), and why the others were refused."""
+        refused = []
+        for entry in item.options.get("fallback_routes", []):
+            if entry["role"] != role or (entry["provider"], entry["model_class"]) == (current["provider"],
+                                                                                    current["model_class"]):
+                continue
+            if declared is not None and (entry["provider"], entry["model_class"]) != (declared["provider"],
+                                                                                    declared["model_class"]):
+                continue
+            try:
+                candidate = self._route(item, role, entry)
+            except Stop as stop:
+                refused.append(f"{entry['provider']}/{entry['model_class']}: {stop.code}: {stop.message}")
+                continue
+            problem = self._admit(item, role, candidate)
+            if problem is None:
+                return candidate, refused
+            refused.append(f"{self.label(candidate)}: {problem}")
+        return None, refused
+
+    def _admit(self, item: Item, role: str, route: dict) -> Optional[str]:
+        """Why ``route`` may not take over the work of ``role``, as ``CODE: text``; ``None`` when it may: not below the
+        class and effort the work requires, startable here (transport, sandbox, command) and not gated."""
+        if role == "executor":
+            try:
+                self._route_minimum(item, route)
+            except Stop as stop:
+                return f"{stop.code}: {stop.message}"
+        return self.route_problem(route) or self._claude_sandbox_problem(item, route)
+
+    def _claude_sandbox_problem(self, item: Item, route: dict) -> Optional[str]:
+        """``SANDBOX_UNAVAILABLE: ...`` when ``instructions.sandbox`` is ``require`` and a Claude Code role with Bash on
+        ``route`` could not be confined (the sandbox cannot start, or the CLI does not list ``--settings``): the rule of
+        the preflight, applied to a route that was not in it."""
+        if self._sandbox_mode(item) != "require" or not self._claude_bash(route):
+            return None
+        probed = sandbox.probe()
+        if not probed["available"]:
+            return f"SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start ({probed['reason']})"
+        if not self._knows(route["argv"], ["--settings"]):
+            return "SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the claude CLI does not list --settings"
         return None
 
     @staticmethod
@@ -828,10 +934,20 @@ class Conductor:
                    if role not in self.OPTIONAL_ROLES and not process.available(route["argv"])]
         if missing:
             raise Stop("PROVIDER_UNAVAILABLE", f"cannot start {', '.join(missing)}: install or log in the CLI, then resume")
+        gated = [f"{role} on {route['provider']} until {gate['until']}" for role, route in required.items()
+                 for gate in [gates.blocked(route["provider"], wall())] if gate]
+        if gated:
+            raise Stop("PROVIDER_QUOTA", f"{'; '.join(gated)}: the account quota is exhausted; resume after the reset, "
+                                         "or remove the gate with conduct.py gates --clear")
 
-    def _route(self, item: Item, role: str) -> dict:
+    def _route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
+        """The route of ``role``; ``override`` (a ``fallback_routes`` entry or retry.decide's route) replaces the
+        provider, the model class and, when it has one, the effort of the stage and drops its model."""
         wanted = opts.stage_route(item.options, role)
-        if role == "reviewer":
+        if override:
+            wanted = {**{key: value for key, value in wanted.items() if key not in ("provider", "model", "model_class")},
+                      **{key: override[key] for key in ("provider", "model_class", "effort") if override.get(key)}}
+        if role == "reviewer" and not override:
             selector = opts.parse_selector(item.options["reviewer"])
             provider, model, effort = selector["provider"], selector["model"], selector.get("effort")
         else:
@@ -852,10 +968,10 @@ class Conductor:
             except catalogs.CatalogError as error:
                 raise Stop(error.code, str(error)) from None
         values = {"model": model or "", "effort": effort, "cwd": str(self.project), "orch": str(ORCH_ROOT)}
-        override = (self.conductor.get("argv") or {}).get(role)
+        argv_override = (self.conductor.get("argv") or {}).get(role)
         try:
-            if override:
-                argv = catalogs.substitute(list(override), values)
+            if argv_override:
+                argv = catalogs.substitute(list(argv_override), values)
             elif effort not in launch.EFFORTS:
                 raise Stop("ROUTE_UNDERSHOOT", f"{role} needs effort {effort}, which {provider} cannot start")
             else:
@@ -872,9 +988,9 @@ class Conductor:
         return {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
                 "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
 
-    def _route_minimum(self, item: Item) -> None:
+    def _route_minimum(self, item: Item, route: Optional[dict] = None) -> None:
         minimum = item.claim.get("route") or {}
-        route = item.routes["executor"]
+        route = route or item.routes["executor"]
         if minimum.get("class") and CLASS_RANK.get(route["model_class"], -1) < CLASS_RANK[minimum["class"]]:
             raise Stop("ROUTE_UNDERSHOOT", f"the executor class {route['model_class']} is below "
                                            f"{minimum['class']} required by {item.ref}")
@@ -897,12 +1013,17 @@ class Conductor:
 
         A result outside its contract is first healed by rule (``heal``), then repaired by the report-fixer role from
         the role's own answer (``limits.repairs``), and only then is the whole role repeated (``limits.retries`` per
-        step): a repeat costs a whole run of the role, a repair seconds."""
+        step): a repeat costs a whole run of the role, a repair seconds. A role that failed at the provider (it exited
+        with an error, or its stream ended in one) is not told its answer was rejected: ``retry.decide`` chooses between
+        a repeat, a wait for the reset, another route and a stop (``_provider_failure``)."""
         route = item.routes[role]
         (item.directory / "prompts").mkdir(parents=True, exist_ok=True)
         (item.directory / "prompts" / f"{key}.md").write_text(prompt, encoding="utf-8")
         attempt = 0
         first_prompt = prompt
+        trail = {"decisions": [], "error": None, "api_retries": 0}
+        base = self._tree_mark() if self._writes(role) else None  # the tree this step started from
+        route = self._start_route(item, key, role, route, cancel)
         while True:
             attempt += 1
             suffix = "" if attempt == 1 else f"-a{attempt}"
@@ -910,8 +1031,9 @@ class Conductor:
             run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
                                    timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
                                    idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
-                                   on_tick=self._beacons(item, key, role, raw))
+                                   on_tick=self._beacons(item, key, role, raw), provider=route["provider"])
             self._tokens(item, run.usage)
+            trail["api_retries"] += run.api_retries
             if run.lingered:
                 self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
                                    reason_code="ROLE_LINGERED",
@@ -931,7 +1053,10 @@ class Conductor:
                     problem = f"ROLE_OUTPUT_INVALID: {'; '.join(issues[:3])}"
             meta = {"session": run.session, "model": run.model, "stream": self._relative(raw), "attempts": attempt,
                     "exit": run.exit, "usage": run.usage,
-                    **({"healed": healed} if healed else {}), **({"repaired_by": repaired} if repaired else {})}
+                    **({"healed": healed} if healed else {}), **({"repaired_by": repaired} if repaired else {}),
+                    **({"error": trail["error"]} if trail["error"] else {}),
+                    **({"api_retries": trail["api_retries"]} if trail["api_retries"] else {}),
+                    **({"decisions": trail["decisions"]} if trail["decisions"] else {})}
             if problem is None:
                 if healed:
                     self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="RESULT_HEALED",
@@ -942,12 +1067,189 @@ class Conductor:
             by_stage[key] = by_stage.get(key, 0) + 1
             self._save()
             self._budget(item)
+            if run.error:  # the role itself failed: a provider failure is decided, not judged as an answer
+                route, prompt = self._provider_failure(item, key, role, route, run, by_stage[key], base, first_prompt,
+                                                       trail, cancel)
+                continue
             if by_stage[key] > item.options["limits"]["retries"]:  # a stage has its own repeats: a slow executor must not cost the review its only one
                 raise Stop(problem.split(":", 1)[0], f"{role} on {self.label(route)}: {problem}")
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
                                message=f"attempt {attempt} failed ({problem}); repeating")
             prompt = (f"{first_prompt}\n\n# Your previous answer was rejected\n\n{problem}\n\n"
                       "Do the work again as needed and end with one corrected block that fits the contract exactly.\n")
+
+    def _start_route(self, item: Item, key: str, role: str, route: dict, cancel) -> dict:
+        """The route a role starts on: its own unless its provider was gated after the routes of the piece were chosen
+        (an earlier role exhausted the account). Then the first admissible fallback route; else, when the gate ends
+        within ``limits.provider_wait_max_s``, a wait for it; else ``PROVIDER_QUOTA`` before the call."""
+        gate = gates.blocked(route["provider"], wall())
+        if gate is None:
+            return route
+        found, refused = self._fallback(item, role, route)
+        until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})"
+        if found is not None:
+            item.routes[role] = found
+            item.state.setdefault("route_overrides", {})[role] = {
+                key_: found[key_] for key_ in ("provider", "model_class", "effort") if found.get(key_)}
+            self._save()
+            write_json(item.directory / "routes.json", item.routes)
+            self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
+                               reason_code="CAPACITY_GATED", message=f"{role}: {until}")
+            self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
+                               reason_code="ROUTE_FALLBACK",
+                               message=f"{role}: {self.label(route)} -> {self.label(found)} (CAPACITY_GATED)")
+            return found
+        left = max(0, calendar.timegm(time.strptime(gate["until"], "%Y-%m-%dT%H:%M:%SZ")) - wall())
+        if left <= item.options["limits"].get("provider_wait_max_s", 900):
+            self._wait(item, key, role, {"class": gate["class"]}, int(left) + 1, cancel)
+            return route
+        raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
+                   + "; resume after the reset, or remove the gate with conduct.py gates --clear")
+
+    # ------------------------------------------------------------------ provider failures
+
+    def _provider_failure(self, item: Item, key: str, role: str, route: dict, run, attempts: int, base: Optional[str],
+                          first_prompt: str, trail: dict, cancel) -> tuple:
+        """``(route, prompt)`` of the next attempt of a role that failed at the provider, or a ``Stop``.
+
+        One ``retry.decide`` call decides (knowledge/provider-errors#flow). The conductor does not multiply repeats: when
+        the provider CLI already repeated the request itself (``api_retry`` events) a transient failure is repeated
+        only after a pause, and a writing role that left changes in the tree continues from them, never from scratch."""
+        error = run.error_doc or {"class": "timeout" if run.error == "TIMEOUT" else "unknown"}
+        trail["error"] = error
+        limits = item.options["limits"]
+        writes = self._writes(role)
+        dirty = base is not None and self._tree_mark() != base
+        self._gate(item, route, error)
+        inputs = retry.RetryInputs(
+            error_class=error["class"], stage_writes=writes, worktree_dirty=dirty, receipt_unresolved=False,
+            attempts_used=attempts, stage_retries_max=limits["retries"], budget_left=limits["retries"] + 1 - attempts,
+            retry_after_s=error.get("retry_after_s"),
+            current_route={"provider": route["provider"], "model_class": route["model_class"]},
+            max_wait_s=limits.get("provider_wait_max_s", 900))
+        policy = {"on_error": {**CONDUCTOR_ON_ERROR, **item.options.get("on_error", {})},
+                  "fallback_routes": [entry for entry in item.options.get("fallback_routes", []) if entry["role"] == role]}
+        decision = retry.decide(inputs, policy)
+        if decision.action == "reconcile" and attempts > limits["retries"]:  # decide does not bound a reconcile
+            decision = retry.RetryDecision("stop", decision.reason_codes + ("BUDGET_EXHAUSTED",))
+        trail["decisions"].append({"action": decision.action, "reason_codes": list(decision.reason_codes),
+                                   **({"wait_s": decision.wait_s} if decision.wait_s is not None else {}),
+                                   **({"route": decision.route} if decision.route else {})})
+        label = self.label(route)
+        self.progress.emit("info", item=item.ref, stage=key, role=role, route=label,
+                           message=f"attempt {attempts} failed at the provider ({error['class']}: "
+                                   f"{error.get('safe_message') or run.detail}); {decision.action} "
+                                   f"({', '.join(decision.reason_codes)})")
+        if decision.action == "retry":
+            if run.api_retries and error["class"] in TRANSIENT_CLASSES:
+                self._wait(item, key, role, error, error.get("retry_after_s") if error.get("retry_after_s") is not None
+                           else int(min(JITTER_CAP_S, JITTER_BASE_S * 2 ** (attempts - 1)) * unit_random()), cancel)
+            return route, first_prompt
+        if decision.action == "retry_after":
+            self._wait(item, key, role, error, decision.wait_s, cancel)
+            return route, first_prompt
+        if decision.action == "reconcile":
+            return route, first_prompt + self._continuation(item)
+        refused = []
+        if decision.action == "fallback_route":
+            found, refused = self._fallback(item, role, route, decision.route)
+            if found is not None:
+                item.routes[role] = found
+                item.state.setdefault("route_overrides", {})[role] = {
+                    key: found[key] for key in ("provider", "model_class", "effort") if found.get(key)}
+                self._save()
+                write_json(item.directory / "routes.json", item.routes)
+                self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
+                                   reason_code="ROUTE_FALLBACK",
+                                   message=f"{role}: {label} -> {self.label(found)} ({error['class']}; "
+                                           f"{', '.join(decision.reason_codes)})")
+                return found, first_prompt
+        raise Stop(*self._provider_stop(role, route, run, error, decision, refused))
+
+    def _provider_stop(self, role: str, route: dict, run, error: dict, decision, refused: list) -> tuple:
+        code = PROVIDER_STOP_CODES.get(error["class"]) or run.error
+        text = f"{role} on {self.label(route)}: {error['class']} ({error.get('safe_message') or run.detail}); " \
+               f"{', '.join(decision.reason_codes)}"
+        if error["class"] in ("quota", "rate_limit") and error.get("retry_after_s") is not None:
+            reset = utc_stamp(wall() + error["retry_after_s"])
+            text += f"; the limit resets {reset}, resume after {reset}"
+        elif error["class"] in ("quota", "rate_limit"):
+            text += "; the reset time is unknown, resume after the limit is lifted"
+        if refused:
+            text += f"; no admissible fallback route: {'; '.join(refused)}"
+        return code, text
+
+    def _gate(self, item: Item, route: dict, error: dict) -> None:
+        """Remember an exhausted account quota with a known reset on the machine: nobody starts the provider again
+        before it (``gates.py``). A gate that cannot be written does not stop the run."""
+        if error["class"] != "quota" or error.get("retry_after_s") is None or error.get("scope") != "account":
+            return
+        now = wall()
+        try:
+            gates.set_gate(route["provider"], until=now + error["retry_after_s"], code=error.get("code", "PROVIDER_QUOTA"),
+                           run_id=self.run_id, now=now)
+        except (gates.GateError, OSError) as failure:
+            self.progress.emit("info", item=item.ref, reason_code="GATE_NOT_WRITTEN",
+                               message=f"the capacity gate of {route['provider']} was not written: {failure}")
+
+    def _wait(self, item: Item, key: str, role: str, error: dict, seconds: int, cancel) -> None:
+        """Wait ``seconds`` before the repeat (a ``PROVIDER_WAIT`` beacon names the class, the wait and the reset)."""
+        if seconds <= 0:
+            return
+        reset = utc_stamp(wall() + seconds)
+        self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="PROVIDER_WAIT",
+                           message=f"{role}: {error['class']}; waiting {seconds} s, until {reset}")
+        self._pause(seconds, cancel)
+
+    @staticmethod
+    def _pause(seconds: float, cancel=None) -> None:
+        """Sleep ``seconds``, looking at ``cancel`` every second."""
+        remaining = float(seconds)
+        while remaining > 0:
+            if cancel is not None and cancel.is_set():
+                raise Stop("REVIEW_CANCELLED", "cancelled while waiting for the provider: the checks are red")
+            step = min(1.0, remaining)
+            sleep(step)
+            remaining -= step
+
+    @staticmethod
+    def _writes(role: str) -> bool:
+        """Whether the role may change files (``tools.filesystem`` of its manifest); a role without a manifest might."""
+        try:
+            manifest = json.loads((ORCH_ROOT / "roles" / f"{role}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return True
+        return (manifest.get("tools") or {}).get("filesystem") == "write"
+
+    def _tree_mark(self) -> str:
+        """HEAD and the content of every changed path of the tree: what a failed attempt of a writing role can be
+        compared with (the conductor reports are not the role's)."""
+        try:
+            head = checks_mod.head(self.project)
+        except RuntimeError:  # no commit yet
+            head = "-"
+        parts = [head]
+        for path in self._dirty_paths():
+            file = self.project / path
+            try:
+                parts.append(path + ":" + sha256_hex(file.read_bytes() if file.is_file() else b"-"))
+            except OSError:
+                parts.append(path + ":?")
+        return sha256_hex("\n".join(parts).encode("utf-8"))
+
+    def _continuation(self, item: Item) -> str:
+        """The section that turns a repeat of a writing role into a continuation: what is in the tree, what was checked."""
+        head = checks_mod.head(self.project)
+        status = checks_mod.git(self.project, "status", "--short").strip() or "(clean)"
+        stat = checks_mod.git(self.project, "diff", "--stat", "HEAD").strip() or "(no change in tracked files)"
+        closed = [f"{name}: {step.get('verdict', 'done')}" for name, step in (item.state.get("steps") or {}).items()
+                  if name.startswith("checks.") and step.get("status") == "done"]
+        return ("\n\n# The previous attempt failed and left changes\n\n"
+                "The previous attempt of this step ended with a failure of the provider, not with an answer. Its changes are "
+                "still in the working tree and are yours: read them, keep what is right, finish the rest, and end with the "
+                "closed block the contract asks for. Do not discard them and do not start over.\n\n"
+                f"Base commit: {head}\n\n```\n$ git status --short\n{status}\n\n$ git diff --stat HEAD\n{stat}\n```\n\n"
+                f"Checks closed before this step: {', '.join(closed) if closed else 'none'}.\n")
 
     @staticmethod
     def _closed(text: str, kind: str, extra) -> tuple:
@@ -1141,13 +1443,15 @@ class Conductor:
         if stage is None:
             return ""
         route = item.routes["context-scout"]
-        if not process.available(route["argv"]):
+        gate = gates.blocked(route["provider"], wall())
+        if gate or not process.available(route["argv"]):
+            code, why = ("PROVIDER_QUOTA", f"{route['provider']} is gated until {gate['until']}") if gate else \
+                ("PROVIDER_UNAVAILABLE", f"{route['argv'][0]} not found")
             if stage.get("on_unavailable") == "skip" and not stage.get("required"):
                 self.progress.emit("stage.skip", item=item.ref, stage="scout", role="context-scout",
-                                   route=self.label(route), reason_code="PROVIDER_UNAVAILABLE",
-                                   message=f"{route['argv'][0]} not found; optional stage skipped")
+                                   route=self.label(route), reason_code=code, message=f"{why}; optional stage skipped")
                 return ""
-            raise Stop("PROVIDER_UNAVAILABLE", f"context-scout on {route['provider']}: {route['argv'][0]} not found")
+            raise Stop(code, f"context-scout on {route['provider']}: {why}")
         key = sha256_hex(canonical_json_bytes({
             "input": item.input_doc.get("digest"),
             "plan": (item.input_doc.get("provenance") or {}).get("source_digest"),

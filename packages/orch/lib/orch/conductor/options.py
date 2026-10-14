@@ -2,7 +2,8 @@
 
 Layers merge from the general to the specific: the defaults, ``[orch.conductor]`` of the configuration, the run-policy
 pack, then the layers the work source hands over (the options of the plan, the phase and the item, in that order). A
-more specific layer overrides a value; ``rules`` append (a repeated rule is kept once), ``limits`` merge by key,
+more specific layer overrides a value; ``rules`` append (a repeated rule is kept once), ``limits`` and ``on_error`` merge by
+key (``fallback_routes`` is replaced as a list; ``[]`` switches the routes of the layers below off),
 ``skills`` replace the list of each role a layer names, and ``stages`` merge by role (a layer that names a model or a
 model class replaces both of the role). Every layer of the source is checked against ``conductor/v1``
 ``run-options`` and the bounds of ``LIMIT_BOUNDS`` before it is used. The merged options keep ``skills`` as a map
@@ -20,7 +21,7 @@ from orch.conductor import contract
 # progress, up to ``ceiling_factor`` times it. The *_timeout_s ceilings stay available, off by default.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
                   "stage_timeout_s": 0, "stage_idle_timeout_s": 0, "check_timeout_s": 0, "ceiling_factor": 2,
-                  "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900}
+                  "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected"}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
@@ -35,11 +36,11 @@ CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
-            "on_blocked": "stop"}
+            "on_blocked": "stop", "on_error": {}, "fallback_routes": []}
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
                 "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
                 "check_timeout_s": (0, None), "ceiling_factor": (1, 5), "repairs": (0, 3), "stage_warn_s": (0, None),
-                "stage_idle_warn_s": (0, None), "check_warn_s": (0, None)}
+                "stage_idle_warn_s": (0, None), "check_warn_s": (0, None), "provider_wait_max_s": (0, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
@@ -105,7 +106,7 @@ def merge(base: dict, layer: dict) -> dict:
             out["stages"] = _merge_stages(out.get("stages", []), value)
         elif key == "rules":
             out["rules"] = _dedupe(list(out.get("rules", [])) + list(value))
-        elif key in ("limits", "review", "checks", "instructions", "scope"):
+        elif key in ("limits", "review", "checks", "instructions", "scope", "on_error"):
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
@@ -162,7 +163,7 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
         nonlocal current
         current = merge(current, layer)
         for key, value in layer.items():
-            if key in ("limits", "review", "checks", "instructions", "scope"):
+            if key in ("limits", "review", "checks", "instructions", "scope", "on_error"):
                 sources.update({f"{key}.{sub}": name for sub in value})
             elif key == "skills":
                 sources.update({f"skills.{entry['role']}": name for entry in value})

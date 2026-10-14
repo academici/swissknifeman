@@ -87,6 +87,11 @@ The conductor stops only on:
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` (today the grok `executor` entry; the conductor builds no `bounded-implementer` route) stops with `TRANSPORT_UNSUPPORTED` |
 | `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
+| `PROVIDER_AUTH`, `PROVIDER_AUTHZ` | the provider refused the credentials or the operation (class `authentication`, `authorization`): never repeated, log in or fix the access, then resume |
+| `PROVIDER_QUOTA` | the usage limit is exhausted (class `quota`, `rate_limit`) and the reset is further than `limits.provider_wait_max_s` or unknown, with no admissible `fallback_routes` entry; or the provider of a role is gated on this machine (see Capacity gates). The message names the reset time (UTC) and says `resume after` it |
+| `PROVIDER_REFUSED` | the provider refused the request (class `invalid_request`, `content_policy`): a repeat would be refused again |
+| `PROVIDER_CONTEXT` | the request does not fit the context window (class `context_limit`); the prompt is not rebuilt yet |
+| `MODEL_UNAVAILABLE` | the model is not available to the account (class `model_unavailable`), repeated within `limits.retries` first |
 | `TIMEOUT` | only when a ceiling was asked for (`stage_timeout_s`, `stage_idle_timeout_s`); none by default |
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece) |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |
@@ -109,6 +114,10 @@ instead; `conduct.py status` shows the latest one of the running step:
 | `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
 | `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
+| `PROVIDER_WAIT` | a role failed at the provider and waits before its repeat: a usage limit that resets within `limits.provider_wait_max_s`, or a transient failure after the provider CLI had repeated the request itself (`api_retry`) | the failure class, the wait in seconds and the UTC time it ends; the wait looks at the cancel every second |
+| `ROUTE_FALLBACK` | a role moved to a `fallback_routes` entry (its provider failed beyond the wait, or was gated) | role, old route → new route, the class and the reason codes (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`, `CAPACITY_GATED`) |
+| `CAPACITY_GATED` | the provider of a role is gated when the routes of a piece are chosen | the gate (until, class, who set it) |
+| `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
 
@@ -125,6 +134,39 @@ whose `until` is in the future forbids the provider; an expired entry is ignored
 the later `until` wins. A write is a read-modify-write under `flock` on `provider-gates.lock` beside the file and an atomic
 replace, so two conductors never lose each other's entry and a reader sees a whole file. `conduct.py gates [--json]` lists
 the gates in force; `gates --clear [PROVIDER]` removes one or all (so does deleting the file); it needs no project.
+
+### Provider failures
+
+A role that fails at the provider (it exits with an error, or its stream ends in one) is not told that its answer was rejected;
+`ROLE_OUTPUT_INVALID` keeps the old text. The process adapters (`process.py`) read the failure signals of the stream and
+`aicore.provider.errors` classifies them into an `error/v1` record (class, scope, `retry_after_s`, evidence); `_role` then asks
+`retry.decide` once, with the class, whether the role writes (`tools.filesystem` of its manifest) and whether the tree changed since
+the step began, `limits.retries` and `limits.provider_wait_max_s`, `on_error` (over the conductor default `unknown` → `retry`) and
+the `fallback_routes` of the role:
+
+| Decision | What the conductor does |
+| --- | --- |
+| `retry` | repeats the role with its original prompt; when the provider CLI had already repeated the request (`api_retries`) and the class is transient (`provider_internal`, `transport`, `rate_limit`), only after a pause (the reset time, else full jitter `min(300, 30·2^(attempt−1))·random()`): one owner repeats a request, the conductor only bounds the time |
+| `retry_after` | a `PROVIDER_WAIT` beacon, the wait (cancel is looked at every second), then the repeat |
+| `fallback_route` | takes the route retry.decide names after the admission: not below the class or effort the work requires, startable here (command, transport, provider sandbox) and not gated; then a `ROUTE_FALLBACK` beacon, `routes.json` is rewritten and the next calls of the role use the new route; a route that fails the admission is a stop with the reason |
+| `reconcile` | a writing role that left changes in the tree continues: the repeat prompt is the original one plus `# The previous attempt failed and left changes` (base commit, `git status --short`, `git diff --stat HEAD`, the checks closed so far). The changes are never discarded; a reconcile counts against `limits.retries` too |
+| `replan` | `PROVIDER_CONTEXT` |
+| `stop` | the code of the class (see Stops); the repeats of one step are bounded by `limits.retries` |
+
+An exhausted account quota with a known reset is also written as a capacity gate when it is seen, so the next piece and the
+next run do not start the provider again; a wait that is longer than `limits.provider_wait_max_s`, or a quota whose reset
+is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`). The role's step result records
+`error` (error/v1), `api_retries` and `decisions`.
+
+A fallback route is admitted by the same rules as a route at the start: not below the class or effort the work requires,
+startable here (command, transport, provider sandbox, `instructions.sandbox: require` for a Claude Code role with Bash) and not
+gated. A route taken is remembered in the state of the piece, so a resumed run starts on it, not on the route that failed.
+A role is checked against the gates again when it starts: when an earlier role of the piece exhausted its provider, it moves to
+a fallback route, or waits when the gate ends within `limits.provider_wait_max_s`, or stops with `PROVIDER_QUOTA` before the call.
+
+When the provider of a role is gated as the routes of a piece are chosen, the role moves to the first admissible
+`fallback_routes` entry (`CAPACITY_GATED`, `ROUTE_FALLBACK`); without one the piece stops with `PROVIDER_QUOTA` before any
+work (an optional context scout is skipped instead, when its stage allows it).
 
 ### Resume
 
@@ -161,7 +203,9 @@ effect.
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set` |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
-| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s` |
+| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s` |
+| `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
+| `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it (default `[]`); a layer replaces the list, `[]` switches the routes of the layers below off |
 | `on_blocked` | `stop` or `report` |
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its

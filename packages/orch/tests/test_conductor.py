@@ -20,7 +20,7 @@ import time
 import unittest
 from unittest import mock
 
-from orch.conductor import cli, engine, progress
+from orch.conductor import cli, engine, gates, progress
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "conductor"
@@ -1131,6 +1131,284 @@ class SandboxTests(ConductorCase):
             code, _, err = self.run_items("W1", extra=("--options", options))
         self.assertEqual(self.calls("executor"), 0)
         self.assertEqual(self.outcome(err)[1], "SANDBOX_UNAVAILABLE", err)
+
+
+def quota_failure(reset_in: int) -> dict:
+    """Claude Code, usage limit: a rejected ``rate_limit_event`` (``resetsAt``) and a ``result`` with ``is_error``."""
+    event = {"type": "rate_limit_event", "rate_limit_info": {
+        "status": "rejected", "resetsAt": int(time.time()) + reset_in, "rateLimitType": "five_hour"}}
+    return {"stream": [event], "is_error": True, "text": "You've hit your limit", "exit": 1}
+
+
+def api_retry(category: str, status: int) -> dict:
+    return {"type": "system", "subtype": "api_retry", "attempt": 1, "max_retries": 2, "retry_delay_ms": 500,
+            "error_status": status, "error": category}
+
+
+class ProviderErrorTests(ConductorCase):
+    """A role that fails at the provider is decided by one ``retry.decide`` call (knowledge/provider-errors#flow): a repeat
+    keeps the original prompt, a wait is a beacon, a fallback route is checked, a writing role continues, the stop has
+    its own code."""
+
+    FALLBACK = {"role": "executor", "provider": "codex", "model_class": "implementation"}
+
+    def setUp(self):
+        super().setUp()
+        self.slept = []
+        for name, value in (("sleep", self.slept.append), ("unit_random", lambda: 0.5)):
+            patcher = mock.patch.object(engine, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def options(self, **layer) -> None:
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": layer}]}})
+
+    def beacons(self, err: str, code: str) -> list:
+        return [line for line in self.lines(err) if line.get("reason_code") == code]
+
+    def gate_file(self) -> dict:
+        return json.loads(gates.path().read_text(encoding="utf-8"))["gates"]
+
+    def test_a_short_quota_wait_is_a_beacon_and_the_second_call_succeeds(self):
+        self.script({"executor": [quota_failure(3), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        wait = self.beacons(err, "PROVIDER_WAIT")
+        self.assertEqual(len(wait), 1, err)
+        self.assertIn("quota", wait[0]["message"])
+        self.assertTrue(1 <= sum(self.slept) <= 4, self.slept)
+        self.assertNotIn("previous answer was rejected", self.prompt("executor", 2))
+        self.assertEqual(self.prompt("executor", 2), self.prompt("executor", 1))
+        self.assertEqual(self.gate_file()["claude-code"]["code"], "PROVIDER_QUOTA")  # the account quota is gated
+
+    def test_a_far_reset_goes_to_the_declared_fallback_route(self):
+        self.options(fallback_routes=[self.FALLBACK])
+        self.script({"executor": [quota_failure(3600), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertEqual(self.slept, [])
+        fallback = self.beacons(err, "ROUTE_FALLBACK")
+        self.assertEqual(len(fallback), 1, err)
+        self.assertIn("claude-code", fallback[0]["message"])
+        self.assertIn("WAIT_TOO_LONG", fallback[0]["message"])
+        routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
+        self.assertEqual(routes["executor"]["provider"], "codex")
+        self.assertEqual(self.source()["items"]["W1"]["executed_by"]["provider"], "codex")
+
+    def test_a_far_reset_without_a_fallback_stops_with_the_reset_time_and_gates_the_provider(self):
+        self.script({"executor": [quota_failure(3600), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("executor"), 1)
+        self.assertIn("resume after", err)
+        self.assertIn("claude-code", self.gate_file())
+
+    def test_a_gated_provider_goes_to_the_fallback_at_once_and_stops_without_one(self):
+        gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        self.options(fallback_routes=[self.FALLBACK, dict(self.FALLBACK, role="triager")])
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual({line["role"] for line in self.beacons(err, "CAPACITY_GATED")}, {"executor", "triager"}, err)
+        self.assertEqual(len(self.beacons(err, "ROUTE_FALLBACK")), 2, err)
+        self.assertEqual(self.source()["items"]["W1"]["executed_by"]["provider"], "codex")
+        self.set_items({"W2": {}})
+        code, _, err = self.run_items("W2")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("executor"), 1)  # nothing was started on the gated provider
+
+    def test_a_fallback_below_the_class_of_the_work_is_refused(self):
+        self.options(fallback_routes=[dict(self.FALLBACK, model_class="economy")])
+        self.script({"executor": [quota_failure(3600), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("executor"), 1)
+        self.assertIn("ROUTE_UNDERSHOOT", err)
+        self.assertEqual(self.beacons(err, "ROUTE_FALLBACK"), [])
+
+    def test_a_missing_model_is_repeated_once_then_stops_as_model_unavailable(self):
+        self.options(limits={"retries": 1})
+        failed = {"is_error": True, "api_error_status": 404, "text": "model not found", "exit": 1}
+        self.script({"executor": [failed, failed], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "MODEL_UNAVAILABLE")), err)
+        self.assertEqual(self.calls("executor"), 2)
+
+    def test_a_failed_authentication_stops_without_a_repeat(self):
+        failed = {"stream": [api_retry("authentication_failed", 401)], "is_error": True, "text": "401", "exit": 1}
+        self.script({"executor": [failed, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_AUTH")), err)
+        self.assertEqual(self.calls("executor"), 1)
+
+    def test_a_refusal_and_a_context_overflow_have_their_own_codes(self):
+        self.options(stages=[{"role": "executor", "provider": "codex"}])
+        failed = {"codex_failed": "stream error: reason: content_filter", "exit": 1}
+        self.script({"executor": [failed, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_REFUSED")), err)
+        self.assertEqual(self.calls("executor"), 1)
+        self.set_items({"W2": {"options": [{"source": "item:W2", "options": {
+            "stages": [{"role": "executor", "provider": "codex"}]}}]}})
+        self.script({"executor": [{"codex_failed": "Codex ran out of room in the model's context window.", "exit": 1}]})
+        code, _, err = self.run_items("W2")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_CONTEXT")), err)
+
+    def test_a_codex_usage_limit_without_a_reset_stops_as_quota_and_an_error_event_is_no_failure(self):
+        self.options(stages=[{"role": "executor", "provider": "codex"}])
+        failed = {"codex_failed": "You\u2019ve hit your usage limit. Upgrade to Pro or try again later.", "exit": 1}
+        self.script({"executor": [failed, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("executor"), 1)
+        notice = {"codex": True, "stream": [{"type": "error", "message": "Reconnecting... 1/5"}], **executor_ok("W2")}
+        self.set_items({"W2": {"options": [{"source": "item:W2", "options": {
+            "stages": [{"role": "executor", "provider": "codex"}]}}]}})
+        self.script({"executor": [notice], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W2")
+        self.assertEqual(code, 0, err)
+
+    def test_an_unknown_failure_is_repeated_once_with_the_original_prompt_then_fails(self):
+        self.options(limits={"retries": 1})
+        failed = {"exit": 1, "stderr": "something odd"}
+        self.script({"executor": [failed, failed], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROLE_FAILED")), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertEqual(self.prompt("executor", 2), self.prompt("executor", 1))
+        self.assertEqual(self.slept, [])  # the CLI did not repeat the request, so there is nothing to space out
+
+    def test_after_the_cli_repeated_the_request_the_conductor_waits_before_it_repeats(self):
+        failed = {"stream": [api_retry("server_error", 500), api_retry("server_error", 500)], "is_error": True,
+                  "api_error_status": 500, "text": "overloaded", "exit": 1}
+        self.script({"executor": [failed, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertEqual(sum(self.slept), 15)  # min(300, 30 * 2**0) * random (0.5)
+        meta = self.state(err)["items"]["W1"]["steps"]["executor.1"]["result"]
+        self.assertEqual(meta["api_retries"], 2)
+        self.assertEqual(meta["decisions"][0]["action"], "retry")
+
+    def test_a_writing_role_continues_over_the_changes_it_left(self):
+        partial = {"write": {"out/W1.txt": "partial\n"}, "exit": 1, "stderr": "killed"}
+        self.script({"executor": [partial, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        second = self.prompt("executor", 2)
+        self.assertTrue(second.startswith(self.prompt("executor", 1)))
+        self.assertIn("# The previous attempt failed and left changes", second)
+        self.assertIn("out/W1.txt", second)
+        self.assertNotIn("previous answer was rejected", second)
+        self.assertEqual((self.project / "out/W1.txt").read_text(), "ok\n")
+
+    def test_a_reconcile_does_not_repeat_past_the_retries_of_the_step(self):
+        self.options(limits={"retries": 1})
+        partial = {"write": {"out/W1.txt": "partial\n"}, "exit": 1}
+        self.script({"executor": [partial], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROLE_FAILED")), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertTrue((self.project / "out/W1.txt").exists())  # the changes of the failed role stay
+
+    def test_on_error_of_the_options_overrides_the_default_action(self):
+        self.options(on_error={"unknown": {"action": "stop"}})
+        self.script({"executor": [{"exit": 1}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ROLE_FAILED")), err)
+        self.assertEqual(self.calls("executor"), 1)
+
+    def test_provider_wait_max_s_is_an_option(self):
+        self.options(limits={"provider_wait_max_s": 1}, fallback_routes=[self.FALLBACK])
+        self.script({"executor": [quota_failure(30), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(len(self.beacons(err, "ROUTE_FALLBACK")), 1, err)
+
+    def test_a_role_that_starts_on_a_provider_gated_meanwhile_moves_or_stops(self):
+        # the executor exhausts claude-code and moves to codex; the reviewer, chosen on claude-code at the start, must not
+        # reopen the account that was just gated
+        layer = {"reviewer": "claude-code/sonnet-5-5/high", "fallback_routes": [self.FALLBACK],
+                 "limits": {"provider_wait_max_s": 60}}
+        self.options(**layer)
+        self.script({"executor": [quota_failure(3600), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 0), err)
+
+    def test_a_gate_in_force_routes_every_gated_role_at_the_start(self):
+        gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        self.options(reviewer="claude-code/sonnet-5-5/high", fallback_routes=[
+            self.FALLBACK, dict(self.FALLBACK, role="reviewer"), dict(self.FALLBACK, role="triager")])
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        gated = {line["role"] for line in self.beacons(err, "CAPACITY_GATED")}
+        self.assertTrue({"executor", "reviewer"} <= gated, err)
+
+    def test_a_role_waits_for_a_gate_that_ends_soon_instead_of_stopping(self):
+        self.options(reviewer="claude-code/sonnet-5-5/high")
+        self.script({"executor": [quota_failure(3), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        self.assertGreaterEqual(len(self.beacons(err, "PROVIDER_WAIT")), 2, err)  # the executor's wait and the reviewer's
+
+    def test_a_fallback_taken_by_a_role_survives_a_resume(self):
+        self.options(stages=[{"role": "executor", "provider": "codex"}], limits={"retries": 1},
+                     fallback_routes=[{"role": "executor", "provider": "claude-code", "model_class": "implementation"}])
+        auth = {"stream": [api_retry("authentication_failed", 401)], "is_error": True, "text": "401", "exit": 1}
+        self.script({"executor": [{"codex_failed": "You\u2019ve hit your usage limit. Try later.", "exit": 1}, auth,
+                                  executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_AUTH")), err)
+        run_id = self.run_dir(err).name
+        code, _, err = self.conduct("resume", "--run", run_id, "--json-lines")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        routes = json.loads((engine.runs_root(self.project) / run_id / "W1" / "routes.json").read_text())
+        self.assertEqual(routes["executor"]["provider"], "claude-code")
+        self.assertEqual(self.source()["items"]["W1"]["executed_by"]["provider"], "claude-code")
+
+    def test_a_fallback_must_pass_the_sandbox_rule_the_preflight_applies(self):
+        eng = engine.Conductor.__new__(engine.Conductor)
+        item = engine.Item(ref="W1", orch_run="-", state={}, directory=Path(), claim={},
+                           options={"instructions": {"sandbox": "require"}})
+        route = {"role": "executor", "provider": "claude-code", "model_class": "implementation", "transport": "jsonl",
+                 "argv": ["claude", "-p", "--tools", "Bash,Read"]}
+        with mock.patch.object(engine.process, "available", return_value=True), \
+                mock.patch.object(engine.sandbox, "probe", return_value={"available": True, "reason": ""}), \
+                mock.patch.object(engine.Conductor, "_knows", return_value=False):
+            problem = eng._admit(item, "executor", route)
+        self.assertTrue(problem and problem.startswith("SANDBOX_UNAVAILABLE"), problem)
+
+    def test_a_dry_run_marks_a_gated_provider_unavailable(self):
+        gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        options = self.project.parent / "gated.json"
+        options.write_text(json.dumps({"fallback_routes": [self.FALLBACK, dict(self.FALLBACK, role="triager")]}),
+                           encoding="utf-8")
+        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full", "--options", options)
+        self.assertEqual(code, 0, err)
+        preview = json.loads(out)
+        self.assertEqual(preview["routes"]["executor"]["provider"], "codex")
+        self.assertIs(preview["available"]["context-scout"], False)
+        self.assertTrue(preview["unavailable"]["context-scout"].startswith("PROVIDER_QUOTA:"), preview["unavailable"])
+
+    def test_a_provider_wait_is_the_beacon_status_shows(self):
+        lines = [{"event": "run.start", "ts": "t"}, {"event": "stage.start", "item": "W1", "stage": "executor.1",
+                                                      "role": "executor", "ts": "t"},
+                 {"event": "info", "item": "W1", "reason_code": "PROVIDER_WAIT", "message": "waiting 800 s", "ts": "t"}]
+        self.assertEqual(progress.summarize(lines)["beacon"]["reason_code"], "PROVIDER_WAIT")
+
+    def test_a_wait_is_cut_short_by_a_cancel(self):
+        eng = engine.Conductor.__new__(engine.Conductor)
+        cancel = mock.Mock()
+        cancel.is_set.side_effect = [False, False, True]
+        with self.assertRaises(engine.Stop) as raised:
+            eng._pause(30, cancel)
+        self.assertEqual(raised.exception.code, "REVIEW_CANCELLED")
+        self.assertEqual(len(self.slept), 2)  # looked at every second
 
 
 class PreviewAndStatusTests(ConductorCase):

@@ -1,0 +1,50 @@
+{
+  "selector": "grok/grok-4.7/high",
+  "session": "01a138d5-152c-7481-9b31-5160a1138fe1",
+  "route_proof": {
+    "modelId": "grok-4.7",
+    "reasoning_effort": "high",
+    "contextWindowTokens": 256000,
+    "source": "~/.grok/sessions/<cwd>/<session>/{chat_history.jsonl,updates.jsonl,signals.json}"
+  },
+  "stream": ".swissknifeman/state/reviews/P2.5-grok.jsonl",
+  "round": 1,
+  "verdict": "findings",
+  "findings": [
+    {
+      "severity": "high",
+      "file": "packages/orch/lib/orch/conductor/engine.py",
+      "summary": "Fallback admission does not apply the Claude sandbox rules that preflight uses. With instructions.sandbox set to require, a codex executor that hits a quota is switched to the catalog claude-code executor and started with Bash and no --settings when that CLI's --help does not list --settings. Preflight of the same route raises SANDBOX_UNAVAILABLE.",
+      "executor": "confirmed (own failing test, all 5)",
+      "action": "fixed: _admit applies the preflight sandbox rule (_claude_sandbox_problem); test_a_fallback_must_pass_the_sandbox_rule_the_preflight_applies"
+    },
+    {
+      "severity": "medium",
+      "file": "packages/orch/lib/orch/conductor/engine.py",
+      "summary": "An account gate written when the executor hits a quota does not stop a later role in the same piece. Routes are chosen once, before that gate exists, and _role starts item.routes[role] with no gates.blocked check. The reviewer pinned to claude-code still runs after the executor has gated claude-code and moved to codex.",
+      "executor": "confirmed (own failing test, all 5)",
+      "action": "fixed: a role checks the gates again at its start (_start_route): fallback, wait if the gate ends within provider_wait_max_s, else PROVIDER_QUOTA; two tests"
+    },
+    {
+      "severity": "medium",
+      "file": "packages/orch/lib/orch/conductor/engine.py",
+      "summary": "A fallback stored in routes.json is dropped on resume. Resume always calls _routes again from the run options. routes.json is written on fallback and never read back. A quota with an unknown reset writes no gate, so the resumed piece starts the exhausted provider again and, with the retry budget already spent, stops ROLE_FAILED.",
+      "executor": "confirmed (own failing test, all 5)",
+      "action": "fixed: a taken fallback is kept in item.state.route_overrides and used by _selected on resume; test_a_fallback_taken_by_a_role_survives_a_resume"
+    },
+    {
+      "severity": "low",
+      "file": "packages/orch/lib/orch/conductor/cli.py",
+      "summary": "Dry-run reports a gated context scout as available. _selected returns the gated scout route when it has no fallback, and the preview's availability map is only route_problem, which does not read the capacity gate. The real run skips that scout.",
+      "executor": "confirmed (own failing test, all 5)",
+      "action": "fixed: route_problem knows the gates, so dry-run available is false for a gated scout; test"
+    },
+    {
+      "severity": "low",
+      "file": "packages/orch/lib/orch/conductor/progress.py",
+      "summary": "PROVIDER_WAIT is not a status beacon. progress.BEACONS is still only STAGE_SLOW, STAGE_IDLE, CHECK_SLOW, BUDGET_OVER and LIMIT_OVER, so conduct.py status does not show a provider wait as the beacon of the running step. The new docs row lists PROVIDER_WAIT under the sentence that status shows the latest beacon of the running step.",
+      "executor": "confirmed (own failing test, all 5)",
+      "action": "fixed: PROVIDER_WAIT, ROUTE_FALLBACK, CAPACITY_GATED added to progress.BEACONS; test"
+    }
+  ]
+}

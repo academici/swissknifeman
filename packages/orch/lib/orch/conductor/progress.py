@@ -17,7 +17,8 @@ from typing import Callable, Optional
 MODES = ("text", "json-lines", "quiet")
 # ``info`` lines that report a long or costly run without stopping it; the latest one of the running step is the
 # answer to "why is it taking so long" (``conduct.py status`` prints it)
-BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER")
+BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER", "PROVIDER_WAIT", "ROUTE_FALLBACK",
+           "CAPACITY_GATED")
 PROGRESS_FILE = "progress.jsonl"
 WORDS = {"run.start": "run start", "run.resume": "run resume", "run.end": "run end", "item.start": "item start",
          "item.end": "item end", "stage.start": "start", "stage.end": "end", "stage.skip": "skip", "info": "info"}

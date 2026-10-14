@@ -102,6 +102,28 @@ class OptionsTests(unittest.TestCase):
             self.assertEqual(caught.exception.code, "OPTIONS_INVALID")
             self.assertIn(words, caught.exception.message)
 
+    def test_provider_failure_options_merge_by_class_and_the_routes_are_replaced_as_a_list(self):
+        merged, _ = options.effective({}, self.policy(), [])
+        self.assertEqual((merged["on_error"], merged["fallback_routes"], merged["limits"]["provider_wait_max_s"]),
+                         ({}, [], 900))
+        route = {"role": "executor", "provider": "codex", "model_class": "implementation"}
+        layers = [{"source": "phase:P2", "options": {"on_error": {"quota": {"action": "stop"}, "unknown": {"action": "retry"}},
+                                                     "fallback_routes": [route, dict(route, role="reviewer")]}},
+                  {"source": "item:P2.5", "options": {"on_error": {"quota": {"action": "fallback_route", "max": 1}},
+                                                      "fallback_routes": [dict(route, effort="high")],
+                                                      "limits": {"provider_wait_max_s": 60}}}]
+        merged, sources = options.effective({}, self.policy(), layers)
+        self.assertEqual(merged["on_error"], {"quota": {"action": "fallback_route", "max": 1},
+                                              "unknown": {"action": "retry"}})
+        self.assertEqual(merged["fallback_routes"], [dict(route, effort="high")])
+        self.assertEqual((merged["limits"]["provider_wait_max_s"], sources["on_error.unknown"], sources["fallback_routes"]),
+                         (60, "phase:P2", "item:P2.5"))
+        merged, _ = options.effective({}, self.policy(), layers + [{"source": "item:x", "options": {"fallback_routes": []}}])
+        self.assertEqual(merged["fallback_routes"], [])  # an empty list switches the routes of the layers below off
+        with self.assertRaises(options.OptionsError) as caught:
+            options.effective({}, self.policy(), [{"source": "item:P2.5", "options": {"limits": {"provider_wait_max_s": -1}}}])
+        self.assertIn("provider_wait_max_s", caught.exception.message)
+
     def test_selectors(self):
         self.assertEqual(options.parse_selector("grok/grok-4.7/500k/high"),
                          {"provider": "grok", "model": "grok-4.7", "context": "500k", "effort": "high"})

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.2",
   "title": "Risk score conductor: risk.score (чистая), [orch.conductor.risk] веса и шаблоны, review.dynamic и dynamic_threshold, REVIEW_ADDED и risk.json; закрытие фазы P7",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "orch/lib/orch/conductor/risk.py; сбор фактов после executor-раунда; config [orch.conductor.risk]; run-options review.dynamic, review.dynamic_threshold; при пороге — маршруты reviewer/triager и штатный цикл review; маяк REVIEW_ADDED, plan note, risk.json; тесты unit и e2e. Пункт закрывает фазу: phase.validation P7.",
   "why": "Аудит П6.2, N10: review окупается. Риски: (1) лишний review удорожает run — веса и порог в конфиге, risk.json для измерения; (2) маршруты reviewer в solo не разрешены — разрешать с проверкой доступности и gate.",
   "scope": {
@@ -127,6 +127,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:52:08Z"
+  "result": {
+    "started_at": "2026-10-14T14:33:44Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "d28dd78b-d672-4a05-a090-92281ed71ce8"
+    }
+  },
+  "updated_at": "2026-10-14T14:33:44Z"
 }

@@ -160,6 +160,29 @@ cannot be read for a guard). They are bridge codes,
 not core `ERROR_CODES`. A refusal of a `plan.py` call (`CODE: message` of the core) lands in the receipt as
 `refused` with its `error`.
 
+## Agent mode
+
+The procedure of an agent that picks its own pieces (`packages/orch/docs/agent-mode.md`) starts with
+
+```text
+python3 <planner>/scripts/plan.py next <plan> --parallel N --json
+```
+
+The output is pinned by the golden file `packages/planner/tests/engine/fixtures/next-parallel-2.json`
+(`tests/engine/test_next_golden.py` of the planner; `UPDATE_GOLDEN=1` regenerates it, then fix this section):
+
+| Field | Meaning |
+| --- | --- |
+| `lanes[]` | work that may start now: `lane` (`L1`…), `kind` (`run-items` or `design-phase`), `phase`, `batch`, `items`, `route` (`class`, `effort`: the minimum of the work), `command`, `launch` (`claude`, `codex` command lines) |
+| `running[]` | items in progress: they hold a slot and their paths |
+| `conflicts[]` | items left out because their `task_files` overlap a lane or a running item (`item`, `with`, `reason`, `paths`) |
+| `waiting[]` | phases and items that wait: `phase`, `item`, `reason` (a dependency, a gate, a running batch) |
+| `deferred[]` | ready work that did not fit into `N` slots |
+| `next` | the single next action of `plan.py next` without `--parallel` |
+
+Take a lane of `kind: run-items` and conduct it with `conduct.py run --plan <plan> --items <lane items>`; a `design-phase`
+lane is planning work, not a conductor run.
+
 ## Work source
 
 `extension.json` (extension/v1, kind `command`, point `orch:work-source`, protocol 1) registers the bridge as the

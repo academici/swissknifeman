@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.5",
   "title": "Агентный режим запуска: docs/agent-mode.md (plan.py next --parallel → conduct.py run --items → status/observe → resume/settle) и golden структуры next --json",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Документ процедуры по knowledge/p6-work#agentmode со ссылкой из docs/conductor.md; golden-тест вывода plan.py next --parallel 2 --json на фикстуре плана в тестах planner.",
   "why": "Аудит П5.6, мысль 4. Риск: процедура устаревает молча — golden на поля вывода.",
   "scope": {
@@ -71,6 +71,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:51:22Z"
+  "result": {
+    "started_at": "2026-10-14T13:06:35Z",
+    "finished_at": "2026-10-14T13:37:54Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "b455794f-a801-4bf3-a97a-6a6172481e5a"
+    },
+    "notes": "docs/agent-mode.md (source-neutral), link in conductor.md and index, golden next --parallel 2 --json + test_next_golden.py in planner, fields table in bridge README. V1 green.",
+    "deviations": [
+      "bridges/planner-orch/README.md (Agent mode section) added outside scope: module boundaries keep plan.py out of orch docs"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T13:37:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T13:37:54Z"
 }

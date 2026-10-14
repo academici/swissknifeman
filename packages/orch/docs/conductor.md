@@ -20,6 +20,8 @@ conduct.py observe [--run RUN] [--follow]
 conduct.py gates [--json] [--clear [PROVIDER]]
 ```
 
+For an agent that picks its own pieces (ask the source for ready lanes → `run --items` → `status`/`observe` → `resume`/`settle`) see [agent-mode.md](agent-mode.md).
+
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
 130 interrupted (`resume` continues).
 

@@ -1,0 +1,14 @@
+{
+  "status": "done",
+  "summary": "changed the schema",
+  "changed_paths": [
+    "packages/orch/schemas/x.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [],
+  "review_recommendation": {
+    "recommended": false,
+    "reason_codes": []
+  }
+}

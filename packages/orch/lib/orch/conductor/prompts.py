@@ -38,6 +38,11 @@ decision | approval | credential", "text": "…", "options": [{"id": "a", "label
 true, "risk": "low | medium | high"}]`. A blocking question needs `status` `blocked` (and an `escalation` issue); a
 question with `"blocking": false` names what you `assumed` and you go on with it. `default` is only your proposal.
 
+Optionally give your own advice on a review of the piece in `review_recommendation`: `{"recommended": true, "reason_codes":
+["scope_expanded | public_api_changed | schema_changed | shared_module_changed | security_touched | low_confidence |
+other"], "focus": ["what a reviewer should look at first"], "suggested_model_class": "economy | implementation |
+frontier"}`. It is advice only: the conductor decides about a review itself; omit it when you have no basis for it.
+
 `status` is `blocked` whenever the work needs something only the owner can give (a decision, a path outside
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
 thing as an `escalation` issue. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`

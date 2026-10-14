@@ -142,6 +142,16 @@ class ConductorCase(unittest.TestCase):
 
 
 class HappyPathTests(ConductorCase):
+    def test_the_executor_recommendation_stays_in_the_stage_report_and_out_of_the_register_body(self):
+        advice = {"recommended": True, "reason_codes": ["schema_changed"], "focus": ["readers of stage-report"]}
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "result": report("W1", review_recommendation=advice)}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        saved = json.loads((self.project / "plans/T/artifacts/W1/stage-report.json").read_text())
+        self.assertEqual(saved["review_recommendation"], advice)
+        self.assertNotIn("review_recommendation", self.source()["items"]["W1"]["report"])
+
     def test_green_at_once_registers_commits_and_reports(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         code, out, err = self.run_items("W1")

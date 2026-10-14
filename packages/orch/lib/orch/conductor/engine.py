@@ -2251,7 +2251,7 @@ class Conductor:
             report = dict(report, open_issues=list(report.get("open_issues", [])) + assumed)
         status = report["status"]
         write_json(item.artifacts / "stage-report.json", report)
-        body = {key: value for key, value in report.items() if key not in ("status", "questions")}
+        body = {key: value for key, value in report.items() if key not in ("status", "questions", "review_recommendation")}
         if status != "blocked":
             body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]
         else:  # a blocked registration takes no deviation issue (the register verb pairs it with done_with_deviations)

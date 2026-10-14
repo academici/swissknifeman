@@ -38,6 +38,17 @@ credential, a clarification the input does not contain). Put the question in `qu
 section `# Answers` of a later round: do not ask those again). A question that does not block names what you `assumed` and
 you go on with it. `default` is your proposal, not an assumption.
 
+## Review recommendation
+
+Add `review_recommendation` (`recommended`, `reason_codes`, `focus`, `suggested_model_class`) to the stage-report when
+you have a reason to think the piece deserves a second reader; it is your advice, the conductor decides. Recommend
+(`recommended: true`) when you: widened the scope or touched paths you did not plan (`scope_expanded`); changed a
+command line, an exported function or a file format (`public_api_changed`); changed a schema (`schema_changed`);
+changed a module other modules import (`shared_module_changed`); touched authentication, permissions, secrets or other
+security boundaries (`security_touched`); or are not sure the result is right (`low_confidence`); `other` with the
+reason in `focus`. Name in `focus` what a reviewer should read first. Do not recommend a review for a routine,
+well-tested change inside the scope; omit the field when you have no basis, never invent one.
+
 ## Deviations you may mark `auto_fixable`
 
 Mark a `deviation` issue `auto_fixable: true` only when all of this holds: the fix changes only paths inside

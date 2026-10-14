@@ -58,6 +58,9 @@
       "items": {
         "$ref": "#/$defs/question"
       }
+    },
+    "review_recommendation": {
+      "$ref": "#/$defs/review_recommendation"
     }
   },
   "required": [
@@ -370,6 +373,55 @@
           ]
         }
       ]
+    },
+    "review_recommendation": {
+      "description": "The executor's own advice whether the piece needs a review, with why (P7.1). The conductor keeps it in the report and reads it as the executor_recommended feature of the risk score; it never turns it into a review by itself.",
+      "type": "object",
+      "properties": {
+        "recommended": {
+          "description": "True when a review of the piece is advised.",
+          "type": "boolean"
+        },
+        "reason_codes": {
+          "description": "Why a review is advised (or the signals met when it is not).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "scope_expanded",
+              "public_api_changed",
+              "schema_changed",
+              "shared_module_changed",
+              "security_touched",
+              "low_confidence",
+              "other"
+            ]
+          }
+        },
+        "focus": {
+          "description": "What the reviewer should look at first.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "suggested_model_class": {
+          "description": "Route class the executor suggests for the review.",
+          "type": "string",
+          "enum": [
+            "economy",
+            "implementation",
+            "frontier"
+          ]
+        }
+      },
+      "required": [
+        "recommended",
+        "reason_codes"
+      ],
+      "additionalProperties": false
     }
   }
 }

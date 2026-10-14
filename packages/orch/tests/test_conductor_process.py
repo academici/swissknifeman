@@ -1,4 +1,6 @@
 """Role processes of the conductor: a role that keeps writing is never stopped for its length; a silent one is."""
+import json
+import os
 import sys
 import tempfile
 import time
@@ -52,6 +54,142 @@ class RoleProcessTests(unittest.TestCase):
     def test_the_wall_clock_ceiling_still_stops_a_long_role_when_asked_for(self):
         run = self.run_role(BUSY, timeout_s=1, idle_timeout_s=0)
         self.assertEqual((run.error, run.detail), ("TIMEOUT", "no result within 1 s"))
+
+
+FAKE = ROOT / "tests" / "fixtures" / "conductor" / "fake_role.py"
+
+
+class FailureSignalTests(unittest.TestCase):
+    """Signals of a failed role: what the stream gives, what is left out, and the error/v1 the rules of aicore make of them."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+
+    def run_fake(self, answer, provider="claude-code"):
+        script = self.dir / "script.json"
+        script.write_text(json.dumps({"executor": [answer]}), encoding="utf-8")
+        env = {**os.environ, "FAKE_ROLE_SCRIPT": str(script), "FAKE_ROLE_STATE": str(self.dir / "state")}
+        return process.run_role([sys.executable, str(FAKE), "executor"], "prompt", transport="jsonl", cwd=self.dir,
+                                timeout_s=0, raw_path=self.dir / "out.jsonl", env=env, provider=provider)
+
+    def test_claude_success_subtype_with_is_error_is_a_failure_with_its_status(self):
+        # claude-agent-sdk-python#599: result.subtype "success", is_error true, api_error_status 404
+        run = self.run_fake({"is_error": True, "api_error_status": 404, "exit": 1, "text": "model: nope-9 not found"})
+        self.assertEqual(run.error, "ROLE_FAILED")
+        self.assertEqual((run.error_doc["class"], run.error_doc["code"], run.error_doc["evidence"]),
+                         ("model_unavailable", "MODEL_UNAVAILABLE", "structured"))
+        self.assertNotIn("nope-9", json.dumps(run.error_doc))
+
+    def test_claude_is_error_with_exit_zero_is_still_a_failure(self):
+        run = self.run_fake({"is_error": True, "api_error_status": 401, "text": "invalid key"})
+        self.assertEqual((run.error, run.error_doc["code"]), ("ROLE_FAILED", "PROVIDER_AUTH"))
+
+    def test_claude_api_retry_gives_category_status_and_count(self):
+        retry = {"type": "system", "subtype": "api_retry", "attempt": 1, "max_retries": 2, "retry_delay_ms": 10,
+                 "error_status": None, "error": "authentication_failed"}
+        run = self.run_fake({"stream": [retry, {**retry, "attempt": 2}], "is_error": True, "exit": 1, "text": "x"})
+        self.assertEqual(run.api_retries, 2)
+        self.assertEqual(run.error_doc["code"], "PROVIDER_AUTH")
+
+    def test_claude_api_retry_status_is_used_when_the_result_has_none(self):
+        retry = {"type": "system", "subtype": "api_retry", "attempt": 1, "error_status": 529, "error": "unknown"}
+        run = self.run_fake({"stream": [retry], "is_error": True, "exit": 1, "text": "x"})
+        self.assertEqual(run.error_doc["code"], "PROVIDER_OVERLOADED")
+
+    def test_claude_rejected_limit_event_is_quota_with_the_reset_time(self):
+        event = {"type": "rate_limit_event", "rate_limit_info": {"status": "rejected", "resetsAt": int(time.time()) + 7200,
+                                                                 "rateLimitType": "five_hour"}}
+        run = self.run_fake({"stream": [event], "is_error": True, "exit": 1, "text": "limit"})
+        self.assertEqual((run.error_doc["class"], run.error_doc["code"]), ("quota", "PROVIDER_QUOTA"))
+        self.assertTrue(7180 <= run.error_doc["retry_after_s"] <= 7200)
+
+    def test_claude_allowed_limit_event_is_not_a_failure_cause(self):
+        event = {"type": "rate_limit_event", "rate_limit_info": {"status": "allowed_warning", "resetsAt": int(time.time()) + 60}}
+        run = self.run_fake({"stream": [event], "is_error": True, "exit": 1, "text": "tool crashed"})
+        self.assertEqual(run.error, "ROLE_FAILED")
+        self.assertIsNone(run.error_doc)
+
+    def test_unclassified_failure_has_no_error_doc_and_keeps_the_old_detail(self):
+        run = self.run_fake({"exit": 1, "stderr": "boom\n", "text": "x"})
+        self.assertEqual((run.error, run.error_doc), ("ROLE_FAILED", None))
+        self.assertEqual(run.detail, "exit 1: boom")
+
+    def test_stderr_text_classifies_a_codex_failure_without_a_stream_error(self):
+        run = self.run_fake({"exit": 1, "stderr": "Quota exceeded. Check your plan and billing details.\n",
+                             "text": "x"}, provider="codex")
+        self.assertEqual(run.error_doc["code"], "PROVIDER_QUOTA")
+        self.assertEqual(run.error_doc["evidence"], "text")
+
+    def test_codex_turn_failed_is_a_failure_with_its_text(self):
+        run = self.run_fake({"codex_failed": "You\u2019ve hit your usage limit. Try again later.", "exit": 1},
+                            provider="codex")
+        self.assertEqual((run.error, run.error_doc["class"], run.error_doc["code"]), ("ROLE_FAILED", "quota", "PROVIDER_QUOTA"))
+        self.assertEqual(run.session, "executor-session-1")
+
+    def test_codex_error_event_before_a_completed_turn_is_not_a_failure(self):
+        notice = {"type": "error", "message": "Quota exceeded. Reconnecting 1/5"}
+        run = self.run_fake({"codex": True, "stream": [notice], "text": "all done"}, provider="codex")
+        self.assertIsNone(run.error)
+        self.assertEqual((run.text, run.error_doc), ("all done", None))
+
+    def test_tool_and_answer_text_never_becomes_a_signal(self):
+        parsed = process.parse_stream("jsonl", "\n".join(json.dumps(doc) for doc in (
+            {"type": "assistant", "message": {"content": [{"type": "text", "text": "weekly limit"}]}},
+            {"type": "item.completed", "item": {"type": "agent_message", "text": "Quota exceeded"}},
+            {"type": "error", "message": "Quota exceeded"},
+            {"type": "turn.completed", "usage": {}})))
+        self.assertEqual(parsed["signals"], {"terminal": True})
+        self.assertFalse(parsed["is_error"])
+
+    def test_signals_of_each_stream_event(self):
+        parsed = process.parse_stream("jsonl", "\n".join(json.dumps(doc) for doc in (
+            {"type": "rate_limit_event", "rate_limit_info": {"status": "rejected", "resetsAt": 123, "rateLimitType": "seven_day"}},
+            {"type": "system", "subtype": "api_retry", "error_status": 429, "error": "rate_limit"},
+            {"type": "result", "subtype": "success", "is_error": True, "result": "limit", "api_error_status": 429})))
+        self.assertEqual(parsed["signals"], {
+            "limit_status": "rejected", "limit_resets_at": 123, "limit_window": "seven_day", "retry_category": "rate_limit",
+            "terminal": True, "fatal_text": "limit", "http_status": 429, "api_retries": 1, "is_error": True})
+
+    def test_the_last_terminal_event_decides_not_an_earlier_failure(self):
+        for stream, failed in (
+                ((json.dumps({"type": "turn.failed", "error": {"message": "You\u2019ve hit your usage limit."}}),
+                  json.dumps({"type": "turn.completed", "usage": {}})), False),
+                ((json.dumps({"type": "turn.completed", "usage": {}}),
+                  json.dumps({"type": "turn.failed", "error": {"message": "x"}})), True),
+                ((json.dumps({"type": "result", "is_error": True, "result": "weekly limit", "api_error_status": 401}),
+                  json.dumps({"type": "result", "is_error": False, "result": "all good"})), False)):
+            parsed = process.parse_stream("jsonl", "\n".join(stream))
+            with self.subTest(stream=stream):
+                self.assertEqual(parsed["is_error"], failed)
+                self.assertEqual("fatal_text" in parsed["signals"] or "http_status" in parsed["signals"], failed)
+
+    def test_a_later_success_after_an_error_result_is_not_classified_as_the_old_failure(self):
+        # exit 1 after a clean final result: the stale text of the earlier error result must not become quota
+        code = ("import sys,json\nsys.stdin.read()\n"
+                "print(json.dumps({'type':'result','is_error':True,'result':'weekly limit'}))\n"
+                "print(json.dumps({'type':'result','is_error':False,'result':'all good'}))\n"
+                "sys.stderr.write('boom')\nsys.exit(1)")
+        run = process.run_role([sys.executable, "-c", code], "p", transport="jsonl", cwd=self.dir, timeout_s=0,
+                               raw_path=self.dir / "o.jsonl", provider="claude-code")
+        self.assertEqual((run.error, run.text, run.error_doc), ("ROLE_FAILED", "all good", None))
+
+    def test_a_non_finite_reset_time_is_ignored(self):
+        parsed = process.parse_stream("jsonl", '{"type":"rate_limit_event","rate_limit_info":{"status":"rejected","resetsAt":1e309}}')
+        self.assertEqual(parsed["signals"], {"limit_status": "rejected"})
+
+    def test_a_run_without_a_provider_is_not_classified(self):
+        run = self.run_fake({"is_error": True, "api_error_status": 401, "exit": 1, "text": "x"}, provider=None)
+        self.assertEqual((run.error, run.error_doc), ("ROLE_FAILED", None))
+
+    def test_a_cancelled_or_timed_out_role_is_not_a_provider_failure(self):
+        run = process.run_role([sys.executable, "-c", SILENT], "p", transport="jsonl", cwd=self.dir, timeout_s=0,
+                               idle_timeout_s=1, raw_path=self.dir / "o.jsonl", provider="claude-code")
+        self.assertEqual((run.error, run.error_doc), ("TIMEOUT", None))
+
+    def test_text_transport_has_no_signals(self):
+        self.assertEqual(process.parse_stream("text", "answer")["signals"], {})
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.2",
   "title": "orch: адаптеры потоков — сигналы отказа Claude (result.is_error, api_error_status, api_retry, rate_limit_event) и Codex (turn.failed), RoleRun.error_doc; фейковый провайдер",
-  "status": "todo",
+  "status": "done",
   "summary": "conductor/process.py: parse_stream собирает сигналы таблицы knowledge/provider-errors#signals (Claude: result.is_error при любом subtype, api_error_status, последнее system/api_retry, rate_limit_event; Codex: turn.failed, error-события игнорируются; exit 143); run_role при неуспехе вызывает aicore classify_signals и заполняет RoleRun.error_doc (error/v1) и api_retries; fake_role.py — ключи stream, stderr, is_error, api_error_status, codex_failed. Решение conductor не меняется.",
   "why": "Аудит П1.1, N2, D7. Риски: (1) subtype success с is_error — успех определяется только по is_error и terminal; (2) error-события Codex не отказ; (3) текст инструментов не попадает в сигналы.",
   "scope": {
@@ -56,6 +56,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P2.2/review-verdict.json",
+      "role": "output"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "orch импортирует aicore.provider.errors; существующие поля RoleRun не меняются"
@@ -87,6 +93,23 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:43:52Z"
+  "result": {
+    "started_at": "2026-10-14T02:32:44Z",
+    "finished_at": "2026-10-14T03:19:46Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "8f5319ab-6291-4ee5-aed3-9ecc37393022"
+    },
+    "notes": "parse_stream returns signals (Claude is_error any subtype, api_error_status, api_retry, rate_limit_event; Codex turn.failed, error events ignored; last terminal event decides); run_role(provider=) fills RoleRun.error_doc and api_retries; fake_role learns stream/stderr/is_error/api_error_status/codex/codex_failed. Grok review round 1: 3 findings fixed. Engine does not pass provider= yet (P2.5).",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T03:19:46Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T03:19:46Z"
 }

@@ -4,12 +4,18 @@ The prompt goes on stdin; stdout is written as it comes into the raw stream file
 stderr beside it, both under the ignored runtime folder of the run. The final text, the session, the model and the
 token usage are read back from the stream by its transport: ``text`` (stdout is the answer), ``jsonl`` (the
 stream-json of claude-code and grok: ``system/init`` and ``result``; the event stream of codex: ``thread.started``,
-``item.completed`` agent messages and ``turn.completed``). ``acp`` is not driven by the conductor.
+``item.completed`` agent messages and ``turn.completed`` / ``turn.failed``). ``acp`` is not driven by the conductor.
+
+A failed role is classified here from normalized signals (see ``aicore.provider.errors``): the stream gives the
+structured ones (``is_error``, ``http_status``, ``retry_category``, ``api_retries``, the ``limit_*`` of a rate-limit
+event, ``terminal``) and the text of the failure (``fatal_text``); the process gives ``exit_code`` and ``stderr_tail``.
+Text of tools and of model answers never enters a signal. Deciding what to do about the failure is the engine's job.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -18,6 +24,10 @@ import subprocess
 import threading
 import time
 from typing import Callable, Mapping, Optional
+
+from aicore.provider import errors as provider_errors
+
+STDERR_TAIL_CHARS = 4000
 
 
 @dataclass
@@ -34,6 +44,8 @@ class RoleRun:
     error: Optional[str] = None
     detail: Optional[str] = None
     lingered: bool = False  # the final result was out but the process did not exit: it was reaped after the grace
+    error_doc: Optional[dict] = None  # error/v1 of a failed role the rules of aicore recognize (``provider`` known)
+    api_retries: int = 0  # how many times the provider CLI itself repeated the request (claude ``api_retry`` events)
 
 
 def available(argv: list) -> bool:
@@ -57,11 +69,18 @@ def _usage(found: object) -> dict:
 
 
 def parse_stream(transport: str, data: str) -> dict:
-    """``{text, session, model, usage, is_error}`` of a captured stdout."""
+    """``{text, session, model, usage, is_error, signals}`` of a captured stdout.
+
+    ``is_error`` rests on ``result.is_error`` whatever its ``subtype`` (``success`` can come with ``is_error: true``)
+    or on a codex ``turn.failed``; codex ``error`` events are notifications, not a failure. ``signals`` holds only the
+    normalized failure signals the stream gives (see ``aicore.provider.errors.SIGNAL_TYPES``).
+    """
     if transport == "text":
         return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
-                "is_error": False}
-    found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False}
+                "is_error": False, "signals": {}}
+    found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False,
+             "signals": {}}
+    signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
     messages = []
     for raw in data.splitlines():
         try:
@@ -79,18 +98,56 @@ def parse_stream(transport: str, data: str) -> dict:
             found["session"] = doc.get("session_id") or found["session"]
             found["usage"] = _usage(doc.get("usage"))
             found["is_error"] = bool(doc.get("is_error"))
+            last = {"terminal": True}
+            if found["is_error"]:
+                if isinstance(doc.get("result"), str):
+                    last["fatal_text"] = doc["result"]
+                if _is_int(doc.get("api_error_status")):
+                    last["http_status"] = doc["api_error_status"]
+        elif kind == "system" and doc.get("subtype") == "api_retry":  # claude: the CLI repeated the request itself
+            retries += 1
+            if isinstance(doc.get("error"), str):
+                signals["retry_category"] = doc["error"]
+            retry_status = doc["error_status"] if _is_int(doc.get("error_status")) else None
+        elif kind == "rate_limit_event" and isinstance(doc.get("rate_limit_info"), dict):  # claude: quota telemetry
+            info = doc["rate_limit_info"]
+            for name, key in (("limit_status", "status"), ("limit_window", "rateLimitType")):
+                if isinstance(info.get(key), str):
+                    signals[name] = info[key]
+            reset = info.get("resetsAt")
+            if isinstance(reset, (int, float)) and not isinstance(reset, bool) and math.isfinite(reset):
+                signals["limit_resets_at"] = int(reset)
+        elif kind == "turn.failed":  # codex: the only fatal outcome; there is no structured code, only the text
+            found["is_error"] = True
+            last = {"terminal": True}
+            error = doc.get("error")
+            if isinstance(error, dict) and isinstance(error.get("message"), str):
+                last["fatal_text"] = error["message"]
         elif kind == "thread.started":  # codex exec --json
             found["session"] = doc.get("thread_id") or found["session"]
         elif kind == "item.completed" and isinstance(doc.get("item"), dict):
             item = doc["item"]
             if item.get("type") in ("agent_message", "assistant_message") and isinstance(item.get("text"), str):
                 messages.append(item["text"])
-        elif kind == "turn.completed":
+        elif kind == "turn.completed":  # a turn that completes after a failed one is the outcome
+            found["is_error"] = False
+            last = {"terminal": True}
             usage = _usage(doc.get("usage"))
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
     if not found["text"] and messages:
         found["text"] = messages[-1]
+    signals.update(last)
+    if retries:
+        signals["api_retries"] = retries
+        if "http_status" not in signals and retry_status is not None:
+            signals["http_status"] = retry_status
+    if found["is_error"]:
+        signals["is_error"] = True
     return found
+
+
+def _is_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def partial_usage(data: str) -> dict:
@@ -268,8 +325,12 @@ def _feed(process: subprocess.Popen, data: bytes) -> None:
 def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
              env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
              cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
-             result_grace_s: float = RESULT_GRACE_S) -> RoleRun:
-    """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child."""
+             result_grace_s: float = RESULT_GRACE_S, provider: Optional[str] = None) -> RoleRun:
+    """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child.
+
+    ``provider`` (an aicore provider id such as ``claude-code``) lets a failed run be classified into ``error_doc``;
+    without it only ``error`` and ``detail`` are set.
+    """
     if transport == "acp":
         return RoleRun(exit=None, error="TRANSPORT_UNSUPPORTED", detail="the conductor does not drive acp roles")
     if not available(argv):
@@ -302,12 +363,18 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
     duration = time.monotonic() - started
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
-                  usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered)
+                  usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered,
+                  api_retries=parsed["signals"].get("api_retries", 0))
     if lingered:
         run.exit = 0
     if (process.returncode != 0 and not lingered) or parsed["is_error"]:
-        tail = err_path.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-3:]
+        stderr = err_path.read_text(encoding="utf-8", errors="replace").strip()
+        tail = stderr.splitlines()[-3:]
         run.error, run.detail = "ROLE_FAILED", f"exit {process.returncode}" + (f": {' | '.join(tail)}" if tail else "")
+        if provider:
+            signals = {**parsed["signals"], "exit_code": process.returncode, "stderr_tail": stderr[-STDERR_TAIL_CHARS:]}
+            found = provider_errors.classify_signals(provider, signals, now=time.time())
+            run.error_doc = found.to_dict() if found else None
     elif not run.text:
         run.error, run.detail = "ROLE_OUTPUT_EMPTY", "the role returned no final text"
     return run

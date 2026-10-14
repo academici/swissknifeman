@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.6",
   "title": "Карантин импорта: проверки лицензии, provenance, инъекций, бюджета, tools → compat-report.json; quarantined не попадает в runtime; закрытие фазы P8",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "По knowledge/p8-skills#quarantine: skiller/configs/licenses.json, детерминированные шаблоны опасных инструкций, compat-report.json рядом с upstream.json, quarantined в skills.json и исключение в select; тест с «прочитай ~/.ssh». Пункт закрывает фазу: phase.validation P8 и бюджет первого хода.",
   "why": "Аудит П7.6, 2.6.10; риск supply chain: provenance не доказывает безопасность.",
   "scope": {
@@ -115,12 +115,47 @@
   },
   "result": {
     "started_at": "2026-10-14T16:33:14Z",
+    "finished_at": "2026-10-14T17:22:41Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet-5.5",
       "effort": "high",
       "session": "301cfed7-08af-4ae7-960e-8ac5e83ad291"
-    }
+    },
+    "notes": "compat checks, 56 reports, quarantine excluded from select/resolve/vendor/publication, one reviewed correction after grok review.",
+    "deviations": [
+      "phase P8 validation narrowed at owner request (V11 dropped, golden.py out of V12); aicore content hash and descriptor schema extended"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T17:22:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T17:22:41Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T17:22:41Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T17:22:41Z"
+      },
+      {
+        "id": "V14",
+        "exit": 0,
+        "at": "2026-10-14T17:22:41Z"
+      }
+    ],
+    "commits": [
+      "710104c865ae99882db512d312d9565fb5f0e004"
+    ]
   },
-  "updated_at": "2026-10-14T16:33:14Z"
+  "updated_at": "2026-10-14T17:22:41Z"
 }

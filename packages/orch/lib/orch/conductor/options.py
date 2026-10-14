@@ -23,7 +23,8 @@ from orch.conductor import contract
 # progress, up to ``ceiling_factor`` times it. The *_timeout_s ceilings stay available, off by default.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
                   "stage_timeout_s": 0, "stage_idle_timeout_s": 0, "check_timeout_s": 0, "ceiling_factor": 2,
-                  "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900}
+                  "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900,
+                  "run_warn_s": 7200, "run_timeout_s": 0}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected"}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
@@ -45,7 +46,8 @@ DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
                 "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
                 "check_timeout_s": (0, None), "ceiling_factor": (1, 5), "repairs": (0, 3), "stage_warn_s": (0, None),
-                "stage_idle_warn_s": (0, None), "check_warn_s": (0, None), "provider_wait_max_s": (0, None)}
+                "stage_idle_warn_s": (0, None), "check_warn_s": (0, None), "provider_wait_max_s": (0, None),
+                "run_warn_s": (0, None), "run_timeout_s": (0, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"

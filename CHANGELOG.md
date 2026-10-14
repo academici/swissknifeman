@@ -8,6 +8,8 @@
 
 ### Added
 
+- **orch:** run time limits of the conductor. `limits.run_warn_s` (default 7200, 0 off) prints a `RUN_SLOW` beacon and leaves a plan note every threshold of the *active* run time (`state.active_s`, summed over process segments, so a resume a day later does not count the day); `limits.run_timeout_s` (default 0 = off) cancels the current role and stops with `RUN_TIMEOUT`. The observer report gets a "Long run" section when `RUN_SLOW` fired. Optional fields of `run-options/v1` (and its bridge mirror).
+
 - **orch:** digests of the configuration and of the options in the conductor run. `run.json` gets `config_digest` (effective `[orch]` and `[aicore.providers]`) and `config_layers` (`[{layer, file, present}]`); `<item>/options.json` gets `digest`; the data of `orch.run.started` gets `config_digest` and `project_resolution`, and that of the conductor's `orch.run.stage.finished` gets `options_digest` (optional fields of event-data/v1, with valid and invalid fixtures).
 
 - **aicore:** `aicore config explain --all [--root DIR] [--config FILE] [--json]` explains every module that has a config schema in one call: each set key with its value, layer, file and line (text grouped by `# <module>`; `--json` is an array of `config-explain/v1`, one per module). `module` and `--all` exclude each other (exit 2); secrets stay references. `swissknifeman config explain --all` is the same through the proxy.

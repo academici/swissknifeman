@@ -108,6 +108,10 @@ def build(directory: Path, project: Path) -> dict:
     report = {
         "schema": "orch-conductor-observer/v1", "run": run_id, "started": started,
         "beacons": dict(sorted(codes.items())),
+        "long_run": ({"active_s": state.get("active_s", 0), "share": {
+            "retries": sum(item.get("retries_used", 0) for item in (state.get("items") or {}).values()),
+            "review_s": round(seconds.get("reviewer", 0), 1), "checks_s": round(seconds.get("deterministic", 0), 1),
+            "repeats": len(repeats)}} if codes.get("RUN_SLOW") else None),
         "wall_s": round(wall, 1),
         "checks_share": round(seconds.get("deterministic", 0) / wall, 2) if wall else 0.0,
         "ended": lines[-1]["ts"] if lines else None, "status": state.get("status"), "stop": state.get("stop"),

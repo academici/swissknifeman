@@ -818,6 +818,54 @@ class BeaconTests(ConductorCase):
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
 
+class RunClockTests(ConductorCase):
+    """The active run time: RUN_SLOW by thresholds, never a stop; RUN_TIMEOUT only when asked."""
+
+    def fake_clock(self, step: float) -> None:
+        now = [1000.0]
+
+        def tick() -> float:
+            now[0] += step
+            return now[0]
+
+        patcher = mock.patch.object(engine, "_mono", tick)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def limits(self, **limits) -> None:
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": limits}}]}})
+
+    def test_run_slow_is_a_beacon_and_a_note_and_the_run_goes_on(self):
+        self.fake_clock(100)
+        self.limits(run_warn_s=250)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        slow = [line for line in self.lines(err) if line.get("reason_code") == "RUN_SLOW"]
+        self.assertTrue(slow, err)
+        self.assertIn("run active", slow[0]["message"])
+        state = self.state(err)
+        self.assertGreater(state["active_s"], 0)
+        self.assertGreaterEqual(state["run_warned"], 1)
+        self.assertTrue(any("run active" in i["text"] for i in self.source()["items"]["W1"]["report"]["open_issues"]))
+
+    def test_no_run_slow_below_the_threshold_or_when_off(self):
+        self.fake_clock(100)
+        self.limits(run_warn_s=0)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "RUN_SLOW"])
+
+    def test_run_timeout_stops_the_run_and_records_the_active_time(self):
+        self.fake_clock(100)
+        self.limits(run_timeout_s=300)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "RUN_TIMEOUT")), err)
+        self.assertGreaterEqual(self.state(err)["active_s"], 300)
+
+
 class RepositoryRulesTests(ConductorCase):
     def test_an_isolated_role_gets_the_module_rules_and_nothing_else_of_claude_md(self):
         (self.project / "CLAUDE.md").write_text("# Rules\n\n## root.module-folders\nEvery module is a folder. <!-- swissknifeman:marker --> <!-- semantic:x -->\n\n"

@@ -63,6 +63,11 @@ TRANSIENT_CLASSES = ("provider_internal", "transport", "rate_limit")  # the prov
 JITTER_CAP_S, JITTER_BASE_S = 300, 30
 
 
+def _mono() -> float:
+    """The clock of the active run time (one place, so a test can replace it)."""
+    return time.monotonic()
+
+
 class Stop(Exception):
     """An honest stop of the run: a stable code and what happened."""
 
@@ -322,8 +327,39 @@ class Conductor:
 
     # ------------------------------------------------------------------ the loop over pieces of work
 
+    def _active_s(self) -> float:
+        """Active run time: the closed segments of earlier processes plus the one now running (a resume a day later
+        does not count the day)."""
+        segment = getattr(self, "_segment", None)
+        return float(self.state.get("active_s", 0)) + (0.0 if segment is None else _mono() - segment)
+
+    def _run_clock(self, item: Item, stop: bool = True) -> None:
+        """RUN_SLOW every ``limits.run_warn_s`` of active run time (a beacon and one plan note per threshold, never a
+        stop); ``limits.run_timeout_s`` > 0 stops the run with RUN_TIMEOUT (``stop`` false: from a thread of checks,
+        where the next step boundary stops it). Called by role ticks, check ticks and step boundaries."""
+        limits = (item.options or {}).get("limits") or {}
+        warn, cap = limits.get("run_warn_s", 0), limits.get("run_timeout_s", 0)
+        if not (warn or cap):
+            return
+        active = self._active_s()
+        if warn and int(active // warn) > self.state.get("run_warned", 0):
+            self.state["run_warned"] = int(active // warn)
+            items = self.state.get("items", {})
+            closed = sum(1 for row in items.values() if row.get("outcome") in ("done", "done_with_deviations", "blocked"))
+            asked = len(self.run_doc.get("items") or [])
+            text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
+                    + (f", {max(asked - closed, 0)} left" if asked else "") + f"; now {item.ref} {self._current_step or '-'}")
+            self.progress.emit("info", item=item.ref, reason_code="RUN_SLOW", message=text)
+            self._plan_note(item, text)
+        if stop and cap and active >= cap:
+            raise Stop("RUN_TIMEOUT", f"the run was active {human_duration(active)}, past limits.run_timeout_s {cap}; "
+                                      "raise it or set 0, then resume")
+
+    _current_step: Optional[str] = None
+
     def _loop(self) -> int:
         started = time.monotonic()
+        self._segment = _mono()
         code, reason, outcome = 0, None, "finished"
         try:
             self._pieces()
@@ -331,6 +367,8 @@ class Conductor:
             code, reason, outcome = 1, stop, "stopped"
         except KeyboardInterrupt:
             code, reason, outcome = 130, Stop("INTERRUPTED", "interrupted; resume continues"), "stopped"
+        self.state["active_s"] = round(self._active_s(), 1)
+        self._segment = None
         self.state["status"] = outcome
         if reason is not None:
             self.state["stop"] = {"code": reason.code, "message": reason.message}
@@ -698,6 +736,9 @@ class Conductor:
             self.progress.emit("stage.skip", item=item.ref, stage=key, role=role, route=known.get("route"),
                                verdict=known.get("verdict"), message="closed earlier; not repeated")
             return known["result"]
+        self._current_step = key
+        if item.options:
+            self._run_clock(item)
         self.progress.emit("stage.start", item=item.ref, stage=key, role=role, route=route)
         begin = time.monotonic()
         self._step_tokens = {"input": 0, "output": 0}
@@ -1333,6 +1374,7 @@ class Conductor:
         marks = {"slow": warn, "idle": idle_warn}
 
         def tick(elapsed: float, idle: float, pid: int) -> None:
+            self._run_clock(item)
             if warn and elapsed >= marks["slow"]:
                 marks["slow"] += warn
                 self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW",
@@ -1665,11 +1707,14 @@ class Conductor:
                 executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
                 on_result=on_result, first=self._red_before(item, number), kinds=tuple(item.options["checks"]["kinds"]),
                 cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
-                on_slow=lambda check_id, elapsed, pid: self.progress.emit(
-                    "info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_SLOW",
-                    message=f"{check_id} running {human_duration(elapsed)}; {process.activity(pid, Path(os.devnull))}"))
+                on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid))
         except (RuntimeError, ValueError, OSError) as error:
             raise Stop("CHECKS_FAILED", str(error)) from None
+
+    def _check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid: int) -> None:
+        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_SLOW",
+                           message=f"{check_id} running {human_duration(elapsed)}; {process.activity(pid, Path(os.devnull))}")
+        self._run_clock(item, stop=False)
 
     def _run_checks(self, item: Item, number: int, report: dict, computed=None) -> list:
         """The step ``checks.N``; ``computed`` is a future of the rows started earlier (the overlap with the review)."""

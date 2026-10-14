@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.1",
   "title": "RUN_SLOW по активному времени run (limits.run_warn_s 7200) и RUN_TIMEOUT (limits.run_timeout_s 0); active_s через сегменты процессов; observer — раздел long run",
-  "status": "todo",
+  "status": "done",
   "summary": "state.active_s по сегментам _loop; _run_clock из тиков ролей, проверок и границ шагов; маяк RUN_SLOW + plan note на каждый порог; run_timeout_s → cancel и Stop RUN_TIMEOUT; limits в схеме, options, зеркале; observer — факты долгого run.",
   "why": "Аудит П3.1, мысль 13. Риск: маяк после resume через сутки — активное время, не стеночное.",
   "scope": {
@@ -119,6 +119,28 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:47:25Z"
+  "result": {
+    "started_at": "2026-10-14T09:06:28Z",
+    "finished_at": "2026-10-14T09:09:29Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "ded8e872-3e56-461a-abfa-4938ad4ba9fa"
+    },
+    "notes": "limits.run_warn_s/run_timeout_s; state.active_s по сегментам _loop; _run_clock из тиков ролей/проверок и границ шагов; RUN_SLOW + plan note; RUN_TIMEOUT; observer Long run; схема+зеркало, docs, CHANGELOG, RunClockTests",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T09:09:29Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T09:09:29Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T09:09:29Z"
 }

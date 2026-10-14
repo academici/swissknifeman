@@ -492,6 +492,10 @@
           "content": {
             "description": "Complete inline source content; any JSON value."
           },
+          "included": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Pack key that already holds this source; content is then omitted."
+          },
           "error": {
             "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
             "description": "Source read error."

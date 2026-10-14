@@ -34,6 +34,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `config-explain` | v1 | Origin of every effective setting of a module: layers, winning layer, file and line, overridden values; implemented by `aicore.config` |
 | `digest` | v1 | Tagged SHA-256 digest (`sha256:<hex>`) of canonical JSON; rules and test vectors; implemented by `aicore.util.digest` |
 | `skill-descriptor` | v1 | What a skill is, read from its directory: identity, content digest, Agent Skills standard fields, provenance; implemented by `aicore.content.skill` |
+| `skill-selection` | v1 | Selection policy of one skill (`selection.json` beside `SKILL.md`): kind, audit decision, roles, triggers, conflicts, exclusive group, budget; read by `skiller registry` and `skiller select` |
 | `eval-context` | v1 | What an evaluation result was produced from: skill digest, fixtures, grader and runner, observed values only; implemented by `aicore.content.eval` |
 | `event` | v1 | One event of the project journal, a subset of CloudEvents 1.0: id, source, type `<module>.<subject>.<verb>`, time, optional data; unknown extension attributes are ignored by readers |
 | `artifact-ref` | v1 | Reference to data kept outside an event or a document: tagged digest, size, media type, sensitivity; implemented by `aicore.state.blobs` |

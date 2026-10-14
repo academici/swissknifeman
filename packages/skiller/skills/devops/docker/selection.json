@@ -1,0 +1,13 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "router",
+  "decision": "ROUTER_ONLY",
+  "conflicts": [
+    "devops/docker-dev-prod",
+    "devops/docker-php",
+    "devops/docker-postgres",
+    "devops/docker-services",
+    "devops/docker-vite"
+  ],
+  "exclusive_group": "docker"
+}

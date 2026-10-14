@@ -70,6 +70,17 @@ skiller describe SKILL [--json]
 
 `SKILL` is a name or `bucket/rel`. An unknown skill exits 1. See [Skill metadata](./configuration#skill-metadata).
 
+### `skiller selection`
+
+The selection policy of the library (`selection.json` beside each `SKILL.md`, contract `skill-selection/v1`; `skiller registry` copies it to `skills.json` as `selection`).
+
+```bash
+skiller selection report [--json]   # decisions against the audit summary 3.5 (configs/selection-summary.json)
+skiller selection check             # schema, conflicts, exclusive groups (configs/exclusive-groups.json); exit 1 on a problem
+```
+
+`report` lists the differences from the audit counts and does not fail; `check` is a gate of `validate.sh`. The sidecar is not part of the skill content: it is not hashed and not copied to consumers.
+
 ### `skiller resolve`
 
 Reads the package's `skills.json` and resolves requested skills plus their transitive

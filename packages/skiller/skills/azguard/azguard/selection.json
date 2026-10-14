@@ -1,0 +1,9 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "PACKAGE_LOCAL",
+  "conflicts": [
+    "laravel-auth/laravel-permissions"
+  ],
+  "exclusive_group": "authz"
+}

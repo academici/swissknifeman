@@ -61,6 +61,7 @@ class ContentHashCase(unittest.TestCase):
             write(directory / "SKILL.ru.md", "ru")
             write(directory / ".claude-plugin" / "plugin.json", "{}")
             write(directory / "evals" / "case.json", "{}")
+            write(directory / "selection.json", "{}")
             write(directory / "snippets" / "__pycache__" / "x.pyc", "x")
             write(directory / "snippets" / "y.pyc", "y")
             self.assertEqual(skill.skill_content_hash(directory), before)
@@ -68,7 +69,7 @@ class ContentHashCase(unittest.TestCase):
             self.assertNotEqual(skill.skill_content_hash(directory), before)
 
     def test_ignore_list_names_the_service_files(self):
-        for name in ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals", "__pycache__", "*.pyc"):
+        for name in ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals", "__pycache__", "*.pyc", "selection.json"):
             self.assertIn(name, skill.SKILL_IGNORE)
 
 

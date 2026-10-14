@@ -18,6 +18,7 @@ from .profiles_list import cmd_profiles
 from .lock import cmd_lock
 from .registry import cmd_registry
 from .resolve import cmd_resolve
+from .selection import cmd_selection
 from .release import cmd_release
 from .release_attestation import cmd_attest, cmd_version
 from .delivery import cmd_deliver
@@ -45,6 +46,7 @@ COMMANDS = {
     "registry": cmd_registry,
     "resolve": cmd_resolve,
     "describe": cmd_describe,
+    "selection": cmd_selection,
     "doctor": cmd_doctor,
     "topology": cmd_topology,
     "release": cmd_release,

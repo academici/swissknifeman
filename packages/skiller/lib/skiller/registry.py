@@ -16,6 +16,7 @@ from aicore.util.text import parse_inline_list
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .host import host_plugin_dirs, load_host
 from .module_skills import check_collisions, host_bucket_plugins
+from .selection import read_sidecar, registry_selection
 from aicore.content.publication import manifest_bytes
 
 from .publication import (
@@ -86,6 +87,14 @@ def build_registry(env):
         level = (fm.get("level") or "").strip()
         if level:
             entry["level"] = level
+        # Selection policy (D10): selection.json beside SKILL.md → `selection` (omitted without a sidecar).
+        # The schema is checked by `skiller selection check`; a broken file is a clear error here.
+        try:
+            sidecar = read_sidecar(skill_md.parent)
+        except ValueError as exc:
+            die(f"broken selection.json: {exc}")
+        if sidecar:
+            entry["selection"] = registry_selection(sidecar)
         # Provenance: upstream.json next to SKILL.md marks an external skill
         upstream_file = skill_md.parent / "upstream.json"
         if upstream_file.exists():

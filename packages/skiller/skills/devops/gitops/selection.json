@@ -1,0 +1,5 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "procedure",
+  "decision": "SLIM"
+}

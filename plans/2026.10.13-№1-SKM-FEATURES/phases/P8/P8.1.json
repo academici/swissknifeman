@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P8.1",
   "title": "skill-selection/v1: схема в aicore, selection.json для 209 skills (kind, decision по аудиту часть 3), ingest в skills.json, validate, skiller selection report против таблицы 3.5",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Схема aicore/schemas/skill-selection/v1; skiller registry переносит sidecar в skills.json; validate.sh проверяет схему, conflicts, exclusive_group (skiller/configs/exclusive-groups.json из аудита 3.3); selection.json для всех skills по части 3 аудита; skiller selection report [--json] сверяет с 3.5.",
   "why": "Аудит П7.1, N16, D10: стандарт запрещает вложенный metadata. Риск: 209 файлов — генерировать скриптом из таблиц аудита, затем ручная правка; расхождения со сводкой 3.5 — отчёт, не подгонка.",
   "scope": {
@@ -149,6 +149,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:54:10Z"
+  "result": {
+    "started_at": "2026-10-14T15:45:01Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0da2629f-5c4d-41fc-9bfc-ca2039bc857c"
+    }
+  },
+  "updated_at": "2026-10-14T15:45:01Z"
 }

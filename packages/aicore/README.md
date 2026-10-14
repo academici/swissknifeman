@@ -198,6 +198,7 @@ source of truth and the code implements it. The layout rules and the full table 
 | `model-catalog/v1` | `aicore.provider.models`; data in `configs/model-catalog.json` |
 | `config-explain/v1` | `aicore.config.ResolvedConfig.explain_json` |
 | `skill-descriptor/v1` | `aicore.content.skill.describe_skill`; fields of the Agent Skills standard plus digest and provenance |
+| `skill-selection/v1` | `selection.json` beside a `SKILL.md`: kind, audit decision, roles, triggers, conflicts, `exclusive_group`, `max_tokens`; ingested by `skiller registry` (`skills.json` `selection`) |
 | `eval-context/v1` | `aicore.content.eval.eval_context`; skill digest, fixtures, grader and runner, compared with `compare_eval_context` |
 | `common/v1` | shared `$defs` (`semver`, `module_id`, `relpath`, `argv`, `stability`, `extensions`, `media_type`, `rfc3339_utc`) that other contracts reference |
 | `event/v1` | `aicore.ext.events`; a CloudEvents 1.0 subset |

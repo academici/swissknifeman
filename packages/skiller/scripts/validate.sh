@@ -1338,6 +1338,13 @@ else
   "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
 fi
 
+# --- 12a. selection.json sidecars (skill-selection/v1, D10) + exclusive groups --------
+# Schema of every sidecar, `conflicts` and `exclusive_group` references, the group table.
+if [ -x "$REPO_ROOT/bin/skiller" ]; then
+  "$REPO_ROOT/bin/skiller" selection check || {
+    echo "ERROR: selection.json / exclusive-groups.json are invalid" >&2; exit 1; }
+fi
+
 # --- 12b. registry drift-gate (skills.json/_index.md/manifests vs sources) ----
 # Rebuilds the registry IN MEMORY and checks it against committed artifacts. Catches the quiet one
 # drift (edit SKILL.md/buckets.json/neighboring plugin.json without `skiller registry`) —

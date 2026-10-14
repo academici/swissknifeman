@@ -259,6 +259,10 @@
         "prompt-engineering",
         "subagents"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "SPLIT"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-25"
@@ -272,6 +276,10 @@
       "sha256": "0f4592dcb53cf2b5d6b7febee6b4152018b565551a1c29e3c612f57b218ab295",
       "content_sha256": "45123dd733fb78280d491e935da87b0196f165b73ae0b2a5099db443745f5a65",
       "license": "Complete terms in LICENSE.txt",
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/SKILL.md",
       "fetched_at": "2026-07-11"
@@ -285,6 +293,13 @@
       "sha256": "f287c272ed9af2902aeb8f9a0d8b1fd345cdda85e9df830b08f1d40bec3b1e75",
       "content_sha256": "2442b891e9d150ddde181aa56bf7c2a2a297df924b0989e701884051d9cf6a92",
       "license": "MIT",
+      "selection": {
+        "kind": "procedure",
+        "decision": "MERGE",
+        "also": [
+          "DELETE"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -308,6 +323,10 @@
         "eval-design",
         "observability-design"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -325,6 +344,10 @@
         "rest",
         "contracts"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -351,6 +374,11 @@
         "observability-design",
         "legal-compliance"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "SLIM",
+        "exclusive_group": "architect-stage"
+      },
       "source": "local"
     },
     {
@@ -373,6 +401,11 @@
         "refactoring-plan",
         "architecture"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "architect-stage"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/codebase-design/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -399,6 +432,10 @@
       "produces_for": [
         "api-design"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -422,6 +459,11 @@
         "api-design",
         "data-schema"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "architect-stage"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/domain-modeling/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -446,6 +488,10 @@
         "new-project",
         "tech-stack-selection"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -457,6 +503,10 @@
       "sha256": "5fcdd133dff5e09bf192c278520709fabae24f14547b7c0375f8fcaaa91afdaf",
       "content_sha256": "e63ec9acb5707a1a724c02f09fb7a2d573b2b4f23cda5ac4508ffa9bdd41bca4",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/dev-engineering-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -483,6 +533,10 @@
       "produces_for": [
         "observability-design"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -507,6 +561,16 @@
         "figma-to-vue",
         "figma-to-flutter"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "REFERENCE",
+        "also": [
+          "TOOL_PROFILE"
+        ],
+        "requires_tools": [
+          "figma-mcp"
+        ]
+      },
       "source": "local"
     },
     {
@@ -531,6 +595,10 @@
       "produces_for": [
         "security-design"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -559,6 +627,10 @@
         "incident-response",
         "capacity-planning"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -579,6 +651,10 @@
         "anti-bloat",
         "boundary"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -601,6 +677,10 @@
         "privacy",
         "stride"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -627,6 +707,11 @@
         "oss-development",
         "release-engineering"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "architect-stage"
+      },
       "source": "local"
     },
     {
@@ -644,6 +729,13 @@
         "architecture",
         "ecosystem"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "PACKAGE_LOCAL",
+        "also": [
+          "OVERLAY"
+        ]
+      },
       "source": "local"
     },
     {
@@ -664,6 +756,10 @@
       "requires": [
         "domain-modeling"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "PACKAGE_LOCAL"
+      },
       "source": "local"
     },
     {
@@ -684,6 +780,10 @@
       "requires": [
         "ecosystem-reuse-gate"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "PACKAGE_LOCAL"
+      },
       "source": "local"
     },
     {
@@ -702,6 +802,10 @@
         "docs",
         "navigation"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "PACKAGE_LOCAL"
+      },
       "source": "local"
     },
     {
@@ -723,6 +827,14 @@
         "gate",
         "enum"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "PACKAGE_LOCAL",
+        "conflicts": [
+          "laravel-auth/laravel-permissions"
+        ],
+        "exclusive_group": "authz"
+      },
       "source": "local"
     },
     {
@@ -751,6 +863,13 @@
       "produces_for": [
         "build-loop"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "KEEP",
+        "requires_tools": [
+          "blender-mcp"
+        ]
+      },
       "source": "local"
     },
     {
@@ -776,6 +895,10 @@
         "mcp-blender",
         "parametric-config"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE"
+      },
       "source": "local"
     },
     {
@@ -806,6 +929,10 @@
         "model-rules",
         "threading"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -833,6 +960,10 @@
         "parametric-config",
         "build-loop"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -855,6 +986,10 @@
       "produces_for": [
         "build-loop"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "local"
     },
     {
@@ -883,6 +1018,10 @@
       "produces_for": [
         "build-loop"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -915,6 +1054,10 @@
       "produces_for": [
         "build-loop"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -939,6 +1082,10 @@
       "produces_for": [
         "build-loop"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -963,6 +1110,13 @@
         "parametric-config",
         "build-loop"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "KEEP",
+        "also": [
+          "REFERENCE"
+        ]
+      },
       "source": "local"
     },
     {
@@ -983,6 +1137,10 @@
       "requires": [
         "laravel"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "PACKAGE_LOCAL"
+      },
       "source": "local"
     },
     {
@@ -994,6 +1152,10 @@
       "sha256": "1c24a1611e9fdf95b7d3ec712eb757f84cdf8c9083b15ee030d33d757e7e2334",
       "content_sha256": "0a1531ac906df2455c2823c133dced5844fd20e56273999670c4a2fd85092d6b",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -1017,6 +1179,15 @@
         "testing",
         "compatibility"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "pubspec.yaml"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -1041,6 +1212,10 @@
       "produces_for": [
         "release-engineering"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "SPLIT"
+      },
       "source": "local"
     },
     {
@@ -1068,6 +1243,10 @@
         "laravel-testing",
         "test-isolation-guard"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "SCRIPT"
+      },
       "source": "local"
     },
     {
@@ -1084,6 +1263,18 @@
         "devops",
         "router"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "conflicts": [
+          "devops/docker-dev-prod",
+          "devops/docker-php",
+          "devops/docker-postgres",
+          "devops/docker-services",
+          "devops/docker-vite"
+        ],
+        "exclusive_group": "docker"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills/docker-expert/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -1109,6 +1300,11 @@
       "produces_for": [
         "docker-services"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "docker"
+      },
       "source": "local"
     },
     {
@@ -1131,6 +1327,11 @@
         "docker-services",
         "docker-vite"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "docker"
+      },
       "source": "local"
     },
     {
@@ -1153,6 +1354,11 @@
         "docker-services",
         "db-test-preflight"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "docker"
+      },
       "source": "local"
     },
     {
@@ -1176,6 +1382,11 @@
         "docker-php",
         "docker-postgres"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "docker"
+      },
       "source": "local"
     },
     {
@@ -1197,6 +1408,11 @@
       "produces_for": [
         "docker-dev-prod"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "docker"
+      },
       "source": "local"
     },
     {
@@ -1216,6 +1432,10 @@
       "produces_for": [
         "github-flow"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "SLIM"
+      },
       "source": "local"
     },
     {
@@ -1236,6 +1456,15 @@
         "docker-dev-prod",
         "docker-services"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "Makefile"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -1254,6 +1483,10 @@
         "preflight",
         "ci"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "SCRIPT"
+      },
       "source": "local"
     },
     {
@@ -1265,6 +1498,13 @@
       "sha256": "a30254a1313fbbe05ef3baf79516890aa2a9604833122f7d5dc6fcf9f9bca322",
       "content_sha256": "dd6a9be191e68a9672443a7f1dbc3d2a805c2042d614e9f9e10781ec85f6f5d1",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "also": [
+          "EXTERNAL_PACK"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/finance-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -1290,6 +1530,11 @@
         "new-project",
         "startup-lifecycle"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "founder-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1314,6 +1559,11 @@
         "new-project",
         "pitch-deck"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "founder-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1338,6 +1588,11 @@
         "monetization-design",
         "new-project"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "founder-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1357,6 +1612,10 @@
         "pitch-deck",
         "go-to-market"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -1383,6 +1642,14 @@
         "risk-assessment",
         "new-project"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "MERGE",
+        "also": [
+          "WORKFLOW"
+        ],
+        "exclusive_group": "founder-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1404,6 +1671,11 @@
         "monetization-design",
         "new-project"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "founder-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1427,6 +1699,11 @@
         "risk-assessment",
         "ecosystem-reuse-gate"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW",
+        "exclusive_group": "pm-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1448,6 +1725,10 @@
         "unit-economics",
         "go-to-market"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -1469,6 +1750,11 @@
         "new-project",
         "pitch-deck"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "founder-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1491,6 +1777,11 @@
         "pmf-diagnostics",
         "defensibility"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "exclusive_group": "pm-pipeline"
+      },
       "source": "local"
     },
     {
@@ -1502,6 +1793,10 @@
       "sha256": "cadc77c68f1205526757057250e9769a41a6a2d00a4e31406989059fcf208083",
       "content_sha256": "2cdbdf75100fffae4e0c8b3bba4bc7190911d9aaeaa7e0a5854e985872f63221",
       "license": "MIT",
+      "selection": {
+        "kind": "domain",
+        "decision": "SLIM"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/document-writer/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1526,6 +1821,15 @@
         "inertia",
         "uploads"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "npm:filepond"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -1537,6 +1841,13 @@
       "sha256": "41d130e3113c7bd5a2c3a55dfab4092b65483513b801402a2a2ce7df32a9f38b",
       "content_sha256": "ea02cc8d16d51e8dc68fb564d78c96f72c63d63ddf79ed2ca00e7a656f76470b",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "KEEP",
+        "also": [
+          "REFERENCE"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/4e799d45c17aec1498c269287a83b9dba22b966b/command.md",
       "fetched_at": "2026-08-01"
@@ -1550,6 +1861,10 @@
       "sha256": "f0e7a7749a2eed534f115c551b6ff27c17c9f38c25689302b7032fe583e41a60",
       "content_sha256": "584a5b145329558c2d086b736a9967a49ebb86e9fa2651624f4876a857de0b70",
       "license": "MIT",
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1577,6 +1892,10 @@
       "requires": [
         "wayfinder"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -1596,6 +1915,10 @@
         "architecture",
         "structure"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -1617,6 +1940,11 @@
         "broadcasting",
         "frontend"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "realtime"
+      },
       "source": "local"
     },
     {
@@ -1647,6 +1975,13 @@
         "naive-ui-theming",
         "dark-mode"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "requires_tools": [
+          "figma-mcp"
+        ]
+      },
       "source": "local"
     },
     {
@@ -1658,6 +1993,11 @@
       "sha256": "bf1badde2a7b0ac941613adaa3694cab11a258d589dbc8b31b42045ecbcfa0c1",
       "content_sha256": "5fc72f8b7e000895e8d3705e44d97fce7fb48d47268982452f0d94326b870c43",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE",
+        "exclusive_group": "js-style"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1682,6 +2022,11 @@
         "code-style",
         "frontend"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "js-style"
+      },
       "source": "local"
     },
     {
@@ -1701,6 +2046,11 @@
         "prettier",
         "vue"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "OVERLAY",
+        "exclusive_group": "js-style"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
       "fetched_at": "2026-06-12"
@@ -1714,6 +2064,10 @@
       "sha256": "eb47397d20c8ca098fb8d3188fe44be08e726cd323f003b9fb2e1f279628d768",
       "content_sha256": "44fc34b1efabe5dd2d495b80e1041c812abb6351c28065c9d486c6ea3e6b307f",
       "license": "MIT",
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1741,6 +2095,15 @@
       "requires": [
         "tailwind-conventions"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "npm:naive-ui"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -1752,6 +2115,10 @@
       "sha256": "1517d52997895f4a5170571ae7ac67f806d92363a5b7e67edd8fa4dfcbb374ca",
       "content_sha256": "d81987a8b94a5572b44babbab8135cc5032d3f47f9af8a97203344de43282dd1",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1765,6 +2132,10 @@
       "sha256": "a070b2bcfcb342c5f659bc3c40bf09842155776d54f615e601e87343ee92b2a3",
       "content_sha256": "932bb50d97d41d6887130ae050a8042d296b154dbdc432e860adf124e9e15413",
       "license": "MIT",
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-modules/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1778,6 +2149,10 @@
       "sha256": "41a81222375ffbedaae95abba5e82a8c428d320076eccad6ade21e364a5e1862",
       "content_sha256": "d5413d202717cf383a6ee022674708bb9e583441c2a02f8c45f4534a5c1d34d6",
       "license": "MIT",
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-seo/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1806,6 +2181,15 @@
       "requires": [
         "tailwind-conventions"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "npm:reka-ui"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -1830,6 +2214,10 @@
       "requires": [
         "tailwind-conventions"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -1851,6 +2239,13 @@
         "design-tokens",
         "prettier"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "also": [
+          "OVERLAY"
+        ]
+      },
       "source": "local"
     },
     {
@@ -1862,6 +2257,11 @@
       "sha256": "3cb7a75336e338faa9be15dd8b97479721ac8ceac6f1ff4061c9b9eefccd9983",
       "content_sha256": "8effd8b572c5835dfb44dc2d4d749ce943418d01d31fb3150c1e0f178e75a926",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE",
+        "exclusive_group": "vite"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1882,6 +2282,11 @@
         "laravel",
         "vue"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "vite"
+      },
       "source": "local"
     },
     {
@@ -1905,6 +2310,11 @@
       "requires": [
         "vite-module-loader"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "vite"
+      },
       "source": "local"
     },
     {
@@ -1916,6 +2326,16 @@
       "sha256": "eba57687640159cd74333a6d0abcc1c6e7967883b978bc801b9a8fb461021d8c",
       "content_sha256": "9e290febf63ad2d04164791ed483190259855c9579cb268d496f55a174d9f28b",
       "license": "MIT",
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "npm:vitepress"
+          ]
+        },
+        "exclusive_group": "vite"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vitepress/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1929,6 +2349,11 @@
       "sha256": "8f2bbebf25ee2c4a928fb21610bf1ce778b881e3870e5bf98fd9a6b98dfe647e",
       "content_sha256": "a436cf5f47dc57b7d4028023ebaf62ebe1e102b0c851698ed9e2bab04a1d4065",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE",
+        "exclusive_group": "pinia"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1950,6 +2375,11 @@
         "store",
         "architecture"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "pinia"
+      },
       "source": "local"
     },
     {
@@ -1973,6 +2403,11 @@
       "requires": [
         "inertia-vue"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE",
+        "exclusive_group": "vitest"
+      },
       "source": "local"
     },
     {
@@ -1984,6 +2419,14 @@
       "sha256": "a4cdc2816c89402005dc683f978a48f006dc22ff2fe39cbc4b4e8e320dc981ed",
       "content_sha256": "99341c2360295cf1c1b4330886b45fed938b5c47260fac7b265ccb331e655ed9",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "MERGE",
+        "also": [
+          "REFERENCE"
+        ],
+        "exclusive_group": "vitest"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vitest/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1997,6 +2440,11 @@
       "sha256": "ba88fdcd30c689c61599c35b6ed0fc1151fd5d0ca1454d547257f1159d68fcdc",
       "content_sha256": "014ac9b16b255ce26bbbbd42987575f5414badcfac6bbd2d90d6c0579baded3c",
       "license": "MIT",
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE",
+        "exclusive_group": "vue-core"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -2010,6 +2458,11 @@
       "sha256": "af3b05ad1bc4a64b9e084a9052668e1745c4fb7cf742f238f0df78a744ce78a9",
       "content_sha256": "446acaf420f8597ef960e5f281b4e69a4640a3babc25d7a5e549966ed0560b7a",
       "license": "MIT",
+      "selection": {
+        "kind": "domain",
+        "decision": "SLIM",
+        "exclusive_group": "vue-core"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -2029,6 +2482,11 @@
         "composable",
         "patterns"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "MERGE",
+        "exclusive_group": "vue-core"
+      },
       "source": "local"
     },
     {
@@ -2048,6 +2506,10 @@
         "typescript",
         "frontend"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2068,6 +2530,10 @@
         "lazy-loading",
         "typescript"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-router-best-practices/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -2094,6 +2560,11 @@
         "vue",
         "vitest"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP",
+        "exclusive_group": "vitest"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -2114,6 +2585,10 @@
         "vueuse",
         "composables"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -2136,6 +2611,10 @@
         "eslint",
         "frontend"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2156,6 +2635,10 @@
       "produces_for": [
         "session-handoff"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -2174,6 +2657,10 @@
         "context",
         "workflow"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "DELETE"
+      },
       "source": "local"
     },
     {
@@ -2194,6 +2681,10 @@
       "produces_for": [
         "cross-layer-change-checklist"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -2215,6 +2706,10 @@
       "produces_for": [
         "gh-review"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -2231,6 +2726,13 @@
         "workflow",
         "validation"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP",
+        "also": [
+          "SLIM"
+        ]
+      },
       "source": "local"
     },
     {
@@ -2254,6 +2756,10 @@
       "produces_for": [
         "github-flow"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "OVERLAY"
+      },
       "source": "local"
     },
     {
@@ -2272,6 +2778,10 @@
         "guardrails",
         "init"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "SCRIPT"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/misc/git-guardrails-claude-code/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -2300,6 +2810,10 @@
         "task-brief-template",
         "to-issues"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -2322,6 +2836,10 @@
       "requires": [
         "tdd-discipline"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -2345,6 +2863,13 @@
       "produces_for": [
         "context-economy"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "CONFIG",
+        "also": [
+          "WORKFLOW"
+        ]
+      },
       "source": "local"
     },
     {
@@ -2364,6 +2889,10 @@
         "discipline",
         "clean-code"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "OVERLAY"
+      },
       "source": "local"
     },
     {
@@ -2382,6 +2911,10 @@
         "stack",
         "init"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "ARTIFACT"
+      },
       "source": "local"
     },
     {
@@ -2403,6 +2936,10 @@
       "produces_for": [
         "cross-layer-change-checklist"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "ARTIFACT"
+      },
       "source": "local"
     },
     {
@@ -2420,6 +2957,10 @@
         "tokens",
         "handoff"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "CONTRACT"
+      },
       "source": "local"
     },
     {
@@ -2438,6 +2979,10 @@
         "safety",
         "hooks"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE"
+      },
       "source": "local"
     },
     {
@@ -2457,6 +3002,10 @@
         "conventions",
         "ai"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2476,6 +3025,10 @@
       "produces_for": [
         "task-brief-template"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -2496,6 +3049,10 @@
       "produces_for": [
         "complex-task-orchestrator"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "SCHEMA"
+      },
       "source": "local"
     },
     {
@@ -2519,6 +3076,10 @@
         "architecture",
         "tech-stack-selection"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "POLICY"
+      },
       "source": "local"
     },
     {
@@ -2540,6 +3101,10 @@
         "docs",
         "style"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "OVERLAY"
+      },
       "source": "local"
     },
     {
@@ -2559,6 +3124,10 @@
         "registry",
         "multi-tenant"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2579,6 +3148,13 @@
         "mutators",
         "patterns"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "KEEP",
+        "also": [
+          "REFERENCE"
+        ]
+      },
       "source": "local"
     },
     {
@@ -2599,6 +3175,10 @@
         "patterns",
         "typescript"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2620,6 +3200,10 @@
         "domain",
         "actions"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2637,6 +3221,10 @@
         "agents",
         "laravel"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -2659,6 +3247,11 @@
       "requires": [
         "laravel"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "php-architecture"
+      },
       "source": "local"
     },
     {
@@ -2685,6 +3278,10 @@
       "requires": [
         "laravel-permissions"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2704,6 +3301,14 @@
         "rbac",
         "authorization"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "conflicts": [
+          "azguard/azguard"
+        ],
+        "exclusive_group": "authz"
+      },
       "source": "local"
     },
     {
@@ -2726,6 +3331,13 @@
       "produces_for": [
         "security-design"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "roles": [
+          "reviewer"
+        ]
+      },
       "source": "local"
     },
     {
@@ -2746,6 +3358,11 @@
         "websockets",
         "realtime"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "realtime"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
       "fetched_at": "2026-06-12"
@@ -2774,6 +3391,10 @@
       "produces_for": [
         "backend-type-sync"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2793,6 +3414,15 @@
         "uploads",
         "images"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "composer:spatie/laravel-medialibrary"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -2810,6 +3440,15 @@
         "pennant",
         "feature-flags"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "composer:laravel/pennant"
+          ]
+        }
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/pennant/skill/pennant-development/SKILL.md",
       "fetched_at": "2026-06-13"
@@ -2831,6 +3470,15 @@
         "filament",
         "configuration"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "composer:spatie/laravel-settings"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -2855,6 +3503,15 @@
         "laravel",
         "laravel-structure"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "triggers": {
+          "deps": [
+            "composer:filament/filament"
+          ]
+        }
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/filamentphp/filament/5.x/packages/panels/resources/boost/guidelines/core.blade.php",
       "fetched_at": "2026-06-12"
@@ -2876,6 +3533,10 @@
         "advisory",
         "gotchas"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2896,6 +3557,10 @@
         "readiness",
         "observability"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2916,6 +3581,10 @@
         "chromedriver",
         "docker"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -2932,6 +3601,10 @@
         "laravel",
         "testing"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "SLIM"
+      },
       "source": "local"
     },
     {
@@ -2956,6 +3629,13 @@
       "requires": [
         "laravel-testing"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "SCRIPT",
+        "also": [
+          "POLICY"
+        ]
+      },
       "source": "local"
     },
     {
@@ -2967,6 +3647,13 @@
       "sha256": "d3737870937393ced8e47d428f2e4ba44698530a93489106957384486426fe53",
       "content_sha256": "5c22bb9d96d9d79b4e2db4eaa2cb5fba67076b74635f749a99f39e0d37467a6c",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "also": [
+          "EXTERNAL_PACK"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/legal-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -2980,6 +3667,13 @@
       "sha256": "bfdcb7d9b4f5af54ad8207b0e975d7d2eb7e6c0548ecc39ea11a0039a087640e",
       "content_sha256": "a2718b2f80237e1ac49039af8b1d8dfd5cb15467cff1414df9dcbe6f39283368",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "also": [
+          "EXTERNAL_PACK"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/marketing-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -3005,6 +3699,13 @@
       "requires": [
         "figma-mcp-core"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "requires_tools": [
+          "figma-mcp"
+        ]
+      },
       "source": "local"
     },
     {
@@ -3025,6 +3726,10 @@
       "requires": [
         "observability-design"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3045,6 +3750,10 @@
       "produces_for": [
         "postmortem"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -3065,6 +3774,10 @@
       "produces_for": [
         "incident-response"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3076,6 +3789,10 @@
       "sha256": "5203283cc33972d915126ce3599833c97accfe88450f3035a392839c54dcacc5",
       "content_sha256": "87a6f28ae58a855dc68601b12d1e1c66707e14cb7f12cd4565e107bfa1f9adbf",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/operations-cx-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -3102,6 +3819,10 @@
         "tech-debt-audit",
         "runbook"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3122,6 +3843,10 @@
       "produces_for": [
         "incident-response"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3147,6 +3872,10 @@
         "security-design",
         "release-engineering"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "SPLIT"
+      },
       "source": "local"
     },
     {
@@ -3167,6 +3896,10 @@
       "requires": [
         "oss-development"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3192,6 +3925,10 @@
       "produces_for": [
         "github-flow"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -3215,6 +3952,10 @@
         "release-engineering",
         "gh-review"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "local"
     },
     {
@@ -3236,6 +3977,10 @@
       "requires": [
         "github-flow"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "WORKFLOW"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -3261,6 +4006,10 @@
         "oss-governance",
         "dependency-audit"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "local"
     },
     {
@@ -3285,6 +4034,10 @@
       "produces_for": [
         "dependency-audit"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3309,6 +4062,10 @@
       "produces_for": [
         "github-flow"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3329,6 +4086,10 @@
       "requires": [
         "git-commit-rules"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/resolving-merge-conflicts/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -3355,6 +4116,13 @@
       "produces_for": [
         "implement"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "COMMAND",
+        "also": [
+          "WORKFLOW"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-issues/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -3374,6 +4142,10 @@
         "code-style",
         "spatie"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "OVERLAY"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/laravel-php.md",
       "fetched_at": "2026-06-12"
@@ -3394,6 +4166,10 @@
         "cursor",
         "database"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3414,6 +4190,15 @@
       "requires": [
         "laravel"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "database/migrations/**"
+          ]
+        }
+      },
       "source": "local"
     },
     {
@@ -3431,6 +4216,14 @@
         "di",
         "architecture"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "also": [
+          "SLIM"
+        ],
+        "exclusive_group": "php-architecture"
+      },
       "source": "local"
     },
     {
@@ -3456,6 +4249,11 @@
         "filament",
         "botkit"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "exclusive_group": "php-architecture"
+      },
       "source": "local"
     },
     {
@@ -3472,6 +4270,13 @@
         "laravel",
         "best-practices"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "DEPRECATE",
+        "also": [
+          "REFERENCE"
+        ]
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3491,6 +4296,14 @@
         "architecture",
         "structure"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "MERGE",
+        "also": [
+          "OVERLAY"
+        ],
+        "exclusive_group": "php-architecture"
+      },
       "source": "local"
     },
     {
@@ -3508,6 +4321,10 @@
         "readability",
         "conventions"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "OVERLAY"
+      },
       "source": "local"
     },
     {
@@ -3525,6 +4342,10 @@
         "namespace",
         "safety"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3544,6 +4365,10 @@
         "code-style",
         "readability"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "MERGE"
+      },
       "source": "local"
     },
     {
@@ -3562,6 +4387,10 @@
         "tokens",
         "agent-output"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "TOOL_PROFILE"
+      },
       "source": "local"
     },
     {
@@ -3580,6 +4409,11 @@
         "dto",
         "architecture"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE",
+        "exclusive_group": "php-architecture"
+      },
       "source": "local"
     },
     {
@@ -3599,6 +4433,10 @@
         "phpstan",
         "composer"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3618,6 +4456,10 @@
         "reliability",
         "quality"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3635,6 +4477,11 @@
         "repository",
         "architecture"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "php-architecture"
+      },
       "source": "local"
     },
     {
@@ -3651,6 +4498,13 @@
         "laravel",
         "quality"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "SCRIPT",
+        "also": [
+          "KEEP"
+        ]
+      },
       "source": "local"
     },
     {
@@ -3670,6 +4524,10 @@
         "reliability",
         "async"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3686,6 +4544,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-compatibility/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3704,6 +4567,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-docs/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3722,6 +4590,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "PACKAGE_LOCAL",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/skeleton-development/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3740,6 +4613,14 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "COMMAND",
+        "also": [
+          "KEEP"
+        ],
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-generate-skill/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3758,6 +4639,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-release/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3776,6 +4662,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-scaffold/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3794,6 +4685,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3812,6 +4708,11 @@
         "laravel",
         "package-dev"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "php-packages"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -3831,6 +4732,21 @@
         "package-dev",
         "skills"
       ],
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "conflicts": [
+          "php-packages/laravel-package-compatibility",
+          "php-packages/laravel-package-docs",
+          "php-packages/laravel-package-expressive",
+          "php-packages/laravel-package-generate-skill",
+          "php-packages/laravel-package-release",
+          "php-packages/laravel-package-scaffold",
+          "php-packages/laravel-package-service-provider",
+          "php-packages/laravel-package-testing"
+        ],
+        "exclusive_group": "php-packages"
+      },
       "source": "local"
     },
     {
@@ -3857,6 +4773,11 @@
         "prd-from-brd",
         "tech-stack-selection"
       ],
+      "selection": {
+        "kind": "contract",
+        "decision": "KEEP",
+        "exclusive_group": "pm-pipeline"
+      },
       "source": "local"
     },
     {
@@ -3875,6 +4796,10 @@
       "produces_for": [
         "brd"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3899,6 +4824,10 @@
         "product-roadmap",
         "pitch-deck"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3922,6 +4851,10 @@
         "go-to-market",
         "brd"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3940,6 +4873,10 @@
       "requires": [
         "product-roadmap"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -3963,6 +4900,11 @@
         "product-roadmap",
         "api-design"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "pm-pipeline"
+      },
       "source": "local"
     },
     {
@@ -3974,6 +4916,11 @@
       "sha256": "0f2d1a35da1e7acdd8993721af172dd1991d68f7559e282be710b000ddea04bd",
       "content_sha256": "d75f9259c75e8d9264122e3abb150f17af1baa96f0e1d3e17543436701138402",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY",
+        "exclusive_group": "pm-pipeline"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/pm-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -3996,6 +4943,11 @@
         "brd",
         "go-to-market"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "pm-pipeline"
+      },
       "source": "local"
     },
     {
@@ -4014,6 +4966,13 @@
       "requires": [
         "brd"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "roles": [
+          "reviewer"
+        ]
+      },
       "source": "local"
     },
     {
@@ -4035,6 +4994,10 @@
         "pitch-deck",
         "go-to-market"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -4057,6 +5020,10 @@
       "produces_for": [
         "venv-dependencies"
       ],
+      "selection": {
+        "kind": "domain",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -4079,6 +5046,13 @@
       "requires": [
         "ml-project-structure"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "also": [
+          "SLIM"
+        ]
+      },
       "source": "local"
     },
     {
@@ -4100,6 +5074,11 @@
         "severity",
         "conventional-comments"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "quality-split"
+      },
       "source": "local"
     },
     {
@@ -4118,6 +5097,14 @@
         "github",
         "workflow"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "roles": [
+          "reviewer"
+        ],
+        "exclusive_group": "quality-split"
+      },
       "source": "local"
     },
     {
@@ -4139,6 +5126,11 @@
       "produces_for": [
         "code-review"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "quality-split"
+      },
       "source": "local"
     },
     {
@@ -4160,6 +5152,10 @@
       "produces_for": [
         "code-review"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -4188,6 +5184,10 @@
       "produces_for": [
         "code-review"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -4210,6 +5210,10 @@
         "frontend",
         "typescript"
       ],
+      "selection": {
+        "kind": "tool",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -4234,6 +5238,11 @@
       "produces_for": [
         "testing-safety-report"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "exclusive_group": "quality-split"
+      },
       "source": "local"
     },
     {
@@ -4254,6 +5263,10 @@
       "produces_for": [
         "code-review"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "SLIM"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md",
       "fetched_at": "2026-06-26"
@@ -4277,6 +5290,10 @@
       "produces_for": [
         "refactoring-plan"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "SLIM"
+      },
       "source": "local"
     },
     {
@@ -4302,6 +5319,10 @@
         "mutation-testing",
         "playwright-e2e"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -4322,6 +5343,13 @@
         "quality",
         "refactor"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP",
+        "roles": [
+          "reviewer"
+        ]
+      },
       "source": "local"
     },
     {
@@ -4345,6 +5373,10 @@
       "produces_for": [
         "verify-claims"
       ],
+      "selection": {
+        "kind": "procedure",
+        "decision": "KEEP"
+      },
       "source": "local"
     },
     {
@@ -4356,6 +5388,10 @@
       "sha256": "79b2957a8aaf5c169c71a7cc90485e7c32a31619572549297d7e40918726b3a6",
       "content_sha256": "0fe7507a25b1e893da9306c0c19e7febeaff0a3fa31e58eb596729f3f00356b2",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/research-knowledge-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4378,6 +5414,10 @@
         "release",
         "triage"
       ],
+      "selection": {
+        "kind": "persona",
+        "decision": "PERSONA"
+      },
       "source": "local"
     },
     {
@@ -4396,6 +5436,10 @@
         "market",
         "validation"
       ],
+      "selection": {
+        "kind": "persona",
+        "decision": "PERSONA"
+      },
       "source": "local"
     },
     {
@@ -4414,6 +5458,10 @@
         "stack-choice",
         "discipline"
       ],
+      "selection": {
+        "kind": "persona",
+        "decision": "PERSONA"
+      },
       "source": "local"
     },
     {
@@ -4432,6 +5480,10 @@
         "review",
         "workflow"
       ],
+      "selection": {
+        "kind": "persona",
+        "decision": "PERSONA"
+      },
       "source": "local"
     },
     {
@@ -4443,6 +5495,10 @@
       "sha256": "55d6a28edb34324a04829bfd4e8aecddfed2e1a3358f74a2137462249d0a6649",
       "content_sha256": "44345211bd7df3f3c13e1115437af5aeddfab98998228f93235db80b4186ef31",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "EXTERNAL_PACK"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/sales-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4456,6 +5512,10 @@
       "sha256": "ba9f04adacb09f090aa5b6398bb9bd565dcf30b83ee426e8a5a806829f20ec5a",
       "content_sha256": "a5c0bc05d56ea16879aab90be09d10a56bb7a111cd38a3ed55a64d2e4d3e18cf",
       "license": "MIT",
+      "selection": {
+        "kind": "router",
+        "decision": "ROUTER_ONLY"
+      },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/agent-security-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4480,6 +5540,10 @@
         "latency",
         "russian-stack"
       ],
+      "selection": {
+        "kind": "reference",
+        "decision": "REFERENCE"
+      },
       "source": "http",
       "upstream": "https://developers.openai.com/api/docs/guides/realtime-vad",
       "fetched_at": "2026-07-03"

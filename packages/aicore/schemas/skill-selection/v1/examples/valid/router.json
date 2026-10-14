@@ -1,0 +1,9 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "router",
+  "decision": "ROUTER_ONLY",
+  "conflicts": [
+    "devops/docker-php"
+  ],
+  "exclusive_group": "docker"
+}

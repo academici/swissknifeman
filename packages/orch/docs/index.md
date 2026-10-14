@@ -11,6 +11,7 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Work source](work-source.md) — the `orch:work-source` port, its contract and the `orch.py source` cycle.
 - [Conductor](conductor.md) — `conduct.py`: the chain of roles of a piece of work, run options, progress, resume,
   the observer, and which files are committed.
+- [Agent mode](agent-mode.md) — the procedure for an agent that picks its own pieces: ready lanes of the work source, `conduct.py run --items`, `status`/`observe`, `resume`/`settle`.
 - [Conformance](conformance.md) — scenario catalogue, `orch.py conformance`, write confinement.
 - [Architecture](architecture.md) — package boundaries, dependency rule, layout.
 - [Adding an engine](adding-an-engine.md) — steps to add a binding.

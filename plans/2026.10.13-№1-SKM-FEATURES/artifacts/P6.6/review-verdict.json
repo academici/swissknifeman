@@ -1,0 +1,23 @@
+{
+  "selector": "grok/grok-4.7/high",
+  "session": "01a13aa7-ed9f-7e72-ad4d-dac8b4ac3182",
+  "route_proof": {
+    "modelId": "grok-4.7",
+    "reasoning_effort": "high",
+    "contextWindowTokens": 256000,
+    "source": "~/.grok/sessions/<cwd>/<session>/{chat_history.jsonl,summary.json,signals.json}"
+  },
+  "scope": "P6.4 (4b06c3689), P6.5 (80cbfd912) and the working tree of P6.6, base c040bef7a; one general review at the owner's request",
+  "stream": ".swissknifeman/state/reviews/P6.4-P6.6-grok.jsonl",
+  "round": 1,
+  "verdict": "findings",
+  "findings": [
+    {"id": "F1", "severity": "Major", "item": "P6.4", "summary": "questions=defaults: a question the executor asks again after the policy answered it stayed 'applied'; the piece was blocked but questions listed none and answer refused (QUESTION_NOT_OPEN)", "executor": "confirmed", "action": "fixed: questions.record reopens a policy-answered question asked again in a later round (stale_resolution kept); test"},
+    {"id": "F2", "severity": "Major", "item": "P6.4", "summary": "resume --retry after a policy round anchored at executor.1 (earlier blocked round) and repeated the policy round", "executor": "confirmed", "action": "fixed: engine.continued() leaves out rounds continued by a -q round from the retry anchor; test"},
+    {"id": "F3", "severity": "Major", "item": "P6.6", "summary": "the fix round spent the only default correction, so the first review correction was refused (REVIEW_LIMIT)", "executor": "confirmed", "action": "fixed: the fix round checks the corrections budget but does not spend the review's; accounting in review/_piece_count reverted; test"},
+    {"id": "F4", "severity": "Major", "item": "P6.5", "summary": "agent-mode.md told to resume without --retry after answering a question or REVIEW_LIMIT; a blocked piece is not taken back", "executor": "confirmed", "action": "fixed: docs name resume --retry ITEM for blocked pieces"},
+    {"id": "F5", "severity": "Minor", "item": "P6.4", "summary": "an answered question still counted as overdue and the observer proposed conduct.py answer again", "executor": "confirmed", "action": "fixed: an answered question is never overdue; test"}
+  ],
+  "corrections": 1,
+  "after_correction": "affected tests green (python3 scripts/affected-tests.py --run); no second review round"
+}

@@ -50,6 +50,14 @@ def record(store: dict, asked: list, binding: dict, now: str) -> list:
     changed = []
     for question in asked:
         known = store.get(question["id"])
+        if known and known["status"] == "applied" and known.get("auto_answered") and known["binding"].get("step") != binding["step"]:
+            # the executor asked it again after the policy answered it once: the policy does not answer twice, the
+            # question waits for a person
+            known["stale_resolution"] = known.pop("resolution")
+            known["status"] = "open"
+            known["binding"], known["asked_at"] = dict(binding), now
+            changed.append(known)
+            continue
         if (known and known["status"] != "stale" and known["binding"].get("step") == binding["step"]
                 and known["revision"] >= question["revision"]):
             continue  # the same round again (a resume walks it): nothing new
@@ -182,9 +190,10 @@ def listing(directory: Path, now: float, default_warn_s: int = DEFAULT_WARN_S) -
             if entry["status"] != "open":
                 continue
             age = max(0, int(now - _epoch(entry["asked_at"])))
+            answered = bool(entry.get("resolution"))  # it waits for resume, not for an answer
             rows.append({"item": doc.get("item"), "id": entry["id"], "revision": entry["revision"], "kind": entry["kind"],
-                         "text": entry["text"], "answered": bool(entry.get("resolution")), "age_s": age,
-                         "overdue": bool(warn) and age > warn})
+                         "text": entry["text"], "answered": answered, "age_s": age,
+                         "overdue": bool(warn) and age > warn and not answered})
     return rows
 
 

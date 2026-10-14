@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.6",
   "title": "Автоисправление deviation внутри пункта: auto_fixable + evidence в write set + acceptance checks + бюджет corrections → correction-раунд и повтор checks; закрытие фазы P6",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "После executor-раунда deviation с auto_fixable и условиями knowledge/p6-work#autofix → correction-раунд с разделом # Fix this deviation и повтор checks; результат — outcome accepted с note или прежний deviation; executor.md — критерии auto_fixable (аудит 2.9.3); тесты. Пункт закрывает фазу: phase.validation P6.",
   "why": "Аудит П4.4. Риски: (1) петля исправлений — бюджет corrections и _allowance; (2) conductor не судит о публичном API — это декларация роли, проверяется только проверяемое.",
   "scope": {
@@ -95,6 +95,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:51:23Z"
+  "result": {
+    "started_at": "2026-10-14T13:06:35Z",
+    "finished_at": "2026-10-14T14:18:11Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "b455794f-a801-4bf3-a97a-6a6172481e5a"
+    },
+    "notes": "autofix of deviations (_autofix, # Fix this deviation, DEVIATION_AUTOFIX beacons), executor.md criteria, tests. grok-4.7 general review: 5 findings fixed in one correction. V1, V12 (units strict, golden, hygiene), V13 (schema compat) green; V11 on the three changed units green.",
+    "deviations": [
+      "V11 narrowed to ci-matrix units orch, planner, planner-orch (owner: only the necessary long runs); review fixes of P6.4/P6.5 (F1,F2,F4,F5) are in this commit"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T14:18:11Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T14:18:11Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T14:18:11Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T14:18:11Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T14:18:11Z"
 }

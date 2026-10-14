@@ -173,6 +173,20 @@ def _conductor_commands(input_doc: dict) -> str:
             + "\n".join(f"- `{command}`" for command in commands) + "\n")
 
 
+DEVIATION_FIX = "Fix the deviation named in the section above: change only what its evidence names, inside the write set."
+
+
+def fix_deviation(issues) -> str:
+    """The "Fix this deviation" section: the deviations of the last round that the conductor lets the executor fix."""
+    lines = []
+    for issue in issues:
+        lines.append(f"- {issue['text']}\n  Impact: {issue.get('impact', '-')}\n  Evidence: {', '.join(issue.get('evidence') or [])}")
+    return ("# Fix this deviation\n\nYou reported the deviation(s) below as `auto_fixable`. Fix them now, inside the write "
+            "set, without changing an acceptance check, a public interface or anything that needs a decision of the owner; "
+            "the conductor then runs the acceptance checks again. If one cannot be fixed that way, leave it as it is and "
+            "report it again.\n\n" + "\n".join(lines))
+
+
 def _answers(answers) -> str:
     """The "Answers" section: what the owner (or the policy) answered to the questions of earlier rounds."""
     lines = []
@@ -185,7 +199,7 @@ def _answers(answers) -> str:
 
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
-             skill_texts=None, expected=None, answers=()) -> str:
+             skill_texts=None, expected=None, answers=(), fix: str = "") -> str:
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
     if scout_text:
         parts.append("## Context map\n\nA read-only scout mapped the context; treat its lines as leads, not facts.\n\n"
@@ -202,6 +216,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append("## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))
     if answers:
         parts.append(_answers(answers))
+    if fix:
+        parts.append(fix)
     if correction:
         parts.append("## Correction\n\nYour previous attempt is in the working tree. Make exactly this correction, "
                      "inside the same scope" + (" and re-run the tests of what you touched" if targeted_tests

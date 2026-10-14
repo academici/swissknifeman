@@ -136,7 +136,45 @@ class QuestionTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         self.assertEqual(self.calls("executor"), 2)  # not a third time
-        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "applied")
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")  # it waits for a person now
+
+    def test_a_question_the_executor_asks_again_after_the_policy_answered_it_is_queued(self):  # review F1
+        self.write_config(extra='[orch.conductor]\nquestions = "defaults"')
+        again = asking(dict(ASK, default="keep"))
+        self.script({"executor": [again, again, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor")), (1, 2), err)
+        entry = self.state(err)["questions"]["W1"]["Q1"]
+        self.assertEqual((entry["status"], entry["stale_resolution"]["by"]), ("open", "policy"))
+        run = self.run_dir(err).name
+        self.assertIn("W1 Q1", self.conduct("questions", "--run", run)[1])
+        self.assertEqual(self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q1", "--option", "rename")[0], 0)
+
+    def test_a_retry_after_a_policy_round_goes_on_from_the_round_that_stopped(self):  # review F2
+        self.write_config(extra='[orch.conductor]\nquestions = "defaults"')
+        second = asking(dict(ASK, id="Q2", text="Which name?"))
+        self.script({"executor": [asking(dict(ASK, default="keep")), second, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor")), (1, 2), err)
+        run = self.run_dir(err).name
+        self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q2", "--option", "rename")
+        self.reopen()
+        code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
+        self.assertEqual((code, self.calls("executor")), (0, 3), err2)  # not a fourth: executor.1 was not repeated
+        started = [line["stage"] for line in self.lines(err2) if line["event"] == "stage.start"]
+        self.assertIn("executor.1-q1", started)
+        self.assertNotIn("executor.1", started)
+        self.assertIn("Answer: rename (by", self.prompt("executor", 3))
+
+    def test_an_answered_question_is_not_overdue(self):  # review F5
+        err, directory = self.blocked_run()
+        self.conduct("answer", "--run", directory.name, "--item", "W1", "--question", "Q1", "--option", "keep")
+        file = directory / "W1" / questions.FILE
+        saved = json.loads(file.read_text())
+        saved["questions"][0]["asked_at"] = "2020-01-01T00:00:00Z"
+        file.write_text(json.dumps(saved))
+        row = questions.listing(directory, 2_000_000_000)[0]
+        self.assertEqual((row["answered"], row["overdue"]), (True, False))
 
     def test_defaults_without_a_default_queue_the_question(self):
         self.write_config(extra='[orch.conductor]\nquestions = "defaults"')

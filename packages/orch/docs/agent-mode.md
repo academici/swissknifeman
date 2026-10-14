@@ -45,9 +45,9 @@ stopped (`CODE: message` on stderr, the code is in `status`), 130 it was interru
 
 | Stop | What to do |
 | --- | --- |
-| `ITEM_BLOCKED` with an escalation | read the escalation in the report of the piece. A question of the executor (`QUESTION: <id> …`): `conduct.py answer --run RUN --item ITEM --question ID (--option ID \| --text T)`, then `resume`. Anything else: amend the plan (or give what is missing), reopen the item in the work source, then `resume --retry ITEM` |
+| `ITEM_BLOCKED` with an escalation (a question, `CHECKS_RED`, `REVIEW_LIMIT`, …) | read the escalation in the report of the piece. A question of the executor (`QUESTION: <id> …`): `conduct.py answer --run RUN --item ITEM --question ID (--option ID \| --text T)`, then `resume --run RUN --retry ITEM` (a plain `resume` does not take a blocked piece back). Anything else: amend the plan (or give what is missing), reopen the item in the work source, then `resume --retry ITEM` |
 | `PROVIDER_QUOTA`, `PROVIDER_AUTH`, `PROVIDER_AUTHZ` | fix the account or wait for the reset the message names, then `resume --run RUN` |
-| `ROLE_FAILED`, `ROLE_OUTPUT_*`, `REVIEW_LIMIT`, `OPTIONS_INVALID`, … | fix the cause named in the message (provider, options, the work itself), then `resume --run RUN` |
+| `ROLE_FAILED`, `ROLE_OUTPUT_*`, `OPTIONS_INVALID`, … | fix the cause named in the message (provider, options, the work itself), then `resume --run RUN` |
 | `WORKTREE_DIRTY` | the tree holds changes the run did not make: commit or set them aside; `run --adopt` takes over an earlier attempt of the first piece |
 | the piece was finished or given up outside the conductor | `conduct.py settle --run RUN --item ITEM --outcome done\|done_with_deviations\|blocked --reason TEXT` |
 | the run died before any work began | `conduct.py release --run RUN --item ITEM` gives the claim back |

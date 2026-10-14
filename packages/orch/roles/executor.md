@@ -38,6 +38,15 @@ credential, a clarification the input does not contain). Put the question in `qu
 section `# Answers` of a later round: do not ask those again). A question that does not block names what you `assumed` and
 you go on with it. `default` is your proposal, not an assumption.
 
+## Deviations you may mark `auto_fixable`
+
+Mark a `deviation` issue `auto_fixable: true` only when all of this holds: the fix changes only paths inside
+`scope.write_set` and you name them in `evidence` (`path:line`); no acceptance check and no public interface
+(command line, schema, exported function, file format) changes; no product decision and no security boundary is
+involved; and the deviation is not a mismatch with the spec. The conductor then asks you once for a correction round
+(`# Fix this deviation`) and runs the acceptance checks again; it checks the write set and the checks, the rest is
+your declaration. Anything else stays unmarked.
+
 ## You never
 
 - Read or edit plan source files, generated views or plan state; run plan lifecycle commands.

@@ -250,6 +250,20 @@ When the provider of a role is gated as the routes of a piece are chosen, the ro
 `fallback_routes` entry (`CAPACITY_GATED`, `ROUTE_FALLBACK`); without one the piece stops with `PROVIDER_QUOTA` before any
 work (an optional context scout is skipped instead, when its stage allows it).
 
+### Deviations fixed inside the piece
+
+A finished executor round that reports a `deviation` issue with `auto_fixable: true` gets one correction round before the
+checks, when all of this holds: every path of its `evidence` (`path:line`; a check id `V1` is not a path, and at least one
+path is needed) lies inside `scope.write_set`; the input has acceptance checks; the class is not `spec_mismatch` and the
+outcome is not `owner_decision`; and the `corrections` budget (`_allowance`, shared with the review corrections: the fix
+is one correction) allows one more. The round is an executor round (`executor.<n+1>`) whose prompt has the section
+`# Fix this deviation` (text, impact, evidence); the acceptance checks run on its result like on any candidate. The
+beacons are `DEVIATION_AUTOFIX` (the round starts) and `DEVIATION_AUTOFIX_SKIPPED` (the budget is spent: the deviation
+stays as reported). When the piece ends green the deviation is registered with `outcome: accepted`, `next: fixed in correction N`
+and a plan note "deviation fixed in correction N: …"; when the executor reports it again, or the piece is blocked, it is
+registered as the executor reported it. That the change is safe (no public interface, no product decision, no security
+boundary) is the declaration of the role (`roles/executor.md`): the conductor checks only the write set and the checks.
+
 ### Questions of the executor (D11)
 
 The executor asks in `stage-report.questions[]` (`id`, `revision` ≥ 1, `kind` `clarification|decision|approval|credential`,

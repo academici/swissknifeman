@@ -273,7 +273,7 @@ class Conductor:
             raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
         steps = item.get("steps", {})
         # the state file is sorted by key, so the order of the steps is the order of their ``ended`` stamps
-        blocked = min((key for key in steps if key.startswith("executor.") and
+        blocked = min((key for key in steps if key.startswith("executor.") and key not in continued(steps) and
                        (((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked")),
                       key=lambda key: steps[key].get("ended", ""), default=None)
         if blocked is None:
@@ -544,14 +544,17 @@ class Conductor:
         report = self._execute(item, 1, scout_text, prompts.ADOPTED.format(paths=", ".join(adopted)) if adopted else "")
         if report["status"] == "blocked":
             return self._finish(item, report, None)
-        overlap = self._review_enabled(item) and item.options["checks"]["overlap_review"]
-        round_no = 1
-        rows = self._checks_then_review(item, report, 1, 1) if overlap else self._run_checks(item, 1, report)
         state = item.state
         state.setdefault("check_fixes_used", 0)
         state.setdefault("corrections_used", 0)
         state.setdefault("check_fixes_at", [])   # rounds that got a correction: a resume walks the closed rounds again,
         state.setdefault("corrections_at", [])   # so a counter that only counts up would count them twice
+        state.setdefault("autofix_at", [])       # rounds whose deviation got its fix round (a correction of the budget)
+        overlap = self._review_enabled(item) and item.options["checks"]["overlap_review"]
+        report, round_no = self._autofix(item, report, 1, scout_text)
+        if report["status"] == "blocked":
+            return self._finish(item, report, None)
+        rows = self._checks_then_review(item, report, round_no, 1) if overlap else self._run_checks(item, round_no, report)
         rows, report, round_no = self._green(item, rows, report, round_no, scout_text, 1 if overlap else None)
         if report["status"] == "blocked":
             return self._finish(item, report, rows)
@@ -1716,13 +1719,13 @@ class Conductor:
                                message=f"context-scout write-set hint ignored: {error}"[:300])
         return shown
 
-    def _execute(self, item: Item, number: int, scout_text: str, correction: str) -> dict:
+    def _execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
         """One executor round. A blocking question is queued, denied or, with a default, answered by policy once and the
         round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round."""
         again = 0
         while True:
             key = f"executor.{number}" + (f"-q{again}" if again else "")
-            report = self._round(item, key, number, again > 0, scout_text, correction)
+            report = self._round(item, key, number, again > 0, scout_text, correction, fix)
             if report.get("questions") and f"executor.{number}-q{again + 1}" in item.state.get("steps", {}):
                 again += 1  # a resume walks the closed rounds again
                 continue
@@ -1731,7 +1734,8 @@ class Conductor:
                 return report
             again += 1
 
-    def _round(self, item: Item, key: str, number: int, refresh: bool, scout_text: str, correction: str) -> dict:
+    def _round(self, item: Item, key: str, number: int, refresh: bool, scout_text: str, correction: str,
+               fix: str = "") -> dict:
         route = item.routes["executor"]
 
         def run() -> dict:
@@ -1744,7 +1748,7 @@ class Conductor:
                                       repo_rules=self._repo_rules(item, "executor"),
                                       skill_texts=self._skill_texts(item, "executor"),
                                       expected=item.state.get("expected"),
-                                      answers=questions_mod.answers_text(self._questions(item)))
+                                      answers=questions_mod.answers_text(self._questions(item)), fix=fix)
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}
@@ -1757,6 +1761,68 @@ class Conductor:
             report = self._blocked(report, "OUTSIDE_WRITE_SET", "the executor changed paths the write set does not own: "
                                    + ", ".join(outside[:20]) + "; widen the write set in the plan or set them aside, then retry")
         return report
+
+    # ------------------------------------------------------------------ deviations fixed inside the piece
+
+    def _autofixable(self, item: Item, report: dict) -> list:
+        """The deviations of a finished round the conductor may have fixed: ``auto_fixable``, not a ``spec_mismatch`` and
+        not left to the owner, every path of the evidence inside the write set (and at least one), in a piece that has
+        acceptance checks to prove the fix. Whether the change is safe (no public API, no product decision, no security
+        boundary) is the declaration of the role (``roles/executor.md``); only what can be checked is checked here."""
+        write_set = (item.input_doc.get("scope") or {}).get("write_set")
+        checks = [row for row in (item.input_doc.get("acceptance") or {}).get("checks", [])
+                  if row.get("kind", "acceptance") == "acceptance"]
+        if report["status"] == "blocked" or not write_set or not checks:
+            return []
+        found = []
+        for issue in report.get("open_issues", []):
+            paths = evidence_paths(issue.get("evidence") or [])
+            if (issue["kind"] == "deviation" and issue.get("auto_fixable") is True and issue.get("class") != "spec_mismatch"
+                    and issue.get("outcome") != "owner_decision" and paths and not scopes.outside(paths, write_set)):
+                found.append(issue)
+        return found
+
+    def _autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> tuple:
+        """``(report, round_no)``: one correction round for the fixable deviations of the executor report, when the
+        ``corrections`` budget allows one (it is checked, not spent: the fix happens once per piece and leaves the review
+        its own corrections); the checks that follow are the same ones. The deviation is kept in
+        ``state.autofixed`` and settled by ``_finish``: accepted with a note when the piece ends green, as it was when not."""
+        found = self._autofixable(item, report)
+        state = item.state
+        if not found:
+            return report, round_no
+        replayed = round_no in state["autofix_at"]
+        done_before = len([number for number in state["autofix_at"] if number != round_no]) + len(state["corrections_at"])
+        why = None if replayed else self._allowance(item, "corrections", done_before, False)
+        if why:
+            self.progress.emit("info", item=item.ref, reason_code="DEVIATION_AUTOFIX_SKIPPED",
+                               message=f"{len(found)} auto_fixable deviation(s) stay as reported: {why}")
+            return report, round_no
+        if not replayed:
+            state["autofix_at"].append(round_no)
+            state.setdefault("autofixed", []).extend({"issue": issue, "round": round_no} for issue in found)
+            self.progress.emit("info", item=item.ref, reason_code="DEVIATION_AUTOFIX",
+                               message=f"correction {len(state['autofix_at'])}: {len(found)} auto_fixable deviation(s) "
+                                       "are fixed in the write set, then the checks run again")
+        self._save()
+        round_no += 1
+        return self._execute(item, round_no, scout_text, prompts.DEVIATION_FIX, prompts.fix_deviation(found)), round_no
+
+    def _autofix_issues(self, item: Item, report: dict) -> list:
+        """The deviations of the fix rounds as the registration must carry them: accepted with a note when the piece is
+        done, unchanged when it is not; none that the final report names itself."""
+        carried = []
+        for entry in item.state.get("autofixed", []):
+            issue = entry["issue"]
+            if any(known.get("text") == issue["text"] for known in report.get("open_issues", [])):
+                continue  # the executor reported it again: it was not fixed
+            if report["status"] == "blocked":
+                carried.append(issue)
+                continue
+            number = item.state["autofix_at"].index(entry["round"]) + 1
+            carried.append(dict(issue, outcome="accepted", next=f"fixed in correction {number}"))
+            self._plan_note(item, f"deviation fixed in correction {number}: {issue['text']}")
+        return carried
 
     # ------------------------------------------------------------------ questions of the executor (D11)
 
@@ -2171,6 +2237,11 @@ class Conductor:
                      "class": "write_set", "outcome": "accepted", "evidence": list(outside)[:20]}
             report = dict(report, status="done_with_deviations",
                           open_issues=list(report.get("open_issues", [])) + [issue])
+        fixed = self._autofix_issues(item, report)
+        if fixed:
+            report = dict(report, open_issues=list(report.get("open_issues", [])) + fixed)
+            if report["status"] == "done" and any(issue["kind"] == "deviation" for issue in fixed):
+                report["status"] = "done_with_deviations"
         notes = self._notes(item)
         if notes:
             report = dict(report, open_issues=list(report.get("open_issues", [])) + notes)
@@ -2239,6 +2310,28 @@ class Conductor:
 
             self._step(item, "commit", commit, verdict=lambda result: f"{result['outcome']} {result.get('sha') or ''}".strip())
         return status
+
+
+_EVIDENCE_CHECK = re.compile(r"^V[0-9]+$")
+
+
+def evidence_paths(evidence: list) -> list:
+    """The repository paths an issue names as evidence: ``path:line`` and ``path:line-line`` lose their lines; a check
+    id (``V1``) is not a path."""
+    return [re.sub(r":[0-9]+(?:-[0-9]+)?$", "", text) for text in evidence
+            if isinstance(text, str) and text and not _EVIDENCE_CHECK.match(text)]
+
+
+def continued(steps: dict) -> set:
+    """The executor rounds that a later round of the same number continued after a policy answer (``executor.1`` by
+    ``executor.1-q1``, that by ``executor.1-q2``): they reported ``blocked`` but are not where the piece stopped."""
+    found = set()
+    for key in steps:
+        match = re.fullmatch(r"(executor\.[0-9]+)(?:-q([0-9]+))?", key)
+        if match and match.group(2):
+            number = int(match.group(2))
+            found.add(match.group(1) if number == 1 else f"{match.group(1)}-q{number - 1}")
+    return found
 
 
 def report_problems(report: dict) -> list:

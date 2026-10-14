@@ -822,31 +822,33 @@ class Conductor:
 
     def _selected(self, item: Item, role: str, persist: bool) -> dict:
         """The route of ``role`` that can start: its own, or, when its provider is gated (the account quota is known to
-        be exhausted until a reset), the first declared fallback route that passes the admission. A gated route with no
-        such fallback stops the run with ``PROVIDER_QUOTA`` (the optional scout is left to its own step: it is skipped
-        when it may be)."""
+        be exhausted until a reset) or cannot start here (no CLI, a sandbox that does not start), the first declared
+        fallback route that passes the admission. A gated route with no such fallback stops the run with
+        ``PROVIDER_QUOTA``; one that cannot start keeps its route and is refused by the preflight with its own code (the
+        optional scout is left to its own step: it is skipped when it may be)."""
         kept = (item.state.get("route_overrides") or {}).get(role)  # a fallback taken before a stop: a resume keeps it
         route = self._route(item, role, kept) if kept else self._route(item, role)
         gate = gates.blocked(route["provider"], wall())
-        if gate is None:
+        problem = None if gate else self.route_problem(route)
+        if gate is None and problem is None:
             return route
         found, refused = self._fallback(item, role, route)
-        until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})"
+        until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})" \
+            if gate else problem
         if found is None:
-            if role == "context-scout":
+            if gate is None or role == "context-scout":
                 return route
             raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
                        + "; resume after the reset, or remove the gate with conduct.py gates --clear")
-        if persist:
-            item.state.setdefault("route_overrides", {})[role] = {
-                key: found[key] for key in ("provider", "model_class", "effort") if found.get(key)}
-        item.route_notes.append({"role": role, "reason_code": "CAPACITY_GATED", "from": self.label(route),
-                                 "to": self.label(found), "until": gate["until"]})
+        reason = "CAPACITY_GATED" if gate else problem.split(":", 1)[0]
+        item.route_notes.append({"role": role, "reason_code": reason, "from": self.label(route), "to": self.label(found),
+                                 "detail": until})
         if persist and self.progress is not None:
-            self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="CAPACITY_GATED",
-                               message=f"{role}: {until}")
+            if gate:
+                self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="CAPACITY_GATED",
+                                   message=f"{role}: {until}")
             self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="ROUTE_FALLBACK",
-                               message=f"{role}: {self.label(route)} -> {self.label(found)} (CAPACITY_GATED)")
+                               message=f"{role}: {self.label(route)} -> {self.label(found)} ({reason})")
         return found
 
     def _fallback(self, item: Item, role: str, current: dict, declared: Optional[dict] = None) -> tuple:
@@ -1089,9 +1091,6 @@ class Conductor:
         until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})"
         if found is not None:
             item.routes[role] = found
-            item.state.setdefault("route_overrides", {})[role] = {
-                key_: found[key_] for key_ in ("provider", "model_class", "effort") if found.get(key_)}
-            self._save()
             write_json(item.directory / "routes.json", item.routes)
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
                                reason_code="CAPACITY_GATED", message=f"{role}: {until}")

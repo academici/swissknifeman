@@ -104,8 +104,9 @@ class OptionsTests(unittest.TestCase):
 
     def test_provider_failure_options_merge_by_class_and_the_routes_are_replaced_as_a_list(self):
         merged, _ = options.effective({}, self.policy(), [])
-        self.assertEqual((merged["on_error"], merged["fallback_routes"], merged["limits"]["provider_wait_max_s"]),
-                         ({}, [], 900))
+        self.assertEqual((merged["on_error"], merged["limits"]["provider_wait_max_s"]), ({}, 900))
+        self.assertEqual(merged["fallback_routes"], [{"role": "reviewer", "provider": "claude-code",
+                                                      "model_class": "frontier", "effort": "high"}])  # the default
         route = {"role": "executor", "provider": "codex", "model_class": "implementation"}
         layers = [{"source": "phase:P2", "options": {"on_error": {"quota": {"action": "stop"}, "unknown": {"action": "retry"}},
                                                      "fallback_routes": [route, dict(route, role="reviewer")]}},

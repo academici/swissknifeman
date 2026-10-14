@@ -158,6 +158,12 @@ next run do not start the provider again; a wait that is longer than `limits.pro
 is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`). The role's step result records
 `error` (error/v1), `api_retries` and `decisions`.
 
+The reviewer has a fallback by default (`fallback_routes`): a review is too dear to lose when grok cannot start (no CLI), is
+gated (its quota is exhausted) or fails and the policy says `fallback_route` (`on_error`). A route that cannot start, or is
+gated, is replaced when the routes of a piece are chosen (`ROUTE_FALLBACK`, `CAPACITY_GATED`); a role that fails at the provider moves
+by the decision of `retry.decide`. `run --dry-run` shows what a run would do: `fallback_routes`, the `gates` in force, the
+`reviewer` selector with the layer that set it, and `route_notes` (a route replaced at selection and why).
+
 A fallback route is admitted by the same rules as a route at the start: not below the class or effort the work requires,
 startable here (command, transport, provider sandbox, `instructions.sandbox: require` for a Claude Code role with Bash) and not
 gated. A route taken is remembered in the state of the piece, so a resumed run starts on it, not on the route that failed.
@@ -205,7 +211,7 @@ effect.
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`) |
 | `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s` |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
-| `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it (default `[]`); a layer replaces the list, `[]` switches the routes of the layers below off |
+| `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `on_blocked` | `stop` or `report` |
 
 Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its

@@ -34,9 +34,12 @@ DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks"
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
 CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
+# A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.
+# A layer with its own ``fallback_routes`` replaces this list, ``fallback_routes: []`` ends it.
+DEFAULT_FALLBACK_ROUTES = [{"role": "reviewer", "provider": "claude-code", "model_class": "frontier", "effort": "high"}]
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
-            "on_blocked": "stop", "on_error": {}, "fallback_routes": []}
+            "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
                 "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
                 "check_timeout_s": (0, None), "ceiling_factor": (1, 5), "repairs": (0, 3), "stage_warn_s": (0, None),

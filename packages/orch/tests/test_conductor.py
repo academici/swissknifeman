@@ -1411,6 +1411,89 @@ class ProviderErrorTests(ConductorCase):
         self.assertEqual(len(self.slept), 2)  # looked at every second
 
 
+class ReviewerFallbackTests(ConductorCase):
+    """The reviewer of a run is grok by default; a review is too dear to lose when grok cannot start, is gated or fails, so
+    ``fallback_routes`` has a default for it: claude-code, class frontier, effort high (a layer replaces it, ``[]`` ends it)."""
+
+    def real_reviewer(self) -> None:
+        """No command override for the reviewer: its route is the launch catalog's own (a grok command line)."""
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES if role != "reviewer"})
+
+    def without_grok(self):
+        return mock.patch.object(engine.process, "available", lambda argv: "grok" not in argv)
+
+    def dry_run(self, layer=None) -> dict:
+        args = ["run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full"]
+        if layer is not None:
+            options = self.project.parent / "layer.json"
+            options.write_text(json.dumps(layer), encoding="utf-8")
+            args += ["--options", options]
+        code, out, err = self.conduct(*args)
+        self.assertEqual(code, 0, err)
+        return json.loads(out)
+
+    def test_the_default_is_claude_code_frontier_high_for_the_reviewer(self):
+        preview = self.dry_run()
+        self.assertEqual(preview["fallback_routes"], [{"role": "reviewer", "provider": "claude-code",
+                                                       "model_class": "frontier", "effort": "high"}])
+        self.assertEqual(preview["reviewer"], {"selector": "grok/grok-4.7/high", "source": "config:orch.conductor"})
+        self.assertEqual((preview["gates"], preview["route_notes"]), ([], []))
+
+    def test_a_reviewer_layer_is_named_in_the_preview(self):
+        preview = self.dry_run({"reviewer": "codex/gpt-6-sol/high"})
+        self.assertEqual(preview["reviewer"], {"selector": "codex/gpt-6-sol/high", "source": "invocation:--options"})
+
+    def test_a_dry_run_without_grok_shows_the_fallback_reviewer(self):
+        self.real_reviewer()
+        with self.without_grok():
+            preview = self.dry_run()
+        self.assertEqual(preview["routes"]["reviewer"]["provider"], "claude-code")
+        self.assertEqual((preview["routes"]["reviewer"]["model_class"], preview["routes"]["reviewer"]["effort"]),
+                         ("frontier", "high"))
+        self.assertIs(preview["available"]["reviewer"], True)
+        note = preview["route_notes"][0]
+        self.assertEqual((note["role"], note["reason_code"]), ("reviewer", "PROVIDER_UNAVAILABLE"))
+        self.assertTrue(note["from"].startswith("grok/"), note)
+
+    def test_an_empty_layer_ends_the_default_fallback(self):
+        self.real_reviewer()
+        with self.without_grok():
+            preview = self.dry_run({"fallback_routes": []})
+        self.assertEqual(preview["routes"]["reviewer"]["provider"], "grok")
+        self.assertIs(preview["available"]["reviewer"], False)
+        self.assertEqual(preview["route_notes"], [])
+
+    def test_a_dry_run_lists_the_gates_in_force(self):
+        gates.set_gate("grok", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        preview = self.dry_run()
+        self.assertEqual([row["provider"] for row in preview["gates"]], ["grok"])
+        self.assertEqual(preview["routes"]["reviewer"]["provider"], "claude-code")
+        self.assertEqual(preview["route_notes"][0]["reason_code"], "CAPACITY_GATED")
+
+    def test_a_gated_grok_reviews_on_claude_code(self):
+        gates.set_gate("grok", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        fallback = [line for line in self.lines(err) if line.get("reason_code") == "ROUTE_FALLBACK"]
+        self.assertEqual([line["role"] for line in fallback], ["reviewer"], err)
+        self.assertIn("claude-code", fallback[0]["message"])
+        routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
+        self.assertEqual(routes["reviewer"]["provider"], "claude-code")
+
+    def test_a_failing_grok_reviewer_moves_to_claude_code_when_the_policy_says_so(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"on_error": {"unknown": {"action": "fallback_route"}}}}]}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [{"exit": 1}, GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 2)
+        fallback = [line for line in self.lines(err) if line.get("reason_code") == "ROUTE_FALLBACK"]
+        self.assertEqual([line["role"] for line in fallback], ["reviewer"], err)
+        routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
+        self.assertEqual(routes["reviewer"]["provider"], "claude-code")
+
+
 class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_writes_nothing_and_shows_routes(self):
         code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")

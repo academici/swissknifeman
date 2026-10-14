@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.4",
   "title": "aicore config explain --all: все модули, значение, слой, файл, строка; --json",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "aicore config explain --all [--root] [--config] [--json] по всем модулям discover_units(); module и --all взаимоисключимы; маскирование секретов как в explain; golden на фикстуре machine+project+invocation; umbrella проксирует.",
   "why": "Аудит П2.5; критерий 1 части 9.",
   "scope": {
@@ -89,6 +89,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:46:21Z"
+  "result": {
+    "started_at": "2026-10-14T06:44:55Z",
+    "finished_at": "2026-10-14T07:13:03Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0068d0be-1d1f-4fdc-8ee8-a533f18299ad"
+    },
+    "notes": "aicore config explain --all [--json]: все модули discover(), массив config-explain/v1, module и --all взаимоисключимы (exit 2); тесты: json, текст-golden, секрет-ссылка, исключение; README, CHANGELOG.",
+    "deviations": [
+      "golden как точный тест на фикстуре, не кейс cases.json; README aicore"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T07:13:03Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T07:13:03Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T07:13:03Z"
 }

@@ -55,8 +55,11 @@ def build_parser() -> argparse.ArgumentParser:
     show.add_argument("module")
 
     explain = commands.add_parser("explain", parents=[common], help="where each value comes from and what it overrides")
-    explain.add_argument("module")
+    explain.add_argument("module", nargs="?", help="module id (not with --all)")
     explain.add_argument("key", nargs="?", help="a key or table (dotted); default: every set key")
+    explain.add_argument("--all", action="store_true", dest="all_modules",
+                         help="every module with a config schema: each set key with its value, layer, file and line "
+                              "(--json: one config-explain/v1 document per module, as an array)")
 
     for name, text in (("set", "write one key into a layer file"), ("unset", "remove one key from a layer file")):
         sub = commands.add_parser(name, parents=[common], help=text)
@@ -129,7 +132,25 @@ def _cmd_show(ctx: _Context) -> int:
     return 0
 
 
+def _cmd_explain_all(ctx: _Context) -> int:
+    configs = [ctx.resolved(module_id) for module_id in sorted(discover(ctx.env))]
+    if ctx.args.json:
+        ctx.emit_json([config.explain_json() for config in configs])
+        return 0
+    for config in configs:
+        ctx.say(f"# {config.module}")
+        text = config.explain_text()
+        ctx.say(text if text else "(no keys set)")
+    return 0
+
+
 def _cmd_explain(ctx: _Context) -> int:
+    if ctx.args.all_modules:
+        if ctx.args.module:
+            raise _UsageError("--all explains every module; give a module or --all, not both")
+        return _cmd_explain_all(ctx)
+    if not ctx.args.module:
+        raise _UsageError("a module id or --all is required")
     config = ctx.resolved(ctx.args.module)
     if ctx.args.json:
         ctx.emit_json(config.explain_json(ctx.args.key))

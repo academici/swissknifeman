@@ -67,6 +67,72 @@ class TestShowExplain(CliCase):
         self.assertEqual("urn:swissknifeman:aicore:config-explain:v1", doc["$schema"])
         self.assertEqual(str(self.project), doc["project"])
 
+    def all_layers(self):
+        self.machine_file.parent.mkdir(parents=True)
+        self.machine_file.write_text('schema_version = 1\n[demo]\nmode = "fast"\n[demo.recompute]\ncandidate_min_n = 18\n',
+                                     encoding="utf-8")
+        self.project_file.parent.mkdir(parents=True)
+        self.project_file.write_text("schema_version = 1\n[demo.recompute]\ncandidate_min_n = 20\n", encoding="utf-8")
+        extra = self.tmp / "extra.toml"
+        extra.write_text("schema_version = 1\n[demo]\nverbose = true\n", encoding="utf-8")
+        return extra
+
+    def test_explain_all_json_is_one_document_per_module(self):
+        extra = self.all_layers()
+        code, out, err = self.run_cli("config", "explain", "--all", "--json", "--config", str(extra))
+        self.assertEqual((code, err), (0, ""))
+        docs = json.loads(out)
+        self.assertEqual(["demo"], [doc["module"] for doc in docs])  # a unit without a config schema is not listed
+        doc = docs[0]
+        self.assertEqual("urn:swissknifeman:aicore:config-explain:v1", doc["$schema"])
+        self.assertEqual(str(self.project), doc["project"])
+        entries = {entry["key"]: entry for entry in doc["entries"]}
+        self.assertEqual(("project", 3), (entries["recompute.candidate_min_n"]["layer"],
+                                          entries["recompute.candidate_min_n"]["line"]))
+        self.assertEqual("machine", entries["recompute.candidate_min_n"]["overridden"][0]["layer"])
+        self.assertEqual(("machine", str(self.machine_file)), (entries["mode"]["layer"], entries["mode"]["file"]))
+        self.assertEqual(("invocation", str(extra)), (entries["verbose"]["layer"], entries["verbose"]["file"]))
+
+    def test_explain_all_text_is_the_golden_of_machine_project_and_invocation(self):
+        extra = self.all_layers()
+        code, out, err = self.run_cli("config", "explain", "--all", "--config", str(extra))
+        self.assertEqual((code, err), (0, ""))
+        golden = """\
+# demo
+recompute.candidate_min_n = 20
+  from project {proj}:3
+  overrides machine {machine}:5 = 18; defaults = 15
+recompute.ratio = 0.5
+  from defaults
+recompute.window.days = 7
+  from defaults
+verbose = true
+  from invocation {extra}:3
+  overrides defaults = false
+mode = "fast"
+  from machine {machine}:3
+  overrides defaults = "safe"
+sources = ["local"]
+  from defaults
+cache_dir = ""
+  from defaults
+"""
+        self.assertEqual(golden.format(proj=self.project_file, machine=self.machine_file, extra=extra), out)
+
+    def test_explain_all_does_not_print_a_secret_reference_value_of_a_set_token(self):
+        self.project_file.parent.mkdir(parents=True)
+        self.project_file.write_text('schema_version = 1\n[demo]\ntoken = "env://DEMO_TOKEN"\n', encoding="utf-8")
+        code, out, _ = self.run_cli("config", "explain", "--all", "--json")
+        entry = {e["key"]: e for e in json.loads(out)[0]["entries"]}["token"]
+        self.assertTrue(entry["secret"])
+        self.assertEqual("env://DEMO_TOKEN", entry["value"])  # the reference, never a resolved value
+
+    def test_explain_all_and_a_module_exclude_each_other(self):
+        for argv in (("config", "explain", "--all", "demo"), ("config", "explain")):
+            code, _, err = self.run_cli(*argv)
+            self.assertEqual(2, code, argv)
+            self.assertIn("error", err)
+
     def test_env_and_config_flag_layers(self):
         extra = self.tmp / "extra.toml"
         extra.write_text('schema_version = 1\n[demo]\nmode = "fast"\n', encoding="utf-8")

@@ -108,6 +108,7 @@ shown by `show`, `explain`, `repr`, error messages or tracebacks.
 ```text
 aicore config show <module>                          resolved values and their layers
 aicore config explain <module> [key] [--json]        origin of each value; --json is config-explain/v1
+aicore config explain --all [--json]                 every module with a config schema: each set key with value, layer, file, line
 aicore config set <module>.<key> <value> --machine|--project
 aicore config unset <module>.<key> --machine|--project
 aicore config init --machine|--project [--module ID ...] [--force]

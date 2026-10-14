@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.2",
   "title": "Каталог и lineage каждого вызова агента: agents/<agent_run_id>/ request, result, usage; поле agent в progress-line; status --json и observer по агентам",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "agent_run_id в _role (включая report-fixer, parent_agent_run_id); файлы request/result/usage по knowledge/p6-work#agents; progress-line.agent (аддитивно); conduct.py status --json — agents; observer — токены по ролям и агентам; тесты.",
   "why": "Аудит П5.2, мысли 1 и 10.",
   "scope": {
@@ -103,6 +103,26 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:51:20Z"
+  "result": {
+    "started_at": "2026-10-14T11:30:43Z",
+    "finished_at": "2026-10-14T11:48:57Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "10bfd74b-2666-49dd-adce-d1e7a0bf145f"
+    },
+    "notes": "agents.py catalog: agent-<suffix>-<n> folders with request/result/usage, report-fixer parent, state.agents counter, progress-line agent field, status --json agents, observer tokens_by_agent; tests test_conductor_agents; docs, CHANGELOG. V1 green.",
+    "deviations": [
+      "P6.1 leftovers (bridge README row, progress.py beacon) committed with this item"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T11:48:57Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T11:48:57Z"
 }

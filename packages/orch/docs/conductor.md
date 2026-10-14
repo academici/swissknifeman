@@ -303,13 +303,26 @@ Every event is one progress line (`conductor/v1` `progress-line`): `run.start|re
 happened, verdict, duration, tokens, stop code), the JSON line with `--json-lines`, nothing with `--quiet`. The journal
 `progress.jsonl` always gets the JSON line. Every role is told to print the same kind of line
 (`[orch] <UTC time> <item> <step> <what>`) into its own stream. `conduct.py status` summarises the journal: run status,
-the step running now, the last step and outcome of each piece, the tokens.
+the step running now, the last step and outcome of each piece, the tokens and the agent runs of the current piece
+(`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`).
+
+### Agent runs
+
+Every start of a model role (executor, reviewer, scout, triager, registrar, and the report-fixer that mends a result) is an agent
+run with the id `agent-<run suffix>-<n>` (`n` from `state.agents`, kept across a resume) and the folder
+`<run>/<item>/agents/<agent_run_id>/`: `request.json` (`role`, `route`, `step`, `attempt`, `prompt` and `causation`, `started_at`;
+`parent_agent_run_id` for the report-fixer, which names the role it mended), `result.json` (`exit`, `error` — an `error/v1`
+document when the failure was classified, else the code of the stop —, `decisions` of `retry.decide`, `duration_s`, `stream`,
+`lingered`; written however the run ends) and `usage.json` (`input`, `cached`, `output` of all its attempts, the report-fixer
+apart from the role it mended). The prompts and the streams stay in `prompts/` and `streams/`; the folder points at them. A
+folder without `result.json` is a role still running or one that died with the process. The `stage.end` lines and the
+`STAGE_SLOW`/`STAGE_IDLE` beacons carry the optional field `agent`; the observer report lists the tokens by agent run.
 
 ## Files: what is committed
 
 | Path | Git | Content |
 | --- | --- | --- |
-| `.swissknifeman/state/orch/conductor/<run>/` | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/`, `streams/` (raw role streams with token logs), `reports/`, `checks/<n>/V#.log`, `register-report.json` |
+| `.swissknifeman/state/orch/conductor/<run>/` | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/`, `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json` |
 | `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the digest of the brief, the plan version, the route and the role text |
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |

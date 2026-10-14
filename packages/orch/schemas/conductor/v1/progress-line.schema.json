@@ -50,6 +50,11 @@
       "type": "string",
       "minLength": 1
     },
+    "agent": {
+      "description": "Agent run of a model stage: the id of its folder under agents/ (agent-<run suffix>-<n>).",
+      "type": "string",
+      "pattern": "^agent-[A-Za-z0-9._-]+$"
+    },
     "verdict": {
       "description": "Verdict of the stage: done, blocked, green, red, GREEN, ATTENTION, RED, confirmed counts and so on.",
       "type": "string",

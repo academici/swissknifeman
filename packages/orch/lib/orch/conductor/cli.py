@@ -15,7 +15,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import engine, gates, observer, progress
+from orch.conductor import agents, engine, gates, observer, progress
 
 
 def _project(args):
@@ -213,10 +213,12 @@ def main(argv: list | None = None) -> int:
         found = progress.summarize(progress.read_lines(directory))
         found["run"] = run_id
         found["state"] = engine.read_json(directory / engine.STATE_FILE) or {}
+        here = (found["current"] or {}).get("item") or (found["items"][-1]["item"] if found["items"] else None)
+        listed = agents.read(directory / engine.safe(here)) if here else []
         if args.json:
             print(json.dumps({key: value for key, value in found.items() if key != "state"} |
-                             {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop")},
-                             ensure_ascii=False, indent=2))
+                             {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
+                              "agents": listed}, ensure_ascii=False, indent=2))
             return 0
         print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
               + f", last line {found['last_ts']}")
@@ -234,6 +236,9 @@ def main(argv: list | None = None) -> int:
                   + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
         tokens = found["state"].get("tokens") or {}
         print(f"  tokens: {tokens.get('input', 0)} in, {tokens.get('output', 0)} out")
+        for row in listed:
+            print(f"  agent {row['agent_run_id']}: {row['role']} {row['step']} {row['status']}, "
+                  f"{row['tokens']['input']} in, {row['tokens']['output']} out")
         return 0
 
     try:

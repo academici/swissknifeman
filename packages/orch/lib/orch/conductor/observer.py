@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 import time
 
-from orch.conductor import progress as progress_mod
+from orch.conductor import agents as agents_mod, progress as progress_mod
 
 IDLE_S = 30
 EVENT_TYPES = ("orch.run.*", "planner.*")
@@ -102,6 +102,10 @@ def build(directory: Path, project: Path) -> dict:
         items.append({"item": ref, "outcome": item.get("outcome"), "stop": item.get("stop"),
                       "check_fixes": item.get("check_fixes_used", 0), "corrections": item.get("corrections_used", 0),
                       "retries": item.get("retries_used", 0), "tokens": item.get("tokens", {"input": 0, "output": 0})})
+    by_agent = []
+    for folder in sorted(Path(directory).glob("*/")):
+        for row in agents_mod.read(folder):
+            by_agent.append({"item": folder.name, **row})
     counts, problems = _events(project, started) if started else ({}, [])
     codes = Counter(line.get("reason_code") for line in lines if line.get("event") == "info" and line.get("reason_code"))
     wall = (_seconds(lines[-1]["ts"]) - _seconds(lines[0]["ts"])) if len(lines) > 1 else 0.0
@@ -123,6 +127,7 @@ def build(directory: Path, project: Path) -> dict:
         "triage": {"confirmed": confirmed, "rejected": rejected},
         "idle": {"total_s": round(idle_total, 1), "max_s": round(idle_max, 1), "max_between": idle_where},
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
+        "tokens_by_agent": by_agent,
         "seconds_by_role": {role: round(value, 1) for role, value in sorted(seconds.items())},
         "scout_cache": {"runs": scout_runs, "hits": scout_hits},
         "items": items, "events": counts, "event_problems": problems,
@@ -199,6 +204,11 @@ def markdown(report: dict) -> str:
     for role in sorted(set(report["seconds_by_role"]) | set(report["tokens_by_role"])):
         value = report["tokens_by_role"].get(role, {"input": 0, "output": 0})
         lines.append(f"| {role} | {report['seconds_by_role'].get(role, 0)} | {value['input']}/{value['output']} |")
+    if report.get("tokens_by_agent"):
+        lines += ["", "## Agent runs", "", "| Agent | Item | Role | Step | Status | Tokens in/out |",
+                  "| --- | --- | --- | --- | --- | --- |"]
+        lines += [f"| {row['agent_run_id']} | {row['item']} | {row['role']} | {row['step']} | {row['status']} | "
+                  f"{row['tokens']['input']}/{row['tokens']['output']} |" for row in report["tokens_by_agent"]]
     lines += ["", "## Events", ""]
     lines += [f"- {name}: {count}" for name, count in report["events"].items()] or ["- none"]
     lines += [f"- not read: {problem}" for problem in report["event_problems"]]

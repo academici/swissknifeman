@@ -38,7 +38,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_hex
 
 from orch import catalog as catalogs, events, launch, policies, render, retry, sandbox
 from orch import settings as settings_mod
-from orch.conductor import checks as checks_mod, contract, gates, heal, observer, options as opts, process, prompts
+from orch.conductor import agents, checks as checks_mod, contract, gates, heal, observer, options as opts, process, prompts
 from orch.conductor import scope as scopes
 from orch.conductor.progress import Progress, human_duration
 from orch.settings import ORCH_ROOT
@@ -172,6 +172,8 @@ class Conductor:
         self.conductor = dict(settings.conductor or {})
         self._catalog = None
         self._step_tokens = {"input": 0, "output": 0}
+        self._local = threading.local()  # the agent run of the role this thread runs: usage and children belong to it
+        self._agents_lock = threading.Lock()
         self.run_id = ""
         self.directory = Path()
         self.run_doc: dict = {}
@@ -830,7 +832,8 @@ class Conductor:
                       **({"tokens": tokens} if tokens and any(tokens.values()) else {})}
         self._save()
         self.progress.emit("stage.end", item=item.ref, stage=key, role=role, route=route, verdict=said,
-                           duration_s=steps[key]["duration_s"], tokens=steps[key].get("tokens"))
+                           duration_s=steps[key]["duration_s"], tokens=steps[key].get("tokens"),
+                           agent=result.get("agent") if isinstance(result, dict) else None)
         self._stage_event(item, key, "completed")
         if item.options:
             self._budget(item)
@@ -1153,8 +1156,48 @@ class Conductor:
 
     # ------------------------------------------------------------------ model stages
 
+    def _agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int) -> dict:
+        """A new agent run (``agents``): its folder and ``request.json``. It becomes the agent of this thread, so that the
+        usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent."""
+        with self._agents_lock:
+            number = self.state["agents"] = self.state.get("agents", 0) + 1
+            self._save()
+        parent = getattr(self._local, "agent", None)
+        handle = agents.start(item.directory, agents.agent_id(self.run_id, number), role=role, route=self._actor(route),
+                              step=key, attempt=attempt, prompt=self._relative(prompt_file),
+                              parent=parent["id"] if parent else None, started_at=utc_now())
+        handle.update(began=time.monotonic(), previous=parent, last_exit=None, stream=None, lingered=False, trail={})
+        self._local.agent = handle
+        return handle
+
+    def _agent_end(self, handle: dict, error: Optional[dict] = None) -> None:
+        """The result of the agent run, whatever its end; the agent of the thread is the parent again."""
+        trail = handle["trail"]
+        agents.finish(handle, exit_code=handle["last_exit"], error=trail.get("error") or error,
+                      decisions=trail.get("decisions") or [], duration_s=time.monotonic() - handle["began"],
+                      stream=handle["stream"], lingered=handle["lingered"])
+        self._local.agent = handle["previous"]
+
     def _role(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
               extra: Optional[Callable[[dict], list]] = None, cancel=None) -> tuple:
+        """``(result, meta)`` of a role as an agent run: the body is :meth:`_role_body`; the run gets its folder under
+        ``agents/`` and its result however the role ends, and ``meta`` names it (``agent``)."""
+        prompt_file = item.directory / "prompts" / f"{key}.md"
+        attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
+        handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt)
+        try:
+            doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle)
+        except Stop as stop:
+            self._agent_end(handle, {"code": stop.code, "message": stop.message})
+            raise
+        except BaseException as error:  # an interrupt or a crash still leaves the record of the run
+            self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})
+            raise
+        self._agent_end(handle)
+        return doc, {**meta, "agent": handle["id"]}
+
+    def _role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
+                   extra: Optional[Callable[[dict], list]], cancel, handle: dict) -> tuple:
         """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None).
 
         A result outside its contract is first healed by rule (``heal``), then repaired by the report-fixer role from
@@ -1167,7 +1210,7 @@ class Conductor:
         (item.directory / "prompts" / f"{key}.md").write_text(prompt, encoding="utf-8")
         attempt = 0
         first_prompt = prompt
-        trail = {"decisions": [], "error": None, "api_retries": 0}
+        trail = handle["trail"] = {"decisions": [], "error": None, "api_retries": 0}
         base = self._tree_mark() if self._writes(role) else None  # the tree this step started from
         route = self._start_route(item, key, role, route, cancel)
         while True:
@@ -1180,6 +1223,7 @@ class Conductor:
                                    on_tick=self._beacons(item, key, role, raw), provider=route["provider"])
             self._tokens(item, run.usage)
             trail["api_retries"] += run.api_retries
+            handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=handle["lingered"] or run.lingered)
             if run.lingered:
                 self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
                                    reason_code="ROLE_LINGERED",
@@ -1421,11 +1465,19 @@ class Conductor:
             problem = "; ".join(issues[:5])
             prompt = prompts.report_fixer(kind=kind, problem=problem, answer=answer, item=item.ref, step=key)
             raw = item.directory / "streams" / f"{key}-fix{number}.jsonl"
-            (item.directory / "prompts" / f"{key}-fix{number}.md").write_text(prompt, encoding="utf-8")
-            run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
-                                   cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
-                                   env=self._role_env(item, "report-fixer", route))
-            self._tokens(item, run.usage)
+            prompt_file = item.directory / "prompts" / f"{key}-fix{number}.md"
+            prompt_file.write_text(prompt, encoding="utf-8")
+            handle = self._agent_start(item, key, "report-fixer", route, prompt_file, number)  # the parent is the role mended
+            try:
+                run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
+                                       cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
+                                       env=self._role_env(item, "report-fixer", route))
+                self._tokens(item, run.usage)
+                handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
+            except BaseException as error:
+                self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})
+                raise
+            self._agent_end(handle, {"code": run.error, "message": run.detail or run.error} if run.error else None)
             if run.error:
                 self.progress.emit("info", item=item.ref, stage=key, role="report-fixer", route=self.label(route),
                                    reason_code="REPAIR_FAILED", message=f"{run.error}: {run.detail}")
@@ -1445,19 +1497,21 @@ class Conductor:
         limits = item.options["limits"]
         warn, idle_warn = limits.get("stage_warn_s", 0), limits.get("stage_idle_warn_s", 0)
         marks = {"slow": warn, "idle": idle_warn}
+        current = getattr(self._local, "agent", None)
+        agent = current["id"] if current else None
 
         def tick(elapsed: float, idle: float, pid: int) -> None:
             self._run_clock(item)
             if warn and elapsed >= marks["slow"]:
                 marks["slow"] += warn
-                self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW",
+                self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW", agent=agent,
                                    message=f"running {human_duration(elapsed)}; {process.activity(pid, raw)}")
             if idle_warn:
                 if idle < idle_warn:
                     marks["idle"] = idle_warn
                 elif idle >= marks["idle"]:
                     marks["idle"] += idle_warn
-                    self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_IDLE",
+                    self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_IDLE", agent=agent,
                                        message=f"no output for {human_duration(idle)} (running {human_duration(elapsed)}); "
                                                f"{process.activity(pid, raw)}")
         return tick
@@ -1556,6 +1610,9 @@ class Conductor:
         return base
 
     def _tokens(self, item: Item, usage: dict) -> None:
+        handle = getattr(self._local, "agent", None)
+        if handle is not None:
+            agents.add_usage(handle, usage)
         for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
                        item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
             for key in ("input", "cached", "output"):

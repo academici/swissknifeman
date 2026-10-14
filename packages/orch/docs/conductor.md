@@ -13,6 +13,7 @@ conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json
 conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 conduct.py status [--run RUN] [--json]
 conduct.py observe [--run RUN] [--follow]
+conduct.py gates [--json] [--clear [PROVIDER]]
 ```
 
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
@@ -114,6 +115,16 @@ instead; `conduct.py status` shows the latest one of the running step:
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
 the run is healthy (a long test run is) or needs a look. `stage_timeout_s`, `stage_idle_timeout_s` and
 `check_timeout_s` still set hard ceilings when asked for; all are off by default.
+
+### Capacity gates
+
+A provider whose account quota is known to be exhausted is not started again before its reset. `conductor/gates.py` keeps
+the machine file `<state>/orch/provider-gates.json` (`provider-gates/v1`, one entry per provider: `until` UTC, `class`,
+`code`, `set_by`, `set_at`): a usage limit belongs to the account, so every conductor of the machine shares it. An entry
+whose `until` is in the future forbids the provider; an expired entry is ignored and dropped by the next write; of two writes
+the later `until` wins. A write is a read-modify-write under `flock` on `provider-gates.lock` beside the file and an atomic
+replace, so two conductors never lose each other's entry and a reader sees a whole file. `conduct.py gates [--json]` lists
+the gates in force; `gates --clear [PROVIDER]` removes one or all (so does deleting the file); it needs no project.
 
 ### Resume
 

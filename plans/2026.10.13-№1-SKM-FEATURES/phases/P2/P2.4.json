@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.4",
   "title": "orch capacity gate: provider-gates.json в машинном состоянии под flock, проверка при выборе маршрута, conduct.py gates",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Новый conductor/gates.py по knowledge/provider-errors#gates: файл state_dir('orch')/provider-gates.json (provider-gates/v1), set/blocked/clear, read-modify-write под fcntl.flock и atomic_write_json; conduct.py gates [--json] [--clear [PROVIDER]]; тесты истечения, конкурентной записи, CLI.",
   "why": "research-2026-10-13#resilience: исчерпанная квота аккаунта не переоткрывается. Риски: (1) гонка двух conductor-ов — flock на запись, атомарная замена; (2) устаревшая запись — игнор по until.",
   "scope": {
@@ -64,6 +64,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P2.4/review-verdict.json",
+      "role": "output"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "Тесты — временный HOME/XDG_STATE_HOME; реальное состояние машины не трогать",
@@ -96,6 +102,29 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:43:53Z"
+  "result": {
+    "started_at": "2026-10-14T02:32:44Z",
+    "finished_at": "2026-10-14T04:07:29Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "8f5319ab-6291-4ee5-aed3-9ecc37393022"
+    },
+    "notes": "orch.conductor.gates (provider-gates/v1 in state_dir('orch'), set/blocked/active/clear under flock + atomic replace, ceil until, lock identity check, untrusted file = no gates, GATES_UNSAFE on write) and conduct.py gates [--json] [--clear [PROVIDER]]; 23 tests incl. multiprocess writers. Grok review: round 1 7 findings fixed; round 2 7 findings (2 high adversarial, 3 medium, 2 low) left open. conductor.md section added; no golden for conduct.py exists (nothing to regenerate). Not yet consulted by _route (P2.5).",
+    "deviations": [
+      "Round-2 review findings not corrected: corrections_max=1 and review_rounds_max=2 exhausted (4/4 Grok launches); see log note and artifacts/P2.4/review-verdict.json"
+    ],
+    "pending": [
+      "owner decision: bounded extra round or planner:review for gates.py hardening (7 reproduced findings)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T04:07:29Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T04:07:29Z"
 }

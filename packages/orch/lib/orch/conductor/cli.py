@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``conduct.py run|resume|settle|status|observe``.
+"""Command line of the conductor: ``conduct.py run|resume|settle|release|status|observe|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -9,11 +9,12 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 from aicore.config import ConfigError
 
 from orch import sandbox, settings as settings_mod
-from orch.conductor import engine, observer, progress
+from orch.conductor import engine, gates, observer, progress
 
 
 def _project() -> Path | None:
@@ -81,6 +82,32 @@ def _network(conductor, role: str, route: dict, isolation: list, probed: dict) -
     return {"declared": declared, "enforced": by is not None, "by": by}
 
 
+def _gates(args) -> int:
+    """List or clear the machine gates of providers; the gates do not depend on a project."""
+    try:
+        if args.clear is not None:
+            removed = gates.clear(args.clear or None)
+            if args.clear and not removed:
+                print(f"GATE_UNKNOWN: no gate for {args.clear}", file=sys.stderr)
+                return 1
+            print(json.dumps({"cleared": removed}) if args.json else
+                  ("cleared: " + ", ".join(removed) if removed else "no gates"))
+            return 0
+        found = gates.active(time.time())
+    except gates.GateError as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
+    rows = [{"provider": name, **entry} for name, entry in sorted(found.items())]
+    if args.json:
+        print(json.dumps({"path": str(gates.path()), "gates": rows}, ensure_ascii=False, indent=2))
+    elif not rows:
+        print("no gates")
+    for row in rows:
+        if not args.json:
+            print(f"{row['provider']}: until {row['until']} ({row['class']} {row['code']}, set by {row['set_by']})")
+    return 0
+
+
 def main(argv: list | None = None) -> int:
     parser = argparse.ArgumentParser(prog="conduct.py", description="Conduct pieces of work of a plan through "
                                      "the roles of their run-policy until green or an honest stop.")
@@ -128,7 +155,14 @@ def main(argv: list | None = None) -> int:
     observe = verbs.add_parser("observe", help="write the observer report of a run, or --follow a running one")
     observe.add_argument("--run", metavar="RUN")
     observe.add_argument("--follow", action="store_true")
+    gate_list = verbs.add_parser("gates", help="provider capacity gates of this machine (exhausted account quotas); "
+                                               "--clear removes them")
+    gate_list.add_argument("--json", action="store_true")
+    gate_list.add_argument("--clear", nargs="?", const="", default=None, metavar="PROVIDER",
+                           help="remove the gate of PROVIDER, or every gate when no provider is given")
     args = parser.parse_args(argv)
+    if args.verb == "gates":
+        return _gates(args)
 
     project = _project()
     if project is None:

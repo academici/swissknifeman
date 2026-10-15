@@ -100,8 +100,8 @@ class SkillsAutoTests(unittest.TestCase):
 
     def test_auto_cannot_be_listed_with_other_skills(self):
         layer = {"skills": [{"role": "executor", "names": ["auto", "docs:notes"]}]}
-        self.assertEqual(len(opts.limit_problems(layer)), 1)
-        self.assertEqual(opts.limit_problems({"skills": [{"role": "executor", "names": ["auto"]}]}), [])
+        self.assertEqual(len(opts.layer_problems(layer)), 1)
+        self.assertEqual(opts.layer_problems({"skills": [{"role": "executor", "names": ["auto"]}]}), [])
 
 
 if __name__ == "__main__":

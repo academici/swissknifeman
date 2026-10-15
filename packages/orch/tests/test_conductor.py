@@ -666,6 +666,17 @@ class StopTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "OPTIONS_INVALID")), err)
 
+    def test_a_source_layer_that_loosens_the_isolation_stops_even_under_an_invocation_label(self):
+        self.set_items({"W1": {"options": [{"source": "invocation:--options",
+                                            "options": {"instructions": {"sandbox": "off"}}}]}})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "OPTIONS_UNTRUSTED")), err)
+        self.assertEqual(self.calls("executor"), 0)
+
+    def test_an_unsafe_extra_path_of_the_invocation_stops(self):
+        code, _, err = self.run_items("W1", extra=("--allow-path", "~/"))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "OPTIONS_UNSAFE_PATH")), err)
+
 
 REPRO = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
 TRIAGE_F1 = {"result": {"confirmed": [{"finding": "F1", "reproduction": REPRO, "fix": "write done"}], "rejected": []}}
@@ -1140,6 +1151,16 @@ class DynamicReviewTests(ConductorCase):
         self.assertEqual([line for line in self.lines(err) if line.get("reason_code") == "REVIEW_ADDED"], [])
         self.assertNotIn("dynamic_review", self.state(err)["items"]["W1"])
 
+    def test_a_critical_feature_adds_the_review_below_the_threshold(self):
+        self.piece(extra="[orch.conductor.risk]\ncritical = [\"schema\"]")
+        self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 1), err)
+        found = self.risk(err)
+        self.assertEqual((found["score"], found["added"], found["critical"]), (25, True, ["schema"]))
+        added = [line["message"] for line in self.lines(err) if line.get("reason_code") == "REVIEW_ADDED"]
+        self.assertIn("critical feature schema", added[0])
+
     def test_the_threshold_of_the_options_moves_the_line(self):
         self.piece({"review": {"dynamic_threshold": 25}})
         self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
@@ -1199,8 +1220,8 @@ class DynamicReviewTests(ConductorCase):
         self.assertTrue([text for text in notes if "risk score 70" in text], notes)
 
     def test_the_threshold_stays_inside_0_to_100(self):
-        self.assertEqual(opts.limit_problems({"review": {"dynamic_threshold": 100}}), [])
-        self.assertEqual(len(opts.limit_problems({"review": {"dynamic_threshold": 101}})), 1)
+        self.assertEqual(opts.layer_problems({"review": {"dynamic_threshold": 100}}), [])
+        self.assertEqual(len(opts.layer_problems({"review": {"dynamic_threshold": 101}})), 1)
 
 
 class ClosingTests(ConductorCase):

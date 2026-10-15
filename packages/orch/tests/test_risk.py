@@ -15,7 +15,7 @@ def names(result: dict) -> list:
 
 class ScoreTests(unittest.TestCase):
     def test_no_facts_score_zero(self):
-        self.assertEqual(risk.score({}), {"score": 0, "features": []})
+        self.assertEqual(risk.score({}), {"score": 0, "features": [], "critical": []})
 
     def test_every_default_feature_with_its_weight_and_evidence(self):
         facts = {"changed": ["bin/tool", "packages/orch/schemas/x.json", "src/auth/login.py", "packages/aicore/lib/a.py"],
@@ -46,6 +46,17 @@ class ScoreTests(unittest.TestCase):
         found = risk.score({"changed": ["contracts/a.json", "x/schemas/b.json"], "diff_lines": 9999}, config)
         self.assertEqual((names(found), found["score"]), (["schema"], 70))  # the schema pattern was replaced
         self.assertEqual(risk.score({"recommended": True}, {"weights": {"executor_recommended": 0}})["score"], 0)
+
+    def test_a_security_change_is_critical_on_its_own_and_critical_can_be_changed(self):
+        for path in ("packages/orch/lib/orch/sandbox.py", "packages/orch/scripts/ro-run.py", "install.sh",
+                     "packages/orch/roles/reviewer.json", ".github/workflows/ci.yml", "packages/x/hooks/pre.sh"):
+            with self.subTest(path=path):
+                found = risk.score({"changed": [path]})
+                self.assertLess(found["score"], risk.DEFAULT_THRESHOLD)  # below the line, critical all the same
+                self.assertEqual(found["critical"], ["security"])
+        self.assertEqual(risk.score({"changed": ["a/schemas/x.json"]})["critical"], [])
+        self.assertEqual(risk.score({"changed": ["a/schemas/x.json"]}, {"critical": ["schema"]})["critical"], ["schema"])
+        self.assertEqual(risk.score({"changed": ["install.sh"]}, {"critical": []})["critical"], [])
 
     def test_the_score_is_pure(self):
         facts, config = {"changed": ["bin/x"], "red_first": True}, risk.defaults()

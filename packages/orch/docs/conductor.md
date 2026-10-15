@@ -162,10 +162,13 @@ The conductor stops only on:
 | `PROVIDER_REFUSED` | the provider refused the request (class `invalid_request`, `content_policy`): a repeat would be refused again |
 | `PROVIDER_CONTEXT` | the request does not fit the context window (class `context_limit`); the prompt is not rebuilt yet |
 | `MODEL_UNAVAILABLE` | the model is not available to the account (class `model_unavailable`), repeated within `limits.retries` first |
-| `TIMEOUT` | only when a ceiling was asked for (`stage_timeout_s`, `stage_idle_timeout_s`); none by default |
+| `TIMEOUT` | a role was silent for `stage_idle_timeout_s` (default 5400: a hang, not a long run), or a wall-clock `stage_timeout_s` was asked for (none by default) |
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece) |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |
 | `OPTIONS_INVALID`, `POLICY_UNKNOWN`, `MODEL_CATALOG_UNAVAILABLE` | the run options, the pack or the model catalog are unusable |
+| `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside` or `scope.extra_paths` (see "Isolation floor") |
+| `OPTIONS_UNSAFE_PATH` | an `extra_paths` entry (`--allow-path`) is the root, a system folder, HOME or an ancestor of it, the project or an ancestor, a secrets folder under HOME, or lies in `.git` (after `~` and symlinks are resolved) |
+| `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
 
 With `on_blocked = "report"` a blocked piece that changed nothing is registered, its records are committed and the
 run goes on; a blocked piece with changes stops the run, because its partial work would leak into the next piece.
@@ -196,11 +199,14 @@ instead; `orch conduct status` shows the latest one of the running step:
 | `RESULT_SILENT_DENIAL` | a Claude role had tool calls refused without a prompt (`--permission-prompts none`) | the tools and how many calls (`Bash×2, WebFetch`), never their input; for the executor and the bounded-implementer the report also gets a `note` issue "tools denied without a prompt: …" with the way out (widen `allowedTools` in the launch catalog, or change the plan) |
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
+| `CHECK_CHANGED_TREE` | the checks of a round changed files of the project (their evidence and logs aside) | the paths; the evidence proves the candidate as it was before the checks |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
-the run is healthy (a long test run is) or needs a look. `stage_timeout_s`, `stage_idle_timeout_s` and
-`check_timeout_s` still set hard ceilings when asked for; all are off by default.
+the run is healthy (a long test run is) or needs a look. `stage_timeout_s` and `check_timeout_s` still set wall-clock
+ceilings when asked for (off by default). Only silence stops work by default: a role whose stream has not grown for
+`stage_idle_timeout_s` (5400) or a check whose log has not grown for `check_idle_timeout_s` (3600) is hung; 0 turns
+either off.
 
 ### Provider availability
 
@@ -300,7 +306,7 @@ that hold, at most 100:
 | --- | --- | --- |
 | `public_cli` | a path matches `patterns.public_cli` (`bin/**`, `**/cli.py`, `packages/*/scripts/*.py`) | 25 |
 | `schema` | `patterns.schema` (`**/schemas/**`, `**/migrations/**`) | 25 |
-| `security` | `patterns.security` (`**/auth/**`, `**/security/**`, `**/permissions*`, `**/*secret*`) | 30 |
+| `security` | `patterns.security` (`**/auth/**`, `**/security/**`, `**/permissions*`, `**/*secret*`, and the code that confines the roles: `**/sandbox*`, `**/ro-run*`, `**/launch-catalog.json`, `**/roles/*.json`, `**/run-policies/**`, `**/hooks/**`, `.github/workflows/**`, `**/install.sh`) | 30, critical |
 | `shared` | `patterns.shared` (`packages/aicore/**`) | 15 |
 | `diff_size` | more than `diff_lines` (400) changed lines | 10 |
 | `red_first` | an acceptance check was red in the first round | 10 |
@@ -308,8 +314,10 @@ that hold, at most 100:
 | `outside_write_set` | paths outside the write set | 15 |
 | `executor_recommended` | the executor recommended a review | 30 |
 
-`[orch.conductor.risk]` (`weights.<feature>`, `patterns.<feature>`, `diff_lines`) changes them in any config layer; a
-weight of 0 turns a feature off. Score and features (with their evidence) go to `<run>/<item>/risk.json` and
+`[orch.conductor.risk]` (`weights.<feature>`, `patterns.<feature>`, `diff_lines`, `critical`) changes them in any config
+layer; a weight of 0 turns a feature off. A feature named in `critical` (default `["security"]`) adds the review on its
+own, whatever the score: a lone sandbox change weighs 30, below the threshold, and must still be read by a reviewer;
+`critical = []` leaves only the threshold. Score and features (with their evidence) go to `<run>/<item>/risk.json` and
 `state.risk`; a resume reads them again. At `review.dynamic_threshold` (default 60) `state.dynamic_review` is set, the
 `reviewer` and the triage role are resolved on the spot (availability, gate, preflight, `routes.json`), the beacon
 `REVIEW_ADDED` and a plan note name the score and the features, and the usual review → triage → correction cycle runs
@@ -465,7 +473,7 @@ committed in the work source).
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and added as `--rw` to its `ro-run.py` guard). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`model` default, `rules`: who chooses it) |
-| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s`  Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
+| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); wall-clock ceilings, off by default: `stage_timeout_s`, `check_timeout_s`; silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `on_blocked` | `stop` or `report` |
@@ -479,8 +487,22 @@ Layers merge from the general to the specific: defaults → `[orch.conductor]` �
 model stages, `review.triage`, `max_rounds`, `max_corrections`, `retries_budget`) → the layers of the work source (the
 plan, the phase, the item) → `--options FILE`. A value of a more specific layer wins; `rules` append without repeats;
 `limits` merge by key; `skills` replace the list of each named role; `stages` merge by role, and a layer that names a
-model or a model class replaces both. Every source layer is validated (`OPTIONS_INVALID` names the layer).
+model or a model class replaces both. Every source layer is validated (`OPTIONS_INVALID` names the layer); the numeric
+bounds are `minimum`/`maximum` of the schema itself, so the schema is the one statement of them.
 `<run>/<item>/options.json` records the merged options and, per key, the layer that set it.
+
+**Isolation floor.** A layer of the work source is text a model may have written (an overlay document, an input file),
+so it may tighten the isolation of a run but never loosen it: `instructions.sandbox` only moves along
+`off < prefer < require`, `scope.fence` along `project < plan`, `scope.outside` along `deviation < block`;
+`instructions.sandbox_domains` and `scope.extra_paths` may only repeat or shrink what the layers below allow;
+`instructions.isolate_roles` may only grow. A layer that loosens one of them stops the run with `OPTIONS_UNTRUSTED` (the
+key, the value and the layer below that set it). Only the configuration, the run-policy pack and the invocation
+(`--options`, `--allow-path`, `--fence`) may loosen them; trust is a mark the conductor sets on its own invocation layers,
+never the `source` label a layer carries. Limits, review and checks keys stay free for the plan (it raises
+`check_timeout_s` or picks a scenario without review legitimately). Every `extra_paths` entry is resolved (`~`,
+symlinks) and refused with `OPTIONS_UNSAFE_PATH` when it is the root, a system folder, HOME or an ancestor, the project
+or an ancestor, a secrets folder under HOME (`.ssh`, `.gnupg`, `.aws`, …) or inside `.git`; the canonical path is the one
+the filesystem guard gets and `options.json` records.
 
 The work source hands the layers over in its claim answer (`options`). The planner bridge reads them from
 `orchestration.options` of the plan, the phase and the item, and from orchestration overlay documents (see the

@@ -222,8 +222,8 @@ class BudgetTests(unittest.TestCase):
                          {"prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000})
         for key in ("prompt_core_tokens", "prompt_supporting_tokens", "prompt_retrieval_tokens"):
             with self.subTest(key=key):
-                self.assertEqual(opts.limit_problems({"limits": {key: 0}}), [])
-                self.assertEqual(len(opts.limit_problems({"limits": {key: -1}})), 1)
+                self.assertEqual(opts.layer_problems({"limits": {key: 0}}), [])
+                self.assertEqual(len(opts.layer_problems({"limits": {key: -1}})), 1)
                 self.assertEqual(contract.problems({"limits": {key: 9000}}, "run-options"), [])
                 self.assertTrue(contract.problems({"limits": {key: "9000"}}, "run-options"))
         self.assertTrue(contract.problems({"limits": {"prompt_other_tokens": 1}}, "run-options"))

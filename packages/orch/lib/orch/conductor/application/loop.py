@@ -469,7 +469,8 @@ def resolve(self, item: Item, persist: bool = True) -> None:
         item.policy = run_policies.load(scenario, self.settings, warn=lambda message: None)
     except run_policies.PolicyError as error:
         raise Stop(error.code, str(error)) from None
-    layers = list(item.claim.get("options") or [])
+    # the work source cannot mark its own layers trusted: only the invocation layers below are
+    layers = [{key: value for key, value in layer.items() if key != "trusted"} for layer in item.claim.get("options") or []]
     if self.run_doc.get("options_file"):
         named, kept = Path(self.run_doc["options_file"]), self.directory / OPTIONS_COPY
         origin = named if named.is_file() or not kept.is_file() else kept  # an edited file still wins on resume
@@ -477,16 +478,18 @@ def resolve(self, item: Item, persist: bool = True) -> None:
             found = json.loads(origin.read_text(encoding="utf-8"))
         except (OSError, ValueError) as error:
             raise Stop("OPTIONS_INVALID", f"{origin}: {error}") from None
-        layers.append({"source": "invocation:--options", "options": found})
+        layers.append({"source": "invocation:--options", "options": found, "trusted": True})
     if self.run_doc.get("grouped") is not None:
         layers.append({"source": "invocation:--batch" if self.run_doc["grouped"] else "invocation:--no-batch",
-                       "options": {"session": {"executor": "shared" if self.run_doc["grouped"] else "per-item"}}})
+                       "options": {"session": {"executor": "shared" if self.run_doc["grouped"] else "per-item"}},
+                       "trusted": True})
     flags = {key: self.run_doc[name] for key, name in (("fence", "fence"), ("extra_paths", "extra_paths"))
              if self.run_doc.get(name)}
     if flags:
-        layers.append({"source": "invocation:--fence/--allow-path", "options": {"scope": flags}})
+        layers.append({"source": "invocation:--fence/--allow-path", "options": {"scope": flags}, "trusted": True})
     try:
         item.options, item.sources = opts.effective(self.conductor, item.policy, layers)
+        item.options["scope"]["extra_paths"] = opts.checked_extra_paths(item.options["scope"]["extra_paths"], self.project)
     except opts.OptionsError as error:
         raise Stop(error.code, error.message) from None
     if persist:

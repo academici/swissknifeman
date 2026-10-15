@@ -6,12 +6,13 @@ more specific layer overrides a value; ``rules`` append (a repeated rule is kept
 key (``fallback_routes`` is replaced as a list; ``[]`` switches the routes of the layers below off),
 ``skills`` replace the list of each role a layer names, and ``stages`` merge by role (a layer that names a model or a
 model class replaces both of the role). Every layer of the source is checked against ``conductor/v1``
-``run-options`` and the bounds of ``LIMIT_BOUNDS`` before it is used. The merged options keep ``skills`` as a map
+``run-options`` (its numeric bounds included) before it is used. The merged options keep ``skills`` as a map
 from role to names.
 """
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 import re
 
 from aicore.util.digest import digest_json
@@ -20,9 +21,12 @@ from orch.conductor import contract
 
 # Limits are targets and beacons, not walls: no role and no check is stopped for being long (the owner or an observer
 # reads the STAGE_SLOW / STAGE_IDLE / CHECK_SLOW beacons and decides); rounds go past their target while they make
-# progress, up to ``ceiling_factor`` times it. The *_timeout_s ceilings stay available, off by default.
+# progress, up to ``ceiling_factor`` times it. The wall-clock ceilings stage_timeout_s, check_timeout_s and run_timeout_s
+# stay available, off by default. Only silence is a wall: a role whose stream has not grown for 90 minutes, or a check
+# whose log has not grown for an hour, is hung, and an unattended run must not wait for it forever.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
-                  "stage_timeout_s": 0, "stage_idle_timeout_s": 0, "check_timeout_s": 0, "ceiling_factor": 2,
+                  "stage_timeout_s": 0, "stage_idle_timeout_s": 5400, "check_timeout_s": 0,
+                  "check_idle_timeout_s": 3600, "ceiling_factor": 2,
                   "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900,
                   "run_warn_s": 7200, "run_timeout_s": 0, "review_rounds_batch": 0, "corrections_batch": 0,
                   "findings_batch": 0, "question_warn_s": 1800, "skill_tokens_max": 5000,
@@ -31,7 +35,6 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
                   "strategy": "auto", "strategist": "model"}
-REVIEW_BOUNDS = {"dynamic_threshold": (0, 100)}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
@@ -47,7 +50,6 @@ DEFAULT_SESSION = {"executor": "shared"}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": True,
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
-CHECKS_BOUNDS = {"parallel": (1, 8)}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 # A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.
 # A layer with its own ``fallback_routes`` replaces this list, ``fallback_routes: []`` ends it.
@@ -56,14 +58,6 @@ AUTO_SKILLS = "auto"  # the one name of a role's skills that asks the skills bri
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
             "session": DEFAULT_SESSION, "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
-LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
-                "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
-                "check_timeout_s": (0, None), "ceiling_factor": (1, 5), "repairs": (0, 3), "stage_warn_s": (0, None),
-                "stage_idle_warn_s": (0, None), "check_warn_s": (0, None), "provider_wait_max_s": (0, None),
-                "run_warn_s": (0, None), "run_timeout_s": (0, None),
-                "review_rounds_batch": (0, None), "corrections_batch": (0, None), "findings_batch": (0, None),
-                "question_warn_s": (0, None), "skill_tokens_max": (0, None), "prompt_core_tokens": (0, None),
-                "prompt_supporting_tokens": (0, None), "prompt_retrieval_tokens": (0, None), "disk_min_gb": (0, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
                "researcher", "advisor")
@@ -73,8 +67,27 @@ _ACTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-
                     r"(?:/(?P<effort>low|medium|high|xhigh|max|ultra))?$")
 
 
+# Layers that come from the machine or the operator: the configuration, the run-policy pack and the invocation layers
+# the conductor itself marks ``trusted`` (``--options``, flags). Every other layer is handed over by the work source (the
+# plan, a phase, an item, an overlay document, an input file): text a model may have written, so it can tighten the
+# isolation of a run, never loosen it. Trust is a mark the conductor sets, never read from the layer's own ``source``.
+# Ordered keys: a work-source layer may only move them to the right.
+FLOOR_ORDER = {("instructions", "sandbox"): ("off", "prefer", "require"),
+               ("scope", "fence"): ("project", "plan"),
+               ("scope", "outside"): ("deviation", "block")}
+# Set keys: a work-source layer may only shrink ``narrow`` ones (a subset of what the layers below allow) and only grow
+# ``widen`` ones; ``extra_paths`` it may only repeat or shrink, so a plan cannot open a directory outside the project.
+FLOOR_NARROW = (("instructions", "sandbox_domains"), ("scope", "extra_paths"))
+FLOOR_WIDEN = (("instructions", "isolate_roles"),)
+# Folders an extra writable path may never be, contain, or lie in (besides the root, HOME and the project's ancestors).
+SYSTEM_DIRS = ("/bin", "/boot", "/dev", "/etc", "/lib", "/lib32", "/lib64", "/proc", "/run", "/sbin", "/sys", "/usr", "/var")
+HOME_SECRETS = (".ssh", ".gnupg", ".aws", ".kube", ".docker", ".netrc", ".password-store")
+
+
 class OptionsError(ValueError):
-    """``OPTIONS_INVALID``: a layer is outside ``run-options``; ``SELECTOR_INVALID``: a selector does not parse."""
+    """``OPTIONS_INVALID``: a layer is outside ``run-options``; ``SELECTOR_INVALID``: a selector does not parse;
+    ``OPTIONS_UNTRUSTED``: a work-source layer loosens the isolation the layers below set; ``OPTIONS_UNSAFE_PATH``: an
+    extra writable path is a system, home or ancestor folder."""
 
     def __init__(self, code: str, message: str):
         super().__init__(f"{code}: {message}")
@@ -180,7 +193,8 @@ def policy_layer(policy: dict) -> dict:
 def effective(conductor: dict, policy: dict, layers: list) -> tuple:
     """``(options, sources)``: the merged options and, per key, the layer that set it last.
 
-    ``layers`` are ``{"source": text, "options": object}`` entries of the work source, general first.
+    ``layers`` are ``{"source": text, "options": object[, "trusted": true]}`` entries, general first: those of the work
+    source, then the invocation ones the conductor marks ``trusted``.
     """
     sources: dict = {}
     current = copy.deepcopy(DEFAULTS)
@@ -202,31 +216,84 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
     apply(f"policy:{policy.get('policy_id', '-')}", policy_layer(policy))
     for layer in layers:
         name, found = layer.get("source", "source"), layer.get("options")
-        issues = contract.problems(found, "run-options") or limit_problems(found)
+        issues = layer_problems(found)
         if issues:
             raise OptionsError("OPTIONS_INVALID", f"{name}: {'; '.join(issues[:3])}")
+        if layer.get("trusted") is not True:
+            loosened = floor_problems(current, found, sources)
+            if loosened:
+                raise OptionsError("OPTIONS_UNTRUSTED", f"{name}: {'; '.join(loosened)} (only the configuration, the "
+                                   "run-policy pack or the invocation (--options, flags) may loosen the isolation)")
         apply(name, found)
     parse_selector(current["reviewer"])
     return current, sources
 
 
-def limit_problems(layer: dict) -> list:
-    """Limits outside ``LIMIT_BOUNDS`` (the shared schema profile has no numeric bounds)."""
+def floor_problems(current: dict, layer: dict, sources: dict) -> list:
+    """How ``layer`` would loosen the isolation of the options merged so far (empty when it only keeps or tightens it)."""
     issues = []
-    for key, value in (layer.get("limits") or {}).items():
-        low, high = LIMIT_BOUNDS[key]
-        if value < low or (high is not None and value > high):
-            issues.append(f"/limits/{key}: {value} is outside {low}..{high if high is not None else '∞'}")
-    for key, value in (layer.get("checks") or {}).items():
-        if key in CHECKS_BOUNDS and not CHECKS_BOUNDS[key][0] <= value <= CHECKS_BOUNDS[key][1]:
-            issues.append(f"/checks/{key}: {value} is outside {CHECKS_BOUNDS[key][0]}..{CHECKS_BOUNDS[key][1]}")
-    for entry in layer.get("skills") or []:
-        if AUTO_SKILLS in entry["names"] and len(entry["names"]) > 1:
-            issues.append(f"/skills/{entry['role']}: \"auto\" cannot be listed together with other skills")
-    for key, value in (layer.get("review") or {}).items():
-        if key in REVIEW_BOUNDS and not REVIEW_BOUNDS[key][0] <= value <= REVIEW_BOUNDS[key][1]:
-            issues.append(f"/review/{key}: {value} is outside {REVIEW_BOUNDS[key][0]}..{REVIEW_BOUNDS[key][1]}")
+
+    def below(group: str, key: str) -> str:
+        return sources.get(f"{group}.{key}", "defaults")
+
+    for (group, key), order in FLOOR_ORDER.items():
+        if key in (layer.get(group) or {}):
+            old, new = current[group][key], layer[group][key]
+            if order.index(new) < order.index(old):
+                issues.append(f"{group}.{key} {new} is weaker than {old} of {below(group, key)}")
+    for group, key in FLOOR_NARROW:
+        if key in (layer.get(group) or {}):
+            added = sorted(set(layer[group][key]) - set(current[group][key]))
+            if added:
+                issues.append(f"{group}.{key} adds {', '.join(added)} to what {below(group, key)} allows")
+    for group, key in FLOOR_WIDEN:
+        if key in (layer.get(group) or {}):
+            dropped = sorted(set(current[group][key]) - set(layer[group][key]))
+            if dropped:
+                issues.append(f"{group}.{key} drops {', '.join(dropped)} kept by {below(group, key)}")
     return issues
+
+
+def checked_extra_paths(paths, project, home=None) -> list:
+    """``scope.extra_paths`` as canonical folders (``~`` expanded, symlinks resolved), refused with
+    ``OPTIONS_UNSAFE_PATH`` when one is the root, a system folder, HOME or an ancestor of it, an ancestor of the project
+    (or the project itself), a folder of secrets under HOME, or lies in a ``.git`` folder."""
+    import os
+
+    home = os.path.realpath(os.path.expanduser("~") if home is None else str(home))
+    project = os.path.realpath(str(project))
+    out = []
+    for path in paths or []:
+        expanded = os.path.expanduser(path) if path.startswith("~") else path
+        real = os.path.realpath(expanded)
+
+        def within(base: str, real=real) -> bool:
+            return real == base or real.startswith(base.rstrip("/") + "/")
+
+        why = None
+        if real == "/" or not os.path.isabs(expanded):
+            why = "the root or a relative path"
+        elif any(within(system) for system in SYSTEM_DIRS) and not within(home):
+            why = "a system folder"
+        elif home == real or home.startswith(real.rstrip("/") + "/"):
+            why = "HOME or one of its ancestors"
+        elif project == real or project.startswith(real.rstrip("/") + "/"):
+            why = "the project or one of its ancestors"
+        elif any(within(os.path.join(home, name)) for name in HOME_SECRETS):
+            why = "a folder of secrets under HOME"
+        elif ".git" in Path(real).parts:
+            why = "inside a .git folder"
+        if why:
+            raise OptionsError("OPTIONS_UNSAFE_PATH", f"scope.extra_paths {path!r} ({real}) is {why}")
+        out.append(real)
+    return out
+
+
+def layer_problems(layer: dict) -> list:
+    """Problems of one layer: ``run-options`` (its bounds included), then what the schema cannot say (``auto`` listed
+    together with other skills)."""
+    return contract.problems(layer, "run-options") or [f"/skills/{entry['role']}: \"auto\" cannot be listed together with other skills"
+            for entry in layer.get("skills") or [] if AUTO_SKILLS in entry["names"] and len(entry["names"]) > 1]
 
 
 def digest(options: dict) -> str:

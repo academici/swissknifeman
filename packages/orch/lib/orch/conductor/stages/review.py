@@ -34,7 +34,7 @@ def dynamic_review(self, item: Item, report: dict) -> None:
         facts = self._risk_facts(item, report)
         found = dict(risk_mod.score(facts, self.conductor.get("risk")), facts=facts,
                      threshold=review["dynamic_threshold"])
-        found["added"] = found["score"] >= found["threshold"]
+        found["added"] = found["score"] >= found["threshold"] or bool(found.get("critical"))
         item.state["risk"] = found
         if found["added"]:
             item.state["dynamic_review"] = True
@@ -49,8 +49,9 @@ def dynamic_review(self, item: Item, report: dict) -> None:
         self._preflight(item)
         write_json(item.directory / "routes.json", item.routes)
     names = ", ".join(f"{row['name']}+{row['weight']}" for row in found["features"])
-    text = (f"risk score {found['score']} reached {found['threshold']} ({names}); the policy has no review, "
-            "so a review and its triage were added")
+    why = (f"risk score {found['score']} reached {found['threshold']}" if found["score"] >= found["threshold"]
+           else f"critical feature {', '.join(found['critical'])} (score {found['score']} below {found['threshold']})")
+    text = f"{why} ({names}); the policy has no review, so a review and its triage were added"
     self.progress.emit("info", item=item.ref, reason_code="REVIEW_ADDED", message=text)
     self._beacon_event("orch.review.added", item, {
         "score": found["score"], "threshold": found["threshold"],

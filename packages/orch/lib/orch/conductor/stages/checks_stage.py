@@ -100,7 +100,12 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
             on_result=on_result, first=self._red_before(item, number), kinds=tuple(item.options["checks"]["kinds"]),
             cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
-            on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid))
+            on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid),
+            idle_s=item.options["limits"].get("check_idle_timeout_s", 0),
+            on_changed=lambda paths: self.progress.emit(
+                "info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_CHANGED_TREE",
+                message=f"the checks changed {len(paths)} file(s) of the project: {', '.join(paths[:5])}"
+                        f"{' …' if len(paths) > 5 else ''}; the evidence proves the candidate before them"))
     except (RuntimeError, ValueError, OSError) as error:
         raise Stop("CHECKS_FAILED", str(error)) from None
 

@@ -24,7 +24,9 @@ OPTIONS = {"reviewer": "grok/grok-4.7/high", "limits": {"review_rounds": 2},
            "stages": [{"role": "executor", "model_class": "implementation"}], "on_blocked": "report"}
 SUPPLIED = {
     "$schema": schema.DIALECT, "$id": "urn:test:options:v1", "type": "object",
-    "properties": {"reviewer": {"$ref": "#/$defs/selector"}, "limits": {"type": "object"},
+    "properties": {"reviewer": {"$ref": "#/$defs/selector"},
+                   "limits": {"type": "object",
+                              "properties": {"review_rounds": {"type": "integer", "minimum": 0, "maximum": 5}}},
                    "stages": {"type": "array"}, "on_blocked": {"type": "string", "enum": ["stop", "report"]}},
     "additionalProperties": False,
     "$defs": {"selector": {"type": "string", "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/[a-z]+)?$"}},
@@ -104,7 +106,8 @@ class SuppliedTests(SlotCase):
         self.assertEqual(self.item()["orchestration"]["options"], OPTIONS)
         self.assertEqual(errors(store.load_plan(self.root)), [])
         for wrong, code in (({"reviewer": "Bad Selector"}, "pattern"), ({"colour": 1}, "additional"),
-                            ({"on_blocked": "later"}, "enum"), ([1], "type")):
+                            ({"on_blocked": "later"}, "enum"), ([1], "type"),
+                            ({"limits": {"review_rounds": 9}}, "maximum"), ({"limits": {"review_rounds": -1}}, "minimum")):
             with self.subTest(wrong=wrong):
                 with self.assertRaises(PlanError) as caught:
                     ops.patch(store.load_plan(self.root), "P1.2", {"orchestration": {"options": wrong}})
@@ -137,8 +140,8 @@ class UnavailableTests(SlotCase):
         self.assert_unavailable("bridges first, second all supply it")
 
     def test_an_unusable_supplied_schema_is_unavailable_not_a_crash(self):
-        self.add_bridge("broken", document={"type": "object", "minimum": 1})
-        self.assert_unavailable("unsupported keyword 'minimum'")
+        self.add_bridge("broken", document={"type": "object", "maxProperties": 1})
+        self.assert_unavailable("unsupported keyword 'maxProperties'")
 
     def test_check_reports_the_field_and_the_cli_returns_the_code(self):
         status, out, _ = test_envelope.run("--output", "json", "set", str(self.root), "P1.1", "--json",

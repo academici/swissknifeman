@@ -76,6 +76,11 @@ class Source:
                 **({"roots": list(self.roots)} if self.roots else {})}
 
 
+# What each kind cannot work without; a layer of the configuration may hold only part of a source (the machine its argv,
+# the project its roots), so the fields are required of the merged entry, not by the schema of one layer.
+REQUIRED_FIELDS = {"command": ("argv",), "filesystem": ("roots",), "mcp-stdio": ("argv",)}
+
+
 def sources_from(settings) -> list:
     """The configured sources on the ladder: by ``order``, then by id."""
     found = []
@@ -83,6 +88,10 @@ def sources_from(settings) -> list:
         kind = entry.get("kind")
         if kind is None:
             raise SourceError("SOURCE_INVALID", f"source {name!r} has no kind")
+        needed = REQUIRED_FIELDS.get(kind, ())  # checked on the merged layers: argv comes from the machine, roots may not
+        missing = [field for field in needed if not entry.get(field)]
+        if missing:
+            raise SourceError("SOURCE_INVALID", f"source {name!r} ({kind}) has no {' and no '.join(missing)}")
         found.append(Source(id=name, kind=kind, argv=tuple(entry.get("argv") or ()), tool=entry["tool"],
                             roots=tuple(entry.get("roots") or ()), capabilities=tuple(entry.get("capabilities") or ()),
                             timeout_s=entry["timeout_s"], concurrency=entry["concurrency"], order=entry["order"]))

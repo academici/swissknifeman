@@ -89,10 +89,32 @@ class ConfigTests(ResearchCase):
             self.load()
 
     def test_the_ladder_is_sorted_by_order_then_id(self):
-        self.machine('[orch.research.sources.b]\nkind = "filesystem"\norder = 2\n'
-                     '[orch.research.sources.a]\nkind = "filesystem"\norder = 2\n'
-                     '[orch.research.sources.z]\nkind = "filesystem"\norder = 1\n')
+        self.machine('[orch.research.sources.b]\nkind = "filesystem"\norder = 2\nroots = ["docs"]\n'
+                     '[orch.research.sources.a]\nkind = "filesystem"\norder = 2\nroots = ["docs"]\n'
+                     '[orch.research.sources.z]\nkind = "filesystem"\norder = 1\nroots = ["docs"]\n')
         self.assertEqual(["z", "a", "b"], [s.id for s in research.sources_from(self.load())])
+
+    def test_a_kind_without_the_fields_it_needs_is_refused_when_loaded(self):
+        for text, missing in (('kind = "filesystem"\n', "roots"), ('kind = "command"\n', "argv"),
+                              ('kind = "mcp-stdio"\n', "argv")):
+            self.machine("[orch.research.sources.x]\n" + text)
+            with self.assertRaises(sources.SourceError) as caught:
+                research.sources_from(self.load())
+            self.assertEqual("SOURCE_INVALID", caught.exception.code)
+            self.assertIn(missing, str(caught.exception))
+
+    def test_the_machine_argv_and_the_project_roots_make_one_source(self):
+        self.machine('[orch.research.sources.notes]\nkind = "filesystem"\n')
+        self.project_file('[orch.research.sources.notes]\nroots = ["docs"]\n')
+        self.assertEqual(("docs",), research.sources_from(self.load(project=self.project))[0].roots)
+
+    def test_an_empty_argv_and_repeated_capabilities_are_refused(self):
+        self.machine('[orch.research.sources.x]\nkind = "command"\nargv = []\n')
+        with self.assertRaises(ConfigError):
+            self.load()
+        self.machine('[orch.research.sources.x]\nkind = "command"\nargv = ["a"]\ncapabilities = ["search", "search"]\n')
+        with self.assertRaises(ConfigError):
+            self.load()
 
 
 class McpStdioTests(ResearchCase):

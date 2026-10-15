@@ -117,11 +117,14 @@
       "properties": {
         "parallel": {
           "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
         },
         "kinds": {
           "description": "Kinds of checks the conductor runs in a piece of work: `[\"acceptance\"]` is the quick pass (the gate needs evidence of the acceptance checks only), the default `[\"acceptance\", \"impact\"]` the full one. Heavy repository-wide checks belong to `impact` and run in the full pass (the closing piece of a phase, or on request).",
           "type": "array",
+          "uniqueItems": true,
           "items": {"type": "string", "enum": ["acceptance", "impact"]},
           "minItems": 1
         },
@@ -176,7 +179,9 @@
         },
         "dynamic_threshold": {
           "description": "Risk score 0..100 at which a review is added. Default 60.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
         },
         "strategy": {
           "description": "How a batch of several pieces is reviewed, chosen before the first piece runs. `auto` (default): the strategist picks; `each`: every piece on its own as the policy and the risk score say; `groups`: one review per group of neighbouring pieces after the last piece of the group; `single`: one review of the whole batch after its last piece; `none`: no review. In `groups`, `single` and `none` a piece has no review of its own.",
@@ -302,7 +307,8 @@
         },
         "max": {
           "description": "Maximum number of times the action may be taken; 0 or more.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         }
       },
       "required": ["action"],
@@ -342,103 +348,139 @@
       "properties": {
         "review_rounds": {
           "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A target, not a wall: past it a round still runs while the last correction made progress, up to ceiling_factor times the target, with a LIMIT_OVER beacon and a plan note.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
         },
         "corrections": {
           "description": "Corrections planned after a confirmed review finding (the policy pack's max_corrections by default); 0 to 3; a target like review_rounds.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
         },
         "check_fixes": {
           "description": "Corrections planned after red acceptance checks; 0 to 3; a target: past it a correction still runs while the red checks change, up to ceiling_factor times the target.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
         },
         "retries": {
           "description": "Repeats of one step whose role run failed or whose result stays outside its contract after healing and repair (the policy pack's retries_budget by default); counted per step; 0 to 5.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
         },
         "tokens_max": {
           "description": "Fresh input and output tokens of the piece of work: past it a BUDGET_OVER beacon is printed once (nothing is stopped); 0 means none; 0 or more.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "stage_timeout_s": {
           "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role (stage_warn_s beacons report a long run instead) and keeps the launch catalog timeout for a text role; 0 or more.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "stage_idle_timeout_s": {
-          "description": "A streaming role is stopped when its output has not grown for this many seconds; 0 (default) never stops it (stage_idle_warn_s beacons report the silence and what runs meanwhile); 0 or more.",
-          "type": "integer"
+          "description": "A streaming role is stopped (TIMEOUT, then the retry rule of the step) when its output has not grown for this many seconds: silence that long is a hang, not a long test run (stage_idle_warn_s beacons report shorter silences and what runs meanwhile); 0 never stops it; default 5400.",
+          "type": "integer",
+          "minimum": 0
         },
         "check_timeout_s": {
           "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: a long check is reported by check_warn_s beacons, not stopped; 0 or more.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
+        },
+        "check_idle_timeout_s": {
+          "description": "An acceptance check is stopped (exit 124, red) when its log has not grown for this many seconds: a hung test runner, not a long one (the check runs with PYTHONUNBUFFERED=1, and the time a check spends stopped is not counted); 0 never stops it; default 3600.",
+          "type": "integer",
+          "minimum": 0
         },
         "ceiling_factor": {
           "description": "How far past their target review_rounds, corrections and check_fixes may go while every extra round makes progress: the ceiling is this factor times the target (at least target + 1); 1 to 5, default 2.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
         },
         "repairs": {
           "description": "Repairs of a role result outside its contract by the report-fixer role (an economy model that rewrites only the closed block from the role's own answer) before the whole role is repeated; 0 switches repair off; 0 to 3, default 1.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
         },
         "stage_warn_s": {
           "description": "A STAGE_SLOW beacon (what the role runs now: its last command and the child processes) is printed every this many seconds of one role run; nothing is stopped; 0 switches it off; default 2700.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "stage_idle_warn_s": {
           "description": "A STAGE_IDLE beacon is printed every this many seconds while the output of a role has not grown (a long test run or a silent model call); nothing is stopped; 0 switches it off; default 600.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "provider_wait_max_s": {
           "description": "The longest a role waits for a provider limit to reset (a PROVIDER_WAIT beacon, checked for cancel every second); a longer wait, or a quota whose reset is unknown, goes to `fallback_routes` or stops with PROVIDER_QUOTA; 0 or more, default 900.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "check_warn_s": {
           "description": "A CHECK_SLOW beacon is printed every this many seconds of one running acceptance check; 0 switches it off; default 900.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "run_warn_s": {
           "description": "A RUN_SLOW beacon (and one plan note) is printed every this many seconds of the ACTIVE time of a run (the segments of its processes: a resume a day later does not count the day); nothing is stopped; 0 switches it off; default 7200.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "question_warn_s": {
           "description": "A question of the executor that waits this many seconds for an answer is marked overdue by `conduct.py questions` and the observer; nothing is answered or stopped; 0 switches it off; default 1800.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "skill_tokens_max": {
           "description": "Largest text of one skill, in estimated tokens, that an isolated role gets in its prompt: a longer skill is left out whole (`excluded: over_budget` in the prompt manifest, beacon SKILL_EXCLUDED), never cut; the `max_tokens` of its `selection.json` is checked as well; 0 switches the limit off; default 5000.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "prompt_core_tokens": {
           "description": "Largest total of the core blocks of one role prompt (role text, input, verification, result contract, answers, correction and the frame of the review roles), in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut (`budgets` of the prompt manifest); 0 switches the beacon off; default 12000.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "prompt_supporting_tokens": {
           "description": "Largest total of the supporting blocks of one role prompt (repository rules, skills, context map, expected paths, run rules), in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; 0 switches the beacon off; default 30000.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "prompt_retrieval_tokens": {
           "description": "Largest total of the retrieval blocks (references) of one role prompt, in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; no block has this class yet; 0 switches the beacon off; default 50000.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "disk_min_gb": {
           "description": "Least free space in GB under the project and the temporary directory: below it the run does not start (and `resume` does not go on) and the checks of a round do not start, it stops with DISK_LOW (free the space, then resume); a running check only gets a DISK_LOW beacon every `check_warn_s`; 0 switches it off; default 5.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "run_timeout_s": {
           "description": "Ceiling on the active time of a run in seconds: the current role is cancelled and the run stops with RUN_TIMEOUT (resume continues; raise the limit first); 0 (default) has none.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "review_rounds_batch": {
           "description": "Target for review rounds of the whole run (all pieces of a `--batch` or `--items` run together); the rule of `review_rounds`: a round past the target goes on only while the last correction made progress, up to `ceiling_factor` times it, with a LIMIT_OVER beacon (`batch: …`); 0 (default) has no limit.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "corrections_batch": {
           "description": "Target for corrections of the whole run, with the target and ceiling rule of `corrections`; 0 (default) has no limit.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "findings_batch": {
           "description": "Target for confirmed review findings of the whole run (those accepted by triage), with the target and ceiling rule; when the run is refused more rounds, an open Blocker stops it with REVIEW_LIMIT and other findings become plan notes; 0 (default) has no limit.",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         }
       },
       "required": [],

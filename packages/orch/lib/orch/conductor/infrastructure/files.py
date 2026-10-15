@@ -11,6 +11,7 @@ import threading
 from typing import Any
 
 from aicore.state import project_state_dir
+from aicore.util.io import durable_replace
 
 from orch.conductor.domain.stop import Stop
 
@@ -30,18 +31,21 @@ def safe(text: str) -> str:
 
 
 def write_json(path: Path, doc: Any) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    os.replace(temporary, path)
+    """Replace ``path`` crash-safely: a unique temporary file (two threads of one run may write the same file), fsync of
+    the file and of its folder, then the rename; a crash leaves the old file or the new one, never a torn one."""
+    durable_replace(path, (json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     return path
 
 
 def read_json(path: Path) -> Any:
+    """The document at ``path``, None when there is none; ``STATE_CORRUPT`` (with the path) when it is not JSON."""
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
         return None
+    except (UnicodeDecodeError, ValueError) as error:
+        raise Stop("STATE_CORRUPT", f"{path} is not JSON ({error}): restore it from the run's progress.jsonl or "
+                   "remove the run folder and start again") from None
 
 
 class RunStore:
@@ -61,6 +65,11 @@ class RunStore:
         return run_doc, state
 
     def create(self, run_doc: dict) -> None:
+        """Write ``run.json``; the folders of the runs are the owner's only (``0700``): prompts, streams and answers
+        hold code, provider errors and whatever a role printed."""
+        self.directory.mkdir(parents=True, exist_ok=True)
+        for folder in (self.directory.parent, self.directory):
+            os.chmod(folder, 0o700)
         write_json(self.directory / RUN_FILE, run_doc)
 
     def keep_options(self, options_file: Path) -> None:

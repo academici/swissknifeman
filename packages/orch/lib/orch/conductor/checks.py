@@ -17,6 +17,8 @@ from pathlib import Path
 import subprocess
 import time
 
+from aicore.util.io import durable_replace
+
 from orch import contracts
 
 RUN_KINDS = ("acceptance", "impact")
@@ -86,8 +88,11 @@ INSTALL_ROOTS = ("AICORE_ROOT", "SKM_ORCH_ROOT", "PLANNER_ROOT", "PLANNER_PLAN_P
 
 
 def check_env(cwd: Path, environ=None) -> dict:
-    """The environment of a check command: the conductor's, without install roots that lie outside the project."""
+    """The environment of a check command: the conductor's, without install roots that lie outside the project, and with
+    unbuffered Python output (a Python test runner writing to the log file shows its progress, so the silence ceiling
+    ``check_idle_timeout_s`` measures a hang, not a buffer)."""
     base = dict(os.environ if environ is None else environ)
+    base.setdefault("PYTHONUNBUFFERED", "1")
     project = Path(cwd).resolve()
     for name in INSTALL_ROOTS:
         value = base.get(name)
@@ -100,12 +105,13 @@ def check_env(cwd: Path, environ=None) -> dict:
     return base
 
 
-def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_slow=None) -> int:
-    """Exit code of ``argv``; 124 after ``timeout_s`` (0: no ceiling). ``on_slow(elapsed, pid)`` every ``warn_s``."""
+def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_slow=None, idle_s: int = 0) -> int:
+    """Exit code of ``argv``; 124 after ``timeout_s`` or ``idle_s`` seconds without output (0: no ceiling).
+    ``on_slow(elapsed, pid)`` every ``warn_s``."""
     process = subprocess.Popen(argv, cwd=str(cwd), stdout=out, stderr=subprocess.STDOUT, start_new_session=True,
                                env=check_env(cwd))
     try:
-        return _wait_command(process, out=out, timeout_s=timeout_s, warn_s=warn_s, on_slow=on_slow)
+        return _wait_command(process, out=out, timeout_s=timeout_s, warn_s=warn_s, on_slow=on_slow, idle_s=idle_s)
     except BaseException:  # an interrupted run must not leave the check (a test run with workers) running
         _kill_group(process)
         raise
@@ -137,23 +143,38 @@ def stopped(pid: int) -> bool:
         return False
 
 
-def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow) -> int:
+def _size(out) -> int:
+    try:
+        return os.fstat(out.fileno()).st_size
+    except (OSError, ValueError, AttributeError):
+        return -1
+
+
+def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow, idle_s: int = 0) -> int:
     """Wait for a check. The time a stopped check spends stopped is not counted: neither the ``CHECK_SLOW`` beacon nor the
-    ceiling ``check_timeout_s`` runs while somebody holds it."""
+    ceilings ``check_timeout_s`` and ``check_idle_timeout_s`` (silence of the log) run while somebody holds it."""
     began, next_warn, paused, last = time.monotonic(), warn_s, 0.0, time.monotonic()
+    size, quiet = _size(out), 0.0  # seconds of silence, without the stopped time
     while True:
         try:
             return process.wait(timeout=POLL_S)
         except subprocess.TimeoutExpired:
             pass
         now = time.monotonic()
-        if stopped(process.pid):
+        held = stopped(process.pid)
+        if held:
             paused += now - last
-        last = now
+        current = _size(out)
+        quiet = 0.0 if current != size else quiet + (0.0 if held else now - last)
+        size, last = current, now
         elapsed = now - began - paused
         if timeout_s and elapsed > timeout_s:
             _kill_group(process)
             out.write(f"\n[orch] check timed out after {timeout_s} s\n".encode("utf-8"))
+            return 124
+        if idle_s and quiet > idle_s:
+            _kill_group(process)
+            out.write(f"\n[orch] check stopped: no output for {idle_s} s\n".encode("utf-8"))
             return 124
         if warn_s and on_slow is not None and elapsed >= next_warn:
             next_warn += warn_s
@@ -163,7 +184,7 @@ def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow) -> int:
 def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: Path, timeout_s: int,
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
                parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS, cadence=("item", "phase"),
-               warn_s: int = 0, on_slow=None) -> list:
+               warn_s: int = 0, on_slow=None, idle_s: int = 0, on_changed=None) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
@@ -174,11 +195,14 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
     red check does not need a half-hour run of everything else. ``kinds`` limits the run to these kinds (a quick pass
     runs ``acceptance`` only; the ``impact`` checks wait for the full pass). ``cadence`` limits it to the checks of
     these cadences (a check without one is ``item``; ``phase`` checks run in the closing piece of a phase).
-    ``timeout_s`` 0 sets no ceiling on a check; ``on_slow(check_id, elapsed, pid)`` is called every ``warn_s`` seconds of
-    a running check, so a long run is reported, not cut.
+    ``timeout_s`` 0 sets no ceiling on a check; ``idle_s`` stops a check whose log has not grown that long (a hang, not a
+    long run); ``on_slow(check_id, elapsed, pid)`` is called every ``warn_s`` seconds of a running check, so a long run is
+    reported, not cut. ``on_changed(paths)`` is called once when the checks changed files of the project (their own
+    evidence and logs aside): the evidence proves the candidate as it was before them.
     """
     project = Path(project)
     candidate = {"head": head(project), "dirty_digest": dirty_digest(project)}
+    before = dirty_files(project) if on_changed is not None else None
     subject = subject_of(input_doc)
     reported = {row["id"]: row for row in (report or {}).get("checks_run", [])}
     wanted = [check for check in (input_doc.get("acceptance") or {}).get("checks", [])
@@ -204,6 +228,7 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
             begin = time.monotonic()
             with open(log, "wb") as out:
                 code = _run_command(["bash", "-c", check["cmd"]], cwd=cwd, out=out, timeout_s=timeout_s, warn_s=warn_s,
+                                    idle_s=idle_s,
                                     on_slow=None if on_slow is None else
                                     (lambda elapsed, pid, check_id=check_id: on_slow(check_id, elapsed, pid)))
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-TAIL_LINES:]
@@ -226,10 +251,7 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
         if issues:
             raise ValueError(f"check-evidence of {check_id} is outside exec/v1: {issues[0].message}")
         target = Path(evidence_dir) / f"{check_id}.json"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_name(f".{target.name}.{os.getpid()}.{check_id}.tmp")
-        temporary.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        os.replace(temporary, target)
+        durable_replace(target, (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode("utf-8"), mode=0o644)
         row["evidence"] = _relative(target, project)
         return row
 
@@ -239,6 +261,36 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                 return list(pool.map(run_one, checks))  # map keeps the order of the input
         return [run_one(check) for check in checks]
 
+    rows = _run_ordered(wanted, first, run_all, on_result)
+    if before is not None:
+        own = [_relative(Path(folder), project) for folder in (evidence_dir, log_dir)]
+        changed = [path for path in changed_files(before, dirty_files(project))
+                   if not any(path == folder or path.startswith(folder.rstrip("/") + "/") for folder in own)]
+        if changed:
+            on_changed(changed)
+    return rows
+
+
+def dirty_files(project: Path) -> dict:
+    """``{path: sha256}`` of the tracked files that differ from HEAD and of the untracked ones (None: deleted)."""
+    names = [line for line in git(project, "diff", "HEAD", "--name-only", "-z").split("\0") if line] + untracked(project)
+    found = {}
+    for name in names:
+        try:
+            found[name] = hashlib.sha256((project / name).read_bytes()).hexdigest()
+        except OSError:
+            found[name] = None
+    return found
+
+
+def changed_files(before: dict, after: dict) -> list:
+    """Paths whose state differs between two ``dirty_files`` maps (a path back to HEAD counts as changed too)."""
+    return sorted(name for name in set(before) | set(after) if before.get(name, "-") != after.get(name, "-"))
+
+
+def _run_ordered(wanted: list, first, run_all, on_result) -> list:
+    """The rows of ``wanted``; the checks named in ``first`` run ahead, and when one of them is still red the others are
+    skipped."""
     ahead = [check for check in wanted if check["id"] in set(first)]
     if not ahead or len(ahead) == len(wanted):
         return run_all(wanted)

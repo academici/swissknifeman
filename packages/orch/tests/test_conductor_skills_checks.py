@@ -207,9 +207,9 @@ class SkillChecksTests(unittest.TestCase):
         self.assertEqual(self.excluded(), {})
 
     def test_the_budget_limit_is_a_run_option_with_bounds(self):
-        self.assertEqual(opts.limit_problems({"limits": {"skill_tokens_max": 0}}), [])
-        self.assertEqual(opts.limit_problems({"limits": {"skill_tokens_max": 8000}}), [])
-        self.assertEqual(len(opts.limit_problems({"limits": {"skill_tokens_max": -1}})), 1)
+        self.assertEqual(opts.layer_problems({"limits": {"skill_tokens_max": 0}}), [])
+        self.assertEqual(opts.layer_problems({"limits": {"skill_tokens_max": 8000}}), [])
+        self.assertEqual(len(opts.layer_problems({"limits": {"skill_tokens_max": -1}})), 1)
 
     def test_the_schema_of_run_options_knows_the_limit_and_stays_closed(self):
         # valid/invalid fixtures of run-options live outside the write set of P9.2; the cases are checked here

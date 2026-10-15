@@ -53,9 +53,9 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(code, 1)
 
     def test_the_schema_profile_stays_inside_the_planner_profile(self):
-        # the planner keeps a copy of run-options; its profile has no numeric bounds and no patternProperties
+        # the planner keeps a copy of run-options; its profile has numeric bounds but no patternProperties
         text = (ROOT / "schemas/conductor/v1/run-options.schema.json").read_text(encoding="utf-8")
-        for keyword in ('"minimum"', '"maximum"', '"patternProperties"', '"propertyNames"'):
+        for keyword in ('"patternProperties"', '"propertyNames"'):
             self.assertNotIn(keyword, text)
 
 
@@ -100,9 +100,13 @@ class OptionsTests(unittest.TestCase):
         merged, _ = options.effective({}, self.policy(), [])
         self.assertEqual((merged["instructions"]["sandbox"], merged["instructions"]["sandbox_domains"]), ("prefer", []))
         layer = {"instructions": {"sandbox": "require", "sandbox_domains": ["pypi.org", "*.example.com"]}}
-        merged, sources = options.effective({}, self.policy(), [{"source": "item:P1.6", "options": layer}])
+        merged, sources = options.effective({}, self.policy(), [{"source": "invocation:--options", "options": layer,
+                                                                  "trusted": True}])
         self.assertEqual(merged["instructions"]["sandbox"], "require")
-        self.assertEqual(sources["instructions.sandbox_domains"], "item:P1.6")
+        self.assertEqual(sources["instructions.sandbox_domains"], "invocation:--options")
+        with self.assertRaises(options.OptionsError) as caught:  # a plan item may not open the network
+            options.effective({}, self.policy(), [{"source": "item:P1.6", "options": layer}])
+        self.assertEqual(caught.exception.code, "OPTIONS_UNTRUSTED")
         for bad, words in (({"sandbox": "always"}, "sandbox"), ({"sandbox_domains": ["http://x.org/y"]}, "sandbox_domains"),
                            ({"sandbox_domains": ["a.org", "a.org"]}, "sandbox_domains")):
             with self.subTest(bad=bad), self.assertRaises(options.OptionsError) as caught:
@@ -181,8 +185,9 @@ class SettingsTests(unittest.TestCase):
         found = settings.defaults().conductor
         self.assertEqual((found["provider"], found["reviewer"], found["registrar"], found["on_blocked"]),
                          ("claude-code", "grok/grok-4.7/high", "orch/conductor", "stop"))
-        self.assertEqual((found["argv"], found["limits"]["check_timeout_s"], found["limits"]["stage_idle_timeout_s"]),
-                         ({}, 0, 0))  # nothing long is cut by default: beacons report it
+        self.assertEqual((found["argv"], found["limits"]["check_timeout_s"], found["limits"]["stage_idle_timeout_s"],
+                          found["limits"]["check_idle_timeout_s"]),
+                         ({}, 0, 5400, 3600))  # nothing long is cut by default, only a silent (hung) role or check
 
     def test_a_project_file_cannot_choose_the_commands(self):
         with tempfile.TemporaryDirectory() as tmp:

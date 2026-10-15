@@ -11,6 +11,7 @@ supplies its schema (``extends`` of ``bridge.json``, see ``extensions``). A slot
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any, NamedTuple
@@ -21,14 +22,14 @@ KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "doc
          "bridge", "check-evidence", "read-get", "read-list", "read-events", "read-artifact", "read-links",
          "read-neighborhood", "read-catalog", "read-commits", "read-ready", "read-followups")
 ERROR_CODES = ("type", "enum", "const", "required", "additional", "pattern", "min_items", "unique",
-               "min_length", "one_of", "ref")
+               "min_length", "one_of", "ref", "minimum", "maximum")
 EXTENSION_PREFIX = f"{SCHEMA_URN_PREFIX}extension:"
 # Issue code of an extension slot without a usable supplier; engine-only, outside the shared closed profile.
 EXTENSION_CODE = "extension"
 SUPPORTED_KEYWORDS = frozenset({
     "$schema", "$id", "$defs", "$ref", "title", "description", "type", "enum", "const", "properties",
     "required", "additionalProperties", "items", "minItems", "uniqueItems", "minLength", "pattern", "oneOf",
-    "default",
+    "default", "minimum", "maximum",
 })
 _TYPE_NAMES = frozenset({"null", "boolean", "integer", "number", "string", "array", "object"})
 _cache: dict[Path, "Registry"] = {}
@@ -147,6 +148,9 @@ def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -
             fail(f"{keyword} must be a non-negative integer")
         elif keyword == "uniqueItems" and not isinstance(value, bool):
             fail("uniqueItems must be a boolean")
+        elif keyword in ("minimum", "maximum") and not (
+                isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)):
+            fail(f"{keyword} must be a finite number")
         elif keyword == "pattern":
             try:
                 _compile(value)
@@ -215,7 +219,12 @@ def _check(reg: Registry, schema: dict, base: str, value: Any, pointer: str, out
         add("enum", "must be one of " + ", ".join(json.dumps(o, ensure_ascii=False) for o in schema["enum"]))
     if "const" in schema and not _equal(value, schema["const"]):
         add("const", f"must equal {json.dumps(schema['const'], ensure_ascii=False)}")
-    if isinstance(value, str):
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            add("minimum", f"{value} is less than the minimum {schema['minimum']}")
+        if "maximum" in schema and value > schema["maximum"]:
+            add("maximum", f"{value} is greater than the maximum {schema['maximum']}")
+    elif isinstance(value, str):
         if len(value) < schema.get("minLength", 0):
             add("min_length", f"string is shorter than {schema['minLength']}")
         pattern = schema.get("pattern")

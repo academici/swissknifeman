@@ -196,6 +196,7 @@
     "risk": {
      "added": true,
      "announced": true,
+     "critical": [],
      "facts": {
       "changed": [
        "out/W1.txt",

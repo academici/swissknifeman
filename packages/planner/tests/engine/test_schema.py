@@ -62,8 +62,9 @@ class FixtureTests(unittest.TestCase):
                 issues = schema.validate(load(path), split_kind(path.stem, len(code) + 1))
                 self.assertEqual(codes(issues), {code}, issues)
                 seen.add(code)
-        # `ref` cannot be produced by a document; it is covered by test_dangling_ref below.
-        self.assertEqual(seen | {"ref"}, set(schema.ERROR_CODES))
+        # `ref` cannot be produced by a document; it is covered by test_dangling_ref below. No plan schema has a
+        # numeric bound: `minimum` and `maximum` come from a slot schema a bridge supplies (test_extensions).
+        self.assertEqual(seen | {"ref", "minimum", "maximum"}, set(schema.ERROR_CODES))
 
     def test_every_valid_fixture_is_canonical_json(self):
         for path in sorted((FIXTURES / "valid").glob("*.json")):

@@ -176,14 +176,20 @@
             },
             "stage_idle_timeout_s": {
               "type": "integer",
-              "description": "A streaming role is stopped when its output has not grown for this many seconds; 0 (default) never stops it: STAGE_IDLE beacons report the silence and what runs meanwhile.",
-              "default": 0,
+              "description": "A streaming role is stopped when its output has not grown for this many seconds (a hang, not a long run); 0 never stops it; default 5400. STAGE_IDLE beacons report shorter silences and what runs meanwhile.",
+              "default": 5400,
               "minimum": 0
             },
             "check_timeout_s": {
               "type": "integer",
               "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: CHECK_SLOW beacons report a long check.",
               "default": 0,
+              "minimum": 0
+            },
+            "check_idle_timeout_s": {
+              "type": "integer",
+              "description": "An acceptance check is stopped when its log has not grown for this many seconds (a hung test runner); 0 never stops it; default 3600.",
+              "default": 3600,
               "minimum": 0
             }
           }
@@ -196,6 +202,7 @@
             "^[a-z][a-z0-9-]*$": {
               "type": "array",
               "description": "Command and arguments.",
+              "minItems": 1,
               "items": {
                 "type": "string",
                 "description": "One argument."
@@ -323,7 +330,15 @@
                     "**/auth/**",
                     "**/security/**",
                     "**/permissions*",
-                    "**/*secret*"
+                    "**/*secret*",
+                    "**/sandbox*",
+                    "**/ro-run*",
+                    "**/launch-catalog.json",
+                    "**/roles/*.json",
+                    "**/run-policies/**",
+                    "**/hooks/**",
+                    ".github/workflows/**",
+                    "**/install.sh"
                   ],
                   "items": {
                     "type": "string",
@@ -350,6 +365,17 @@
               "description": "Changed lines past which the diff_size feature counts.",
               "default": 400,
               "minimum": 1
+            },
+            "critical": {
+              "type": "array",
+              "description": "Features that add the review on their own, whatever the score (REVIEW_ADDED names them); [] leaves only the threshold.",
+              "default": ["security"],
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "description": "A feature name.",
+                "enum": ["public_cli", "schema", "security", "shared", "diff_size", "red_first", "deviation", "outside_write_set", "executor_recommended"]
+              }
             }
           }
         },
@@ -406,7 +432,8 @@
                 },
                 "argv": {
                   "type": "array",
-                  "description": "Command and arguments of a command or mcp-stdio source; a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs.",
+                  "description": "Command and arguments of a command or mcp-stdio source (required by both kinds on the merged layers: SOURCE_INVALID otherwise); a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs.",
+                  "minItems": 1,
                   "items": {
                     "type": "string",
                     "description": "One argument."
@@ -426,7 +453,8 @@
                 },
                 "roots": {
                   "type": "array",
-                  "description": "filesystem: folders searched, absolute, starting with ~, or relative to the project.",
+                  "description": "filesystem: folders searched, absolute, starting with ~, or relative to the project (required by this kind on the merged layers: SOURCE_INVALID otherwise).",
+                  "minItems": 1,
                   "items": {
                     "type": "string",
                     "description": "One folder.",
@@ -436,6 +464,7 @@
                 "capabilities": {
                   "type": "array",
                   "description": "What the source can do.",
+                  "uniqueItems": true,
                   "items": {
                     "type": "string",
                     "description": "One capability.",

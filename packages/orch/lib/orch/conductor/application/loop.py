@@ -109,7 +109,7 @@ def pieces(self) -> None:
     doc = self.run_doc
     keys = [(f"item-{safe(ref)}", [ref]) for ref in doc["items"]] if doc["items"] else None
     count = index = 0
-    claimed, first_adopted = {}, []
+    claimed, first_adopted, held = {}, [], []
     if keys is None and doc.get("grouped") is not False:  # the batch a source names is a batch like --items
         expanded = self._expand_ready()
         if expanded:
@@ -121,6 +121,9 @@ def pieces(self) -> None:
     while True:
         if keys is not None:
             if index >= len(keys):
+                if held:
+                    raise Stop("DEPENDENCY_BLOCKED", f"{', '.join(held)} not started: a piece they depend on is blocked; "
+                                                     "retry it (resume --retry), then resume")
                 return
             key, asked = keys[index]
         else:
@@ -147,6 +150,13 @@ def pieces(self) -> None:
             self.state["items"].setdefault(answer["ref"], {"steps": {}, "retries_used": 0, "orch_run": answer["run_id"]}) \
                 .setdefault("adopted", adopted)
             self._save()
+        waiting = blocked_dependencies(self, answer)
+        if waiting:  # a piece on top of a blocked one of this run would build on work that is not accepted
+            held.append(answer["ref"])
+            self.progress.emit("info", item=answer["ref"], reason_code="DEPENDENCY_BLOCKED",
+                               message=f"{answer['ref']} waits for {', '.join(waiting)} (blocked in this run): not started, "
+                                       "it stays in progress; retry the blocked piece and resume")
+            continue
         outcome = self._piece(answer)
         if outcome in ("done", "done_with_deviations"):
             self._group_review_due(answer["ref"])
@@ -154,6 +164,12 @@ def pieces(self) -> None:
                                      or self.state["items"][answer["ref"]].get("partial")):
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
             raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
+
+
+def blocked_dependencies(self, answer: dict) -> list:
+    """The pieces named in ``depends_on`` of a claim that ended ``blocked`` in this run."""
+    items = self.state.get("items", {})
+    return [dep for dep in answer.get("depends_on") or [] if (items.get(dep) or {}).get("outcome") == "blocked"]
 
 
 def expand_ready(self) -> Optional[tuple]:

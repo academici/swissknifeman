@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 
 from orch.conductor import checks as checks_mod
-from orch.conductor import options as opts, prompts
+from orch.conductor import options as opts, prompts, review_batch
 from orch.conductor.application import loop
 from orch.conductor.stages import context
 from orch.conductor.infrastructure import disk, roles
@@ -174,11 +174,94 @@ class DiskGuard(unittest.TestCase):
             loop.disk_guard(me)  # the configuration's limit applies without a piece
 
 
+CLEAN = "## Findings\nnone\n## Checked and fine\n- the claim path\n"
+DRESSED = ("Here is my review.\n\n## Findings\n1. **[Major]** `lib/a.py:12` - wrong state on resume\n   Scenario: x -> y\n"
+           "- [Minor] lib/b.py:3 - a nit\n- `[Blocker]` lib/c.py:7 - unsafe path\n\n## Checked and fine\n- [Major] in a bullet here\n")
+
+
+class ReviewVerdict(unittest.TestCase):
+    def test_a_clean_reply_is_none_and_counts_nothing(self):
+        read = review_batch.verdict(CLEAN)
+        self.assertEqual((read["format"], read["counts"]), ("none", {"Blocker": 0, "Major": 0, "Minor": 0}))
+
+    def test_findings_dressed_as_list_items_numbers_bold_or_code_are_counted(self):
+        read = review_batch.verdict(DRESSED)
+        self.assertEqual(read["format"], "findings")
+        self.assertEqual(read["counts"], {"Blocker": 1, "Major": 1, "Minor": 1})  # the line under "Checked and fine" is not one
+        self.assertEqual([row["location"] for row in read["findings"]], ["lib/a.py:12", "lib/b.py:3", "lib/c.py:7"])
+
+    def test_a_reply_in_another_format_is_malformed_and_never_clean(self):
+        for text in ("The change looks fine to me.", "", "## Review\nAll good", "## Findings\nIt seems OK, nothing serious.\n"):
+            self.assertEqual(review_batch.verdict(text)["format"], "malformed", text)
+
+    def test_the_paths_to_correct_come_from_blocker_and_major_findings_only(self):
+        read = review_batch.verdict(DRESSED)
+        self.assertEqual(review_batch.followup_paths(read["findings"]), ["lib/a.py", "lib/c.py"])
+        hostile = review_batch.verdict("## Findings\n[Major] ../../etc/passwd:1 - x\n[Major] /abs/p.py:1 - y\n")
+        self.assertEqual(review_batch.followup_paths(hostile["findings"]), [])
+
+    def test_counts_keeps_its_old_meaning(self):
+        self.assertEqual(review_batch.counts("## Findings\n[Major] a.py:1 - d\n")["Major"], 1)
+
+
+class SessionRoute(unittest.TestCase):
+    def me(self, state: dict):
+        return types.SimpleNamespace(state=state, _shared_session=lambda item, role, route: True, progress=mock.Mock())
+
+    def test_a_piece_on_another_model_resumes_the_session_and_says_so_once(self):
+        item = types.SimpleNamespace(ref="W2")
+        me = self.me({"executor_session": "s1", "executor_session_route": "claude-code/claude-haiku-5-5/low"})
+        route = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
+        self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
+        self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
+        emitted = [call.kwargs["reason_code"] for call in me.progress.emit.call_args_list]
+        self.assertEqual(emitted, ["SESSION_ROUTE_CHANGED"])
+
+    def test_the_same_route_says_nothing_and_no_session_gives_no_resume(self):
+        item = types.SimpleNamespace(ref="W2")
+        route = {"provider": "claude-code", "model": "m", "effort": "high"}
+        me = self.me({"executor_session": "s1", "executor_session_route": "claude-code/m/high"})
+        self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
+        me.progress.emit.assert_not_called()
+        self.assertEqual(roles.resume_args(self.me({}), item, "executor", route), [])
+
+    def test_keep_session_records_the_route_and_forgets_it_with_a_failed_session(self):
+        item, route = types.SimpleNamespace(ref="W1"), {"provider": "claude-code", "model": "m", "effort": "low"}
+        me = self.me({})
+        me._save = lambda: None
+        roles.keep_session(me, item, "executor", route, types.SimpleNamespace(error=None, session="s9"))
+        self.assertEqual((me.state["executor_session"], me.state["executor_session_route"]), ("s9", "claude-code/m/low"))
+        roles.keep_session(me, item, "executor", route, types.SimpleNamespace(error="ROLE_FAILED", session=None))
+        self.assertNotIn("executor_session_route", me.state)
+
+
+class PreviewBatchKeys(unittest.TestCase):
+    """``--dry-run`` says whether the run is a batch (the default for several pieces), apart from ``--ready``."""
+
+    def preview(self, items, ready=False, batch=None) -> dict:
+        from orch.conductor import cli
+        args = types.SimpleNamespace(scenario=None, options=None, plan="P", input=None, items=items, ready=ready, batch=batch)
+        item = types.SimpleNamespace(routes={}, policy={}, options={"reviewer": "x", "fallback_routes": []}, sources={},
+                                     route_notes=[])
+        conductor = types.SimpleNamespace(run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"),
+                                          _resolve=lambda *a, **k: None, _routes=lambda *a, **k: None,
+                                          _sandbox_mode=lambda it: "off")
+        with mock.patch.object(cli.engine, "Item", return_value=item), \
+                mock.patch.object(cli.sandbox, "probe", return_value={"available": False, "reason": "test"}):
+            return cli._preview(conductor, args)
+
+    def test_several_pieces_are_a_batch_unless_no_batch(self):
+        self.assertEqual(self.preview(["A", "B"])["batch"], True)
+        self.assertEqual(self.preview(["A", "B"], batch=False)["batch"], False)
+        self.assertEqual(self.preview(["A"])["batch"], False)
+        shown = self.preview(None, ready=True)
+        self.assertEqual((shown["batch"], shown["ready"]), (True, True))
+
+
 class TranscriptFolder(unittest.TestCase):
     def test_the_name_is_every_non_alphanumeric_as_a_dash(self):
         self.assertEqual(roles.transcript_folder_name("/home/a b/proj.x/№1"), "-home-a-b-proj-x--1")
-        self.assertEqual(roles.transcript_folder_name("/home/vostrikov/projects/packages/swissknifeman-next"),
-                         "-home-vostrikov-projects-packages-swissknifeman-next")
+        self.assertEqual(roles.transcript_folder_name("/work/alpha/beta-next"), "-work-alpha-beta-next")
 
     def test_a_character_outside_the_basic_plane_is_two_dashes_as_in_utf16(self):
         self.assertEqual(roles.transcript_folder_name("/p/\U0001F600x"), "-p---x")

@@ -8,6 +8,7 @@ below the minimum, budget, output outside the contract).
 """
 from __future__ import annotations
 
+import contextlib
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
@@ -1020,6 +1021,24 @@ class AdoptAndSettleTests(ConductorCase):
         code, _, err2 = self.conduct("release", "--run", run_id, "--item", "W1", "--reason", "the run died")
         self.assertEqual(code, 0, err2)
         self.assertEqual((self.source()["items"]["W1"]["status"], self.source()["items"]["W1"].get("holder")), ("todo", None))
+
+    def test_release_all_gives_back_every_piece_of_a_stopped_batch_that_nobody_worked_on(self):
+        self.set_items({"W1": {}, "W2": {}})
+        (self.project / "stray.txt").write_text("x", encoding="utf-8")
+        code, _, err = self.run_items("W1", "W2", extra=("--adopt",))
+        self.assertEqual(code, 1, err)
+        held = {ref: doc["status"] for ref, doc in self.source()["items"].items()}
+        self.assertEqual(held, {"W1": "in_progress", "W2": "in_progress"})  # a batch stop gives nothing back on its own
+        code, _, err2 = self.conduct("release", "--run", self.run_dir(err).name, "--all", "--reason", "start over")
+        self.assertEqual(code, 0, err2)
+        self.assertIn("RELEASED_ALL", err2)
+        self.assertEqual({ref: doc["status"] for ref, doc in self.source()["items"].items()}, {"W1": "todo", "W2": "todo"})
+
+    def test_release_needs_item_or_all_and_not_both(self):
+        for argv in (("release", "--run", "r"), ("release", "--run", "r", "--item", "W1", "--all")):
+            with self.assertRaises(SystemExit) as stop, contextlib.redirect_stderr(io.StringIO()):
+                self.conduct(*argv)
+            self.assertEqual(stop.exception.code, 2)
 
     def test_release_refuses_a_piece_that_has_work_in_the_tree(self):
         self.script({"executor": [{"result": report("W1", "blocked", open_issues=[{"text": "x", "kind": "escalation"}])}]})

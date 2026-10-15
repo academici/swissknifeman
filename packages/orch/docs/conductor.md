@@ -139,6 +139,7 @@ The conductor stops only on:
 | Code | When |
 | --- | --- |
 | `REVIEW_LIMIT` | a batch limit refused a round while a confirmed Blocker finding is open | the finding ids and the limit |
+| `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
 | `DISK_LOW` | less than `limits.disk_min_gb` (default 5) GB free under the project or the temporary directory when the run starts or resumes, or before the checks of a round; the run stops (resumable): free the space, then `resume` |
 | `RUN_TIMEOUT` | the active time of the run passed `limits.run_timeout_s` (default 0: off); the current role is cancelled; raise the limit, then resume |
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
@@ -180,6 +181,7 @@ instead; `orch conduct status` shows the latest one of the running step:
 | `PROVIDER_WAIT` | a role failed at the provider and waits before its repeat: a usage limit that resets within `limits.provider_wait_max_s`, or a transient failure after the provider CLI had repeated the request itself (`api_retry`) | the failure class, the wait in seconds and the UTC time it ends; the wait looks at the cancel every second |
 | `ROUTE_FALLBACK` | a role moved to a `fallback_routes` entry (its provider failed beyond the wait, or was gated) | role, old route → new route, the class and the reason codes (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`, `CAPACITY_GATED`) |
 | `ROUTE_UPGRADED` | the reviewer route went up to the `suggested_model_class` of an executor `review_recommendation` (above the class of its route, admitted: startable here, not gated) | role, old route → new route, `<class> -> <class>`; a suggestion at or below the route, or a higher route that is not admitted, gives no beacon |
+| `SESSION_ROUTE_CHANGED` | a piece resumes the shared executor session under another model or effort than the one that built it (the session continues, the provider cache of the old model is lost) | the old and the new route |
 | `CAPACITY_GATED` | the provider of a role is gated when the routes of a piece are chosen | the gate (until, class, who set it) |
 | `RESULT_SILENT_DENIAL` | a Claude role had tool calls refused without a prompt (`--permission-prompts none`) | the tools and how many calls (`Bash×2, WebFetch`), never their input; for the executor and the bounded-implementer the report also gets a `note` issue "tools denied without a prompt: …" with the way out (widen `allowedTools` in the launch catalog, or change the plan) |
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
@@ -249,7 +251,7 @@ is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNK
 The reviewer has a fallback by default (`fallback_routes`): a review is too dear to lose when grok cannot start (no CLI), is
 gated (its quota is exhausted) or fails and the policy says `fallback_route` (`on_error`). A route that cannot start, or is
 gated, is replaced when the routes of a piece are chosen (`ROUTE_FALLBACK`, `CAPACITY_GATED`); a role that fails at the provider moves
-by the decision of `retry.decide`. `run --dry-run` shows what a run would do: `fallback_routes`, the `gates` in force, the
+by the decision of `retry.decide`. `run --dry-run` shows what a run would do (`batch`: whether the pieces are one batch, the default for several; `ready`: whether `--ready` picks them): `fallback_routes`, the `gates` in force, the
 `reviewer` selector with the layer that set it, and `route_notes` (a route replaced at selection and why).
 
 A fallback route is admitted by the same rules as a route at the start: not below the class or effort the work requires,
@@ -380,8 +382,9 @@ always allowed: they are not counted as the role's changes and are not listed to
 A piece that stops before any executor round (`WORKTREE_DIRTY` at adopt, a refused route, a failed brief or prepare) gives
 its claim back to the work source (`CLAIM_RELEASED`; the source's `release` op), so a new `run` can claim it again without
 `ITEM_OWNED`. A source without `release`, or a refusal, prints `CLAIM_KEPT`; then, or when a run died before it could
-release, `release --run RUN --item REF [--reason TEXT]` does it by hand (`RELEASE_WORK_BEGAN` when an executor round ran:
-`settle` or `resume --retry` the piece instead). `resume --run RUN` of a stopped run needs none of this: it claims
+release, `release --run RUN --item REF [--item REF2 …] [--reason TEXT]` does it by hand (`RELEASE_WORK_BEGAN` when an executor round ran:
+`settle` or `resume --retry` the piece instead); `release --run RUN --all` gives back every piece of the run that nobody worked on and that is not
+closed (a batch that stopped before any work: all of its pieces are in progress), names the pieces it kept, and prints `RELEASED_ALL`. `resume --run RUN` of a stopped run needs none of this: it claims
 its own piece again.
 `settle --run RUN --item REF --outcome … --reason …` sets the outcome of a piece by hand after it was finished or given up
 outside the conductor (for example committed with the work source's own command); the journal keeps the reason. A closed step returns its recorded result and prints `stage.skip`; a
@@ -428,8 +431,14 @@ effort to `high`. Naming a mode in `review.strategy` skips the strategist. The p
 In `groups`, `single` and `none` a piece has no review of its own. After the last piece of a group the conductor reads the
 commits of the group once (`review_batch`: production code only, the same as `batch-review.py`), with the reviewer of the run
 (`reviewer`, grok by default) at the effort of the plan, and keeps the reply in `group-review-<n>.md` of the run folder
-(`state.group_reviews`). The beacon `GROUP_REVIEW` gives the counts of Blocker, Major and Minor; Blocker and Major are
-corrected in a commit of their own by the owner or the observer.
+(`state.group_reviews`). The reply must hold a `## Findings` section with `[Blocker|Major|Minor] file:line - defect` lines (a
+list marker, a number, bold or backticks around them are read too) or the word `none`. The beacon `GROUP_REVIEW` gives the
+counts; a reply that is neither is `GROUP_REVIEW_FAILED` (`format: malformed` in `state.group_reviews`), never a clean review, and
+so is a group without a commit. Blocker and Major findings are corrected in a commit of their own: the conductor writes
+`group-review-<n>.followup.json` (an execution-input with `provenance: review_followup`, the files the findings name as scope)
+and the beacon names the command, `orch conduct run --input <that file> --commit` (the executor corrects them, the conductor
+checks and commits; native correction inside the run is not built, because the pieces of the group are already registered and
+committed in the work source).
 
 ## Run options
 

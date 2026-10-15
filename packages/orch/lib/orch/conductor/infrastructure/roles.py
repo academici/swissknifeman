@@ -414,9 +414,24 @@ def shared_session(self, item: Item, role: str, route: dict) -> bool:
         and self._session_mode(item) == "shared"
 
 
+def route_label(route: dict) -> str:
+    return "/".join(str(route.get(key)) for key in ("provider", "model", "effort") if route.get(key))
+
+
 def resume_args(self, item: Item, role: str, route: dict) -> list:
-    session = (getattr(self, "state", None) or {}).get("executor_session")
-    return ["--resume", session] if session and self._shared_session(item, role, route) else []
+    """``--resume SESSION`` of the shared executor session. A piece whose route names another model or effort than the
+    one that built the session still resumes it (the provider continues the same transcript under the new model; the
+    cache of the old one is lost): the change is announced once per change as ``SESSION_ROUTE_CHANGED``."""
+    state = getattr(self, "state", None) or {}
+    session = state.get("executor_session")
+    if not (session and self._shared_session(item, role, route)):
+        return []
+    before, now = state.get("executor_session_route"), route_label(route)
+    if before and before != now and state.get("executor_session_route_said") != now:
+        state["executor_session_route_said"] = now
+        self.progress.emit("info", item=item.ref, reason_code="SESSION_ROUTE_CHANGED",
+                           message=f"the shared executor session was built by {before}; {item.ref} resumes it as {now}")
+    return ["--resume", session]
 
 
 def keep_session(self, item: Item, role: str, route: dict, run) -> None:
@@ -426,8 +441,10 @@ def keep_session(self, item: Item, role: str, route: dict, run) -> None:
         return
     if run.error or not run.session:
         self.state.pop("executor_session", None)
+        self.state.pop("executor_session_route", None)
     else:
         self.state["executor_session"] = run.session
+        self.state["executor_session_route"] = route_label(route)
     self._save()
 
 

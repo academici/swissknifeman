@@ -69,7 +69,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             and any(conductor._claude_bash(route) for route in item.routes.values()):
         warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
                         "a run stops with SANDBOX_UNAVAILABLE")
-    return {"plan": args.plan or str(args.input), "items": args.items or None, "batch": bool(args.ready),
+    return {"plan": args.plan or str(args.input), "items": args.items or None, "ready": bool(args.ready),
+            "batch": args.batch is not False and (len(args.items or []) > 1 or bool(args.ready)),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
             "review": item.policy.get("review"), "options": item.options, "sources": item.sources,
             "reviewer": {"selector": item.options["reviewer"], "source": item.sources.get("reviewer", "default")},
@@ -235,7 +236,10 @@ def main(argv: list | None = None) -> int:
     release = verbs.add_parser("release", help="give a claimed piece of a run back to the work source, when the run stopped "
                                                 "before any work began (so that a later run can claim it)")
     release.add_argument("--run", required=True, metavar="RUN")
-    release.add_argument("--item", required=True, metavar="REF")
+    which = release.add_mutually_exclusive_group(required=True)
+    which.add_argument("--item", action="append", metavar="REF", help="a piece to give back (repeatable)")
+    which.add_argument("--all", action="store_true", help="every piece of the run that nobody worked on and that is not closed "
+                                                         "(the whole batch after a stop before any work)")
     release.add_argument("--reason", default="released by hand", help="why, for the journal of the source")
     status = verbs.add_parser("status", help="state of a run from its journal (default: the latest run)")
     status.add_argument("--run", metavar="RUN")
@@ -355,7 +359,7 @@ def main(argv: list | None = None) -> int:
                                  adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario,
                                  fence=args.fence, extra_paths=args.allow_path, grouped=args.batch)
         if args.verb == "release":
-            return conductor.release(args.run, args.item, args.reason)
+            return conductor.release(args.run, None if args.all else args.item, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
         return conductor.resume(args.run, retry=args.retry)

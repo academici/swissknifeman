@@ -46,6 +46,28 @@ class ReviewPlanTests(ConductorCase):
         self.assertTrue(self.events(err, "GROUP_REVIEW"))
         self.assertTrue(self.events(err, "REVIEW_STRATEGY"))
 
+    def test_a_reply_in_another_format_is_a_failed_review_not_a_clean_one(self):
+        self.set_items({r: {} for r in ("W1", "W2", "W3")})
+        self.script({"executor": [executor_ok(r) for r in ("W1", "W2", "W3")], "reviewer": [{"text": "Looks fine to me."}],
+                     "triager": [answer("single", [["W1", "W2", "W3"]])]})
+        code, _, err = self.run_items("W1", "W2", "W3")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.state(err)["group_reviews"]["1"]["format"], "malformed")
+        self.assertFalse(self.events(err, "GROUP_REVIEW"))
+        self.assertTrue(self.events(err, "GROUP_REVIEW_FAILED"))
+
+    def test_major_findings_come_with_a_ready_followup_input(self):
+        err = self.batch(triager=answer("single", [["W1", "W2", "W3"]]))
+        kept = self.state(err)["group_reviews"]["1"]
+        self.assertEqual(kept["format"], "findings")
+        path = self.project / kept["followup"]
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(doc["provenance"]["kind"], "review_followup")
+        self.assertEqual(doc["scope"]["include"], ["out/W3.txt"])
+        self.assertIn("[Major] out/W3.txt:1 - a defect", doc["goal"])
+        message = self.events(err, "GROUP_REVIEW")[0]["message"]
+        self.assertIn("orch conduct run --input", message)
+
     def test_groups_are_reviewed_after_the_last_piece_of_each_group(self):
         err = self.batch(triager=answer("groups", [["W1", "W2"], ["W3"]], "high"))
         self.assertEqual(sorted(self.state(err)["group_reviews"]), ["1", "2"])

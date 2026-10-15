@@ -204,6 +204,7 @@
    }
   },
   "executor_session": "executor-session-2",
+  "executor_session_route": "claude-code/sonnet/high",
   "items": {
    "W1": {
     "adopted": [],

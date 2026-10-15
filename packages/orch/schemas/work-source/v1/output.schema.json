@@ -46,6 +46,11 @@
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*$"
         },
+        "depends_on": {
+          "description": "References of the pieces this piece depends on, when the source knows them (optional): the conductor holds a piece whose dependency in the same run ended blocked.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
         "scenario_source": {"description": "Where the scenario comes from.", "$ref": "#/$defs/text"},
         "route": {
           "description": "Minimum model route of the work.",

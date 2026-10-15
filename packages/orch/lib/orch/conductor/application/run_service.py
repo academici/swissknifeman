@@ -115,20 +115,47 @@ def batch_held(self) -> bool:
     return self.run_doc.get("grouped") is not False and len(self.run_doc.get("items") or []) > 1
 
 
-def release(self, run_id: str, ref: str, reason: str) -> int:
-    """Give a piece of this run back to the work source by hand, when a run died or stopped before any work began
-    (an executor round makes it refuse: settle or retry the piece instead)."""
+def release(self, run_id: str, ref, reason: str) -> int:
+    """Give pieces of this run back to the work source by hand, when a run died or stopped before any work began
+    (an executor round makes it refuse: settle or retry the piece instead). ``ref``: one reference, a list of them, or
+    ``None`` for every piece of the run that nobody worked on and that is not closed (the pieces with work are named and
+    left alone, and the command says so)."""
     store = RunStore(self.project, run_id)
     run_doc, state = store.load()
-    item = state.get("items", {}).get(ref)
-    if item is None:
-        raise Stop("ITEM_UNKNOWN", f"{ref} is not a piece of run {run_id}")
-    if self._work_began(item) or item.get("outcome") in ("done", "done_with_deviations"):
-        raise Stop("RELEASE_WORK_BEGAN", f"{ref} has work in the tree or is closed; settle it, or resume with --retry")
+    items = state.setdefault("items", {})
+    known = list(dict.fromkeys([*state_claims(state), *(run_doc.get("items") or []), *items]))  # claimed, maybe never started
+    everything = ref is None
+    refs = known if everything else ([ref] if isinstance(ref, str) else list(ref))
+    for one in refs:
+        if one not in known:
+            raise Stop("ITEM_UNKNOWN", f"{one} is not a piece of run {run_id}")
     self._open(run_id, run_doc, state, store)
-    if not self._release_claim(ref, item, reason):
-        raise Stop("RELEASE_REFUSED", f"the work source did not release {ref}; see the progress line")
+    freed, kept, failed = [], [], []
+    for one in refs:
+        owner = next((claim.get("orch_run") for claim in (state.get("claims") or {}).values() if claim.get("ref") == one), None)
+        item = items.setdefault(one, {"steps": {}, "retries_used": 0, "orch_run": owner})
+        closed = item.get("outcome") in ("done", "done_with_deviations")
+        if self._work_began(item) or closed:
+            if not everything:
+                raise Stop("RELEASE_WORK_BEGAN", f"{one} has work in the tree or is closed; settle it, or resume with --retry")
+            kept.append(one)
+        elif self._release_claim(one, item, reason):
+            freed.append(one)
+        elif not everything:
+            raise Stop("RELEASE_REFUSED", f"the work source did not release {one}; see the progress line")
+        else:
+            failed.append(one)
+    if everything:
+        self.progress.emit("info", reason_code="RELEASED_ALL", message=f"released: {', '.join(freed) or '-'}; "
+                           f"kept (work began or closed): {', '.join(kept) or '-'}; refused by the source: {', '.join(failed) or '-'}")
+    if failed:
+        raise Stop("RELEASE_REFUSED", f"the work source did not release {', '.join(failed)}; see the progress lines")
     return 0
+
+
+def state_claims(state: dict) -> list:
+    """The references of the pieces a run claimed, in the order of its claims."""
+    return [claim["ref"] for claim in (state.get("claims") or {}).values() if claim.get("ref")]
 
 
 def settle(self, run_id: str, ref: str, outcome: str, reason: str) -> int:

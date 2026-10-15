@@ -62,6 +62,8 @@ def claim(state, given):
               "attempt_id": f"att-{run_id}-{ref}", "session": run_id}
     if item.get("options"):
         answer["options"] = item["options"]
+    if item.get("depends_on"):
+        answer["depends_on"] = item["depends_on"]
     if len(lane) > 1 and lane[0] == ref and state.get("lanes", True):
         answer["lane"] = lane
     return answer

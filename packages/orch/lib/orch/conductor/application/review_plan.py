@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 from typing import Optional
 
-from orch import launch
+from orch import adhoc, launch
 from orch.conductor import options as opts, process, review_batch
 from orch.conductor.domain.item import Item
 from orch.conductor.infrastructure.clock import utc_now
@@ -119,6 +119,8 @@ def group_review_due(self, ref: str) -> None:
 def group_review(self, number: int, group: list, effort: str) -> None:
     refs, shas = review_batch.commits_of_state({"items": {r: self.state["items"][r] for r in group}})
     if not shas:
+        self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED",
+                           message=f"group {number} ({', '.join(group)}): no commit of the group to read; not reviewed")
         return
     diff = review_batch.diff_of(self.project, shas, ["packages", "bridges", "scripts"], list(review_batch.EXCLUDED))
     item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
@@ -139,15 +141,48 @@ def group_review(self, number: int, group: list, effort: str) -> None:
                            timeout_s=0, raw_path=raw, env=self._role_env(item, "reviewer", route), provider=provider)
     self._tokens(item, run.usage)
     text = run.text if not run.error else ""
-    found = review_batch.counts(text)
+    read = review_batch.verdict(text)
+    found = read["counts"]
     path = self.directory / f"group-review-{number}.md"
     path.write_text(text or f"(no reply: {run.error}: {run.detail})", encoding="utf-8")
-    kept = {"refs": refs, "file": self._relative(path), "counts": found, "effort": effort,
+    kept = {"refs": refs, "file": self._relative(path), "counts": found, "effort": effort, "format": read["format"],
             "seconds": round(time.monotonic() - began, 1), "error": run.error}
+    loud = found["Blocker"] + found["Major"]
+    followup = followup_input(self, number, refs, read) if loud else None
+    if followup:
+        kept["followup"] = followup
     self.state.setdefault("group_reviews", {})[str(number)] = kept
     self._save()
-    loud = found["Blocker"] + found["Major"]
-    self.progress.emit("info", reason_code="GROUP_REVIEW" if not run.error else "GROUP_REVIEW_FAILED",
-                       message=(f"group {number}: {found['Blocker']} Blocker, {found['Major']} Major, {found['Minor']} Minor "
-                                f"in {kept['seconds']} s; {kept['file']}" + ("; correct them in a commit of their own" if loud else ""))
-                       if not run.error else f"group {number}: {run.error}: {run.detail}")
+    seconds = f"in {kept['seconds']} s; {kept['file']}"
+    if run.error:
+        self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED", message=f"group {number}: {run.error}: {run.detail}")
+    elif read["format"] == "malformed":  # never reported as a clean review: the reply is not in the asked format
+        self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED", message=f"group {number}: the reply has no readable "
+                           f"'## Findings' section (neither [Severity] lines nor 'none'); read {kept['file']}")
+    else:
+        self.progress.emit("info", reason_code="GROUP_REVIEW",
+                           message=f"group {number}: {found['Blocker']} Blocker, {found['Major']} Major, {found['Minor']} Minor "
+                                   f"{seconds}" + (f"; to correct them: orch conduct run --input {followup} --commit" if followup
+                                                   else ""))
+
+
+def followup_input(self, number: int, refs: list, read: dict) -> Optional[str]:
+    """The Blocker and Major findings of a group review as a ready execution-input (``provenance: review_followup``): one
+    command corrects them in a commit of their own, with the file source (``run --input FILE --commit``)."""
+    paths = review_batch.followup_paths(read["findings"])
+    loud = [row for row in read["findings"] if row["severity"] in ("Blocker", "Major")]
+    if not paths or not loud:
+        return None
+    goal = ("Correct these confirmed review findings of the pieces " + ", ".join(refs) + ", each in the file it names; change "
+            "nothing else:\n" + "\n".join(f"- [{row['severity']}] {row['text']}" for row in loud))
+    try:
+        doc = adhoc.build_adhoc_input(goal, paths, procedures=["V1=every listed finding is fixed and the tests that cover the "
+                                                              "touched code pass"], why=f"group review {number} of this run",
+                                      route={"class": "implementation", "effort": "high"},
+                                      provenance=adhoc.support_provenance("review_followup"))
+    except adhoc.AdhocError as error:
+        self.progress.emit("info", reason_code="GROUP_REVIEW_FOLLOWUP_FAILED", message=f"group {number}: {error}"[:200])
+        return None
+    target = self.directory / f"group-review-{number}.followup.json"
+    write_json(target, doc)
+    return self._relative(target)

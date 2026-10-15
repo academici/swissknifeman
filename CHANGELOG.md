@@ -12,8 +12,14 @@
 - **orch:** the folder name of the Claude Code transcripts follows the UTF-16 rule (a character outside the basic plane is two dashes); a path whose name would pass 200 characters opens the whole `~/.claude/projects` for the shared session.
 - **orch, bridges:** lint findings of ruff F+B that CI had not seen locally (unused imports, loop variables bound late, `raise ... from None`, a test class that shadowed another one in `bridges/planner-orch/tests/test_brief.py`, so its tests never ran).
 
+- **orch:** a group review whose reply is not in the asked format (no `## Findings` section, neither `[Severity]` lines nor `none`) is `GROUP_REVIEW_FAILED` with `format: malformed`, no longer a clean review; finding lines dressed as list items, numbers, bold or code are counted; a group with no commit is reported too.
+- **orch:** with `on_blocked: report` a piece that depends on a piece blocked in the same run is not started (`DEPENDENCY_BLOCKED`, it stays in progress, the run ends after the others and stops resumable); the claim answer of `work-source/v1` carries an optional `depends_on`.
+
 ### Added
 
+- **orch:** `orch conduct release --run RUN --all` (and `--item` repeated) gives back every piece of a stopped batch that nobody worked on; the beacon `RELEASED_ALL` names what was kept.
+- **orch:** for Blocker and Major findings of a group review the conductor writes `group-review-<n>.followup.json` (an execution-input, `provenance: review_followup`) and the beacon names the command that corrects them in a commit of their own.
+- **orch:** `SESSION_ROUTE_CHANGED` beacon when a piece resumes the shared executor session under another model or effort.
 - **orch:** `limits.disk_min_gb` (default 5, 0 off): a run does not start or resume, and the checks of a round do not start, with less free space under the project or the temporary directory (`DISK_LOW`, resumable); a running check gets a `DISK_LOW` beacon.
 - **orch:** `instructions.file_tools_rule` (default true): a `## File tools` run-rules block in the executor prompt that sends reading and editing to Read/Grep/Edit/Write instead of Bash heredocs, when the route offers Read and Edit.
 - **scripts:** `lint.sh` covers `packages/orch` and `bridges` by default, and `SKM_LINT_ANY_VERSION=1` runs a ruff of another version (advisory) where pipx is missing.

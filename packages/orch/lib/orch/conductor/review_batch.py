@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from typing import Optional
 
 PROMPT = """You are an independent code reviewer. READ ONLY: do not run any command and do not edit anything. Work from the diff \
 below; open a file only when a defect cannot be judged without it, and use at most {max_tools} tool calls in total. Keep your \
@@ -61,12 +62,58 @@ def commits_of(run_dir: Path) -> tuple:
     return commits_of_state(json.loads((run_dir / "state.json").read_text(encoding="utf-8")))
 
 
-SEVERITY = re.compile(r"^\[(Blocker|Major|Minor)\]", re.M)
+# A finding line of the reply: ``[Major] file:line - defect``, as the prompt asks, also when the model dresses it as a list
+# item, a number, bold or code (``- [Major]``, ``1. **[Major]**``, ```[Major]```).
+SEVERITY = re.compile(r"^[ \t]*(?:[-*+][ \t]+|\d+[.)][ \t]+)?[`*_ \t]*\[(Blocker|Major|Minor)\][`*_ \t]*(.*)$", re.M)
+_HEADER = re.compile(r"^[ \t]*#{1,6}[ \t]*\**[ \t]*(.+?)[ \t]*\**[ \t]*$", re.M)
+_NONE = re.compile(r"^[ \t]*[`*_\-]*[ \t]*none[ \t]*[`*_.\-]*[ \t]*$", re.I | re.M)
+
+
+def findings_section(text: str) -> Optional[str]:
+    """The text under ``## Findings`` up to the next heading; ``None`` when the reply has no such heading."""
+    heads = list(_HEADER.finditer(text or ""))
+    for index, head in enumerate(heads):
+        if head.group(1).strip().lower().rstrip(":") == "findings":
+            end = heads[index + 1].start() if index + 1 < len(heads) else len(text)
+            return text[head.end():end]
+    return None
+
+
+def verdict(text: str) -> dict:
+    """What a review reply says: ``format`` is ``findings`` (at least one ``[Severity]`` line), ``none`` (the section says
+    so) or ``malformed`` (no ``## Findings`` heading, or a section that is neither): a malformed reply is not a clean
+    review; ``counts`` per severity and ``findings`` ``[{severity, location, text}]`` in the order of the reply."""
+    section = findings_section(text)
+    found = {"Blocker": 0, "Major": 0, "Minor": 0}
+    rows = []
+    for match in SEVERITY.finditer(section or ""):
+        found[match.group(1)] += 1
+        rest = match.group(2).strip().strip("`*_ ")
+        location = rest.split(" - ", 1)[0].strip().strip("`*_ ") if " - " in rest else ""
+        rows.append({"severity": match.group(1), "location": location, "text": rest})
+    if section is None:
+        kind = "malformed"
+    elif rows:
+        kind = "findings"
+    elif _NONE.search(section):
+        kind = "none"
+    else:
+        kind = "malformed"
+    return {"format": kind, "counts": found, "findings": rows}
 
 
 def counts(text: str) -> dict:
-    """How many findings of each severity a reply holds (``## Findings`` lines that start with ``[Severity]``)."""
-    found = {"Blocker": 0, "Major": 0, "Minor": 0}
-    for name in SEVERITY.findall(text or ""):
-        found[name] += 1
-    return found
+    """How many findings of each severity a reply holds."""
+    return verdict(text)["counts"]
+
+
+def followup_paths(findings: list) -> list:
+    """The files that the Blocker and Major findings of a reply name (``file:line``), once each, in order."""
+    paths = []
+    for row in findings:
+        if row["severity"] not in ("Blocker", "Major"):
+            continue
+        path = re.split(r":\d", row["location"], maxsplit=1)[0].strip() if row["location"] else ""
+        if path and re.fullmatch(r"[\w./@+-]+", path) and not path.startswith(("/", "..")) and path not in paths:
+            paths.append(path)
+    return paths

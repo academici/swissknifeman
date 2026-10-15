@@ -337,3 +337,22 @@ class ScenarioFlagTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertEqual({call.get("scenario") for call in self.claims()}, {None})
+
+
+class DependencyHoldTests(ConductorCase):
+    """``on_blocked: report`` goes on after a blocked piece, but not into a piece that depends on it."""
+
+    def test_a_piece_that_depends_on_a_blocked_one_is_held_not_run(self):
+        blocked = {"result": __import__("tests.test_conductor", fromlist=["report"]).report(
+            "W1", "blocked", open_issues=[{"text": "needs a decision", "kind": "escalation"}])}
+        self.set_items({"W1": {}, "W2": {"depends_on": ["W1"]}, "W3": {}})
+        self.script({"executor": [blocked, executor_ok("W3")], "reviewer": [GREEN] * 2})
+        options_file = self.project.parent / "report.json"
+        options_file.write_text(json.dumps({"on_blocked": "report"}), encoding="utf-8")
+        code, _, err = self.run_items("W1", "W2", "W3", extra=("--options", options_file))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "DEPENDENCY_BLOCKED")), err)
+        self.assertEqual(self.calls("executor"), 2)  # W1 (blocked) and W3; never W2
+        self.assertIn("DEPENDENCY_BLOCKED", err)
+        status = {ref: doc["status"] for ref, doc in self.source()["items"].items()}
+        self.assertEqual(status["W2"], "in_progress")  # held, not given back, not closed
+        self.assertEqual(self.state(err)["items"]["W3"]["outcome"], "done")

@@ -232,6 +232,8 @@ def op_claim(fields: dict) -> dict:
         answer["title"] = doc["title"]
         if len(_LANE) > 1 and _LANE[0] == ref:
             answer["lane"] = list(_LANE)
+        if isinstance(doc.get("depends_on"), list) and doc["depends_on"]:
+            answer["depends_on"] = [dep for dep in doc["depends_on"] if isinstance(dep, str)]
         if isinstance(doc.get("route"), dict):
             answer["route"] = {key: doc["route"][key] for key in ("class", "effort") if key in doc["route"]}
         context = plan_json(["context", plan, ref, "--stdout"], plans_root)

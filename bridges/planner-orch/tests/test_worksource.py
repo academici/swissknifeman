@@ -215,6 +215,7 @@ class BatchClaimTests(Case):
         two = self.op(worksource.op_claim, op="claim", plan=self.plan, items=[second], batch=True, run_id="run-b",
                       submission_id="sub-b", actor=ACTOR)
         self.assertEqual((one["status"], two["status"]), ("claimed", "claimed"), (one, two))
+        self.assertEqual((one.get("depends_on"), two.get("depends_on")), (None, [first]))  # the conductor holds a piece whose dependency blocks
         self.assertEqual((self.item(first)["status"], self.item(second)["status"]), ("in_progress", "in_progress"))
         self.assertEqual(self.item(first)["result"]["executor"]["session"], "run-a")
         self.assertEqual(self.item(second)["result"]["executor"]["session"], "run-b")

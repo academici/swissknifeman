@@ -397,6 +397,7 @@ COVERAGE = {
     "PROVIDER_WAIT": "snapshot:quota-wait", "ROUTE_FALLBACK": "snapshot:route-fallback",
     "ROUTE_UPGRADED": "test:test_conductor_focus.py", "CAPACITY_GATED": f"test:{T}",
     "RESULT_SILENT_DENIAL": "test:test_conductor_agents.py", "GATE_NOT_WRITTEN": f"test:{C}", "DISK_LOW": "test:test_polish.py",
+    "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}",
 }
 

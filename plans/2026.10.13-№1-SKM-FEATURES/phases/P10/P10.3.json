@@ -62,6 +62,36 @@
       "path": "packages/orch/config.example.toml",
       "change": "modify",
       "note": "generated: aicore config example packages/orch --write"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/fixtures/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
     }
   ],
   "rules": [
@@ -97,5 +127,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-15T05:36:13Z"
+  "updated_at": "2026-10-15T05:42:23Z"
 }

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.2",
   "title": "Роль researcher (read-only, network) с research-result/v1; launch-catalog; сохранение в plans/<plan>/research через мост или в orch-artifacts",
-  "status": "todo",
+  "status": "blocked",
   "summary": "roles/researcher.json|md, launch-catalog claude-code (allowedTools только orch.py research query), схема research-result, стадия в engine, регистрация результата; e2e на фейковом источнике.",
   "why": "Аудит П9.2. Риск: утверждения без источника — только в unknowns (контракт).",
   "scope": {
@@ -78,6 +78,37 @@
       "path": "packages/orch/config.example.toml",
       "change": "modify",
       "note": "generated: aicore config example packages/orch --write"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/role-manifest.schema.json",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/fixtures/conductor/v1/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/roles/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/8d5954c14d946266f8e87cf1af1a32bf78cfaef08a13096384366c99a5c54f73",
+      "role": "input"
     }
   ],
   "rules": [
@@ -112,6 +143,21 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-15T05:40:39Z"
+  "result": {
+    "started_at": "2026-10-15T05:40:48Z",
+    "finished_at": "2026-10-15T05:41:54Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-77fe1ca5e880f0f0e0816271-P10.2",
+    "notes": "Nothing was changed. The researcher role cannot be added inside scope.write_set: a new conductor schema needs a KINDS entry in lib/orch/conductor/contract.py (registry() fails on any mismatch between schema files and KINDS), role-manifest.result_shape is a closed enum without research-result (schemas/exec/v1/role-manifest.schema.json), and the plan rule on closed schemas requires valid/invalid fixtures (packages/orch/fixtures/conductor/v1/*/research-result) and a docs/contracts.md line. All of these are outside the write set.",
+    "escalation": "Write set is insufficient: need packages/orch/lib/orch/conductor/contract.py (KINDS), packages/orch/schemas/exec/v1/role-manifest.schema.json (result_shape enum + aicore schema compat), packages/orch/fixtures/conductor/v1/valid|invalid/research-result/*, packages/orch/docs/contracts.md. Optionally lib/orch/conductor/heal.py (heal rule for research-result)."
+  },
+  "updated_at": "2026-10-15T05:42:22Z"
 }

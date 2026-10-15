@@ -22,7 +22,7 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
     def run() -> dict:
         base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
         prompt = prompts.triager(item.input_doc, item=item.ref, step=key, base=base, findings=findings,
-                                 roles_dir=self.roles_dir, skills=self._skills(item, role),
+                                 roles_dir=self.roles_dir, stub=self._stub(role), skills=self._skills(item, role),
                                  repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role),
                                  advice=advice)
         triage, meta = self._role(item, key, role, prompt, "triage-result",

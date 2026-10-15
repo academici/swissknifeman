@@ -12,7 +12,8 @@ from orch.conductor.domain.item import Item
 BUDGET_CLASSES = {
     "core": ("role_text", "input", "verification", "result_contract", "answers", "correction", "progress", "candidate",
              "review_scope", "diff", "findings", "instruction"),
-    "supporting": ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules"),
+    "supporting": ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules",
+                   "stub"),
     "retrieval": ("research",),
 }
 BUDGET_LIMITS = {"core": "prompt_core_tokens", "supporting": "prompt_supporting_tokens",

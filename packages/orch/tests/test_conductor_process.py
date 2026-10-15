@@ -36,6 +36,26 @@ class RoleProcessTests(unittest.TestCase):
         self.assertIsNone(run.error, run.detail)
         self.assertEqual(run.text, "done")
 
+    def test_what_a_finished_role_left_in_the_background_is_ended(self):
+        marker = Path(self.tmp.name) / "child.pid"
+        code = ("import subprocess, sys, json\n"
+                f"child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])\n"
+                f"open({str(marker)!r}, 'w').write(str(child.pid))\n"
+                "print(json.dumps({'type': 'result', 'result': 'done'}))\n")
+        run = self.run_role(code, timeout_s=0, idle_timeout_s=0)
+        self.assertIsNone(run.error, run.detail)
+        pid = int(marker.read_text())
+        for _ in range(50):
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                break
+            if Path(f"/proc/{pid}/stat").exists() and Path(f"/proc/{pid}/stat").read_text().split(")")[1].split()[0] == "Z":
+                break
+            time.sleep(0.1)
+        else:
+            self.fail(f"the background child {pid} of the role is still alive")
+
     def test_a_role_that_has_given_its_result_but_does_not_exit_is_reaped_after_the_grace(self):
         started = time.monotonic()
         run = self.run_role(LINGER, timeout_s=0, idle_timeout_s=0, result_grace_s=1)

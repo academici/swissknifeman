@@ -2,12 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- **aicore, orch:** stubs — additional instructions of the roles that a person keeps by machine (`~/.config/swissknifeman/stubs`) and by project (`.swissknifeman/stubs`, committed), without touching the canonical role text: four slots per role (`_all.md`, `orch/_all.md`, `orch/roles/_all.md`, `orch/roles/<role>.md`), modes `replace|append|disable`, an empty file inherits (published empty files mask nothing). A run resolves them once (`instructions.json`, `instructions_digest` in `run.json`), the prompt block `stub` stands after the role text and before the task; an unusable stub (symlink, not a regular file, too large, not UTF-8, bad header) stops the run with `STUBS_INVALID` before any role; a resume whose files changed keeps the snapshot and says `STUBS_CHANGED`. `orch.py stubs publish|list|show`; `[orch.stubs] enabled, layers` (machine only). The registrar and the report-fixer have no stub.
+
 ### Security
 
 - **orch:** isolation floor of the run options: a layer of the work source (plan, phase, item, overlay, input file) may tighten `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence` and `scope.outside`, never loosen them, and may not add `scope.extra_paths` (`OPTIONS_UNTRUSTED`); only the configuration, the pack and the invocation may. Trust is a mark the conductor sets on its own invocation layers, never the layer's `source` label.
 - **orch:** `scope.extra_paths` (`--allow-path`) is resolved (`~`, symlinks) and refused when it is the root, a system folder, HOME or an ancestor, the project or an ancestor, a secrets folder under HOME or inside `.git` (`OPTIONS_UNSAFE_PATH`); the guard gets the canonical path.
 - **orch:** the risk feature `security` is critical by default (`[orch.conductor.risk] critical`): it adds the review on its own, whatever the score; its patterns cover the code that confines the roles (`sandbox*`, `ro-run*`, launch catalog, role manifests, run policies, hooks, CI workflows, `install.sh`).
 - **orch:** the run folders are `0700`.
+- **orch:** `orch conduct answer --text` refuses an answer that looks like a secret (a token format or `name=value` of a secret name): an answer goes into `questions.json` and into the executor prompt, so a credential is named, never pasted.
 
 ### Fixed
 
@@ -15,6 +20,7 @@
 - **orch:** a research source missing what its kind needs (`argv` of `command`/`mcp-stdio`, `roots` of `filesystem`) is refused when the merged configuration is loaded (`SOURCE_INVALID`), not at the first query; an empty `argv` and repeated `capabilities` are refused by the schema.
 - **orch:** the JSON files of a run are written crash-safely (unique temporary file, fsync of the file and its folder; two threads writing one file no longer collide), and a torn one stops with `STATE_CORRUPT` naming it instead of a traceback.
 - **orch:** a hung process no longer holds a run forever: `limits.stage_idle_timeout_s` defaults to 5400 (a role whose stream is silent that long) and the new `limits.check_idle_timeout_s` (3600) stops a check whose log has not grown that long (checks run with `PYTHONUNBUFFERED=1`); wall-clock ceilings stay off.
+- **orch:** what a finished role left running in its process group (a server, a watcher started in the background) is ended when the role ends (SIGTERM, SIGKILL after 5 s); zombies do not hold the wait.
 - **orch:** the beacon `CHECK_CHANGED_TREE` names the files the checks of a round changed (their evidence and logs aside).
 
 - **orch:** `run --scenario S` is honoured for a plan run (it was silent): the scenario goes into every claim (`source claim --scenario`, `work-source/v1` claim gets an optional `scenario`), wins over the plan's overlays, and an unknown one blocks the claim with `SCENARIO_UNKNOWN`; the claim answer names `scenario_source: invocation:--scenario`. The mirror `bridges/planner-orch/schemas/run-options.schema.json` was stale and is synced.

@@ -537,6 +537,31 @@
           }
         }
       }
+    },
+    "stubs": {
+      "type": "object",
+      "description": "Stubs: additional instructions for the roles (`orch stubs publish|list|show`), from `~/.config/swissknifeman/stubs` (machine) and `<project>/.swissknifeman/stubs` (project). A run resolves them once and keeps the snapshot. Machine-wide: a project cannot turn its own stubs on or widen what it may add.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the role prompts get the stubs at all.",
+          "default": true,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "layers": {
+          "type": "array",
+          "description": "Layers read: a machine that runs repositories it does not trust leaves `project` out, so their stubs never reach a model.",
+          "default": ["machine", "project"],
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "description": "One layer.",
+            "enum": ["machine", "project"]
+          },
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        }
+      }
     }
   }
 }

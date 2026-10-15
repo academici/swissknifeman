@@ -21,6 +21,8 @@ from pathlib import Path
 import time
 from typing import Optional
 
+from aicore.util.redact import redact_text
+
 FILE = "questions.json"
 MODES = ("queue", "deny", "defaults")
 DEFAULT_WARN_S = 1800
@@ -172,6 +174,11 @@ def answer(file_doc: dict, question: str, *, option: Optional[str] = None, text:
     else:
         if options and entry["kind"] != "clarification":
             raise QuestionError("ANSWER_INVALID", f"{question} is answered by one of its options: {', '.join(options)}")
+        if text and redact_text(text) != text:
+            # an answer goes into questions.json and into the prompt of the executor (a provider): never a secret
+            raise QuestionError("ANSWER_INVALID", f"the answer to {question} looks like a secret; a credential never goes "
+                                "into a run: put it where the role reads it (an environment variable, a secret store) "
+                                "and answer with its name")
         value = text
     entry["resolution"] = {"value": value, "by": by, "at": now}
     return entry

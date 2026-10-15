@@ -390,6 +390,7 @@ COVERAGE = {
     "REGISTER_REFUSED": f"test:{T}", "COMMIT_REFUSED": f"test:{T}", "WORK_SOURCE_*": "test:test_worksource.py",
     "OPTIONS_INVALID": f"test:{T}", "POLICY_UNKNOWN": "test:test_policies.py",
     "OPTIONS_UNTRUSTED": f"test:{T}", "OPTIONS_UNSAFE_PATH": f"test:{T}", "STATE_CORRUPT": "test:test_durable_state.py",
+    "STUBS_INVALID": "test:test_conductor_stubs.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
     # Beacons
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
@@ -400,6 +401,7 @@ COVERAGE = {
     "RESULT_SILENT_DENIAL": "test:test_conductor_agents.py", "GATE_NOT_WRITTEN": f"test:{C}", "DISK_LOW": "test:test_polish.py",
     "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}", "CHECK_CHANGED_TREE": "test:test_conductor_checks.py",
+    "STUBS_CHANGED": "test:test_conductor_stubs.py",
 }
 
 

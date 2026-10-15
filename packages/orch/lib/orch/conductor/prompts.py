@@ -25,7 +25,7 @@ from orch.conductor.policies.skills import EXCLUSIVE_GROUP_LIMITS, EXCLUSIVE_GRO
 
 KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "context_map", "verification", "run_rules",
          "correction", "answers", "progress", "result_contract", "expected_paths", "candidate", "review_scope", "diff",
-         "findings", "instruction", "research")
+         "findings", "instruction", "research", "stub")
 CONDUCTOR = "conductor"
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
@@ -221,9 +221,11 @@ def _fence(text: str, tag: str = "") -> str:
     return f"{mark}{tag}\n{text.rstrip()}\n{mark}"
 
 
-def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", skill_texts=None) -> list:
-    """Blocks of the role text and task block, then the repository rules an isolated role still needs and its skills: by
-    name when the provider loads skills itself, as text when the role runs isolated (its provider loads none)."""
+def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", skill_texts=None, stub=None) -> list:
+    """Blocks of the role text, the stub of the role (``(origin, text)``: the additional instructions of the machine and
+    the project, after the canonical text and before the task, never in place of it) and the task block, then the
+    repository rules an isolated role still needs and its skills: by name when the provider loads skills itself, as text
+    when the role runs isolated (its provider loads none)."""
     manifest, text = role_render.load_role(role, roles_dir)
     prompt = role_render.render_prompt(input_doc, manifest, text)
     task = role_render.render_task_block(input_doc)
@@ -232,6 +234,8 @@ def _head(role: str, input_doc: dict, roles_dir, skills: list, rules: str = "", 
         blocks = [Block("role_text", origin, prompt[:len(prompt) - len(task)]), Block("input", "input.json", task)]
     else:  # a renderer that does not end with the task block: one block, nothing is guessed
         blocks = [Block("role_text", origin, prompt)]
+    if stub and stub[1]:
+        blocks.insert(1, Block("stub", stub[0], stub[1].rstrip() + "\n\n"))
     if rules:
         rules = re.sub(r"\s*<!--.*?-->", "", rules, flags=re.S)  # instruction markers are for generators, not for roles
         _then(blocks, Block("repository_rules", "CLAUDE.md|AGENTS.md", "## Repository rules\n\n" + rules.rstrip() + "\n"))
@@ -249,8 +253,8 @@ def _progress(item: str, step: str) -> Block:
     return Block("progress", CONDUCTOR, _PROGRESS.format(item=item, step=step))
 
 
-def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, skills=(), skill_texts=None) -> list:
-    blocks = _head("context-scout", input_doc, roles_dir, list(skills), skill_texts=skill_texts)
+def scout(input_doc: dict, *, item: str, step: str, roles_dir=None, stub=None, skills=(), skill_texts=None) -> list:
+    blocks = _head("context-scout", input_doc, roles_dir, list(skills), skill_texts=skill_texts, stub=stub)
     blocks[-1] = replace(blocks[-1], text=blocks[-1].text + "\n")
     return blocks + [_progress(item, step)]
 
@@ -340,12 +344,12 @@ git, generators)."""
 
 
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
-             role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
+             role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
              file_tools: bool = False) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
-    parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
+    parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub)]
     if fence == "project" or extra_paths:
         parts.append([Block("run_rules", CONDUCTOR, _fence_rule(fence, extra_paths))])
     if file_tools:
@@ -401,11 +405,11 @@ def _corrected_scope(corrected) -> str:
 
 
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
-             roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
+             roles_dir=None, stub=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
              checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None,
              focus=(), focus_origin: str = "stage-report") -> list:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
-    parts = [_head("reviewer", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
+    parts = [_head("reviewer", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("candidate", CONDUCTOR, f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the "
                     "candidate is the working tree (uncommitted changes, untracked files included). Read files as you "
                     "need; do not change anything.")],
@@ -438,9 +442,9 @@ def _outside_scope(outside) -> str:
             "contract):\n\n" + "\n".join(f"- `{path}`" for path in outside))
 
 
-def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict, roles_dir=None, skills=(),
+def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict, roles_dir=None, stub=None, skills=(),
             repo_rules: str = "", skill_texts=None, advice: str = "") -> list:
-    parts = [_head("triager", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
+    parts = [_head("triager", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("candidate", CONDUCTOR, f"## Candidate\n\nBase revision `{base}`; the candidate is the working tree. "
                     "Scratch files go to a temporary directory outside the repository.")],
              [Block("findings", "review-findings", "## Review findings\n\n"
@@ -471,11 +475,11 @@ def closer(*, item: str, step: str, command: str) -> list:
     return _join(parts)
 
 
-def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: list, command: str, roles_dir=None,
+def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: list, command: str, roles_dir=None, stub=None,
                skills=(), repo_rules: str = "", skill_texts=None) -> list:
     """The prompt of the researcher: the question, the sources it may ask (ids) and the one command that asks one."""
     listed = "\n".join(f"- `{name}`" for name in sources)
-    parts = [_head("researcher", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
+    parts = [_head("researcher", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("instruction", CONDUCTOR, "## Research question\n\n" + _fence(query, "text"))],
              [Block("instruction", CONDUCTOR, "## Allowed sources\n\nAsk only these sources, by id:\n\n" + listed)],
              [Block("instruction", CONDUCTOR,
@@ -489,10 +493,10 @@ def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: li
 
 
 def advisor(input_doc: dict, *, item: str, step: str, problem_ref: str, problem: str, evidence=(), sources=(),
-            command: str = "", roles_dir=None, skills=(), repo_rules: str = "", skill_texts=None) -> list:
+            command: str = "", roles_dir=None, stub=None, skills=(), repo_rules: str = "", skill_texts=None) -> list:
     """The prompt of the advisor: the problem (``problem_ref`` and text), the local evidence as ``(kind, text)`` pairs
     (the reports, the red checks, the diff or the findings) and, when sources are configured, the one command that asks one."""
-    parts = [_head("advisor", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
+    parts = [_head("advisor", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("instruction", CONDUCTOR, f"## Problem\n\n`problem_ref`: `{problem_ref}`\n\n" + problem.rstrip())],
              *[[Block(kind, CONDUCTOR, text)] for kind, text in evidence]]
     if sources:

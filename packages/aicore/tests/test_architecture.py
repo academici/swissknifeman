@@ -12,7 +12,7 @@ LIB = ROOT / "lib" / "aicore"
 _STDLIB_FALLBACK = frozenset({
     "__future__", "ast", "collections", "concurrent", "contextlib", "copy", "dataclasses",
     "datetime", "enum", "fcntl", "functools", "hashlib", "http", "inspect", "io",
-    "itertools", "json", "math", "os", "pathlib", "re", "select", "selectors", "shutil", "signal",
+    "itertools", "json", "math", "os", "pathlib", "re", "select", "selectors", "shutil", "signal", "stat",
     "subprocess", "sys", "tempfile", "textwrap", "threading", "time", "tomllib", "types",
     "typing",
     "unittest", "urllib", "uuid",

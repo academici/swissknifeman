@@ -13,6 +13,7 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Conductor](conductor.md) — `orch conduct`: the chain of roles of a piece of work, run options, progress, resume,
   the observer, and which files are committed.
 - [Agent mode](agent-mode.md) — the procedure for an agent that picks its own pieces: ready lanes of the work source, `orch conduct run --items`, `status`/`observe`, `resume`/`settle`.
+- [Stubs](conductor.md#stubs-additional-instructions-of-the-roles) — additional instructions of the roles by machine and project: `orch.py stubs publish|list|show`, `[orch.stubs]`, the snapshot of a run.
 - [Research sources](research.md) — `[orch.research]`: `command`, `filesystem` and `mcp-stdio` sources, retries on `BROWSER_BUSY`, `orch.py research`, a Perplexity example.
 - [Conformance](conformance.md) — scenario catalogue, `orch.py conformance`, write confinement.
 - [Architecture](architecture.md) — package boundaries, dependency rule, layout.

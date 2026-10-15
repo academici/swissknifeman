@@ -169,3 +169,12 @@ schema_version = 1
 
 # Advice categories that are never applied without the owner: the problem is queued with the advice instead. Array of strings.
 # human_gate = ["security", "destructive", "public-api", "scope-expansion"]
+
+[orch.stubs]
+# Whether the role prompts get the stubs at all. Boolean.
+# Allowed in layers: defaults, machine, invocation, flags.
+# enabled = true
+
+# Layers read: a machine that runs repositories it does not trust leaves `project` out, so their stubs never reach a model. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# layers = ["machine", "project"]

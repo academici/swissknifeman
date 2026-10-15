@@ -5,11 +5,14 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from aicore.stubs import StubError
+
 from orch import settings as settings_mod
+from orch.conductor import stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import RunStore
+from orch.conductor.infrastructure.files import RunStore, write_json
 from orch.worksource import WorkSourceError
 from orch.worksource_file import read_input
 
@@ -30,6 +33,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
             raise Stop(error.code, error.message) from None
         plan, plans_root, items, batch = str(Path(input_file).resolve()), None, [found["input_id"]], False
         source = {"kind": "file", "path": plan, "commit": bool(commit)}
+    instructions = snapshot_stubs(self)
     run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
                "source": source, "scenario": scenario,
                "max_items": max_items, "options_file": str(options_file) if options_file else None,
@@ -38,9 +42,12 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
                "config_file": str(self.config_file) if self.config_file else None, "created": clock.utc_now(),
                "project": str(self.project), "project_resolution": self.project_resolution,
                "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
-               "config_layers": settings_mod.config_layers(self.settings)}
+               "config_layers": settings_mod.config_layers(self.settings),
+               "instructions_digest": instructions["digest"]}
     self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
     self.store.create(run_doc)
+    write_json(self.directory / stubs_mod.SNAPSHOT_FILE, instructions)
+    self.instructions = instructions
     if options_file:
         self.store.keep_options(options_file)
     self._save()
@@ -55,6 +62,7 @@ def resume(self, run_id: str, retry=()) -> int:
     if run_doc.get("config_file") and not self.config_file:
         self.config_file = Path(run_doc["config_file"])
     self._open(run_id, run_doc, state, store)
+    stubs_changed(self, run_doc)
     for ref in retry:
         self._retry(ref)
     state["status"] = "running"
@@ -62,6 +70,29 @@ def resume(self, run_id: str, retry=()) -> int:
     self._save()
     self.progress.emit("run.resume", message=f"resume {state['resumes']}")
     return self._loop()
+
+
+def snapshot_stubs(self) -> dict:
+    """The stubs of the roles, resolved once for the whole run; a stub that cannot be used stops it before any work."""
+    try:
+        return stubs_mod.snapshot(self.project, getattr(self.settings, "stubs", None), env=self.env)
+    except StubError as error:
+        raise Stop("STUBS_INVALID", f"{error.code}: {error.message}") from None
+
+
+def stubs_changed(self, run_doc: dict) -> None:
+    """A resume keeps the snapshot of the run; when the files say something else now, the beacon ``STUBS_CHANGED`` says
+    that the new text waits for a new run."""
+    if "instructions_digest" not in run_doc:
+        return  # a run of an older conductor has no snapshot
+    try:
+        now = stubs_mod.snapshot(self.project, getattr(self.settings, "stubs", None), env=self.env)["digest"]
+    except StubError as error:
+        now = f"invalid ({error.code})"
+    if now != run_doc["instructions_digest"]:
+        self.progress.emit("info", reason_code="STUBS_CHANGED",
+                           message="the stubs changed since the run started; the run keeps its snapshot "
+                                   f"({run_doc['instructions_digest'] or 'none'}), a new run reads them")
 
 
 def retry(self, ref: str) -> None:

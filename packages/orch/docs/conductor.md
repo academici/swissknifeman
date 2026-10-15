@@ -169,6 +169,7 @@ The conductor stops only on:
 | `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside` or `scope.extra_paths` (see "Isolation floor") |
 | `OPTIONS_UNSAFE_PATH` | an `extra_paths` entry (`--allow-path`) is the root, a system folder, HOME or an ancestor of it, the project or an ancestor, a secrets folder under HOME, or lies in `.git` (after `~` and symlinks are resolved) |
 | `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
+| `STUBS_INVALID` | a stub file cannot be used (a symlink, not a regular file, over 32 KiB, not UTF-8, a bad header or mode); the run stops before any role starts and names the file and the `STUB_*` code |
 
 With `on_blocked = "report"` a blocked piece that changed nothing is registered, its records are committed and the
 run goes on; a blocked piece with changes stops the run, because its partial work would leak into the next piece.
@@ -199,6 +200,7 @@ instead; `orch conduct status` shows the latest one of the running step:
 | `RESULT_SILENT_DENIAL` | a Claude role had tool calls refused without a prompt (`--permission-prompts none`) | the tools and how many calls (`Bash×2, WebFetch`), never their input; for the executor and the bounded-implementer the report also gets a `note` issue "tools denied without a prompt: …" with the way out (widen `allowedTools` in the launch catalog, or change the plan) |
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
+| `STUBS_CHANGED` | on `resume`, the stub files say something else than the snapshot of the run | the run keeps its snapshot; a new run reads the new text |
 | `CHECK_CHANGED_TREE` | the checks of a round changed files of the project (their evidence and logs aside) | the paths; the evidence proves the candidate as it was before the checks |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
 
@@ -529,6 +531,30 @@ document when the failure was classified, else the code of the stop —, `decisi
 apart from the role it mended). The prompts and the streams stay in `prompts/` and `streams/`; the folder points at them. A
 folder without `result.json` is a role still running or one that died with the process. The `stage.end` lines and the
 `STAGE_SLOW`/`STAGE_IDLE` beacons carry the optional field `agent`; the observer report lists the tokens by agent run.
+
+### Stubs: additional instructions of the roles
+
+A person keeps additional instructions for a role in Markdown files, by machine and by project, without touching the
+canonical role text (`roles/*.md`, digest-checked) or anything a role may do. `orch stubs publish [--scope project|machine]`
+creates the empty files (never overwriting one): `<project>/.swissknifeman/stubs/` (the project layer; in the
+swissknifeman checkout itself this is the place to publish them) or `~/.config/swissknifeman/stubs/` (the machine layer).
+A target `orch.role.<role>` (context-scout, executor, reviewer, triager, researcher, advisor; not the registrar and the
+report-fixer, whose one-command steps extra text would only blur) is fed by four slots, joined from the general to the
+specific: `_all.md`, `orch/_all.md`, `orch/roles/_all.md`, `orch/roles/<role>.md`. In each slot the project file decides by
+the mode of its header `<!-- skm-stub:v1 target=… mode=replace|append|disable -->`: an empty file (or comments only)
+inherits the machine one, so the published empty files mask nothing; `replace` (default) takes the project text instead,
+`append` after the machine text, `disable` drops the slot. Text is literal: no includes, no variables.
+
+A run resolves every target once, when it starts: the text and the provenance of each part (layer, slot, path, sha256)
+go to `<run>/instructions.json`, the digest to `run.json` (`instructions_digest`). Every prompt of the run and of its
+resumes reads that snapshot; a resume whose files changed says `STUBS_CHANGED`. The block `stub` (budget class
+`supporting`) stands after the role text and before the task, under a heading that says it cannot change tools, write
+authority, scope, checks or the result contract; the real limits stay the launch catalog, the sandbox, the filesystem guard
+and the result parser. A stub that cannot be used (symlink, not a regular file, over 32 KiB, over 64 KiB for one target,
+not UTF-8, unknown header field, mode or version, a header that names another target, text in a `disable` file) stops the
+run with `STUBS_INVALID` before any role starts. `[orch.stubs]` (machine, invocation or flags only): `enabled` (true) and
+`layers` (`["machine", "project"]`; leave `project` out on a machine that runs repositories it does not trust).
+`orch stubs list` shows the effective stubs of every role, `orch stubs show ROLE` the block and where each part comes from.
 
 ### Prompt manifest
 

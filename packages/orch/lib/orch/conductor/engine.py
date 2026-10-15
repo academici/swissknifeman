@@ -41,6 +41,7 @@ from orch.conductor.policies import allowance, budget, retry_policy, routing
 from orch.conductor.policies import risk as risk_policy, sandbox as sandbox_policy
 from orch.conductor.policies.allowance import BATCH_FIELDS, BATCH_LIMITS
 from orch.conductor.policies.routing import CLASS_RANK, EFFORT_RANK, LAUNCH_ROLE
+from orch.conductor import stubs as stubs_mod
 from orch.conductor.progress import Progress
 from orch.conductor.stages import advice, checks_stage, close, context, execute, finish
 from orch.conductor.stages import research as research_stage, review as review_stage, scout as scout_stage
@@ -85,6 +86,7 @@ class Conductor:
         self.run_doc: dict = {}
         self.state: dict = {}
         self.progress: Optional[Progress] = None
+        self.instructions: dict = {}  # the stubs snapshot of the run (``instructions.json``)
 
     _current_step: Optional[str] = None  # the step that runs now, for the RUN_SLOW beacon
     _sandbox_noted = False  # ISOLATION_PARTIAL of a sandbox that cannot start is said once per run
@@ -96,6 +98,11 @@ class Conductor:
         self.store = store or RunStore(self.project, run_id)
         self.directory = self.store.directory
         self.progress = Progress(run_id, self.directory, self.mode, self.stream, self.clock)
+        self.instructions = read_json(self.directory / stubs_mod.SNAPSHOT_FILE) or {}
+
+    def _stub(self, role: str) -> tuple:
+        """``(origin, text)`` of the additional instructions of ``role`` from the snapshot of the run."""
+        return stubs_mod.origin(self.instructions, role), stubs_mod.text(self.instructions, role)
 
     def _save(self) -> None:
         self.store.save(self.state)

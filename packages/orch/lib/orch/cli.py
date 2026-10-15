@@ -332,6 +332,60 @@ def _research(args: argparse.Namespace) -> int:
         return 1
 
 
+def _stubs(args: argparse.Namespace) -> int:
+    """``stubs publish|list|show``: the additional instructions of the roles (``aicore.stubs``)."""
+    from aicore import stubs as core
+    from orch.conductor import stubs
+    try:
+        project = _project_root(args) if args.action != "publish" or args.scope == "project" else None
+        current = settings.load(project=project, config_file=args.config)
+        layers = stubs.layers(current.stubs)
+        if args.action == "publish":
+            if args.scope == "project" and project is None:
+                print("PROJECT_CONTEXT_REQUIRED: no project here; pass --project DIR or --scope machine", file=sys.stderr)
+                return 1
+            root = core.roots(project, layers=(args.scope,))[args.scope]
+            rows = core.publish(stubs.targets(), root, dry_run=args.dry_run)
+            if args.json:
+                print(json.dumps({"root": str(root), "files": rows}, ensure_ascii=False))
+            else:
+                for row in rows:
+                    print(f"{row['status']}\t{row['path']}" + (f"\t{row['reason']}" if row.get("reason") else ""))
+            return 1 if any(row["status"] == "refused" for row in rows) else 0
+        roles = [args.role] if args.action == "show" else list(stubs.ROLES)
+        unknown = [role for role in roles if role not in stubs.ROLES]
+        if unknown:
+            print(f"STUB_TARGET_UNKNOWN: {unknown[0]!r} has no stub; roles: {', '.join(stubs.ROLES)}", file=sys.stderr)
+            return 1
+        found = core.resolve([stubs.target(role) for role in roles], project, layers=layers) \
+            if current.stubs.get("enabled", True) else {}
+        doc = {"enabled": current.stubs.get("enabled", True), "layers": list(layers),
+               "roots": {name: str(path) for name, path in core.roots(project, layers=layers).items()},
+               "targets": {target: dict(entry, block=stubs.text({"targets": {target: entry}}, target.rsplit(".", 1)[1]))
+                           for target, entry in found.items()}}
+        if args.json:
+            print(json.dumps(doc, ensure_ascii=False))
+        elif args.action == "list":
+            print(f"layers\t{','.join(doc['layers']) or '-'}" + ("" if doc["enabled"] else "\t(disabled)"))
+            for target, entry in doc["targets"].items():
+                parts = ", ".join(f"{part['layer']}:{part['slot']}" for part in entry["parts"]) or "-"
+                print(f"{target}\t{len(entry['text'].encode('utf-8'))} bytes\t{parts}")
+        else:
+            entry = doc["targets"].get(stubs.target(args.role), {"text": "", "parts": [], "skipped": []})
+            for part in entry["parts"]:
+                print(f"# {part['reason']}: {part['layer']} {part['path']} ({part['bytes']} bytes, {part['sha256'][:12]})")
+            for row in entry.get("skipped", []):
+                print(f"# skipped ({row['reason']}): {row['layer']} {row['path']}")
+            print(entry.get("block") or "(no additional instructions)")
+        return 0
+    except core.StubError as error:
+        print(f"{error.code}: {error.message}", file=sys.stderr)
+        return 1
+    except ConfigError as error:
+        print(f"CONFIG_INVALID: {error}", file=sys.stderr)
+        return 1
+
+
 def _conformance(args: argparse.Namespace) -> int:
     try:
         rows = conformance.run(args.binding)
@@ -926,11 +980,25 @@ def _main(argv: list[str] | None = None) -> int:
     ask.add_argument("--source", required=True, metavar="ID", help="id of a source of [orch.research.sources]")
     ask.add_argument("--query-file", required=True, type=Path, metavar="FILE", help="the query text")
     ask.add_argument("--json", action="store_true", help="{source, text, sources, raw_ref}")
+    command = verbs.add_parser("stubs", help="additional instructions of the roles: publish the files, list them, show one")
+    actions = command.add_subparsers(dest="action", required=True)
+    publish = actions.add_parser("publish", help="create the missing stub files (never overwrites one)")
+    publish.add_argument("--scope", choices=("project", "machine"), default="project",
+                         help="project: <project>/.swissknifeman/stubs (default); machine: ~/.config/swissknifeman/stubs")
+    publish.add_argument("--dry-run", action="store_true", help="say what would be created, write nothing")
+    publish.add_argument("--json", action="store_true")
+    listing = actions.add_parser("list", help="the effective stubs of every role (read-only)")
+    listing.add_argument("--json", action="store_true")
+    show = actions.add_parser("show", help="the block one role gets and where each part comes from")
+    show.add_argument("role", metavar="ROLE")
+    show.add_argument("--json", action="store_true")
     command = verbs.add_parser("doctor", help="diagnose the project: the conductor files git must ignore or keep")
     command.add_argument("--json", action="store_true", help="check-result/v1 documents as a JSON list")
     args = parser.parse_args(argv)
     if args.verb == "doctor":
         return _doctor(args)
+    if args.verb == "stubs":
+        return _stubs(args)
     if args.verb == "source":
         return _source_command(args)
     if args.verb == "research":

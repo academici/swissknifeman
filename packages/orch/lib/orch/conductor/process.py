@@ -264,6 +264,48 @@ def _kill(process: subprocess.Popen) -> None:
         process.wait()
 
 
+def _group_alive(pgid: int) -> bool:
+    """Whether a process of group ``pgid`` still runs; a zombie (dead, waiting for a parent that is not the conductor)
+    does not count. Without ``/proc`` the group counts as alive while ``killpg(pgid, 0)`` reaches it."""
+    proc = Path("/proc")
+    if not proc.is_dir():
+        try:
+            os.killpg(pgid, 0)
+        except (ProcessLookupError, PermissionError):
+            return False
+        return True
+    for entry in proc.iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            fields = (entry / "stat").read_text(encoding="utf-8", errors="replace").rsplit(")", 1)[1].split()
+        except (OSError, IndexError):
+            continue
+        if len(fields) > 2 and fields[2] == str(pgid) and fields[0] not in ("Z", "X"):
+            return True
+    return False
+
+
+def _reap_group(pgid: int, grace_s: float = 5.0) -> bool:
+    """End what a finished role left in its process group (a server or a watcher started in the background): SIGTERM,
+    then SIGKILL after ``grace_s``. True when something was left. A process that left the group (``setsid``) is not
+    reached; the conductor has no handle on it."""
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        return False
+    deadline = time.monotonic() + grace_s
+    while time.monotonic() < deadline:
+        if not _group_alive(pgid):
+            return True
+        time.sleep(0.1)
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+    return True
+
+
 POLL_S = 5  # how often a running role is looked at
 RESULT_GRACE_S = 30  # how long a process may live on after its final ``result`` line (a provider CLI waits for its
 # background tasks, for example a monitor loop that never ends, even though the role has answered)
@@ -372,6 +414,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
         lingered = stopped == "lingering"
         if lingered:
             _kill(process)
+        elif not stopped:
+            _reap_group(process.pid)  # the role ended; what it started in the background must not outlive it
         elif stopped:
             _kill(process)
             usage = partial_usage(raw_path.read_text(encoding="utf-8", errors="replace")) if transport == "jsonl" else None

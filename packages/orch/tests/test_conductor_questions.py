@@ -107,6 +107,17 @@ class QuestionTests(ConductorCase):
         self.assertEqual(code, 1)  # a decision with options takes one of them
         self.assertIn("ANSWER_INVALID", text)
 
+    def test_an_answer_that_looks_like_a_secret_is_refused(self):
+        from orch.conductor import questions as questions_mod
+        doc = {"item": "W1", "questions": [{"id": "Q1", "revision": 1, "kind": "credential", "text": "token?",
+                                            "blocking": True, "status": "open"}]}
+        with self.assertRaises(questions_mod.QuestionError) as caught:
+            questions_mod.answer(doc, "Q1", text="use ghp_" + "a" * 36, by="owner", now="t")
+        self.assertEqual(caught.exception.code, "ANSWER_INVALID")
+        self.assertNotIn("resolution", doc["questions"][0])
+        entry = questions_mod.answer(doc, "Q1", text="it is in the env var GH_TOKEN", by="owner", now="t")
+        self.assertEqual(entry["resolution"]["value"], "it is in the env var GH_TOKEN")
+
     def test_deny_blocks_without_waiting_for_an_answer(self):
         self.write_config(extra='[orch.conductor]\nquestions = "deny"')
         self.script({"executor": [asking(dict(ASK))]})

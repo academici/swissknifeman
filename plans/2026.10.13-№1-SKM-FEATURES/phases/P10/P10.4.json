@@ -86,6 +86,11 @@
     {
       "path": "CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/orch/config.example.toml",
+      "change": "modify",
+      "note": "generated: aicore config example packages/orch --write"
     }
   ],
   "rules": [
@@ -122,5 +127,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T19:56:42Z"
+  "updated_at": "2026-10-15T05:36:14Z"
 }

@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "10624606181b",
-  "reason": "orch-debug: batch-review, ready batch",
+  "captured_from": "054fb490e4d3",
+  "reason": "analyst orch report: help line",
   "generators": [
     {
       "id": "skiller-registry",

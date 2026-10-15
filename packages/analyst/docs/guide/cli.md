@@ -26,6 +26,21 @@ greedy-Jaccard-clusters and detects patterns that repeat in **≥N projects** (d
 **Namespace-isolated**. Reconciliation: orphaned artifacts are removed **strictly in scope run**
 (`--no-prune` turns off, `--dry-run` shows). More details - [Life cycle](./lifecycle).
 
+## `analyst orch report`
+
+```
+analyst orch report [--plan P] [--run R] [--json] [--planned FILE] [--baseline FILE]
+```
+
+Read-only report on the runs of orch, read through its contracts only: the `orch.*` events of the project journal
+(`event/v1`), the artifacts of a piece (`plans/<plan>/artifacts/<item>/stage-report.json`, `review-verdict.json`; only
+with `--plan`) and the run folder of the conductor (`risk.json`, `prompts/*.manifest.json`). Sections: tokens (by role,
+by model, by skill), review (rounds, findings by severity, reviews added by risk), deviations (by class and outcome,
+recorded and resolved), providers (waits, fallbacks), long stages, prompt budgets over their limit, plan against actual
+per piece (`--planned` is a JSON object `{item: {duration_ms, tokens}}`) and the comparison with the PLAN3 deviation
+baseline (`--baseline` is a JSON file with `plan3_deviations`). A source that is missing or unreadable is listed in
+`problems`; nothing is guessed.
+
 ## `analyst workflow-scan`
 
 ```

@@ -15,6 +15,7 @@ from .promote import cmd_deprecate, cmd_promote
 from .proposals import cmd_proposals
 from .recompute import cmd_recompute
 from .review import cmd_review
+from .orch_report import cmd_orch
 from .runs_cli import cmd_runs
 from .scan import cmd_scan
 from .sessions import cmd_sessions
@@ -39,6 +40,7 @@ COMMANDS = {
     "compact": cmd_compact,
     "token-report": cmd_token_report,
     "runs": cmd_runs,
+    "orch": cmd_orch,
     "sessions": cmd_sessions,
     "doctor": cmd_doctor,
     "events": cmd_events,

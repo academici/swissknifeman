@@ -20,6 +20,7 @@
 #   sessions  weekly medians first_turn_overhead from the living jsonl-session transcripts
 #             (--project ID | --weeks N | --json)
 #   doctor    environment diagnostics
+#   orch      what orch runs cost, from its events and artifacts: `orch report [--plan P] [--run R] [--json]`
 #   workflow-scan  read-only inventory registered plan workflow artifacts
 #   version   version (git SHA) and package path
 set -euo pipefail

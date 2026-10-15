@@ -32,7 +32,7 @@ Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: m
 
 A piece that refactors `orch` changes the code of the process that conducts it. `run --frozen` (and `resume --frozen`) takes a snapshot of
 the committed state (`git archive HEAD`) of the orchestrator checkout the command was started from (`packages/orch`, `aicore`, `planner`
-and `bridges`) under `~/.cache/skm-frozen/run-<time>-<pid>`, starts the same command from it with `--project` naming the project, and
+and `bridges`) under `~/.cache/skm-frozen-runs/run-<time>-<pid>`, starts the same command from it with `--project` naming the project, and
 removes the snapshot when the command ends. The install roots (`SKM_ORCH_ROOT`, `AICORE_ROOT`, `PLANNER_ROOT`, `PLANNER_PLAN_PY`) point
 into the snapshot, `PYTHONPATH` is dropped, and the check commands of the pieces do not inherit roots outside the project, so they test the
 project's own code. The work-source plugin stays the one the configuration registers. `resume --frozen` takes a new snapshot: that is how

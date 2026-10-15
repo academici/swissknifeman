@@ -1,7 +1,7 @@
 """``run --frozen`` / ``resume --frozen``: the conductor runs from a snapshot of the orchestrator, not from the checkout it works on.
 
 A piece that rewrites ``orch`` itself (a refactor of the conductor) changes the code of the process that conducts it. The snapshot
-is the committed state (``git archive HEAD``) of the orchestrator checkout the command was started from: its ``packages`` and ``bridges``, in a folder under ``~/.cache/skm-frozen`` that is removed when the run ends. The run itself
+is the committed state (``git archive HEAD``) of the orchestrator checkout the command was started from: its ``packages`` and ``bridges``, in a folder under ``~/.cache/skm-frozen-runs`` that is removed when the run ends. The run itself
 is the same command started again from the snapshot with the project it works on named by ``--project`` and every environment
 variable that names a path inside the checkout (the install roots) pointing into the snapshot; the check commands
 of the pieces do not inherit those roots (``checks.check_env``), so they test the project's own code. The work-source plugin
@@ -22,7 +22,7 @@ from typing import Optional
 from orch.settings import ORCH_ROOT
 
 SNAPSHOT_PATHS = ("packages", "bridges")
-CACHE = Path.home() / ".cache" / "skm-frozen"
+CACHE = Path.home() / ".cache" / "skm-frozen-runs"
 
 
 class FrozenError(Exception):

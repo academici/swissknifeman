@@ -17,7 +17,7 @@
 
 ### Added
 
-- **orch:** `run --frozen` / `resume --frozen`: the conductor runs from a snapshot of the committed orchestrator (`git archive HEAD` into `~/.cache/skm-frozen`, removed when the run ends), so a piece that rewrites `orch` does not change the code that conducts it; the install roots point into the snapshot and checks keep testing the project.
+- **orch:** `run --frozen` / `resume --frozen`: the conductor runs from a snapshot of the committed orchestrator (`git archive HEAD` into `~/.cache/skm-frozen-runs`, removed when the run ends), so a piece that rewrites `orch` does not change the code that conducts it; the install roots point into the snapshot and checks keep testing the project.
 - **scripts:** `ci-matrix.py run --jobs N` (default 4 for `--all`, `SKM_CI_MATRIX_JOBS`): units and the independent steps of a unit run side by side, `validate` stays after the `test` of its unit.
 - **orch:** `CHECK_SLOW` and `check_timeout_s` do not count the time a check is stopped (`SIGSTOP`).
 - **orch:** `orch conduct release --run RUN --all` (and `--item` repeated) gives back every piece of a stopped batch that nobody worked on; the beacon `RELEASED_ALL` names what was kept.

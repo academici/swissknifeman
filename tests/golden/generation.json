@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "fb90a9a14b4c",
-  "reason": "дайджесты реестра skiller после P8: compat/select/selection, справка",
+  "captured_from": "43ee2c958dc1",
+  "reason": "orch research (P10.1) и роль researcher в launch-catalog (P10.2)",
   "generators": [
     {
       "id": "skiller-registry",

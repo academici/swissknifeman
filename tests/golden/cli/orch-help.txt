@@ -2,11 +2,11 @@ exit: 0
 --- stdout ---
 usage: orch.py [-h] [--config FILE] [--project DIR]
                [--project-resolution {flag,environment,marker,git}]
-               {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,doctor}
+               {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,doctor}
                ...
 
 positional arguments:
-  {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,doctor}
+  {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,doctor}
     validate            validate an exec/v1 or conductor/v1 JSON document
     launch              read the launch catalog (role x provider)
     input               create an execution-input without a plan
@@ -19,7 +19,9 @@ positional arguments:
     conformance         engine conformance scenarios; covered ones run,
                         declared ones are listed
     source              cycle of a work source: claim, brief, prepare,
-                        register, commit, release
+                        register, commit, release, research
+    research            research sources of [orch.research]: list them, ask
+                        one
     doctor              diagnose the project: the conductor files git must
                         ignore or keep
 

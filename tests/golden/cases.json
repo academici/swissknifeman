@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "fb90a9a14b4c",
-  "reason": "дайджесты реестра skiller после P8: compat/select/selection, справка",
+  "captured_from": "43ee2c958dc1",
+  "reason": "orch research (P10.1) и роль researcher в launch-catalog (P10.2)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

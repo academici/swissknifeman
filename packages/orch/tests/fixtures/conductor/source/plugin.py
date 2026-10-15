@@ -46,6 +46,11 @@ def claim(state, given):
     item = state["items"][ref]
     if item.get("holder") not in (None, run_id):
         return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "ITEM_OWNED", "message": "held"}
+    after = given.get("after") or []
+    unmet = [dep for dep in item.get("depends_on", []) if state["items"][dep]["status"] != "done" and dep not in after]
+    if unmet:
+        return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "DEPENDENCY_NOT_READY",
+                "message": f"{ref} waits for {', '.join(unmet)}"}
     if item["status"] == "todo":
         item["status"] = "in_progress"
     item["holder"] = run_id

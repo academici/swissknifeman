@@ -466,7 +466,7 @@ class Conductor:
                 raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
 
     def _claim_all(self, keys: list) -> tuple:
-        """Every piece named by ``--items`` becomes in progress together, as ``plan.py start`` on several items does: the
+        """Every piece named by ``--items`` becomes in progress together, as one start of several items in the work source does: the
         pieces of one run share one executor session and the owner sees the whole batch at work. Pieces that closed in an
         earlier pass are left alone; ``--no-batch`` claims one piece at a time. ``(claimed answers by key, the changed
         paths of the tree taken over by ``--adopt``)``."""
@@ -482,10 +482,10 @@ class Conductor:
                 else:
                     self._require_clean_tree()
             try:
-                answer = self._claim(key, asked)
+                answer = self._claim(key, asked, after=tuple(a["ref"] for a in claimed.values()))
             except Stop as stop:
                 if stop.code == "CLAIM_BLOCKED" and "DEPENDENCY_NOT_READY" in stop.message:
-                    continue  # a piece that waits for an earlier piece of this run is claimed when its turn comes
+                    continue  # waits for something outside this batch: claimed when its turn comes
                 raise
             if answer is None:
                 break
@@ -510,7 +510,7 @@ class Conductor:
             raise Stop("WORKTREE_DIRTY", f"{len(dirty)} changed path(s) before new work, such as {dirty[0]}; "
                                          "commit or set them aside, or take them over with run --adopt, then resume")
 
-    def _claim(self, key: str, asked: list) -> Optional[dict]:
+    def _claim(self, key: str, asked: list, after: tuple = ()) -> Optional[dict]:
         actor = self._claim_actor()
         submission = f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
         file_source = self.run_doc.get("source") or {}
@@ -521,6 +521,8 @@ class Conductor:
             args += ["--plans-root", self.run_doc["plans_root"]]
         for ref in asked:
             args += ["--item", ref]
+        for ref in after:  # the pieces of this batch held so far: a piece that waits for one of them starts with them
+            args += ["--after", ref]
         code, answer, err = self._orch(*args)
         if code == 3:
             raise Stop("WORK_SOURCE_UNAVAILABLE", err or "no work source")

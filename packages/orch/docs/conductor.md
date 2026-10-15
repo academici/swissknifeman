@@ -72,7 +72,7 @@ Every step has a key and is recorded in `state.json` once it closes; the work so
 
 | Step | Who | What |
 | --- | --- | --- |
-| claim | work source | `source claim` with a submission of this run. `--batch` (default) takes every piece of `--items A B C` in progress at the start (as `plan.py start` on several items) and the first prompt of the shared session lists them; `--no-batch` claims one at a time; `--ready` claims the next ready piece each time. A piece that was never started when the run stops stays claimed: `resume` goes on, `release` gives it back |
+| claim | work source | `source claim` with a submission of this run. `--batch` (default) takes every piece of `--items A B C` in progress at the start (one start of several items in the work source) and the first prompt of the shared session lists them; `--no-batch` claims one at a time; `--ready` claims the next ready piece each time. A piece that was never started when the run stops stays claimed: `resume` goes on, `release` gives it back |
 | `brief` | work source | `source brief`; the execution-input is read from the artifact store; the base revision is recorded |
 | `prepare` | orch | `source prepare` writes the launch-plan of the scenario's pack (routes, policy decision) |
 | `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map; its optional closing ```` ```json write-set ```` block (`scout-write-set`: `paths`, `tests`) is taken out of the map into the executor's "Expected paths" section, a missing or invalid block is ignored with a `RESULT_HEALED` beacon, and the hint never widens `scope.write_set` |

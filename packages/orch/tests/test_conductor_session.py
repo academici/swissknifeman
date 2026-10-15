@@ -162,22 +162,26 @@ class ClaimAllTests(ConductorCase):
         self.assertEqual(self.statuses_at_the_first_piece("--no-batch"),
                          {"W1": "in_progress", "W2": "todo", "W3": "todo"})
 
-    def test_a_piece_that_waits_for_an_earlier_one_is_claimed_when_its_turn_comes(self):
-        self.set_items({"W1": {}, "W2": {}})
+    def test_a_piece_that_depends_on_an_earlier_one_of_the_batch_is_in_progress_with_it(self):
+        self.set_items({"W1": {}, "W2": {"depends_on": ["W1"]}})
         self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN] * 2})
-        original, calls = engine.Conductor._claim, []
+        seen, original = {}, engine.Conductor._piece
 
-        def waiting(conductor, key, asked):
-            calls.append(key)
-            if key.endswith("W2") and len(calls) == 2:  # the claim-all pass: W1 is not done yet
-                raise engine.Stop("CLAIM_BLOCKED", "W2: DEPENDENCY_NOT_READY: W2 waits for W1")
-            return original(conductor, key, asked)
+        def spy(conductor, answer):
+            if not seen:
+                seen.update({ref: doc["status"] for ref, doc in self.source()["items"].items()})
+            return original(conductor, answer)
 
-        with mock.patch.object(engine.Conductor, "_claim", waiting):
+        with mock.patch.object(engine.Conductor, "_piece", spy):
             code, _, err = self.run_items("W1", "W2")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
-        self.assertEqual(self.calls("executor"), 2)
-        self.assertEqual(calls.count("item-W2"), 2)  # blocked once, claimed again at its turn
+        self.assertEqual(seen, {"W1": "in_progress", "W2": "in_progress"})
+
+    def test_a_dependency_outside_the_batch_waits_for_its_turn_without_stopping_the_run(self):
+        self.set_items({"W1": {}, "W2": {"depends_on": ["W9"]}, "W9": {"status": "done"}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN] * 2})
+        code, _, err = self.run_items("W1", "W2")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
 
     def test_the_prompt_lists_every_piece_with_its_title_and_state(self):
         self.statuses_at_the_first_piece()

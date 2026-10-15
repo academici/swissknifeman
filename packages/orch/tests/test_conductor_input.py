@@ -100,7 +100,7 @@ class FileSourceRunTests(InputCase):
 
     def test_plan_and_input_exclude_each_other_and_an_input_takes_no_items(self):
         path = self.write_input()
-        for argv in (("--plan", "T", "--input", path), ("--input", path, "--items", "W1"), ("--input", path, "--batch"),
+        for argv in (("--plan", "T", "--input", path), ("--input", path, "--items", "W1"), ("--input", path, "--ready"),
                      ("--plan", "T"), ("--commit", "--plan", "T", "--items", "W1")):
             with self.assertRaises(SystemExit) as stop:
                 self.conduct("run", *argv)

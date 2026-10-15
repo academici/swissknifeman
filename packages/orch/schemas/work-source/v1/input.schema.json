@@ -69,6 +69,11 @@
           "minItems": 1,
           "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
         },
+        "after": {
+          "description": "Pieces this run already holds and starts together with the claimed one (a batch): a piece that waits for one of them is startable. Optional.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
         "run_id": {"description": "Run that claims the work.", "$ref": "#/$defs/runId"},
         "submission_id": {"description": "Submission of the run.", "$ref": "#/$defs/submissionId"},
         "actor": {"description": "Who runs the work.", "$ref": "#/$defs/actor"},

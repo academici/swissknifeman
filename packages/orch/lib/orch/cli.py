@@ -535,7 +535,8 @@ def _source_claim(args, current, project) -> int:
     try:
         answer = _call(_source(current, project, args.config, {"source": file_source}), "claim", plan=args.plan,
                        plans_root=args.plans_root,
-                       items=asked or None, run_id=run_id, submission_id=submission, actor=actor,
+                       items=asked or None, after=list(args.after or []) or None, run_id=run_id, submission_id=submission,
+                       actor=actor,
                        orch_config=str(Path(args.config).resolve()) if args.config else None)
     except SourceRefusal as refusal:
         _emit("orch.run.refused", {"submission_id": submission, "step": "claim", "reason_codes": [refusal.code],
@@ -759,6 +760,8 @@ def _source_parser(verbs) -> None:
                        help="with --input: commit the changed paths of the work (default: they stay in the tree)")
     claim.add_argument("--plans-root", dest="plans_root", metavar="DIR")
     claim.add_argument("--item", action="append", metavar="REF", help="candidate reference (repeatable)")
+    claim.add_argument("--after", action="append", metavar="REF",
+                       help="a piece this run already holds and starts together with the claimed one (repeatable)")
     claim.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="who runs the work")
     claim.add_argument("--submission-id", dest="submission_id", metavar="SUB",
                        help="submission key (default: derived from plan, items and actor)")

@@ -240,7 +240,9 @@ def op_claim(fields: dict) -> dict:
             raise refused
         # An item this very attempt already closed stays claimed by the run: its claim is answered again, unchanged.
         if (doc.get("result") or {}).get("attempt_id") != attempt_id:
-            plan_json(["start", plan, ref, "--actor", actor_text(fields["actor"]), "--session", run_id,
+            phase = ref.split(".", 1)[0]
+            together = [name for name in fields.get("after") or [] if name != ref and name.split(".", 1)[0] == phase]
+            plan_json(["start", plan, *together, ref, "--actor", actor_text(fields["actor"]), "--session", run_id,
                        "--no-scout", "--json"], plans_root, code="START_REFUSED")
     except Blocked as blocked:
         answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)

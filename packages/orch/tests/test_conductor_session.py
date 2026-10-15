@@ -171,6 +171,17 @@ class ClaimAllTests(ConductorCase):
         self.assertIn("- `W3` — Work W3 (next)", second)
 
 
+class ClaimActorTests(ConductorCase):
+    def test_the_claim_names_the_executor_class_the_run_was_started_with(self):
+        options_file = self.project.parent / "o.json"
+        options_file.write_text(json.dumps({"stages": [{"role": "executor", "model_class": "frontier"}]}), encoding="utf-8")
+        eng = engine.Conductor.__new__(engine.Conductor)
+        eng.run_doc, eng.directory = {"options_file": str(options_file)}, self.project
+        self.assertEqual(eng._invocation_executor_class(), "frontier")
+        eng.run_doc = {"options_file": str(self.project.parent / "gone.json")}
+        self.assertIsNone(eng._invocation_executor_class())
+
+
 class FenceTests(ConductorCase):
     def test_the_project_fence_is_the_default_and_the_executor_is_told_it_may_report_instead_of_block(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})

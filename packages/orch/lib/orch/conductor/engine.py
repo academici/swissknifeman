@@ -51,6 +51,7 @@ EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 
 ADVICE_DIFF_CHARS = 40_000  # the diff an advisor reads is cut here
 LAUNCH_ROLE = {"context-scout": "scout"}
 RULE_HEADING = re.compile(r"^## ([A-Za-z0-9_.-]+)[ \t]*$", re.M)
+ROLE_ALIASES_ENGINE = {"scout": "context-scout"}
 RUN_FILE, STATE_FILE = "run.json", "state.json"
 OPTIONS_COPY = "options.json"
 REPORTS = Path(".swissknifeman") / "orch" / "reports"  # observer reports: run output, ignored
@@ -536,9 +537,24 @@ class Conductor:
         work is checked by the source at registration against the executor that really ran)."""
         provider = self.conductor.get("provider") or "claude-code"
         entry = self._entry("executor", provider)
-        model = self._catalog_get().resolve_model(provider, entry["model_class"]) \
+        model_class = self._invocation_executor_class() or entry["model_class"]
+        model = self._catalog_get().resolve_model(provider, model_class) \
             if entry["model_set"] == "supported" else "default"
         return f"{provider}/{model}"
+
+    def _invocation_executor_class(self) -> Optional[str]:
+        """The executor class the run was started with (``stages`` of ``--options``): the claim names that executor, so a piece
+        whose route minimum is higher than the default class (a ``frontier`` refactor) is not refused at the claim."""
+        named = self.run_doc.get("options_file")
+        for path in (Path(named) if named else None, self.directory / OPTIONS_COPY):
+            try:
+                found = json.loads(path.read_text(encoding="utf-8")) if path and path.is_file() else None
+            except (OSError, ValueError):
+                found = None
+            for stage in (found or {}).get("stages") or []:
+                if ROLE_ALIASES_ENGINE.get(stage.get("role"), stage.get("role")) == "executor" and stage.get("model_class"):
+                    return stage["model_class"]
+        return None
 
     # ------------------------------------------------------------------ one piece of work
 

@@ -201,6 +201,37 @@ class ClaimTests(Case):
         self.assertEqual(self.item("P1.3")["status"], "todo")
 
 
+class BatchClaimTests(Case):
+    """A batch starts its pieces together in the work source: the dependent piece is startable, and each piece ends up
+    held by its own run (the owner fence of register and commit is per piece)."""
+
+    def test_a_dependent_piece_starts_under_its_own_run_while_the_first_is_in_progress(self):
+        first, second = "P1.1", "P1.2"
+        self.item_depends(second, first)
+        refused = self.claim(run_id="run-b", items=[second])
+        self.assertEqual((refused["status"], refused.get("reason_code")), ("blocked", "DEPENDENCY_NOT_READY"))
+        one = self.op(worksource.op_claim, op="claim", plan=self.plan, items=[first], batch=True, run_id="run-a",
+                      submission_id="sub-a", actor=ACTOR)
+        two = self.op(worksource.op_claim, op="claim", plan=self.plan, items=[second], batch=True, run_id="run-b",
+                      submission_id="sub-b", actor=ACTOR)
+        self.assertEqual((one["status"], two["status"]), ("claimed", "claimed"), (one, two))
+        self.assertEqual((self.item(first)["status"], self.item(second)["status"]), ("in_progress", "in_progress"))
+        self.assertEqual(self.item(first)["result"]["executor"]["session"], "run-a")
+        self.assertEqual(self.item(second)["result"]["executor"]["session"], "run-b")
+
+    def test_without_batch_a_dependency_in_progress_is_not_met(self):
+        self.item_depends("P1.2", "P1.1")
+        self.claim(run_id="run-a", items=["P1.1"])
+        refused = self.claim(run_id="run-b", items=["P1.2"])
+        self.assertEqual((refused["status"], refused.get("reason_code")), ("blocked", "DEPENDENCY_NOT_READY"))
+
+    def item_depends(self, ref: str, dependency: str) -> None:
+        path = self.project / "plans" / self.plan / "phases" / ref.split(".")[0] / f"{ref}.json"
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc["depends_on"] = [dependency]
+        path.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 class OrchestrationTests(Case):
     """Scenario and run options of a claim: fields of the item, its phase and the plan, and overlay documents."""
 

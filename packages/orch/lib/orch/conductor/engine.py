@@ -471,7 +471,7 @@ class Conductor:
         earlier pass are left alone; ``--no-batch`` claims one piece at a time. ``(claimed answers by key, the changed
         paths of the tree taken over by ``--adopt``)``."""
         doc, claimed, adopted = self.run_doc, {}, []
-        for position, (key, asked) in enumerate(keys):
+        for key, asked in keys:
             known = self.state["claims"].get(key)
             outcome = self.state["items"].get(known["ref"], {}).get("outcome") if known else None
             if outcome in ("done", "done_with_deviations", "blocked"):
@@ -482,8 +482,7 @@ class Conductor:
                 else:
                     self._require_clean_tree()
             try:
-                later = tuple(ref for _, refs in keys[position + 1:] for ref in refs) if not claimed else ()
-                answer = self._claim(key, asked, together=later, batch=True)
+                answer = self._claim(key, asked, batch=True)
             except Stop as stop:
                 if stop.code == "CLAIM_BLOCKED" and "DEPENDENCY_NOT_READY" in stop.message:
                     continue  # waits for something outside this batch: claimed when its turn comes
@@ -511,7 +510,7 @@ class Conductor:
             raise Stop("WORKTREE_DIRTY", f"{len(dirty)} changed path(s) before new work, such as {dirty[0]}; "
                                          "commit or set them aside, or take them over with run --adopt, then resume")
 
-    def _claim(self, key: str, asked: list, together: tuple = (), batch: bool = False) -> Optional[dict]:
+    def _claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
         actor = self._claim_actor()
         submission = f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
         file_source = self.run_doc.get("source") or {}
@@ -522,8 +521,6 @@ class Conductor:
             args += ["--plans-root", self.run_doc["plans_root"]]
         for ref in asked:
             args += ["--item", ref]
-        for ref in together:  # the later pieces of the batch start in this call, so a piece that waits for one is startable
-            args += ["--together", ref]
         if batch:
             args.append("--batch")
         code, answer, err = self._orch(*args)

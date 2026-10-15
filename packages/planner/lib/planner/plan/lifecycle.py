@@ -555,7 +555,8 @@ def _owner_conflict(doc: Mapping, actor: Mapping) -> dict | None:
 
 
 def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
-          scout: bool | None = None, registrar: Mapping | None = None, take_over: bool = False) -> StartResult:
+          scout: bool | None = None, registrar: Mapping | None = None, take_over: bool = False,
+          in_progress_deps: bool = False) -> StartResult:
     """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed.
 
     ``actor`` is the executor (route-checked, stored as ``result.executor``); ``registrar`` is who called and
@@ -607,7 +608,9 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             if p.phases[dep]["closed"].get("result") == "blocked":
                 raise PlanError("DEPENDENCY_NOT_READY", f"phase {dep} is closed as blocked")
         for position, item_id in enumerate(requested):
-            unmet = _unmet_dependency(p, item_id, requested[:position])
+            held = [dep for dep in p.items[item_id].get("depends_on") or [] if in_progress_deps
+                    and dep in p.items and status_of(p, dep) == "in_progress"]
+            unmet = _unmet_dependency(p, item_id, [*requested[:position], *held])
             if unmet:
                 raise PlanError("DEPENDENCY_NOT_READY", f"{item_id} waits for {unmet}")
         known_gates = {(d.get("authority") or {}).get("gate") or (d.get("authority") or {}).get("label")

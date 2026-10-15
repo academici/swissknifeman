@@ -240,15 +240,11 @@ def op_claim(fields: dict) -> dict:
             raise refused
         # An item this very attempt already closed stays claimed by the run: its claim is answered again, unchanged.
         if (doc.get("result") or {}).get("attempt_id") != attempt_id:
-            phase = ref.split(".", 1)[0]
-            # A batch: the pieces named in ``together`` start in this one call (the planner counts a dependency met only
-            # when its piece starts in the same call); a piece an earlier call of the batch started and that has no
-            # attempt yet is taken over by its own run.
-            together = [name for name in fields.get("together") or [] if name != ref and name.split(".", 1)[0] == phase]
-            taking = bool(fields.get("batch")) and doc.get("status") == "in_progress" \
-                and not (doc.get("result") or {}).get("attempt_id")
-            plan_json(["start", plan, ref, *together, "--actor", actor_text(fields["actor"]), "--session", run_id,
-                       "--no-scout", "--json", *(["--take-over"] if taking else [])], plans_root, code="START_REFUSED")
+            # A batch starts its pieces one after another, each under its own run: a dependency that is in progress
+            # (an earlier piece of the batch) counts as met.
+            plan_json(["start", plan, ref, "--actor", actor_text(fields["actor"]), "--session", run_id,
+                       "--no-scout", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
+                      plans_root, code="START_REFUSED")
     except Blocked as blocked:
         answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)
         return {key: value for key, value in answer.items() if value is not None}

@@ -69,11 +69,6 @@
           "minItems": 1,
           "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
         },
-        "together": {
-          "description": "Pieces of the same batch that start in the same call as the claimed one: the source counts a dependency among them as met. Optional.",
-          "type": "array",
-          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
-        },
         "batch": {"description": "The claim is part of a batch of one run: a piece an earlier claim of the batch started and that has no attempt yet may be taken over. Optional.", "type": "boolean"},
         "run_id": {"description": "Run that claims the work.", "$ref": "#/$defs/runId"},
         "submission_id": {"description": "Submission of the run.", "$ref": "#/$defs/submissionId"},

@@ -535,7 +535,7 @@ def _source_claim(args, current, project) -> int:
     try:
         answer = _call(_source(current, project, args.config, {"source": file_source}), "claim", plan=args.plan,
                        plans_root=args.plans_root,
-                       items=asked or None, together=list(args.together or []) or None, batch=True if args.batch else None, run_id=run_id, submission_id=submission,
+                       items=asked or None, batch=True if args.batch else None, run_id=run_id, submission_id=submission,
                        actor=actor,
                        orch_config=str(Path(args.config).resolve()) if args.config else None)
     except SourceRefusal as refusal:
@@ -760,9 +760,7 @@ def _source_parser(verbs) -> None:
                        help="with --input: commit the changed paths of the work (default: they stay in the tree)")
     claim.add_argument("--plans-root", dest="plans_root", metavar="DIR")
     claim.add_argument("--item", action="append", metavar="REF", help="candidate reference (repeatable)")
-    claim.add_argument("--together", action="append", metavar="REF",
-                       help="a piece of the same batch that starts in the same call as the claimed one (repeatable)")
-    claim.add_argument("--batch", action="store_true", help="the claim is part of a batch of one run")
+    claim.add_argument("--batch", action="store_true", help="the claim is part of a batch of one run: a dependency in progress (an earlier piece of the batch) counts as met")
     claim.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="who runs the work")
     claim.add_argument("--submission-id", dest="submission_id", metavar="SUB",
                        help="submission key (default: derived from plan, items and actor)")

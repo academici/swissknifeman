@@ -1,0 +1,16 @@
+2026-10-15T05:36:21Z  P10.1  -  info  — retry: the steps from executor.1 on are repeated
+2026-10-15T05:36:21Z  -  -  run resume  — resume 1
+2026-10-15T05:36:22Z  P10.1  -  item start  — [orch.research] policy и sources: адаптеры command, filesystem, mcp-stdio (Perplexity через perplexity-web-mcp), повтор при BROWSER_BUSY; orch.py research query/sources
+2026-10-15T05:36:22Z  P10.1  brief  deterministic  start
+2026-10-15T05:36:23Z  P10.1  brief  deterministic  end  done  1s
+2026-10-15T05:36:23Z  P10.1  prepare  deterministic  start
+2026-10-15T05:36:24Z  P10.1  prepare  deterministic  end  done  0s
+2026-10-15T05:36:24Z  P10.1  executor.1  executor claude-code/sonnet/medium  start
+2026-10-15T05:36:24Z  -  -  info  ISOLATION_PARTIAL  — sandbox unavailable: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted; the commands of claude-code roles run under the filesystem guard only
+2026-10-15T05:39:31Z  P10.1  executor.1  executor claude-code/sonnet/medium  end  done  3m08s  tokens 12102/2455
+2026-10-15T05:39:31Z  P10.1  checks.1  deterministic  start
+2026-10-15T05:39:37Z  P10.1  checks.1  deterministic  end  green  5s
+2026-10-15T05:39:37Z  P10.1  register  registrar orch/conductor  start
+2026-10-15T05:39:38Z  P10.1  register  registrar orch/conductor  end  stopped  2s  REGISTER_REFUSED  — ATTEMPT_CONFLICT: attempt att-run-cc9f6e4398e32221556a156a-P10.1 already registered P10.1 as blocked with other outcome
+2026-10-15T05:39:38Z  P10.1  -  item end  stopped  3m16s  REGISTER_REFUSED  — ATTEMPT_CONFLICT: attempt att-run-cc9f6e4398e32221556a156a-P10.1 already registered P10.1 as blocked with other outcome
+2026-10-15T05:39:39Z  -  -  run end  stopped  3m18s  REGISTER_REFUSED  — ATTEMPT_CONFLICT: attempt att-run-cc9f6e4398e32221556a156a-P10.1 already registered P10.1 as blocked with other outcome; observer report /home/vostrikov/projects/packages/swissknifeman-next/.swissknifeman/orch/reports/cnd-20261015T053109Z-7b7f1a/observer.md

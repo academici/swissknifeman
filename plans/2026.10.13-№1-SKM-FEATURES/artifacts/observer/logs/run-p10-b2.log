@@ -1,0 +1,13 @@
+2026-10-15T05:31:09Z  -  -  run start  — plan plans/2026.10.13-№1-SKM-FEATURES; items P10.1, P10.2, P10.3, P10.4
+2026-10-15T05:31:11Z  P10.1  -  item start  — [orch.research] policy и sources: адаптеры command, filesystem, mcp-stdio (Perplexity через perplexity-web-mcp), повтор при BROWSER_BUSY; orch.py research query/sources
+2026-10-15T05:31:11Z  P10.1  brief  deterministic  start
+2026-10-15T05:31:12Z  P10.1  brief  deterministic  end  done  1s
+2026-10-15T05:31:12Z  P10.1  prepare  deterministic  start
+2026-10-15T05:31:12Z  P10.1  prepare  deterministic  end  done  0s
+2026-10-15T05:31:12Z  P10.1  executor.1  executor claude-code/sonnet/medium  start
+2026-10-15T05:31:13Z  -  -  info  ISOLATION_PARTIAL  — sandbox unavailable: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted; the commands of claude-code roles run under the filesystem guard only
+2026-10-15T05:35:51Z  P10.1  executor.1  executor claude-code/sonnet/medium  end  blocked  4m38s  tokens 88949/27930
+2026-10-15T05:35:51Z  P10.1  register  registrar orch/conductor  start
+2026-10-15T05:35:54Z  P10.1  register  registrar orch/conductor  end  recorded gate none  4s
+2026-10-15T05:35:54Z  P10.1  -  item end  blocked  4m43s
+2026-10-15T05:35:54Z  -  -  run end  stopped  4m45s  ITEM_BLOCKED  — P10.1 is blocked; see its escalation; observer report /home/vostrikov/projects/packages/swissknifeman-next/.swissknifeman/orch/reports/cnd-20261015T053109Z-7b7f1a/observer.md

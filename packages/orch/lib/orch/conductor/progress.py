@@ -14,6 +14,8 @@ import sys
 import threading
 from typing import Callable, Optional
 
+from aicore.util.redact import env_secrets, redact_document
+
 MODES = ("text", "json-lines", "quiet")
 # ``info`` lines that report a long or costly run without stopping it; the latest one of the running step is the
 # answer to "why is it taking so long" (``conduct.py status`` prints it)
@@ -78,6 +80,7 @@ class Progress:
             return self._emit(event, **fields)
 
     def _emit(self, event: str, **fields) -> dict:
+        fields = redact_document(fields, secrets=env_secrets())  # before the message is cut: a cut token no longer matches
         line = {"ts": self.clock(), "run": self.run_id, "event": event,
                 **{key: value for key, value in fields.items() if value is not None and value != ""}}
         if "message" in line:

@@ -42,6 +42,8 @@ def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid:
         if not settings.events_enabled:
             return None
         from aicore.ext import events as journal
+        from aicore.util.redact import env_secrets, redact_document
+        data = redact_document(dict(data), secrets=env_secrets())
         stored = journal.emit(event_type, dict(data), source=SOURCE, subject=subject, project=project,
                               dataschema=data_schema(event_type), causationid=causationid,
                               correlationid=correlationid, config_file=config_file, strict=True)

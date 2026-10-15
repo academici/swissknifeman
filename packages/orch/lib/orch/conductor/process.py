@@ -26,6 +26,7 @@ import time
 from typing import Callable, Mapping, Optional
 
 from aicore.provider import errors as provider_errors
+from aicore.util.redact import env_secrets, redact_text
 
 STDERR_TAIL_CHARS = 4000
 
@@ -360,7 +361,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
             process = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=out, stderr=err, cwd=str(cwd),
                                        env=None if env is None else dict(env), start_new_session=True)
         except OSError as error:
-            return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=str(error), raw=str(raw_path))
+            return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=redact_text(str(error), secrets=env_secrets(env)),
+                           raw=str(raw_path))
         try:
             stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
                             on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0)
@@ -384,7 +386,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
     if lingered:
         run.exit = 0
     if (process.returncode != 0 and not lingered) or parsed["is_error"]:
-        stderr = err_path.read_text(encoding="utf-8", errors="replace").strip()
+        stderr = redact_text(err_path.read_text(encoding="utf-8", errors="replace").strip(),
+                             secrets=env_secrets(env))  # the raw .stderr file keeps what the role printed
         tail = stderr.splitlines()[-3:]
         run.error, run.detail = "ROLE_FAILED", f"exit {process.returncode}" + (f": {' | '.join(tail)}" if tail else "")
         if provider:

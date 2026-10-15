@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 import time
 
+from aicore.util.redact import env_secrets, redact_document
 from orch.conductor import agents as agents_mod, progress as progress_mod, prompts as prompts_mod, questions as questions_mod
 
 IDLE_S = 30
@@ -178,7 +179,7 @@ def build(directory: Path, project: Path) -> dict:
         "items": items, "events": counts, "event_problems": problems,
     }
     report["proposals"] = proposals(report)
-    return report
+    return redact_document(report, secrets=env_secrets())
 
 
 def proposals(report: dict) -> list:

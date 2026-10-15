@@ -45,6 +45,7 @@ when the fixed deviation is carried as accepted.
   prints one line `ORCH_EVENT_NOT_EMITTED: <type>: <reason>` on stderr; the exit code and the output of the command
   do not change.
 - Pure operations (`prepare --dry-run`, `policy test`) never emit.
+- `data` passes `aicore.util.redact.redact_document` first: the values of environment variables named like api key, token, secret or password and the explicit token formats become `‹redacted›`. The same masking covers the progress lines, the `detail` of a failed role (the stderr tail) and the observer report; the raw streams under `streams/` stay as the role printed them and live in the ignored runtime folder (`orch doctor` warns when `.swissknifeman/state/` is not ignored).
 - `data` never carries a secret: aicore refuses a `Secret` value (`EVENT_SECRET`) and the event is not journaled.
 
 ## Producer fixtures

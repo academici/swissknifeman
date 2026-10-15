@@ -23,6 +23,7 @@ import subprocess
 import time
 from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence
 
+from ..util import redact
 from ..util.digest import canonical_json_bytes
 
 MAX_STDOUT = 1048576
@@ -176,23 +177,13 @@ def _redact_bytes(data: bytes, secrets: List[bytes]) -> bytes:
 
 
 def _redact_text(text: str, secrets: Sequence[str]) -> str:
-    for secret in sorted((s for s in secrets if isinstance(s, str) and s), key=len, reverse=True):
-        text = text.replace(secret, REDACTED)
-    return text
+    return redact.redact_text(text, secrets=secrets, patterns=False, mask=REDACTED)
 
 
 def _redact_document(value: object, secrets: Sequence[str]) -> object:
     """Replace secrets in strings, keys and scalars (a number or literal whose JSON text holds a secret
     becomes ``"***"``)."""
-    if isinstance(value, str):
-        return _redact_text(value, secrets)
-    if isinstance(value, list):
-        return [_redact_document(item, secrets) for item in value]
-    if isinstance(value, dict):
-        return {_redact_text(key, secrets): _redact_document(item, secrets) for key, item in value.items()}
-    if any(secret in json.dumps(value) for secret in secrets):
-        return REDACTED
-    return value
+    return redact.redact_document(value, secrets=secrets, patterns=False, mask=REDACTED)
 
 
 def _tail_text(buffer: bytearray, truncated: bool, secrets: List[bytes], limit: int) -> str:

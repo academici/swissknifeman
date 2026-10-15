@@ -64,7 +64,7 @@ if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/skiller" ]]; then
 fi
 
 usage() {
-  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,34p'
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,37p'
 }
 
 CMD="${1:-help}"

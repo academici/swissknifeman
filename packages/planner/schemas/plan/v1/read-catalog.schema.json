@@ -195,6 +195,7 @@
                 "PLAN_LOCKED",
                 "PLAN_NOT_DONE",
                 "PLAN_NOT_FOUND",
+                "PROJECT_PATH_OVERRIDE_FORBIDDEN",
                 "RATIONALE_REQUIRED",
                 "READ_MISSING",
                 "REASON_REQUIRED",

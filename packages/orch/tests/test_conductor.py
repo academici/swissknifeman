@@ -933,7 +933,8 @@ class BatchLimitTests(ConductorCase):
 
     def batch(self, severity: str, **limits):
         finding = {"result": {"verdict": "ATTENTION", "findings": [dict(FINDING["result"]["findings"][0], severity=severity)]}}
-        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": dict(ceiling_factor=1, **limits)}}]},
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": dict(ceiling_factor=1, **limits),
+                                                                                    "review": {"strategy": "each"}}}]},
                         "W2": {}})
         self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [finding, GREEN],
                      "triager": [TRIAGE_F1]})

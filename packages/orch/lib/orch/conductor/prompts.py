@@ -452,12 +452,14 @@ def _corrected_scope(corrected) -> str:
 
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
              roles_dir=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
-             checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None) -> list:
+             checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None,
+             focus=(), focus_origin: str = "stage-report") -> list:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
     parts = [_head("reviewer", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
              [Block("candidate", CONDUCTOR, f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the "
                     "candidate is the working tree (uncommitted changes, untracked files included). Read files as you "
                     "need; do not change anything.")],
+             *([[Block("focus", focus_origin, _focus(focus))]] if focus else []),
              *([[Block("review_scope", CONDUCTOR, _PRE_FINAL.format(floor=min_severity))]] if pre_final else []),
              *([[Block("review_scope", CONDUCTOR, _corrected_scope(corrected))]] if corrected else []),
              *([[Block("review_scope", CONDUCTOR, _outside_scope(outside))]] if outside else []),
@@ -470,6 +472,14 @@ def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, che
              [_progress(item, step)],
              [Block("result_contract", CONDUCTOR, "## Result\n\n" + _REVIEW_FINDINGS)]]
     return _join(parts)
+
+
+def _focus(lines) -> str:
+    """The "Focus" section: where to look first (the advice of the executor, the features of the risk score); the
+    review keeps its whole scope."""
+    return ("## Focus\n\nLook at these points first: the executor advised them or the risk score of the conductor found "
+            "them. They do not reduce the review: judge the whole change as usual.\n\n"
+            + "\n".join(f"- {line}" for line in lines))
 
 
 def _outside_scope(outside) -> str:

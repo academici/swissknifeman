@@ -2308,9 +2308,64 @@ class Conductor:
         return [dict(by_id.get(entry["finding"], {}), id=entry["finding"], fix=entry.get("fix", ""))
                 for entry in triage.get("confirmed", [])]
 
+    def _executor_advice(self, item: Item) -> list:
+        """The ``review_recommendation`` of every executor round that gave one, in order."""
+        return [advice for key, step in item.state.get("steps", {}).items()
+                if key.startswith("executor.") and isinstance(step.get("result"), dict)
+                for advice in [((step["result"].get("report") or {}).get("review_recommendation"))]
+                if isinstance(advice, dict)]
+
+    def _review_focus(self, item: Item) -> tuple:
+        """``(lines, origin)`` of the ``focus`` block of the reviewer prompt (knowledge/p9-prompt#focus): what the executor
+        advised to check first (``review_recommendation.focus``) and the features of ``risk.json``. The block asks for no
+        narrower review; with neither source there is no block."""
+        lines = []
+        for advice in self._executor_advice(item):
+            lines += [text for text in advice.get("focus") or [] if isinstance(text, str) and text and text not in lines]
+        origins = ["stage-report"] if lines else []
+        features = (item.state.get("risk") or {}).get("features") or []
+        if features:
+            lines += [f"risk {row['name']} (+{row['weight']}): {row['evidence']}" for row in features]
+            origins.append("risk.json")
+        return lines, "+".join(origins)
+
+    def _upgrade_reviewer(self, item: Item) -> None:
+        """P9.4: the class an executor round suggested (``review_recommendation.suggested_model_class``) is taken for the
+        reviewer when it is above the class of its route and the higher route is admitted (startable here, not gated, the
+        sandbox rule); a suggestion at or below the route changes nothing, the class is never lowered. The upgrade is kept
+        in ``route_overrides``, so a resume starts from it, and announced once (``ROUTE_UPGRADED``)."""
+        wanted = max((advice["suggested_model_class"] for advice in self._executor_advice(item)
+                      if advice.get("suggested_model_class") in CLASS_RANK), key=CLASS_RANK.get, default=None)
+        route = item.routes["reviewer"]
+        if wanted is None or CLASS_RANK[wanted] <= CLASS_RANK.get(route["model_class"], -1) \
+                or item.state.get("reviewer_upgrade_refused") == wanted:
+            return
+        try:
+            higher = self._route(item, "reviewer", {"provider": route["provider"], "model_class": wanted,
+                                                    "effort": route.get("effort")})
+            problem = self._admit(item, "reviewer", higher)
+        except Stop as stop:
+            problem = f"{stop.code}: {stop.message}"
+        if problem is not None:
+            item.state["reviewer_upgrade_refused"] = wanted
+            self._save()
+            self.progress.emit("info", item=item.ref, role="reviewer", route=self.label(route),
+                               message=f"reviewer: the suggested class {wanted} is not taken ({problem})")
+            return
+        item.routes["reviewer"] = higher
+        item.state.setdefault("route_overrides", {})["reviewer"] = {
+            key: higher[key] for key in ("provider", "model_class", "effort") if higher.get(key)}
+        self._save()
+        write_json(item.directory / "routes.json", item.routes)
+        self.progress.emit("info", item=item.ref, role="reviewer", route=self.label(higher), reason_code="ROUTE_UPGRADED",
+                           message=f"reviewer: {self.label(route)} -> {self.label(higher)} "
+                                   f"({route['model_class']} -> {wanted}; the executor suggested it)")
+
     def _review(self, item: Item, number: int, rows: list, pending: bool = False, cancel=None) -> dict:
+        self._upgrade_reviewer(item)
         route = item.routes["reviewer"]
         key = f"review.{number}"
+        focus, focus_origin = self._review_focus(item)
 
         def run() -> dict:
             base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
@@ -2320,8 +2375,8 @@ class Conductor:
                                       pre_final=number > 1 and item.options["review"]["pre_final"],
                                       min_severity=item.options["review"]["correct_min_severity"],
                                       roles_dir=self.roles_dir, skills=self._skills(item, "reviewer"),
-                                      checks_pending=pending, outside=self._outside(item),
-                                      repo_rules=self._repo_rules(item, "reviewer"),
+                                      checks_pending=pending, outside=self._outside(item), focus=focus,
+                                      focus_origin=focus_origin, repo_rules=self._repo_rules(item, "reviewer"),
                                       skill_texts=self._skill_texts(item, "reviewer"))
             findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems,
                                         cancel=cancel)

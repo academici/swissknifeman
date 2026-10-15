@@ -170,6 +170,7 @@ instead; `conduct.py status` shows the latest one of the running step:
 | `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
 | `PROVIDER_WAIT` | a role failed at the provider and waits before its repeat: a usage limit that resets within `limits.provider_wait_max_s`, or a transient failure after the provider CLI had repeated the request itself (`api_retry`) | the failure class, the wait in seconds and the UTC time it ends; the wait looks at the cancel every second |
 | `ROUTE_FALLBACK` | a role moved to a `fallback_routes` entry (its provider failed beyond the wait, or was gated) | role, old route → new route, the class and the reason codes (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`, `CAPACITY_GATED`) |
+| `ROUTE_UPGRADED` | the reviewer route went up to the `suggested_model_class` of an executor `review_recommendation` (above the class of its route, admitted: startable here, not gated) | role, old route → new route, `<class> -> <class>`; a suggestion at or below the route, or a higher route that is not admitted, gives no beacon |
 | `CAPACITY_GATED` | the provider of a role is gated when the routes of a piece are chosen | the gate (until, class, who set it) |
 | `RESULT_SILENT_DENIAL` | a Claude role had tool calls refused without a prompt (`--permission-prompts none`) | the tools and how many calls (`Bash×2, WebFetch`), never their input; for the executor and the bounded-implementer the report also gets a `note` issue "tools denied without a prompt: …" with the way out (widen `allowedTools` in the launch catalog, or change the plan) |
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
@@ -421,6 +422,19 @@ and the frame of the review, triage and closing roles (`progress`, `candidate`, 
 references, no block of this class exists yet. A class past its limit is a beacon `BUDGET_OVER` with `message` `block <kind> <origin>
 <tokens>` for its heaviest block. This is a measure and a beacon only: the prompt is never cut, and the limits are for tuning from the data
 (observer: Prompt budgets).
+
+### Review focus
+
+The reviewer prompt gets a block `focus` (`origin` `stage-report`, `risk.json` or `stage-report+risk.json`; budget class
+supporting) after `candidate` when there is something to say: the `review_recommendation.focus` lines of the executor
+rounds (in order, without repeats) and the features of `risk.json` (`risk <feature> (+<weight>): <evidence>`; the score
+exists only for a piece whose policy has no review, see Dynamic review). It lists what to look at first and says the
+review is not narrowed; without a source there is no block, and the prompt is the one it was. The manifest of `review.N`
+lists the block. `suggested_model_class` of the executor raises the class of the reviewer route (the highest class
+suggested by any round) when it is above the class of the route and `_admit` takes the higher route of the same provider
+(command, transport, sandbox, gate): the beacon `ROUTE_UPGRADED`, `routes.json` and `state.route_overrides.reviewer` (a
+resume starts from it) change. A suggestion at or below the route changes nothing: the class is never lowered; a refused
+upgrade is an `info` line once and the review goes on with its route.
 
 ### Skill checks
 

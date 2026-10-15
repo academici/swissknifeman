@@ -1609,7 +1609,10 @@ class Conductor:
         extra = self.ISOLATION_ARGS.get(route.get("provider")) if isolated else None
         if extra and not self._knows(route["argv"], extra):
             extra = None
-        return list(route["argv"]) + (extra or []) + self._resume_args(item, role, route) + self._sandbox_args(item, role, route)
+        argv = list(route["argv"])
+        if self._shared_session(item, role, route):  # a session that is not saved cannot be resumed by the next executor
+            argv = [arg for arg in argv if arg != "--no-session-persistence"]
+        return argv + (extra or []) + self._resume_args(item, role, route) + self._sandbox_args(item, role, route)
 
     def _shared_session(self, item: Item, role: str, route: dict) -> bool:
         """The executor of this run keeps one provider session across its pieces and correction rounds (``session.executor``)."""

@@ -7,7 +7,9 @@ import json
 import unittest
 
 from orch.conductor import options, prompts
-from tests.test_conductor import GREEN, ConductorCase, executor_ok
+import sys
+
+from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok
 from tests.test_conductor_prompts import fixture
 
 
@@ -49,6 +51,24 @@ class SharedSessionTests(ConductorCase):
         self.assertNotIn("--resume", self.argv(1))
         self.assertEqual(self.argv(2)[self.argv(2).index("--resume") + 1], "executor-session-1")
         self.assertEqual(self.state(err)["executor_session"], "executor-session-2")
+
+    def with_no_persistence(self):
+        roles = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        roles["executor"].append("--no-session-persistence")  # what the launch catalog gives the executor
+        self.write_config(argv=roles)
+        self.two_items()
+
+    def test_a_shared_executor_keeps_its_session_on_disk(self):
+        self.with_no_persistence()
+        code, _, err = self.run_items("W1", "W2")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("--no-session-persistence", self.argv(1))
+
+    def test_per_item_leaves_the_flag_as_the_catalog_has_it(self):
+        self.with_no_persistence()
+        code, _, err = self.run_items("W1", "W2", extra=("--no-single-session",))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertIn("--no-session-persistence", self.argv(1))
 
     def test_the_prompts_name_the_run_and_say_whether_the_session_is_resumed(self):
         self.two_items()

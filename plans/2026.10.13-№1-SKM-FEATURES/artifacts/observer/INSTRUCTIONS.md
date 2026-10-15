@@ -22,3 +22,9 @@ Start correctly at once; owner corrected this twice.
 - Small fixes (a few lines, obvious, testable) are made at once in the worktree (~/.cache/skm-wt-session) with a test and merged between pieces; larger ones go to FINDINGS.md (STUDY) for the end-of-plan review. Do not wait for a decision on the small ones.
 - FINDINGS.md, INDEX.md, journal.md, INSTRUCTIONS.md live in the plan folder (`plans/<plan>/artifacts/observer/`) and link to everything (run ids, state dirs, commits, worktree, memory) so a lost session can be rebuilt from them; source copy in ~/.cache/skm-orch-run/observer/, `sync-observer.sh` copies+commits it when no run is active; sync after every batch. Never keep run files in /tmp.
 - Reports to the owner stay short: done, verified, next.
+
+## Added 2026-10-15 (owner, strict) — batch by default, polished system by the end of the plan
+- ANY run whose work names several pieces (`--items A B C`, a roadmap row, the batch that `plan.py next` names, `--ready`) is a BATCH by default: all pieces in progress at the start, one executor session, list of all pieces in the first prompt. Separate sessions only on an explicit `--no-batch`. No path may silently fall back to piece-by-piece.
+- Every default parameter must be written down (docs + code + a test that keeps them in step) and every rough edge found while observing is fixed or logged at once. Spend extra time on it: the goal is a fully polished, reliable system at the end of the plan.
+- Study the internals while a run works: how the processes talk to each other (conductor, bridge, planner, provider CLI, guard), what can block them (ownership/fencing, dependencies, dirty tree, sandbox/Landlock, disk), and how to improve it. Not only the per-item analysis: be curious, keep reading the streams, prompts, state files.
+- 2026-10-15 (owner): DO NOT start phase P13 until the owner says so. Keep fixing and polishing; park P13.

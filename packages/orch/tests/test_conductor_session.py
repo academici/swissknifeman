@@ -95,8 +95,6 @@ class SharedSessionTests(ConductorCase):
         self.assertNotIn("--resume", self.argv(1))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class OptionsCopyTests(ConductorCase):
@@ -108,3 +106,19 @@ class OptionsCopyTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         kept = self.run_dir(err) / "options.json"
         self.assertEqual(json.loads(kept.read_text(encoding="utf-8")), {"rules": ["keep it short"]})
+
+
+class SessionConfigTests(unittest.TestCase):
+    def test_the_machine_config_layer_sets_the_default_and_a_run_option_overrides_it(self):
+        layer = options.config_layer({"session_executor": "per-item"})
+        self.assertEqual(layer["session"], {"executor": "per-item"})
+        self.assertNotIn("session", options.config_layer({}))
+        merged, sources = options.effective({"session_executor": "per-item"}, {}, [])
+        self.assertEqual(merged["session"]["executor"], "per-item")
+        merged, _ = options.effective({"session_executor": "per-item"}, {},
+                                      [{"source": "plan", "options": {"session": {"executor": "shared"}}}])
+        self.assertEqual(merged["session"]["executor"], "shared")
+
+
+if __name__ == "__main__":
+    unittest.main()

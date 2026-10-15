@@ -32,6 +32,7 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `conductor.registrar` | actor | `orch/conductor` | all | who registers outcomes in the work source |
 | `conductor.rules` | array of strings | empty | all | executor rules of every run (the first run-options layer) |
 | `conductor.on_blocked` | `stop`, `report` | `stop` | all | what a blocked piece of work does to the run |
+| `conductor.session_executor` | `shared`, `per-item` | `shared` | all | one executor session for the pieces of a run (`shared`, Claude Code `--resume`) or a fresh one per step; the first run-options layer, so a plan, `--options` and `--single-session` override it |
 | `conductor.questions` | `queue`, `deny`, `defaults`, `advisor` | `queue` | all | what a blocking question of the executor does: blocked `QUESTION` and wait for `conduct.py answer`, blocked `QUESTION_DENIED`, a `default` answered once by policy, or the advisor's advice (needs `advisor.enabled`; advice that needs the owner is queued) |
 | `conductor.limits.*` | integers | `tokens_max` 0, `stage_timeout_s` 0, `stage_idle_timeout_s` 0, `check_timeout_s` 0 | all | default limits of a run: `tokens_max` is a beacon, the three ceilings are off (nothing long is cut; see the beacons in `conductor.md`) |
 | `conductor.argv.<role>` | array of strings | empty | defaults, machine, invocation, flags | command line of a role instead of the launch catalog entry |

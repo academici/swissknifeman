@@ -128,6 +128,15 @@
             "description": "One rule."
           }
         },
+        "session_executor": {
+          "type": "string",
+          "description": "How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `shared` resumes the session of the previous executor, `per-item` starts a fresh one.",
+          "default": "shared",
+          "enum": [
+            "shared",
+            "per-item"
+          ]
+        },
         "on_blocked": {
           "type": "string",
           "description": "What a blocked piece of work does to the run: stop it, or report it and go on.",

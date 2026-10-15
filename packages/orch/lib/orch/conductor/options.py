@@ -140,6 +140,8 @@ def config_layer(conductor: dict) -> dict:
     limits = {key: value for key, value in (conductor.get("limits") or {}).items() if value is not None}
     if limits:
         layer["limits"] = limits
+    if conductor.get("session_executor") is not None:
+        layer["session"] = {"executor": conductor["session_executor"]}
     return layer
 
 

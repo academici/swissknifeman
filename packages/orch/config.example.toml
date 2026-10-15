@@ -44,6 +44,9 @@ schema_version = 1
 # Rules for the executor of every run; the options of the pack, the phase and the item append theirs. Array of strings.
 # rules = []
 
+# How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `shared` resumes the session of the previous executor, `per-item` starts a fresh one. One of: "shared", "per-item".
+# session_executor = "shared"
+
 # What a blocked piece of work does to the run: stop it, or report it and go on. One of: "stop", "report".
 # on_blocked = "stop"
 

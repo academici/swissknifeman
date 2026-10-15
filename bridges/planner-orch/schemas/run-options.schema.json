@@ -91,6 +91,17 @@
           "description": "`deviation` (default): the paths are kept, listed as a deviation issue, shown to the reviewer and committed with the piece; `block`: the piece is blocked at once with an escalation that names them.",
           "type": "string",
           "enum": ["deviation", "block"]
+        },
+        "fence": {
+          "description": "What the executor may change. `project` (default): any file of the project; `scope.write_set` is the expected change, and a path outside it is reported by the executor as a `deviation` instead of blocking the piece. `plan`: the write set is a fence, a path outside it makes the executor stop with `blocked`.",
+          "type": "string",
+          "enum": ["project", "plan"]
+        },
+        "extra_paths": {
+          "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to its filesystem guard (`ro-run.py --rw`). Default none.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(/|~/)"}
         }
       },
       "required": [],

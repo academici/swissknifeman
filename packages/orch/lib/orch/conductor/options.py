@@ -34,7 +34,10 @@ DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-
                                          "report-fixer"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
                         "sandbox": "prefer", "sandbox_domains": []}
-DEFAULT_SCOPE = {"outside": "deviation"}
+# ``fence``: ``project`` (default) lets the executor change any file of the project and report the paths outside the plan's
+# write set as deviations; ``plan`` keeps the write set a fence (a path outside it blocks the piece). ``extra_paths``:
+# directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``).
+DEFAULT_SCOPE = {"outside": "deviation", "fence": "project", "extra_paths": []}
 # One executor session for all pieces of a run: a piece (and a correction round of it) resumes the session of the
 # previous executor, so the later pieces start with what the earlier ones learned. ``per-item``: a fresh session each.
 SESSION_MODES = ("shared", "per-item")

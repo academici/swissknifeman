@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import unittest
 
-from orch.conductor import options, prompts
+from orch.conductor import engine, options, prompts
 import sys
 
 from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok
@@ -118,6 +118,43 @@ class SessionConfigTests(unittest.TestCase):
         merged, _ = options.effective({"session_executor": "per-item"}, {},
                                       [{"source": "plan", "options": {"session": {"executor": "shared"}}}])
         self.assertEqual(merged["session"]["executor"], "shared")
+
+
+
+
+class FenceTests(ConductorCase):
+    def test_the_project_fence_is_the_default_and_the_executor_is_told_it_may_report_instead_of_block(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        prompt = self.prompt("executor", 1)
+        self.assertIn("## Write fence of this run", prompt)
+        self.assertIn("it is not a fence", prompt)
+
+    def test_the_plan_fence_leaves_the_prompt_as_it_was(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--fence", "plan"))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("Write fence of this run", self.prompt("executor", 1))
+
+    def test_an_extra_path_is_named_in_the_prompt_and_given_to_the_filesystem_guard(self):
+        extra = self.project.parent / "shared-docs"
+        extra.mkdir()
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--fence", "plan", "--allow-path", str(extra)))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertIn(f"`{extra}`", self.prompt("executor", 1))
+
+    def test_ro_run_gets_one_rw_per_extra_path_before_the_separator(self):
+        eng = engine.Conductor.__new__(engine.Conductor)
+        item = type("I", (), {"options": {"scope": {"extra_paths": ["/data/a", "~/b"]}}})()
+        argv = ["python3", "/x/ro-run.py", "--rw", "/p", "--", "claude", "-p"]
+        out = eng._extra_write_dirs(item, "executor", argv)
+        self.assertEqual(out[:5], ["python3", "/x/ro-run.py", "--rw", "/p", "--rw"])
+        self.assertEqual(out[out.index("--"):], ["--", "claude", "-p"])
+        self.assertEqual(out.count("--rw"), 3)
+        self.assertEqual(eng._extra_write_dirs(item, "reviewer", argv), argv)
+        self.assertEqual(eng._extra_write_dirs(item, "executor", ["claude", "-p"]), ["claude", "-p"])
 
 
 if __name__ == "__main__":

@@ -444,12 +444,31 @@ def _research(result: dict) -> str:
     return "\n\n".join(parts)
 
 
+def _fence_rule(fence: str, extra_paths) -> str:
+    """The write fence of the run (``scope.fence``, ``scope.extra_paths``): it overrides the "stay inside the write set /
+    block on a path outside it" lines of the role text, which describe the plan fence."""
+    lines = ["## Write fence of this run", ""]
+    if fence == "project":
+        lines.append("`scope.write_set` lists the paths this piece is expected to change; it is not a fence. You may also "
+                     "change any other file of the project that the piece needs (generated files, registries, the tests, "
+                     "docs and fixtures of what you change). Do not stop with `blocked` for such a path: make the change "
+                     "and report each path outside `scope.write_set` as a `deviation` (class `write_set`) with the reason. "
+                     "Change nothing the piece does not need, and never anything outside the project.")
+    if extra_paths:
+        lines.append(("" if fence == "project" else "The write set stays your fence, except for these extra paths. ")
+                     + "Besides the project you may change files under: " + ", ".join(f"`{path}`" for path in extra_paths)
+                     + " (report them as deviations too).")
+    return "\n".join(lines)
+
+
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
-             research=None, research_origin: str = "") -> list:
+             research=None, research_origin: str = "", fence: str = "plan", extra_paths=()) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
+    if fence == "project" or extra_paths:
+        parts.append([Block("run_rules", CONDUCTOR, _fence_rule(fence, extra_paths))])
     if batch:
         parts.append([Block("run_rules", CONDUCTOR, batch)])
     if scout_text:

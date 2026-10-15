@@ -226,7 +226,7 @@ class Conductor:
     def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, batch: bool, max_items: int,
             options_file: Optional[Path] = None, adopt: bool = False, input_file: Optional[Path] = None,
             commit: bool = False, scenario: Optional[str] = None,
-            session: Optional[str] = None) -> int:
+            session: Optional[str] = None, fence: Optional[str] = None, extra_paths: Optional[list] = None) -> int:
         """Conduct the pieces of a plan, or with ``input_file`` the one piece of an execution-input document (the built-in
         file source: no plan; ``scenario`` is then the scenario of the run, ``commit`` lets it commit its paths)."""
         run_id = new_run_id()
@@ -241,7 +241,8 @@ class Conductor:
         run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
                    "source": source, "scenario": scenario if source else None,
                    "max_items": max_items, "options_file": str(options_file) if options_file else None,
-                   "adopt": bool(adopt), "session": session,
+                   "adopt": bool(adopt), "session": session, "fence": fence,
+                   "extra_paths": [str(path) for path in extra_paths or []] or None,
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
                    "project": str(self.project), "project_resolution": self.project_resolution,
                    "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
@@ -914,6 +915,10 @@ class Conductor:
         if self.run_doc.get("session"):
             layers.append({"source": "invocation:--single-session",
                            "options": {"session": {"executor": self.run_doc["session"]}}})
+        flags = {key: self.run_doc[name] for key, name in (("fence", "fence"), ("extra_paths", "extra_paths"))
+                 if self.run_doc.get(name)}
+        if flags:
+            layers.append({"source": "invocation:--fence/--allow-path", "options": {"scope": flags}})
         try:
             item.options, item.sources = opts.effective(self.conductor, item.policy, layers)
         except opts.OptionsError as error:
@@ -1621,7 +1626,20 @@ class Conductor:
         argv = list(route["argv"])
         if self._shared_session(item, role, route):  # a session that is not saved cannot be resumed by the next executor
             argv = [arg for arg in argv if arg != "--no-session-persistence"]
+        argv = self._extra_write_dirs(item, role, argv)
         return argv + (extra or []) + self._resume_args(item, role, route) + self._sandbox_args(item, role, route)
+
+    def _extra_write_dirs(self, item: Item, role: str, argv: list) -> list:
+        """``scope.extra_paths`` for an executor started through ``ro-run.py``: one more ``--rw`` each, before the ``--``."""
+        paths = self._scope_option(item, "extra_paths", [])
+        if role != "executor" or not paths or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
+            return argv
+        at = argv.index("--")
+        return argv[:at] + [part for path in paths for part in ("--rw", os.path.expanduser(path))] + argv[at:]
+
+    @staticmethod
+    def _scope_option(item: Item, key: str, default):
+        return (item.options.get("scope") or {}).get(key, default)
 
     @staticmethod
     def _session_mode(item: Item) -> str:
@@ -1940,7 +1958,9 @@ class Conductor:
                                       answers=questions_mod.answers_text(self._questions(item)), fix=fix,
                                       scout_origin=scouted.get("cache") or "",
                                       batch=self._batch_note(item), research=researched.get("result"),
-                                      research_origin=researched.get("path") or "")
+                                      research_origin=researched.get("path") or "",
+                                      fence=self._scope_option(item, "fence", "plan"),
+                                      extra_paths=self._scope_option(item, "extra_paths", []))
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}

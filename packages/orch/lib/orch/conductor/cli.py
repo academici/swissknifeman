@@ -199,6 +199,11 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--max-items", dest="max_items", type=int, default=0, metavar="N",
                      help="with --batch: at most N pieces (default: until none is ready)")
     run.add_argument("--options", type=Path, metavar="FILE", help="run-options JSON: the most specific layer")
+    run.add_argument("--fence", choices=("project", "plan"), default=None,
+                     help="what the executor may change: the whole project (default; the plan's write set is reported "
+                          "against) or only the plan's write set (`scope.fence`)")
+    run.add_argument("--allow-path", dest="allow_path", action="append", default=None, metavar="DIR",
+                     help="a directory outside the project the executor may also change (repeatable; `scope.extra_paths`)")
     run.add_argument("--single-session", dest="single_session", action=argparse.BooleanOptionalAction, default=None,
                      help="one executor session for all pieces of the run (default on: `session.executor: shared`); "
                           "--no-single-session starts a fresh executor session per step")
@@ -343,7 +348,8 @@ def main(argv: list | None = None) -> int:
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.batch, max_items=args.max_items, options_file=args.options,
                                  adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario,
-                                 session=None if args.single_session is None else ("shared" if args.single_session else "per-item"))
+                                 session=None if args.single_session is None else ("shared" if args.single_session else "per-item"),
+                                 fence=args.fence, extra_paths=args.allow_path)
         if args.verb == "release":
             return conductor.release(args.run, args.item, args.reason)
         if args.verb == "settle":

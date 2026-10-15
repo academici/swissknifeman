@@ -2,6 +2,8 @@
 roles really changed in the tree."""
 from __future__ import annotations
 
+from typing import Optional
+
 from orch.conductor import prompts, questions as questions_mod, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import evidence_paths, report_problems
@@ -124,13 +126,36 @@ def autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> t
         return report, round_no
     if not replayed:
         state["autofix_at"].append(round_no)
-        state.setdefault("autofixed", []).extend({"issue": issue, "round": round_no} for issue in found)
+        state.setdefault("autofixed", []).extend(
+            {"issue": issue, "round": round_no, "event": self._deviation_recorded(item, issue)} for issue in found)
         self.progress.emit("info", item=item.ref, reason_code="DEVIATION_AUTOFIX",
                            message=f"correction {len(state['autofix_at'])}: {len(found)} auto_fixable deviation(s) "
                                    "are fixed in the write set, then the checks run again")
     self._save()
     round_no += 1
     return self._execute(item, round_no, scout_text, prompts.DEVIATION_FIX, prompts.fix_deviation(found)), round_no
+
+
+def deviation_data(item: Item, issue: dict) -> dict:
+    """``deviation_id`` (``<item>/dev-<n>``, n counting the deviations of the piece), ``class`` and ``outcome``."""
+    seen = item.state.setdefault("deviation_ids", [])
+    if issue["text"] not in seen:
+        seen.append(issue["text"])
+    return {"deviation_id": f"{item.ref}/dev-{seen.index(issue['text']) + 1}", "class": issue.get("class"),
+            "outcome": issue.get("outcome")}
+
+
+def deviation_recorded(self, item: Item, issue: dict) -> Optional[str]:
+    """``orch.deviation.recorded`` for a deviation of a report; the id of the event."""
+    return self._beacon_event("orch.deviation.recorded", item, {
+        **self._deviation_data(item, issue), **({"auto_fixable": issue["auto_fixable"]}
+                                               if isinstance(issue.get("auto_fixable"), bool) else {})})
+
+
+def deviation_resolved(self, item: Item, issue: dict, recorded: Optional[str]) -> None:
+    """``orch.deviation.resolved`` for a deviation a correction round closed; ``corrects`` is the recorded event."""
+    if recorded:
+        self._beacon_event("orch.deviation.resolved", item, {**self._deviation_data(item, issue), "corrects": recorded})
 
 
 def autofix_issues(self, item: Item, report: dict) -> list:
@@ -146,6 +171,7 @@ def autofix_issues(self, item: Item, report: dict) -> list:
             continue
         number = item.state["autofix_at"].index(entry["round"]) + 1
         carried.append(dict(issue, outcome="accepted", next=f"fixed in correction {number}"))
+        self._deviation_resolved(item, issue, entry.get("event"))
         self._plan_note(item, f"deviation fixed in correction {number}: {issue['text']}")
     return carried
 
@@ -170,8 +196,11 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         return report, False
     store = self._questions(item)
     binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest")}
-    questions_mod.record(store, asked, binding, clock.utc_now())
+    new = questions_mod.record(store, asked, binding, clock.utc_now())
     waiting = questions_mod.blocking_open(store, asked)
+    for entry in new:  # a round walked again by a resume adds nothing
+        self._beacon_event("orch.agent.questioned", item, {
+            "step": key, "question_id": entry["id"], "revision": entry["revision"], "blocking": bool(entry["blocking"])})
     mode = self.conductor.get("questions") or "queue"
     if mode == "advisor" and not self._advisor_on():
         self.progress.emit("info", item=item.ref, stage=key, reason_code="ADVISOR_DISABLED",
@@ -196,6 +225,8 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         return report, any(entry["status"] == "applied" and entry["binding"]["step"] == key
                            for entry in store.values())
     said = "; ".join(f"{entry['id']} {entry['text']}{self._advice_note(entry)}" for entry in waiting)
+    self._beacon_event("orch.run.waiting", item, {"reason_code": "QUESTION", "step": key,
+                                                  "question_ids": [entry["id"] for entry in waiting]})
     if mode == "deny":
         self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
         return self._blocked(report, "QUESTION_DENIED", said), False

@@ -906,6 +906,10 @@ class RunClockTests(ConductorCase):
         self.assertGreater(state["active_s"], 0)
         self.assertGreaterEqual(state["run_warned"], 1)
         self.assertTrue(any("run active" in i["text"] for i in self.source()["items"]["W1"]["report"]["open_issues"]))
+        from aicore.ext import events as journal
+        warned = [e for e in journal.read_events(self.project)[0] if e.type == "orch.run.warning"]
+        self.assertEqual(len(warned), len(slow))
+        self.assertEqual((warned[0].data["reason_code"], warned[0].subject), ("RUN_SLOW", f"{warned[0].data['run_id']}/W1"))
 
     def test_no_run_slow_below_the_threshold_or_when_off(self):
         self.fake_clock(100)

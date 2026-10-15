@@ -4,6 +4,7 @@
 
 ### Added
 
+- **orch:** events next to the beacons (PLAN4 P12.2): `orch.run.warning`, `orch.run.waiting`, `orch.work.blocked`, `orch.agent.questioned`, `orch.review.added`, `orch.deviation.recorded`/`resolved`, `orch.provider.rate-limited`/`quota-exhausted`/`fallback` and `orch.input.rebuilt` (closed event-data/v1 schemas, valid and invalid fixtures, a sequence test on the characterization scenarios). They are emitted by the code of the beacon, subject `<run>/<item>`, `correlationid` the run id.
 - **orch:** agent events (PLAN4 P12.1). `orch.agent.started`, `orch.agent.finished` and `orch.agent.failed` (event-data/v1, closed schemas with valid and invalid fixtures) are journaled for every agent run of the conductor with `run_id`, `work_id`, `agent_run_id`, `role`, `route`, `prompt_sha256`, `config_digest`, `options_digest`, `tokens`, `duration_ms` and `error`; subject `<run>/<item>/<agent run id>`, `correlationid` the run id, `causationid` of the end events the `started` event. `orch.run.stage.finished` got the optional `work_id`, `item` and `config_digest`. `orch.events.emit` takes `correlationid` and returns the event id. No `gen_ai.*` in the core.
 
 ### Changed

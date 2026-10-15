@@ -132,7 +132,8 @@ def refresh_input(self, item: Item) -> None:
         return
     if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
         write_json(item.directory / "input.json", doc)
-        item.input_doc = doc
+        previous, item.input_doc = item.input_doc.get("digest"), doc
+        self._beacon_event("orch.input.rebuilt", item, {"previous_digest": previous, "digest": doc["digest"]})
         self.progress.emit("info", item=item.ref, reason_code="INPUT_REBUILT",
                            message=f"the plan changed during the piece: input {answer.get('input_id', '-')} is used from now on")
 

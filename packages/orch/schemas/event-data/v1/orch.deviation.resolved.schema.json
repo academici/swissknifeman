@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-deviation-resolved:v1",
+  "title": "orch.deviation.resolved",
+  "description": "A recorded deviation was closed (fixed by a correction round).",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "deviation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the deviation: <item>/dev-<n> of the piece."
+    },
+    "class": {
+      "type": "string",
+      "enum": [
+        "write_set",
+        "spec_mismatch",
+        "test_env",
+        "docs",
+        "dependency",
+        "environment",
+        "other"
+      ],
+      "description": "Deviation class."
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "follow_up",
+        "owner_decision"
+      ],
+      "description": "Deviation outcome."
+    },
+    "corrects": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the orch.deviation.recorded event this one closes."
+    }
+  },
+  "required": [
+    "run_id",
+    "work_id",
+    "deviation_id",
+    "corrects"
+  ],
+  "additionalProperties": false
+}

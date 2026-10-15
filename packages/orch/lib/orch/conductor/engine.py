@@ -32,7 +32,7 @@ from orch.conductor.domain import report as report_rules
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import continued, evidence_paths, findings_problems, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import roles, work_source
+from orch.conductor.infrastructure import beacon_events, roles, work_source
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
 from orch.conductor.infrastructure.files import (OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE, RunStore, read_json,
                                                  runs_root, safe, write_json)
@@ -166,6 +166,12 @@ class Conductor:
     _agent_start = roles.agent_start
     _agent_end = roles.agent_end
     _agent_event = roles.agent_event
+    _beacon_event = beacon_events.beacon_event
+    _deviation_data = staticmethod(execute.deviation_data)
+    _deviation_recorded = execute.deviation_recorded
+    _deviation_resolved = execute.deviation_resolved
+    _provider_limit = beacon_events.provider_limit
+    _route_fallback = beacon_events.route_fallback
     _event_route = staticmethod(roles.event_route)
     _role = roles.run_role
     _denied = staticmethod(roles.denied)

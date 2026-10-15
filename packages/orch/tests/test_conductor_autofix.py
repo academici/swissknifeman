@@ -50,6 +50,27 @@ class AutofixTests(ConductorCase):
                          ["executor.1", "executor.2", "checks.2"])  # the checks run on the fixed candidate
         self.assertTrue([line for line in self.lines(err) if line.get("reason_code") == "DEVIATION_AUTOFIX"])
 
+    def deviation_events(self) -> list:
+        from aicore.ext import events as journal
+        return [e for e in journal.read_events(self.project)[0] if e.type.startswith("orch.deviation.")]
+
+    def test_a_fixed_deviation_is_recorded_and_resolved_by_id(self):
+        self.script({"executor": [with_deviation(), fixed()], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        recorded, resolved = self.deviation_events()
+        self.assertEqual((recorded.type, resolved.type), ("orch.deviation.recorded", "orch.deviation.resolved"))
+        self.assertEqual(resolved.data["corrects"], recorded.id)
+        self.assertEqual(recorded.data["deviation_id"], resolved.data["deviation_id"])
+        self.assertEqual((recorded.data["class"], recorded.data["auto_fixable"]), ("other", True))
+
+    def test_an_unfixed_deviation_is_recorded_once_and_not_resolved(self):
+        self.script({"executor": [with_deviation(evidence=["README.md:3"])], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual([(e.type, e.data["outcome"]) for e in self.deviation_events()],
+                         [("orch.deviation.recorded", "follow_up")])
+
     def test_evidence_outside_the_write_set_gets_no_correction(self):
         self.script({"executor": [with_deviation(evidence=["README.md:3"])], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")

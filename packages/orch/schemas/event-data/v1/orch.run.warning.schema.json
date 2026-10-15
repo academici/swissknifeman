@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-run-warning:v1",
+  "title": "orch.run.warning",
+  "description": "A beacon that warns and stops nothing: the run or a round went past a threshold.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "RUN_SLOW",
+        "LIMIT_OVER"
+      ],
+      "description": "Beacon of the progress log."
+    },
+    "step": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Step that ran when the warning was raised."
+    }
+  },
+  "required": [
+    "run_id",
+    "reason_code"
+  ],
+  "additionalProperties": false
+}

@@ -70,4 +70,5 @@ def limit_over(self, item: Item, past: Optional[str], emit: bool) -> None:
     """The LIMIT_OVER beacon and plan note of a round that goes past its target."""
     if past and emit:
         self.progress.emit("info", item=item.ref, reason_code="LIMIT_OVER", message=past)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "LIMIT_OVER", "step": self._current_step})
         self._plan_note(item, past)

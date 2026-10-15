@@ -50,6 +50,9 @@ def dynamic_review(self, item: Item, report: dict) -> None:
     text = (f"risk score {found['score']} reached {found['threshold']} ({names}); the policy has no review, "
             "so a review and its triage were added")
     self.progress.emit("info", item=item.ref, reason_code="REVIEW_ADDED", message=text)
+    self._beacon_event("orch.review.added", item, {
+        "score": found["score"], "threshold": found["threshold"],
+        "features": [{"name": row["name"], "weight": row["weight"]} for row in found["features"]]})
     self._plan_note(item, text)
     found["announced"] = True  # a stop at the preflight above leaves it open: the resume announces it
     self._save()

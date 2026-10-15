@@ -13,7 +13,10 @@ from typing import Any, Mapping, Optional
 SOURCE = "orch"
 DATA_SCHEMA = "urn:swissknifeman:orch:event-data:{name}:v1"
 EVENT_TYPES = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused",
-               "orch.agent.started", "orch.agent.finished", "orch.agent.failed")
+               "orch.agent.started", "orch.agent.finished", "orch.agent.failed", "orch.agent.questioned",
+               "orch.run.warning", "orch.run.waiting", "orch.work.blocked", "orch.review.added",
+               "orch.deviation.recorded", "orch.deviation.resolved", "orch.provider.rate-limited",
+               "orch.provider.quota-exhausted", "orch.provider.fallback", "orch.input.rebuilt")
 
 
 def data_schema(event_type: str) -> str:

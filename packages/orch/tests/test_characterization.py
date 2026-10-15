@@ -214,6 +214,68 @@ class ScenarioTests(CharacterizationCase):
         self.snapshot("advisor", err)
 
 
+class EventSequenceTests(CharacterizationCase):
+    """The ``orch.*`` events that stand next to a beacon (knowledge/p12-observability#types), in the order of a scenario.
+    The run and agent events are left out: they are the subject of the contract tests of ``test_events``."""
+
+    SKIPPED = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused")
+
+    def sequence(self) -> list:
+        from aicore.ext import events as journal
+        stored, problems = journal.read_events(self.project)
+        self.assertEqual(problems, [])
+        return [event.type for event in stored
+                if event.type not in self.SKIPPED and not event.type.startswith("orch.agent.") or
+                event.type == "orch.agent.questioned"]
+
+    def test_green_has_no_beacon_event(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.sequence(), [])
+
+    def test_quota_wait(self):
+        self.script({"executor": [tc.quota_failure(3), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.sequence(), ["orch.provider.quota-exhausted"])
+
+    def test_route_fallback(self):
+        self.options(fallback_routes=[{"role": "executor", "provider": "codex", "model_class": "implementation"}])
+        self.script({"executor": [tc.quota_failure(3600), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.sequence(), ["orch.provider.fallback"])
+
+    def test_input_rebuilt(self):
+        state = self.source()
+        state["items"]["W1"].update(status="in_progress", goal="Create the amended output of W1.")
+        amend = {"result": report("W1"), "write": {str(self.state_file): json.dumps(state)}}
+        self.script({"executor": [amend, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.sequence(), ["orch.input.rebuilt"])
+
+    def test_question_blocks_the_piece(self):
+        self.script({"executor": [asking(dict(ASK))], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(self.sequence(), ["orch.agent.questioned", "orch.run.waiting", "orch.work.blocked"])
+
+    def test_dynamic_review(self):
+        self.write_config(extra="[orch.conductor.risk.weights]\nschema = 70")
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "out/schemas/*.json"]}}, )
+        doc = self.source()
+        doc["items"]["W1"]["scenario"] = "scout-solo"
+        self.state_file.write_text(json.dumps(doc), encoding="utf-8")
+        schema = {"write": {"out/W1.txt": "ok\n", "out/schemas/W1.json": "{}\n"},
+                  "result": report("W1", changed_paths=["out/W1.txt", "out/schemas/W1.json"])}
+        self.script({"executor": [schema], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.sequence(), ["orch.review.added"])
+
+
 class CodeScenarioTests(CharacterizationCase):
     """Stops and beacons that no other test of the conductor reaches by name; each runs on the fake roles."""
 

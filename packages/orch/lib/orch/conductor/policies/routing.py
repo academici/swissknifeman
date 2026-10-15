@@ -111,8 +111,11 @@ def selected(self, item: Item, role: str, persist: bool) -> dict:
         if gate:
             self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="CAPACITY_GATED",
                                message=f"{role}: {until}")
+            self._provider_limit(item, None, role, route["provider"], gate["class"], "CAPACITY_GATED",
+                                 until=gate["until"])
         self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="ROUTE_FALLBACK",
                            message=f"{role}: {self.label(route)} -> {self.label(found)} ({reason})")
+        self._route_fallback(item, None, role, route, found, [reason])
     return found
 
 

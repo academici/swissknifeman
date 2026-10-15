@@ -2,6 +2,8 @@
 commit through the work source."""
 from __future__ import annotations
 
+import re
+
 from typing import Optional
 
 from orch.conductor import questions as questions_mod
@@ -38,6 +40,14 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         report = dict(report, open_issues=list(report.get("open_issues", [])) + assumed)
     status = report["status"]
     self._write_artifact(item, "stage-report.json", report)
+    reported = {entry["issue"]["text"] for entry in item.state.get("autofixed", [])}
+    for issue in report.get("open_issues", []):  # the fixed ones were recorded when their correction began
+        if issue["kind"] == "deviation" and issue["text"] not in reported:
+            self._deviation_recorded(item, issue)
+    if status == "blocked":
+        codes = [issue["text"].split(":", 1)[0] for issue in report.get("open_issues", [])
+                 if issue["kind"] == "escalation" and re.match(r"^[A-Z][A-Z0-9_]*:", issue["text"])]
+        self._beacon_event("orch.work.blocked", item, {"code": codes[0] if codes else "BLOCKED"})
     body = {key: value for key, value in report.items() if key not in ("status", "questions", "review_recommendation")}
     if status != "blocked":
         body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]

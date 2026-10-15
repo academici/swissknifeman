@@ -41,6 +41,8 @@ def start_route(self, item: Item, key: str, role: str, route: dict, cancel) -> d
         self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
                            reason_code="ROUTE_FALLBACK",
                            message=f"{role}: {self.label(route)} -> {self.label(found)} (CAPACITY_GATED)")
+        self._provider_limit(item, key, role, route["provider"], gate["class"], "CAPACITY_GATED", until=gate["until"])
+        self._route_fallback(item, key, role, route, found, ["CAPACITY_GATED"])
         return found
     left = max(0, calendar.timegm(time.strptime(gate["until"], "%Y-%m-%dT%H:%M:%SZ")) - clock.wall())
     if left <= item.options["limits"].get("provider_wait_max_s", 900):
@@ -105,6 +107,7 @@ def provider_failure(self, item: Item, key: str, role: str, route: dict, run, at
                                reason_code="ROUTE_FALLBACK",
                                message=f"{role}: {label} -> {self.label(found)} ({error['class']}; "
                                        f"{', '.join(decision.reason_codes)})")
+            self._route_fallback(item, key, role, route, found, [error["class"], *decision.reason_codes])
             return found, first_prompt
     raise Stop(*self._provider_stop(role, route, run, error, decision, refused))
 
@@ -144,6 +147,8 @@ def wait(self, item: Item, key: str, role: str, error: dict, seconds: int, cance
     reset = clock.utc_stamp(clock.wall() + seconds)
     self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="PROVIDER_WAIT",
                        message=f"{role}: {error['class']}; waiting {seconds} s, until {reset}")
+    self._provider_limit(item, key, role, (item.routes.get(role) or {}).get("provider"), error["class"],
+                         "PROVIDER_WAIT", until=reset, wait_s=int(seconds))
     self._pause(seconds, cancel)
 
 

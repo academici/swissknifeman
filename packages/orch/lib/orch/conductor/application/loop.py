@@ -42,6 +42,7 @@ def run_clock(self, item: Item, stop: bool = True) -> None:
         text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
                 + (f", {max(asked - closed, 0)} left" if asked else "") + f"; now {item.ref} {self._current_step or '-'}")
         self.progress.emit("info", item=item.ref, reason_code="RUN_SLOW", message=text)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "RUN_SLOW", "step": self._current_step})
         self._plan_note(item, text)
     if stop and cap and active >= cap:
         raise Stop("RUN_TIMEOUT", f"the run was active {human_duration(active)}, past limits.run_timeout_s {cap}; "

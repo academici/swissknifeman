@@ -218,6 +218,66 @@ class TranscriptGuardTests(ConductorCase):
             self.assertEqual(eng._extra_write_dirs(item, "executor", argv), argv)
 
 
+class ReadyBatchTests(ConductorCase):
+    """`--ready`: the lane the source names is a batch like `--items` (all pieces in progress, one session)."""
+
+    def at_the_first_piece(self, *extra) -> dict:
+        self.set_items({"W1": {}, "W2": {}, "W3": {}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2"), executor_ok("W3")], "reviewer": [GREEN] * 3})
+        seen, original = {}, engine.Conductor._piece
+
+        def spy(conductor, answer):
+            if not seen:
+                seen.update({ref: doc["status"] for ref, doc in self.source()["items"].items()})
+            return original(conductor, answer)
+
+        with mock.patch.object(engine.Conductor, "_piece", spy):
+            code, _, err = self.conduct("run", "--plan", "T", "--ready", "--json-lines", *extra)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        return seen
+
+    def test_the_lane_of_the_source_is_in_progress_at_once(self):
+        self.assertEqual(self.at_the_first_piece(), {"W1": "in_progress", "W2": "in_progress", "W3": "in_progress"})
+        self.assertEqual(self.calls("executor"), 3)
+        self.assertIn("`W3`", self.prompt("executor", 1))
+
+    def test_no_batch_takes_one_piece_at_a_time(self):
+        self.assertEqual(self.at_the_first_piece("--no-batch"), {"W1": "in_progress", "W2": "todo", "W3": "todo"})
+
+    def test_max_items_cuts_the_lane(self):
+        seen = self.at_the_first_piece("--max-items", "2")
+        self.assertEqual(seen, {"W1": "in_progress", "W2": "in_progress", "W3": "todo"})
+
+
+class StopKeepsTheBatchTests(ConductorCase):
+    """A stop is resumable: the pieces of a batch stay in progress together (none is given back on its own), and a piece
+    whose executor round began counts as worked on, however the round ended."""
+
+    def stopped_first_piece(self, *extra) -> dict:
+        self.set_items({"W1": {}, "W2": {}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN] * 2})
+        original = engine.Conductor._conduct
+
+        def stop_first(conductor, item):
+            if item.ref == "W1":
+                raise engine.Stop("PREPARE_REFUSED", "refused for the test")
+            return original(conductor, item)
+
+        with mock.patch.object(engine.Conductor, "_conduct", stop_first):
+            self.run_items("W1", "W2", extra=extra)
+        return {ref: doc["status"] for ref, doc in self.source()["items"].items()}
+
+    def test_a_batch_keeps_every_piece_in_progress_when_one_stops_before_work(self):
+        self.assertEqual(self.stopped_first_piece(), {"W1": "in_progress", "W2": "in_progress"})
+
+    def test_without_a_batch_the_stopped_piece_is_given_back_as_before(self):
+        self.assertEqual(self.stopped_first_piece("--no-batch"), {"W1": "todo", "W2": "todo"})
+
+    def test_a_started_executor_round_counts_as_work(self):
+        self.assertTrue(engine.Conductor._work_began({"executor_started": True, "steps": {}}))
+        self.assertFalse(engine.Conductor._work_began({"steps": {"scout": {}}}))
+
+
 class FenceTests(ConductorCase):
     def test_the_project_fence_is_the_default_and_the_executor_is_told_it_may_report_instead_of_block(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})

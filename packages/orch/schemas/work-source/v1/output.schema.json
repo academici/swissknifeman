@@ -36,6 +36,11 @@
         "status": {"description": "Outcome of the claim.", "type": "string", "enum": ["claimed", "none", "blocked"]},
         "ref": {"description": "Reference of the claimed or refused piece of work.", "$ref": "#/$defs/text"},
         "title": {"description": "Title of the piece of work.", "$ref": "#/$defs/text"},
+        "lane": {
+          "description": "When the source picked the piece itself: every piece of the batch its lane names, in order (the claimed one first). Optional.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
         "scenario": {
           "description": "Run-policy scenario of the work.",
           "type": "string",

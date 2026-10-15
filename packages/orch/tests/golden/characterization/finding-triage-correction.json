@@ -250,6 +250,7 @@
      1
     ],
     "corrections_used": 1,
+    "executor_started": true,
     "expected": null,
     "findings_at": {
      "1": 1

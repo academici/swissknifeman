@@ -154,7 +154,7 @@ def _filesystem(source: Source, text: str, *, cwd) -> dict:
             for name in sorted(names):
                 path = Path(folder) / name
                 try:
-                    if path.is_symlink() or path.stat().st_size > MAX_FILE_BYTES:
+                    if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_FILE_BYTES:  # a fifo would block
                         continue
                     lines = path.read_text(encoding="utf-8").splitlines()
                 except (OSError, UnicodeDecodeError):

@@ -43,7 +43,8 @@ def run_orch(self, *args: str) -> tuple:
 
 def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
     actor = self._claim_actor()
-    submission = f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
+    kept = (self.state["claims"].get(key) or {}).get("submission")
+    submission = kept or f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
     file_source = self.run_doc.get("source") or {}
     where = ["--input", file_source["path"]] + (["--commit"] if file_source.get("commit") else []) \
         if file_source.get("kind") == "file" else ["--plan", self.run_doc["plan"]]

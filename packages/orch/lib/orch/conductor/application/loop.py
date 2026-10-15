@@ -12,7 +12,7 @@ from orch.conductor import observer, options as opts, prompts, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, safe, write_json
+from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, RUN_FILE, safe, write_json
 from orch.conductor.progress import human_duration
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
@@ -83,7 +83,11 @@ def pieces(self) -> None:
     keys = [(f"item-{safe(ref)}", [ref]) for ref in doc["items"]] if doc["items"] else None
     count = index = 0
     claimed, first_adopted = {}, []
-    if keys is not None and doc.get("grouped") is not False and len(keys) > 1:
+    if keys is None and doc.get("grouped") is not False:  # the batch a source names is a batch like --items
+        expanded = self._expand_ready()
+        if expanded:
+            keys, claimed, first_adopted = expanded
+    elif keys is not None and doc.get("grouped") is not False and len(keys) > 1:
         claimed, first_adopted = self._claim_all(keys)
     while True:
         if keys is not None:
@@ -119,6 +123,37 @@ def pieces(self) -> None:
                                      or self.state["items"][answer["ref"]].get("partial")):
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
             raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
+
+
+def expand_ready(self) -> Optional[tuple]:
+    """``--ready`` with a batch: the first claim lets the source pick a piece and name its lane (the pieces that go
+    together); the run then goes on as ``--items`` of that lane, so every piece is in progress from the start.
+    ``None`` when the source names no lane of several pieces (the run claims one piece at a time as before)."""
+    doc = self.run_doc
+    if self.state["claims"].get("next-1") is None:
+        adopted = self._dirty_paths() if doc.get("adopt") else []
+        if not adopted:
+            self._require_clean_tree()
+    else:
+        adopted = []
+    answer = self._claim("next-1", [], batch=True)
+    lane = list(answer.get("lane") or []) if answer else []
+    if len(lane) < 2:
+        return None
+    if doc.get("max_items"):
+        lane = lane[:doc["max_items"]]
+    if len(lane) < 2:
+        return None
+    first = f"item-{safe(lane[0])}"
+    self.state["claims"][first] = self.state["claims"].pop("next-1")
+    doc["items"] = lane
+    write_json(self.directory / RUN_FILE, doc)
+    self._save()
+    keys = [(f"item-{safe(ref)}", [ref]) for ref in lane]
+    claimed = {first: answer}
+    rest, _ = self._claim_all(keys[1:])
+    claimed.update(rest)
+    return keys, claimed, adopted
 
 
 def claim_all(self, keys: list) -> tuple:
@@ -211,7 +246,7 @@ def piece(self, answer: dict) -> str:
         state["outcome"] = "stopped"
         state["stop"] = {"code": stop.code, "message": stop.message}
         self._save()
-        if not self._work_began(state):  # a claim nobody worked on must not outlive the stopped run
+        if not self._work_began(state) and not self._batch_held():  # a claim nobody worked on must not outlive the stopped run
             self._release_claim(ref, state, f"stopped before any work began: {stop.code}")
         self.progress.emit("item.end", item=ref, outcome="stopped", reason_code=stop.code,
                            duration_s=round(time.monotonic() - begin, 1), message=stop.message)

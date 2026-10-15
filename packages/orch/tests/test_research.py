@@ -184,6 +184,17 @@ class CommandAndFilesystemTests(ResearchCase):
             absolute = sources.Source(id="fs", kind="filesystem", roots=(str(outside),))  # a machine-configured root
             self.assertIn("secret.txt", research.query(absolute, "gateway timeout", cwd=project)["text"])
 
+    def test_a_fifo_under_a_root_is_skipped_instead_of_blocking_the_read(self):
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            os.mkfifo(root / "pipe")
+            (root / "note.txt").write_text("gateway timeout is 30s\n", encoding="utf-8")
+            source = sources.Source(id="fs", kind="filesystem", roots=(str(root),))
+            answer = research.query(source, "gateway timeout", cwd=root)
+            self.assertIn("note.txt", answer["text"])
+
     def test_filesystem_without_a_match_or_roots(self):
         source = sources.Source(id="fs", kind="filesystem", roots=(str(FIXTURES / "tree"),))
         self.assertEqual(([], ""), (lambda a: (a["sources"], a["text"]))(research.query(source, "zzz-none")))

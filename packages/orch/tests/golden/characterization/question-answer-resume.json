@@ -295,6 +295,7 @@
     "check_fixes_used": 0,
     "corrections_at": [],
     "corrections_used": 0,
+    "executor_started": true,
     "expected": null,
     "orch_run": "run-<digest>",
     "outcome": "done",

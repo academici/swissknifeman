@@ -44,6 +44,7 @@ def claim(state, given):
     if ref is None:
         return {"op": "claim", "status": "none", "message": "no item is ready"}
     item = state["items"][ref]
+    lane = [name for name in state["order"] if state["items"][name]["status"] == "todo"] if not given.get("items") else []
     if item.get("holder") not in (None, run_id):
         return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "ITEM_OWNED", "message": "held"}
     unmet = [dep for dep in item.get("depends_on", [])
@@ -61,6 +62,8 @@ def claim(state, given):
               "attempt_id": f"att-{run_id}-{ref}", "session": run_id}
     if item.get("options"):
         answer["options"] = item["options"]
+    if len(lane) > 1 and lane[0] == ref and state.get("lanes", True):
+        answer["lane"] = lane
     return answer
 
 

@@ -96,7 +96,13 @@ def retry(self, ref: str) -> None:
 def work_began(state: dict) -> bool:
     """An executor round ran: the piece has this run's work in the tree and is no longer free to give back. Changes
     adopted from an earlier attempt do not count: they stay in the tree, and a later ``run --adopt`` takes them again."""
-    return any(key.startswith("executor.") for key in state.get("steps", {}))
+    return bool(state.get("executor_started")) or any(key.startswith("executor.") for key in state.get("steps", {}))
+
+
+def batch_held(self) -> bool:
+    """The pieces of this run are one batch (several pieces, ``--batch`` unless ``--no-batch``): they are in progress
+    together, so a stop gives none of them back on its own (a stop is resumable; ``release`` is the hand that frees)."""
+    return self.run_doc.get("grouped") is not False and len(self.run_doc.get("items") or []) > 1
 
 
 def release(self, run_id: str, ref: str, reason: str) -> int:

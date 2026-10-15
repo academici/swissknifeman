@@ -179,6 +179,7 @@
     "corrections_at": [],
     "corrections_used": 0,
     "dynamic_review": true,
+    "executor_started": true,
     "expected": null,
     "orch_run": "run-<digest>",
     "outcome": "done",

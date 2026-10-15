@@ -62,6 +62,9 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
     ``agents/`` and its result however the role ends, and ``meta`` names it (``agent``). The prompt is the ``blocks``
     rendered; ``prompts/<key>.manifest.json`` (``prompt-manifest/v1``) says what each block is and where it came from."""
     prompt = prompts.render(blocks)
+    if role == "executor" and not item.state.get("executor_started"):
+        item.state["executor_started"] = True  # from here on the piece has work in the tree, whatever the round ends with
+        self._save()
     prompt_file = item.directory / "prompts" / f"{key}.md"
     prompt_file.parent.mkdir(parents=True, exist_ok=True)
     limits = {name: int(item.options.get("limits", {}).get(option, opts.DEFAULT_LIMITS[option]))

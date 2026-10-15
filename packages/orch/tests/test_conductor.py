@@ -212,7 +212,7 @@ class HappyPathTests(ConductorCase):
     def test_batch_takes_the_ready_pieces_one_by_one(self):
         self.set_items({"W1": {}, "W2": {}})
         self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN]})
-        code, _, err = self.conduct("run", "--plan", "T", "--batch", "--quiet")
+        code, _, err = self.conduct("run", "--plan", "T", "--ready", "--quiet")
         self.assertEqual(code, 0, err)
         self.assertEqual([commit["ref"] for commit in self.source()["commits"]], ["W1", "W2"])
 
@@ -1256,7 +1256,7 @@ class SandboxTests(ConductorCase):
 
     def preview(self, probe: dict, **instructions) -> dict:
         with mock.patch("orch.sandbox.probe", return_value=probe):
-            code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full",
+            code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",
                                           "--options", self.options(**instructions))
         self.assertEqual(code, 0, err)
         return json.loads(out)
@@ -1357,7 +1357,7 @@ class SandboxTests(ConductorCase):
 
         def preview(probe):
             with mock.patch("orch.sandbox.probe", return_value=probe):
-                code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full",
+                code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",
                                               "--options", options)
             self.assertEqual(code, 0, err)
             return json.loads(out)
@@ -1631,7 +1631,7 @@ class ProviderErrorTests(ConductorCase):
         options = self.project.parent / "gated.json"
         options.write_text(json.dumps({"fallback_routes": [self.FALLBACK, dict(self.FALLBACK, role="triager")]}),
                            encoding="utf-8")
-        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full", "--options", options)
+        code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full", "--options", options)
         self.assertEqual(code, 0, err)
         preview = json.loads(out)
         self.assertEqual(preview["routes"]["executor"]["provider"], "codex")
@@ -1666,7 +1666,7 @@ class ReviewerFallbackTests(ConductorCase):
         return mock.patch.object(engine.process, "available", lambda argv: "grok" not in argv)
 
     def dry_run(self, layer=None) -> dict:
-        args = ["run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full"]
+        args = ["run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full"]
         if layer is not None:
             options = self.project.parent / "layer.json"
             options.write_text(json.dumps(layer), encoding="utf-8")
@@ -1784,7 +1784,7 @@ class ProviderAvailabilityTests(ConductorCase):
 
     def test_the_project_cannot_enable_what_the_machine_disabled_and_selection_does_not_route(self):
         self.disable(file=self.project / ".swissknifeman" / "config.toml")
-        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")
+        code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
         self.assertEqual(code, 1, out)
         self.assertIn("CONFIG_LAYER_FORBIDDEN", err)
         (self.project / ".swissknifeman" / "config.toml").write_text(
@@ -2030,7 +2030,7 @@ class DigestTests(ConductorCase):
 
 class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_writes_nothing_and_shows_routes(self):
-        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")
+        code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
         self.assertEqual(code, 0, err)
         preview = json.loads(out)
         self.assertEqual(preview["routes"]["reviewer"]["provider"], "grok")
@@ -2041,7 +2041,7 @@ class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_marks_an_acp_route_unavailable_with_the_reason(self):
         options = self.project.parent / "grok-executor.json"
         options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "grok"}]}), encoding="utf-8")
-        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full",
+        code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",
                                       "--options", options)
         self.assertEqual(code, 0, err)
         preview = json.loads(out)
@@ -2055,7 +2055,7 @@ class PreviewAndStatusTests(ConductorCase):
         missing = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         missing["reviewer"] = [str(self.project / "no-such-grok")]
         self.write_config(missing)
-        code, out, err = self.conduct("run", "--plan", "T", "--batch", "--dry-run", "--scenario", "full")
+        code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
         self.assertEqual(code, 0, err)
         preview = json.loads(out)
         self.assertIs(preview["available"]["reviewer"], False)

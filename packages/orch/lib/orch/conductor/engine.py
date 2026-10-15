@@ -117,6 +117,7 @@ class Conductor:
     resume = run_service.resume
     _retry = run_service.retry
     _work_began = staticmethod(run_service.work_began)
+    _batch_held = run_service.batch_held
     release = run_service.release
     settle = run_service.settle
 
@@ -125,6 +126,7 @@ class Conductor:
     _loop = loop.loop
     _pieces = loop.pieces
     _claim_all = loop.claim_all
+    _expand_ready = loop.expand_ready
     _on_blocked = loop.on_blocked
     _dirty_paths = loop.dirty_paths
     _require_clean_tree = loop.require_clean_tree

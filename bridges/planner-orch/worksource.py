@@ -132,13 +132,14 @@ def _held_by(plan: str, run_id: str, plans_root) -> str | None:
 
 
 def _candidate(plan: str, run_id: str, plans_root) -> tuple:
-    """``(ref, None)`` of the item to claim, or ``(None, message)`` when nothing is ready."""
+    """``(ref, None)`` of the item to claim, or ``(None, message)`` when nothing is ready; ``_LANE`` keeps the whole lane."""
     held = _held_by(plan, run_id, plans_root)  # a repeated claim of the same run answers for its own item
     if held:
         return held, None
     ready = plan_json(["next", plan, "--parallel", "1", "--json"], plans_root)
     for lane in ready.get("lanes", []):
         if lane.get("kind") == "run-items" and lane.get("items"):
+            _LANE[:] = list(lane["items"])
             return lane["items"][0], None
     upcoming = ready.get("next") or {}
     return None, upcoming.get("reason") or upcoming.get("exact") or "no item is ready"
@@ -217,6 +218,7 @@ def orchestration_of(context: dict, ref: str) -> tuple:
 def op_claim(fields: dict) -> dict:
     plan, plans_root, run_id = fields["plan"], fields.get("plans_root"), fields["run_id"]
     items = fields.get("items") or []
+    _LANE.clear()
     ref, message = (items[0], None) if items else _candidate(plan, run_id, plans_root)
     if ref is None:
         return {"op": "claim", "status": "none", "message": message}
@@ -228,6 +230,8 @@ def op_claim(fields: dict) -> dict:
                                                 f"({_PLANNER_ATTEMPT.pattern}); use a shorter run id")
         doc = item_doc(plan, ref, plans_root)
         answer["title"] = doc["title"]
+        if len(_LANE) > 1 and _LANE[0] == ref:
+            answer["lane"] = list(_LANE)
         if isinstance(doc.get("route"), dict):
             answer["route"] = {key: doc["route"][key] for key in ("class", "effort") if key in doc["route"]}
         context = plan_json(["context", plan, ref, "--stdout"], plans_root)
@@ -363,6 +367,7 @@ def op_register(fields: dict) -> dict:
 # ------------------------------------------------------------------------------------------------ commit
 
 
+_LANE: list = []  # the lane of the last ``_candidate`` (a batch the planner names); one call per process
 _FOREIGN = re.compile(r"OUTSIDE_SCOPE: foreign dirty paths: (.*?); use --leave-outside")
 
 

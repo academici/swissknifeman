@@ -51,6 +51,12 @@ class AffectedTestsTests(unittest.TestCase):
         self.assertNotIn("packages/maind", units)  # a tool joins only for its own changes, or with --with-tools
         self.assertIn("packages/maind", plan("packages/aicore/x.py", extra=("--with-tools",))["units"])
 
+    def test_a_change_inside_a_unit_brings_the_golden_check_once(self):
+        argv = [" ".join(item["argv"]) for item in plan("packages/orch/lib/orch/cli.py")["commands"]]
+        self.assertEqual(argv.count("python3 scripts/golden.py check"), 1)
+        both = [" ".join(item["argv"]) for item in plan("packages/orch/lib/orch/cli.py", "bootstrap/skills/x/SKILL.md")["commands"]]
+        self.assertEqual(both.count("python3 scripts/golden.py check"), 1)
+
     def test_a_hub_path_runs_only_the_cheap_hub_checks(self):
         result = plan("docs/develop.md")
         self.assertEqual(result["units"], [])

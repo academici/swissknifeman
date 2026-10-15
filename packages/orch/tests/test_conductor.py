@@ -21,6 +21,8 @@ import unittest
 from unittest import mock
 
 from orch.conductor import cli, engine, gates, options as opts, progress
+from orch.conductor.infrastructure import clock
+from orch.conductor.policies import sandbox as sandbox_policy
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "conductor"
@@ -884,7 +886,7 @@ class RunClockTests(ConductorCase):
             now[0] += step
             return now[0]
 
-        patcher = mock.patch.object(engine, "_mono", tick)
+        patcher = mock.patch.object(clock, "mono", tick)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -1338,12 +1340,12 @@ class SandboxTests(ConductorCase):
 
     def test_the_manifest_of_a_role_is_found_by_its_conductor_name(self):
         self.assertEqual(engine.Conductor.declared_network("context-scout"), "none")
-        with mock.patch.object(engine, "ORCH_ROOT", self.project):  # no roles/ folder: the fallback
+        with mock.patch.object(sandbox_policy, "ORCH_ROOT", self.project):  # no roles/ folder: the fallback
             self.assertEqual(engine.Conductor.declared_network("executor"), "none")
         manifest = self.project / "roles"
         manifest.mkdir()
         (manifest / "context-scout.json").write_text(json.dumps({"tools": {"network": "allowed"}}), encoding="utf-8")
-        with mock.patch.object(engine, "ORCH_ROOT", self.project):
+        with mock.patch.object(sandbox_policy, "ORCH_ROOT", self.project):
             self.assertEqual(engine.Conductor.declared_network("context-scout"), "allowed")
 
     def test_a_codex_route_is_unavailable_without_the_sandbox(self):
@@ -1396,7 +1398,7 @@ class ProviderErrorTests(ConductorCase):
         super().setUp()
         self.slept = []
         for name, value in (("sleep", self.slept.append), ("unit_random", lambda: 0.5)):
-            patcher = mock.patch.object(engine, name, value)
+            patcher = mock.patch.object(clock, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
 

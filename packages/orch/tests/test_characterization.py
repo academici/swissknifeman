@@ -29,6 +29,7 @@ if __name__ == "__main__":  # run as a script: the package root is the parent of
 
 from orch import adhoc
 from orch.conductor import engine
+from orch.conductor.infrastructure import clock
 from tests import test_conductor as tc
 from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
 from tests.test_conductor_advisor import ENABLED, advice
@@ -71,7 +72,7 @@ class CharacterizationCase(ConductorCase):
         super().setUp()
         self.slept = []
         for name, value in (("sleep", self.slept.append), ("unit_random", lambda: 0.5)):
-            patcher = mock.patch.object(engine, name, value)
+            patcher = mock.patch.object(clock, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
         self.captured = {}

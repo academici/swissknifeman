@@ -19,27 +19,17 @@ from aicore.content.budget import estimate_tokens
 from aicore.util.digest import sha256_hex
 
 from orch import render as role_render
+from orch.conductor.domain.report import json_block, write_set_block  # noqa: F401 — the answer parsers, kept here
+from orch.conductor.policies.budget import BUDGET_CLASSES, BUDGET_LIMITS, budget_class, budgets, over_budget  # noqa: F401
+from orch.conductor.policies.skills import EXCLUSIVE_GROUP_LIMITS, EXCLUSIVE_GROUP_MAX, INTERACTIVE_TOOL, check_skills  # noqa: F401
 
 KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "context_map", "verification", "run_rules",
          "correction", "answers", "progress", "result_contract", "expected_paths", "candidate", "review_scope", "diff",
          "findings", "instruction", "research")
 CONDUCTOR = "conductor"
 
-# Budget classes of the blocks (knowledge/p9-prompt#budgets). Only the measure and a beacon: nothing is cut. The kinds the
-# design does not list belong to the frame or the task material of their role (progress, candidate, review_scope, diff,
-# findings, instruction), so they count as core; ``retrieval`` is what the sources answered (``research``).
-BUDGET_CLASSES = {
-    "core": ("role_text", "input", "verification", "result_contract", "answers", "correction", "progress", "candidate",
-             "review_scope", "diff", "findings", "instruction"),
-    "supporting": ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules"),
-    "retrieval": ("research",),
-}
-BUDGET_LIMITS = {"core": "prompt_core_tokens", "supporting": "prompt_supporting_tokens",
-                 "retrieval": "prompt_retrieval_tokens"}  # the ``limits`` keys of the run options
-
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
                 "triager": "triage-result", "researcher": "research-result", "advisor": "advice"}
-_FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 
 _STAGE_REPORT = """\
 End your answer with exactly one fenced block tagged `stage-report` holding one JSON object and nothing else:
@@ -171,30 +161,6 @@ def _then(blocks: list, block: Block) -> None:
     blocks.append(block)
 
 
-def budget_class(kind: str) -> str:
-    """``core``, ``supporting`` or ``retrieval``: the budget class of a block kind (a kind nobody listed is supporting)."""
-    return next((name for name, kinds in BUDGET_CLASSES.items() if kind in kinds), "supporting")
-
-
-def budgets(blocks, limits: dict) -> dict:
-    """``{class: {tokens, limit}}``: the estimated tokens of the blocks of each class against ``limits[class]``."""
-    tokens = {name: 0 for name in BUDGET_CLASSES}
-    for block in blocks:
-        tokens[budget_class(block.kind)] += estimate_tokens(block.text)
-    return {name: {"tokens": tokens[name], "limit": int(limits.get(name) or 0)} for name in BUDGET_CLASSES}
-
-
-def over_budget(blocks, limits: dict) -> list:
-    """``[(class, block, class_tokens, limit)]`` for each class above its limit (0 is no limit), with the heaviest block of
-    the class, the first of equals. A report only: the blocks are not touched."""
-    found = []
-    for name, row in budgets(blocks, limits).items():
-        if row["limit"] and row["tokens"] > row["limit"]:
-            members = [block for block in blocks if budget_class(block.kind) == name]
-            found.append((name, max(members, key=lambda block: estimate_tokens(block.text)), row["tokens"], row["limit"]))
-    return found
-
-
 def manifest(blocks, *, step: str, role: str, route: dict, excluded=(), limits=None) -> dict:
     """The ``prompt-manifest/v1`` document of a prompt: its blocks (kind, origin, digest, estimated tokens), what was left
     out and why, the digest and size of the whole prompt, and, when ``limits`` (``{class: tokens}``) is given, the tokens
@@ -234,103 +200,6 @@ def explain_table(doc: dict) -> str:
     if doc.get("excluded"):
         lines += ["", "excluded:"] + [f"- {row['id']}: {row['reason']}" for row in doc["excluded"]]
     return "\n".join(lines)
-
-
-INTERACTIVE_TOOL = "AskUserQuestion"  # a skill that needs it waits for a person; every conductor role runs headless
-EXCLUSIVE_GROUP_MAX = 1
-EXCLUSIVE_GROUP_LIMITS = {"php-architecture": 2}  # every other exclusive group allows one
-
-
-def _is_role_contract(target: str) -> bool:
-    """Whether a ``selection.replaced_by`` points at a role contract or a schema (a script or a hook does not replace the
-    text a role reads)."""
-    parts = re.split(r"[\\/]", target)
-    return "roles" in parts[:-1] or "schemas" in parts[:-1] or target.endswith(".schema.json")
-
-
-def _conflicts_with(skill: dict, other: dict) -> bool:
-    """Whether ``skill`` lists ``other`` in its ``conflicts``: by id, by name, or, for a skill of the project that has no
-    bucket in its id, by the folder of a ``<bucket>/<folder>`` entry."""
-    return any(target in (other["id"], other["name"]) or ("/" not in other["id"] and target.rsplit("/", 1)[-1] == other["name"])
-               for target in skill["selection"].get("conflicts") or [])
-
-
-def check_skills(skills: list, *, tools: Optional[set], budget: int = 0) -> tuple:
-    """``(kept, excluded, conflict)`` of the skills of a role, from what they declare and nothing in their text.
-
-    ``skills`` are ``{name, id, selection, tokens}`` in the order of the role's list (``selection`` is the content of
-    ``selection.json`` or ``{}``; ``tokens`` is the size of the text that enters the prompt, or None when none does).
-    ``tools`` are the tools of the route (None when it names none, so ``requires_tools`` is not judged). A skill is
-    left out as ``duplicated_by_role_contract``, ``interactive_in_headless``, ``tool_missing``, ``over_budget`` (the text
-    is above its ``max_tokens`` or above ``budget`` when that is not 0; never cut), ``persona_duplicate`` (a second
-    ``persona``) or ``exclusive_group`` (beyond the limit of its group). ``conflict`` is the first pair of kept skills
-    one of which lists the other in ``conflicts``, else None. ``excluded`` rows are ``{id, reason, detail}``."""
-    kept, excluded, groups = [], [], {}
-
-    def drop(skill, reason, detail=""):
-        excluded.append({"id": skill["id"], "reason": reason, "detail": detail})
-
-    for skill in skills:
-        meta = skill["selection"]
-        required = list(meta.get("requires_tools") or [])
-        missing = sorted(set(required) - tools) if tools is not None else []
-        tokens = skill.get("tokens")
-        group = meta.get("exclusive_group")
-        if meta.get("replaced_by") and _is_role_contract(meta["replaced_by"]):
-            drop(skill, "duplicated_by_role_contract", meta["replaced_by"])
-        elif INTERACTIVE_TOOL in required:
-            drop(skill, "interactive_in_headless", INTERACTIVE_TOOL)
-        elif missing:
-            drop(skill, "tool_missing", ", ".join(missing))
-        elif tokens is not None and meta.get("max_tokens") and tokens > meta["max_tokens"]:
-            drop(skill, "over_budget", f"{tokens} tokens, max_tokens {meta['max_tokens']}")
-        elif tokens is not None and budget and tokens > budget:
-            drop(skill, "over_budget", f"{tokens} tokens, limits.skill_tokens_max {budget}")
-        elif meta.get("kind") == "persona" and any(row["selection"].get("kind") == "persona" for row in kept):
-            drop(skill, "persona_duplicate", "persona")
-        elif group and groups.get(group, 0) >= EXCLUSIVE_GROUP_LIMITS.get(group, EXCLUSIVE_GROUP_MAX):
-            drop(skill, "exclusive_group", group)
-        else:
-            kept.append(skill)
-            if group:
-                groups[group] = groups.get(group, 0) + 1
-    conflict = next(((first, second) for number, first in enumerate(kept) for second in kept[number + 1:]
-                     if _conflicts_with(first, second) or _conflicts_with(second, first)), None)
-    return kept, excluded, conflict
-
-
-def json_block(text: str, tag: str):
-    """``(document, error)``: the JSON object of the last fenced block tagged ``tag`` (else the last ``json`` block)."""
-    blocks = list(_FENCE_BLOCK.finditer(text or ""))
-    chosen = [match for match in blocks if match["tag"] == tag] or [match for match in blocks if match["tag"] == "json"]
-    if not chosen:
-        return None, f"no fenced `{tag}` block in the answer"
-    try:
-        doc = json.loads(chosen[-1]["body"])
-    except ValueError as error:
-        return None, f"the `{tag}` block is not JSON: {error}"
-    if not isinstance(doc, dict):
-        return None, f"the `{tag}` block is not a JSON object"
-    return doc, None
-
-
-def write_set_block(text: str):
-    """``(document, error, shown)``: the JSON object of the last fenced ``write-set`` block of a scout answer (the
-    ``json write-set`` form is the same block), and the answer without its ``write-set`` blocks. No fallback to
-    another ``json`` block: a hint is only what the scout tagged as one."""
-    found = [match for match in _FENCE_BLOCK.finditer(text or "") if match["tag"] == "write-set"]
-    if not found:
-        return None, "no fenced `write-set` block in the answer", text
-    shown = text
-    for match in reversed(found):
-        shown = shown[:match.start()] + shown[match.end():]
-    try:
-        doc = json.loads(found[-1]["body"])
-    except ValueError as error:
-        return None, f"the `write-set` block is not JSON: {error}", shown.rstrip() + "\n"
-    if not isinstance(doc, dict):
-        return None, "the `write-set` block is not a JSON object", shown.rstrip() + "\n"
-    return doc, None, shown.rstrip() + "\n"
 
 
 def _expected(expected: dict) -> str:

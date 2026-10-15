@@ -159,7 +159,8 @@
    "item-adhoc-9b97afced891": {
     "orch_run": "run-<digest>",
     "ref": "adhoc@<digest>",
-    "submission": "sub-<run>-item-adhoc-9b97afced891"
+    "submission": "sub-<run>-item-adhoc-9b97afced891",
+    "title": "Make out/adhoc.txt"
    }
   },
   "executor_session": "executor-session-1",

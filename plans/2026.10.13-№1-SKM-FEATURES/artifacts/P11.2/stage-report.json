@@ -1,0 +1,123 @@
+{
+  "changed_paths": [
+    "packages/orch/lib/orch/conductor/application/__init__.py",
+    "packages/orch/lib/orch/conductor/application/loop.py",
+    "packages/orch/lib/orch/conductor/application/run_service.py",
+    "packages/orch/lib/orch/conductor/domain/__init__.py",
+    "packages/orch/lib/orch/conductor/domain/item.py",
+    "packages/orch/lib/orch/conductor/domain/report.py",
+    "packages/orch/lib/orch/conductor/domain/stop.py",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/infrastructure/__init__.py",
+    "packages/orch/lib/orch/conductor/infrastructure/clock.py",
+    "packages/orch/lib/orch/conductor/infrastructure/files.py",
+    "packages/orch/lib/orch/conductor/infrastructure/roles.py",
+    "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+    "packages/orch/lib/orch/conductor/policies/__init__.py",
+    "packages/orch/lib/orch/conductor/policies/allowance.py",
+    "packages/orch/lib/orch/conductor/policies/budget.py",
+    "packages/orch/lib/orch/conductor/policies/retry_policy.py",
+    "packages/orch/lib/orch/conductor/policies/risk.py",
+    "packages/orch/lib/orch/conductor/policies/routing.py",
+    "packages/orch/lib/orch/conductor/policies/sandbox.py",
+    "packages/orch/lib/orch/conductor/policies/skills.py",
+    "packages/orch/lib/orch/conductor/prompts.py",
+    "packages/orch/lib/orch/conductor/stages/__init__.py",
+    "packages/orch/lib/orch/conductor/stages/advice.py",
+    "packages/orch/lib/orch/conductor/stages/checks_stage.py",
+    "packages/orch/lib/orch/conductor/stages/close.py",
+    "packages/orch/lib/orch/conductor/stages/context.py",
+    "packages/orch/lib/orch/conductor/stages/execute.py",
+    "packages/orch/lib/orch/conductor/stages/finish.py",
+    "packages/orch/lib/orch/conductor/stages/research.py",
+    "packages/orch/lib/orch/conductor/stages/review.py",
+    "packages/orch/lib/orch/conductor/stages/scout.py",
+    "packages/orch/lib/orch/conductor/stages/triage.py",
+    "packages/orch/tests/golden/characterization/adhoc-input.json",
+    "packages/orch/tests/golden/characterization/advisor.json",
+    "packages/orch/tests/golden/characterization/dynamic-review.json",
+    "packages/orch/tests/golden/characterization/finding-triage-correction.json",
+    "packages/orch/tests/golden/characterization/green.json",
+    "packages/orch/tests/golden/characterization/input-rebuilt.json",
+    "packages/orch/tests/golden/characterization/question-answer-resume.json",
+    "packages/orch/tests/golden/characterization/quota-wait.json",
+    "packages/orch/tests/golden/characterization/red-check-correction.json",
+    "packages/orch/tests/golden/characterization/resume-after-stop.json",
+    "packages/orch/tests/golden/characterization/route-fallback.json",
+    "packages/orch/tests/test_characterization.py",
+    "packages/orch/tests/test_conductor.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "other",
+      "evidence": [
+        "packages/orch/tests/test_characterization.py:74",
+        "packages/orch/tests/test_conductor.py:888",
+        "packages/orch/tests/test_conductor.py:1343"
+      ],
+      "impact": "Only the patch targets of two test files changed; snapshots and assertions are untouched. Any outside code that patches engine-level seams would silently stop working (none found in packages/ or bridges/).",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "Test seams moved: patching engine.sleep, engine.unit_random, engine._mono or engine.ORCH_ROOT no longer reaches the moved code. test_characterization.py and test_conductor.py now patch infrastructure.clock (sleep, unit_random, mono) and policies.sandbox.ORCH_ROOT. The names are still re-exported from engine, but patching them there has no effect."
+    },
+    {
+      "class": "other",
+      "impact": "The layout follows the design's layers, but not all names come from it; a reviewer of the phase may rename.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "Module names beyond knowledge/p11-refactor#extract: infrastructure/clock.py (the time seams), policies/skills.py (check_skills from prompts.py), stages/research.py, stages/advice.py (P10 advisor), plus policies/budget.py and stages/context.py (from the audit). RunStore lives in infrastructure/files.py. Stateful steps are module functions that take the conductor as self and are bound as Conductor methods, rather than functions with fully explicit arguments; only the stateless rules are pure functions."
+    },
+    {
+      "class": "other",
+      "impact": "The structure is not yet the full target of audit 2.19; old import paths stay valid.",
+      "kind": "deviation",
+      "next": "Move them with import shims, or record that they stay, in P11.3 or the phase cleanup.",
+      "outcome": "follow_up",
+      "text": "The existing modules the design also assigns to folders (progress.py -> infrastructure, gates.py -> policies, checks/process/scope/observer/options/heal) were not moved; only engine.py was extracted. prompts.py was split only as far as V2 needs (parsers, budgets, skill checks moved out, re-exported)."
+    },
+    {
+      "impact": "The coordinator commits them at once or splits them by path (domain/, infrastructure/files.py+clock.py, policies/, infrastructure/roles.py+work_source.py, stages/, application/+engine.py).",
+      "kind": "note",
+      "next": "coordinator",
+      "text": "item.rules[2] (one layer, one commit): I cannot commit. The six layers were done in order (domain, files, policies, roles, stages, application), with characterization and the conductor tests green after each, but they sit in the working tree together."
+    },
+    {
+      "impact": "They must not be attributed to P11.2; they probably belong to the P11.1/a7a64e7 recapture.",
+      "kind": "note",
+      "next": "coordinator decides which commit takes them",
+      "text": "The 11 modified files under packages/orch/tests/golden/characterization/ (a 'title' field in claims) were already changed in the tree before P11.2 started; I did not touch them. Characterization passes with them."
+    },
+    {
+      "impact": "Lint findings of ruff F/B, if any, are not known.",
+      "kind": "difficulty",
+      "next": "CI lint",
+      "text": "ruff could not start (snap confinement), so lint was not run. I checked undefined names and unused imports with a symtable/AST script instead. The orch package is not in lint.sh's default paths."
+    },
+    {
+      "impact": "These are the places the P11.3 architecture test will flag.",
+      "kind": "pending",
+      "next": "P11.3 moves them behind work_source functions.",
+      "text": "For P11.3: every orch.py source verb (claim, release, brief, prepare, research, register, commit) and the brief's artifacts_dir are already in infrastructure/work_source.py, and no code calls plan.py. These places outside it still write into item.artifacts: stages/advice.py:63 (advice-N.json), stages/finish.py:40 (stage-report.json), stages/review.py:180 (review-verdict.json), and stages/checks_stage.py:94 (evidence_dir passed to checks.run_checks). stages/close.py builds the register command line for the closer role."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "engine.py binding table against the old method set (every old method name is still bound; constants moved to modules)",
+      "policies/allowance.py: _over_target was rewritten as the pure over_target plus limit_over, so the LIMIT_OVER emit order must match the old one",
+      "stages/finish.py and infrastructure/work_source.py register/commit taken out of the closures",
+      "infrastructure/files.py RunStore replacing the inline run.json/state.json handling and the agents lock"
+    ],
+    "reason_codes": [
+      "shared_module_changed",
+      "other"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "engine.py (3100 lines) is split by layer in the order of knowledge/p11-refactor#extract: domain (stop.py Stop, item.py Item, report.py: answer parsers, report_problems, findings_problems, evidence_paths, continued, blocked, notes) -> infrastructure/files.py (write_json, read_json, runs_root, safe, run constants, new RunStore for run.json/state.json/options copy/agent numbers) + infrastructure/clock.py (the time seams) -> policies (allowance.py with pure over_target/batch_used/piece_count, routing.py, sandbox.py, retry_policy.py around retry.decide, risk.py, budget.py, skills.py) -> infrastructure/roles.py (role process, agent runs, argv/env, repair) + infrastructure/work_source.py (every orch.py source verb incl. register and commit taken out of finish) -> stages (scout, research, context, execute, checks_stage, review, triage, advice, close, finish) -> application (run_service.py: run/resume/retry/release/settle; loop.py: loop, pieces, claim, conduct, step, resolve). engine.py (305 lines) is a facade: Conductor keeps the run and binds the layer functions as its methods under the old names, so self-calls, Conductor.__new__ tests and mock.patch.object(Conductor, ...) work unchanged; public names are re-exported (__all__). The only classes are Conductor and RunStore. prompts.py (711) moved its answer parsers to domain/report.py, budgets to policies/budget.py and skill checks to policies/skills.py, re-exporting them (580). Behaviour unchanged: after every layer, characterization plus all test_conductor*/test_contracts*/test_conformance files (bash scripts/test.sh -p 'test_c[oh]*.py', 545 tests) passed; also test_gates, test_native_conformance, test_risk, test_boundaries, test_adhoc, ecosystem-units check and conduct.py --help."
+}

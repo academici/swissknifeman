@@ -193,7 +193,8 @@
    "item-W1": {
     "orch_run": "run-<digest>",
     "ref": "W1",
-    "submission": "sub-<run>-item-W1"
+    "submission": "sub-<run>-item-W1",
+    "title": "Work W1"
    }
   },
   "executor_session": "executor-session-2",

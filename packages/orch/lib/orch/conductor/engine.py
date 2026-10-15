@@ -481,7 +481,12 @@ class Conductor:
                     adopted = self._dirty_paths()
                 else:
                     self._require_clean_tree()
-            answer = self._claim(key, asked)
+            try:
+                answer = self._claim(key, asked)
+            except Stop as stop:
+                if stop.code == "CLAIM_BLOCKED" and "DEPENDENCY_NOT_READY" in stop.message:
+                    continue  # a piece that waits for an earlier piece of this run is claimed when its turn comes
+                raise
             if answer is None:
                 break
             claimed[key] = answer

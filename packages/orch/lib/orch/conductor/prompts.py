@@ -415,9 +415,11 @@ def _answers(answers) -> str:
 
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
-             skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "") -> list:
+             skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "") -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
+    if batch:
+        parts.append([Block("run_rules", CONDUCTOR, batch)])
     if scout_text:
         parts.append([Block("context_map", scout_from, "## Context map\n\nA read-only scout mapped the context; treat its "
                             "lines as leads, not facts.\n\n" + _fence(scout_text, "text"))])

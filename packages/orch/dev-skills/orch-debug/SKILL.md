@@ -1,7 +1,7 @@
 ---
 name: orch-debug
 bucket: repository-bootstrap
-version: 0.2.0
+version: 0.3.0
 description: "Debug-mode protocol for an agent that drives the orch conductor run by run (team-lead observer): estimate, watch the beacons, measure, fix the mechanism, log, hand the logs to a final reviewer. Activate ONLY when the user names this skill; without it the agent is a plain supervisor."
 when_to_use: "Only on an explicit request to run orch in debug mode (for example 'use orch-debug' or '/orch-debug'); never by inference from a plan or a conductor command."
 risk: write
@@ -30,7 +30,7 @@ package, and leaves a record that a later reviewer can audit. Never activate it 
   long time, or a loop of the same command, is not. Never kill a working role and never reset a working result to get
   a "clean" run. A blocked piece with good work continues with `resume --retry` after the plan is fixed, a dirty tree
   with an earlier attempt with `run --adopt`, a piece finished by hand with `settle`.
-- **One item per run, one item at a time.** After the item closes: analyze, improve, log, only then start the next.
+- **One run = one roadmap batch, one executor session.** Start the pieces of a roadmap row together (`run --items A B C D`, never one run per item): by default (`session.executor: shared`, `--single-session`) the executor keeps ONE session across them, knows the whole batch from the first prompt and builds each piece on the earlier ones; checks, review, register and commit stay per piece. `--no-single-session` is for a deliberate fresh start. When a piece closes: measure, log, fix the mechanism in a separate worktree and merge between pieces; the run itself goes on.
 - **The main tree is the conductor's.** While a run is active change no file in it, not even a journal. Develop fixes in a
   separate git worktree, merge between items. Commit only with explicit paths (`git commit -- <paths>`); never sweep the
   index. Run `python3 scripts/public-hygiene.py` before committing documents (no concrete plan ids in committed docs).
@@ -46,7 +46,7 @@ package, and leaves a record that a later reviewer can audit. Never activate it 
 1. **Preflight.** Decide per item whether review is needed and with which settings (`review.*`, model, effort, rounds), pass them with `--options FILE` and write the choice with its reason into the journal; never take the default by habit. Tree clean (or `--adopt` on purpose), item `todo`, `conduct.py run --dry-run --scenario S --options F`
    shows every route with `available: true` and the isolation flags. The run itself refuses to start a piece when a
    required role cannot start. Monitors: `tail -n0 -F err | grep --line-buffered -E '"event": "(stage.end|info|item.end|run.end)"'`
-   (no `cut` in the pipe: it buffers and the events never arrive); one monitor per run, stop the old one first.
+   (no `cut` in the pipe: it buffers and the events never arrive); one monitor per run, stop the old one first. Keep the options file, the journal and the logs outside `/tmp` (a disk cleanup wipes it, and `resume` re-reads the options path of the run).
 2. **Estimate before the run.** `python3 packages/orch/scripts/estimate.py --input <the item's input.json> --effort E`
    (or `--cmd` per acceptance command): the history medians of the roles and the measured seconds of the same
    commands. Write it down; after the run compare each step; a deviation over 30% needs a recorded cause.

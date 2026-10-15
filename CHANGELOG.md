@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **orch:** one executor session for the pieces of a run. `session.executor` (`shared` by default, `per-item`) and `run --single-session / --no-single-session`: the executor of the next piece, and of every correction round, resumes the Claude Code session of the previous executor (`--resume`), the first prompt names all pieces of the run (`## Run batch`, a `run_rules` block), checks, review, register and commit stay per piece. Closed schema `run-options` (and its bridge mirror) gets `session`.
+
 ### Fixed
 
 - **orch, aicore, skiller:** fixes after the review of PLAN4 P3. The conductor passes `--project` and `--project-resolution` to the `orch.py` it starts (the run cycle no longer resolves the project again, so `SKM_PROJECT_ROOT` of another repository cannot receive the claim and the event reports the conductor's resolution); a named project that is not a directory is refused with its own message instead of being searched around (`find_project_root` still never raises); `resolve_project` markers can be typed `(name, "file"|"dir"|"any")` and skiller keeps its old kinds and the `.claude/` via; `route explain` applies the minimum class and effort recorded for the work, the sandbox rule of the preflight and drops bare stage entries from the candidates.

@@ -30,6 +30,7 @@ counter = state / f"{role}.count"
 number = int(counter.read_text()) + 1 if counter.exists() else 1
 counter.write_text(str(number))
 (state / f"{role}-{number}.md").write_text(prompt, encoding="utf-8")
+(state / f"{role}-{number}.argv").write_text(json.dumps(sys.argv[2:]), encoding="utf-8")
 answers = json.loads(Path(os.environ["FAKE_ROLE_SCRIPT"]).read_text(encoding="utf-8")).get(role) or [{}]
 answer = answers[min(number, len(answers)) - 1]
 if answer.get("sleep"):  # a slow role (the cancellation tests)

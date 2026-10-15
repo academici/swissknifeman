@@ -199,6 +199,9 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--max-items", dest="max_items", type=int, default=0, metavar="N",
                      help="with --batch: at most N pieces (default: until none is ready)")
     run.add_argument("--options", type=Path, metavar="FILE", help="run-options JSON: the most specific layer")
+    run.add_argument("--single-session", dest="single_session", action=argparse.BooleanOptionalAction, default=None,
+                     help="one executor session for all pieces of the run (default on: `session.executor: shared`); "
+                          "--no-single-session starts a fresh executor session per step")
     run.add_argument("--scenario", help="the scenario to preview with --dry-run, or the scenario of a --input run "
                                         "(default: default_profile)")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
@@ -339,7 +342,8 @@ def main(argv: list | None = None) -> int:
         if args.verb == "run":
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.batch, max_items=args.max_items, options_file=args.options,
-                                 adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario)
+                                 adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario,
+                                 session=None if args.single_session is None else ("shared" if args.single_session else "per-item"))
         if args.verb == "release":
             return conductor.release(args.run, args.item, args.reason)
         if args.verb == "settle":

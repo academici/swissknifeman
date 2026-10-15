@@ -35,6 +35,10 @@ DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
                         "sandbox": "prefer", "sandbox_domains": []}
 DEFAULT_SCOPE = {"outside": "deviation"}
+# One executor session for all pieces of a run: a piece (and a correction round of it) resumes the session of the
+# previous executor, so the later pieces start with what the earlier ones learned. ``per-item``: a fresh session each.
+SESSION_MODES = ("shared", "per-item")
+DEFAULT_SESSION = {"executor": "shared"}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": True,
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
@@ -46,7 +50,7 @@ DEFAULT_FALLBACK_ROUTES = [{"role": "reviewer", "provider": "claude-code", "mode
 AUTO_SKILLS = "auto"  # the one name of a role's skills that asks the skills bridge to choose them from the work
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
-            "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
+            "session": DEFAULT_SESSION, "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
 LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (0, 3), "retries": (0, 5),
                 "tokens_max": (0, None), "stage_timeout_s": (0, None), "stage_idle_timeout_s": (0, None),
                 "check_timeout_s": (0, None), "ceiling_factor": (1, 5), "repairs": (0, 3), "stage_warn_s": (0, None),
@@ -121,7 +125,7 @@ def merge(base: dict, layer: dict) -> dict:
             out["stages"] = _merge_stages(out.get("stages", []), value)
         elif key == "rules":
             out["rules"] = _dedupe(list(out.get("rules", [])) + list(value))
-        elif key in ("limits", "review", "checks", "instructions", "scope", "on_error"):
+        elif key in ("limits", "review", "checks", "instructions", "scope", "session", "on_error"):
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
@@ -178,7 +182,7 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
         nonlocal current
         current = merge(current, layer)
         for key, value in layer.items():
-            if key in ("limits", "review", "checks", "instructions", "scope", "on_error"):
+            if key in ("limits", "review", "checks", "instructions", "scope", "session", "on_error"):
                 sources.update({f"{key}.{sub}": name for sub in value})
             elif key == "skills":
                 sources.update({f"skills.{entry['role']}": name for entry in value})

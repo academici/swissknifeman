@@ -222,7 +222,8 @@ class Conductor:
 
     def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, batch: bool, max_items: int,
             options_file: Optional[Path] = None, adopt: bool = False, input_file: Optional[Path] = None,
-            commit: bool = False, scenario: Optional[str] = None) -> int:
+            commit: bool = False, scenario: Optional[str] = None,
+            session: Optional[str] = None) -> int:
         """Conduct the pieces of a plan, or with ``input_file`` the one piece of an execution-input document (the built-in
         file source: no plan; ``scenario`` is then the scenario of the run, ``commit`` lets it commit its paths)."""
         run_id = new_run_id()
@@ -237,7 +238,7 @@ class Conductor:
         run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
                    "source": source, "scenario": scenario if source else None,
                    "max_items": max_items, "options_file": str(options_file) if options_file else None,
-                   "adopt": bool(adopt),
+                   "adopt": bool(adopt), "session": session,
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
                    "project": str(self.project), "project_resolution": self.project_resolution,
                    "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
@@ -886,6 +887,9 @@ class Conductor:
             except (OSError, ValueError) as error:
                 raise Stop("OPTIONS_INVALID", f"{self.run_doc['options_file']}: {error}") from None
             layers.append({"source": "invocation:--options", "options": found})
+        if self.run_doc.get("session"):
+            layers.append({"source": "invocation:--single-session",
+                           "options": {"session": {"executor": self.run_doc["session"]}}})
         try:
             item.options, item.sources = opts.effective(self.conductor, item.policy, layers)
         except opts.OptionsError as error:
@@ -1253,6 +1257,7 @@ class Conductor:
                                    idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                    on_tick=self._beacons(item, key, role, raw), provider=route["provider"])
             self._tokens(item, run.usage)
+            self._keep_session(item, role, route, run)
             trail["api_retries"] += run.api_retries
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=handle["lingered"] or run.lingered)
             if run.denials:  # a tool call refused without a prompt: the role could not do what it meant to
@@ -1566,12 +1571,47 @@ class Conductor:
     # skills or hooks (a measured start-up context of 6 K instead of 16 K tokens, and none of the developer-session rules).
     ISOLATION_ARGS = {"claude-code": ["--safe-mode"]}
 
+    def _batch_note(self, item: Item) -> str:
+        """The run block of the executor prompt: the pieces of the run, so one shared session knows the whole batch."""
+        refs = self.run_doc.get("items") or []
+        if len(refs) < 2 or item.options["session"]["executor"] != "shared" \
+                or item.routes["executor"].get("provider") != "claude-code":
+            return ""
+        resumed = bool(self.state.get("executor_session"))
+        lines = ["## Run batch", "", "One session carries the pieces of this run in order: " + ", ".join(refs) + ". "
+                 + (f"You are resuming it: the pieces before {item.ref} are done and committed, what you learned stays "
+                    "valid (re-read only what this piece needs), and the instructions below are for this piece."
+                    if resumed else
+                    f"You start with {item.ref}; later pieces arrive in this session as new messages, so keep the "
+                    "choices you make here compatible with them and say in `open_issues` what the next piece must know.")]
+        return "\n".join(lines)
+
     def _role_argv(self, item: Item, role: str, route: dict) -> list:
         isolated = role in item.options["instructions"]["isolate_roles"]
         extra = self.ISOLATION_ARGS.get(route.get("provider")) if isolated else None
         if extra and not self._knows(route["argv"], extra):
             extra = None
-        return list(route["argv"]) + (extra or []) + self._sandbox_args(item, role, route)
+        return list(route["argv"]) + (extra or []) + self._resume_args(item, role, route) + self._sandbox_args(item, role, route)
+
+    def _shared_session(self, item: Item, role: str, route: dict) -> bool:
+        """The executor of this run keeps one provider session across its pieces and correction rounds (``session.executor``)."""
+        return role == "executor" and route.get("provider") == "claude-code" \
+            and item.options["session"]["executor"] == "shared"
+
+    def _resume_args(self, item: Item, role: str, route: dict) -> list:
+        session = (getattr(self, "state", None) or {}).get("executor_session")
+        return ["--resume", session] if session and self._shared_session(item, role, route) else []
+
+    def _keep_session(self, item: Item, role: str, route: dict, run) -> None:
+        """Remember the session of an executor that finished, so the next executor of the run resumes it; forget a
+        session that failed (a fresh one starts)."""
+        if not self._shared_session(item, role, route):
+            return
+        if run.error or not run.session:
+            self.state.pop("executor_session", None)
+        else:
+            self.state["executor_session"] = run.session
+        self._save()
 
     @staticmethod
     def _sandbox_mode(item: Item) -> str:
@@ -1842,7 +1882,8 @@ class Conductor:
                                       skill_texts=self._skill_texts(item, "executor"),
                                       expected=item.state.get("expected"),
                                       answers=questions_mod.answers_text(self._questions(item)), fix=fix,
-                                      scout_origin=scouted.get("cache") or "")
+                                      scout_origin=scouted.get("cache") or "",
+                                      batch=self._batch_note(item))
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}

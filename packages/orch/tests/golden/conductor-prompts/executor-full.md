@@ -338,7 +338,8 @@ frontier"}`. It is advice only: the conductor decides about a review itself; omi
 
 `status` is `blocked` whenever the work needs something only the owner can give (a decision, a path outside
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
-thing as an `escalation` issue. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`
+thing as an `escalation` issue; find all of them before you stop (a changed file's tests, generated files, registries, docs), so one
+escalation names every missing path and the plan is widened once. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`
 issue. Every `checks_run` entry has exactly the keys shown (`id`, `cmd`, `exit`) or, for a manual procedure,
 `id`, `procedure`, `verdict` (`pass | fail`); no other keys, no entry for a check that did not run, put notes in
 `open_issues`. List in `checks_run` only checks that really ran; the conductor runs every acceptance check again itself.

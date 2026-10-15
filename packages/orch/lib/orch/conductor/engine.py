@@ -25,6 +25,7 @@ from pathlib import Path
 import random
 import re
 import secrets
+import shutil
 import shlex
 import subprocess
 import sys
@@ -51,6 +52,7 @@ ADVICE_DIFF_CHARS = 40_000  # the diff an advisor reads is cut here
 LAUNCH_ROLE = {"context-scout": "scout"}
 RULE_HEADING = re.compile(r"^## ([A-Za-z0-9_.-]+)[ \t]*$", re.M)
 RUN_FILE, STATE_FILE = "run.json", "state.json"
+OPTIONS_COPY = "options.json"
 REPORTS = Path(".swissknifeman") / "orch" / "reports"  # observer reports: run output, ignored
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
 STATUS_EXIT = {"finished": 0, "stopped": 1}
@@ -246,6 +248,11 @@ class Conductor:
                    "config_layers": settings_mod.config_layers(self.settings)}
         self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
         write_json(self.directory / RUN_FILE, run_doc)
+        if options_file:  # kept with the run: `resume` must not depend on a file that may be gone (a cleaned /tmp)
+            try:
+                shutil.copyfile(options_file, self.directory / OPTIONS_COPY)
+            except OSError:
+                pass
         self._save()
         self.progress.emit("run.start", message=f"plan {plan}; " + (f"items {', '.join(items)}" if items else
                                                                      f"batch, at most {max_items or 'all'}"))
@@ -897,10 +904,12 @@ class Conductor:
             raise Stop(error.code, str(error)) from None
         layers = list(item.claim.get("options") or [])
         if self.run_doc.get("options_file"):
+            named, kept = Path(self.run_doc["options_file"]), self.directory / OPTIONS_COPY
+            origin = named if named.is_file() or not kept.is_file() else kept  # an edited file still wins on resume
             try:
-                found = json.loads(Path(self.run_doc["options_file"]).read_text(encoding="utf-8"))
+                found = json.loads(origin.read_text(encoding="utf-8"))
             except (OSError, ValueError) as error:
-                raise Stop("OPTIONS_INVALID", f"{self.run_doc['options_file']}: {error}") from None
+                raise Stop("OPTIONS_INVALID", f"{origin}: {error}") from None
             layers.append({"source": "invocation:--options", "options": found})
         if self.run_doc.get("session"):
             layers.append({"source": "invocation:--single-session",

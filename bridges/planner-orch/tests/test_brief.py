@@ -260,6 +260,13 @@ class CompletenessTests(BriefCase):
     def verify(self, doc, item="P1.1", **kwargs):
         return brief.verify(self.load(), item, doc, **kwargs)
 
+    def test_a_read_that_names_forbidden_inputs_is_not_lifecycle_content(self):
+        doc = self.brief()
+        doc["reads"] = list(doc["reads"]) + [{"path": "roles/x.json", "content": {"forbidden_inputs": ["report_api"]}}]
+        self.assertFalse([line for line in self.verify(doc) if "lifecycle" in line])
+        doc["reads"][-1]["content"]["note"] = "call report_api"
+        self.assertTrue([line for line in self.verify(doc) if "lifecycle phrase 'report_api'" in line])
+
     def test_complete_document_has_no_omissions(self):
         self.assertEqual(self.verify(self.brief()), [])
 

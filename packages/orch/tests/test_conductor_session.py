@@ -97,3 +97,14 @@ class SharedSessionTests(ConductorCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OptionsCopyTests(ConductorCase):
+    def test_the_options_file_is_kept_with_the_run(self):
+        options_file = self.project.parent / "opts.json"
+        options_file.write_text(json.dumps({"rules": ["keep it short"]}), encoding="utf-8")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--options", options_file))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        kept = self.run_dir(err) / "options.json"
+        self.assertEqual(json.loads(kept.read_text(encoding="utf-8")), {"rules": ["keep it short"]})

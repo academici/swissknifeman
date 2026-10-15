@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- **orch, planner-orch:** the conductor keeps the `--options` file with the run (`options.json`; `resume` uses it when the original is gone); the brief guard no longer rejects a read that only names `report_api` in a role manifest `forbidden_inputs`; the executor prompt asks to find all missing write-set paths before it escalates, so the plan is widened once, not per round.
 - **orch, aicore, skiller:** fixes after the review of PLAN4 P3. The conductor passes `--project` and `--project-resolution` to the `orch.py` it starts (the run cycle no longer resolves the project again, so `SKM_PROJECT_ROOT` of another repository cannot receive the claim and the event reports the conductor's resolution); a named project that is not a directory is refused with its own message instead of being searched around (`find_project_root` still never raises); `resolve_project` markers can be typed `(name, "file"|"dir"|"any")` and skiller keeps its old kinds and the `.claude/` via; `route explain` applies the minimum class and effort recorded for the work, the sandbox rule of the preflight and drops bare stage entries from the candidates.
 
 ### Added

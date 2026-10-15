@@ -236,8 +236,8 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
     plan_rules = {f"/constraints/{i}/text" for i, c in enumerate(constraints)
                   if isinstance(c, dict) and str(c.get("source", "")).startswith("plan.rules")}
     for path, text in _strings(doc):
-        if path.startswith("/provenance") or path in plan_rules:
-            continue
+        if path.startswith("/provenance") or path in plan_rules or "/forbidden_inputs/" in path:
+            continue  # a role manifest read by an item names the lifecycle inputs it is denied; that is data, not instruction
         phrase = next((p for p in LIFECYCLE_PHRASES if p in text), None)
         if phrase:
             missing.append(f"{path}: lifecycle phrase {phrase!r}")

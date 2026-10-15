@@ -429,6 +429,18 @@ class RegisterTests(Case):
         self.assertEqual(self.item("P1.1")["status"], "blocked")
 
 
+class RetryRegisterTests(Case):
+    def test_a_blocked_attempt_retried_by_its_run_registers_done_without_a_conflict(self):
+        self.claim()
+        blocked = self.register(status="blocked", report={"summary": "stuck", "open_issues": [
+            {"text": "needs the plan widened", "kind": "escalation"}]})
+        self.assertEqual(blocked["outcome"], "recorded")
+        self.assertEqual(self.item("P1.1")["status"], "blocked")
+        done = self.register(status="done", evidence={"V1": self.evidence()})
+        self.assertEqual(done["outcome"], "recorded", done)
+        self.assertEqual(self.item("P1.1")["status"], "done")
+
+
 class CommitTests(Case):
     def setUp(self):
         super().setUp()

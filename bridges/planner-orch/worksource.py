@@ -327,8 +327,39 @@ def op_brief(fields: dict) -> dict:
 # ------------------------------------------------------------------------------------------------ register
 
 
+def _plan_text(argv: list, plans_root=None, *, code: str = "PLAN_UNREADABLE") -> str:
+    """Stdout of a ``plan.py`` verb that prints text; a refusal raises :class:`Blocked`."""
+    done = plan_py(argv, plans_root)
+    if done.returncode:
+        raise refusal_of(done.stderr or done.stdout, code)
+    return done.stdout
+
+
+def _supersede_blocked_attempt(fields: dict) -> None:
+    """A piece the run retries after it was blocked is registered under the same attempt id (``att-<run>-<item>``): the
+    planner answers ``ATTEMPT_CONFLICT`` to a done outcome for an attempt it holds as blocked. The retry of the run is a new
+    try of the same attempt, so the blocked record is reopened first (the plan keeps the history in its log)."""
+    if fields["status"] == "blocked":
+        return
+    doc = item_doc(fields["plan"], fields["ref"], fields.get("plans_root"))
+    result = doc.get("result") or {}
+    if doc.get("status") == "blocked" and result.get("attempt_id") == fields["attempt_id"]:
+        _plan_text(["reopen", fields["plan"], fields["ref"], "--reason",
+                   f"retry of attempt {fields['attempt_id']} by its run after the block was resolved"],
+                  fields.get("plans_root"), code="REOPEN_REFUSED")
+        # the reopened piece is held by its run again (the owner fence of the registration), as the claim made it
+        plan_json(["start", fields["plan"], fields["ref"], "--actor", actor_text(fields["executed_by"]), "--session",
+                   fields["run_id"], "--no-scout", "--in-progress-deps", "--json"], fields.get("plans_root"),
+                  code="START_REFUSED")
+
+
 def op_register(fields: dict) -> dict:
     run_id = fields["run_id"]
+    try:
+        _supersede_blocked_attempt(fields)
+    except Blocked as blocked:
+        return {"op": "register", "gate": {"verdict": "none", "checks": {}}, "outcome": "refused",
+                "reason_code": blocked.code, "message": blocked.message}
     with tempfile.TemporaryDirectory(prefix="planner-orch-register-") as tmp:
         report = Path(tmp) / "report.json"
         report.write_text(json.dumps(fields["report"], ensure_ascii=False), encoding="utf-8")

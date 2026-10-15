@@ -7,8 +7,8 @@ import unittest
 from orch.contracts import LIFECYCLE_PHRASES
 
 ROLES = Path(__file__).resolve().parents[1] / "roles"
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar")
-WORKER_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher")
+WORKER_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "researcher")
 SECTIONS = ("## You receive", "## You do", "## You never", "## You return")
 EXPORT = re.compile(r"<!-- export:(begin|end) ([\w-]+) -->")
 
@@ -83,6 +83,12 @@ class RolesTextTests(unittest.TestCase):
         for kind in ("pending", "deviation", "blocker", "difficulty", "assumption", "note", "escalation"):
             with self.subTest(kind=kind):
                 self.assertIn(kind, text)
+
+    def test_researcher_sends_a_claim_without_a_source_to_unknowns(self):
+        text = _text("researcher")
+        for phrase in ("`claims`", "`unknowns`", "`contradictions`", "`sources_used`", "Invent a source"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, text)
 
     def test_marker_parser_rejects_unpaired_markers(self):
         for text in ("<!-- export:begin a -->", "<!-- export:end a -->",

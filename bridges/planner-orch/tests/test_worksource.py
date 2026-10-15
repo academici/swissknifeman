@@ -489,6 +489,49 @@ class NoteTests(Case):
         self.assertTrue(answer["reason_code"])
 
 
+class ResearchTests(Case):
+    RESULT = {"query": "q", "claims": [{"text": "t", "sources": ["https://example.org/c"]}], "contradictions": [],
+              "unknowns": [], "sources_used": ["fake"]}
+
+    def research(self, **extra) -> dict:
+        fields = {"op": "research", "plan": self.plan, "ref": "P1.1", "run_id": "run-a", "number": 1,
+                  "result": self.RESULT, "actor": ACTOR, **extra}
+        return self.op(worksource.op_research, **fields)
+
+    def declared(self) -> list:
+        return [entry for entry in self.item("P1.1").get("artifacts", []) if entry.get("role") == "input"
+                and str(entry.get("path", "")).endswith("research/P1.1-1.json")]
+
+    def test_the_result_lands_in_the_research_folder_and_is_declared_as_an_input(self):
+        self.claim()
+        answer = self.research()
+        self.assertEqual(answer["outcome"], "recorded")
+        path = self.project / answer["path"]
+        self.assertEqual(answer["path"], f"plans/{self.plan}/research/P1.1-1.json")
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8")), self.RESULT)
+        self.assertEqual(len(self.declared()), 1)
+
+    def test_a_repeat_changes_nothing_and_a_changed_result_is_written_again(self):
+        self.claim()
+        self.research()
+        self.assertEqual(self.research()["outcome"], "no-op")
+        self.assertEqual(len(self.declared()), 1)
+        again = self.research(result={**self.RESULT, "unknowns": ["new"]})
+        self.assertEqual(again["outcome"], "recorded")
+        self.assertEqual(json.loads((self.project / again["path"]).read_text())["unknowns"], ["new"])
+
+    def test_a_number_below_one_or_a_ref_that_is_no_file_name_is_refused(self):
+        self.claim()
+        self.assertEqual(self.research(number=0)["reason_code"], "RESEARCH_REF_INVALID")
+        self.assertEqual(self.research(ref="../x")["reason_code"], "RESEARCH_REF_INVALID")
+
+    def test_an_unknown_item_is_refused_with_the_planner_code(self):
+        answer = self.research(ref="P9.9")
+        self.assertEqual(answer["outcome"], "refused")
+        self.assertTrue(answer["reason_code"])
+        self.assertFalse((self.project / "plans" / self.plan / "research" / "P9.9-1.json").exists())
+
+
 class ProtocolTests(Case):
     """describe and invoke through aicore.ext.plugins with the plugin registered in a temporary machine config."""
 

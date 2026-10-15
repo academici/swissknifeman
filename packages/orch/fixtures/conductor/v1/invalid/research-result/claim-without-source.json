@@ -1,0 +1,7 @@
+{
+  "query": "q",
+  "claims": [{"text": "A statement with no source.", "sources": []}],
+  "contradictions": [],
+  "unknowns": [],
+  "sources_used": ["fake"]
+}

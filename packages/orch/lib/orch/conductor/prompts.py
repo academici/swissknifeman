@@ -38,7 +38,7 @@ BUDGET_LIMITS = {"core": "prompt_core_tokens", "supporting": "prompt_supporting_
                  "retrieval": "prompt_retrieval_tokens"}  # the ``limits`` keys of the run options
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
-                "triager": "triage-result"}
+                "triager": "triage-result", "researcher": "research-result"}
 _FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 
 _STAGE_REPORT = """\
@@ -98,6 +98,19 @@ Every finding id of the round appears exactly once, in `confirmed` or in `reject
 {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "…", "exit": 1, "observed": "…"},
                 "fix": "what to change inside the scope and the regression check that proves it"}],
  "rejected": [{"finding": "F2", "reason": "why it does not hold", "reproduction": {"cmd": "…", "exit": 0, "observed": "…"}}]}
+```
+"""
+
+_RESEARCH_RESULT = """\
+End your answer with exactly one fenced block tagged `research-result` holding one JSON object and nothing else.
+A claim without a source is not a claim: it goes to `unknowns`:
+
+```research-result
+{"query": "the question as asked",
+ "claims": [{"text": "a statement a source supports", "sources": ["https://… or repository/path"]}],
+ "contradictions": ["source A says …, source B says …"],
+ "unknowns": ["what no source answered"],
+ "sources_used": ["id of a source you asked"]}
 ```
 """
 
@@ -520,7 +533,25 @@ def closer(*, item: str, step: str, command: str) -> list:
     return _join(parts)
 
 
-CONTRACT_TEXT = {"stage-report": _STAGE_REPORT, "review-findings": _REVIEW_FINDINGS, "triage-result": _TRIAGE_RESULT}
+def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: list, command: str, roles_dir=None,
+               skills=(), repo_rules: str = "", skill_texts=None) -> list:
+    """The prompt of the researcher: the question, the sources it may ask (ids) and the one command that asks one."""
+    listed = "\n".join(f"- `{name}`" for name in sources)
+    parts = [_head("researcher", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
+             [Block("instruction", CONDUCTOR, "## Research question\n\n" + _fence(query, "text"))],
+             [Block("instruction", CONDUCTOR, "## Allowed sources\n\nAsk only these sources, by id:\n\n" + listed)],
+             [Block("instruction", CONDUCTOR,
+                    "## Ask a source\n\nThe question is already in the query file of this command. Run it with Bash to ask "
+                    "the source; for another source change `--source`, for a narrower question write a new query file "
+                    "outside the repository and name it in `--query-file`. Every other command is denied.\n\n"
+                    + _fence(command, "sh"))],
+             [_progress(item, step)],
+             [Block("result_contract", CONDUCTOR, "## Result\n\n" + _RESEARCH_RESULT)]]
+    return _join(parts)
+
+
+CONTRACT_TEXT = {"stage-report": _STAGE_REPORT, "review-findings": _REVIEW_FINDINGS, "triage-result": _TRIAGE_RESULT,
+                 "research-result": _RESEARCH_RESULT}
 
 
 def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, limit: int = 40_000) -> list:

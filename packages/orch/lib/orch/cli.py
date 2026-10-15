@@ -704,9 +704,26 @@ def _source_release(args, current, project) -> int:
     return 1 if answer["outcome"] == "refused" else 0
 
 
+def _source_research(args, current, project) -> int:
+    """Save the research-result of a research stage where the source keeps research (a plan: its research folder; a file
+    input: its artifact folder). A source that does not serve it is a refusal; the result is still in the run's artifacts."""
+    directory, doc = _run(args.run, project)
+    try:
+        result = json.loads(Path(args.result).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SourceRefusal("INPUT_INVALID", f"cannot read the result {args.result}: {error}") from None
+    answer = _call(_source(current, project, args.config, doc), "research", plan=doc["plan"],
+                   plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"], number=args.number,
+                   result=result, actor=args.actor)
+    journal.write_doc(directory, f"receipts/research-{args.number}.json", answer)
+    _print(answer)
+    return 1 if answer["outcome"] == "refused" else 0
+
+
 def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
-               "register": _source_register, "commit": _source_commit, "release": _source_release}[args.action]
+               "register": _source_register, "commit": _source_commit, "release": _source_release,
+               "research": _source_research}[args.action]
     try:
         context = project_mod.require(getattr(args, "project", None))  # the cycle writes the state of a project
         project = context.root
@@ -731,7 +748,7 @@ def _source_command(args: argparse.Namespace) -> int:
 
 
 def _source_parser(verbs) -> None:
-    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release")
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
     where = claim.add_mutually_exclusive_group(required=True)
@@ -773,6 +790,11 @@ def _source_parser(verbs) -> None:
     release.add_argument("--run", required=True, metavar="RUN")
     release.add_argument("--reason", metavar="TEXT", help="why, for the source's journal")
     release.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who releases (default: the source decides)")
+    research = actions.add_parser("research", help="save the research-result of a run where the source keeps research")
+    research.add_argument("--run", required=True, metavar="RUN")
+    research.add_argument("--result", required=True, type=Path, help="research-result JSON file")
+    research.add_argument("--number", required=True, type=int, metavar="N", help="ordinal of the research of the piece, from 1")
+    research.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who saves (default: the source decides)")
 
 
 def main(argv: list[str] | None = None) -> int:

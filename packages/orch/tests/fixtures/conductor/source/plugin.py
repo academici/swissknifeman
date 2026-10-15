@@ -145,6 +145,19 @@ def note(state, given):
     return {"op": "note", "outcome": "recorded"}
 
 
+def research(state, given, project):
+    """Keeps the result where the planner bridge does: ``plans/<plan>/research/<ref>-<n>.json``."""
+    if "research" in state.get("refuse", []):
+        state["refuse"].remove("research")
+        return {"op": "research", "outcome": "refused", "reason_code": "RESEARCH_TEST_REFUSAL", "message": "once"}
+    relative = f"plans/{given['plan']}/research/{given['ref']}-{given['number']}.json"
+    target = Path(project) / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(given["result"], indent=2) + "\n", encoding="utf-8")
+    state.setdefault("research", []).append({"ref": given["ref"], "number": given["number"], "path": relative})
+    return {"op": "research", "outcome": "recorded", "path": relative}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -160,7 +173,8 @@ elif request.get("op") == "invoke":
     state.setdefault("calls", []).append(given)
     handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
                 "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
-                "release": lambda: release(state, given), "note": lambda: note(state, given)}
+                "release": lambda: release(state, given), "note": lambda: note(state, given),
+                "research": lambda: research(state, given, project)}
     answer = handlers[given["op"]]()
     save(state)
     reply(request_id, output=answer)

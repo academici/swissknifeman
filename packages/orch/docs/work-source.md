@@ -20,6 +20,7 @@ choose a branch by `op`.
 | `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?` | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
 | `release` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `reason?`, `actor?` | `outcome` `released` \| `no-op` (the run does not hold the piece) \| `refused`; `reason_code`, `message` when refused |
 | `note` (optional) | `collection`, `plans_root?`, `text`, `refs` (a phase or an item of the collection), `run_id?`, `actor?` | `outcome` `recorded` \| `no-op` \| `refused`; `reason_code`, `message` when refused |
+| `research` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `number` (from 1), `result` (a `research-result`), `actor?` | `outcome` `recorded` \| `no-op` (the same result is already kept) \| `refused`; `path` (repository-relative) when kept; `reason_code`, `message` when refused |
 
 A claim may also answer `options`: the run-option layers of the work, general first (`[{source, options}]`, each a
 conductor `run-options` document that orch validates). A brief may answer `artifacts_dir`: the repository folder
@@ -32,7 +33,7 @@ outside the contract is a failure of the source.
 ## Client
 
 `orch.worksource.PluginWorkSource(plugin_id, *, project=None, env=None, config_file=None)` implements the
-`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, each returning
+`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, `research(**fields)`, each returning
 the output document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
 describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and validates the answer.
 
@@ -54,6 +55,7 @@ orch.py source prepare --run RUN --provider P [--binding B] [--model-catalog FIL
 orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… --actor P/M[/E] [--executed-by P/M[/E]]
 orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
 orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
+orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
 ```
 
 - `claim` derives `submission_id` = `sub-` + the first 24 hex characters of the SHA-256 of the canonical JSON
@@ -92,7 +94,7 @@ input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`
 source); `register` applies the same evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance
 check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
 `.swissknifeman/orch-artifacts/<run_id>/<input_id>/`; `commit` commits nothing unless `--commit`, then only the given paths with
-`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal. For provenance
+`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input. For provenance
 `plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source
 (the CLI prints the answer with `note: {outcome: recorded | unsupported | refused, message?}`; `receipts/register.json` keeps the pure answer of the source and the note goes to `receipts/note.json`). The `input_id` of a file input names the artifact folder, so it must be one path component (`INPUT_INVALID` otherwise); `commit` uses literal git pathspecs, and a commit refused by a hook leaves the index as it was. `run.json` of the cycle gets
 `source = {kind: file, path, commit}` and `plugin: file`; the later commands read it.

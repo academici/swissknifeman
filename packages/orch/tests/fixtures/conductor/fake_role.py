@@ -4,7 +4,9 @@
 one repeats). An answer may hold ``result`` (a JSON document put into the result block of the role), ``text`` (the
 whole answer), ``tag`` (the tag of the result block, for the report-fixer), ``write`` (``{path: content}`` written below
 the working directory first; an absolute path is written as it is), ``run_command`` (run the ``sh`` block of
-the prompt, the way the registrar does) , ``exit`` and ``usage``. Failure shapes: ``stream`` (raw JSON lines printed before
+the prompt, the way the registrar does), ``research`` (run that block, the way the researcher does, and answer a
+research-result whose one claim is the first line of its output, resting on its ``source:`` lines; the value is the
+source id to name in ``sources_used``), ``exit`` and ``usage``. Failure shapes: ``stream`` (raw JSON lines printed before
 the result, for example ``api_retry`` system events and ``rate_limit_event``; each is a document or a string), ``stderr`` (text on
 stderr), ``is_error`` (the result is an error; its text is the answer text), ``api_error_status`` (put into the result),
 ``permission_denials`` (put into the result), ``codex`` (print the event stream of codex instead of claude's) and ``codex_failed`` (a message: codex ``turn.failed``
@@ -17,7 +19,8 @@ import os
 import sys
 from pathlib import Path
 
-TAGS = {"executor": "stage-report", "reviewer": "review-findings", "triager": "triage-result"}
+TAGS = {"executor": "stage-report", "reviewer": "review-findings", "triager": "triage-result",
+        "researcher": "research-result"}
 
 role = sys.argv[1]
 prompt = sys.stdin.read()
@@ -44,6 +47,19 @@ if answer.get("run_command"):  # the registrar: run the one command of the promp
     done = subprocess.run(shlex.split(block.group(1)), capture_output=True, text=True, check=False)
     text = f"[orch] closing\n\n```json\n{done.stdout}\n```\n" + (
         "RECORDED" if done.returncode == 0 else f"REFUSED: {done.stderr.strip()}")
+elif answer.get("research"):  # the researcher: ask the source with the command of the prompt, report what it said
+    import re
+    import shlex
+    import subprocess
+    block = re.search(r"```sh\n(.*?)\n```", prompt, re.S)
+    done = subprocess.run(shlex.split(block.group(1)), capture_output=True, text=True, check=False)
+    lines = done.stdout.splitlines()
+    urls = [line.split(": ", 1)[1] for line in lines if line.startswith("source: ")]
+    said = [line for line in lines if not line.startswith("source: ")]
+    found = {"query": "fake query", "claims": [{"text": said[0], "sources": urls}] if said and urls else [],
+             "contradictions": [], "unknowns": [] if urls else [done.stderr.strip() or "no source answered"],
+             "sources_used": [answer["research"]] if urls else []}
+    text = f"[orch] researched\n\n```research-result\n{json.dumps(found)}\n```\n"
 elif "text" in answer:
     text = answer["text"]
 elif "result" in answer:

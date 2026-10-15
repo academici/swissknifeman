@@ -9,7 +9,8 @@
     {"$ref": "#/$defs/register"},
     {"$ref": "#/$defs/commit"},
     {"$ref": "#/$defs/release"},
-    {"$ref": "#/$defs/note"}
+    {"$ref": "#/$defs/note"},
+    {"$ref": "#/$defs/research"}
   ],
   "$defs": {
     "text": {
@@ -169,6 +170,19 @@
         "op": {"description": "Operation.", "const": "note"},
         "outcome": {"description": "recorded, no-op or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
         "reason_code": {"description": "Why the note was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "research": {
+      "description": "Outcome of saving a research result: recorded, no-op (the same result is already saved) or refused.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "research"},
+        "outcome": {"description": "recorded, no-op or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
+        "path": {"description": "Repository-relative path of the saved result.", "$ref": "#/$defs/text"},
+        "reason_code": {"description": "Why the result was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },
       "required": ["op", "outcome"],

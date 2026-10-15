@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.2",
   "title": "Роль researcher (read-only, network) с research-result/v1; launch-catalog; сохранение в plans/<plan>/research через мост или в orch-artifacts",
-  "status": "blocked",
+  "status": "done_with_deviations",
   "summary": "roles/researcher.json|md, launch-catalog claude-code (allowedTools только orch.py research query), схема research-result, стадия в engine, регистрация результата; e2e на фейковом источнике.",
   "why": "Аудит П9.2. Риск: утверждения без источника — только в unknowns (контракт).",
   "scope": {
@@ -138,6 +138,10 @@
     {
       "path": ".swissknifeman/state/artifacts/sha256/e4ea5f7db00e04a3e8349033bbe399f88338c70cd3355ab1303a017b20380729",
       "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/acaef4b19444ddabd690ff0aea5520bab2304f49dae63fa1bd914f505a665311",
+      "role": "input"
     }
   ],
   "rules": [
@@ -173,8 +177,8 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-15T05:40:48Z",
-    "finished_at": "2026-10-15T05:41:54Z",
+    "started_at": "2026-10-15T06:06:08Z",
+    "finished_at": "2026-10-15T06:07:23Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet",
@@ -185,8 +189,22 @@
       "model": "conductor"
     },
     "attempt_id": "att-run-77fe1ca5e880f0f0e0816271-P10.2",
-    "notes": "Nothing was changed. The researcher role cannot be added inside scope.write_set: a new conductor schema needs a KINDS entry in lib/orch/conductor/contract.py (registry() fails on any mismatch between schema files and KINDS), role-manifest.result_shape is a closed enum without research-result (schemas/exec/v1/role-manifest.schema.json), and the plan rule on closed schemas requires valid/invalid fixtures (packages/orch/fixtures/conductor/v1/*/research-result) and a docs/contracts.md line. All of these are outside the write set.",
-    "escalation": "Write set is insufficient: need packages/orch/lib/orch/conductor/contract.py (KINDS), packages/orch/schemas/exec/v1/role-manifest.schema.json (result_shape enum + aicore schema compat), packages/orch/fixtures/conductor/v1/valid|invalid/research-result/*, packages/orch/docs/contracts.md. Optionally lib/orch/conductor/heal.py (heal rule for research-result)."
+    "notes": "The V1 failure was test_all_roles_prints_name_and_digest_per_role in bridges/orch-skiller: the resolver now returns the researcher role, but the test's ROLES tuple lacked it. ROLES in bridges/orch-skiller/tests/test_resolve_role.py already includes 'researcher' in the working tree, and I made no new edit this round. bridges/orch-skiller `bash scripts/test.sh` passes (24 tests OK) with a temporary HOME/SKM_HOME and the partner roots wired as scripts/test-bridges.sh does. I did not run V1 itself or the other bridge and package suites.\nChanged: CHANGELOG.md, bridges/orch-skiller/tests/test_resolve_role.py, bridges/planner-orch/README.md, bridges/planner-orch/schemas/run-options.schema.json, bridges/planner-orch/tests/test_worksource.py, bridges/planner-orch/worksource.py, packages/orch/configs/launch-catalog.json, packages/orch/docs/conductor.md, packages/orch/docs/contracts.md, packages/orch/docs/research.md, packages/orch/docs/work-source.md, packages/orch/fixtures/conductor/v1/invalid/research-result/bad-source-id.json, packages/orch/fixtures/conductor/v1/invalid/research-result/claim-without-source.json, packages/orch/fixtures/conductor/v1/invalid/research-result/empty-query.json, packages/orch/fixtures/conductor/v1/invalid/research-result/extra-key.json, packages/orch/fixtures/conductor/v1/invalid/research-result/no-unknowns.json, packages/orch/fixtures/conductor/v1/valid/research-result/claims.json, packages/orch/fixtures/conductor/v1/valid/research-result/empty.json, packages/orch/lib/orch/cli.py, packages/orch/lib/orch/conductor/contract.py, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/explain.py, packages/orch/lib/orch/conductor/options.py, packages/orch/lib/orch/conductor/prompts.py, packages/orch/lib/orch/launch.py, packages/orch/lib/orch/worksource.py, packages/orch/lib/orch/worksource_file.py, packages/orch/roles/researcher.json, packages/orch/roles/researcher.md, packages/orch/schemas/conductor/v1/research-result.schema.json, packages/orch/schemas/conductor/v1/run-options.schema.json, packages/orch/schemas/exec/v1/role-manifest.schema.json, packages/orch/schemas/work-source/v1/input.schema.json, packages/orch/schemas/work-source/v1/output.schema.json, packages/orch/tests/fixtures/conductor/fake_role.py, packages/orch/tests/fixtures/conductor/source/plugin.py, packages/orch/tests/test_conductor_research.py, packages/orch/tests/test_launch.py, packages/orch/tests/test_role_manifests.py, packages/orch/tests/test_roles_text.py, packages/orch/tests/test_worksource.py",
+    "deviations": [
+      "bridges/orch-skiller/tests/test_resolve_role.py (ROLES += 'researcher') is outside scope.write_set, which names bridges/planner-orch/** but not bridges/orch-skiller. The correction needs this one-line edit because the new role appears in the resolve_role.py --all-roles output.",
+      "changed outside the write set: bridges/orch-skiller/tests/test_resolve_role.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T06:07:23Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.2/evidence/V1.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.2/evidence/V1.json"
+    ]
   },
-  "updated_at": "2026-10-15T05:44:09Z"
+  "updated_at": "2026-10-15T06:07:23Z"
 }

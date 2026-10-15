@@ -18,7 +18,10 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
   no verb that returns an in-progress item to ``todo``, so it is finished as ``blocked`` under owner fencing
   (``--owner-session <run_id>``) and reopened, which clears the executor session (a run that does not hold the item is a no-op);
 - ``note`` adds a note to the plan's journal (``plan.py log <plan> <phase|item> --type note``) for work that has no item of
-  its own (support work run from a file input); it names a phase or an item in ``refs``, and a note without one is refused.
+  its own (support work run from a file input); it names a phase or an item in ``refs``, and a note without one is refused;
+- ``research`` saves the research-result of a research stage as ``research/<item>-<n>.json`` in the folder of the plan and
+  declares it with ``plan.py add-artifact … --role input`` (a repeat of the same result changes nothing); the file is a
+  record of the research, not plan state.
 
 An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
 ``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
@@ -43,7 +46,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -406,6 +409,41 @@ def op_release(fields: dict) -> dict:
     return {"op": "release", "outcome": "released"}
 
 
+_RESEARCH_ITEM = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def op_research(fields: dict) -> dict:
+    """The research-result of a piece of work in ``research/<item>-<n>.json`` of the plan, declared as an input of the item."""
+    import brief  # the planner engine is located and imported only when a result is saved
+    plan_ref, plans_root, number = fields["plan"], fields.get("plans_root"), fields["number"]
+    item = fields["ref"].split("/", 1)[0]
+    if number < 1 or not _RESEARCH_ITEM.match(item):
+        return {"op": "research", "outcome": "refused", "reason_code": "RESEARCH_REF_INVALID",
+                "message": f"research {number} of {fields['ref']!r} does not name a file of the plan"}
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
+    except brief.PlanError as error:
+        return {"op": "research", "outcome": "refused", "reason_code": error.code, "message": error.message}
+    if item not in plan.items:
+        return {"op": "research", "outcome": "refused", "reason_code": "ITEM_UNKNOWN",
+                "message": f"plan {plan_ref} has no item {item}"}
+    target = plan.root / "research" / f"{item}-{number}.json"
+    relative = target.resolve().relative_to(Path(plan.repo_root).resolve()).as_posix()
+    body = json.dumps(fields["result"], ensure_ascii=False, indent=2) + "\n"
+    same = target.is_file() and target.read_text(encoding="utf-8") == body
+    if not same:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+    try:
+        plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "input"],
+                  plans_root, code="ARTIFACT_REFUSED")
+    except Blocked as blocked:
+        if not same:  # a result the plan did not accept leaves no file behind
+            target.unlink(missing_ok=True)
+        return {"op": "research", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    return {"op": "research", "outcome": "no-op" if same else "recorded", "path": relative}
+
+
 def op_note(fields: dict) -> dict:
     """A note of support work in the journal of the plan: ``plan.py log <plan> <ref> --type note``."""
     refs = fields["refs"]
@@ -445,7 +483,7 @@ def invoke(request_id: str, request: dict) -> None:
                                           "message": f"expected point {POINT} with op {' | '.join(OPS)}"})
         return
     handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
-               "release": op_release, "note": op_note}[fields["op"]]
+               "release": op_release, "note": op_note, "research": op_research}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

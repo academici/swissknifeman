@@ -541,6 +541,7 @@ class Conductor:
         self._routes(item)
         adopted = self._adopted(item)
         scout_text = self._scout(item)
+        self._research(item)
         report = self._execute(item, 1, scout_text, prompts.ADOPTED.format(paths=", ".join(adopted)) if adopted else "")
         if report["status"] == "blocked":
             return self._finish(item, report, None)
@@ -922,6 +923,8 @@ class Conductor:
         roles = ["executor"]
         if self._scout_stage(item) is not None:
             roles.insert(0, "context-scout")
+        if self._research_wanted(item):
+            roles.insert(1 if roles[0] == "context-scout" else 0, "researcher")
         if self._reviewing(item):
             roles += ["reviewer", self._triage_role(item)]
         if self._closer_named(item):
@@ -1731,6 +1734,83 @@ class Conductor:
                                message=f"context-scout write-set hint ignored: {error}"[:300])
         return shown
 
+    # ------------------------------------------------------------------ research
+
+    def _research_wanted(self, item: Item) -> bool:
+        """Whether the piece gets a research stage. ``orch.research.policy`` ``required`` asks for one before every piece;
+        ``off`` never; ``conditional`` is for a piece whose plan asks for research, which the input does not carry yet."""
+        return (getattr(self.settings, "research", None) or {}).get("policy") == "required"
+
+    @staticmethod
+    def _research_query(item: Item) -> str:
+        doc = item.input_doc
+        text = f"Research for this work: {str(doc.get('goal') or '').strip()}"
+        return text + (f"\n\nWhy it is done: {str(doc['why']).strip()}" if doc.get("why") else "")
+
+    def _research(self, item: Item, number: int = 1) -> Optional[dict]:
+        """The research stage: the researcher role asks the configured sources (``orch.py research query``) and answers a
+        closed ``research-result``; the result is then saved where the work source keeps research (a plan: its ``research``
+        folder, declared as an input of the item; a file input: its artifacts) and, when the source cannot, kept in the
+        artifacts of the piece. ``None`` when the piece gets no research stage."""
+        if not self._research_wanted(item):
+            return None
+        from orch import research as research_mod
+        sources = [source.id for source in research_mod.sources_from(self.settings)]
+        if not sources:
+            raise Stop("RESEARCH_NO_SOURCES", "orch.research.policy is required, but [orch.research.sources] names no source")
+        role, key = "researcher", f"research.{number}"
+        route = item.routes[role]
+        folder = item.directory / "research"
+
+        def run() -> dict:
+            query_file = folder / f"query-{number}.txt"
+            query_file.parent.mkdir(parents=True, exist_ok=True)
+            query = self._research_query(item)
+            query_file.write_text(query + "\n", encoding="utf-8")
+            # ``python3`` as a bare name and no option before the verb: the launch catalog allows the researcher exactly
+            # ``python3 *orch.py research query *``; an invocation config before the verb is outside that allowance.
+            argv = ["python3", str(ORCH_ROOT / "scripts" / "orch.py"), "research", "query", "--source", sources[0],
+                    "--query-file", str(query_file)]
+            if self.config_file:
+                argv[2:2] = ["--config", str(self.config_file)]
+            prompt = prompts.researcher(item.input_doc, item=item.ref, step=key, query=query, sources=sources,
+                                        command=shlex.join(argv), roles_dir=self.roles_dir, skills=self._skills(item, role),
+                                        repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role))
+            doc, meta = self._role(item, key, role, prompt, "research-result",
+                                   extra=lambda found: contract.research_problems(sources, found))
+            saved = write_json(folder / f"result-{number}.json", doc)
+            return {"result": doc, "file": self._relative(saved), **meta}
+
+        found = self._step(item, key, run, role=role, route=self.label(route),
+                           verdict=lambda result: f"{len(result['result']['claims'])} claim(s), "
+                                                  f"{len(result['result']['unknowns'])} unknown(s)")
+        self._step(item, f"research-save.{number}", lambda: self._research_save(item, number, found), role="registrar",
+                   route=self.conductor.get("registrar") or "orch/conductor",
+                   verdict=lambda result: f"{result['outcome']} {result.get('path') or ''}".strip())
+        return found["result"]
+
+    def _research_save(self, item: Item, number: int, found: dict) -> dict:
+        result_file = self.project / found["file"]
+        code, answer, err = self._orch("source", "research", "--run", item.orch_run, "--result", str(result_file),
+                                       "--number", str(number), "--actor", self.conductor.get("registrar") or "orch/conductor")
+        if code == 0 and isinstance(answer, dict) and answer.get("outcome") in ("recorded", "no-op"):
+            return {"outcome": answer["outcome"], "path": answer.get("path")}
+        if isinstance(answer, dict) and answer.get("outcome") == "refused":
+            why = f"{answer.get('reason_code', 'RESEARCH_REFUSED')}: {answer.get('message', '')}".rstrip(": ")
+        else:
+            why = err or "the work source printed no answer"
+        kept = write_json(item.artifacts / f"research-{number}.json", found["result"])
+        self.progress.emit("info", item=item.ref, stage=f"research-save.{number}", reason_code="RESEARCH_NOT_SAVED",
+                           message=f"the work source did not take the research result ({why}); kept in {self._relative(kept)}"[:300])
+        return {"outcome": "kept", "path": self._relative(kept), "reason": why[:300]}
+
+    @staticmethod
+    def _research_paths(item: Item) -> set:
+        """The files the work source saved research results in (a plan's ``research`` folder): a commit of the piece takes them."""
+        saved = (((item.state.get("steps") or {}).get(key) or {}).get("result") or {}
+                 for key in (item.state.get("steps") or {}) if key.startswith("research-save."))
+        return {found["path"] for found in saved if found.get("outcome") in ("recorded", "no-op") and found.get("path")}
+
     def _execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
         """One executor round. A blocking question is queued, denied or, with a default, answered by policy once and the
         round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round."""
@@ -2535,7 +2615,8 @@ class Conductor:
         if status == "blocked" and not records_only:
             item.state["partial"] = bool(report.get("changed_paths"))
         if (status != "blocked" or records_only) and item.policy.get("git_action") == "commit":
-            paths = sorted(set(report.get("changed_paths", [])) | {self._relative(item.artifacts) + "/"})
+            paths = sorted(set(report.get("changed_paths", [])) | {self._relative(item.artifacts) + "/"}
+                           | self._research_paths(item))
 
             def commit() -> dict:
                 args = ["source", "commit", "--run", item.orch_run]

@@ -1,5 +1,5 @@
 """The closed documents of the conductor (``schemas/conductor/v1``): run-options, stage-report, review-findings,
-triage-result, progress-line, scout-write-set and prompt-manifest, checked by the closed-profile validator of aicore."""
+triage-result, research-result, progress-line, scout-write-set and prompt-manifest, checked by the closed-profile validator of aicore."""
 from __future__ import annotations
 
 from aicore.util import schema
@@ -7,7 +7,8 @@ from aicore.util import schema
 from orch.settings import ORCH_ROOT
 
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "conductor" / "v1"
-KINDS = ("progress-line", "prompt-manifest", "review-findings", "run-options", "scout-write-set", "stage-report", "triage-result")
+KINDS = ("progress-line", "prompt-manifest", "research-result", "review-findings", "run-options", "scout-write-set", "stage-report",
+         "triage-result")
 _REGISTRY: list = []
 
 
@@ -39,4 +40,14 @@ def triage_problems(findings: dict, triage: dict) -> list[str]:
     severe = {item["id"] for item in findings.get("findings", []) if item.get("severity") in ("Blocker", "Major")}
     issues += [f"/rejected: {entry['finding']} is a Blocker or Major finding rejected without a reproduction that ran"
                for entry in triage.get("rejected", []) if entry.get("finding") in severe and not entry.get("reproduction")]
+    return issues
+
+
+def research_problems(allowed: list, result: dict) -> list[str]:
+    """What the schema cannot see in a research-result: a source id outside the ``allowed`` ones (the sources of
+    ``[orch.research.sources]`` the role was given), and claims that name no source asked."""
+    issues = [f"/sources_used: {name} is not an allowed source ({', '.join(allowed)})"
+              for name in result.get("sources_used", []) if name not in allowed]
+    if result.get("claims") and not result.get("sources_used"):
+        issues.append("/sources_used: claims are given but no source was asked")
     return issues

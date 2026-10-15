@@ -11,7 +11,8 @@ plugin source: a request orch builds wrongly never reaches it, and its answers a
 - ``commit`` commits nothing unless the run asked for it (the changes stay in the tree); then it commits the given paths
   with the message ``adhoc(<input_id>): <title>``;
 - ``release`` is a no-op (a file input keeps no claim) and ``note`` is refused: the journal of a plan belongs to the plan's
-  own source.
+  own source;
+- ``research`` records ``research-<n>.json`` next to the stage-report.
 """
 from __future__ import annotations
 
@@ -103,6 +104,9 @@ class FileWorkSource:
 
     def note(self, **fields: Any) -> dict:
         return self.call("note", fields)
+
+    def research(self, **fields: Any) -> dict:
+        return self.call("research", fields)
 
     # ------------------------------------------------------------------ operations
 
@@ -237,3 +241,16 @@ class FileWorkSource:
     def _note(self, request: dict) -> dict:
         return {"op": "note", "outcome": "refused", "reason_code": "NOTE_UNSUPPORTED",
                 "message": "a file input has no journal; the journal of a plan belongs to the source of that plan"}
+
+    def _research(self, request: dict) -> dict:
+        """The result of a research stage is kept next to the other records of the piece: ``research-<n>.json`` in its
+        artifact folder (``orch-artifacts``); a repeat of the same result changes nothing."""
+        doc = read_input(self.path)
+        target = self.project / self._artifacts(request["run_id"], doc) / f"research-{request['number']}.json"
+        body = json.dumps(request["result"], ensure_ascii=False, indent=2) + "\n"
+        relative = target.relative_to(self.project).as_posix()
+        if target.is_file() and target.read_text(encoding="utf-8") == body:
+            return {"op": "research", "outcome": "no-op", "path": relative}
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+        return {"op": "research", "outcome": "recorded", "path": relative}

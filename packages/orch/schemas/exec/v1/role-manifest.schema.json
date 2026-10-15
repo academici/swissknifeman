@@ -145,7 +145,8 @@
         "stage-report",
         "review-findings",
         "registration-receipt",
-        "triage-result"
+        "triage-result",
+        "research-result"
       ],
       "description": "Result shape."
     },

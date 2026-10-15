@@ -7,7 +7,7 @@ live in `orch.research.sources`; they use the standard library only.
 
 | Key | Value | Default | Layers | Meaning |
 |---|---|---|---|---|
-| `research.policy` | `required`, `conditional`, `off` | `conditional` | all | when a piece of work gets a research stage: every piece, only a piece whose research need is `required`, or never (the stage itself arrives with the researcher role) |
+| `research.policy` | `required`, `conditional`, `off` | `conditional` | all | when a piece of work gets a research stage: every piece, only a piece whose research need is `required`, or never (`required` is served by the research stage below; `conditional` waits for the research need of a plan item) |
 | `research.sources.<id>.kind` | `command`, `filesystem`, `mcp-stdio` | none (required) | all | adapter of the source; `http` and `vector` do not exist yet |
 | `research.sources.<id>.argv` | array of strings | empty | defaults, machine, invocation, flags | command line of a `command` or `mcp-stdio` source; a leading `~` is expanded |
 | `research.sources.<id>.tool` | string | `search` | all | `mcp-stdio`: the tool that receives the query |
@@ -51,6 +51,34 @@ orch.py research query --source ID --query-file FILE [--json]
 
 `sources` lists the policy and the sources on the ladder. `query` prints the text and one `source:` line per source, or
 the answer as JSON. A failure prints `CODE: message` to stderr and exits 1.
+
+## The researcher role and the research stage
+
+The role `researcher` (`roles/researcher.md|json`; class `implementation`; filesystem read, shell read-only, network
+allowed, no plan API, no write authority) gets a question and the ids of the allowed sources. Its launch entry
+(`configs/launch-catalog.json`, `claude-code` only) lists `--tools Bash,Read,Grep,Glob` and allows exactly
+`Bash(python3 *orch.py research query *)`; there is no codex route, because a read-only codex sandbox has no network. An
+invocation `--config` before the verb would fall outside that allowance, so the sources of a conducted run must come from
+the machine or project layers.
+
+It answers a closed `research-result` (`schemas/conductor/v1/research-result.schema.json`):
+
+```json
+{"query": "…", "claims": [{"text": "…", "sources": ["https://… or path"]}], "contradictions": ["…"],
+ "unknowns": ["…"], "sources_used": ["source id"]}
+```
+
+Every claim has at least one source; a statement without one belongs to `unknowns`. `sources_used` may name only the
+allowed sources, and claims need a source that was asked (`ROLE_OUTPUT_INVALID` otherwise). The raw replies of the sources
+are not stored: the stream of the role keeps them.
+
+With `policy = "required"` the conductor adds the steps `research.1` and `research-save.1` before the executor of every
+piece (the question is the goal and the reason of the piece; see [Conductor](conductor.md)). `research-save.1` has the
+work source keep the result (`orch.py source research`): a plan keeps `research/<item>-<n>.json` in its folder and declares
+it as an input of the item (through the planner bridge); a file input keeps `research-<n>.json` in its
+artifacts. A source that cannot keep it leaves the result in the artifacts of the piece (`RESEARCH_NOT_SAVED`). With no
+source configured the run stops before any work with `RESEARCH_NO_SOURCES`. The policy `conditional` (the research need
+of a plan item) and the block of the executor prompt are not part of this stage yet.
 
 ## Example: Perplexity (machine file)
 

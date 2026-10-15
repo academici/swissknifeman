@@ -233,6 +233,9 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
   `triage-result`, `progress-line`) of the [conductor](conductor.md); `orch.py validate <kind>` accepts these kinds.
 - conductor/v1 — optional `issue` fields `class`, `severity`, `outcome`, `auto_fixable`, `evidence` in `stage-report` (a `deviation` needs `class`, `impact`, `outcome`) and the new kind `scout-write-set` (`paths`, `tests`: the optional hint block of the context-scout).
 - conductor/v1 — new kind `prompt-manifest` (`prompt-manifest/v1`: `step`, `role`, `route`, `blocks` with `kind`, `origin`, `sha256`, `tokens`, `id?`, `excluded`, `estimated_tokens`, `prompt_sha256`, `budgets?`): what the prompt of a role step was made of, written to `prompts/<step>.manifest.json`; existing kinds are unchanged.
+- conductor/v1 — new kind `research-result` (`query`, `claims` of `text` and at least one `sources` entry, `contradictions`, `unknowns`, `sources_used`): the closed answer of the researcher role; existing kinds are unchanged.
+- exec/v1 — `role-manifest.result_shape` accepts `research-result` (enum widened) for the role `researcher`; existing documents remain valid.
+- work-source/v1 — optional op `research` (`plan`, `plans_root?`, `ref`, `run_id`, `number`, `result`, `actor?` → `recorded` \| `no-op` \| `refused`, `path?`): the source keeps the research result of a piece of work; existing ops are unchanged.
 - exec/v1 — `role-manifest.result_shape` accepts `triage-result` (enum widened) and `run-policy.review` has an
   optional `triage` (`role`, `model_class?`); existing documents remain valid.
 - work-source/v1 — optional `options` (run-option layers) of a claim, optional `artifacts_dir` of a brief, and the

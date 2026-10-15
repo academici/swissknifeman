@@ -160,6 +160,18 @@ class RefusalTests(PrepareCase):
         next(s for s in policy["stages"] if s["kind"] == "primary")["model_class"] = "economy"
         self.assertEqual(self.refusal("native", "claude-code", policy).code, "ROUTE_UNDERSHOOT")
 
+    def test_an_unpinned_primary_follows_the_route_minimum_of_the_piece(self):
+        engine = Native(self.out, catalog=self.catalog)
+        policy, doc = fixture("run-policy", "solo"), fixture("execution-input", "plan-bound")
+        self.assertIsNone(next(s for s in policy["stages"] if s["kind"] == "primary").get("model_class"))
+        doc["route"]["minimum"]["class"] = "frontier"
+        from orch import contracts
+        doc["digest"] = contracts.canonical_digest(doc)
+        doc["input_id"] = doc["input_id"].split("@")[0] + "@" + doc["digest"][:12]
+        plan = engine.prepare(doc, policy, roles(), provider="claude-code")
+        primary = next(stage for stage in plan["stages"] if stage["stage_id"] == "primary")
+        self.assertEqual(primary["model"], "m-big")  # the frontier model of the test catalog
+
     def test_role_without_manifest(self):
         self.assertEqual(self.refusal("native", "claude-code", "frontend-bounded").code, "ROLE_UNKNOWN")
 

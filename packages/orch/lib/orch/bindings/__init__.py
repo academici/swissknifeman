@@ -219,6 +219,9 @@ def prepare_common(binding: str, input_doc: dict, policy: dict, roles: Mapping[s
         if manifest is None:
             raise PortError("ROLE_UNKNOWN", f"stage {stage['id']!r} uses role {stage['role']!r} without a manifest")
         model_class = stage.get("model_class") or manifest["model_class_min"]
+        if stage["kind"] == "primary" and not stage.get("model_class") \
+                and CLASS_RANK[model_class] < CLASS_RANK[minimum["class"]]:
+            model_class = minimum["class"]  # a pack that does not pin the class follows the route minimum of the piece
         if stage["kind"] == "primary" and CLASS_RANK[model_class] < CLASS_RANK[minimum["class"]]:
             raise PortError("ROUTE_UNDERSHOOT", f"stage {stage['id']!r} class {model_class!r} is below the "
                             f"input minimum {minimum['class']!r}")

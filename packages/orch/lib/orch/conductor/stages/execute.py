@@ -231,7 +231,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
         return self._blocked(report, "QUESTION_DENIED", said), False
     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_QUEUED",
-                       message=f"{said[:240]}; answer with conduct.py answer, then resume --retry {item.ref}")
+                       message=f"{said[:240]}; answer with orch conduct answer, then resume --retry {item.ref}")
     blocked = report
     for entry in waiting:
         blocked = self._blocked(blocked, "QUESTION", f"{entry['id']} {entry['text']}{self._advice_note(entry)}")
@@ -239,7 +239,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
 
 
 def sync_questions(self, item: Item) -> None:
-    """Take the answers written by ``conduct.py answer`` into the state and hand them to the executor, when the input
+    """Take the answers written by ``orch conduct answer`` into the state and hand them to the executor, when the input
     is still the one they were asked on; an answer to another input is stale, its question is asked again."""
     store = self._questions(item)
     if not store:

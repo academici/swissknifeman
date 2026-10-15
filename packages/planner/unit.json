@@ -9,6 +9,7 @@
   "requires": [
     {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
   ],
+  "execution": {"project": "required", "cwd": "preserve", "writes": "project"},
   "provides": {
     "cli": ["scripts/plan.py"],
     "config": "configs/config.schema.json",

@@ -1,16 +1,16 @@
 # Plan read API
 
-Use `python3 <Planner package root>/scripts/plan.py` for plan data. Query documents and links through
+Use `plan.py` (the project CLI `python3 -I .swissknifeman/launcher.py planner`) for plan data. Query documents and links through
 the API; never open or edit plan source files directly. Human Markdown under `views/` is not an
 agent input. Repository code and documentation remain ordinary readable files.
 
 ## Discover the API
 
 ```sh
-python3 <Planner package root>/scripts/plan.py schema --verbs
-python3 <Planner package root>/scripts/plan.py schema item
-python3 <Planner package root>/scripts/plan.py schema read-links
-python3 <Planner package root>/scripts/plan.py schema defs
+plan.py schema --verbs
+plan.py schema item
+plan.py schema read-links
+plan.py schema defs
 ```
 
 `schema` needs no plan. With no argument, it returns the same catalog as `schema --verbs`.
@@ -37,7 +37,7 @@ The catalog is built from the live argument parser. Each entry contains `name`, 
 
 Links to other tools live only in named bridges (`<root>/<name>/bridge.json`); the core never names a partner.
 The planner scans the `bridges.roots` setting (relative paths are taken from the project root, `~` is expanded),
-then a built-in `<Planner package root>/bridges/` when it exists; the first root that holds a name wins and a
+then the built-in `bridges/` of the planner package when it exists; the first root that holds a name wins and a
 shadowed one is reported as `BRIDGE_SHADOWED` on stderr. `plan.py bridge list` validates every `bridge.json` (kind
 `bridge`, `schema bridge`) and prints one row per bridge (`--output json`: `{"bridges": [...]}`; `path` is relative
 to the project root when the bridge is inside it).
@@ -65,13 +65,13 @@ comes from; `--json` gives `{"aicore", "layers", "values"}` for `show` and `conf
 ## Overlays
 
 Every command of the module opens with a call to its overlay slot: the owner's own rules for that command, kept
-outside the module. `plan.py overlays SLOT [--project DIR] [--json] [--strict]` takes `planner:<command>` or
+outside the module. `plan.py overlays SLOT [--json] [--strict]` takes `planner:<command>` or
 `<command>` (the slots are `provides.overlay_slots` of `unit.json`, one per command) and prints the block of the
 files listed under `[aicore.overlays."planner:<command>"]` in the layered configuration, in layer order. The
 block is empty without overlays; the files add rules and never replace the plan, its checks or safety rules.
 Warnings (`OVERLAY_MISSING`, `OVERLAY_INVALID`) go to stderr; `--strict` makes them exit 1. `--json` prints
-`{"slot", "overlays": [{"path", "layer", "digest", "bytes"}], "warnings", "aicore"}`. `--project` defaults to the
-git repository of the working directory. Without aicore the output is empty and the exit code 0 (`--json`:
+`{"slot", "overlays": [{"path", "layer", "digest", "bytes"}], "warnings", "aicore"}`. The project is the one the
+launcher bound (else the git repository of the working directory). Without aicore the output is empty and the exit code 0 (`--json`:
 `warnings` is `["AICORE_UNAVAILABLE"]`). Refusals: `OVERLAY_SLOT_UNKNOWN`, `OVERLAY_TOO_LARGE` (the texts of a slot
 are limited to 32 KiB).
 

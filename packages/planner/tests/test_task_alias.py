@@ -81,8 +81,9 @@ class AliasPluginTests(unittest.TestCase):
             self.assertTrue(notice.startswith(f"> `/task:{name}` is deprecated"), notice)
             self.assertIn(f"use `/planner:{name}`", notice)
             self.assertEqual(alias[close + 2], "")
-            # a relative link into the package becomes a package-root reference (the alias folder has no references/)
-            expected = [re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", r"\1: `<Planner package root>/\2`", line)
+            # a relative link into the package names the file of the planner plugin (the alias folder has no
+            # references/, and no command names a package root)
+            expected = [re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", r"\1 (`\2` of the enabled planner plugin)", line)
                         for line in origin[close + 1:]]
             self.assertEqual(alias[close + 3:], expected)
             self.assertNotIn("Skill(", "\n".join(alias))

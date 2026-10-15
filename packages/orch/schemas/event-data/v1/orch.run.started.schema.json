@@ -54,12 +54,13 @@
     "project_resolution": {
       "type": "string",
       "enum": [
+        "launcher",
         "flag",
         "environment",
         "marker",
         "git"
       ],
-      "description": "How the project of the run was found: --project, SKM_PROJECT_ROOT, a marker folder or a git repository."
+      "description": "How the project of the run was found: the project-local launcher, --project, SKM_PROJECT_ROOT, a marker folder or a git repository."
     }
   },
   "required": [

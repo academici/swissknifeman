@@ -796,10 +796,10 @@ def _alias_command_bytes(command: str, content: bytes) -> bytes:
         f"Deprecated alias of /{COMMAND_NAMESPACE}:{command}. {description}", ensure_ascii=False) + "\n"
     notice = (f"> `/{LEGACY_NAMESPACE}:{command}` is deprecated and will be removed in the next minor "
               f"release: use `/{COMMAND_NAMESPACE}:{command}`. Say this to the user once, then follow "
-              f"the instructions below; `<Planner package root>` is the root of the enabled "
-              f"{MODULE_ID} plugin.")
-    # A relative link points into the planner package, which the alias folder is not part of.
-    body = re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", r"\1: `<Planner package root>/\2`", body)
+              f"the instructions below.")
+    # A relative link points into the planner package, which the alias folder is not part of: name the file of the
+    # enabled planner plugin instead of a path (no command names a package root).
+    body = re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", rf"\1 (`\2` of the enabled {MODULE_ID} plugin)", body)
     return f"---\n{''.join(lines)}---\n{notice}\n\n{body}".encode("utf-8")
 
 
@@ -1579,35 +1579,12 @@ Current Codex mapping: {class_routes}; {effort_routes}.
 '''
 
 
-def _codex_plugin_root_expression() -> str:
-    """Return the shell expression that finds the shared planner runtime of the SKM marketplace.
-
-    Codex's marketplace cache deliberately contains only declared skills, not the planner Python
-    runtime. Project-selected skills therefore link to the canonical marketplace checkout; this
-    expression discovers that single shared checkout and never falls back to a consumer-local copy.
-    """
-    return (
-        "$(codex plugin marketplace list --json | python3 -c "
-        "'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item[\"root\"] "
-        "for item in data.get(\"marketplaces\", []) if item.get(\"name\")==\"swissknifeman\" "
-        f"and (pathlib.Path(item[\"root\"])/\"{_MODULE_DIR}/lib/{MODULE_ID}\").is_dir()]; "
-        f"len(roots)==1 or sys.exit(\"{MODULE_ID} runtime unavailable: expected one marketplace "
-        f"root with {_MODULE_DIR}/lib/{MODULE_ID}\"); print(roots[0]+\"/{_MODULE_DIR}\")')"
-    )
-
-
 def _codex_current_route_rule(record: CommandRecord) -> str:
-    """Tell Codex where the planner package root (and so ``plan.py``) lives."""
-    planner_root = _codex_plugin_root_expression()
-    return f'''## Codex planner root — provider-specific
+    """Tell Codex how ``plan.py`` is reached: the project launcher, never a package script path."""
+    return '''## Codex planner CLI — provider-specific
 
-The planner package root is the installed Codex plugin:
-
-```bash
-export PLANNER_CODEX_PLUGIN_ROOT="{planner_root}"
-```
-
-`plan.py` means `python3 "$PLANNER_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
+`plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root; the launcher binds the
+project and hands over to the installed `swissknifeman`. Declare the route with
 `--actor codex/<model>/<reasoning effort>` from this session's settings.
 
 '''

@@ -7,7 +7,7 @@ in `views/`, and never supplies execution state, agent instructions or indexed c
 
 ## Read API
 
-Use `python3 <Planner package root>/scripts/plan.py`. Pass a plan directory id, Short ID (`PLAN<N>`)
+Use `plan.py`, the project CLI `python3 -I .swissknifeman/launcher.py planner`. Pass a plan directory id, Short ID (`PLAN<N>`)
 or path as `PLAN`. Repository code and documentation remain ordinary readable files.
 
 | Need | Command after `plan.py` |

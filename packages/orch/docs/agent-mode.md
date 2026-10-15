@@ -4,7 +4,7 @@ The procedure for an agent that does not follow a fixed command line: it asks th
 pieces may run now, hands the chosen lane to the conductor, watches the run and decides what to do after a stop. The
 agent decides; every step is a command with a closed output, so nothing here needs a model.
 
-`<orch>` is this package (`scripts/conduct.py`). The work source of the plan engine in use says which pieces are ready;
+Run it through the project launcher (`python3 -I .swissknifeman/launcher.py orch conduct ...`; `swissknifeman project init` writes it once). The work source of the plan engine in use says which pieces are ready;
 its bridge documents the exact command and the fields of its answer (for the planner: the section "Agent mode" of
 `bridges/planner-orch/README.md`).
 
@@ -23,18 +23,18 @@ not a conductor run. An empty list of lanes with waiting entries means nothing i
 From the root of the project, on a clean working tree:
 
 ```text
-python3 <orch>/scripts/conduct.py run --plan <plan> --items <item> [<item> …] [--options FILE]
+python3 -I .swissknifeman/launcher.py orch conduct run --plan <plan> --items <item> [<item> …] [--options FILE]
 ```
 
 `--dry-run [--scenario S]` first shows the routes, their availability and the merged options without claiming anything.
-For parallel lanes use one worktree and one branch per lane; the conductor of a lane works in its own tree. Items outside a plan: `conduct.py run --input FILE` (see `conductor.md`).
+For parallel lanes use one worktree and one branch per lane; the conductor of a lane works in its own tree. Items outside a plan: `orch conduct run --input FILE` (see `conductor.md`).
 
 ## 3. Watch
 
 ```text
-python3 <orch>/scripts/conduct.py status [--run RUN] [--json]     # state, the current step, the last beacon, the agent runs
-python3 <orch>/scripts/conduct.py observe [--run RUN] [--follow]  # the observer report; --follow prints the notable lines
-python3 <orch>/scripts/conduct.py questions [--run RUN] [--json]  # open questions of the executor and their age
+python3 -I .swissknifeman/launcher.py orch conduct status [--run RUN] [--json]     # state, the current step, the last beacon, the agent runs
+python3 -I .swissknifeman/launcher.py orch conduct observe [--run RUN] [--follow]  # the observer report; --follow prints the notable lines
+python3 -I .swissknifeman/launcher.py orch conduct questions [--run RUN] [--json]  # open questions of the executor and their age
 ```
 
 A beacon (`STAGE_SLOW`, `STAGE_IDLE`, `CHECK_SLOW`, `BUDGET_OVER`, `LIMIT_OVER`, `RUN_SLOW`, `RESULT_SILENT_DENIAL`,
@@ -45,15 +45,15 @@ stopped (`CODE: message` on stderr, the code is in `status`), 130 it was interru
 
 | Stop | What to do |
 | --- | --- |
-| `ITEM_BLOCKED` with an escalation (a question, `CHECKS_RED`, `REVIEW_LIMIT`, …) | read the escalation in the report of the piece. A question of the executor (`QUESTION: <id> …`): `conduct.py answer --run RUN --item ITEM --question ID (--option ID \| --text T)`, then `resume --run RUN --retry ITEM` (a plain `resume` does not take a blocked piece back). Anything else: amend the plan (or give what is missing), reopen the item in the work source, then `resume --retry ITEM` |
+| `ITEM_BLOCKED` with an escalation (a question, `CHECKS_RED`, `REVIEW_LIMIT`, …) | read the escalation in the report of the piece. A question of the executor (`QUESTION: <id> …`): `orch conduct answer --run RUN --item ITEM --question ID (--option ID \| --text T)`, then `resume --run RUN --retry ITEM` (a plain `resume` does not take a blocked piece back). Anything else: amend the plan (or give what is missing), reopen the item in the work source, then `resume --retry ITEM` |
 | `PROVIDER_QUOTA`, `PROVIDER_AUTH`, `PROVIDER_AUTHZ` | fix the account or wait for the reset the message names, then `resume --run RUN` |
 | `ROLE_FAILED`, `ROLE_OUTPUT_*`, `OPTIONS_INVALID`, … | fix the cause named in the message (provider, options, the work itself), then `resume --run RUN` |
 | `WORKTREE_DIRTY` | the tree holds changes the run did not make: commit or set them aside; `run --adopt` takes over an earlier attempt of the first piece |
-| the piece was finished or given up outside the conductor | `conduct.py settle --run RUN --item ITEM --outcome done\|done_with_deviations\|blocked --reason TEXT` |
-| the run died before any work began | `conduct.py release --run RUN --item ITEM` gives the claim back |
+| the piece was finished or given up outside the conductor | `orch conduct settle --run RUN --item ITEM --outcome done\|done_with_deviations\|blocked --reason TEXT` |
+| the run died before any work began | `orch conduct release --run RUN --item ITEM` gives the claim back |
 
 ```text
-python3 <orch>/scripts/conduct.py resume --run RUN [--retry ITEM …]
+python3 -I .swissknifeman/launcher.py orch conduct resume --run RUN [--retry ITEM …]
 ```
 
 `resume` repeats no closed step; `--retry ITEM` takes a blocked piece back from the executor round that reported

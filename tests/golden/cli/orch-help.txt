@@ -1,12 +1,14 @@
 exit: 0
 --- stdout ---
 usage: orch.py [-h] [--config FILE] [--project DIR]
-               [--project-resolution {flag,environment,marker,git}]
-               {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,doctor}
+               [--project-resolution {launcher,flag,environment,marker,git}]
+               {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,doctor}
                ...
 
 positional arguments:
-  {validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,doctor}
+  {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,doctor}
+    conduct             the conductor: run|resume|settle|release|status|observ
+                        e|answer|questions|prompt|gates (orch conduct --help)
     validate            validate an exec/v1 or conductor/v1 JSON document
     launch              read the launch catalog (role x provider)
     input               create an execution-input without a plan
@@ -32,7 +34,7 @@ options:
                         nearest .git or .swissknifeman above the working
                         directory (the run cycle needs one:
                         PROJECT_CONTEXT_REQUIRED)
-  --project-resolution {flag,environment,marker,git}
+  --project-resolution {launcher,flag,environment,marker,git}
                         with --project: how the caller found the project (the
                         conductor passes its own answer; recorded in
                         orch.run.started)

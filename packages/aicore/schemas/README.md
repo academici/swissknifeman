@@ -28,6 +28,8 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `common` | v1 | Shared `$defs` for other contracts to reference: `semver`, `module_id`, `relpath`, `argv`, `stability`, `extensions` (namespaced `<owner>.<name>` keys), `media_type`, `rfc3339_utc` |
 | `unit` | v1 | Module manifest (`packages/<id>/unit.json`): identity, version, dependencies, public surface, default event subscriptions |
 | `check-result` | v1 | Result of one diagnostic check (`ok`, `warn`, `fail`, `skip`) |
+| `project-launcher-lock` | v1 | Lock of the project-local launcher (`.swissknifeman/launcher.lock.json`): protocol, template digest, managed files |
+| `invocation-context` | v1 | `swissknifeman project context --json`: project root, invocation cwd, resolution, launcher |
 | `error` | v1 | Normalized provider failure: class, code, retryable, safe message; implemented by `aicore.provider.errors` |
 | `capability-support` | v1 | One observation of provider support for a capability, by dimension (feature, resource, policy, health) |
 | `model-catalog` | v1 | Models of each provider by class and effort; data in `configs/model-catalog.json`, API `aicore.provider.models` |

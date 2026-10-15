@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `planner:plan-close`.
 - Invocation: `$ planner:plan-close <arguments>`
 - Routing: `implementation/low -> gpt-6-sol/low`
 - Canonical source: `packages/planner/commands/plan-close.md`
-- Canonical SHA-256: `sha256:bf7a594a0aa3b150fd57e439b29508daa8cfcd2879ab33135c1bd073323c3c45`
+- Canonical SHA-256: `sha256:71622dd35042f16da2401737a4aaddb5fea75687b7ea9a560f2162394f406925`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this planner command or skill. Planner is not an

@@ -119,3 +119,40 @@ def atomic_write_json(path, data, *, version=None, indent=2, mode=None, check_ta
         data = {"version": version, **rest}
     atomic_write_text(path, json.dumps(data, indent=indent, ensure_ascii=False) + "\n",
                       mode=mode, check_target=check_target)
+
+
+def durable_replace(path, data, *, mode=None):
+    """Replace ``path`` with ``data`` (bytes) crash-safely: a unique temporary file in the same folder (so the same
+    filesystem), flushed and ``fsync``-ed, then ``os.replace`` and an ``fsync`` of the folder. A failure at any point
+    leaves the old file untouched and removes the temporary one; an unsafe target (symlink, hard link, not a regular
+    file) is refused like :func:`atomic_write_text` does."""
+    import tempfile
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    assert_safe_replace_target(path)
+    handle, name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+    try:
+        with os.fdopen(handle, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if mode is not None:
+            os.chmod(name, mode)
+        os.replace(name, path)
+    except BaseException:
+        try:
+            os.unlink(name)
+        except FileNotFoundError:
+            pass
+        raise
+    try:
+        folder = os.open(str(path.parent), os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(folder)
+    except OSError:
+        pass
+    finally:
+        os.close(folder)

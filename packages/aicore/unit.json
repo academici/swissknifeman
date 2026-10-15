@@ -18,6 +18,8 @@
       {"id": "urn:swissknifeman:aicore:capability-support", "path": "schemas/capability-support/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:model-catalog", "path": "schemas/model-catalog/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:config-explain", "path": "schemas/config-explain/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:project-launcher-lock", "path": "schemas/project-launcher-lock/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:invocation-context", "path": "schemas/invocation-context/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:skill-descriptor", "path": "schemas/skill-descriptor/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:skill-selection", "path": "schemas/skill-selection/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:eval-context", "path": "schemas/eval-context/v1", "version": "v1", "stability": "development"},

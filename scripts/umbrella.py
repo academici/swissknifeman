@@ -122,6 +122,60 @@ def _exec(head: Sequence[str], rest: Sequence[str]) -> int:
     return 1  # not reached
 
 
+def execution_of(unit: Any) -> Dict[str, str]:
+    """The ``execution`` declaration of a module: ``project`` (required|optional|none), ``cwd`` (project|preserve|unit),
+    ``writes``; a module without one is ``optional``/``preserve``."""
+    value = unit.doc.get("execution") if unit is not None else None
+    value = value if isinstance(value, dict) else {}
+    return {"project": str(value.get("project") or "optional"), "cwd": str(value.get("cwd") or "preserve"),
+            "writes": str(value.get("writes") or "none")}
+
+
+def apply_execution(unit: Any, args: Sequence[str]) -> Optional[int]:
+    """Enforce the execution declaration before a module runs: a project-required module without a project is
+    ``PROJECT_CONTEXT_REQUIRED`` (help words pass), ``cwd: project`` starts it in the project root and ``cwd: unit`` in
+    the module root. ``None`` to go on, else the exit code of the refusal."""
+    policy = execution_of(unit)
+    if args and args[0] in HELP_FLAGS:
+        return None
+    if policy["project"] == "required" or policy["cwd"] == "project":
+        from aicore.state import ProjectContextRequired, resolve_project
+
+        try:
+            context = resolve_project(Path.cwd())
+        except ProjectContextRequired as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        if context is None and policy["project"] == "required":
+            print(f"PROJECT_CONTEXT_REQUIRED: {unit.id} works on a project; run it inside one, or through the project "
+                  f"launcher: python3 -I .swissknifeman/launcher.py {unit.id} ...", file=sys.stderr)
+            return 1
+        if context is not None and policy["cwd"] == "project":
+            os.chdir(context.root)
+    if policy["cwd"] == "unit":
+        os.chdir(unit.root)
+    return None
+
+
+def check_launcher(env: Optional[Dict[str, str]] = None) -> Optional[int]:
+    """Validate the project-launcher context before anything is routed and put the canonical values into the
+    environment the modules inherit. ``None`` to go on, else the exit code of the refusal (``CODE: message``)."""
+    from aicore.state import LauncherError, validate_launcher_env
+
+    target = os.environ if env is None else env
+    try:
+        _context, checked, warnings = validate_launcher_env(target)
+    except LauncherError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    for line in warnings:
+        print(line, file=sys.stderr)
+    for name in [key for key in target if key not in checked]:
+        del target[name]
+    target.update(checked)
+    return None
+
+
 def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
           config: Optional[Mapping[str, Any]] = None) -> int:
     """Resolve the first word: built-in command, alias, module id; anything else is unknown."""
@@ -150,6 +204,9 @@ def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
         path = cli_of(unit) if unit is not None else None
         if path is None or not path.exists():
             return _missing(path or ROOT / "packages" / str(target["unit"]))
+        refused = apply_execution(unit, target["args"])
+        if refused is not None:
+            return refused
         return _exec(_command(path), target["argv_prefix"] + target["args"])
     alias = (config.get("aliases") or {}).get(cmd)
     if isinstance(alias, dict):  # a known alias whose routes all have a condition that the arguments miss
@@ -160,7 +217,10 @@ def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
     unit = group_units(units).get(cmd)
     if unit is not None:
         path = cli_of(unit)
-        return _exec(_command(path), rest) if path.exists() else _missing(path)
+        if not path.exists():
+            return _missing(path)
+        refused = apply_execution(unit, rest)
+        return refused if refused is not None else _exec(_command(path), rest)
     print(f"Unknown command: {cmd}", file=sys.stderr)
     print(help_text(units, config), file=sys.stderr)
     return 1
@@ -731,6 +791,9 @@ def install_command(args: Sequence[str], units: Optional[Mapping[str, Any]] = No
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    refused = check_launcher()
+    if refused is not None:
+        return refused
     return route(list(sys.argv[1:] if argv is None else argv))
 
 

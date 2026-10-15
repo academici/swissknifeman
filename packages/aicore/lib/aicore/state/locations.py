@@ -122,10 +122,40 @@ ENV_PROJECT_ROOT = "SKM_PROJECT_ROOT"
 DEFAULT_MARKERS = (".git", PROJECT_DIRNAME)
 
 
+# The project-local launcher (``<project>/.swissknifeman/launcher.py``) hands its project over in these variables. The
+# context binds only the process the launcher replaced itself with (the exec chain keeps the process id): a child
+# process inherits the variables but not the authority, so a worktree agent of a run is never pinned to the parent tree.
+LAUNCHER_NAME = "launcher.py"
+ENV_LAUNCHER_ACTIVE = "SKM_LAUNCHER_ACTIVE"
+ENV_LAUNCHER_PROTOCOL = "SKM_LAUNCHER_PROTOCOL"
+ENV_LAUNCHER_PATH = "SKM_LAUNCHER_PATH"
+ENV_LAUNCHER_ROOT = "SKM_LAUNCHER_PROJECT_ROOT"
+ENV_LAUNCHER_PID = "SKM_LAUNCHER_PID"
+ENV_INVOCATION_CWD = "SKM_INVOCATION_CWD"
+LAUNCHER_ENV = (ENV_LAUNCHER_ACTIVE, ENV_LAUNCHER_PROTOCOL, ENV_LAUNCHER_PATH, ENV_LAUNCHER_ROOT, ENV_LAUNCHER_PID,
+                ENV_INVOCATION_CWD)
+
+
+def launcher_root(env: Optional[Mapping[str, str]] = None, pid: Optional[int] = None) -> Optional[Path]:
+    """The project root the launcher bound to this process, or ``None``: the launcher variables are absent, or they were
+    inherited from another process (``SKM_LAUNCHER_PID`` is not ``pid``, by default this process)."""
+    environment = os.environ if env is None else env
+    if environment.get(ENV_LAUNCHER_ACTIVE) != "1" or not environment.get(ENV_LAUNCHER_ROOT):
+        return None
+    if environment.get(ENV_LAUNCHER_PID) != str(os.getpid() if pid is None else pid):
+        return None
+    return Path(environment[ENV_LAUNCHER_ROOT])
+
+
+def same_path(first: PathLike, second: PathLike) -> bool:
+    """Whether two paths name the same place after ``~``, ``..`` and symlinks are resolved (a string prefix is not)."""
+    return os.path.realpath(os.path.expanduser(str(first))) == os.path.realpath(os.path.expanduser(str(second)))
+
+
 @dataclass(frozen=True)
 class ProjectContext:
-    """The project of a command and how it was found: ``resolution`` is ``flag``, ``environment``, ``marker`` or ``git``;
-    ``marker`` is the entry that matched (``None`` when the project was named, not searched for)."""
+    """The project of a command and how it was found: ``resolution`` is ``launcher``, ``flag``, ``environment``, ``marker``
+    or ``git``; ``marker`` is the entry that matched (``None`` when the project was named, not searched for)."""
 
     root: Path
     resolution: str
@@ -142,6 +172,20 @@ class ProjectContextRequired(LookupError):
                          f".swissknifeman); go into the project or pass --project DIR"))
 
 
+class ProjectContextConflict(ProjectContextRequired):
+    """``PROJECT_CONTEXT_CONFLICT``: the launcher bound the command to one project and a second source names another.
+    A subclass of :class:`ProjectContextRequired`, so every handler that prints that refusal prints this one too."""
+
+    code = "PROJECT_CONTEXT_CONFLICT"
+
+    def __init__(self, launcher: PathLike, other: PathLike, source: str = "--project"):
+        LookupError.__init__(self, f"PROJECT_CONTEXT_CONFLICT: launcher project is {launcher}, but {source} names "
+                                   f"{other}; drop {source} (the launcher binds the project)")
+        self.launcher_root = Path(launcher)
+        self.other_root = Path(other)
+        self.source = source
+
+
 def _marker_found(candidate: Path, marker: Union[str, tuple]) -> bool:
     """Whether ``candidate`` holds the marker: a name (any entry; ``.swissknifeman`` only as a directory) or
     ``(name, kind)`` with kind ``file``, ``dir`` or ``any``."""
@@ -154,15 +198,24 @@ def resolve_project(start: PathLike, *, explicit: Optional[PathLike] = None,
                     env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
                     markers: Iterable[Union[str, tuple]] = DEFAULT_MARKERS,
                     stop_at_home: bool = False) -> Optional[ProjectContext]:
-    """The project of a command: ``explicit`` (the ``--project`` flag), else ``SKM_PROJECT_ROOT``, else the nearest ancestor
-    of ``start`` (inclusive) that holds one of ``markers`` (checked in the order given; a marker is a name, or
-    ``(name, "file"|"dir"|"any")``; ``.git`` may be a file), else ``None``.
+    """The project of a command: the launcher-bound root (:func:`launcher_root`; a ``--project`` that names another folder
+    is ``PROJECT_CONTEXT_CONFLICT``, never an override), else ``explicit`` (the ``--project`` flag), else
+    ``SKM_PROJECT_ROOT``, else the nearest ancestor of ``start`` (inclusive) that holds one of ``markers`` (checked in the
+    order given; a marker is a name, or ``(name, "file"|"dir"|"any")``; ``.git`` may be a file), else ``None``.
 
     A named project that is not a directory is refused (``ProjectContextRequired``), never replaced by a search. The user's
     home directory does not count through ``.swissknifeman`` (the legacy machine state directory has that name); with
     ``stop_at_home`` the search ends at the home directory (it is checked, nothing above it is).
     """
     environment = os.environ if env is None else env
+    bound = launcher_root(environment)
+    if bound is not None:
+        if not bound.is_dir():
+            raise ProjectContextRequired(bound, f"{ENV_LAUNCHER_ROOT} {bound} is not a directory; run the launcher "
+                                                f"of an existing project")
+        if explicit is not None and str(explicit) != "" and not same_path(explicit, bound):
+            raise ProjectContextConflict(bound, os.path.abspath(os.path.expanduser(str(explicit))))
+        return ProjectContext(bound, "launcher")
     named, resolution, label = None, "", ""
     if explicit is not None and str(explicit) != "":
         named, resolution, label = explicit, "flag", "--project"
@@ -191,12 +244,13 @@ def resolve_project(start: PathLike, *, explicit: Optional[PathLike] = None,
 def find_project_root(start: PathLike, *, env: Optional[Mapping[str, str]] = None,
                       home: Optional[PathLike] = None) -> Path:
     """The root of :func:`resolve_project` for ``start``; without a project, ``start`` itself. It never raises: a
-    ``SKM_PROJECT_ROOT`` that is not a directory is ignored and the markers decide."""
+    ``SKM_PROJECT_ROOT`` or launcher root that is not a directory is ignored and the markers decide."""
     try:
         context = resolve_project(start, env=env, home=home)
     except ProjectContextRequired:
         environment = dict(os.environ if env is None else env)
-        environment.pop(ENV_PROJECT_ROOT, None)
+        for name in (ENV_PROJECT_ROOT, *LAUNCHER_ENV):
+            environment.pop(name, None)
         context = resolve_project(start, env=environment, home=home)
     return context.root if context else Path(start)
 

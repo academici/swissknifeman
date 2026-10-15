@@ -220,12 +220,12 @@ def proposals(report: dict) -> list:
             if row["over"]:
                 found.append(f"The {name} part of the {role} prompt was past limits.{prompts_mod.BUDGET_LIMITS[name]} ({row['limit']}) in "
                              f"{row['over']} of {row['steps']} step(s), up to {row['max_tokens']} tokens: read it with "
-                             "conduct.py prompt explain, then shorten its source or raise the limit; the conductor cuts nothing.")
+                             "orch conduct prompt explain, then shorten its source or raise the limit; the conductor cuts nothing.")
     overdue = [row for row in report.get("open_questions", []) if row["overdue"]]
     if overdue:
         found.append(f"{len(overdue)} question(s) wait for an answer past limits.question_warn_s: "
                      + ", ".join(f"{row['item']} {row['id']}" for row in overdue)
-                     + "; conduct.py answer, then resume --retry.")
+                     + "; orch conduct answer, then resume --retry.")
     tokens = report["tokens_by_role"]
     total = sum(value["input"] + value["output"] for value in tokens.values())
     for role, value in tokens.items():

@@ -106,6 +106,7 @@ class TestLegacyGroups(RouteCase):
             (["hub", "health"], "maind", ["health"]),
             (["analyst", "digest"], "analyst", ["digest"]),
             (["config", "show"], "aicore", ["config", "show"]),
+            (["project", "context", "--json"], "aicore", ["project", "context", "--json"]),
             (["setup", "proj"], "maind", ["onboard", "proj"]),
             (["setup"], "maind", ["onboard"]),
             (["status"], "skiller", ["status"]),
@@ -131,7 +132,8 @@ class TestLegacyGroups(RouteCase):
 
     def test_every_alias_of_the_config_is_covered(self):
         covered = {"skills", "env", "wf", "release", "release-fleet", "hub", "config", "setup", "status", "connect",
-                   "vendor", "integrate", "update", "init", "sync", "lock", "list", "registry", "topology", "conformance"}
+                   "vendor", "integrate", "update", "init", "sync", "lock", "list", "registry", "topology", "conformance",
+                   "project"}
         self.assertEqual(covered, set(umbrella.load_config()["aliases"]))
 
     def test_help_lists_the_former_groups(self):
@@ -794,6 +796,142 @@ class TestSources(unittest.TestCase):
                                  env={**env, "HOME": str(Path(os.path.expanduser("~")))}, capture_output=True, text=True)
         if (ROOT / ".swissknifeman-dev").exists() and os.environ.get("SKM_DEV_ALLOW_LIVE") != "1":
             self.assertEqual(3, guarded.returncode)
+
+
+class TestExecutionPolicy(unittest.TestCase):
+    """``execution`` of unit.json: a project-required module needs a project, cwd project starts in the root."""
+
+    def setUp(self):
+        self.hub = Hub(ids=("aicore",))
+        self.addCleanup(self.hub.close)
+        folder = make_unit(self.hub.packages, "needy", ["bin/needy"],
+                           extra=None)
+        doc = json.loads((folder / "unit.json").read_text())
+        doc["execution"] = {"project": "required", "cwd": "project", "writes": "project"}
+        (folder / "unit.json").write_text(json.dumps(doc))
+        (folder / "bin" / "needy").write_text("#!/bin/sh\necho \"needy:$(pwd)\"\n", encoding="utf-8")
+        base = Path(self.hub._tmp.name).resolve()
+        self.project = base / "proj"
+        (self.project / ".git").mkdir(parents=True)
+        (self.project / "deep").mkdir()
+        self.outside = base / "outside"
+        self.outside.mkdir()
+
+    def run_in(self, cwd, *argv):
+        return subprocess.run([sys.executable, str(UMBRELLA), *argv], env=self.hub.env, cwd=str(cwd),
+                              capture_output=True, text=True, check=False)
+
+    def test_required_project_is_refused_outside_one(self):
+        result = self.run_in(self.outside, "needy", "go")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("PROJECT_CONTEXT_REQUIRED", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertEqual(0, self.run_in(self.outside, "needy", "--help").returncode)
+
+    def test_cwd_project_starts_in_the_root(self):
+        result = self.run_in(self.project / "deep", "needy", "go")
+        self.assertEqual((0, f"needy:{self.project}\n"), (result.returncode, result.stdout), result.stderr)
+
+    def test_defaults_without_a_declaration(self):
+        unit = mock.Mock(doc={}, id="x", root=Path("/"))
+        self.assertEqual(umbrella.execution_of(unit), {"project": "optional", "cwd": "preserve", "writes": "none"})
+
+
+@unittest.skipUnless(os.name == "posix", "the project launcher is POSIX-only (bin/swissknifeman is a bash script)")
+class TestProjectLauncherEndToEnd(unittest.TestCase):
+    """Task/user -> .swissknifeman/launcher.py -> installed swissknifeman -> umbrella -> module, in a temporary home."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        base = Path(self._tmp.name).resolve()
+        self.home = base / "home"
+        self.home.mkdir()
+        self.bin = base / "bin"
+        self.bin.mkdir()
+        (self.bin / "swissknifeman").symlink_to(ROOT / "bin" / "swissknifeman")
+        self.env = {key: value for key, value in os.environ.items()
+                    if not key.startswith(("SKM_", "PLANNER_", "AICORE_")) and key != "PYTHONPATH"}
+        self.env.update(HOME=str(self.home), SKM_HOME=str(base / "skm"), SKM_AICORE_EVENTS__DELIVERY="off",
+                        PATH=f"{self.bin}{os.pathsep}/usr/bin{os.pathsep}/bin")
+        self.a = self.project(base / "work" / "proj A")
+        self.b = self.project(base / "work" / "proj Ä")
+
+    def project(self, root):
+        (root / "src" / "deep").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        done = self.sh(root / "src", "swissknifeman", "project", "init")
+        self.assertEqual(0, done.returncode, done.stderr)
+        return root
+
+    def sh(self, cwd, *argv, **extra):
+        return subprocess.run(list(argv), cwd=str(cwd), env={**self.env, **extra}, capture_output=True, text=True,
+                              check=False, stdin=subprocess.DEVNULL, timeout=120)
+
+    def launch(self, project, cwd, *argv, **extra):
+        return self.sh(cwd, sys.executable, "-I", str(project / ".swissknifeman" / "launcher.py"), *argv, **extra)
+
+    def test_context_from_a_nested_folder_is_the_launcher_root(self):
+        result = self.launch(self.a, self.a / "src" / "deep", "project", "context", "--json",
+                             SKM_PROJECT_ROOT=str(self.b))
+        self.assertEqual(0, result.returncode, result.stderr)
+        doc = json.loads(result.stdout)
+        self.assertEqual((doc["project_root"], doc["resolution"]), (str(self.a), "launcher"))
+        self.assertEqual(doc["invocation_cwd"], str(self.a / "src" / "deep"))
+        self.assertTrue(doc["launcher"]["verified"])
+
+    def test_verify_round_trip_and_repeated_sync(self):
+        result = self.launch(self.a, self.a, "project", "verify", "--json")
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual({"ok"}, {item["status"] for item in json.loads(result.stdout)})
+        result = self.launch(self.a, self.a, "project", "sync", "--json")
+        self.assertEqual({"unchanged"}, {item["action"] for item in json.loads(result.stdout)["actions"]})
+
+    def test_planner_writes_only_into_the_launcher_project(self):
+        for project, title in ((self.a, "Alpha"), (self.b, "Beta")):
+            result = self.launch(project, project / "src" / "deep", "planner", "new", "--codename", "DEMO",
+                                 "--title", title, "--actor", "test/model/low", "--message", "demo")
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(1, len(list((project / "plans").glob("*-DEMO"))))
+        self.assertFalse((self.a / "src" / "deep" / "plans").exists())
+        shown = self.launch(self.a, self.b, "planner", "show", "PLAN1")  # cwd in B, launcher of A
+        self.assertEqual(0, shown.returncode, shown.stderr)
+        self.assertIn("Alpha", shown.stdout)
+        self.assertNotIn("Beta", shown.stdout)
+
+    def test_retargeting_is_refused_before_any_write(self):
+        result = self.launch(self.a, self.a, "planner", "new", "--plans-root", str(self.b / "plans"), "--codename",
+                             "X", "--title", "x", "--actor", "test/model/low", "--message", "m")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("PROJECT_PATH_OVERRIDE_FORBIDDEN", result.stderr)
+        self.assertFalse((self.b / "plans").exists())
+        result = self.launch(self.a, self.a, "orch", "conduct", "--project", str(self.b), "status")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("PROJECT_CONTEXT_CONFLICT", result.stderr)
+        self.assertEqual("", result.stdout)
+
+    def test_exit_codes_and_quiet_stdout(self):
+        result = self.launch(self.a, self.a, "project", "nope")
+        self.assertEqual((2, ""), (result.returncode, result.stdout))
+        result = self.launch(self.a, self.a, "project", "context", PATH="/usr/bin:/bin")
+        self.assertEqual((127, ""), (result.returncode, result.stdout))
+        self.assertIn("HUB_NOT_INSTALLED", result.stderr)
+
+    def test_a_symlinked_launcher_is_refused(self):
+        link = self.a / "launcher-link.py"
+        link.symlink_to(self.a / ".swissknifeman" / "launcher.py")
+        result = self.sh(self.a, sys.executable, "-I", str(link), "project", "context")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("LAUNCHER_", result.stderr)
+
+    def test_a_drifted_lock_protocol_is_refused_by_the_umbrella(self):
+        lock = self.a / ".swissknifeman" / "launcher.lock.json"
+        doc = json.loads(lock.read_text(encoding="utf-8"))
+        doc["protocol"] = 99
+        lock.write_text(json.dumps(doc), encoding="utf-8")
+        result = self.launch(self.a, self.a, "planner", "list")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("LAUNCHER_PROTOCOL_NEWER", result.stderr)
 
 
 if __name__ == "__main__":

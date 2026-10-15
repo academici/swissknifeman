@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Launch the conductor of orch (conduct.py run|resume|status|observe) directly from the package checkout.
+"""Private development entry of the orch conductor; the public route is ``swissknifeman orch conduct ...`` (one CLI per
+unit, ``provides.cli`` names only ``scripts/orch.py``).
 
 The aicore foundation is found by the locator below and its lib joins sys.path after the module's own lib.
 """

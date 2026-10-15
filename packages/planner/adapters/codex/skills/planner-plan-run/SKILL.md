@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `planner:plan-run`.
 - Invocation: `$ planner:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/planner/commands/plan-run.md`
-- Canonical SHA-256: `sha256:25c38dbf1756ca54689471460616823a0cbc33e6d3be2f68ec2b74d8052b048b`
+- Canonical SHA-256: `sha256:bafbe2606abe9f2007dd80c71bbd19c6955a0dee88384dc5a33dce77cf09ad86`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this planner command or skill. Planner is not an

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-run.md
-Canonical SHA-256: sha256:25c38dbf1756ca54689471460616823a0cbc33e6d3be2f68ec2b74d8052b048b
+Canonical SHA-256: sha256:bafbe2606abe9f2007dd80c71bbd19c6955a0dee88384dc5a33dce77cf09ad86
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -22,8 +22,9 @@ disable-model-invocation: true
 description: "Execute ready planner plan items with plan.py under the current session route."
 argument-hint: "<PLAN> [Pn.m ...] [--review] [--reviewer <provider/model>] [--review-effort high]"
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 **Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks,
 one commit per item, inside the item's scope.

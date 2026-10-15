@@ -1,9 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/review.md
-Canonical SHA-256: sha256:8de59557e90f6491267b6c32ed833eda2f70e6e28313dc7edbd069f0a0d6e72e
+Canonical SHA-256: sha256:ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f
 Adapter: planner.codex-command/1.0.18
 -->
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:review` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:review` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.

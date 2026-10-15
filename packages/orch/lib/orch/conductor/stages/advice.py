@@ -112,7 +112,7 @@ def advice_evidence(self, item: Item, *parts, diff: bool = True) -> list:
 
 def hold(self, item: Item, number: int, advice: dict, file: str, held: str, problem: str) -> dict:
     """The question to the owner for advice that must not be applied by the conductor: ``orch-advice-<n>`` (kind decision, the
-    options of the advice), saved with the advice like any queued question; ``conduct.py answer`` and ``resume --retry``
+    options of the advice), saved with the advice like any queued question; ``orch conduct answer`` and ``resume --retry``
     then apply the owner's choice."""
     store = self._questions(item)
     asked = {"id": f"orch-advice-{number}", "revision": 1, "kind": "decision", "text": problem, "blocking": True,

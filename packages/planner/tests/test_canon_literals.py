@@ -16,8 +16,9 @@ class CompactCanonTests(unittest.TestCase):
         for name in ("plan-run.md", "plan-audit.md", "plan-design.md", "plan-close.md"):
             with self.subTest(name=name):
                 text = (COMMANDS / name).read_text(encoding="utf-8")
-                self.assertIn("scripts/plan.py", text)
-                self.assertIn("plan.py", text)
+                self.assertIn("`plan.py` means `python3 -I .swissknifeman/launcher.py planner`", text)
+                self.assertNotIn("scripts/plan.py", text)
+                self.assertNotIn("<Planner package root>", text)
 
     def test_execution_still_names_hard_risk_and_owner_gates(self):
         text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")

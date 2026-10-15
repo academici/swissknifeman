@@ -17,6 +17,11 @@ for both person and agent (Claude Code sees for himself drift and fixes it point
 > Layers **independent** (skiller / harness / maind don't know about each other); single point - umbrella
 > CLI and orchestrator `maind`.
 
+**Project-bound invocation.** Inside a project every command goes through `.swissknifeman/launcher.py`
+(`python3 -I .swissknifeman/launcher.py <group> ...`): a transport, not a fifth layer. It binds the project root and
+hands over to the installed `swissknifeman`; `swissknifeman project init|sync|verify|context|doctor` manage it. See
+[project-launcher.md](project-launcher.md).
+
 ## Checking a project with one command
 
 ```bash

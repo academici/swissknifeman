@@ -2,7 +2,7 @@
 
 Every line is a ``conductor/v1`` ``progress-line``. stderr gets a readable line (``text``), the JSON line
 (``json-lines``) or nothing (``quiet``); the journal always gets the JSON line, appended and flushed at once, so
-``conduct.py status`` and the observer can read a run that is still going.
+``orch conduct status`` and the observer can read a run that is still going.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from aicore.util.redact import env_secrets, redact_document
 
 MODES = ("text", "json-lines", "quiet")
 # ``info`` lines that report a long or costly run without stopping it; the latest one of the running step is the
-# answer to "why is it taking so long" (``conduct.py status`` prints it)
+# answer to "why is it taking so long" (``orch conduct status`` prints it)
 BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER", "PROVIDER_WAIT", "ROUTE_FALLBACK",
            "CAPACITY_GATED", "WORK_SOURCE_NO_NOTE", "RESULT_SILENT_DENIAL")
 PROGRESS_FILE = "progress.jsonl"

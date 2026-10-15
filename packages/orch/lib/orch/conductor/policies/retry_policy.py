@@ -49,7 +49,7 @@ def start_route(self, item: Item, key: str, role: str, route: dict, cancel) -> d
         self._wait(item, key, role, {"class": gate["class"]}, int(left) + 1, cancel)
         return route
     raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
-               + "; resume after the reset, or remove the gate with conduct.py gates --clear")
+               + "; resume after the reset, or remove the gate with orch conduct gates --clear")
 
 
 def provider_failure(self, item: Item, key: str, role: str, route: dict, run, attempts: int, base: Optional[str],

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-audit.md
-Canonical SHA-256: sha256:95d9ea32f84545b3c5858316efef76341ad0d27866b7a696bfc21c07bb49c7e2
+Canonical SHA-256: sha256:4c208ed87d16686c3965ffcbb33f942fc99eaf295cea0f13619c9443c75a21ec
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -22,8 +22,9 @@ disable-model-invocation: true
 description: "Read-only planner plan audit of a design or a phase on explicit owner request."
 argument-hint: "<PLAN> <Pn|design> [--reviewer <provider/model>] [--effort xhigh]"
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.
 Without a selector, use the current native review route. A session that executed this candidate

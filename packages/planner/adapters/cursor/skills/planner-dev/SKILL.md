@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `planner:dev`.
 - Invocation: `planner:dev <arguments>`
 - Routing: `implementation/high -> composer-2.5/high`
 - Canonical source: `packages/planner/commands/dev.md`
-- Canonical SHA-256: `sha256:4990aee2f1ece9fa8830c691c6546b5adbd78e159671f16d82139c69b7b1ecb7`
+- Canonical SHA-256: `sha256:00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

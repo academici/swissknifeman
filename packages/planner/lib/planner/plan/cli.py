@@ -409,7 +409,12 @@ def cmd_config(args) -> int:
 
 def cmd_overlays(args) -> int:
     from ..integration import overlays
-    found = overlays.resolve(args.slot, project=overlays.project_root(project=args.project))
+    try:
+        project = overlays.project_root(project=args.project)
+    except LookupError as exc:  # PROJECT_CONTEXT_CONFLICT / PROJECT_CONTEXT_REQUIRED of aicore.state
+        code, _, message = str(exc).partition(": ")
+        raise PlanError(getattr(exc, "code", code), message or str(exc)) from None
+    found = overlays.resolve(args.slot, project=project)
     if args.json:
         _print_json({"slot": found["slot"], "overlays": found["overlays"], "warnings": found["warnings"],
                      "aicore": found["aicore"]})
@@ -627,7 +632,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=None, metavar="FILE",
                         help="configuration file for this run: the invocation layer of [planner] (needs aicore)")
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--plans-root", type=Path, default=None, help="plans/ directory (default: nearest up from cwd)")
+    common.add_argument("--plans-root", type=Path, default=None,
+                        help="plans/ directory (default: <project>/plans of the project launcher, else the nearest "
+                             "plans/ up from cwd; in launcher mode only <project>/plans is accepted)")
     sub = parser.add_subparsers(dest="command", required=True, metavar="VERB")
 
     def verb(name, handler, help_text, plan=True):
@@ -966,6 +973,8 @@ def main(argv=None) -> int:
     try:
         if args.config is not None:
             integration.require("--config")
+        if getattr(args, "plans_root", None) is not None:
+            store.require_project_plans(args.plans_root)
         settings.set_invocation(args.config)
         if as_json and not passthrough:
             output = io.StringIO()

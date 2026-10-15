@@ -309,6 +309,26 @@
       "required": ["min", "max"],
       "additionalProperties": false
     },
+    "execution": {
+      "type": "object",
+      "description": "How the umbrella runs the module CLI inside a project. Absent: project optional, cwd preserve, writes none.",
+      "properties": {
+        "project": {
+          "enum": ["required", "optional", "none"],
+          "description": "Whether the module needs a project context; required: the umbrella refuses to route without one (PROJECT_CONTEXT_REQUIRED)."
+        },
+        "cwd": {
+          "enum": ["project", "preserve", "unit"],
+          "description": "Working folder of the module process: the project root, the folder the command was called from, or the module root."
+        },
+        "writes": {
+          "enum": ["none", "project", "machine", "project-and-machine"],
+          "description": "Where the module may write; a project write stays inside the canonical project root (aicore.state.require_project_path)."
+        }
+      },
+      "required": ["project", "cwd", "writes"],
+      "additionalProperties": false
+    },
     "dev": {
       "type": "object",
       "description": "Developer commands, run from the module root.",

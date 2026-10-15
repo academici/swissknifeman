@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `planner:fix`.
 - Invocation: `$ planner:fix <arguments>`
 - Routing: `implementation/medium -> gpt-6-sol/medium`
 - Canonical source: `packages/planner/commands/fix.md`
-- Canonical SHA-256: `sha256:f135dc20d28221905be1c5e71983903abc05b4f866d6fd7d1707bb9f01c29a0a`
+- Canonical SHA-256: `sha256:6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this planner command or skill. Planner is not an

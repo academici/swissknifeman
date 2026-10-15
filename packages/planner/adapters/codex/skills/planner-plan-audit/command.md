@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-audit.md
-Canonical SHA-256: sha256:95d9ea32f84545b3c5858316efef76341ad0d27866b7a696bfc21c07bb49c7e2
+Canonical SHA-256: sha256:4c208ed87d16686c3965ffcbb33f942fc99eaf295cea0f13619c9443c75a21ec
 Adapter: planner.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -19,19 +19,15 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 
 Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-6-sol, frontier=gpt-6-astra; low=low, medium=medium, high=high, xhigh=xhigh.
 
-## Codex planner root — provider-specific
+## Codex planner CLI — provider-specific
 
-The planner package root is the installed Codex plugin:
-
-```bash
-export PLANNER_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/planner/lib/planner").is_dir()]; len(roots)==1 or sys.exit("planner runtime unavailable: expected one marketplace root with packages/planner/lib/planner"); print(roots[0]+"/packages/planner")')"
-```
-
-`plan.py` means `python3 "$PLANNER_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
+`plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root; the launcher binds the
+project and hands over to the installed `swissknifeman`. Declare the route with
 `--actor codex/<model>/<reasoning effort>` from this session's settings.
 
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.
 Without a selector, use the current native review route. A session that executed this candidate

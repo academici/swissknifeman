@@ -7,7 +7,7 @@ Invariant: an entry ``{until, class, code, set_by, set_at}`` of a provider with 
 start this provider before ``until``". An expired entry is ignored when read and dropped by the next write; of two
 writes for one provider the later ``until`` wins. A write is a read-modify-write under an exclusive ``flock`` on the
 sibling ``provider-gates.lock`` and replaces the file atomically (``os.replace``), so a reader without the lock sees the
-old or the new file, never a torn one. Removing the file by hand (or ``conduct.py gates --clear``) resets the gates.
+old or the new file, never a torn one. Removing the file by hand (or ``orch conduct gates --clear``) resets the gates.
 
 A gate only spares a provider a doomed start, so a file that cannot be trusted (missing, damaged, a symlink, not a regular
 file) means "no gates" when read and ``GATES_UNSAFE`` when a write would have to go through it. ``until`` is stored rounded

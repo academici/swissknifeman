@@ -5,7 +5,8 @@ argument-hint: "<workflow type and objective> [--reviewer <provider/model>]"
 model: sonnet
 effort: high
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:make-workflow` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:make-workflow` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
 not need this path. User input: `$ARGUMENTS`. The route is pinned to Sonnet/high.
 

@@ -1,9 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/dev.md
-Canonical SHA-256: sha256:4990aee2f1ece9fa8830c691c6546b5adbd78e159671f16d82139c69b7b1ecb7
+Canonical SHA-256: sha256:00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7
 Adapter: planner.codex-command/1.0.18
 -->
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DEVELOPMENT task. User input: `$ARGUMENTS`.
 
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.

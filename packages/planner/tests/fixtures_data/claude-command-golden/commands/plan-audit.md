@@ -3,8 +3,9 @@ disable-model-invocation: true
 description: "Read-only planner plan audit of a design or a phase on explicit owner request."
 argument-hint: "<PLAN> <Pn|design> [--reviewer <provider/model>] [--effort xhigh]"
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-audit` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 Read `references/reviewer-selection.md` for optional `--reviewer` and effort selection.
 Without a selector, use the current native review route. A session that executed this candidate

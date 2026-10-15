@@ -224,7 +224,8 @@ class ProviderCommandParityTests(unittest.TestCase):
         plan_text = "\n".join(
             projected[command_id] for command_id in projected
             if self.catalog.by_id()[command_id].kind == "plan-protocol")
-        self.assertIn("scripts/plan.py", plan_text)
+        self.assertIn(".swissknifeman/launcher.py planner", plan_text)
+        self.assertNotIn("scripts/plan.py", plan_text)
 
     def test_qualified_item_reference_rule_lives_in_the_protocol_canon(self):
         canon = (REPO_ROOT / "packages/planner/skills/plan-protocol/SKILL.md").read_text(encoding="utf-8")

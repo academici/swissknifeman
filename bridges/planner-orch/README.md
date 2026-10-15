@@ -181,7 +181,7 @@ The output is pinned by the golden file `packages/planner/tests/engine/fixtures/
 | `deferred[]` | ready work that did not fit into `N` slots |
 | `next` | the single next action of `plan.py next` without `--parallel` |
 
-Take a lane of `kind: run-items` and conduct it with `conduct.py run --plan <plan> --items <lane items>`; a `design-phase`
+Take a lane of `kind: run-items` and conduct it with `orch conduct run --plan <plan> --items <lane items>`; a `design-phase`
 lane is planning work, not a conductor run.
 
 ## Work source
@@ -206,7 +206,7 @@ Untrusted, the plugin finds the planner and orch through `planner` and `orch` on
 | `register` | `register.py <plan> <ref> --report <tmp> --status S --actor <registrar> --executed-by <worker> --attempt-id <attempt_id> --evidence V#=PATH… --owner-session <run_id> --gate evidence`; `outcome` `recorded`, `no-op` (every call was a no-op) or `refused` with the code of the guard or of the refused `plan.py` call; `gate` and `receipt` from the receipt. |
 | `commit` | `plan.py commit <plan> <ref> --role executor [--path P]… [--actor A] --json`: `committed` with `sha`; `NOTHING_TO_COMMIT` is `no-op` (a repeat after the commit); any other refusal (`OUTSIDE_SCOPE`, …) is `refused` with the planner's code. |
 | `release` | `plan.py finish <plan> <ref> --status blocked --owner-session <run_id>`, then `plan.py reopen`: the planner has no verb that returns an in-progress item to `todo`, and the two together clear the executor session. An item not in progress under this run is `no-op`; a refusal of `finish`/`reopen` is `refused` with the planner's code. |
-| `note` | `plan.py log <collection> <refs[0]> --type note --summary <text>`: the journal note of support work run from a file input (`conduct.py run --input`, provenance `plan_support` or `phase_support`). `refs` names a phase or an item; without one the note is `refused` with `NOTE_NO_TARGET`. A source that does not serve `note` loses only the note (`WORK_SOURCE_NO_NOTE`). |
+| `note` | `plan.py log <collection> <refs[0]> --type note --summary <text>`: the journal note of support work run from a file input (`orch conduct run --input`, provenance `plan_support` or `phase_support`). `refs` names a phase or an item; without one the note is `refused` with `NOTE_NO_TARGET`. A source that does not serve `note` loses only the note (`WORK_SOURCE_NO_NOTE`). |
 | `research` | The research-result of a research stage of the conductor: written to `research/<item>-<n>.json` in the folder of the plan (a record of the research, not plan state) and declared with `plan.py add-artifact <plan> <item> --path <file> --role input`; a repeat of the same result is `no-op`. An unknown item, a number below 1 or a ref that is no file name is `refused` (`ITEM_UNKNOWN`, `RESEARCH_REF_INVALID`) and leaves no file. A source that does not serve `research` loses nothing: the conductor keeps the result in the artifacts of the piece (`RESEARCH_NOT_SAVED`). |
 
 | Answer | `reason_code` |

@@ -3,7 +3,7 @@
 What you need, what a run changes in your repository, and the few switches that matter. The full reference is [conductor.md](conductor.md).
 
 ## Before the first run
-- `python3` (stdlib only) and the CLI of at least the executor provider on `PATH` (`claude` for the default route; `codex` and `grok` are optional routes). Check what a run would use, without starting anything: `conduct.py run … --dry-run` prints every route with `available` and the isolation flags.
+- `python3` (stdlib only) and the CLI of at least the executor provider on `PATH` (`claude` for the default route; `codex` and `grok` are optional routes). Check what a run would use, without starting anything: `orch conduct run … --dry-run` prints every route with `available` and the isolation flags.
 - A git repository with a **clean working tree**: a run refuses to start on a dirty tree (`run --adopt` takes over an earlier attempt on purpose). Every finished piece becomes one commit.
 - The `orch` and `aicore` packages reachable (`SKM_ORCH_ROOT`, `AICORE_ROOT` when they are not on `PATH`). `run --input` uses the built-in file source and needs no work-source configuration; plan runs need the work source of your planner registered in the machine config (`[orch] work_source`).
 
@@ -11,13 +11,13 @@ What you need, what a run changes in your repository, and the few switches that 
 ```text
 # a piece of work that is not in a plan
 orch.py input adhoc --goal "…" --include path/ --check V1="python3 -m unittest" > input.json
-conduct.py --project /path/to/project run --input input.json --commit
+orch conduct --project /path/to/project run --input input.json --commit
 
 # pieces of a plan: ONE run per group of related pieces, they share one executor session
-conduct.py --project /path/to/project run --plan PLAN --items A B C   # one batch: all in progress, one executor session; --no-batch to separate
-conduct.py status        # what runs now, the latest beacon
-conduct.py observe --follow
-conduct.py resume --run RUN [--retry ITEM]   # after a stop
+orch conduct --project /path/to/project run --plan PLAN --items A B C   # one batch: all in progress, one executor session; --no-batch to separate
+orch conduct status        # what runs now, the latest beacon
+orch conduct observe --follow
+orch conduct resume --run RUN [--retry ITEM]   # after a stop
 ```
 `--project` is the repository the run works in; the orchestrator code can live elsewhere (and should be a frozen copy when the run changes `orch` itself).
 
@@ -35,4 +35,4 @@ conduct.py resume --run RUN [--retry ITEM]   # after a stop
 | Instructions seen by roles | `instructions.isolate_roles`, `module_rules` | every role starts without the project instructions and gets only its prompt and a short Repository rules block |
 
 ## When something stops
-`conduct.py status` names the piece and the code. `BLOCKED` pieces carry an `escalation` in the report; fix the cause and `resume --retry ITEM`. A run never discards the work of a role: a half-done piece stays in the tree and continues on `resume`.
+`orch conduct status` names the piece and the code. `BLOCKED` pieces carry an `escalation` in the report; fix the cause and `resume --retry ITEM`. A run never discards the work of a role: a half-done piece stays in the tree and continues on `resume`.

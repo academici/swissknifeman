@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-run.md
-Canonical SHA-256: sha256:25c38dbf1756ca54689471460616823a0cbc33e6d3be2f68ec2b74d8052b048b
+Canonical SHA-256: sha256:bafbe2606abe9f2007dd80c71bbd19c6955a0dee88384dc5a33dce77cf09ad86
 Adapter: planner.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -19,19 +19,15 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 
 Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-6-sol, frontier=gpt-6-astra; low=low, medium=medium, high=high, xhigh=xhigh.
 
-## Codex planner root — provider-specific
+## Codex planner CLI — provider-specific
 
-The planner package root is the installed Codex plugin:
-
-```bash
-export PLANNER_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/planner/lib/planner").is_dir()]; len(roots)==1 or sys.exit("planner runtime unavailable: expected one marketplace root with packages/planner/lib/planner"); print(roots[0]+"/packages/planner")')"
-```
-
-`plan.py` means `python3 "$PLANNER_CODEX_PLUGIN_ROOT/scripts/plan.py"`. Declare the route with
+`plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root; the launcher binds the
+project and hands over to the installed `swissknifeman`. Declare the route with
 `--actor codex/<model>/<reasoning effort>` from this session's settings.
 
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 **Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks,
 one commit per item, inside the item's scope.

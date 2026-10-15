@@ -5,7 +5,8 @@ argument-hint: "[what to design] [--reviewer <provider/model>]"
 model: opus
 effort: high
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:design` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:design` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DESIGN task: produce durable artifacts, not implementation. User input: `$ARGUMENTS`.
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.
 Activate this workflow only for an explicit design request. Scale, risk, or an existing plan does not

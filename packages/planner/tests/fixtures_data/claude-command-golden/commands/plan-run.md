@@ -3,8 +3,9 @@ disable-model-invocation: true
 description: "Execute ready planner plan items with plan.py under the current session route."
 argument-hint: "<PLAN> [Pn.m ...] [--review] [--reviewer <provider/model>] [--review-effort high]"
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 **Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks,
 one commit per item, inside the item's scope.

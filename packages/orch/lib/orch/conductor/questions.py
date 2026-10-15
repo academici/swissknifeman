@@ -2,7 +2,7 @@
 the resolution someone gave.
 
 A blocking question never keeps a process: the piece is ``blocked``, the run ends, and ``questions.json`` of the piece
-holds the question. ``conduct.py answer`` writes a resolution into that file only; ``resume --retry`` merges it into the
+holds the question. ``orch conduct answer`` writes a resolution into that file only; ``resume --retry`` merges it into the
 state of the run and gives it to the executor, but only while the input is the one the question was asked on
 (``binding.input_digest``). ``default`` (a proposal) is not ``assumed`` (what the agent went on with) and not what a
 timeout does: the conductor never answers on a timeout.
@@ -123,7 +123,7 @@ def apply(store: dict, digest: Optional[str], now: str) -> tuple:
 
 
 def merge_file(store: dict, document: Optional[dict]) -> None:
-    """Take the resolutions written into ``questions.json`` (by ``conduct.py answer``) into ``store``."""
+    """Take the resolutions written into ``questions.json`` (by ``orch conduct answer``) into ``store``."""
     for entry in (document or {}).get("questions", []):
         mine = store.get(entry["id"])
         if (mine and mine["status"] == "open" and entry.get("resolution") and entry["revision"] == mine["revision"]):

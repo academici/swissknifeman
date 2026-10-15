@@ -10,9 +10,9 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Run-policy packs](run-policies.md) — shipped policies, cases, `orch.py policy`.
 - [Events](events.md) — `orch.run.*` types, data contracts, emission rules, fixtures.
 - [Work source](work-source.md) — the `orch:work-source` port, its contract and the `orch.py source` cycle.
-- [Conductor](conductor.md) — `conduct.py`: the chain of roles of a piece of work, run options, progress, resume,
+- [Conductor](conductor.md) — `orch conduct`: the chain of roles of a piece of work, run options, progress, resume,
   the observer, and which files are committed.
-- [Agent mode](agent-mode.md) — the procedure for an agent that picks its own pieces: ready lanes of the work source, `conduct.py run --items`, `status`/`observe`, `resume`/`settle`.
+- [Agent mode](agent-mode.md) — the procedure for an agent that picks its own pieces: ready lanes of the work source, `orch conduct run --items`, `status`/`observe`, `resume`/`settle`.
 - [Research sources](research.md) — `[orch.research]`: `command`, `filesystem` and `mcp-stdio` sources, retries on `BROWSER_BUSY`, `orch.py research`, a Perplexity example.
 - [Conformance](conformance.md) — scenario catalogue, `orch.py conformance`, write confinement.
 - [Architecture](architecture.md) — package boundaries, dependency rule, layout.

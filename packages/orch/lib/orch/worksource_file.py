@@ -1,6 +1,6 @@
 """The built-in work source of one execution-input document: work outside the items of a plan.
 
-``conduct.py run --input FILE`` serves a single piece of work, the document ``FILE`` (``orch.py input adhoc`` or a
+``orch conduct run --input FILE`` serves a single piece of work, the document ``FILE`` (``orch.py input adhoc`` or a
 hand-written ``exec/v1`` execution-input). It speaks the same protocol and the same ``work-source/v1`` contract as the
 plugin source: a request orch builds wrongly never reaches it, and its answers are checked against the contract.
 

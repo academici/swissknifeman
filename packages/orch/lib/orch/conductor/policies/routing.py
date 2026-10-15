@@ -103,7 +103,7 @@ def selected(self, item: Item, role: str, persist: bool) -> dict:
         if gate is None or role == "context-scout":
             return route
         raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
-                   + "; resume after the reset, or remove the gate with conduct.py gates --clear")
+                   + "; resume after the reset, or remove the gate with orch conduct gates --clear")
     reason = "CAPACITY_GATED" if gate else problem.split(":", 1)[0]
     item.route_notes.append({"role": role, "reason_code": reason, "from": self.label(route), "to": self.label(found),
                              "detail": until})
@@ -194,7 +194,7 @@ def preflight(self, item: Item) -> None:
              for gate in [gates.blocked(route["provider"], clock.wall())] if gate]
     if gated:
         raise Stop("PROVIDER_QUOTA", f"{'; '.join(gated)}: the account quota is exhausted; resume after the reset, "
-                                     "or remove the gate with conduct.py gates --clear")
+                                     "or remove the gate with orch conduct gates --clear")
 
 
 def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:

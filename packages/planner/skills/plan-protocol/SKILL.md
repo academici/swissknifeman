@@ -19,7 +19,7 @@ sha256: ""
 # Plan Protocol
 
 Canon version: `plan-protocol-v4`. Read and change plan data only through the `plan.py` API
-(`python3 <Planner package root>/scripts/plan.py`). Python validates every change and regenerates the
+(the project CLI `python3 -I .swissknifeman/launcher.py planner`). Python validates every change and regenerates the
 human Markdown views under `views/`. Never read these views, use them as inputs or index them.
 The installed marketplace plugin owns this skill and the API together. Activate only for an explicit `planner:plan-design`, `planner:plan-run`, `planner:plan-close`
 or `planner:plan-audit` invocation; ordinary work never needs a plan.
@@ -40,7 +40,7 @@ plans/<YYYY.MM.DD-№N-CODENAME>/
 
 Never open or edit plan source files directly; generated human views are not read for work.
 Get state with `plan.py next|context --stdout` and the read queries below.
-Schemas: `<Planner package root>/schemas/plan/v1/*.schema.json` (`urn:swissknifeman:task:plan:<kind>:v1`).
+Schemas: `plan.py schema <kind>` (`urn:swissknifeman:task:plan:<kind>:v1`).
 `plan.py check` validates JSON. `plan.py render --check` checks human-view freshness separately.
 
 ## 2. Identity and references

@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `planner:dev`.
 - Invocation: `$ planner:dev <arguments>`
 - Routing: `implementation/high -> gpt-6-sol/high`
 - Canonical source: `packages/planner/commands/dev.md`
-- Canonical SHA-256: `sha256:4990aee2f1ece9fa8830c691c6546b5adbd78e159671f16d82139c69b7b1ecb7`
+- Canonical SHA-256: `sha256:00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this planner command or skill. Planner is not an

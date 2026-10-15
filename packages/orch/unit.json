@@ -9,8 +9,9 @@
   "requires": [
     {"unit": "aicore", "range": "^0.1", "description": "Foundation: schema validator, digest, model catalog, error classes, configuration, events, plugins, state."}
   ],
+  "execution": {"project": "optional", "cwd": "preserve", "writes": "project-and-machine"},
   "provides": {
-    "cli": ["scripts/orch.py", "scripts/conduct.py"],
+    "cli": ["scripts/orch.py"],
     "config": "configs/config.schema.json",
     "contracts": [
       {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},

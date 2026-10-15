@@ -83,7 +83,7 @@
   {
    "event": "info",
    "item": "W1",
-   "message": "Q1 Keep the old flag name?; answer with conduct.py answer, then resume --retry W1",
+   "message": "Q1 Keep the old flag name?; answer with orch conduct answer, then resume --retry W1",
    "reason_code": "QUESTION_QUEUED",
    "stage": "executor.1"
   },

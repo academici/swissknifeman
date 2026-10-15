@@ -1,26 +1,26 @@
 # Conductor
 
-`scripts/conduct.py` takes pieces of work from the work source and drives each one through the roles of its
+`orch conduct` (`swissknifeman orch conduct`, or `python3 -I .swissknifeman/launcher.py orch conduct` in a project) takes pieces of work from the work source and drives each one through the roles of its
 run-policy until it is green or stops honestly. It is shipped with orch and tuned by configuration and by the run
 options of the work; it is never rewritten for a run. The conductor itself decides nothing: it branches only on exit
 codes, on the verdicts of the closed role results (`schemas/conductor/v1`) and on the limits of the run options.
 Models are used only for the narrow roles: context scout, executor, reviewer, triager and, when asked for, the registrar that records the result.
 
 ```text
-conduct.py [--config FILE] [--project DIR] run --plan P (--items REF… | --ready [--max-items N]) [--plans-root DIR]
+orch conduct [--config FILE] [--project DIR] run --plan P (--items REF… | --ready [--max-items N]) [--plans-root DIR]
            [--options FILE] [--batch | --no-batch]
            [--fence project|plan] [--allow-path DIR ...] [--adopt] [--dry-run [--scenario S]]
            [--quiet | --json-lines] [--model-catalog FILE]
-conduct.py [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
+orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
            [--quiet | --json-lines] [--model-catalog FILE]
-conduct.py [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
-conduct.py settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
-conduct.py answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
-conduct.py questions [--run RUN] [--json]
-conduct.py prompt explain [--run RUN] --item REF --step STEP [--json]
-conduct.py status [--run RUN] [--json]
-conduct.py observe [--run RUN] [--follow]
-conduct.py gates [--json] [--clear [PROVIDER]]
+orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
+orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
+orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
+orch conduct questions [--run RUN] [--json]
+orch conduct prompt explain [--run RUN] --item REF --step STEP [--json]
+orch conduct status [--run RUN] [--json]
+orch conduct observe [--run RUN] [--follow]
+orch conduct gates [--json] [--clear [PROVIDER]]
 ```
 
 For an agent that picks its own pieces (ask the source for ready lanes → `run --items` → `status`/`observe` → `resume`/`settle`) see [agent-mode.md](agent-mode.md).
@@ -158,7 +158,7 @@ run goes on; a blocked piece with changes stops the run, because its partial wor
 ### Beacons: long and costly runs are reported, not cut
 
 Nothing is stopped for being long or for its tokens. The conductor prints `info` lines with a stable `reason_code`
-instead; `conduct.py status` shows the latest one of the running step:
+instead; `orch conduct status` shows the latest one of the running step:
 
 | Code | When | What it says |
 | --- | --- | --- |
@@ -215,7 +215,7 @@ the machine file `<state>/orch/provider-gates.json` (`provider-gates/v1`, one en
 `code`, `set_by`, `set_at`): a usage limit belongs to the account, so every conductor of the machine shares it. An entry
 whose `until` is in the future forbids the provider; an expired entry is ignored and dropped by the next write; of two writes
 the later `until` wins. A write is a read-modify-write under `flock` on `provider-gates.lock` beside the file and an atomic
-replace, so two conductors never lose each other's entry and a reader sees a whole file. `conduct.py gates [--json]` lists
+replace, so two conductors never lose each other's entry and a reader sees a whole file. `orch conduct gates [--json]` lists
 the gates in force; `gates --clear [PROVIDER]` removes one or all (so does deleting the file); it needs no project.
 
 ### Provider failures
@@ -320,9 +320,9 @@ nothing is ever answered on a timeout.
   `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
   `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
   `QUESTION_DENIED`, `QUESTION_DEFAULT`, `QUESTION_ANSWERED`, `QUESTION_OPEN` (retry without an answer), `QUESTION_STALE`.
-- `conduct.py answer` writes only the resolution into `questions.json` (`QUESTION_UNKNOWN`, `QUESTION_NOT_OPEN`,
+- `orch conduct answer` writes only the resolution into `questions.json` (`QUESTION_UNKNOWN`, `QUESTION_NOT_OPEN`,
   `ANSWER_INVALID`: a decision takes one of its options, a clarification may take `--text`); it never touches the run.
-  `conduct.py questions [--run R] [--json]` lists the open ones with their age; one older than `limits.question_warn_s`
+  `orch conduct questions [--run R] [--json]` lists the open ones with their age; one older than `limits.question_warn_s`
   (default 1800, 0 off) is `OVERDUE`, in the observer report too.
 - `resume --run R --retry ITEM` merges the answers into the state. An answer is applied only while the input is the one the
   question was asked on; otherwise it is `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
@@ -355,7 +355,7 @@ The human gate: advice with `needs_owner: true`, or with a `category` of `[orch.
 `destructive`, `public-api`, `scope-expansion`), is never applied by the conductor. It is handled as `queue`: the piece is
 `blocked` with `QUESTION: <id> <text>` and the advice (file, recommendation, confidence, why the owner decides); the
 question is saved with the advice (`advice` in `questions.json`). A held question of the executor is that question; for red
-checks and a rejected finding it is a new question `orch-advice-<n>` (kind `decision`, the options of the advice). `conduct.py
+checks and a rejected finding it is a new question `orch-advice-<n>` (kind `decision`, the options of the advice). `orch conduct
 answer` and `resume --run R --retry ITEM` then apply the owner's choice the same way: the correction round or the repeated
 triage carries the option the owner chose (`by owner`), and the closed rounds, checks and the advice are not repeated. An
 approval or a credential question is the owner's by its kind and is not asked of the advisor; the policy answers a question
@@ -468,7 +468,7 @@ Every event is one progress line (`conductor/v1` `progress-line`): `run.start|re
 `stage.start|end|skip`, `info`. stderr gets a readable line by default (time, item, step, role and route, what
 happened, verdict, duration, tokens, stop code), the JSON line with `--json-lines`, nothing with `--quiet`. The journal
 `progress.jsonl` always gets the JSON line. Every role is told to print the same kind of line
-(`[orch] <UTC time> <item> <step> <what>`) into its own stream. `conduct.py status` summarises the journal: run status,
+(`[orch] <UTC time> <item> <step> <what>`) into its own stream. `orch conduct status` summarises the journal: run status,
 the step running now, the last step and outcome of each piece, the tokens and the agent runs of the current piece
 (`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`).
 
@@ -542,7 +542,7 @@ of `conflicts` (by id, by name, or by the folder of a `<bucket>/<folder>` entry)
 `PROMPT_CONFLICT` with the pair. The verdict is made once per piece and kept in the state (`skills_checked`). Contradictions
 between the texts of skills ("must" against "never") are not detected: that cannot be done deterministically.
 
-`conduct.py prompt explain --item REF --step STEP [--run RUN] [--json]` prints the blocks of one step as a table (kind,
+`orch conduct prompt explain --item REF --step STEP [--run RUN] [--json]` prints the blocks of one step as a table (kind,
 origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)
 means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer lists the five heaviest blocks by role.
 
@@ -586,7 +586,7 @@ for.
 - A Codex route with `--sandbox read-only|workspace-write` is unavailable while the sandbox cannot start: `--dry-run` shows
   `available: false` and `SANDBOX_UNAVAILABLE: <reason>` in `unavailable`, a run stops with `SANDBOX_UNAVAILABLE`. Its argv is
   not rewritten.
-- `conduct.py run --dry-run` also prints `sandbox: {available, reason}`, `network: {role: {declared, enforced, by}}` with `by` one
+- `orch conduct run --dry-run` also prints `sandbox: {available, reason}`, `network: {role: {declared, enforced, by}}` with `by` one
   of `claude-sandbox`, `codex-sandbox`, `claude-tools` (a Claude role without Bash has no command to confine) or `null`, and
   `warnings` for every role that declares `network: none` while nothing enforces it (the grok `reviewer`; every Claude role
   when the sandbox is off or cannot start).
@@ -597,8 +597,8 @@ The observer only reads: the journal and state of the run and the `orch.run.*` a
 project's aicore event journal since the run started. At the end of every run (also a stopped one) the conductor
 writes `observer.json` and `observer.md`: repeats and resumes, red checks per check id, review findings by severity,
 triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role and the prompt budget classes against their limits (`prompt_budgets_by_role`: largest tokens of a step, limit, steps, steps over; from the prompt manifests), the outcome of
-each piece and proposals to improve the run options. `conduct.py observe --follow` prints the notable lines of a run
-that is still going from another terminal; `conduct.py observe` writes the report again.
+each piece and proposals to improve the run options. `orch conduct observe --follow` prints the notable lines of a run
+that is still going from another terminal; `orch conduct observe` writes the report again.
 
 ## Configuration
 
@@ -612,7 +612,7 @@ launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `
 cannot set it. The tests use it to put fake providers in place of the real CLIs.
 
 Grok in the conductor is the `reviewer` and the `report-fixer` only: its `executor` and `bounded-implementer` launch entries use the
-`acp` transport, which the conductor does not drive. `conduct.py run --dry-run` shows such a route as `available: false` with
+`acp` transport, which the conductor does not drive. `orch conduct run --dry-run` shows such a route as `available: false` with
 the reason in `unavailable` (`TRANSPORT_UNSUPPORTED: …`, or `PROVIDER_UNAVAILABLE: <command> not found`), and a run stops before
 any work.
 

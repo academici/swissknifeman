@@ -40,6 +40,10 @@
       "description": "same as the maind group",
       "routes": [{"unit": "maind"}]
     },
+    "project": {
+      "description": "project-local launcher: init, sync, verify, context [--json], doctor, exec -- <group> ...",
+      "routes": [{"unit": "aicore", "argv_prefix": ["project"]}]
+    },
     "config": {
       "description": "layered config: show, explain, set, unset, init, example, paths",
       "routes": [{"unit": "aicore", "argv_prefix": ["config"]}]

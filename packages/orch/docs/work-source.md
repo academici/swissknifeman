@@ -87,7 +87,7 @@ refusal), 2 usage, 3 `WORK_SOURCE_UNAVAILABLE`.
 
 ## The built-in file source
 
-`--input FILE` (`orch.py source claim --input`, `conduct.py run --input`) serves one execution-input document with no plan:
+`--input FILE` (`orch.py source claim --input`, `orch conduct run --input`) serves one execution-input document with no plan:
 `orch.worksource_file.FileWorkSource`, the same protocol and contract, checked on both sides. `claim` always succeeds for the one
 input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`; an input outside `exec/v1` is `INPUT_INVALID`);
 `brief` is the document itself in the artifact store (a file that changed since the claim is `INPUT_CHANGED`, a failure of the

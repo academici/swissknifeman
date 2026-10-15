@@ -325,6 +325,10 @@ def check_manifests(ctx: Context) -> list:
                                                           f"{folder!r}, found {found or 'none'}"))
         issues.extend(_check_version(ctx, folder, manifest, doc, config_versions, foundation_id))
         issues.extend(_check_paths(ctx, base, manifest, doc))
+        clis = (doc.get("provides") or {}).get("cli") or []
+        if doc["kind"] == "capability" and len(clis) > 1:  # the umbrella routes a group to its first CLI only
+            issues.append(Issue("UNIT_CLI", manifest, f"a capability has one public CLI (provides.cli), found "
+                                                      f"{len(clis)}: make the others subcommands of the first"))
 
     for folder, base in folders:
         if folder in valid:

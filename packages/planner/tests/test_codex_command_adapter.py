@@ -78,10 +78,9 @@ class CodexCommandAdapterTests(unittest.TestCase):
         codex_runtime = next(
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
             if artifact.path.endswith("/planner-plan-run/command.md"))
-        self.assertIn("codex plugin marketplace list --json", codex_runtime)
-        self.assertIn("packages/planner/lib/planner", codex_runtime)
-        self.assertIn('export PLANNER_CODEX_PLUGIN_ROOT="$(codex plugin marketplace', codex_runtime)
-        self.assertIn("scripts/plan.py", codex_runtime)
+        self.assertIn("python3 -I .swissknifeman/launcher.py planner", codex_runtime)
+        self.assertNotIn("PLANNER_CODEX_PLUGIN_ROOT", codex_runtime)
+        self.assertNotIn("scripts/plan.py", codex_runtime)
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
         self.assertNotIn("PYTHONPATH=packages/planner/lib", codex_runtime)
 
@@ -108,12 +107,12 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn("never put the command in a table", codex_runtime)
                 self.assertIn("**Native Codex command:**", codex_runtime)
 
-    def test_every_plan_runtime_names_the_codex_planner_root_and_plan_cli(self):
+    def test_every_plan_runtime_names_the_project_launcher_as_plan_cli(self):
         for command, runtime in self._plan_runtimes().items():
             with self.subTest(command=command):
-                self.assertIn("## Codex planner root", runtime)
-                self.assertIn("PLANNER_CODEX_PLUGIN_ROOT", runtime)
-                self.assertIn("scripts/plan.py", runtime)
+                self.assertIn("## Codex planner CLI", runtime)
+                self.assertIn("python3 -I .swissknifeman/launcher.py planner", runtime)
+                self.assertNotIn("scripts/plan.py", runtime)
                 for retired in ("route_evidence_codex", "TASK_CODEX_ROUTE_EVIDENCE",
                                 "continue-root", "receipt"):
                     self.assertNotIn(retired, runtime)

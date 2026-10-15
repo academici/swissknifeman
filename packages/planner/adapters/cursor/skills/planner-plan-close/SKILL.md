@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `planner:plan-close`.
 - Invocation: `planner:plan-close <arguments>`
 - Routing: `implementation/low -> composer-2.5/low`
 - Canonical source: `packages/planner/commands/plan-close.md`
-- Canonical SHA-256: `sha256:bf7a594a0aa3b150fd57e439b29508daa8cfcd2879ab33135c1bd073323c3c45`
+- Canonical SHA-256: `sha256:71622dd35042f16da2401737a4aaddb5fea75687b7ea9a560f2162394f406925`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

@@ -799,7 +799,23 @@ def _source_parser(verbs) -> None:
     research.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who saves (default: the source decides)")
 
 
+def _conduct_args(argv: list[str]) -> list[str] | None:
+    """The arguments of the conductor when the command is ``orch [--config F] [--project D] conduct ...``, else None."""
+    head: list[str] = []
+    rest = list(argv)
+    while rest and rest[0] in ("--config", "--project") and len(rest) > 1:
+        head += rest[:2]
+        rest = rest[2:]
+    while rest and rest[0].startswith(("--config=", "--project=")):
+        head.append(rest.pop(0))
+    return head + rest[1:] if rest and rest[0] == "conduct" else None
+
+
 def main(argv: list[str] | None = None) -> int:
+    conduct = _conduct_args(list(sys.argv[1:] if argv is None else argv))
+    if conduct is not None:  # one public CLI: the conductor is the `conduct` group of orch
+        from orch.conductor.cli import main as conduct_main
+        return conduct_main(conduct)
     try:
         return _main(argv)
     except ProjectContextRequired as error:  # a named project that is not a folder, or the cycle without a project
@@ -813,10 +829,13 @@ def _main(argv: list[str] | None = None) -> int:
     parser.add_argument("--project", type=Path, metavar="DIR",
                         help="the project; default: SKM_PROJECT_ROOT, else the nearest .git or .swissknifeman above the "
                              "working directory (the run cycle needs one: PROJECT_CONTEXT_REQUIRED)")
-    parser.add_argument("--project-resolution", dest="named_resolution", choices=("flag", "environment", "marker", "git"),
+    parser.add_argument("--project-resolution", dest="named_resolution",
+                        choices=("launcher", "flag", "environment", "marker", "git"),
                         help="with --project: how the caller found the project (the conductor passes its own answer; "
                              "recorded in orch.run.started)")
     verbs = parser.add_subparsers(dest="verb", required=True)
+    verbs.add_parser("conduct", help="the conductor: run|resume|settle|release|status|observe|answer|questions|prompt|"
+                                     "gates (orch conduct --help)", add_help=False)
     command = verbs.add_parser("validate", help="validate an exec/v1 or conductor/v1 JSON document")
     command.add_argument("kind")
     command.add_argument("file", type=Path)

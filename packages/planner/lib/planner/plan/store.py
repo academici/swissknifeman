@@ -27,8 +27,36 @@ GITATTRIBUTES = "log.jsonl merge=union"
 _UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
 
 
+def launcher_project_root() -> Path | None:
+    """The project root the project-local launcher bound to this process (``.swissknifeman/launcher.py`` → the installed
+    ``swissknifeman``; the umbrella checked it), else ``None``. Inherited launcher variables of a parent process (another
+    ``SKM_LAUNCHER_PID``) bind nothing. Same rule as ``aicore.state.launcher_root``; read here so the store stays stdlib-only."""
+    env = os.environ
+    if env.get("SKM_LAUNCHER_ACTIVE") != "1" or env.get("SKM_LAUNCHER_PID") != str(os.getpid()):
+        return None
+    root = env.get("SKM_LAUNCHER_PROJECT_ROOT", "")
+    return Path(root) if root else None
+
+
+def require_project_plans(path: str | Path, what: str = "--plans-root") -> None:
+    """In launcher mode a plans location must be ``<project>/plans`` or inside it: anything else would retarget the
+    command to another project (``PROJECT_PATH_OVERRIDE_FORBIDDEN``). Outside launcher mode nothing is checked."""
+    bound = launcher_project_root()
+    if bound is None:
+        return
+    plans = Path(os.path.realpath(bound / "plans"))
+    target = Path(os.path.realpath(path))
+    if target != plans and plans not in target.parents:
+        raise PlanError("PROJECT_PATH_OVERRIDE_FORBIDDEN",
+                        f"{what} {path} is outside {plans}, the plans folder of the launcher project; drop {what}")
+
+
 def find_plans_root(start: str | Path | None = None) -> Path:
-    """Nearest ``plans/`` at or above ``start``; ``<start>/plans`` (maybe absent) when none exists."""
+    """``<project>/plans`` of the launcher-bound project (no search); else the nearest ``plans/`` at or above ``start``,
+    or ``<start>/plans`` (maybe absent) when none exists."""
+    bound = launcher_project_root()
+    if bound is not None and start is None:
+        return bound / "plans"
     base = Path(start or Path.cwd()).resolve()
     for candidate in (base, *base.parents):
         if (candidate / "plans").is_dir():
@@ -180,6 +208,7 @@ def resolve_plan_dir(ref: str | Path, plans_root: str | Path | None = None) -> P
         raise PlanError("PLAN_NOT_FOUND", "empty plan reference")
     candidate = Path(ref)
     if (candidate / "plan.json").is_file():
+        require_project_plans(candidate, "plan path")
         return candidate
     root = Path(plans_root) if plans_root is not None else find_plans_root()
     for parent in (root, root / ARCHIVE):

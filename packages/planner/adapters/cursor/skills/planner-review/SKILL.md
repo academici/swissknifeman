@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `planner:review`.
 - Invocation: `planner:review <arguments>`
 - Routing: `implementation/high -> composer-2.5/high`
 - Canonical source: `packages/planner/commands/review.md`
-- Canonical SHA-256: `sha256:8de59557e90f6491267b6c32ed833eda2f70e6e28313dc7edbd069f0a0d6e72e`
+- Canonical SHA-256: `sha256:ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

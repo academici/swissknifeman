@@ -1,9 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/make-workflow.md
-Canonical SHA-256: sha256:6cea6cf95e0b37aed1d257e11c28532f6e10906805c7444fcb7e4e072911b048
+Canonical SHA-256: sha256:9086b1ae53826a71b9e422a7fcf71025dc5c932cb7364a5f48ac84ee75dd90dd
 Adapter: planner.codex-command/1.0.18
 -->
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:make-workflow` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:make-workflow` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
 not need this path. User input: `$ARGUMENTS`. The route is pinned to implementation/high.
 

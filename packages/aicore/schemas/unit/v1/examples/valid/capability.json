@@ -9,6 +9,7 @@
   "requires": [
     {"unit": "aicore", "range": "^0.1", "description": "Shared helpers."}
   ],
+  "execution": {"project": "required", "cwd": "preserve", "writes": "project"},
   "provides": {
     "cli": ["bin/sample"],
     "plugins": [{"name": "sample", "manifest": ".claude-plugin/plugin.json"}],

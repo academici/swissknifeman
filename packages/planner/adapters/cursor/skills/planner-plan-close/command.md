@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-close.md
-Canonical SHA-256: sha256:bf7a594a0aa3b150fd57e439b29508daa8cfcd2879ab33135c1bd073323c3c45
+Canonical SHA-256: sha256:71622dd35042f16da2401737a4aaddb5fea75687b7ea9a560f2162394f406925
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -24,8 +24,9 @@ argument-hint: "<PLAN> <Pn.m|archive>"
 model: sonnet
 effort: low
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:plan-close` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
-Invocation payload: `$ARGUMENTS`. `plan.py` is `python3 <Planner package root>/scripts/plan.py`.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:plan-close` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Invocation payload: `$ARGUMENTS`.
 
 **Goal:** record a missing outcome, reopen a finished item, or archive a done plan.
 

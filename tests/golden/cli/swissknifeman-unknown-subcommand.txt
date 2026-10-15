@@ -19,6 +19,7 @@ Aliases (configs/umbrella.json):
   conformance    conformance plugin <extension.json> | engine [--binding B]: protocol checks
   env            environment: permissions, mcp, hooks (full passthrough)
   hub            same as the maind group
+  project        project-local launcher: init, sync, verify, context [--json], doctor, exec -- <group> ...
   release        release proposal; release bundle --root R --tag T --out DIR: release files
   release-fleet  validated local post-tag delivery and fleet sync (never pushes or publishes)
   setup          setup <project>: full onboarding; setup --machine: deploy a machine with one command

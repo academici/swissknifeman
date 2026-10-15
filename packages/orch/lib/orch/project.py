@@ -1,6 +1,7 @@
-"""The project of an orch command: ``--project DIR``, else ``SKM_PROJECT_ROOT``, else the nearest ``.git`` or
-``.swissknifeman`` above the working directory (``aicore.state.resolve_project``). A command that writes project state
-needs one and stops with ``PROJECT_CONTEXT_REQUIRED`` without it."""
+"""The project of an orch command (``aicore.state.resolve_project``): the root bound by the project-local launcher
+(``python3 -I .swissknifeman/launcher.py orch ...``; a ``--project`` naming another folder is ``PROJECT_CONTEXT_CONFLICT``),
+else ``--project DIR``, else ``SKM_PROJECT_ROOT``, else the nearest ``.git`` or ``.swissknifeman`` above the working
+directory. A command that writes project state needs one and stops with ``PROJECT_CONTEXT_REQUIRED`` without it."""
 from __future__ import annotations
 
 from pathlib import Path

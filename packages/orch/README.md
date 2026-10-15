@@ -16,7 +16,7 @@ configuration it was prepared with, the route and engine decisions with the cand
 and the proof of the capability records; `orch.py explain LAUNCH_PLAN [--json]` reads it back without writing anything.
 Models come from the `model-catalog/v1` file of aicore (`--model-catalog FILE`; the default is the catalog packaged with aicore).
 `prepare` without `--dry-run` returns `NOT_IMPLEMENTED`; runs are started by the conductor:
-`conduct.py run --plan P --items REF…|--batch` claims pieces of work through the work source and drives each one through
+`orch conduct run --plan P --items REF…|--batch` claims pieces of work through the work source and drives each one through
 context, scout, executor, checks, review, triage, correction, registration and commit until green or an honest stop,
 with progress lines on stderr, `resume` without repeating closed steps and an observer report
 ([docs/conductor.md](docs/conductor.md)). `orch.py doctor` checks that git ignores the conductor's runtime files.

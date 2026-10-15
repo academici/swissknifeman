@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/fix.md
-Canonical SHA-256: sha256:f135dc20d28221905be1c5e71983903abc05b4f866d6fd7d1707bb9f01c29a0a
+Canonical SHA-256: sha256:6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a
 Adapter: planner.cursor-command/1.0.18
 -->
 ---
@@ -10,7 +10,8 @@ argument-hint: "[what to fix]"
 model: sonnet
 effort: medium
 ---
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:fix` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:fix` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a SMALL incremental repair. User input: `$ARGUMENTS`.
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.
 Complete the repair directly: design, a plan, phase audit, and plan close are not completion prerequisites;

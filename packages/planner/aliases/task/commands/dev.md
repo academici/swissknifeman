@@ -5,9 +5,10 @@ argument-hint: "[what to build: brief / slices / plan reference] [--review] [--r
 model: sonnet
 effort: high
 ---
-> `/task:dev` is deprecated and will be removed in the next minor release: use `/planner:dev`. Say this to the user once, then follow the instructions below; `<Planner package root>` is the root of the enabled planner plugin.
+> `/task:dev` is deprecated and will be removed in the next minor release: use `/planner:dev`. Say this to the user once, then follow the instructions below.
 
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:dev` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a DEVELOPMENT task. User input: `$ARGUMENTS`.
 
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed planner package.
@@ -35,7 +36,7 @@ For a requested selector, read `references/reviewer-selection.md`: use a fresh r
 on that exact route, then at most `policy.corrections_max` owning corrections (context pack `policy`, or
 `plan.py config show`; default 1) and affected checks. The reviewer never repairs.
 
-Review is opt-in (review contract: `<Planner package root>/references/intent-routing.md#review-is-opt-in`). Only with
+Review is opt-in (review contract (`references/intent-routing.md#review-is-opt-in` of the enabled planner plugin)). Only with
 `--review`, `--reviewer` or an explicit owner request, strip review options from the task text and,
 after GREEN checks, launch one fresh read-only pass over the whole diff using `planner:review` depth.
 Use the selected or current native route. One owning correction and affected checks may follow;

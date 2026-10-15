@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``conduct.py run|resume|settle|release|status|observe|answer|questions|prompt|gates``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|observe|answer|questions|prompt|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -129,7 +129,7 @@ def _questions(args, project: Path) -> int:
     engine.write_json(questions.path(folder), doc)
     print(json.dumps({"run": run_id, "item": args.item, "question": entry["id"], "revision": entry["revision"],
                       "resolution": entry["resolution"],
-                      "next": f"conduct.py resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
+                      "next": f"orch conduct resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
     return 0
 
 
@@ -177,7 +177,7 @@ def _gates(args) -> int:
 
 
 def main(argv: list | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="conduct.py", description="Conduct pieces of work of a plan through "
+    parser = argparse.ArgumentParser(prog="swissknifeman orch conduct", description="Conduct pieces of work of a plan through "
                                      "the roles of their run-policy until green or an honest stop.")
     parser.add_argument("--config", type=Path, metavar="FILE", help="configuration file of the invocation layer")
     parser.add_argument("--project", type=Path, metavar="DIR",

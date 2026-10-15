@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `planner:plan-design`.
 - Invocation: `$ planner:plan-design <arguments>`
 - Routing: `frontier/high -> gpt-6-astra/high`
 - Canonical source: `packages/planner/commands/plan-design.md`
-- Canonical SHA-256: `sha256:ba865c3380b9c61219fcb45e90f36cfda1875b5f83c099274d948f63f46e58f6`
+- Canonical SHA-256: `sha256:c92359c561b8de889c1eb35ff66f12b5545678c012b16acd45a5dc2497c03f9c`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this planner command or skill. Planner is not an

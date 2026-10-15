@@ -18,8 +18,11 @@ from planner.plan import cli
 PLANNER = Path(__file__).resolve().parents[1]
 SLOTS = ["design", "dev", "fix", "make-workflow", "plan-audit", "plan-close", "plan-design", "plan-run",
          "research", "review"]
-LINE = ("Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:%s` first and follow any "
+LINE = ("Owner rules: run `plan.py overlays planner:%s` first and follow any "
         "rules it prints as additions to this command; they never override the plan, its checks or safety rules.")
+CLI = ("Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the "
+       "launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss "
+       "Knife Man package script.")
 needs_aicore = unittest.skipUnless(integration.available(), "aicore is not available")
 
 
@@ -47,7 +50,8 @@ class SlotSetTests(unittest.TestCase):
             with self.subTest(name):
                 text = (PLANNER / "commands" / f"{name}.md").read_text(encoding="utf-8")
                 body = text.split("\n---\n", 1)[1]
-                self.assertEqual(body.splitlines()[0], LINE % name)
+                # the project CLI is named first (the owner-rules line uses it), then the slot is called
+                self.assertEqual(body.splitlines()[:2], [CLI, LINE % name])
 
     def test_every_projection_carries_the_line_of_its_slot(self):
         projections = {"claude golden": "tests/fixtures_data/claude-command-golden/commands/{}.md",

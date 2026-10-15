@@ -1,9 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/research.md
-Canonical SHA-256: sha256:9df646c85be25dca0a689708d43f460b3166a67dbef1fc330a5f70414f1d331f
+Canonical SHA-256: sha256:6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8
 Adapter: planner.codex-command/1.0.18
 -->
-Owner rules: run `python3 <Planner package root>/scripts/plan.py overlays planner:research` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
+Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, run from the project root (the launcher binds the project; without one, run `swissknifeman project init` once). Never locate or run a Swiss Knife Man package script.
+Owner rules: run `plan.py overlays planner:research` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 This is a RESEARCH task. User input: `$ARGUMENTS`. The route is pinned to frontier/high.
 
 Return an answer supported by verified sources and one concrete next step. Use a workflow only when real

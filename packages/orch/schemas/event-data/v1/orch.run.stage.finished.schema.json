@@ -67,6 +67,21 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$",
       "description": "Digest of the merged run options of the piece of work the stage belongs to."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the effective orch configuration."
     }
   },
   "required": [

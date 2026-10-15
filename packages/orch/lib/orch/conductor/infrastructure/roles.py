@@ -11,6 +11,7 @@ from typing import Callable, Optional
 
 from aicore.util.digest import sha256_hex
 
+from orch import events, settings as settings_mod
 from orch.conductor import agents, checks as checks_mod, contract, heal, options as opts, process, prompts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import json_block
@@ -33,7 +34,7 @@ ISOLATION_ARGS = {"claude-code": ["--safe-mode"]}
 
 
 def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int,
-                causation: Optional[str] = None) -> dict:
+                causation: Optional[str] = None, prompt_sha256: Optional[str] = None) -> dict:
     """A new agent run (``agents``): its folder and ``request.json``. It becomes the agent of this thread, so that the
     usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent."""
     number = self.store.next_agent(self.state)
@@ -43,7 +44,32 @@ def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file:
                           parent=parent["id"] if parent else None, started_at=clock.utc_now(), causation=causation)
     handle.update(began=time.monotonic(), previous=parent, last_exit=None, stream=None, lingered=False, trail={})
     self._local.agent = handle
+    handle["event_base"] = {"run_id": item.orch_run, "work_id": item.input_doc.get("input_id") or item.ref,
+                            "item": item.ref, "agent_run_id": handle["id"], "role": role, "step": key,
+                            "attempt": attempt, "route": self._event_route(item, role, route),
+                            "prompt_sha256": prompt_sha256,
+                            "config_digest": settings_mod.config_digest(self.settings),
+                            "options_digest": opts.digest(item.options) if item.options else None}
+    handle["event_started"] = self._agent_event("orch.agent.started", handle)
     return handle
+
+
+def event_route(item: Item, role: str, route: dict) -> dict:
+    """``{provider, model_class?, model?, effort?}`` of an agent route for its events."""
+    model_class = opts.stage_route(item.options, role).get("model_class") or route.get("model_class")
+    return {key: value for key, value in (("provider", route.get("provider")), ("model_class", model_class),
+                                          ("model", route.get("model")), ("effort", route.get("effort"))) if value}
+
+
+def agent_event(self, event_type: str, handle: dict, extra: Optional[dict] = None) -> Optional[str]:
+    """Journal an ``orch.agent.*`` event of the agent run in ``handle``; the id of the event, ``None`` when none was
+    journaled. ``agent.finished`` and ``agent.failed`` are caused by ``agent.started``; the run id correlates them."""
+    base = handle["event_base"]
+    data = {key: value for key, value in {**base, **(extra or {})}.items() if value is not None}
+    return events.emit(event_type, data, subject=f"{base['run_id']}/{base['item']}/{handle['id']}",
+                       causationid=handle.get("event_started") if event_type != "orch.agent.started" else None,
+                       correlationid=base["run_id"], settings=self.settings, project=self.project,
+                       config_file=self.config_file)
 
 
 def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool = False) -> None:
@@ -53,6 +79,13 @@ def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool 
     agents.finish(handle, exit_code=handle["last_exit"], error=None if succeeded else trail.get("error") or error,
                   decisions=trail.get("decisions") or [], duration_s=time.monotonic() - handle["began"],
                   stream=handle["stream"], lingered=handle["lingered"])
+    failure = None if succeeded else trail.get("error") or error
+    tokens = {key: value for key, value in handle["usage"].items() if value}
+    extra = {"tokens": handle["usage"] if tokens else None, "duration_ms": round((time.monotonic() - handle["began"]) * 1000)}
+    if failure:
+        extra["error"] = {"class": failure.get("class") or "unknown",
+                          **({"code": failure["code"]} if failure.get("code") else {})}
+    self._agent_event("orch.agent.failed" if failure else "orch.agent.finished", handle, extra)
     self._local.agent = handle["previous"]
 
 
@@ -76,7 +109,8 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
         self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="BUDGET_OVER",
                            message=f"block {block.kind} {block.origin} {prompts.estimate_tokens(block.text)}")
     attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
-    handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt, causation)
+    handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt, causation,
+                               prompt_sha256=sha256_hex(prompt.encode("utf-8")))
     try:
         doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle)
     except Stop as stop:
@@ -211,7 +245,8 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
         raw = item.directory / "streams" / f"{key}-fix{number}.jsonl"
         prompt_file = item.directory / "prompts" / f"{key}-fix{number}.md"
         prompt_file.write_text(prompt, encoding="utf-8")
-        handle = self._agent_start(item, key, "report-fixer", route, prompt_file, number)  # the parent is the role mended
+        handle = self._agent_start(item, key, "report-fixer", route, prompt_file, number,
+                                  prompt_sha256=sha256_hex(prompt.encode("utf-8")))  # the parent is the role mended
         try:
             run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
                                    cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,

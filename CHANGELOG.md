@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **orch:** agent events (PLAN4 P12.1). `orch.agent.started`, `orch.agent.finished` and `orch.agent.failed` (event-data/v1, closed schemas with valid and invalid fixtures) are journaled for every agent run of the conductor with `run_id`, `work_id`, `agent_run_id`, `role`, `route`, `prompt_sha256`, `config_digest`, `options_digest`, `tokens`, `duration_ms` and `error`; subject `<run>/<item>/<agent run id>`, `correlationid` the run id, `causationid` of the end events the `started` event. `orch.run.stage.finished` got the optional `work_id`, `item` and `config_digest`. `orch.events.emit` takes `correlationid` and returns the event id. No `gen_ai.*` in the core.
+
 ### Changed
 
 - **orch:** the conductor by layer (PLAN4 P11, no change of behaviour). A characterization test keeps normalized `progress.jsonl` and `state.json` snapshots of eleven scenarios on fake roles (`tests/golden/characterization/`, rewritten only with `--recapture --reason`) and checks that every stop code and beacon of `docs/conductor.md` is met. `conductor/engine.py` (3100 lines) is split into `domain/`, `infrastructure/`, `policies/`, `stages/` and `application/` (every module at most 600 lines); `engine.py` is a facade whose `Conductor` binds the layer functions as its methods, and the public names stay importable from it. The time seams of the tests moved to `infrastructure/clock.py`. Only `infrastructure/work_source.py` writes into the artifact folder of a piece (stage-report, review-verdict, advice, evidence, the `orch-artifacts` fallback) and builds or runs an `orch.py source` command line; `tests/test_boundaries.py` enforces it.

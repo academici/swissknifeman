@@ -165,6 +165,8 @@ class Conductor:
 
     _agent_start = roles.agent_start
     _agent_end = roles.agent_end
+    _agent_event = roles.agent_event
+    _event_route = staticmethod(roles.event_route)
     _role = roles.run_role
     _denied = staticmethod(roles.denied)
     _role_body = roles.role_body

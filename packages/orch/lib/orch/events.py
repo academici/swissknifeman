@@ -12,7 +12,8 @@ from typing import Any, Mapping, Optional
 
 SOURCE = "orch"
 DATA_SCHEMA = "urn:swissknifeman:orch:event-data:{name}:v1"
-EVENT_TYPES = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused")
+EVENT_TYPES = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused",
+               "orch.agent.started", "orch.agent.finished", "orch.agent.failed")
 
 
 def data_schema(event_type: str) -> str:
@@ -21,8 +22,12 @@ def data_schema(event_type: str) -> str:
 
 
 def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid: Optional[str] = None,
-         settings: Any = None, project: Any = None, config_file: Any = None) -> None:
-    """Journal one event of module ``orch`` about ``subject`` (a run id, or a submission id of a refusal).
+         correlationid: Optional[str] = None, settings: Any = None, project: Any = None,
+         config_file: Any = None) -> Optional[str]:
+    """Journal one event of module ``orch`` about ``subject`` (a run id, a submission id of a refusal, or
+    ``<run>/<item>/<agent run id>`` of an agent run).
+
+    Returns the id of the journaled event, ``None`` when nothing was journaled; ``correlationid`` is the run id.
 
     ``settings`` is the effective ``orch.settings.Settings``; without it ``events.enabled`` is read from the
     configuration. Never raises.
@@ -32,10 +37,12 @@ def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid:
             from . import settings as settings_module
             settings = settings_module.load(project=project, config_file=config_file)
         if not settings.events_enabled:
-            return
+            return None
         from aicore.ext import events as journal
-        journal.emit(event_type, dict(data), source=SOURCE, subject=subject, project=project,
-                     dataschema=data_schema(event_type), causationid=causationid, config_file=config_file, strict=True)
+        stored = journal.emit(event_type, dict(data), source=SOURCE, subject=subject, project=project,
+                              dataschema=data_schema(event_type), causationid=causationid,
+                              correlationid=correlationid, config_file=config_file, strict=True)
+        return stored.id if stored is not None else None
     except Exception as exc:  # noqa: BLE001 — the command that produced the event must not fail
         reason = getattr(exc, "message", None) or exc
         try:
@@ -43,3 +50,4 @@ def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid:
                   file=sys.stderr)
         except (OSError, ValueError):  # a closed or broken stderr is not a reason to fail either
             pass
+    return None

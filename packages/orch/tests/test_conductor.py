@@ -2027,6 +2027,28 @@ class DigestTests(ConductorCase):
         self.assertTrue(stages)
         self.assertEqual({data["options_digest"] for data in stages}, {options["digest"]})
 
+    def test_every_agent_run_has_started_and_finished_events(self):
+        from aicore.ext import events as journal
+        run, options = self.run_with()
+        stored, problems = journal.read_events(self.project)
+        self.assertEqual(problems, [])
+        agents_events = [event for event in stored if event.type.startswith("orch.agent.")]
+        started = {event.data["agent_run_id"]: event for event in agents_events if event.type == "orch.agent.started"}
+        ended = {event.data["agent_run_id"]: event for event in agents_events if event.type != "orch.agent.started"}
+        self.assertTrue(started)
+        self.assertEqual(set(started), set(ended))
+        for agent, event in started.items():
+            data = event.data
+            self.assertEqual(event.subject, f"{data['run_id']}/{data['item']}/{agent}")
+            self.assertEqual(event.correlationid, data["run_id"])
+            self.assertEqual(data["config_digest"], run["config_digest"])
+            self.assertRegex(data["prompt_sha256"], r"^[0-9a-f]{64}$")
+            self.assertIn("provider", data["route"])
+            self.assertEqual(ended[agent].type, "orch.agent.finished")
+            self.assertIsInstance(ended[agent].data["duration_ms"], int)
+            self.assertEqual(ended[agent].causationid, event.id)
+            self.assertEqual(ended[agent].correlationid, data["run_id"])
+
 
 class PreviewAndStatusTests(ConductorCase):
     def test_dry_run_writes_nothing_and_shows_routes(self):

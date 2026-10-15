@@ -55,7 +55,7 @@ F20 FIXED S1 (ATTEMPT_CONFLICT after `resume --retry`, hit 5 times: P10.1, P10.2
 ## STATUS as of 2026-10-15 (HEAD 3ee14851a, pushed) — read this first, it overrides earlier wording
 - S1 FIXED by F20 (bridge reopens a blocked attempt on retry). S2 was a mis-diagnosis (the executor does get the tail of a red check; only `ci-matrix` rows are thin). S19: take-over was dropped; the batch start uses `plan.py start --in-progress-deps` (F13 text mentions `--together`: obsolete). S25 was NOT a vendoring issue: it was the frozen-conductor env leaking into the checks (F19).
 - F21 FIXED review strategy of a batch (`review.strategy`/`review.strategist`, `policies/review_strategy.py`, `application/review_plan.py`, `review_batch.py`, 24 tests). NEVER EXERCISED AGAINST A LIVE MODEL: the strategist (triager route) and the group review (reviewer route) were tested only with the fake roles.
-- OPEN (need analysis/decision): S3, S4, S5, S6, S7 (maybe obsolete with `scope.fence: project`), S8, S9, S10, S11, S12, S14, S15, S17/S26, S18, S20, S22 (conductor-native batch review stage with corrections), S23, S24.
+- OPEN (need analysis/decision): S3, S4, S5, S6, S7 (maybe obsolete with `scope.fence: project`), S8, S9, S10, S11, S12, S15, S17/S26, S18, S20, S22 (conductor-native batch review stage with corrections), S23, S24.
 - PARKED by the owner: P13 must not start; P12.5 (OTel) deferred by the owner (D6), phase P12 closed `blocked` by the tool, phase validation V11-V13 run by hand: green.
 
 ## POLISH before P13 (2026-10-15, branch orch-polish merged into ecosystem-split) — read this first, it overrides all earlier wording
@@ -85,7 +85,7 @@ Each row: id, status, what was found (data), what was done, where the test is. S
 
 ### Providers and limits (E)
 - S20 MEASURED with strace what the Landlock guard (`ro-run.py`) denies to `claude -p` (haiku, safe-mode): `~/.claude/sessions/<pid>.json`, `~/.claude.json` (+ `.tmp`, `.lock`): the live-session registry and the global state file (counters, caches). Nothing the role needs; with the shared session the project's transcript folder is writable. The folder name rule was verified against `~/.claude/projects`; FIXED: a character outside the basic plane is two dashes (UTF-16), a path longer than 200 characters opens `~/.claude/projects` whole (Claude hashes the name there). Tests `TranscriptFolder`.
-- S14 OPEN (needs an owner decision, not a defect): a spare executor when the Claude weekly limit is reached. codex needs bwrap (does not start here) and a codex route under Landlock means `--sandbox danger-full-access`, i.e. dropping the codex sandbox in favour of the guard — a security decision; grok executor is acp (not driven). No fallback route for the executor is configured by default.
+- S14 DECIDED by the owner (2026-10-15): there is NO spare executor. When the Claude weekly limit is reached the run STOPS (`PROVIDER_QUOTA`, gate on the machine, `resume` after the reset or `gates --clear`) and the owner corrects the plan/options. No codex `danger-full-access`, no grok executor route; no executor `fallback_routes` is configured and none is to be added (the reviewer keeps its default claude-code fallback).
 
 ### Messages and plan records (F)
 - S9 FIXED by F20 (a retried attempt is reopened and started again before it registers; the `notes` of the new finish replace the old ones — covered by `RetryRegisterTests`); S10 FIXED: `ITEM_OWNED` now names `orch conduct release/settle` (`work_source.owned_hint`), a repeated `resume --retry` after a resume that stopped again is accepted (`retried` mark), `release --all`/`--item` repeated; `plan.py set` refusing `status/result` is by design (lifecycle verbs).
@@ -101,7 +101,7 @@ Each row: id, status, what was found (data), what was done, where the test is. S
 - ALREADY COVERED and checked: limit stop keeps all pieces in progress (`StopKeepsTheBatchTests`), commit with foreign plan dirt (`_only_plan_dirt`), `--ready --max-items` (`ReadyBatchTests`), `--adopt` with a batch (F18).
 
 ### Not done / left for the owner
-- S14 (above). The pinned ruff 0.15.19 is still not installed here (CI uses pipx). `packages/analyst` and `scripts/` lint findings (other modules). The effect of `file_tools_rule` on the executor's tool use is not measured yet.
+- S14 closed (above). The pinned ruff 0.15.19 is still not installed here (CI uses pipx). `packages/analyst` and `scripts/` lint findings (other modules). The effect of `file_tools_rule` on the executor's tool use is not measured yet.
 
 ### Live round 2 (after the merge; scratch project, `run --frozen`)
 - `run --frozen` end to end: snapshot of the merged HEAD taken, the same command ran from it, green in 1m18s, snapshot removed. The group review now reads the real code (the reply cites `calc/add.py:2`, `calc/sub.py:2`) with `0/0/0` in 9.4 s: F23 fixed in the wild. The strategist chose `groups` this time and `single` the first time (same pieces): a model choice, both sound partitions.

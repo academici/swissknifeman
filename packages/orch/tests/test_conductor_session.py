@@ -316,3 +316,24 @@ class FenceTests(ConductorCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ScenarioFlagTests(ConductorCase):
+    """``run --scenario S`` for a plan run reaches every claim (the work source resolves it for the piece)."""
+
+    def claims(self) -> list:
+        return [call for call in self.source()["calls"] if call.get("op") == "claim"]
+
+    def test_the_flag_is_passed_to_the_claim_of_a_plan_run(self):
+        self.set_items({"W1": {}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--scenario", self.scenario))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual({call.get("scenario") for call in self.claims()}, {self.scenario})
+
+    def test_without_the_flag_the_claim_names_no_scenario(self):
+        self.set_items({"W1": {}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual({call.get("scenario") for call in self.claims()}, {None})

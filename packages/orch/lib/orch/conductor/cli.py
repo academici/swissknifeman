@@ -208,8 +208,9 @@ def main(argv: list | None = None) -> int:
                           "against) or only the plan's write set (`scope.fence`)")
     run.add_argument("--allow-path", dest="allow_path", action="append", default=None, metavar="DIR",
                      help="a directory outside the project the executor may also change (repeatable; `scope.extra_paths`)")
-    run.add_argument("--scenario", help="the scenario to preview with --dry-run, or the scenario of a --input run "
-                                        "(default: default_profile)")
+    run.add_argument("--scenario", help="the scenario of the run: wins over the scenario the plan resolves for each "
+                                        "piece (overlays, `orchestration`); also for --input and --dry-run "
+                                        "(default: the plan's, else default_profile)")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     run.add_argument("--adopt", action="store_true",

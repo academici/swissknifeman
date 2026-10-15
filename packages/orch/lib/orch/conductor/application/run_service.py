@@ -31,7 +31,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
         plan, plans_root, items, batch = str(Path(input_file).resolve()), None, [found["input_id"]], False
         source = {"kind": "file", "path": plan, "commit": bool(commit)}
     run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
-               "source": source, "scenario": scenario if source else None,
+               "source": source, "scenario": scenario,
                "max_items": max_items, "options_file": str(options_file) if options_file else None,
                "adopt": bool(adopt), "grouped": grouped, "fence": fence,
                "extra_paths": [str(path) for path in extra_paths or []] or None,

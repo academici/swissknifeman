@@ -70,6 +70,7 @@
           "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
         },
         "batch": {"description": "The claim is part of a batch of one run: a piece an earlier claim of the batch started and that has no attempt yet may be taken over. Optional.", "type": "boolean"},
+        "scenario": {"description": "Scenario the invocation names (`--scenario`): it wins over the scenario the source resolves for the piece. Optional.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
         "run_id": {"description": "Run that claims the work.", "$ref": "#/$defs/runId"},
         "submission_id": {"description": "Submission of the run.", "$ref": "#/$defs/submissionId"},
         "actor": {"description": "Who runs the work.", "$ref": "#/$defs/actor"},

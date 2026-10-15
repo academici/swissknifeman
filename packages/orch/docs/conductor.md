@@ -34,6 +34,9 @@ Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: m
 with `--provenance` for support work, or written by hand) served by the built-in file source
 (`orch.worksource_file.FileWorkSource`, the same `work-source/v1` contract as the plugin). `--input` excludes `--plan`,
 `--items`, `--ready`, `--max-items` and `--adopt`; the scenario is `--scenario`, else `default_profile`, and `--options` layers on top.
+For a plan run `--scenario S` is passed to every claim (`orch source claim --scenario S`) and wins over the scenario the plan resolves for
+the piece (`orchestration` of the item, phase, plan, overlays); the claim answer names it `scenario_source: invocation:--scenario`, and
+an unknown scenario blocks the claim (`SCENARIO_UNKNOWN`) before the piece starts. Without the flag the plan's scenario applies.
 `run.json` records `source = {kind: file, path, commit}`, the piece's reference is the `input_id`, and `resume` reads the same file
 (a file that changed since the claim is `INPUT_CHANGED`: start a new run).
 

@@ -397,7 +397,7 @@
           "type": "integer"
         },
         "question_warn_s": {
-          "description": "A question of the executor that waits this many seconds for an answer is marked overdue by `orch conduct questions` and the observer; nothing is answered or stopped; 0 switches it off; default 1800.",
+          "description": "A question of the executor that waits this many seconds for an answer is marked overdue by `conduct.py questions` and the observer; nothing is answered or stopped; 0 switches it off; default 1800.",
           "type": "integer"
         },
         "skill_tokens_max": {

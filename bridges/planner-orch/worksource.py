@@ -236,6 +236,8 @@ def op_claim(fields: dict) -> dict:
             answer["route"] = {key: doc["route"][key] for key in ("class", "effort") if key in doc["route"]}
         context = plan_json(["context", plan, ref, "--stdout"], plans_root)
         answer["scenario"], answer["scenario_source"], layers = orchestration_of(context, ref)
+        if fields.get("scenario"):  # the invocation (`--scenario`) wins over the plan's own scenario
+            answer["scenario"], answer["scenario_source"] = fields["scenario"], "invocation:--scenario"
         if layers:
             answer["options"] = layers
         refused = policy_exists(answer["scenario"], fields.get("orch_config")) if answer["scenario"] else \

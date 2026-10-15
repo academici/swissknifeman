@@ -112,9 +112,9 @@ class Case(unittest.TestCase):
         self.valid(answer, "output")
         return answer
 
-    def claim(self, run_id="run-a", items=None) -> dict:
+    def claim(self, run_id="run-a", items=None, scenario=None) -> dict:
         return self.op(worksource.op_claim, op="claim", plan=self.plan, items=items, run_id=run_id,
-                       submission_id=f"sub-{run_id}", actor=ACTOR)
+                       submission_id=f"sub-{run_id}", actor=ACTOR, scenario=scenario)
 
     def item(self, ref: str) -> dict:
         return json.loads(run(self.project, "--output", "json", "get", self.plan, ref).stdout)["data"]["doc"]
@@ -254,6 +254,17 @@ class OrchestrationTests(Case):
             {"source": "document:orchestration-plan", "options": {"rules": ["plan rule"]}},
             {"source": "document:orchestration-p1", "options": {"rules": ["phase rule"]}},
             {"source": "document:orchestration-p1-1", "options": {"limits": {"review_rounds": 1}}}])
+
+    def test_the_scenario_of_the_invocation_wins_over_the_plan(self):
+        self.overlay("orchestration-p1", ["P1"], {"scenario": "full"})
+        answer = self.claim(items=["P1.1"], scenario="scout-solo")
+        self.assertEqual((answer["status"], answer["scenario"], answer["scenario_source"]),
+                         ("claimed", "scout-solo", "invocation:--scenario"))
+
+    def test_an_unknown_scenario_of_the_invocation_is_blocked_before_the_item_starts(self):
+        answer = self.claim(items=["P1.1"], scenario="nope")
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "SCENARIO_UNKNOWN"))
+        self.assertEqual(self.item("P1.1")["status"], "todo")
 
     def test_fields_win_over_overlays_of_the_same_level(self):
         self.overlay("orchestration-p1-1", ["P1.1"], {"scenario": "full", "options": {"rules": ["overlay"]}})

@@ -55,6 +55,8 @@ def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
         args += ["--item", ref]
     if batch:
         args.append("--batch")
+    if self.run_doc.get("scenario") and file_source.get("kind") != "file":
+        args += ["--scenario", self.run_doc["scenario"]]
     code, answer, err = self._orch(*args)
     if code == 3:
         raise Stop("WORK_SOURCE_UNAVAILABLE", err or "no work source")

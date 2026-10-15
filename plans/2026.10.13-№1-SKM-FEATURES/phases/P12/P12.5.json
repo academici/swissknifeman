@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P12.5",
   "title": "Плагин telemetry-exporter: подписчик orch.* → OTLP-JSON, маппинг на gen_ai.* по зафиксированному коммиту semconv; вход по D6; закрытие фазы P12",
-  "status": "todo",
+  "status": "blocked",
   "summary": "По knowledge/p12-observability#otel: модуль-плагин с unit.json, подписка, OTLP-JSON без SDK, тест на фикстуре журнала. Пункт закрывает фазу: phase.validation P12.",
   "why": "Аудит П11.5, D14, D6: только при появлении потребителя.",
   "scope": {
@@ -49,6 +49,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6e46d5f499e6c0398384ff624dc759a5ada504698ec3e7bee7b521503e1e05c4",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
     "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)",
@@ -82,6 +88,21 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T19:58:52Z"
+  "result": {
+    "started_at": "2026-10-15T10:32:00Z",
+    "finished_at": "2026-10-15T11:18:42Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-5a9210aae568c47524ee97c8-P12.5",
+    "notes": "Stopped before any change. The entry condition of D6 for the OTel plugin is not confirmed: the repository holds no consumer of the telemetry (only audits/perplexity-audit.md mentions telemetry-exporter), and the pinned commit of open-telemetry/semantic-conventions-genai that D7/D14 require for the gen_ai.* mapping is not in the input or the repository. No file was changed, no check was run, phase.validation P12 was not run.",
+    "escalation": "ESCALATION: the pinned commit of semantic-conventions-genai is missing; the mapping cannot be written from memory (plan.rules[11], D7).; QUESTION: Q1 D6 lets the OTel exporter start only when a consumer of telemetry appears or the owner decides. Is the scheduling of P12.5 in this run the owner decision, or is there a named consumer?; QUESTION: Q2 The gen_ai.* mapping needs a pinned commit of open-telemetry/semantic-conventions-genai (D7, D14). Name the commit hash, or allow reading the public repository to pin its current head."
+  },
+  "updated_at": "2026-10-15T11:18:42Z"
 }

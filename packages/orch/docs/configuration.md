@@ -35,12 +35,14 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `conductor.questions` | `queue`, `deny`, `defaults` | `queue` | all | what a blocking question of the executor does: blocked `QUESTION` and wait for `conduct.py answer`, blocked `QUESTION_DENIED`, or a `default` answered once by policy |
 | `conductor.limits.*` | integers | `tokens_max` 0, `stage_timeout_s` 0, `stage_idle_timeout_s` 0, `check_timeout_s` 0 | all | default limits of a run: `tokens_max` is a beacon, the three ceilings are off (nothing long is cut; see the beacons in `conductor.md`) |
 | `conductor.argv.<role>` | array of strings | empty | defaults, machine, invocation, flags | command line of a role instead of the launch catalog entry |
+| `research.policy`, `research.sources.<id>.*` | see [research](research.md) | `conditional`, no sources | `argv`: defaults, machine, invocation, flags; the rest all | research sources: `command`, `filesystem`, `mcp-stdio` |
 
 `profiles.dirs` makes orch read policy files from the listed paths, so a project file, which lives in a repository
 that somebody else may control, cannot set it (`CONFIG_LAYER_FORBIDDEN`); neither can the environment. A leading `~`
 is expanded; a relative entry is refused (`PROFILES_DIR_RELATIVE`), because the folder it would be taken from
 cannot be told once a higher layer appends to the array. `conductor.argv` chooses the commands the conductor runs,
-so a project file cannot set it either ([conductor](conductor.md#configuration)).
+so a project file cannot set it either ([conductor](conductor.md#configuration)); the same holds for
+`research.sources.<id>.argv` ([research](research.md)).
 
 ## Engine choice
 

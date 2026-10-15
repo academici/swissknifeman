@@ -359,6 +359,106 @@
           ]
         }
       }
+    },
+    "research": {
+      "type": "object",
+      "description": "Research sources (P10.1): where the researcher role and `orch.py research query` look things up.",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string",
+          "description": "When a piece of work gets a research stage: required (every piece), conditional (a piece whose research need is required) or off (never).",
+          "default": "conditional",
+          "enum": [
+            "required",
+            "conditional",
+            "off"
+          ]
+        },
+        "sources": {
+          "type": "object",
+          "description": "Research sources by id. An argv chooses the process orch starts, so only the machine, the invocation file and flags may set it; a project file may name roots and limits.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "One source.",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "description": "Adapter: command (argv, the query on stdin, JSON on stdout), filesystem (a search over roots) or mcp-stdio (an MCP server over stdio, the query goes to its tool).",
+                  "enum": [
+                    "command",
+                    "filesystem",
+                    "mcp-stdio"
+                  ]
+                },
+                "argv": {
+                  "type": "array",
+                  "description": "Command and arguments of a command or mcp-stdio source; a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs.",
+                  "items": {
+                    "type": "string",
+                    "description": "One argument."
+                  },
+                  "x-skm-layers": [
+                    "defaults",
+                    "machine",
+                    "invocation",
+                    "flags"
+                  ]
+                },
+                "tool": {
+                  "type": "string",
+                  "description": "mcp-stdio: name of the tool that receives the query.",
+                  "default": "search",
+                  "minLength": 1
+                },
+                "roots": {
+                  "type": "array",
+                  "description": "filesystem: folders searched, absolute, starting with ~, or relative to the project.",
+                  "items": {
+                    "type": "string",
+                    "description": "One folder.",
+                    "minLength": 1
+                  }
+                },
+                "capabilities": {
+                  "type": "array",
+                  "description": "What the source can do.",
+                  "items": {
+                    "type": "string",
+                    "description": "One capability.",
+                    "enum": [
+                      "search",
+                      "citations",
+                      "synthesis",
+                      "deep"
+                    ]
+                  }
+                },
+                "timeout_s": {
+                  "type": "integer",
+                  "description": "Ceiling on one query in seconds.",
+                  "default": 600,
+                  "minimum": 1
+                },
+                "concurrency": {
+                  "type": "integer",
+                  "description": "Queries of this source that run at once in one orch process.",
+                  "default": 1,
+                  "minimum": 1
+                },
+                "order": {
+                  "type": "integer",
+                  "description": "Place on the ladder of sources: lower first, ties by id.",
+                  "default": 100
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

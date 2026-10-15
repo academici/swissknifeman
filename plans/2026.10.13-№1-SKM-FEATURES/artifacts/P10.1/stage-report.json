@@ -1,0 +1,58 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/orch/config.example.toml",
+    "packages/orch/configs/config.schema.json",
+    "packages/orch/docs/configuration.md",
+    "packages/orch/docs/index.md",
+    "packages/orch/docs/research.md",
+    "packages/orch/lib/orch/cli.py",
+    "packages/orch/lib/orch/research/__init__.py",
+    "packages/orch/lib/orch/research/sources.py",
+    "packages/orch/lib/orch/settings.py",
+    "packages/orch/tests/fixtures/research/fake_command.py",
+    "packages/orch/tests/fixtures/research/fake_mcp.py",
+    "packages/orch/tests/fixtures/research/tree/b.txt",
+    "packages/orch/tests/fixtures/research/tree/docs/a.md",
+    "packages/orch/tests/test_research.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "exit": 0,
+      "id": "V1"
+    }
+  ],
+  "evidence": [
+    "/tmp/p10.1-affected.txt"
+  ],
+  "open_issues": [
+    {
+      "impact": "Behaviour of sources without explicit settings; two orch processes can still overload the Perplexity daemon",
+      "kind": "assumption",
+      "next": "Adjust if the owner wants other values",
+      "text": "Defaults not named in the design: order=100, BROWSER_BUSY retry wait 5*attempt seconds (timeouts retry without a wait), filesystem match is the whole query as a case-insensitive substring, at most 50 matches. concurrency is enforced per process only."
+    },
+    {
+      "impact": "The researcher role (P10.2) may want stored raw replies",
+      "kind": "assumption",
+      "next": "Decide in P10.2",
+      "text": "raw_ref is the sha256 of the raw reply, not a pointer to a stored file."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "settings.py layer check: CONFIG_LAYER_FORBIDDEN for project-layer argv",
+      "research/sources.py mcp-stdio client and retry"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "schema_changed",
+      "security_touched"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done",
+  "summary": "P10.1 research sources (command, filesystem, mcp-stdio adapters with BROWSER_BUSY retry, generic stdlib MCP stdio client, research query/sources CLI, schema, docs, tests with fake mcp server) are in the tree from the earlier round. This round the only fix was regenerating packages/orch/config.example.toml, which had drifted from the schema (ECOSYSTEM_CONFIG_EXAMPLE_DRIFT). affected-tests --run is now green, including the orch unit tests with a temporary HOME/SKM_HOME."
+}

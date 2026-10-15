@@ -117,3 +117,36 @@ schema_version = 1
 
 # Patterns of the shared feature. Array of strings.
 # shared = ["packages/aicore/**"]
+
+[orch.research]
+# When a piece of work gets a research stage: required (every piece), conditional (a piece whose research need is required) or off (never). One of: "required", "conditional", "off".
+# policy = "conditional"
+
+[orch.research.sources]
+# Research sources by id. An argv chooses the process orch starts, so only the machine, the invocation file and flags may set it; a project file may name roots and limits.
+# [orch.research.sources.example]
+
+# Adapter: command (argv, the query on stdin, JSON on stdout), filesystem (a search over roots) or mcp-stdio (an MCP server over stdio, the query goes to its tool). One of: "command", "filesystem", "mcp-stdio".
+# kind = <string>
+
+# Command and arguments of a command or mcp-stdio source; a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# argv = <array>
+
+# mcp-stdio: name of the tool that receives the query. String.
+# tool = "search"
+
+# filesystem: folders searched, absolute, starting with ~, or relative to the project. Array of strings.
+# roots = <array>
+
+# What the source can do. Array of strings.
+# capabilities = <array>
+
+# Ceiling on one query in seconds. Integer >= 1.
+# timeout_s = 600
+
+# Queries of this source that run at once in one orch process. Integer >= 1.
+# concurrency = 1
+
+# Place on the ladder of sources: lower first, ties by id. Integer.
+# order = 100

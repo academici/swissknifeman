@@ -292,6 +292,46 @@ def _policy(args: argparse.Namespace) -> int:
     return 0
 
 
+def _research(args: argparse.Namespace) -> int:
+    from orch import research
+    try:
+        project = _project_root(args)
+        current = settings.load(project=project, config_file=args.config)
+        found = research.sources_from(current)
+        if args.action == "sources":
+            doc = {"policy": current.research["policy"], "sources": [source.describe() for source in found]}
+            if args.json:
+                print(json.dumps(doc, ensure_ascii=False))
+            else:
+                print(f"policy\t{doc['policy']}")
+                for row in doc["sources"]:
+                    print(f"{row['order']}\t{row['id']}\t{row['kind']}\t{','.join(row['capabilities']) or '-'}")
+            return 0
+        chosen = {source.id: source for source in found}.get(args.source)
+        if chosen is None:
+            raise research.SourceError("SOURCE_UNKNOWN", f"no source {args.source!r}; configured: "
+                                                         f"{', '.join(source.id for source in found) or 'none'}")
+        try:
+            text = args.query_file.read_text(encoding="utf-8")
+        except OSError as error:
+            print(f"INPUT_INVALID: {error}", file=sys.stderr)
+            return 1
+        answer = research.query(chosen, text, cwd=project)
+        if args.json:
+            print(json.dumps(answer, ensure_ascii=False))
+        else:
+            print(answer["text"])
+            for item in answer["sources"]:
+                print(f"source: {item}")
+        return 0
+    except research.SourceError as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
+    except ConfigError as error:
+        print(f"CONFIG_INVALID: {error}", file=sys.stderr)
+        return 1
+
+
 def _conformance(args: argparse.Namespace) -> int:
     try:
         rows = conformance.run(args.binding)
@@ -832,6 +872,14 @@ def _main(argv: list[str] | None = None) -> int:
     command.add_argument("--binding", choices=sorted(BINDINGS), help="only this binding (default: every binding)")
     command.add_argument("--json", action="store_true")
     _source_parser(verbs)
+    command = verbs.add_parser("research", help="research sources of [orch.research]: list them, ask one")
+    actions = command.add_subparsers(dest="action", required=True)
+    sources = actions.add_parser("sources", help="the configured sources on the ladder (read-only)")
+    sources.add_argument("--json", action="store_true")
+    ask = actions.add_parser("query", help="ask one source; its argv comes from the machine, invocation or flags layer")
+    ask.add_argument("--source", required=True, metavar="ID", help="id of a source of [orch.research.sources]")
+    ask.add_argument("--query-file", required=True, type=Path, metavar="FILE", help="the query text")
+    ask.add_argument("--json", action="store_true", help="{source, text, sources, raw_ref}")
     command = verbs.add_parser("doctor", help="diagnose the project: the conductor files git must ignore or keep")
     command.add_argument("--json", action="store_true", help="check-result/v1 documents as a JSON list")
     args = parser.parse_args(argv)
@@ -839,6 +887,8 @@ def _main(argv: list[str] | None = None) -> int:
         return _doctor(args)
     if args.verb == "source":
         return _source_command(args)
+    if args.verb == "research":
+        return _research(args)
     if args.verb == "policy":
         return _policy(args)
     if args.verb == "route":

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P10.1",
   "title": "[orch.research] policy и sources: адаптеры command, filesystem, mcp-stdio (Perplexity через perplexity-web-mcp), повтор при BROWSER_BUSY; orch.py research query/sources",
-  "status": "blocked",
+  "status": "done",
   "summary": "Config и адаптеры по knowledge/p10-research#sources; обобщённый stdlib MCP stdio-клиент; CLI research; пример machine-конфига Perplexity в docs; тесты (CONFIG_LAYER_FORBIDDEN, фейковый mcp-stdio сервер).",
   "why": "Аудит П9.1, мысль 16; ответ на вопрос 7 части 7 (Perplexity — MCP stdio, а не отдельный бинарник). Риски: (1) проект задаёт исполняемый argv — запрещено слоями; (2) перегрузка daemon — concurrency и повтор.",
   "scope": {
@@ -93,6 +93,10 @@
     {
       "path": ".swissknifeman/state/artifacts/sha256/d81478186c60904c843f6a716b58ad23ddd79b5af09ef15a1705ec4dab07297b",
       "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/15093b25c811a5e285ef6783b2ffa02cdb09f7765e420b58c421b6a89e5a7bea",
+      "role": "input"
     }
   ],
   "rules": [
@@ -128,8 +132,8 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-15T05:31:11Z",
-    "finished_at": "2026-10-15T05:35:54Z",
+    "started_at": "2026-10-15T05:39:52Z",
+    "finished_at": "2026-10-15T05:39:54Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet",
@@ -140,8 +144,18 @@
       "model": "conductor"
     },
     "attempt_id": "att-run-cc9f6e4398e32221556a156a-P10.1",
-    "notes": "Added [orch.research] (policy, sources.<id>: kind command|filesystem|mcp-stdio, argv restricted to defaults/machine/invocation/flags, tool, roots, capabilities, timeout_s, concurrency, order) to config.schema.json and Settings.research. New orch/research/sources.py has the command, filesystem and generic stdlib mcp-stdio adapters, normalised to {source,text,sources,raw_ref}. BROWSER_BUSY and timeouts are retried up to 3 times through retry.decide, then SOURCE_UNAVAILABLE. In-process concurrency gate. CLI: orch.py research sources/query. Docs: research.md with the Perplexity machine-config example, configuration.md, index.md and CHANGELOG. Tests with a fake mcp-stdio server and CONFIG_LAYER_FORBIDDEN for a project argv (24 tests, green). Blocked: affected-tests fails only on ECOSYSTEM_CONFIG_EXAMPLE_DRIFT of packages/orch/config.example.toml, a generated file outside the write set.\nChanged: CHANGELOG.md, packages/orch/configs/config.schema.json, packages/orch/docs/configuration.md, packages/orch/docs/index.md, packages/orch/docs/research.md, packages/orch/lib/orch/cli.py, packages/orch/lib/orch/research/__init__.py, packages/orch/lib/orch/research/sources.py, packages/orch/lib/orch/settings.py, packages/orch/tests/fixtures/research/fake_command.py, packages/orch/tests/fixtures/research/fake_mcp.py, packages/orch/tests/fixtures/research/tree/b.txt, packages/orch/tests/fixtures/research/tree/docs/a.md, packages/orch/tests/test_research.py\nEvidence: /tmp/p101-affected.txt",
-    "escalation": "V1 cannot pass inside the write set: packages/orch/config.example.toml is generated from the schema and must be regenerated (`aicore config example packages/orch --write`) after the schema change. The file is not in scope.write_set, so I did not touch it."
+    "notes": "P10.1 research sources (command, filesystem, mcp-stdio adapters with BROWSER_BUSY retry, generic stdlib MCP stdio client, research query/sources CLI, schema, docs, tests with fake mcp server) are in the tree from the earlier round. This round the only fix was regenerating packages/orch/config.example.toml, which had drifted from the schema (ECOSYSTEM_CONFIG_EXAMPLE_DRIFT). affected-tests --run is now green, including the orch unit tests with a temporary HOME/SKM_HOME.\nChanged: CHANGELOG.md, packages/orch/config.example.toml, packages/orch/configs/config.schema.json, packages/orch/docs/configuration.md, packages/orch/docs/index.md, packages/orch/docs/research.md, packages/orch/lib/orch/cli.py, packages/orch/lib/orch/research/__init__.py, packages/orch/lib/orch/research/sources.py, packages/orch/lib/orch/settings.py, packages/orch/tests/fixtures/research/fake_command.py, packages/orch/tests/fixtures/research/fake_mcp.py, packages/orch/tests/fixtures/research/tree/b.txt, packages/orch/tests/fixtures/research/tree/docs/a.md, packages/orch/tests/test_research.py\nEvidence: /tmp/p10.1-affected.txt",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T05:39:54Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.1/evidence/V1.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.1/evidence/V1.json"
+    ]
   },
-  "updated_at": "2026-10-15T05:36:11Z"
+  "updated_at": "2026-10-15T05:39:54Z"
 }

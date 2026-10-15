@@ -12,6 +12,7 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Conductor](conductor.md) — `conduct.py`: the chain of roles of a piece of work, run options, progress, resume,
   the observer, and which files are committed.
 - [Agent mode](agent-mode.md) — the procedure for an agent that picks its own pieces: ready lanes of the work source, `conduct.py run --items`, `status`/`observe`, `resume`/`settle`.
+- [Research sources](research.md) — `[orch.research]`: `command`, `filesystem` and `mcp-stdio` sources, retries on `BROWSER_BUSY`, `orch.py research`, a Perplexity example.
 - [Conformance](conformance.md) — scenario catalogue, `orch.py conformance`, write confinement.
 - [Architecture](architecture.md) — package boundaries, dependency rule, layout.
 - [Adding an engine](adding-an-engine.md) — steps to add a binding.

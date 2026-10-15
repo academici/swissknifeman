@@ -92,6 +92,31 @@
       "path": "tests/golden/**",
       "change": "any",
       "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/lib/orch/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/roles/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/configs/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/schemas/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "bridges/planner-orch/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
     }
   ],
   "rules": [
@@ -127,5 +152,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-15T05:42:23Z"
+  "updated_at": "2026-10-15T05:44:10Z"
 }

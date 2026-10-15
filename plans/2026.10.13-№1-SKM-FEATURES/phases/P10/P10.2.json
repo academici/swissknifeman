@@ -103,11 +103,40 @@
       "path": "packages/orch/roles/**",
       "change": "any",
       "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/lib/orch/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/configs/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/schemas/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/fixtures/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "bridges/planner-orch/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
     }
   ],
   "artifacts": [
     {
       "path": ".swissknifeman/state/artifacts/sha256/8d5954c14d946266f8e87cf1af1a32bf78cfaef08a13096384366c99a5c54f73",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/e4ea5f7db00e04a3e8349033bbe399f88338c70cd3355ab1303a017b20380729",
       "role": "input"
     }
   ],
@@ -159,5 +188,5 @@
     "notes": "Nothing was changed. The researcher role cannot be added inside scope.write_set: a new conductor schema needs a KINDS entry in lib/orch/conductor/contract.py (registry() fails on any mismatch between schema files and KINDS), role-manifest.result_shape is a closed enum without research-result (schemas/exec/v1/role-manifest.schema.json), and the plan rule on closed schemas requires valid/invalid fixtures (packages/orch/fixtures/conductor/v1/*/research-result) and a docs/contracts.md line. All of these are outside the write set.",
     "escalation": "Write set is insufficient: need packages/orch/lib/orch/conductor/contract.py (KINDS), packages/orch/schemas/exec/v1/role-manifest.schema.json (result_shape enum + aicore schema compat), packages/orch/fixtures/conductor/v1/valid|invalid/research-result/*, packages/orch/docs/contracts.md. Optionally lib/orch/conductor/heal.py (heal rule for research-result)."
   },
-  "updated_at": "2026-10-15T05:42:22Z"
+  "updated_at": "2026-10-15T05:44:09Z"
 }

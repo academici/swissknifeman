@@ -16,7 +16,9 @@ if str(BRIDGE) not in sys.path:
 import partners  # noqa: E402
 
 SCRIPT = BRIDGE / "resolve_role.py"
-ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher", "advisor")
+_ORCH = partners.find_orch_root()
+# every role manifest of the partner: a new role needs no edit here (it used to be a hand-kept list that each new role broke)
+ROLES = tuple(sorted(path.stem for path in (_ORCH / "roles").glob("*.json"))) if _ORCH else ()
 PROVIDERS = ("claude-code", "codex", "grok")
 SKILLER = partners.find_skiller()
 ORCH = partners.find_orch_root()

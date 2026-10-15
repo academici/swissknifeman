@@ -1601,7 +1601,7 @@ class Conductor:
     def _batch_note(self, item: Item) -> str:
         """The run block of the executor prompt: the pieces of the run, so one shared session knows the whole batch."""
         refs = self.run_doc.get("items") or []
-        if len(refs) < 2 or item.options["session"]["executor"] != "shared" \
+        if len(refs) < 2 or self._session_mode(item) != "shared" \
                 or item.routes["executor"].get("provider") != "claude-code":
             return ""
         resumed = bool(self.state.get("executor_session"))
@@ -1623,10 +1623,14 @@ class Conductor:
             argv = [arg for arg in argv if arg != "--no-session-persistence"]
         return argv + (extra or []) + self._resume_args(item, role, route) + self._sandbox_args(item, role, route)
 
+    @staticmethod
+    def _session_mode(item: Item) -> str:
+        return (item.options.get("session") or {}).get("executor", "shared")
+
     def _shared_session(self, item: Item, role: str, route: dict) -> bool:
         """The executor of this run keeps one provider session across its pieces and correction rounds (``session.executor``)."""
         return role == "executor" and route.get("provider") == "claude-code" \
-            and item.options["session"]["executor"] == "shared"
+            and self._session_mode(item) == "shared"
 
     def _resume_args(self, item: Item, role: str, route: dict) -> list:
         session = (getattr(self, "state", None) or {}).get("executor_session")

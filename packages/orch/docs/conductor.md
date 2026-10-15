@@ -384,6 +384,13 @@ piece that closed (done or blocked) is not claimed again; a piece that stopped h
 tree. The configuration of the run is read again, so a fixed provider or a corrected `[orch.conductor.argv]` takes
 effect.
 
+## The environment of a check
+
+A check command tests the project, so it does not inherit the install roots of the orchestrator the conductor runs from:
+`AICORE_ROOT`, `SKM_ORCH_ROOT`, `PLANNER_ROOT` and `PLANNER_PLAN_PY` are removed from its environment when they lead outside the
+project (a frozen or installed copy of the orchestrator would otherwise be tested instead of the project's own code, as a
+piece that adds a module to the foundation found out). Roots inside the project stay.
+
 ## One review for a batch: `scripts/batch-review.py`
 
 The conductor reviews piece by piece (`review.*`); a batch is better read once, together: `batch-review.py RUN` takes the

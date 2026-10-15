@@ -299,7 +299,9 @@ def adopted(self, item: Item) -> list:
     the piece (evidence, review verdict of the earlier attempt) and the plan folder are allowed and are not
     counted as the role's changes."""
     adopted = scopes.own(item.state.get("adopted") or [], self._not_the_role(item))
-    item.state["adopted"] = adopted
+    dirty = set(self._dirty_paths())
+    adopted = [path for path in adopted if path in dirty or any(path.startswith(d.rstrip("/") + "/") for d in dirty)]
+    item.state["adopted"] = adopted  # a stray file the owner has removed since the snapshot is no longer adopted
     stray = scopes.outside(adopted, (item.input_doc.get("scope") or {}).get("write_set"))
     if stray:
         raise Stop("WORKTREE_DIRTY", f"run --adopt takes only changes inside the write set of {item.ref}; outside it: "

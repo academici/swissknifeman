@@ -80,9 +80,30 @@ def _relative(path: Path, project: Path) -> str:
 POLL_S = 5
 
 
+# The install roots of the orchestrator the conductor runs from. A check tests the PROJECT, so it must not see them when
+# they lead outside it (a frozen or installed copy of the orchestrator would be tested instead of the project's own code).
+INSTALL_ROOTS = ("AICORE_ROOT", "SKM_ORCH_ROOT", "PLANNER_ROOT", "PLANNER_PLAN_PY")
+
+
+def check_env(cwd: Path, environ=None) -> dict:
+    """The environment of a check command: the conductor's, without install roots that lie outside the project."""
+    base = dict(os.environ if environ is None else environ)
+    project = Path(cwd).resolve()
+    for name in INSTALL_ROOTS:
+        value = base.get(name)
+        if not value:
+            continue
+        try:
+            Path(value).resolve().relative_to(project)
+        except ValueError:
+            base.pop(name)
+    return base
+
+
 def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_slow=None) -> int:
     """Exit code of ``argv``; 124 after ``timeout_s`` (0: no ceiling). ``on_slow(elapsed, pid)`` every ``warn_s``."""
-    process = subprocess.Popen(argv, cwd=str(cwd), stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
+    process = subprocess.Popen(argv, cwd=str(cwd), stdout=out, stderr=subprocess.STDOUT, start_new_session=True,
+                               env=check_env(cwd))
     began, next_warn = time.monotonic(), warn_s
     while True:
         try:

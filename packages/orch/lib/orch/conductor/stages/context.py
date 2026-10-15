@@ -26,8 +26,8 @@ def repo_rules(self, item: Item, role: str) -> str:
     for pattern in (item.input_doc.get("scope") or {}).get("write_set") or []:
         fixed = []
         for part in str(pattern).split("/")[:-1]:
-            if any(mark in part for mark in "*?["):
-                break
+            if any(mark in part for mark in "*?[") or part in ("..", "") or part.startswith("/"):
+                break  # only folders inside the project are walked
             fixed.append(part)
         for depth in range(1, len(fixed) + 1):
             folders.add(Path(*fixed[:depth]))

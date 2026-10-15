@@ -77,7 +77,12 @@ def retry(self, ref: str) -> None:
                   key=lambda key: steps[key].get("ended", ""), default=None)
     held = any(name.startswith("orch-advice-") for name in (self.state.get("questions") or {}).get(ref, {}))
     if blocked is None and not held:
-        raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round that reported blocked")
+        # blocked by the conductor itself (red checks past the limit, a review limit, a path outside the scope with
+        # ``scope.outside: block``): no round reported ``blocked``, so the last executor round is where the piece goes on
+        rounds = [key for key in steps if key.startswith("executor.") and key not in continued(steps)]
+        blocked = max(rounds, key=lambda key: steps[key].get("ended", ""), default=None)
+    if blocked is None and not held:
+        raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round to go on from")
     # the input is built again too: the plan was amended (that is why the piece was blocked and reopened), and the
     # executor must see the amended write set, not the one of the first brief. A piece held on advice (red checks or a
     # rejected finding, the question ``orch-advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,

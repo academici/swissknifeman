@@ -123,12 +123,17 @@ def prepare(self, item: Item) -> dict:
 def refresh_input(self, item: Item) -> None:
     """A plan amended during the piece (a wider write set, a fixed check) reaches the next executor round: the brief
     is asked again and, when its digest changed, replaces the input of every later step."""
-    code, answer, _ = self._orch("source", "brief", "--run", item.orch_run)
+    code, answer, err = self._orch("source", "brief", "--run", item.orch_run)
     if code != 0 or not isinstance(answer, dict) or not answer.get("input_ref"):
+        self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
+                           message=f"the brief could not be asked again ({(err or 'no answer').splitlines()[0][:160]}); "
+                                   "the next round keeps the earlier input")
         return
     try:
         doc = json.loads(blobs.read_bytes(answer["input_ref"], project=self.project))
     except (OSError, ValueError, KeyError):
+        self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
+                           message="the re-asked brief cannot be read; the next round keeps the earlier input")
         return
     if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
         write_json(item.directory / "input.json", doc)
@@ -185,6 +190,11 @@ def commit(self, item: Item, paths: list) -> dict:
 
 def open_artifacts(self, item: Item, brief: dict) -> None:
     """The artifact folder of the piece, as the brief named it."""
+    folder = (self.project / brief["artifacts_dir"]).resolve()
+    try:
+        folder.relative_to(self.project.resolve())
+    except ValueError:
+        raise Stop("ARTIFACTS_OUTSIDE_PROJECT", f"artifacts_dir {brief['artifacts_dir']!r} of {item.ref} leads outside the project") from None
     item.artifacts = self.project / brief["artifacts_dir"]
 
 

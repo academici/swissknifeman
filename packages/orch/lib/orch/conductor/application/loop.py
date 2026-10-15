@@ -105,9 +105,9 @@ def pieces(self) -> None:
         if outcome in ("done", "done_with_deviations", "blocked"):
             count += 1
             continue
-        adopted = first_adopted if index == 1 else []
+        adopted, first_adopted = first_adopted, []  # the paths of ``--adopt`` belong to the first piece that really runs
         if known is None:
-            if doc.get("adopt") and index == 1:
+            if doc.get("adopt") and not adopted and index == 1:
                 adopted = self._dirty_paths()  # the work of an earlier attempt, checked against the write set later
             else:
                 self._require_clean_tree()

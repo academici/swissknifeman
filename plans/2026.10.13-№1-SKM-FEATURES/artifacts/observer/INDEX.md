@@ -27,9 +27,9 @@ Start here if the session of the observer is lost. This folder is copied into th
 |---|---|---|---|
 | B1 | `cnd-20261014T173854Z-697e72` | P9.1-P9.4 (phase P9 closed by P9.4) | done; commits `2e0f282b1`, `ebe9e2e63`, `fb90a9a14`, `61cc61aac`; owner-side fix of the P8 tail `96b4b54a0` |
 | B2 | `cnd-20261015T053109Z-7b7f1a` | P10.1, P10.2 (stopped by the observer to switch to a shared session) | P10.1 `d44a8b4ae`, P10.2 `43ee2c958`; plan write-set commits `31cbcf5ac`, `f2149a8b0`, `da1ce7e10`, `1386ca67c`; golden fix `117af6fcf` |
-| B3 | `cnd-20261015T062002Z-5ee94d` | P10.3, P10.4 (closes phase P10: V11 `ci-matrix run --all`, V12, V13) | P10.3 `69285e82f`; P10.4 see the log |
+| B3 | `cnd-20261015T062002Z-5ee94d` | P10.3, P10.4 (closes phase P10: V11 `ci-matrix run --all`, V12, V13) | P10.3 `69285e82f`; P10.4 `76c7f7836` (phase P10 closed, V11-V13 green at once) |
 
-Mechanism fixes made by the observer: `8271eabfc` (shared executor session, merged); in the worktree, not yet merged unless the journal says so: `7762b7053` (drop `--no-session-persistence` for shared executors), `489663831` (golden check with every unit change), `493f510ee` (options.json, brief guard, prompt rule). After merging, record the new hashes here.
+Mechanism fixes made by the observer, all merged into `ecosystem-split`: `8271eabfc` (shared executor session), `f8bc43776` (shared executors run without `--no-session-persistence`), `2b9ad2c0e` (golden check with every unit change), `32911b7f7` (options.json, brief guard, prompt rule), `2989d4b8f` (orch-skiller ROLES from manifests) and a follow-up fix. The worktree `~/.cache/skm-wt-session` is only a scratch copy now.
 
 ## Continue from here (prompt for a fresh session)
 > Read `plans/2026.10.13-№1-SKM-FEATURES/artifacts/observer/INDEX.md`, then `INSTRUCTIONS.md`, `FINDINGS.md`, `journal.md`. You are the observer (skill `orch-debug`). Check `git status`, `git log --oneline -15`, `python3 packages/orch/scripts/conduct.py status`, `git -C ~/.cache/skm-wt-session log --oneline -6`. Finish the open work in the journal (merge the worktree commits, then start the next roadmap batch: P11.1-P11.3, one run, `run --items`, shared session by default). Keep the journal, the findings and this index inside the plan folder after every batch.

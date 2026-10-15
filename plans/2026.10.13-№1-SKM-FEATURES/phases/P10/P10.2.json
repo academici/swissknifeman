@@ -26,11 +26,6 @@
       "ref": "knowledge/p10-research#researcher",
       "why": "дизайн",
       "required": true
-    },
-    {
-      "path": "packages/orch/roles/context-scout.json",
-      "why": "образец read-only роли",
-      "required": true
     }
   ],
   "task_files": [
@@ -90,7 +85,7 @@
     "Контракты и config — только аддитивно (D1)",
     "argv источников — только machine/invocation/flags"
   ],
-  "guidance": "Исполнитель: implementation/high. Порядок: e2e (падает) → роль и каталог → схема → стадия → сохранение → V1.",
+  "guidance": "Исполнитель: implementation/high. Порядок: e2e (падает) → роль и каталог → схема → стадия → сохранение → V1.\nОбразец read-only роли: packages/orch/roles/context-scout.json (читать самому: в reads его нельзя — manifest содержит служебные поля, которые brief отклоняет).",
   "validation": [
     {
       "id": "V1",
@@ -118,5 +113,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-15T05:36:12Z"
+  "updated_at": "2026-10-15T05:40:39Z"
 }

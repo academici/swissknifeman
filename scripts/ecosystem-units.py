@@ -34,6 +34,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -1020,13 +1021,29 @@ def standalone_env(home: Path, unset: list) -> dict:
     return env
 
 
+_ACTIVE_GROUPS: set = set()  # process groups of the commands that run now (each command has a session of its own)
+_INTERRUPTED = threading.Event()  # set by SIGTERM/SIGHUP: nothing new starts, the temporary copies are removed
+
+
+def kill_active_groups() -> None:
+    for group in list(_ACTIVE_GROUPS):
+        try:
+            os.killpg(group, signal.SIGKILL)
+        except OSError:
+            pass
+
+
 def run_limited(argv: list, cwd: Path, env: dict, timeout: int):
-    """(returncode, output); a timeout kills the whole process group and returns (None, output)."""
+    """(returncode, output); a timeout kills the whole process group and returns (None, output). After an interrupt
+    (SIGTERM/SIGHUP of this script) nothing starts: (130, "")."""
+    if _INTERRUPTED.is_set():
+        return 130, "interrupted\n"
     try:
         proc = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, start_new_session=True)
     except OSError as exc:
         return 127, f"{exc}\n"
+    _ACTIVE_GROUPS.add(proc.pid)
     try:
         out, _ = proc.communicate(timeout=timeout)
         return proc.returncode, out.decode("utf-8", "replace")
@@ -1034,6 +1051,19 @@ def run_limited(argv: list, cwd: Path, env: dict, timeout: int):
         os.killpg(proc.pid, signal.SIGKILL)
         out, _ = proc.communicate()
         return None, out.decode("utf-8", "replace")
+    finally:
+        _ACTIVE_GROUPS.discard(proc.pid)
+        try:  # what the command left behind in its group (par_unittest workers) dies with it
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+
+
+def interrupted(_signum, _frame) -> None:
+    """SIGTERM/SIGHUP: kill the running commands and every child group, so that no worker outlives this script, and
+    let the ``finally`` of each module remove its temporary copy (a killed run used to leave ``skm-standalone-*``)."""
+    _INTERRUPTED.set()
+    kill_active_groups()
 
 
 def standalone_commands(doc: dict) -> list:
@@ -1047,6 +1077,8 @@ def standalone_commands(doc: dict) -> list:
 
 def run_standalone(ctx: Context, folder: str) -> tuple:
     """(state, tail): the module in a copy of its tracked files plus the foundation stand-in."""
+    if _INTERRUPTED.is_set():
+        return "fail", "interrupted"
     unit = load_units(ctx).get(folder)
     commands = standalone_commands(unit.doc if unit else {})
     if not commands or unit.base.startswith(BRIDGES_DIR + "/"):
@@ -1120,6 +1152,16 @@ def cmd_standalone(ctx: Context, args) -> int:
     results, failed = {}, []
     # The modules are independent (each runs in its own copy with its own HOME), so they run side by side.
     jobs = max(1, min(args.jobs or int(os.environ.get("SKM_STANDALONE_JOBS") or 4), len(chosen)))
+    previous = {number: signal.signal(number, interrupted) for number in (signal.SIGTERM, signal.SIGHUP)} \
+        if threading.current_thread() is threading.main_thread() else {}
+    try:
+        return standalone_run(ctx, args, chosen, jobs, recorded, results, failed)
+    finally:
+        for number, handler in previous.items():
+            signal.signal(number, handler)
+
+
+def standalone_run(ctx: Context, args, chosen: list, jobs: int, recorded: dict, results: dict, failed: list) -> int:
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = {folder: pool.submit(run_standalone, ctx, folder) for folder in chosen}
         for folder in chosen:  # reported in the order asked for, as soon as each one is done
@@ -1130,6 +1172,9 @@ def cmd_standalone(ctx: Context, args) -> int:
                 print(f"ECOSYSTEM_STANDALONE_FAIL: {unit_base(ctx, folder)}: {tail}", file=sys.stderr)
                 if args.baseline or recorded.get(folder) == "pass":
                     failed.append(folder)
+    if _INTERRUPTED.is_set():  # a baseline of an interrupted run would record failures that never happened
+        print("ecosystem-units: standalone interrupted; no baseline written", file=sys.stderr)
+        return 130
     if args.update_baseline:
         write_standalone(ctx, results)
         print(f"{BASELINE_PATH}: standalone updated for {', '.join(chosen)}")

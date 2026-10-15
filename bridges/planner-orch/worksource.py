@@ -158,7 +158,7 @@ def _overlay(document: dict) -> dict | None:
     try:
         found = json.loads(fenced.group(1) if fenced else text)
     except ValueError as error:
-        raise Blocked("OVERLAY_INVALID", f"document {document['id']}: section {OVERLAY_SECTION} is not JSON: {error}")
+        raise Blocked("OVERLAY_INVALID", f"document {document['id']}: section {OVERLAY_SECTION} is not JSON: {error}") from None
     if not isinstance(found, dict) or set(found) - {"scenario", "options"}:
         raise Blocked("OVERLAY_INVALID", f"document {document['id']}: section {OVERLAY_SECTION} must be an object "
                                          "with only scenario and options")
@@ -192,7 +192,7 @@ def orchestration_of(context: dict, ref: str) -> tuple:
         if level:
             overlays[level].append((document["id"], found))
     scenario = source = None
-    for level, name, doc in levels:
+    for level, _name, doc in levels:
         field = (doc.get("orchestration") or {}).get("scenario") if isinstance(doc.get("orchestration"), dict) else None
         if field:
             scenario, source = field, level

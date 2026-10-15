@@ -65,7 +65,6 @@ def main(argv=None) -> int:
     first = last = None
     model_s = 0.0
     turns = 0
-    out_tokens = 0
     for event in events:
         when = ts(event.get("timestamp"))
         if when is None and isinstance(event.get("_t"), float):

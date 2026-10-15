@@ -10,7 +10,7 @@ import unittest
 from aicore.content.budget import estimate_tokens
 from aicore.util.digest import sha256_hex
 
-from orch.conductor import contract, engine, observer, options as opts, prompts
+from orch.conductor import contract, observer, options as opts, prompts
 from tests.test_conductor import GREEN, ConductorCase, executor_ok
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -292,7 +292,7 @@ class RunManifestTests(ConductorCase):
         report = observer.build(directory, self.project)
         top = report["prompt_blocks_by_role"]
         self.assertEqual(sorted(top), ["context-scout", "executor", "reviewer"])
-        for role, rows in top.items():
+        for rows in top.values():
             self.assertLessEqual(len(rows), observer.TOP_BLOCKS)
             self.assertEqual([row["tokens"] for row in rows], sorted((row["tokens"] for row in rows), reverse=True))
         self.assertIn("## Prompt blocks", observer.markdown(report))

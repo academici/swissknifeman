@@ -68,6 +68,10 @@ def retry(self, ref: str) -> None:
     """Take a blocked piece back into the run: the input is built again from the (amended) plan, and the steps from the executor round that reported ``blocked`` on
     (and the closing steps after it) are repeated; the earlier rounds are kept and the work in the tree is not thrown away."""
     item = self.state["items"].get(ref)
+    if item and item.get("retried") and item.get("outcome") in (None, "stopped"):
+        # the first resume already took the piece back and stopped again: the same command again is not an error
+        self.progress.emit("info", item=ref, message="retry: already taken back by an earlier resume; the run goes on from there")
+        return
     if not item or item.get("outcome") != "blocked":
         raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
     steps = item.get("steps", {})
@@ -93,6 +97,7 @@ def retry(self, ref: str) -> None:
         steps.pop(key)
     for key in ("outcome", "stop", "partial", "skills_auto", "skills_checked"):  # the skills are chosen again from the amended write set
         item.pop(key, None)
+    item["retried"] = clock.utc_now()
     self._save()
     self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated" if blocked
                        else "retry: the answer to the advice is applied; the closed rounds are kept")

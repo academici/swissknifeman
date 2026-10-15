@@ -2,7 +2,6 @@
 set, in a piece with acceptance checks, costs one correction round (``# Fix this deviation``) and then the same checks."""
 from __future__ import annotations
 
-import json
 import unittest
 
 from orch.conductor import engine

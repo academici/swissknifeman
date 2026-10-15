@@ -300,6 +300,7 @@
     "orch_run": "run-<digest>",
     "outcome": "done",
     "plan_notes": [],
+    "retried": "<time>",
     "retries_used": 0,
     "source_paths": [],
     "steps": {

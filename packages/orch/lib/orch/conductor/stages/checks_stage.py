@@ -12,6 +12,7 @@ from typing import Optional
 from orch.conductor import checks as checks_mod, process, prompts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import disk
 from orch.conductor.progress import human_duration
 
 
@@ -89,6 +90,7 @@ def red_before(item: Item, number: int) -> list:
 
 def compute_checks(self, item: Item, number: int, report: dict, on_result=None) -> list:
     """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
+    self._disk_guard(item, f"checks.{number}")  # a heavy check that fills the disk dies with a truncated trace
     try:
         return checks_mod.run_checks(
             item.input_doc, project=self.project, evidence_dir=self._evidence_dir(item),
@@ -106,6 +108,9 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
 def check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid: int) -> None:
     self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_SLOW",
                        message=f"{check_id} running {human_duration(elapsed)}; {process.activity(pid, Path(os.devnull))}")
+    low = disk.shortage(self.project, item.options["limits"].get("disk_min_gb", 0))
+    if low:  # the check is not cut (a stop from this thread could not release it); the owner decides
+        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="DISK_LOW", message=low)
     self._run_clock(item, stop=False)
 
 

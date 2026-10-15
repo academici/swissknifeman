@@ -104,6 +104,31 @@ def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_
     """Exit code of ``argv``; 124 after ``timeout_s`` (0: no ceiling). ``on_slow(elapsed, pid)`` every ``warn_s``."""
     process = subprocess.Popen(argv, cwd=str(cwd), stdout=out, stderr=subprocess.STDOUT, start_new_session=True,
                                env=check_env(cwd))
+    try:
+        return _wait_command(process, out=out, timeout_s=timeout_s, warn_s=warn_s, on_slow=on_slow)
+    except BaseException:  # an interrupted run must not leave the check (a test run with workers) running
+        _kill_group(process)
+        raise
+    finally:
+        try:  # what the command left in its group (workers of a test runner) dies with it
+            os.killpg(process.pid, 9)
+        except OSError:
+            pass
+
+
+def _kill_group(process) -> None:
+    try:
+        os.killpg(process.pid, 15)
+        process.wait(timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        try:
+            os.killpg(process.pid, 9)
+        except OSError:
+            pass
+        process.wait()
+
+
+def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow) -> int:
     began, next_warn = time.monotonic(), warn_s
     while True:
         try:
@@ -112,15 +137,7 @@ def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_
             pass
         elapsed = time.monotonic() - began
         if timeout_s and elapsed > timeout_s:
-            try:
-                os.killpg(process.pid, 15)
-                process.wait(timeout=10)
-            except (OSError, subprocess.TimeoutExpired):
-                try:
-                    os.killpg(process.pid, 9)
-                except OSError:
-                    pass
-                process.wait()
+            _kill_group(process)
             out.write(f"\n[orch] check timed out after {timeout_s} s\n".encode("utf-8"))
             return 124
         if warn_s and on_slow is not None and elapsed >= next_warn:

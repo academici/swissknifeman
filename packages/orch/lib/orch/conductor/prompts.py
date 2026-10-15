@@ -330,14 +330,26 @@ def _fence_rule(fence: str, extra_paths) -> str:
     return "\n".join(lines)
 
 
+_FILE_TOOLS_RULE = """\
+## File tools
+
+Read files with Read, search with Grep and Glob, change files with Edit (a small change) or Write (a new file or a
+rewrite). Do not read or change files through Bash (`cat`, `sed`, `grep`, `python - <<EOF`, `echo >`, heredocs): every
+such call costs a model turn and a long heredoc costs a minute or two. Use Bash for commands that run something (tests,
+git, generators)."""
+
+
 def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rules=(), correction: str = "",
              role: str = "executor", roles_dir=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
-             research=None, research_origin: str = "", fence: str = "plan", extra_paths=()) -> list:
+             research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
+             file_tools: bool = False) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts)]
     if fence == "project" or extra_paths:
         parts.append([Block("run_rules", CONDUCTOR, _fence_rule(fence, extra_paths))])
+    if file_tools:
+        parts.append([Block("run_rules", CONDUCTOR, _FILE_TOOLS_RULE)])
     if batch:
         parts.append([Block("run_rules", CONDUCTOR, batch)])
     if scout_text:

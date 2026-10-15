@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **orch:** `run --scenario S` is honoured for a plan run (it was silent): the scenario goes into every claim (`source claim --scenario`, `work-source/v1` claim gets an optional `scenario`), wins over the plan's overlays, and an unknown one blocks the claim with `SCENARIO_UNKNOWN`; the claim answer names `scenario_source: invocation:--scenario`. The mirror `bridges/planner-orch/schemas/run-options.schema.json` was stale and is synced.
+- **orch:** a stopped conductor leaves nothing running: SIGTERM and SIGHUP end a run like Ctrl-C (exit 130, `resume` continues), the role process groups and the check process groups (a test runner with workers) are killed, and a check that ends takes its background workers with it.
+- **ecosystem-units:** `standalone` kills its commands and their workers on SIGTERM/SIGHUP, removes the temporary `skm-standalone-*` copies and writes no baseline of an interrupted run (exit 130); an orphaned `par_unittest` worker and a full `/tmp` were the result before.
+- **orch:** the `ITEM_OWNED` claim refusal names the verbs that exist (`orch conduct release`, `settle`); a repeated `resume --retry ITEM` after a resume that stopped again is no longer `RETRY_NOT_BLOCKED` (the piece keeps a `retried` mark).
+- **orch:** the filesystem research source finds the lines of a natural question (words of three letters or more, no stop words, all of two or 60% of more; the whole phrase ranks first), stops walking once the best matches fill the answer (and after 5000 files), never reads secret files (`.env*`, keys, tokens, `.ssh`, `.aws`...) and masks tokens in the lines it returns.
+- **orch:** the folder name of the Claude Code transcripts follows the UTF-16 rule (a character outside the basic plane is two dashes); a path whose name would pass 200 characters opens the whole `~/.claude/projects` for the shared session.
+- **orch, bridges:** lint findings of ruff F+B that CI had not seen locally (unused imports, loop variables bound late, `raise ... from None`, a test class that shadowed another one in `bridges/planner-orch/tests/test_brief.py`, so its tests never ran).
+
+### Added
+
+- **orch:** `limits.disk_min_gb` (default 5, 0 off): a run does not start or resume, and the checks of a round do not start, with less free space under the project or the temporary directory (`DISK_LOW`, resumable); a running check gets a `DISK_LOW` beacon.
+- **orch:** `instructions.file_tools_rule` (default true): a `## File tools` run-rules block in the executor prompt that sends reading and editing to Read/Grep/Edit/Write instead of Bash heredocs, when the route offers Read and Edit.
+- **scripts:** `lint.sh` covers `packages/orch` and `bridges` by default, and `SKM_LINT_ANY_VERSION=1` runs a ruff of another version (advisory) where pipx is missing.
+
 ### Added
 
 - **aicore, umbrella, planner, orch:** project-bound invocation (`docs/project-launcher.md`). `swissknifeman project init` writes `.swissknifeman/launcher.py` (stdlib, from `packages/aicore/templates/project/launcher.py`) and `launcher.lock.json` (contract `project-launcher-lock/v1`); `python3 -I .swissknifeman/launcher.py <group> ...` binds the project root and execs the installed `swissknifeman`. The umbrella validates the launcher context before routing (`aicore.state.validate_launcher_env`); `resolve_project` makes the launcher root authoritative (`PROJECT_CONTEXT_CONFLICT` for another `--project`), bound to the launcher's process id so children keep the legacy resolution. `project sync|verify|context|doctor|exec`, `invocation-context/v1`, `aicore.util.io.durable_replace`, `aicore.state.require_project_path` (`PROJECT_WRITE_OUTSIDE_ROOT`, `PROJECT_WRITE_SYMLINK_ESCAPE`). `unit.json` gets `execution: {project, cwd, writes}` (planner: project required).

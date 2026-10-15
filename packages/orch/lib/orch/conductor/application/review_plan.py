@@ -7,7 +7,6 @@ commits of the group once (``review_batch``) and keeps the reply in ``group-revi
 findings are announced (``GROUP_REVIEW``) and left to the owner or the observer to correct in a commit of their own."""
 from __future__ import annotations
 
-import json
 import time
 from typing import Optional
 

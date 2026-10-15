@@ -69,7 +69,7 @@ class Template:
             plan = next((project / "plans").iterdir()).name
             run(project, "add-phase", plan, "--title", "One")
             run(project, "set", plan, "P1", "--json", json.dumps({"goal": "g"}))
-            for index, title in enumerate(("A", "B", "C"), 1):
+            for title in ("A", "B", "C"):
                 item = dict(ITEM, task_files=[{"path": f"lib/{title}.py", "change": "any"}])
                 run(project, "add-item", plan, "P1", "--title", title, "--json", json.dumps(item))
             run(project, "batches", plan, "P1", "--json", json.dumps(

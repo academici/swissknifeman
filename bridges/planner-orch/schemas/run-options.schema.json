@@ -60,6 +60,10 @@
           "type": "string",
           "enum": ["off", "prefer", "require"]
         },
+        "file_tools_rule": {
+          "description": "Add a short rule to the executor prompt: read, search and change files with the file tools (Read, Grep, Glob, Edit, Write), not with Bash (`cat`, `sed`, heredoc scripts); it is added only when the route offers Read and Edit (Claude Code `--tools`). Default true; false leaves the one line of the role text.",
+          "type": "boolean"
+        },
         "sandbox_domains": {
           "description": "Domains a sandboxed Claude Code role may reach (`network.allowedDomains` with `strictAllowlist`); a role whose manifest declares `network: allowed` is not restricted. Default `[]`: no network for the commands of a role that declares `none`.",
           "type": "array",
@@ -414,6 +418,10 @@
         },
         "prompt_retrieval_tokens": {
           "description": "Largest total of the retrieval blocks (references) of one role prompt, in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; no block has this class yet; 0 switches the beacon off; default 50000.",
+          "type": "integer"
+        },
+        "disk_min_gb": {
+          "description": "Least free space in GB under the project and the temporary directory: below it the run does not start (and `resume` does not go on) and the checks of a round do not start, it stops with DISK_LOW (free the space, then resume); a running check only gets a DISK_LOW beacon every `check_warn_s`; 0 switches it off; default 5.",
           "type": "integer"
         },
         "run_timeout_s": {

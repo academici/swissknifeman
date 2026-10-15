@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-import re
 import time
 from typing import Callable, Optional
 
@@ -380,10 +379,23 @@ def extra_write_dirs(self, item: Item, role: str, argv: list) -> list:
     return argv[:at] + [part for path in paths for part in ("--rw", os.path.expanduser(path))] + argv[at:]
 
 
+TRANSCRIPT_NAME_MAX = 200  # Claude Code shortens a longer folder name and appends a hash it does not publish
+
+
+def transcript_folder_name(project) -> str:
+    """The folder name Claude Code gives a project: every UTF-16 code unit outside [A-Za-z0-9] becomes ``-`` (a character
+    outside the basic plane is two units, so two dashes)."""
+    return "".join(char if char.isascii() and char.isalnum() else "-" * (2 if ord(char) > 0xFFFF else 1) for char in str(project))
+
+
 def claude_transcripts(self) -> str:
     """The folder where Claude Code keeps the transcripts of this project: ``~/.claude/projects/<path with every
-    character outside [A-Za-z0-9] as -``. It is the one place besides the project that a resumable session needs."""
-    folder = Path.home() / ".claude" / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(self.project))
+    character outside [A-Za-z0-9] as -``. It is the one place besides the project that a resumable session needs. A
+    path whose folder name would pass ``TRANSCRIPT_NAME_MAX`` gets a name with a hash suffix that is not known here: the
+    whole ``~/.claude/projects`` is then writable for the executor (the transcripts of the other projects too)."""
+    root = Path.home() / ".claude" / "projects"
+    name = transcript_folder_name(self.project)
+    folder = root if len(name) > TRANSCRIPT_NAME_MAX else root / name
     folder.mkdir(parents=True, exist_ok=True)
     return str(folder)
 

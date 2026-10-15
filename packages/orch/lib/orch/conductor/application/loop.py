@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import signal
+import threading
 import time
 from typing import Any, Callable, Optional
 
@@ -11,7 +13,7 @@ from orch import events, policies as run_policies
 from orch.conductor import observer, options as opts, prompts, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import clock, disk
 from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, RUN_FILE, safe, write_json
 from orch.conductor.progress import human_duration
 
@@ -49,16 +51,40 @@ def run_clock(self, item: Item, stop: bool = True) -> None:
                                   "raise it or set 0, then resume")
 
 
+def disk_guard(self, item: Optional[Item] = None, stage: Optional[str] = None) -> None:
+    """Stop with DISK_LOW (resumable: free the space, then resume) when the project or the temporary directory has less
+    than ``limits.disk_min_gb`` free; the limit of the piece when there is one, else the configuration's."""
+    limits = (item.options or {}).get("limits") if item is not None and item.options else None
+    if limits is None:
+        limits = {**opts.DEFAULT_LIMITS, **{k: v for k, v in (self.conductor.get("limits") or {}).items() if v is not None}}
+    found = disk.shortage(self.project, limits.get("disk_min_gb", 0))
+    if found:
+        self.progress.emit("info", item=item.ref if item else None, stage=stage, reason_code="DISK_LOW", message=found)
+        raise Stop("DISK_LOW", f"{found}; free the space, then resume")
+
+
+def terminated(_signum, _frame) -> None:
+    """SIGTERM/SIGHUP end the run like Ctrl-C: the role and check processes of the run are killed by the code that waits
+    for them (a plain SIGTERM would leave the executor ``claude -p`` and its test workers running)."""
+    raise KeyboardInterrupt
+
+
 def loop(self) -> int:
     started = time.monotonic()
     self._segment = clock.mono()
     code, reason, outcome = 0, None, "finished"
+    previous = {number: signal.signal(number, terminated) for number in (signal.SIGTERM, signal.SIGHUP)} \
+        if threading.current_thread() is threading.main_thread() else {}
     try:
+        self._disk_guard()
         self._pieces()
     except Stop as stop:
         code, reason, outcome = 1, stop, "stopped"
     except KeyboardInterrupt:
         code, reason, outcome = 130, Stop("INTERRUPTED", "interrupted; resume continues"), "stopped"
+    finally:
+        for number, handler in previous.items():
+            signal.signal(number, handler)
     self.state["active_s"] = round(self._active_s(), 1)
     self._segment = None
     self.state["status"] = outcome

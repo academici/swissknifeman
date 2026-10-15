@@ -234,7 +234,7 @@ class UnitTests(BriefCase):
         self.assertEqual(doc["result_contract"]["write_authority"], "none")
 
 
-class DigestTests(BriefCase):
+class InputDigestTests(BriefCase):
     def test_digest_and_input_id_follow_the_convention(self):
         doc = self.brief()
         self.assertEqual(doc["digest"], brief.canonical_digest(doc))

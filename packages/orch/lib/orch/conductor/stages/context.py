@@ -135,6 +135,14 @@ def route_tools(route: Optional[dict]) -> Optional[set]:
     return {tool for tool in str(argv[argv.index("--tools") + 1]).split(",") if tool}
 
 
+def file_tools_rule(self, item: Item) -> bool:
+    """Whether the executor prompt tells the model to use the file tools instead of Bash for reading and editing
+    (``instructions.file_tools_rule``, and the route offers Read and Edit)."""
+    if not item.options["instructions"].get("file_tools_rule", True):
+        return False
+    return {"Read", "Edit"} <= (self._route_tools(item.routes.get("executor")) or set())
+
+
 def skill_set(self, item: Item, role: str) -> dict:
     """``{"names", "excluded"}``: the skills a role keeps after the checks of ``prompts.check_skills`` (what each
     skill declares in its ``selection.json`` against the tools of the route and the budget; no text is cut and no

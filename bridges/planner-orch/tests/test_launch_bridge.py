@@ -31,7 +31,7 @@ class LaunchBridge(unittest.TestCase):
                 self.assertEqual(done.returncode, 0, done.stderr)
                 out = json.loads(done.stdout)
                 values = {"model": entry["model"], "effort": entry["effort"], "cwd": "/work"}
-                expected = [re.sub(r"\{(\w+)\}", lambda m: values[m[1]], arg) for arg in entry["argv"]]
+                expected = [re.sub(r"\{(\w+)\}", lambda m, values=values: values[m[1]], arg) for arg in entry["argv"]]
                 # The catalog adds --permission-prompts none to every headless claude-code role (PLAN4.P1.4); the
                 # planner's legacy scout list predates it, so the pair is the only allowed difference.
                 if provider == "claude-code":

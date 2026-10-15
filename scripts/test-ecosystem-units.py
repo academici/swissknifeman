@@ -1279,6 +1279,58 @@ class StandaloneTests(unittest.TestCase):
         self.assertEqual(self.standalone("nope").returncode, 2)
 
 
+class StandaloneInterruptTests(unittest.TestCase):
+    """A SIGTERM of the script kills the command and its workers and leaves no temporary copy behind."""
+
+    def setUp(self):
+        self.tree = Tree(self)
+        self.tree.config["standalone"] = {"timeout_s": 120}
+
+    def dev(self, **dev):
+        self.tree.alpha["dev"] = dev
+
+    def test_sigterm_kills_the_group_removes_the_copy_and_writes_no_baseline(self):
+        import os
+        import signal
+        import time
+        scratch = Path(tempfile.mkdtemp(prefix="skm-test-interrupt-"))
+        self.addCleanup(shutil.rmtree, scratch, True)
+        pid_file = scratch / "worker.pid"
+        script = ("import os, subprocess, sys, time; "
+                  "w = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(120)']); "
+                  f"open({str(pid_file)!r}, 'w').write(str(w.pid)); time.sleep(120)")
+        self.dev(test=["python3", "-c", script])
+        self.tree.flush()
+        temp = scratch / "tmp"
+        temp.mkdir()
+        env = {**os.environ, "TMPDIR": str(temp)}
+        proc = subprocess.Popen([sys.executable, str(SCRIPT), "standalone", "alpha", "--update-baseline",
+                                 "--root", str(self.tree.root)], env=env, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True)
+        for _ in range(100):
+            if pid_file.exists() and pid_file.read_text():
+                break
+            time.sleep(0.1)
+        worker = int(pid_file.read_text())
+        self.assertTrue(list(temp.glob("skm-standalone-*")))
+        proc.send_signal(signal.SIGTERM)
+        _, err = proc.communicate(timeout=30)
+        self.assertEqual(proc.returncode, 130, err)
+        for _ in range(50):
+            try:
+                os.kill(worker, 0)
+            except OSError:
+                break
+            time.sleep(0.1)
+        else:
+            os.kill(worker, signal.SIGKILL)
+            self.fail("the worker of the command outlived the script")
+        self.assertEqual(list(temp.glob("skm-standalone-*")), [])
+        baseline = self.tree.root / "configs/ecosystem-baseline.json"
+        recorded = json.loads(baseline.read_text(encoding="utf-8")).get("standalone", {}) if baseline.exists() else {}
+        self.assertNotIn("alpha", recorded)
+
+
 class RepositoryStandaloneTests(unittest.TestCase):
     def test_recorded_states(self):
         doc = json.loads((ROOT / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))["standalone"]

@@ -122,6 +122,7 @@ class Conductor:
     settle = run_service.settle
 
     _active_s = loop.active_s
+    _disk_guard = loop.disk_guard
     _run_clock = loop.run_clock
     _loop = loop.loop
     _pieces = loop.pieces
@@ -260,6 +261,7 @@ class Conductor:
     _skill_files = context.skill_files
     _skill_body = staticmethod(context.skill_body)
     _route_tools = staticmethod(context.route_tools)
+    _file_tools_rule = context.file_tools_rule
     _skill_set = context.skill_set
     _skills_excluded = context.skills_excluded
     _skill_texts = context.skill_texts

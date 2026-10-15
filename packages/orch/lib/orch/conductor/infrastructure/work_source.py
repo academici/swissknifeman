@@ -41,6 +41,16 @@ def run_orch(self, *args: str) -> tuple:
     return done.returncode, doc, done.stderr.strip()
 
 
+OWNED_HINT = ("; the conductor never takes a piece over: free it from the run that holds it (`orch conduct release --run RUN "
+              "--item REF` before any work began, `settle` after the owner finished it) or hand it over by hand with the "
+              "take-over command of the source itself")
+
+
+def owned_hint(answer: dict) -> str:
+    """What to do about a piece another session holds (the refusal of the source names no conductor verb)."""
+    return OWNED_HINT if "ITEM_OWNED" in f"{answer.get('reason_code', '')} {answer.get('message', '')}" else ""
+
+
 def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
     actor = self._claim_actor()
     kept = (self.state["claims"].get(key) or {}).get("submission")
@@ -67,7 +77,7 @@ def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
         return None
     if answer.get("status") != "claimed":
         raise Stop("CLAIM_BLOCKED", f"{answer.get('ref', '-')}: {answer.get('reason_code', '-')}: "
-                                    f"{answer.get('message', err)}")
+                                    f"{answer.get('message', err)}{owned_hint(answer)}")
     self.state["claims"][key] = {"ref": answer["ref"], "orch_run": answer["run_id"], "submission": submission,
                                  **({"title": answer["title"]} if answer.get("title") else {})}
     self._save()

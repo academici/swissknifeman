@@ -12,7 +12,6 @@ from aicore.ext import events as aicore_events
 from aicore.ext import journal
 
 from orch import events, schema, settings
-from orch.cli import main
 from tests.test_cli_prepare import CliCase
 
 ROOT = Path(__file__).resolve().parents[1]

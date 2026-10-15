@@ -245,10 +245,12 @@ def prepare_common(binding: str, input_doc: dict, policy: dict, roles: Mapping[s
                                             f"{cap['fresh_until']}"}
             resolved = {"class": model_class}
             if cap["model"]["set"] != "unsupported":
-                resolved["model"] = _catalog(lambda: catalog.resolve_model(stage_provider, model_class), "model.set")
+                resolved["model"] = _catalog(
+                    lambda provider=stage_provider, cls=model_class: catalog.resolve_model(provider, cls), "model.set")
                 base["model"] = resolved["model"]
             if cap["effort"]["set"] != "unsupported":
-                resolved["effort"] = _catalog(lambda: catalog.resolve_effort(stage_provider, effort), "effort.set")
+                resolved["effort"] = _catalog(
+                    lambda provider=stage_provider, level=effort: catalog.resolve_effort(provider, level), "effort.set")
                 base["effort"] = effort
             base["capability_ref"] = _relative(Path(cap["_path"]))
             base["delivery"] = {"mode": cap["skill_delivery"]["mode"], "paths": []}

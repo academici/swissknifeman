@@ -26,7 +26,8 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900,
                   "run_warn_s": 7200, "run_timeout_s": 0, "review_rounds_batch": 0, "corrections_batch": 0,
                   "findings_batch": 0, "question_warn_s": 1800, "skill_tokens_max": 5000,
-                  "prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000}
+                  "prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000,
+                  "disk_min_gb": 5}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
                   "strategy": "auto", "strategist": "model"}
@@ -34,7 +35,7 @@ REVIEW_BOUNDS = {"dynamic_threshold": (0, 100)}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
-                        "sandbox": "prefer", "sandbox_domains": []}
+                        "sandbox": "prefer", "sandbox_domains": [], "file_tools_rule": True}
 # ``fence``: ``project`` (default) lets the executor change any file of the project and report the paths outside the plan's
 # write set as deviations; ``plan`` keeps the write set a fence (a path outside it blocks the piece). ``extra_paths``:
 # directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``).
@@ -62,7 +63,7 @@ LIMIT_BOUNDS = {"review_rounds": (0, 5), "corrections": (0, 3), "check_fixes": (
                 "run_warn_s": (0, None), "run_timeout_s": (0, None),
                 "review_rounds_batch": (0, None), "corrections_batch": (0, None), "findings_batch": (0, None),
                 "question_warn_s": (0, None), "skill_tokens_max": (0, None), "prompt_core_tokens": (0, None),
-                "prompt_supporting_tokens": (0, None), "prompt_retrieval_tokens": (0, None)}
+                "prompt_supporting_tokens": (0, None), "prompt_retrieval_tokens": (0, None), "disk_min_gb": (0, None)}
 ROLE_ALIASES = {"scout": "context-scout"}
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
                "researcher", "advisor")

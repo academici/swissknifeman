@@ -12,7 +12,7 @@ from aicore.ext import events as journal
 from orch.conductor import observer, process as role_process
 from orch.conductor.progress import Progress
 from orch import events as orch_events
-from tests.test_conductor import ConductorCase, GREEN, executor_ok
+from tests.test_conductor import ConductorCase, GREEN
 
 KNOWN = "known-value-7f3a9c2e51"          # the value of an environment variable named like a secret
 TOKEN = "ghp_" + "Z9y8X7w6V5u4T3s2R1q0" * 2  # an explicit token format the role printed on its own

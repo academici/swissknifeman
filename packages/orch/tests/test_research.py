@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from aicore.config import ConfigError
 
@@ -177,12 +178,12 @@ class CommandAndFilesystemTests(ResearchCase):
             outside, project = Path(tmp) / "outside", Path(tmp) / "project"
             outside.mkdir()
             project.mkdir()
-            (outside / "secret.txt").write_text("gateway timeout is a secret\n", encoding="utf-8")
+            (outside / "outside-note.txt").write_text("gateway timeout is a secret\n", encoding="utf-8")
             (project / "notes").symlink_to(outside, target_is_directory=True)
             source = sources.Source(id="fs", kind="filesystem", roots=("notes",))
             self.assertEqual("", research.query(source, "gateway timeout", cwd=project)["text"])
             absolute = sources.Source(id="fs", kind="filesystem", roots=(str(outside),))  # a machine-configured root
-            self.assertIn("secret.txt", research.query(absolute, "gateway timeout", cwd=project)["text"])
+            self.assertIn("outside-note.txt", research.query(absolute, "gateway timeout", cwd=project)["text"])
 
     def test_a_fifo_under_a_root_is_skipped_instead_of_blocking_the_read(self):
         import os
@@ -194,6 +195,56 @@ class CommandAndFilesystemTests(ResearchCase):
             source = sources.Source(id="fs", kind="filesystem", roots=(str(root),))
             answer = research.query(source, "gateway timeout", cwd=root)
             self.assertIn("note.txt", answer["text"])
+
+    def tree(self, files: dict):
+        import tempfile
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        for name, text in files.items():
+            (root / name).parent.mkdir(parents=True, exist_ok=True)
+            (root / name).write_text(text, encoding="utf-8")
+        return root, sources.Source(id="fs", kind="filesystem", roots=(str(root),))
+
+    def test_a_natural_question_finds_the_lines_that_hold_its_words(self):
+        root, source = self.tree({"a.md": "The gateway timeout of the service is 30s\n", "b.md": "unrelated line\n",
+                                  "c.md": "gateway only\n"})
+        answer = research.query(source, "What is the gateway timeout of the service?", cwd=root)
+        self.assertIn("a.md:1:", answer["text"])
+        self.assertNotIn("b.md", answer["text"])
+        self.assertNotIn("c.md", answer["text"])  # one word of three is not enough
+
+    def test_two_words_need_both_and_the_phrase_ranks_above_scattered_words(self):
+        root, source = self.tree({"a.md": "timeout of the gateway\n", "b.md": "gateway only\n"})
+        self.assertEqual(["a.md"], research.query(source, "gateway timeout", cwd=root)["sources"])
+        many = {f"p{n:02}.md": "the gateway timeout is 30s\n" for n in range(sources.MAX_MATCHES)}
+        root, source = self.tree({**many, "z.md": "timeout of the gateway\n"})
+        answer = research.query(source, "gateway timeout", cwd=root)
+        self.assertNotIn("z.md", answer["sources"])  # the phrase matches fill the answer first
+
+    def test_secret_files_are_never_read(self):
+        root, source = self.tree({".env": "gateway timeout token=abc\n", "server.key": "gateway timeout\n",
+                                  "api_token.txt": "gateway timeout\n", ".ssh/config": "gateway timeout\n",
+                                  "notes.md": "gateway timeout is 30s\n"})
+        self.assertEqual(["notes.md"], research.query(source, "gateway timeout", cwd=root)["sources"])
+
+    def test_a_token_in_a_matching_line_is_masked(self):
+        root, source = self.tree({"notes.md": "gateway timeout uses ghp_abcdefghijklmnopqrstuvwxyz0123456789 here\n"})
+        text = research.query(source, "gateway timeout", cwd=root)["text"]
+        self.assertNotIn("ghp_abcdefghijklmnopqrstuvwxyz0123456789", text)
+
+    def test_the_walk_stops_when_the_best_matches_fill_the_answer(self):
+        root, source = self.tree({f"f{n:03}.md": "gateway timeout\n" for n in range(sources.MAX_MATCHES + 30)})
+        original, seen = sources.Path.read_text, []
+
+        def spy(path, *args, **kwargs):
+            seen.append(path.name)
+            return original(path, *args, **kwargs)
+
+        with mock.patch.object(sources.Path, "read_text", spy):
+            answer = research.query(source, "gateway timeout", cwd=root)
+        self.assertEqual(sources.MAX_MATCHES, len(answer["text"].splitlines()))
+        self.assertLessEqual(len(seen), sources.MAX_MATCHES)
 
     def test_filesystem_without_a_match_or_roots(self):
         source = sources.Source(id="fs", kind="filesystem", roots=(str(FIXTURES / "tree"),))

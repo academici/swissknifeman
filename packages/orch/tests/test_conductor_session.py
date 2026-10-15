@@ -1,10 +1,11 @@
 """One executor session for the pieces of a run (``session.executor``): the executor of the next piece, and of every
 correction round, resumes the session of the previous executor (``--resume``), and the first prompt names the pieces
-of the run; ``per-item`` (``--no-single-session``) starts a fresh session each time."""
+of the run; ``per-item`` (``--no-batch``) starts a fresh session each time."""
 from __future__ import annotations
 
 import json
 import unittest
+from unittest import mock
 
 from orch.conductor import engine, options, prompts
 import sys
@@ -66,7 +67,7 @@ class SharedSessionTests(ConductorCase):
 
     def test_per_item_leaves_the_flag_as_the_catalog_has_it(self):
         self.with_no_persistence()
-        code, _, err = self.run_items("W1", "W2", extra=("--no-single-session",))
+        code, _, err = self.run_items("W1", "W2", extra=("--no-batch",))
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertIn("--no-session-persistence", self.argv(1))
 
@@ -75,13 +76,14 @@ class SharedSessionTests(ConductorCase):
         self.run_items("W1", "W2")
         first, second = self.prompt("executor", 1), self.prompt("executor", 2)
         self.assertIn("## Run batch", first)
-        self.assertIn("W1, W2", first)
+        self.assertIn("`W1`", first)
+        self.assertIn("`W2`", first)
         self.assertIn("You start with W1", first)
-        self.assertIn("You are resuming it", second)
+        self.assertIn("You are resuming that session", second)
 
     def test_per_item_starts_a_fresh_session_and_adds_no_note(self):
         self.two_items()
-        code, _, err = self.run_items("W1", "W2", extra=("--no-single-session",))
+        code, _, err = self.run_items("W1", "W2", extra=("--no-batch",))
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertNotIn("--resume", self.argv(2))
         self.assertNotIn("## Run batch", self.prompt("executor", 1))
@@ -135,6 +137,38 @@ class SessionConfigTests(unittest.TestCase):
         self.assertEqual(merged["session"]["executor"], "shared")
 
 
+
+
+class ClaimAllTests(ConductorCase):
+    def statuses_at_the_first_piece(self, *extra) -> dict:
+        self.set_items({"W1": {}, "W2": {}, "W3": {}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2"), executor_ok("W3")], "reviewer": [GREEN] * 3})
+        seen, original = {}, engine.Conductor._piece
+
+        def spy(conductor, answer):
+            if not seen:
+                seen.update({ref: doc["status"] for ref, doc in self.source()["items"].items()})
+            return original(conductor, answer)
+
+        with mock.patch.object(engine.Conductor, "_piece", spy):
+            code, _, err = self.run_items("W1", "W2", "W3", extra=extra)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        return seen
+
+    def test_all_pieces_of_a_batch_are_in_progress_before_the_first_one_starts(self):
+        self.assertEqual(self.statuses_at_the_first_piece(), {"W1": "in_progress", "W2": "in_progress", "W3": "in_progress"})
+
+    def test_no_batch_takes_them_one_at_a_time(self):
+        self.assertEqual(self.statuses_at_the_first_piece("--no-batch"),
+                         {"W1": "in_progress", "W2": "todo", "W3": "todo"})
+
+    def test_the_prompt_lists_every_piece_with_its_title_and_state(self):
+        self.statuses_at_the_first_piece()
+        first, second = self.prompt("executor", 1), self.prompt("executor", 2)
+        self.assertIn("- `W1` — Work W1 (this piece)", first)
+        self.assertIn("- `W2` — Work W2 (next)", first)
+        self.assertIn("- `W1` — Work W1 (done and committed)", second)
+        self.assertIn("- `W3` — Work W3 (next)", second)
 
 
 class FenceTests(ConductorCase):

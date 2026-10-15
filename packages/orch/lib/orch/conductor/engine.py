@@ -226,7 +226,8 @@ class Conductor:
     def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, batch: bool, max_items: int,
             options_file: Optional[Path] = None, adopt: bool = False, input_file: Optional[Path] = None,
             commit: bool = False, scenario: Optional[str] = None,
-            session: Optional[str] = None, fence: Optional[str] = None, extra_paths: Optional[list] = None) -> int:
+            fence: Optional[str] = None, extra_paths: Optional[list] = None,
+            grouped: Optional[bool] = None) -> int:
         """Conduct the pieces of a plan, or with ``input_file`` the one piece of an execution-input document (the built-in
         file source: no plan; ``scenario`` is then the scenario of the run, ``commit`` lets it commit its paths)."""
         run_id = new_run_id()
@@ -241,7 +242,7 @@ class Conductor:
         run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
                    "source": source, "scenario": scenario if source else None,
                    "max_items": max_items, "options_file": str(options_file) if options_file else None,
-                   "adopt": bool(adopt), "session": session, "fence": fence,
+                   "adopt": bool(adopt), "grouped": grouped, "fence": fence,
                    "extra_paths": [str(path) for path in extra_paths or []] or None,
                    "config_file": str(self.config_file) if self.config_file else None, "created": utc_now(),
                    "project": str(self.project), "project_resolution": self.project_resolution,
@@ -419,12 +420,15 @@ class Conductor:
         return code
 
     def _pieces(self) -> None:
-        """Explicit items in order, or the next ready pieces of the source (``--batch``). A piece that closed
+        """Explicit items in order, or the next ready pieces of the source (``--ready``). A piece that closed
         (done or blocked) in an earlier pass of this run is not claimed again; one that stopped half-way resumes
         on its own working tree, while new work needs a clean one."""
         doc = self.run_doc
         keys = [(f"item-{safe(ref)}", [ref]) for ref in doc["items"]] if doc["items"] else None
         count = index = 0
+        claimed, first_adopted = {}, []
+        if keys is not None and doc.get("grouped") is not False and len(keys) > 1:
+            claimed, first_adopted = self._claim_all(keys)
         while True:
             if keys is not None:
                 if index >= len(keys):
@@ -440,13 +444,13 @@ class Conductor:
             if outcome in ("done", "done_with_deviations", "blocked"):
                 count += 1
                 continue
-            adopted = []
+            adopted = first_adopted if index == 1 else []
             if known is None:
                 if doc.get("adopt") and index == 1:
                     adopted = self._dirty_paths()  # the work of an earlier attempt, checked against the write set later
                 else:
                     self._require_clean_tree()
-            answer = self._claim(key, asked)
+            answer = claimed.get(key) or self._claim(key, asked)
             if answer is None:
                 return
             count += 1
@@ -459,6 +463,28 @@ class Conductor:
                                          or self.state["items"][answer["ref"]].get("partial")):
                 why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
                 raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
+
+    def _claim_all(self, keys: list) -> tuple:
+        """Every piece named by ``--items`` becomes in progress together, as ``plan.py start`` on several items does: the
+        pieces of one run share one executor session and the owner sees the whole batch at work. Pieces that closed in an
+        earlier pass are left alone; ``--no-batch`` claims one piece at a time. ``(claimed answers by key, the changed
+        paths of the tree taken over by ``--adopt``)``."""
+        doc, claimed, adopted = self.run_doc, {}, []
+        for key, asked in keys:
+            known = self.state["claims"].get(key)
+            outcome = self.state["items"].get(known["ref"], {}).get("outcome") if known else None
+            if outcome in ("done", "done_with_deviations", "blocked"):
+                continue
+            if known is None and not claimed:  # new work starts on a clean tree: checked once, before the first claim
+                if doc.get("adopt"):
+                    adopted = self._dirty_paths()
+                else:
+                    self._require_clean_tree()
+            answer = self._claim(key, asked)
+            if answer is None:
+                break
+            claimed[key] = answer
+        return claimed, adopted
 
     def _on_blocked(self) -> str:
         return self.state.get("on_blocked") or self.conductor.get("on_blocked") or "stop"
@@ -500,7 +526,8 @@ class Conductor:
         if answer.get("status") != "claimed":
             raise Stop("CLAIM_BLOCKED", f"{answer.get('ref', '-')}: {answer.get('reason_code', '-')}: "
                                         f"{answer.get('message', err)}")
-        self.state["claims"][key] = {"ref": answer["ref"], "orch_run": answer["run_id"], "submission": submission}
+        self.state["claims"][key] = {"ref": answer["ref"], "orch_run": answer["run_id"], "submission": submission,
+                                     **({"title": answer["title"]} if answer.get("title") else {})}
         self._save()
         return answer
 
@@ -917,9 +944,9 @@ class Conductor:
             except (OSError, ValueError) as error:
                 raise Stop("OPTIONS_INVALID", f"{origin}: {error}") from None
             layers.append({"source": "invocation:--options", "options": found})
-        if self.run_doc.get("session"):
-            layers.append({"source": "invocation:--single-session",
-                           "options": {"session": {"executor": self.run_doc["session"]}}})
+        if self.run_doc.get("grouped") is not None:
+            layers.append({"source": "invocation:--batch" if self.run_doc["grouped"] else "invocation:--no-batch",
+                           "options": {"session": {"executor": "shared" if self.run_doc["grouped"] else "per-item"}}})
         flags = {key: self.run_doc[name] for key, name in (("fence", "fence"), ("extra_paths", "extra_paths"))
                  if self.run_doc.get(name)}
         if flags:
@@ -1609,18 +1636,27 @@ class Conductor:
     ISOLATION_ARGS = {"claude-code": ["--safe-mode"]}
 
     def _batch_note(self, item: Item) -> str:
-        """The run block of the executor prompt: the pieces of the run, so one shared session knows the whole batch."""
+        """The run block of the executor prompt: every piece of the run with its title and state, so one shared session
+        knows the whole batch from the first prompt."""
         refs = self.run_doc.get("items") or []
         if len(refs) < 2 or self._session_mode(item) != "shared" \
                 or item.routes["executor"].get("provider") != "claude-code":
             return ""
+        claims = {value["ref"]: value for value in (self.state.get("claims") or {}).values()}
+        rows = []
+        for ref in refs:
+            done = (self.state["items"].get(ref) or {}).get("outcome")
+            mark = "this piece" if ref == item.ref else ("done and committed" if done in ("done", "done_with_deviations")
+                                                         else "next" if done is None else done)
+            title = (claims.get(ref) or {}).get("title")
+            rows.append(f"- `{ref}`{' — ' + title if title else ''} ({mark})")
         resumed = bool(self.state.get("executor_session"))
-        lines = ["## Run batch", "", "One session carries the pieces of this run in order: " + ", ".join(refs) + ". "
-                 + (f"You are resuming it: the pieces before {item.ref} are done and committed, what you learned stays "
-                    "valid (re-read only what this piece needs), and the instructions below are for this piece."
-                    if resumed else
-                    f"You start with {item.ref}; later pieces arrive in this session as new messages, so keep the "
-                    "choices you make here compatible with them and say in `open_issues` what the next piece must know.")]
+        lines = ["## Run batch", "", "All pieces of this run are in progress and one session carries them in order:", *rows, "",
+                 (f"You are resuming that session: the pieces before {item.ref} are done and committed, what you learned stays "
+                  "valid (re-read only what this piece needs), and the instructions below are for this piece."
+                  if resumed else
+                  f"You start with {item.ref}; the later pieces arrive in this session as new messages, so keep the "
+                  "choices you make here compatible with them and say in `open_issues` what the next piece must know.")]
         return "\n".join(lines)
 
     def _role_argv(self, item: Item, role: str, route: dict) -> list:

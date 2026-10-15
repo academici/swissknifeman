@@ -69,7 +69,7 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             and any(conductor._claude_bash(route) for route in item.routes.values()):
         warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
                         "a run stops with SANDBOX_UNAVAILABLE")
-    return {"plan": args.plan or str(args.input), "items": args.items or None, "batch": bool(args.batch),
+    return {"plan": args.plan or str(args.input), "items": args.items or None, "batch": bool(args.ready),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
             "review": item.policy.get("review"), "options": item.options, "sources": item.sources,
             "reviewer": {"selector": item.options["reviewer"], "source": item.sources.get("reviewer", "default")},
@@ -195,18 +195,19 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--plans-root", dest="plans_root", metavar="DIR")
     which = run.add_mutually_exclusive_group()
     which.add_argument("--items", nargs="+", metavar="REF", help="these pieces of work, in order")
-    which.add_argument("--batch", action="store_true", help="the next ready pieces of the source, one by one")
+    which.add_argument("--ready", action="store_true", help="the next ready pieces of the source, one by one")
     run.add_argument("--max-items", dest="max_items", type=int, default=0, metavar="N",
-                     help="with --batch: at most N pieces (default: until none is ready)")
+                     help="with --ready: at most N pieces (default: until none is ready)")
     run.add_argument("--options", type=Path, metavar="FILE", help="run-options JSON: the most specific layer")
+    run.add_argument("--batch", action=argparse.BooleanOptionalAction, default=None,
+                     help="the pieces of this run are one batch (default): all are taken in progress at the start and "
+                          "one executor session carries them in order (`session.executor: shared`); --no-batch takes one "
+                          "piece at a time, each executor step in a fresh session")
     run.add_argument("--fence", choices=("project", "plan"), default=None,
                      help="what the executor may change: the whole project (default; the plan's write set is reported "
                           "against) or only the plan's write set (`scope.fence`)")
     run.add_argument("--allow-path", dest="allow_path", action="append", default=None, metavar="DIR",
                      help="a directory outside the project the executor may also change (repeatable; `scope.extra_paths`)")
-    run.add_argument("--single-session", dest="single_session", action=argparse.BooleanOptionalAction, default=None,
-                     help="one executor session for all pieces of the run (default on: `session.executor: shared`); "
-                          "--no-single-session starts a fresh executor session per step")
     run.add_argument("--scenario", help="the scenario to preview with --dry-run, or the scenario of a --input run "
                                         "(default: default_profile)")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
@@ -268,10 +269,13 @@ def main(argv: list | None = None) -> int:
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
     args = parser.parse_args(argv)
     if args.verb == "run":
-        if args.input and (args.items or args.batch or args.max_items or args.adopt):
-            parser.error("--input is one piece of work: it takes no --items, --batch, --max-items or --adopt")
-        if not args.input and not (args.items or args.batch):
-            parser.error("one of --items or --batch is required with --plan")
+        if args.batch is True and not (args.items or args.ready or args.input):
+            args.ready = True  # `--batch` used to select the next ready pieces
+            print("note: --batch now groups the pieces of a run; selecting the next ready pieces is --ready", file=sys.stderr)
+        if args.input and (args.items or args.ready or args.max_items or args.adopt):
+            parser.error("--input is one piece of work: it takes no --items, --ready, --max-items or --adopt")
+        if not args.input and not (args.items or args.ready):
+            parser.error("one of --items or --ready is required with --plan")
         if args.commit and not args.input:
             parser.error("--commit belongs to --input: a plan source commits as its own policy says")
     if args.verb == "gates":
@@ -346,10 +350,9 @@ def main(argv: list | None = None) -> int:
             return 0
         if args.verb == "run":
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
-                                 batch=args.batch, max_items=args.max_items, options_file=args.options,
+                                 batch=args.ready, max_items=args.max_items, options_file=args.options,
                                  adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario,
-                                 session=None if args.single_session is None else ("shared" if args.single_session else "per-item"),
-                                 fence=args.fence, extra_paths=args.allow_path)
+                                 fence=args.fence, extra_paths=args.allow_path, grouped=args.batch)
         if args.verb == "release":
             return conductor.release(args.run, args.item, args.reason)
         if args.verb == "settle":

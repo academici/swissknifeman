@@ -14,7 +14,7 @@ orch.py input adhoc --goal "…" --include path/ --check V1="python3 -m unittest
 conduct.py --project /path/to/project run --input input.json --commit
 
 # pieces of a plan: ONE run per group of related pieces, they share one executor session
-conduct.py --project /path/to/project run --plan PLAN --items A B C
+conduct.py --project /path/to/project run --plan PLAN --items A B C   # one batch: all in progress, one executor session; --no-batch to separate
 conduct.py status        # what runs now, the latest beacon
 conduct.py observe --follow
 conduct.py resume --run RUN [--retry ITEM]   # after a stop
@@ -29,7 +29,7 @@ conduct.py resume --run RUN [--retry ITEM]   # after a stop
 | What | Switch | Default |
 |---|---|---|
 | Where the executor may write | `--fence project|plan`, `--allow-path DIR` (repeatable) | `project`: any file of the project; paths outside the plan's write set are reported as deviations. `plan` makes the write set a fence. `--allow-path` adds directories outside the project. |
-| Executor session | `--single-session` / `--no-single-session` (`[orch.conductor] session_executor`) | one session for all pieces of a run (`claude --resume`) |
+| Executor session | `--batch` / `--no-batch` (`[orch.conductor] session_executor`) | `--batch`: all pieces of the run in progress at once and one session (`claude --resume`); `--no-batch`: one at a time, a fresh session each |
 | Review | `review.*` in `--options` (`reviewer`, rounds, dynamic) | see conductor.md; set it per piece on purpose |
 | Limits and beacons | `limits.*` | nothing is stopped for being long; beacons tell what runs |
 | Instructions seen by roles | `instructions.isolate_roles`, `module_rules` | every role starts without the project instructions and gets only its prompt and a short Repository rules block |

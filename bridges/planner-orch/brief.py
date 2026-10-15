@@ -33,6 +33,7 @@ ESCALATION = ["A required read is missing or contradicts the goal",
 LIFECYCLE_PHRASES = (
     "report_api", "report API", "plan.py start", "plan.py finish", "unit return", "planner:plan-run",
 )
+_TOKEN = re.compile(r"[a-z][a-z0-9_]*", re.ASCII)  # a denied input of a role manifest is a bare token, not a sentence
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
 _FOREIGN_KEYS = ("ref", "loaded", *_DECISION_KEYS, "source", "reason")
@@ -236,7 +237,7 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
     plan_rules = {f"/constraints/{i}/text" for i, c in enumerate(constraints)
                   if isinstance(c, dict) and str(c.get("source", "")).startswith("plan.rules")}
     for path, text in _strings(doc):
-        if path.startswith("/provenance") or path in plan_rules or "/forbidden_inputs/" in path:
+        if path.startswith("/provenance") or path in plan_rules or ("/forbidden_inputs/" in path and _TOKEN.fullmatch(text)):
             continue  # a role manifest read by an item names the lifecycle inputs it is denied; that is data, not instruction
         phrase = next((p for p in LIFECYCLE_PHRASES if p in text), None)
         if phrase:

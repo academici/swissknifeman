@@ -171,6 +171,19 @@ class CommandAndFilesystemTests(ResearchCase):
         self.assertEqual(["tree/docs/a.md"], answer["sources"])
         self.assertEqual("tree/docs/a.md:2: The Gateway timeout is 30s", answer["text"])
 
+    def test_a_project_folder_that_links_out_of_the_project_is_not_read(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            outside, project = Path(tmp) / "outside", Path(tmp) / "project"
+            outside.mkdir()
+            project.mkdir()
+            (outside / "secret.txt").write_text("gateway timeout is a secret\n", encoding="utf-8")
+            (project / "notes").symlink_to(outside, target_is_directory=True)
+            source = sources.Source(id="fs", kind="filesystem", roots=("notes",))
+            self.assertEqual("", research.query(source, "gateway timeout", cwd=project)["text"])
+            absolute = sources.Source(id="fs", kind="filesystem", roots=(str(outside),))  # a machine-configured root
+            self.assertIn("secret.txt", research.query(absolute, "gateway timeout", cwd=project)["text"])
+
     def test_filesystem_without_a_match_or_roots(self):
         source = sources.Source(id="fs", kind="filesystem", roots=(str(FIXTURES / "tree"),))
         self.assertEqual(([], ""), (lambda a: (a["sources"], a["text"]))(research.query(source, "zzz-none")))

@@ -264,6 +264,9 @@ class CompletenessTests(BriefCase):
         doc = self.brief()
         doc["reads"] = list(doc["reads"]) + [{"path": "roles/x.json", "content": {"forbidden_inputs": ["report_api"]}}]
         self.assertFalse([line for line in self.verify(doc) if "lifecycle" in line])
+        doc["reads"][-1]["content"]["forbidden_inputs"] = ["run plan.py start and go on"]  # a sentence is not a denied token
+        self.assertTrue([line for line in self.verify(doc) if "lifecycle phrase" in line])
+        doc["reads"][-1]["content"]["forbidden_inputs"] = ["report_api"]
         doc["reads"][-1]["content"]["note"] = "call report_api"
         self.assertTrue([line for line in self.verify(doc) if "lifecycle phrase 'report_api'" in line])
 

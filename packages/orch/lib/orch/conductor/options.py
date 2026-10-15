@@ -31,7 +31,7 @@ DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_cor
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60}
 REVIEW_BOUNDS = {"dynamic_threshold": (0, 100)}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
-                                         "report-fixer"],
+                                         "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
                         "sandbox": "prefer", "sandbox_domains": []}
 # ``fence``: ``project`` (default) lets the executor change any file of the project and report the paths outside the plan's

@@ -252,8 +252,8 @@ class Conductor:
         if options_file:  # kept with the run: `resume` must not depend on a file that may be gone (a cleaned /tmp)
             try:
                 shutil.copyfile(options_file, self.directory / OPTIONS_COPY)
-            except OSError:
-                pass
+            except OSError as error:
+                raise Stop("OPTIONS_INVALID", f"{options_file}: cannot keep a copy with the run: {error}") from None
         self._save()
         self.progress.emit("run.start", message=f"plan {plan}; " + (f"items {', '.join(items)}" if items else
                                                                      f"batch, at most {max_items or 'all'}"))
@@ -286,18 +286,18 @@ class Conductor:
         blocked = min((key for key in steps if key.startswith("executor.") and key not in continued(steps) and
                        (((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked")),
                       key=lambda key: steps[key].get("ended", ""), default=None)
-        held = any(name.startswith("advice-") for name in (self.state.get("questions") or {}).get(ref, {}))
+        held = any(name.startswith("orch-advice-") for name in (self.state.get("questions") or {}).get(ref, {}))
         if blocked is None and not held:
             raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round that reported blocked")
         # the input is built again too: the plan was amended (that is why the piece was blocked and reopened), and the
         # executor must see the amended write set, not the one of the first brief. A piece held on advice (red checks or a
-        # rejected finding, the question ``advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,
+        # rejected finding, the question ``orch-advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,
         # checks, reviews and advice stay and only the opening and closing steps are repeated.
         since = steps[blocked].get("ended", "") if blocked else None
         for key in [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
                     or (since is not None and steps[key].get("ended", "") > since)]:
             steps.pop(key)
-        for key in ("outcome", "stop", "partial", "skills_auto"):  # the skills are chosen again from the amended write set
+        for key in ("outcome", "stop", "partial", "skills_auto", "skills_checked"):  # the skills are chosen again from the amended write set
             item.pop(key, None)
         self._save()
         self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated" if blocked
@@ -744,11 +744,16 @@ class Conductor:
                                                                      f"{done_before} correction(s): {why}"), round_no
             if not replayed:
                 state["check_fixes_at"].append(round_no)
+            if advised:  # kept: a replay of this round (resume --retry) must get the same advice, not only the red text
+                state.setdefault("advice_fix", {})[str(round_no)] = advised["text"]
             state["check_fixes_used"] = len(state["check_fixes_at"])
+            kept_advice = (state.get("advice_fix") or {}).get(str(round_no)) if replayed else None
             round_no += 1
             text, combined = prompts.check_correction(red), state.get("combined")
             if advised:  # the allowance is spent; the advice makes one more round
                 text = advised["text"]
+            elif kept_advice:
+                text = kept_advice
             if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
                 text += "\n\n" + combined["text"]
                 if combined["review"] not in state.setdefault("combined_done", []):
@@ -1881,9 +1886,9 @@ class Conductor:
         return found["result"]
 
     def _research_command(self, sources: list, query_file: Path) -> str:
-        """The one command a read-only role asks a source with. ``python3`` as a bare name and no option before the verb: the
-        launch catalog allows the researcher and the advisor exactly ``python3 *orch.py research query *``; an invocation
-        config before the verb is outside that allowance."""
+        """The one command a read-only role asks a source with. ``python3`` as a bare name: the launch catalog allows the researcher
+        and the advisor ``python3 *orch.py research query *`` and, for an invocation config, ``python3 *orch.py --config *
+        research query *``; any other option before the verb is outside that allowance."""
         argv = ["python3", str(ORCH_ROOT / "scripts" / "orch.py"), "research", "query", "--source", sources[0],
                 "--query-file", str(query_file)]
         if self.config_file:
@@ -2130,11 +2135,11 @@ class Conductor:
         return found
 
     def _hold(self, item: Item, number: int, advice: dict, file: str, held: str, problem: str) -> dict:
-        """The question to the owner for advice that must not be applied by the conductor: ``advice-<n>`` (kind decision, the
+        """The question to the owner for advice that must not be applied by the conductor: ``orch-advice-<n>`` (kind decision, the
         options of the advice), saved with the advice like any queued question; ``conduct.py answer`` and ``resume --retry``
         then apply the owner's choice."""
         store = self._questions(item)
-        asked = {"id": f"advice-{number}", "revision": 1, "kind": "decision", "text": problem, "blocking": True,
+        asked = {"id": f"orch-advice-{number}", "revision": 1, "kind": "decision", "text": problem, "blocking": True,
                  "options": [{"id": option["id"], "label": option["text"][:200]} for option in advice["options"]]}
         binding = {"run": self.run_id, "item": item.ref, "step": f"advice.{number}",
                    "input_digest": item.input_doc.get("digest")}

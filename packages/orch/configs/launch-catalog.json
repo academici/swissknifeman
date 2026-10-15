@@ -448,6 +448,7 @@
      "Bash,Read,Grep,Glob",
      "--allowedTools",
      "Bash(python3 *orch.py research query *)",
+     "Bash(python3 *orch.py --config * research query *)",
      "--permission-prompts",
      "none",
      "--no-session-persistence"
@@ -475,6 +476,7 @@
      "Bash,Read,Grep,Glob",
      "--allowedTools",
      "Bash(python3 *orch.py research query *)",
+     "Bash(python3 *orch.py --config * research query *)",
      "--permission-prompts",
      "none",
      "--no-session-persistence"

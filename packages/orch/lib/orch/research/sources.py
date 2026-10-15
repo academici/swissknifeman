@@ -128,6 +128,14 @@ def _command(source: Source, text: str, *, cwd) -> dict:
 
 # -- filesystem -------------------------------------------------------------------------------------------------
 
+def _inside(path: Path, base: Path) -> bool:
+    try:
+        path.resolve().relative_to(base.resolve())
+    except (OSError, ValueError):
+        return False
+    return True
+
+
 def _filesystem(source: Source, text: str, *, cwd) -> dict:
     if not source.roots:
         raise SourceError("SOURCE_INVALID", f"source {source.id!r} (filesystem) has no roots")
@@ -137,7 +145,10 @@ def _filesystem(source: Source, text: str, *, cwd) -> dict:
     files: list = []
     for root in source.roots:
         top = Path(os.path.expanduser(root))
+        relative = not top.is_absolute() and not root.startswith("~")
         top = top if top.is_absolute() else base / top
+        if relative and not _inside(top, base):  # a project folder that is a link out of the project is not read
+            continue
         for folder, dirs, names in os.walk(top):  # symlinked folders are not followed: only reading, only inside
             dirs[:] = sorted(name for name in dirs if name not in SKIPPED_DIRS)
             for name in sorted(names):

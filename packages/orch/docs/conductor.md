@@ -355,7 +355,7 @@ The human gate: advice with `needs_owner: true`, or with a `category` of `[orch.
 `destructive`, `public-api`, `scope-expansion`), is never applied by the conductor. It is handled as `queue`: the piece is
 `blocked` with `QUESTION: <id> <text>` and the advice (file, recommendation, confidence, why the owner decides); the
 question is saved with the advice (`advice` in `questions.json`). A held question of the executor is that question; for red
-checks and a rejected finding it is a new question `advice-<n>` (kind `decision`, the options of the advice). `conduct.py
+checks and a rejected finding it is a new question `orch-advice-<n>` (kind `decision`, the options of the advice). `conduct.py
 answer` and `resume --run R --retry ITEM` then apply the owner's choice the same way: the correction round or the repeated
 triage carries the option the owner chose (`by owner`), and the closed rounds, checks and the advice are not repeated. An
 approval or a credential question is the owner's by its kind and is not asked of the advisor; the policy answers a question

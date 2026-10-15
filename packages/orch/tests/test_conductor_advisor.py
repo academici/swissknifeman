@@ -191,18 +191,19 @@ class RedChecksTriggerTests(AdvisorCase):
         self.assertIn("Chosen way: keep — Keep the old flag name (chosen by advisor", third)
         self.assertNotIn("# Advice", self.prompt("executor", 2))
         self.assertIn("## Red acceptance checks", self.prompt("advisor", 1))
+        self.assertIn("Keep the old flag name", self.state(err)["items"]["W1"]["advice_fix"]["2"])  # kept for a replay of the round
 
     def test_advice_that_needs_the_owner_blocks_with_a_question_and_the_owner_choice_makes_the_round(self):
         self.script({"executor": [self.red(), self.red(), executor_ok("W1")],
                      "advisor": [advice("checks:2", needs_owner=True, category="scope-expansion")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
-        (text,) = [text for text in self.escalations() if text.startswith("QUESTION: advice-1")]
+        (text,) = [text for text in self.escalations() if text.startswith("QUESTION: orch-advice-1")]
         self.assertIn("recommends keep", text)
         self.assertEqual(self.calls("executor"), 2)
         run = self.run_dir(err).name
-        self.assertIn("advice-1", self.conduct("questions", "--run", run)[1])
-        self.conduct("answer", "--run", run, "--item", "W1", "--question", "advice-1", "--option", "rename", "--by", "owner")
+        self.assertIn("orch-advice-1", self.conduct("questions", "--run", run)[1])
+        self.conduct("answer", "--run", run, "--item", "W1", "--question", "orch-advice-1", "--option", "rename", "--by", "owner")
         self.reopen()
         code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
         self.assertEqual(code, 0, err2)
@@ -274,7 +275,7 @@ class RejectedFindingTriggerTests(AdvisorCase):
                      "advisor": [advice("findings:1", needs_owner=True, category="destructive")]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
-        self.assertTrue([text for text in self.escalations() if text.startswith("QUESTION: advice-1")])
+        self.assertTrue([text for text in self.escalations() if text.startswith("QUESTION: orch-advice-1")])
         self.assertEqual(self.calls("triager"), 1)
 
     def test_the_owner_choice_is_applied_to_the_repeated_triage_after_the_resume(self):
@@ -284,7 +285,7 @@ class RejectedFindingTriggerTests(AdvisorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
         run = self.run_dir(err).name
-        self.conduct("answer", "--run", run, "--item", "W1", "--question", "advice-1", "--option", "rename", "--by", "owner")
+        self.conduct("answer", "--run", run, "--item", "W1", "--question", "orch-advice-1", "--option", "rename", "--by", "owner")
         self.reopen()
         code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
         self.assertEqual((code, self.outcome(err2)), (0, ("finished", None)), err2)

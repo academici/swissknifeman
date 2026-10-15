@@ -173,6 +173,16 @@
         "dynamic_threshold": {
           "description": "Risk score 0..100 at which a review is added. Default 60.",
           "type": "integer"
+        },
+        "strategy": {
+          "description": "How a batch of several pieces is reviewed, chosen before the first piece runs. `auto` (default): the strategist picks; `each`: every piece on its own as the policy and the risk score say; `groups`: one review per group of neighbouring pieces after the last piece of the group; `single`: one review of the whole batch after its last piece; `none`: no review. In `groups`, `single` and `none` a piece has no review of its own.",
+          "type": "string",
+          "enum": ["auto", "each", "groups", "single", "none"]
+        },
+        "strategist": {
+          "description": "Who chooses the strategy when it is `auto`: `model` (default; a small model call that sees every piece; the rules decide when it fails or answers unsoundly) or `rules` (the deterministic choice only).",
+          "type": "string",
+          "enum": ["model", "rules"]
         }
       },
       "required": [],

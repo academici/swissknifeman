@@ -28,8 +28,17 @@ def facts(ref: str, title: str, brief: dict) -> dict:
 
 
 def _top(path: str) -> str:
-    parts = [part for part in str(path).split("/") if part and not any(mark in part for mark in "*?[")]
-    return "/".join(parts[:3])
+    """The folder a write-set entry works in (up to three levels): a file counts by its folder, a pattern by its fixed prefix."""
+    parts = [part for part in str(path).split("/") if part]
+    fixed = []
+    for part in parts:
+        if any(mark in part for mark in "*?["):
+            break
+        fixed.append(part)
+    else:
+        if fixed and "." in fixed[-1]:  # a file: its folder
+            fixed.pop()
+    return "/".join(fixed[:3])
 
 
 def _coupled(left: dict, right: dict) -> bool:

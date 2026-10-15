@@ -1,0 +1,154 @@
+"""The review plan of a batch: chosen once before the first piece runs, carried out after the last piece of each group.
+
+``decide`` asks the strategist (a small model call, ``review.strategist: model``; ``rules`` skips the call) how the batch is
+reviewed (``policies/review_strategy.py``) and keeps the answer in ``state.review_strategy`` and ``review-strategy.json`` of the
+run. ``group_review_due`` runs after every piece: when the piece is the last of its group and the group is done it reads the
+commits of the group once (``review_batch``) and keeps the reply in ``group-review-<n>.md`` of the run folder; Blocker and Major
+findings are announced (``GROUP_REVIEW``) and left to the owner or the observer to correct in a commit of their own."""
+from __future__ import annotations
+
+import json
+import time
+from typing import Optional
+
+from orch import launch
+from orch.conductor import options as opts, process, review_batch
+from orch.conductor.domain.item import Item
+from orch.conductor.infrastructure.clock import utc_now
+from orch.conductor.infrastructure.files import safe, write_json
+from orch.conductor.policies import review_strategy as strategy
+
+PER_PIECE_OFF = ("groups", "single", "none")  # the strategy modes in which a piece is not reviewed on its own
+
+
+def piece_item(self, answer: dict) -> Item:
+    state = self.state["items"].setdefault(answer["ref"], {"steps": {}, "retries_used": 0, "orch_run": answer["run_id"]})
+    return Item(ref=answer["ref"], orch_run=answer["run_id"], state=state, directory=self.directory / safe(answer["ref"]),
+                claim=answer)
+
+
+def forced(mode: str, pieces: list, proposal: dict) -> dict:
+    """``review.strategy`` named a mode: the groups it implies (the rules' groups for ``groups`` when they are some)."""
+    refs = [piece["ref"] for piece in pieces]
+    if mode == "none":
+        groups = []
+    elif mode == "single":
+        groups = [refs] if len(refs) <= 12 else [refs[i:i + 12] for i in range(0, len(refs), 12)]
+    elif mode == "each":
+        groups = [[ref] for ref in refs]
+    else:
+        groups = proposal["groups"] if proposal["mode"] == "groups" else \
+            [refs[i:i + strategy.MAX_GROUP] for i in range(0, len(refs), strategy.MAX_GROUP)]
+    return {"mode": mode, "groups": groups, "reviewer": proposal["reviewer"], "reason": f"review.strategy: {mode}",
+            "source": "option"}
+
+
+def ask_strategist(self, item: Item, pieces: list, proposal: dict) -> Optional[dict]:
+    """The model's choice, or ``None`` when it cannot be had or is not sound (the rules' choice stands then)."""
+    try:
+        route = self._route(item, "triager")
+        argv = self._role_argv(item, "triager", route)
+        raw = self.directory / "streams" / "review-strategist.txt"
+        raw.parent.mkdir(parents=True, exist_ok=True)
+        run = process.run_role(argv, strategy.prompt(pieces, proposal), transport=route["transport"], cwd=self.project,
+                               timeout_s=300, raw_path=raw, env=self._role_env(item, "triager", route),
+                               provider=route["provider"])
+    except Exception as error:  # noqa: BLE001 — the strategist is advice; the rules decide when it fails
+        self.progress.emit("info", reason_code="STRATEGIST_FAILED", message=f"{type(error).__name__}: {error}"[:200])
+        return None
+    if run.error:
+        self.progress.emit("info", reason_code="STRATEGIST_FAILED", message=f"{run.error}: {run.detail}"[:200])
+        return None
+    chosen = strategy.check(strategy.parse(run.text), [piece["ref"] for piece in pieces])
+    if chosen is None:
+        self.progress.emit("info", reason_code="STRATEGIST_UNSOUND", message="the strategist's answer is not a partition "
+                           "of the batch in order; the rules decide")
+    self._tokens(item, run.usage)
+    return chosen
+
+
+def decide(self, answers: list) -> None:
+    """Choose the review plan of this batch once (a resume reads the kept plan)."""
+    if self.state.get("review_strategy") is not None:
+        return
+    if len(answers) < 2:
+        self.state["review_strategy"] = {"mode": "each", "groups": [[a["ref"] for a in answers]], "source": "single piece",
+                                         "reviewer": {"effort": "medium"}, "reason": "one piece"}
+        self._save()
+        return
+    first = piece_item(self, answers[0])
+    self._resolve(first, persist=False)
+    review = first.options["review"]
+    pieces = [strategy.facts(a["ref"], a.get("title") or a["ref"], self._brief_doc(a)) for a in answers]
+    proposal = strategy.rules(pieces)
+    mode = review.get("strategy", "auto")
+    if mode != "auto":
+        plan = forced(mode, pieces, proposal)
+    elif review.get("strategist", "model") == "rules":
+        plan = proposal
+    else:
+        plan = ask_strategist(self, first, pieces, proposal) or proposal
+    plan = dict(plan, decided_at=utc_now())
+    self.state["review_strategy"] = plan
+    write_json(self.directory / "review-strategy.json", plan)
+    self._save()
+    groups = "; ".join(" + ".join(group) for group in plan["groups"]) or "none"
+    self.progress.emit("info", reason_code="REVIEW_STRATEGY",
+                       message=f"{plan['mode']} ({plan['source']}): {groups} at effort {plan['reviewer']['effort']}; "
+                               f"{plan['reason']}")
+
+
+def per_piece_off(self) -> bool:
+    plan = self.state.get("review_strategy") or {}
+    return plan.get("mode") in PER_PIECE_OFF
+
+
+def group_review_due(self, ref: str) -> None:
+    """After a piece: the review of its group when it was the group's last piece and every piece of the group is done."""
+    plan = self.state.get("review_strategy") or {}
+    if plan.get("mode") not in ("groups", "single"):
+        return
+    for number, group in enumerate(plan["groups"], 1):
+        if ref != group[-1]:
+            continue
+        done = [self.state["items"].get(r, {}).get("outcome") in ("done", "done_with_deviations") for r in group]
+        if all(done) and str(number) not in (self.state.get("group_reviews") or {}):
+            group_review(self, number, group, plan["reviewer"]["effort"])
+        return
+
+
+def group_review(self, number: int, group: list, effort: str) -> None:
+    refs, shas = review_batch.commits_of_state({"items": {r: self.state["items"][r] for r in group}})
+    if not shas:
+        return
+    diff = review_batch.diff_of(self.project, shas, ["packages", "bridges", "scripts"], list(review_batch.EXCLUDED))
+    item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
+    self._resolve(item, persist=False)
+    route = self._route(item, "reviewer")
+    if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route, at the effort the strategy chose
+        selector = opts.parse_selector(item.options["reviewer"])
+        route = dict(route, effort=effort, argv=launch.build_argv(launch.load_catalog(), "reviewer", selector["provider"],
+                                                                  model=selector["model"], effort=effort, cwd=self.project))
+    provider, model = route["provider"], route.get("model")
+    prompt = review_batch.PROMPT.format(refs=", ".join(refs), max_tools=12) + diff
+    raw = self.directory / "streams" / f"group-review-{number}.jsonl"
+    raw.parent.mkdir(parents=True, exist_ok=True)
+    began = time.monotonic()
+    self.progress.emit("info", reason_code="GROUP_REVIEW_START",
+                       message=f"group {number} ({', '.join(refs)}): {provider}/{model}/{effort}, {len(prompt) // 1000} KB")
+    run = process.run_role(self._role_argv(item, "reviewer", route), prompt, transport=route["transport"], cwd=self.project,
+                           timeout_s=0, raw_path=raw, env=self._role_env(item, "reviewer", route), provider=provider)
+    self._tokens(item, run.usage)
+    text = run.text if not run.error else ""
+    found = review_batch.counts(text)
+    path = self.directory / f"group-review-{number}.md"
+    path.write_text(text or f"(no reply: {run.error}: {run.detail})", encoding="utf-8")
+    kept = {"refs": refs, "file": self._relative(path), "counts": found, "effort": effort,
+            "seconds": round(time.monotonic() - began, 1), "error": run.error}
+    self.state.setdefault("group_reviews", {})[str(number)] = kept
+    self._save()
+    loud = found["Blocker"] + found["Major"]
+    self.progress.emit("info", reason_code="GROUP_REVIEW" if not run.error else "GROUP_REVIEW_FAILED",
+                       message=(f"group {number}: {found['Blocker']} Blocker, {found['Major']} Major, {found['Minor']} Minor "
+                                f"in {kept['seconds']} s; {kept['file']}" + ("; correct them in a commit of their own" if loud else ""))
+                       if not run.error else f"group {number}: {run.error}: {run.detail}")

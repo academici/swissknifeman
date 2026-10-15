@@ -27,7 +27,7 @@ from typing import Callable, Optional
 
 from orch import catalog as catalogs, sandbox
 from orch.conductor import process
-from orch.conductor.application import loop, run_service
+from orch.conductor.application import loop, review_plan, run_service
 from orch.conductor.domain import report as report_rules
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import continued, evidence_paths, findings_problems, report_problems
@@ -127,6 +127,9 @@ class Conductor:
     _pieces = loop.pieces
     _claim_all = loop.claim_all
     _expand_ready = loop.expand_ready
+    _decide_review_strategy = review_plan.decide
+    _group_review_due = review_plan.group_review_due
+    _per_piece_review_off = review_plan.per_piece_off
     _on_blocked = loop.on_blocked
     _dirty_paths = loop.dirty_paths
     _require_clean_tree = loop.require_clean_tree
@@ -152,6 +155,7 @@ class Conductor:
     _claim = work_source.claim
     _release_claim = work_source.release_claim
     _brief = work_source.brief
+    _brief_doc = work_source.brief_doc
     _prepare = work_source.prepare
     _refresh_input = work_source.refresh_input
     _research_save = work_source.research_save

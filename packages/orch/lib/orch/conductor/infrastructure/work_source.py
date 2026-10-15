@@ -225,3 +225,15 @@ def closer_command(self, args: list) -> str:
     if self.config_file:
         argv[2:2] = ["--config", str(self.config_file)]
     return shlex.join(argv)
+
+
+def brief_doc(self, answer: dict) -> dict:
+    """The execution-input of a claimed piece, asked without starting it (the facts the review strategist reads); ``{}`` when the
+    source cannot answer."""
+    code, found, _ = self._orch("source", "brief", "--run", answer["run_id"])
+    if code != 0 or not isinstance(found, dict) or not found.get("input_ref"):
+        return {}
+    try:
+        return json.loads(blobs.read_bytes(found["input_ref"], project=self.project))
+    except (OSError, ValueError, KeyError):
+        return {}

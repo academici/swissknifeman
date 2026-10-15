@@ -401,6 +401,31 @@ writes the reply to `<run folder>/batch-review.md`. The time of a review is the 
 tokens, about 30-60 per second), not its reading: `--effort` and `--max-tools N` (default 12, in the prompt) shorten it; `--dry-run` shows the pieces, the prompt size and the command. A finding of Major and above is fixed in a separate
 commit after the batch.
 
+## The review strategy of a batch
+
+A batch of several pieces is reviewed in the way chosen **before the first piece runs** (`review.strategy`, default `auto`):
+
+| `mode` | Review |
+|---|---|
+| `each` | every piece on its own, as the run policy and the risk score say (`review.*`, dynamic) |
+| `groups` | one review per group of neighbouring pieces, after the last piece of the group |
+| `single` | one review of the whole batch after its last piece |
+| `none` | no review |
+
+With `auto` the strategist decides (`review.strategist: model`, the default): one small model call on the economy route of the
+triager sees every piece (title, goal, write set, route) and the choice the rules would make, and answers a mode, the groups
+(in order, at most four pieces each) and the reviewer's effort. An answer that is not a partition of the batch in order, a
+failed call or `review.strategist: rules` falls back to the rules (`policies/review_strategy.py`): neighbours that work on the
+same folders are read together, a piece on the foundation or a `frontier` piece is read alone, security wording raises the
+effort to `high`. Naming a mode in `review.strategy` skips the strategist. The plan is kept in `state.review_strategy` and
+`review-strategy.json` of the run (a resume keeps it) and announced as `REVIEW_STRATEGY`.
+
+In `groups`, `single` and `none` a piece has no review of its own. After the last piece of a group the conductor reads the
+commits of the group once (`review_batch`: production code only, the same as `batch-review.py`), with the reviewer of the run
+(`reviewer`, grok by default) at the effort of the plan, and keeps the reply in `group-review-<n>.md` of the run folder
+(`state.group_reviews`). The beacon `GROUP_REVIEW` gives the counts of Blocker, Major and Minor; Blocker and Major are
+corrected in a commit of their own by the owner or the observer.
+
 ## Run options
 
 `schemas/conductor/v1/run-options.schema.json`, closed:
@@ -415,7 +440,7 @@ commit after the batch.
 | `session` | `executor`: `shared` (default) or `per-item`. `shared`: the executor of every piece of the run, and of every correction round of a piece, resumes the Claude Code session of the previous executor (`claude -p --resume`), so the later pieces start with what the earlier ones learned, and the prompt of the first one carries a `run_rules` block `## Run batch` that names all pieces; the later ones are told that the session is resumed. Checks, review, register and commit stay per piece. `per-item`: a fresh session per executor step. `--batch` / `--no-batch` of `run` set it, and `--no-batch` also claims the pieces one at a time (layer `invocation:--batch`, above `--options`). Shared executors run without `--no-session-persistence` (the launch catalog sets it; a session that is not saved cannot be resumed), so their sessions stay in the provider's own store. A session that failed is forgotten and a fresh one starts; a provider other than Claude Code always starts fresh. The session id is kept in `executor_session` of the run state. |
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and added as `--rw` to its `ro-run.py` guard). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
-| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60) |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`model` default, `rules`: who chooses it) |
 | `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); ceilings, all off by default: `stage_timeout_s`, `stage_idle_timeout_s`, `check_timeout_s`  Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |

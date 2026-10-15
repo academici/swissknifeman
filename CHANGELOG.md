@@ -15,6 +15,7 @@
 
 ### Added
 
+- **orch:** the review strategy of a batch (`review.strategy`: `auto`, `each`, `groups`, `single`, `none`; `review.strategist`: `model`, `rules`): chosen before the first piece by a small strategist call (rules as the fallback), then one review per group after its last piece (`group-review-<n>.md`, beacon `GROUP_REVIEW`) instead of one per piece; `review_batch` is the shared diff and prompt of `batch-review.py` and the group reviews.
 - **orch:** `scripts/batch-review.py RUN`: one review of the production diff of all commits of a run by one reviewer (`--effort`, `--max-tools`, `--include/--exclude`, `--dry-run`), reply in `<run>/batch-review.md`.
 - **orch, planner-orch:** `run --ready` is a batch too: the first claim returns the whole ready lane of the planner (`lane`), the run continues as `--items` of that lane (all pieces in progress, one session; `--max-items N` cuts the lane); `--no-batch` keeps one piece at a time. A test keeps every default run option named in `docs/conductor.md`.
 - **planner, planner-orch:** `plan.py start --in-progress-deps`: a dependency that is in progress counts as met (the pieces of one batch started one after another); the bridge sets it for `source claim --batch`. When a commit is refused only because plan files of other in-progress pieces are dirty, the bridge repeats it with `--leave-outside`. A shared Claude Code executor may write the transcripts folder of the project under the filesystem guard (`ro-run.py --rw`), otherwise the session is never saved and `--resume` cannot find it.

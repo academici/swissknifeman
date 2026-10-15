@@ -14,6 +14,8 @@ def piece(ref, *paths, route=None, title=None):
 class RulesTests(unittest.TestCase):
     def test_a_chain_on_the_same_folders_is_one_review(self):
         pieces = [piece(f"P12.{i}", "packages/orch/lib/orch/events.py", "packages/orch/tests/**") for i in range(1, 4)]
+        self.assertEqual(strategy._top("packages/orch/lib/orch/events.py"), "packages/orch/lib")
+        self.assertEqual(strategy._top("packages/orch/tests/**"), "packages/orch/tests")
         chosen = strategy.rules(pieces)
         self.assertEqual((chosen["mode"], chosen["groups"]), ("single", [["P12.1", "P12.2", "P12.3"]]))
 
@@ -24,7 +26,7 @@ class RulesTests(unittest.TestCase):
         self.assertEqual([len(group) for group in chosen["groups"]], [4, 2])
 
     def test_uncoupled_pieces_are_reviewed_each(self):
-        chosen = strategy.rules([piece("A", "packages/orch/x.py"), piece("B", "packages/skiller/y.py"),
+        chosen = strategy.rules([piece("A", "packages/orch/x.py"), piece("B", "lib/other/y.py"),
                                  piece("C", "docs/z.md")])
         self.assertEqual((chosen["mode"], chosen["groups"]), ("each", [["A"], ["B"], ["C"]]))
 

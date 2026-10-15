@@ -90,6 +90,8 @@ def pieces(self) -> None:
             keys, claimed, first_adopted = expanded
     elif keys is not None and doc.get("grouped") is not False and len(keys) > 1:
         claimed, first_adopted = self._claim_all(keys)
+    if keys is not None and len(keys) > 1 and doc.get("grouped") is not False and claimed:
+        self._decide_review_strategy([claimed[key] for key, _ in keys if key in claimed])
     while True:
         if keys is not None:
             if index >= len(keys):
@@ -120,6 +122,8 @@ def pieces(self) -> None:
                 .setdefault("adopted", adopted)
             self._save()
         outcome = self._piece(answer)
+        if outcome in ("done", "done_with_deviations"):
+            self._group_review_due(answer["ref"])
         if outcome == "blocked" and (self._on_blocked() == "stop"
                                      or self.state["items"][answer["ref"]].get("partial")):
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""

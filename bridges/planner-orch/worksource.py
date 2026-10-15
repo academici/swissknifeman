@@ -68,7 +68,15 @@ def actor_text(actor: dict) -> str:
 
 
 def refusal_of(text: str, fallback: str) -> Blocked:
-    """The ``CODE: message`` line of a refusal (the last one of the text), else ``fallback``."""
+    """The ``CODE: message`` line of a refusal (the last one of the text), the ``error`` of a JSON envelope of the planner
+    (``{"ok": false, "error": {"code", "message"}}``), else ``fallback``."""
+    try:
+        envelope = json.loads(text or "")
+    except ValueError:
+        envelope = None
+    error = envelope.get("error") if isinstance(envelope, dict) else None
+    if isinstance(error, dict) and isinstance(error.get("code"), str) and isinstance(error.get("message"), str):
+        return Blocked(error["code"], error["message"])
     for line in reversed((text or "").strip().splitlines()):
         found = _CODE.match(line.strip())
         if found:

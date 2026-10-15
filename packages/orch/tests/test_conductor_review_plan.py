@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import unittest
 
-from tests.test_conductor import GREEN, ConductorCase, executor_ok
+from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
 
 REVIEW = "## Findings\n[Major] out/W3.txt:1 - a defect\nScenario: x -> y\nFix: z\n## Checked and fine\n- a\n"
 
@@ -67,6 +67,43 @@ class ReviewPlanTests(ConductorCase):
         self.assertIn("[Major] out/W3.txt:1 - a defect", doc["goal"])
         message = self.events(err, "GROUP_REVIEW")[0]["message"]
         self.assertIn("orch conduct run --input", message)
+
+    def test_a_group_whose_commits_changed_no_production_code_is_not_sent_to_the_reviewer(self):
+        from unittest import mock
+        from orch.conductor import review_batch
+        self.set_items({r: {} for r in ("W1", "W2", "W3")})
+        self.script({"executor": [executor_ok(r) for r in ("W1", "W2", "W3")], "reviewer": [GREEN],
+                     "triager": [answer("single", [["W1", "W2", "W3"]])]})
+        with mock.patch.object(review_batch, "INCLUDE", ["nowhere-in-the-project"]):  # the commits touch nothing it names
+            code, _, err = self.run_items("W1", "W2", "W3")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 0)
+        self.assertEqual(self.state(err)["group_reviews"]["1"]["error"], "EMPTY_DIFF")
+        self.assertTrue(self.events(err, "GROUP_REVIEW_FAILED"))
+
+    def test_a_resume_between_groups_keeps_the_plan_and_reviews_each_group_once(self):
+        blocked = report("W3", "blocked", open_issues=[{"text": "needs a decision", "kind": "escalation"}])
+        self.set_items({r: {} for r in ("W1", "W2", "W3")})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2"), {"result": blocked}, executor_ok("W3")],
+                     "reviewer": [{"text": REVIEW}, {"text": REVIEW}],
+                     "triager": [answer("groups", [["W1", "W2"], ["W3"]])]})
+        code, _, err = self.run_items("W1", "W2", "W3")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(sorted(self.state(err)["group_reviews"]), ["1"])  # the first group was read before the stop
+        doc = self.source()
+        doc["items"]["W3"]["status"] = "todo"  # the source reopened the blocked piece
+        self.state_file.write_text(json.dumps(doc), encoding="utf-8")
+        code, _, err2 = self.conduct("resume", "--run", self.run_dir(err).name, "--retry", "W3", "--json-lines")
+        self.assertEqual(code, 0, err2)
+        state = json.loads((self.run_dir(err) / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(state["group_reviews"]), ["1", "2"])
+        self.assertEqual((self.calls("triager"), self.calls("reviewer")), (1, 2))  # not asked, not read again
+
+    def test_a_batch_review_replaces_the_review_of_each_piece_even_when_dynamic_review_is_on(self):
+        err = self.batch(triager=answer("single", [["W1", "W2", "W3"]]),
+                         options={"review": {"dynamic": True, "dynamic_threshold": 0}})
+        self.assertEqual(self.calls("reviewer"), 1)  # the group review only: no per-piece review was added by the risk score
+        self.assertEqual(self.plan_of(err)["mode"], "single")
 
     def test_groups_are_reviewed_after_the_last_piece_of_each_group(self):
         err = self.batch(triager=answer("groups", [["W1", "W2"], ["W3"]], "high"))

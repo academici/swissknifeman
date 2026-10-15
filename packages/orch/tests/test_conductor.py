@@ -1402,7 +1402,7 @@ class SandboxTests(ConductorCase):
 def quota_failure(reset_in: int) -> dict:
     """Claude Code, usage limit: a rejected ``rate_limit_event`` (``resetsAt``) and a ``result`` with ``is_error``."""
     event = {"type": "rate_limit_event", "rate_limit_info": {
-        "status": "rejected", "resetsAt": int(time.time()) + reset_in, "rateLimitType": "five_hour"}}
+        "status": "rejected", "resetsAt": f"@+{reset_in}", "rateLimitType": "five_hour"}}  # the role turns it into a time
     return {"stream": [event], "is_error": True, "text": "You've hit your limit", "exit": 1}
 
 

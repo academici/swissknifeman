@@ -19,7 +19,7 @@ orch conduct status        # what runs now, the latest beacon
 orch conduct observe --follow
 orch conduct resume --run RUN [--retry ITEM]   # after a stop
 ```
-`--project` is the repository the run works in; the orchestrator code can live elsewhere (and should be a frozen copy when the run changes `orch` itself).
+`--project` is the repository the run works in; the orchestrator code can live elsewhere. When a piece rewrites `orch` itself, add `--frozen` (also to `resume`): the run is conducted from a snapshot of the committed orchestrator, so the pieces cannot change the code that conducts them.
 
 ## What the run touches
 - Product files of the piece and one commit per piece, made by the conductor (the executor never commits).
@@ -31,8 +31,9 @@ orch conduct resume --run RUN [--retry ITEM]   # after a stop
 | Where the executor may write | `--fence project|plan`, `--allow-path DIR` (repeatable) | `project`: any file of the project; paths outside the plan's write set are reported as deviations. `plan` makes the write set a fence. `--allow-path` adds directories outside the project. |
 | Executor session | `--batch` / `--no-batch` (`[orch.conductor] session_executor`) | `--batch`: all pieces of the run in progress at once and one session (`claude --resume`); `--no-batch`: one at a time, a fresh session each |
 | Review | `review.*` in `--options` (`reviewer`, rounds, dynamic) | see conductor.md; set it per piece on purpose |
-| Limits and beacons | `limits.*` | nothing is stopped for being long; beacons tell what runs |
+| Limits and beacons | `limits.*` | nothing is stopped for being long; beacons tell what runs. `limits.disk_min_gb` (5): a run or a round of checks does not start with less free space (`DISK_LOW`) |
+| Scenario | `--scenario S` | the plan's own (overlays, `orchestration`), else `solo`; the flag wins over the plan |
 | Instructions seen by roles | `instructions.isolate_roles`, `module_rules` | every role starts without the project instructions and gets only its prompt and a short Repository rules block |
 
 ## When something stops
-`orch conduct status` names the piece and the code. `BLOCKED` pieces carry an `escalation` in the report; fix the cause and `resume --retry ITEM`. A run never discards the work of a role: a half-done piece stays in the tree and continues on `resume`.
+`orch conduct status` names the piece and the code. `BLOCKED` pieces carry an `escalation` in the report; fix the cause and `resume --retry ITEM`. A run never discards the work of a role: a half-done piece stays in the tree and continues on `resume`. A batch that stopped before any work began keeps all its pieces in progress: `orch conduct release --run RUN --all` gives them back. SIGTERM, SIGHUP and Ctrl-C stop a run cleanly (exit 130): the role and check processes are killed, `resume` continues.

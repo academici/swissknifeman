@@ -16,7 +16,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, gates, observer, progress, prompts, questions
+from orch.conductor import agents, engine, frozen, gates, observer, progress, prompts, questions
 
 
 def _project(args):
@@ -212,6 +212,9 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--scenario", help="the scenario of the run: wins over the scenario the plan resolves for each "
                                         "piece (overlays, `orchestration`); also for --input and --dry-run "
                                         "(default: the plan's, else default_profile)")
+    run.add_argument("--frozen", action="store_true",
+                     help="conduct from a snapshot of the committed orchestrator (a piece that rewrites orch itself must not "
+                          "change the code that conducts it); the snapshot is removed when the run ends")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     run.add_argument("--adopt", action="store_true",
@@ -223,6 +226,7 @@ def main(argv: list | None = None) -> int:
                         help="also continue these blocked pieces: their steps from the blocked executor round on are "
                              "repeated (the source must have reopened them); finished steps are kept")
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
+    resume.add_argument("--frozen", action="store_true", help="as for run: a new snapshot of the committed orchestrator")
     for sub in (run, resume):
         quiet = sub.add_mutually_exclusive_group()
         quiet.add_argument("--quiet", action="store_true", help="no progress lines on stderr")
@@ -290,6 +294,12 @@ def main(argv: list | None = None) -> int:
     if context is None:
         return 1
     project = context.root
+    if getattr(args, "frozen", False) and args.verb in ("run", "resume") and not getattr(args, "dry_run", False):
+        try:
+            return frozen.relaunch(list(sys.argv[1:] if argv is None else argv), project)
+        except frozen.FrozenError as error:
+            print(f"{error.code}: {error}", file=sys.stderr)
+            return 1
     if args.verb in ("answer", "questions"):
         return _questions(args, project)
     if args.verb == "prompt":

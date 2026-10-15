@@ -122,7 +122,15 @@ def group_review(self, number: int, group: list, effort: str) -> None:
         self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED",
                            message=f"group {number} ({', '.join(group)}): no commit of the group to read; not reviewed")
         return
-    diff = review_batch.diff_of(self.project, shas, ["packages", "bridges", "scripts"], list(review_batch.EXCLUDED))
+    diff = review_batch.diff_of(self.project, shas, review_batch.INCLUDE, list(review_batch.EXCLUDED))
+    if not review_batch.has_hunks(diff):  # nothing to read: the model is not asked (it would answer "none" to an empty page)
+        self.state.setdefault("group_reviews", {})[str(number)] = {"refs": refs, "format": "empty", "error": "EMPTY_DIFF",
+                                                                   "counts": {"Blocker": 0, "Major": 0, "Minor": 0}}
+        self._save()
+        self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED",
+                           message=f"group {number} ({', '.join(refs)}): the production diff is empty (the commits changed only "
+                                   "tests, docs, fixtures or other excluded paths); not reviewed")
+        return
     item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
     self._resolve(item, persist=False)
     route = self._route(item, "reviewer")

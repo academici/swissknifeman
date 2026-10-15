@@ -29,7 +29,13 @@ At most 6 bullets naming the riskiest areas you traced and found sound.
 
 --- DIFF ---
 """
+INCLUDE = ["."]  # the whole project: the layout of a project is not known here (a hard-coded packages/ left every other project with an empty diff)
 EXCLUDED = ("tests/", "/tests/", "docs/", "fixtures/", "golden/", "plans/", ".md", "CHANGELOG", "config.example.toml")
+
+
+def has_hunks(diff: str) -> bool:
+    """Whether a diff holds any changed line: file headers alone are nothing to review."""
+    return any(line.startswith("@@") for line in diff.splitlines())
 
 
 def commits_of_state(state: dict) -> tuple:

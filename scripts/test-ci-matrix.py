@@ -39,6 +39,14 @@ def unit_doc(unit_id: str, kind: str = "capability", test=None, validate=None) -
     return {"id": unit_id, "kind": kind, "version": "0.1.0", "dev": dev, "provides": {}}
 
 
+def eu_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ci_matrix_under_test", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class Fixture:
     def __init__(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -136,6 +144,46 @@ class CiMatrixTests(unittest.TestCase):
         self.fx.run("run", "--unit", "redtest", "--step", "test", "--step", "validate")  # a red test step: no skip
         self.assertEqual(self.fx.run("run", "--unit", "dedup", "--repeat-tests", "--step", "test", "--step", "validate").returncode, 0)
         self.assertEqual(log.read_text(encoding="utf-8").split(), ["1", "unset", "unset", "unset"])
+
+    def test_units_run_side_by_side_with_jobs_and_the_steps_of_a_unit_stay_in_order(self):
+        mark = self.fx.root / "marks"
+        script = lambda name: ["python3", "-c", f"import time; open({str(mark)!r}, 'a').write('{name}+ '); time.sleep(1.0); open({str(mark)!r}, 'a').write('{name}- ')"]
+        for name in ("p1", "p2", "p3"):
+            self.fx.unit(f"packages/{name}", unit_doc(name, test=script(name)))
+        started = __import__("time").monotonic()
+        out = self.fx.run("run", "--unit", "p1", "--unit", "p2", "--unit", "p3", "--step", "test", "--jobs", "3")
+        took = __import__("time").monotonic() - started
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertLess(took, 2.8)  # three one-second tests side by side, not one after the other
+        marks = mark.read_text().split()
+        self.assertEqual(sorted(marks[:3]), ["p1+", "p2+", "p3+"])  # all started before any ended
+        self.assertEqual(len(out.stdout.splitlines()), 3)
+
+    def test_the_independent_steps_of_one_unit_overlap_and_validate_still_follows_the_test(self):
+        mark = self.fx.root / "overlap"
+        log = lambda name: ["python3", "-c", f"import time; open({str(mark)!r}, 'a').write('{name}+ '); time.sleep(1.0); open({str(mark)!r}, 'a').write('{name}- ')"]
+        doc = unit_doc("two", test=log("test"), validate=log("validate"))
+        doc["dev"]["standalone_setup"] = []
+        self.fx.unit("packages/two", doc)
+        out = self.fx.run("run", "--unit", "two", "--step", "test", "--step", "validate", "--step", "contracts", "--jobs", "3")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        marks = mark.read_text().split()
+        self.assertEqual(marks, ["test+", "test-", "validate+", "validate-"])  # validate after the test of its unit
+        self.assertEqual(sorted(line.split()[2] for line in out.stdout.splitlines()), ["contracts", "test", "validate"])
+
+    def test_chains_pair_test_and_validate_and_leave_the_other_steps_alone(self):
+        steps = [{"id": name} for name in ("lint", "test", "validate", "standalone", "secrets")]
+        self.assertEqual([[s["id"] for s in chain] for chain in eu_module().chains(steps)],
+                         [["lint"], ["test", "validate"], ["standalone"], ["secrets"]])
+        self.assertEqual([[s["id"] for s in chain] for chain in eu_module().chains(steps[2:3])], [["validate"]])
+
+    def test_jobs_one_is_the_old_order_and_a_red_unit_still_fails_the_run(self):
+        self.fx.unit("packages/broken", unit_doc("broken", test=["bash", "-c", "exit 3"]))
+        out = self.fx.run("run", "--unit", "tooly", "--unit", "broken", "--step", "test", "--jobs", "1")
+        self.assertEqual(out.returncode, 1)
+        self.assertEqual([line.split()[:3] for line in out.stdout.splitlines()], [["ok", "tooly", "test"], ["fail", "broken", "test"]])
+        out = self.fx.run("run", "--unit", "tooly", "--unit", "broken", "--step", "test", "--jobs", "2")
+        self.assertEqual(out.returncode, 1)
 
     def test_run_skip_and_unknown(self):
         out = self.fx.run("run", "--unit", "link", "--skip", "test")

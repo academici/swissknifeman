@@ -79,6 +79,10 @@ else:
         print(json.dumps({"type": "system", "subtype": "init", "session_id": session,
                           "model": answer.get("model", "fake-model")}))
     for line in answer.get("stream") or []:
+        if isinstance(line, dict):  # "@+N" in resetsAt: N seconds from the moment the role prints it (a slow machine cannot outrun it)
+            info = line.get("rate_limit_info")
+            if isinstance(info, dict) and str(info.get("resetsAt", "")).startswith("@+"):
+                info["resetsAt"] = int(__import__("time").time()) + int(info["resetsAt"][2:])
         print(line if isinstance(line, str) else json.dumps(line))
     if answer.get("codex_failed"):
         print(json.dumps({"type": "turn.failed", "error": {"message": answer["codex_failed"]}}))

@@ -4,10 +4,11 @@
 Usage:
   ci-matrix.py list [--json] [--step S] [--python V,V]    units of the hub as a matrix {"include": [{unit, kind, tool}]}
   ci-matrix.py steps UNIT [--json]                        the steps of one unit
-  ci-matrix.py run (--unit U [--step S]... [--skip S]... | --all [--include-tools]) [--base-ref REF] [--repeat-tests]
+  ci-matrix.py run (--unit U [--step S]... [--skip S]... | --all [--include-tools]) [--base-ref REF] [--repeat-tests] [--jobs N]
                                                           run steps; one line `ok|fail|skip <unit> <step> <seconds>` each;
                                                           after a green `test` step `validate` runs with
-                                                          SKM_VALIDATE_SKIP_TESTS=1 (validate.sh skips its test run)
+                                                          SKM_VALIDATE_SKIP_TESTS=1 (validate.sh skips its test run);
+                                                          --all runs 4 units at the same time (--jobs N, SKM_CI_MATRIX_JOBS)
   ci-matrix.py --check [--strict] [--legacy FILE]         structural check of the workflow against the matrix
 Common option: --root DIR (hub root; default: the checkout of this script).
 
@@ -28,7 +29,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HUB = Path(__file__).resolve().parents[1]
@@ -92,7 +95,7 @@ def discover(root: Path) -> dict:
             try:
                 doc = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError) as exc:
-                raise SystemExit(f"CI_MATRIX_UNIT: {path}: {exc}")
+                raise SystemExit(f"CI_MATRIX_UNIT: {path}: {exc}") from None
             unit = Unit(path, doc, kind_dir)
             units.setdefault(unit.id, unit)
     return units
@@ -399,7 +402,7 @@ def cmd_run(args, root: Path) -> int:
             print(f"ci-matrix: unknown or missing unit: {', '.join(missing) or '(none given)'}", file=sys.stderr)
             return 2
         chosen = [units[u] for u in args.unit]
-    failed = False
+    plans = []
     for unit in chosen:
         steps = build_steps(root, unit)
         known = [s["id"] for s in steps]
@@ -408,21 +411,61 @@ def cmd_run(args, root: Path) -> int:
         if bad and not args.all:
             print(f"ci-matrix: {unit.id} has no step {', '.join(bad)} (steps: {', '.join(known)})", file=sys.stderr)
             return 2
+        plans.append((unit, [s for s in steps if s["id"] in wanted and s["id"] not in (args.skip or [])]))
+    lock = threading.Lock()
+    base_ref = args.base_ref or os.environ.get("BASE_REF", "")
+
+    def run_chain(unit: Unit, steps: list) -> bool:
+        """A chain of steps of one unit in order (the tests before validate); a line of the report is printed when a step
+        ends."""
+        red = False
         tests_green = False  # the tests of this unit ran green in this invocation: validate does not run them again
         for step in steps:
-            if step["id"] not in wanted or step["id"] in (args.skip or []):
-                continue
             started = time.monotonic()
             extra = {SKIP_TESTS_ENV: "1"} if step["id"] == "validate" and tests_green and not args.repeat_tests else {}
-            state, note = execute(root, unit, step, args.base_ref or os.environ.get("BASE_REF", ""), extra)
+            state, note = execute(root, unit, step, base_ref, extra)
             tests_green = tests_green or (step["id"] == "test" and state == "ok")
-            print(f"{state} {unit.id} {step['id']} {time.monotonic() - started:.1f}", flush=True)
-            if state == "fail":
-                failed = True
-                print(f"  {note}", file=sys.stderr)
-            elif state == "skip" and note:
-                print(f"  {note}", file=sys.stderr)
-    return 1 if failed else 0
+            with lock:
+                print(f"{state} {unit.id} {step['id']} {time.monotonic() - started:.1f}", flush=True)
+                if state == "fail":
+                    red = True
+                    print(f"  {note}", file=sys.stderr, flush=True)
+                elif state == "skip" and note:
+                    print(f"  {note}", file=sys.stderr, flush=True)
+        return red
+
+    work = [(unit, chain) for unit, steps in plans for chain in chains(steps)]
+    jobs = max(1, min(args.jobs if args.jobs else default_jobs(args.all), len(work) or 1))
+    if jobs == 1:
+        reds = [run_chain(unit, chain) for unit, chain in work]
+    else:  # units and their independent steps are independent (each step has a throwaway HOME): the longest chain sets the time
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            reds = list(pool.map(lambda piece: run_chain(*piece), work))
+    return 1 if any(reds) else 0
+
+
+def chains(steps: list) -> list:
+    """The steps of a unit as chains that may run at the same time: ``validate`` follows the ``test`` step of its unit (it
+    skips the tests that just ran green), every other step stands alone (``standalone`` copies the files and runs
+    its own tests, ``lint`` and the checks read only). Chains keep the order of the steps."""
+    test = next((s for s in steps if s["id"] == "test"), None)
+    follow = next((s for s in steps if s["id"] == "validate"), None) if test else None
+    out, joined = [], False
+    for step in steps:
+        if step is follow:
+            continue
+        out.append([step, follow] if step is test and follow else [step])
+        joined = joined or step is test
+    return out
+
+
+def default_jobs(everything: bool) -> int:
+    """``SKM_CI_MATRIX_JOBS``, else 4 for ``--all`` (units and their independent steps side by side)
+    and 1 for named units (their order is the order asked for)."""
+    given = os.environ.get("SKM_CI_MATRIX_JOBS", "")
+    if given.isdigit() and int(given) > 0:
+        return int(given)
+    return 4 if everything else 1
 
 
 # ---- check -------------------------------------------------------------------------------------------------------
@@ -536,6 +579,9 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--repeat-tests", action="store_true",
                      help="validate runs the tests again after a green test step (default: it skips them)")
     run.add_argument("--base-ref", default="")
+    run.add_argument("--jobs", type=int, default=0, metavar="N",
+                     help="steps at the same time, of different units and the independent steps of one unit (default "
+                          "SKM_CI_MATRIX_JOBS, else 4 for --all and 1 otherwise); `validate` stays after the `test` of its unit")
     sub.add_parser("check")
     return p
 

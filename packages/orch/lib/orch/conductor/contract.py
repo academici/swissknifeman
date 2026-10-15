@@ -25,7 +25,11 @@ def problems(doc: object, kind: str) -> list[str]:
     """Violations of ``conductor/v1`` ``kind`` by ``doc`` as ``path: message`` lines (empty when valid)."""
     if kind not in KINDS:
         raise schema.SchemaProfileError(f"unknown conductor kind: {kind!r}")
-    return [f"{issue.path or '/'}: {issue.message}" for issue in schema.validate(doc, kind, registry())]
+    rows = []
+    for issue in schema.validate(doc, kind, registry()):
+        where = issue.path or "/"
+        rows.append(issue.message if issue.message.startswith(f"{where}:") else f"{where}: {issue.message}")  # one path, not two
+    return rows
 
 
 def triage_problems(findings: dict, triage: dict) -> list[str]:

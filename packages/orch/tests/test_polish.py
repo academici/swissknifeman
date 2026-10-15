@@ -5,13 +5,14 @@ import os
 from pathlib import Path
 import signal
 import tempfile
+import threading
 import time
 import types
 import unittest
 from unittest import mock
 
 from orch.conductor import checks as checks_mod
-from orch.conductor import options as opts, prompts, review_batch
+from orch.conductor import frozen, options as opts, prompts, review_batch
 from orch.conductor.application import loop
 from orch.conductor.stages import context
 from orch.conductor.infrastructure import disk, roles
@@ -110,6 +111,37 @@ class CheckProcessGroup(unittest.TestCase):
             code = checks_mod._run_command(self.spawn_cmd("exit 0"), cwd=self.dir, out=out, timeout_s=0, warn_s=0)
         self.assertEqual(code, 0)
         self.assertTrue(wait_dead(self.worker()))
+
+    def test_the_time_a_check_is_stopped_is_not_counted(self):
+        seen = []
+
+        def on_slow(elapsed, _pid):
+            seen.append(elapsed)
+
+        def pause_then_continue():
+            time.sleep(0.5)
+            os.killpg(proc_pid[0], signal.SIGSTOP)
+            time.sleep(2.0)
+            os.killpg(proc_pid[0], signal.SIGCONT)
+
+        proc_pid = []
+        real = checks_mod.subprocess.Popen
+
+        def popen(*args, **kwargs):
+            process = real(*args, **kwargs)
+            proc_pid.append(process.pid)
+            threading.Thread(target=pause_then_continue, daemon=True).start()
+            return process
+
+        with mock.patch.object(checks_mod, "POLL_S", 0.1), mock.patch.object(checks_mod.subprocess, "Popen", popen), \
+                open(self.dir / "log", "wb") as out:
+            code = checks_mod._run_command(["python3", "-c", "import time\nt = time.process_time()\nwhile time.process_time() - t < 1.6: pass"],
+                                           cwd=self.dir, out=out, timeout_s=0, warn_s=1,
+                                           on_slow=on_slow)
+        self.assertEqual(code, 0)
+        self.assertTrue(seen)
+        # about 1.6 s of work and 2 s stopped (3.6 s on the wall): the beacon never saw more than the work and the polls' slack
+        self.assertLess(max(seen), 2.9)
 
     def test_an_interrupt_kills_the_check_and_its_workers(self):
         def interrupt(_elapsed, _pid):
@@ -235,6 +267,76 @@ class SessionRoute(unittest.TestCase):
         self.assertNotIn("executor_session_route", me.state)
 
 
+class FrozenMode(unittest.TestCase):
+    def hub(self) -> Path:
+        import subprocess
+        base = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(base, True))
+        hub = base / "hub"
+        for path in ("packages/orch", "bridges/one"):
+            (hub / path / "lib").mkdir(parents=True)
+            (hub / path / "lib" / "mark.txt").write_text(f"committed {path}\n")
+        (hub / "packages" / "orch" / "scripts").mkdir(parents=True)
+        (hub / "packages" / "orch" / "scripts" / "conduct.py").write_text("print('frozen entry')\n")
+        git = lambda *a: subprocess.run(["git", "-C", str(hub), *a], check=True, capture_output=True)
+        git("init", "-q")
+        git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "add", "-A")
+        git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "c")
+        (hub / "packages" / "orch" / "lib" / "mark.txt").write_text("edited after the commit\n")  # not in the snapshot
+        return hub
+
+    def test_the_snapshot_is_the_committed_state_and_holds_the_four_paths(self):
+        hub = self.hub()
+        target = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(target, True))
+        frozen.freeze(hub, target)
+        self.assertEqual((target / "packages/orch/lib/mark.txt").read_text(), "committed packages/orch\n")
+        self.assertTrue((target / "bridges/one/lib/mark.txt").is_file())
+
+    def test_the_command_line_loses_frozen_and_project_and_keeps_the_rest(self):
+        self.assertEqual(frozen.strip(["--config", "c.toml", "--project", "/x", "run", "--plan", "P", "--items", "A", "B", "--frozen"]),
+                         ["--config", "c.toml", "run", "--plan", "P", "--items", "A", "B"])
+        self.assertEqual(frozen.strip(["--project=/x", "resume", "--run", "R", "--frozen"]), ["resume", "--run", "R"])
+
+    def test_every_path_inside_the_checkout_points_into_the_snapshot_and_pythonpath_is_dropped(self):
+        hub = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(hub, True))
+        (hub / "packages" / "a").mkdir(parents=True)
+        env = frozen.environment(Path("/snap"), hub, {"PYTHONPATH": str(hub / "lib"), "KEEP": "1", "OTHER": "/elsewhere/x",
+                                                       "ROOT_A": str(hub / "packages" / "a"), "TEXT": "not a path"})
+        self.assertEqual((env["ROOT_A"], env["OTHER"], env["KEEP"], env["TEXT"]),
+                         ("/snap/packages/a", "/elsewhere/x", "1", "not a path"))
+        self.assertNotIn("PYTHONPATH", env)
+
+    def test_relaunch_runs_the_entry_of_the_snapshot_with_the_project_and_removes_the_snapshot(self):
+        hub = self.hub()
+        cache = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(cache, True))
+        seen, real = {}, frozen.subprocess.run
+
+        def fake_run(command, env=None, cwd=None, **kwargs):
+            if command[0] == "git":  # the snapshot is really taken
+                return real(command, **kwargs)
+            seen.update(command=command, env=env, cwd=cwd, entry=Path(command[1]).read_text())
+            return types.SimpleNamespace(returncode=7)
+
+        with mock.patch.object(frozen, "hub_root", return_value=hub), mock.patch.object(frozen, "CACHE", cache), \
+                mock.patch.object(frozen.subprocess, "run", fake_run):
+            code = frozen.relaunch(["run", "--plan", "P", "--items", "A", "--frozen"], Path("/the/project"))
+        self.assertEqual(code, 7)
+        self.assertEqual(seen["entry"], "print('frozen entry')\n")
+        self.assertEqual(seen["command"][2:], ["--project", "/the/project", "run", "--plan", "P", "--items", "A"])
+        self.assertEqual(list(cache.iterdir()), [])  # the snapshot is gone
+
+    def test_a_checkout_without_the_sources_cannot_be_frozen(self):
+        outside = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(outside, True))
+        with mock.patch.object(frozen, "ORCH_ROOT", outside):
+            with self.assertRaises(frozen.FrozenError) as stop:
+                frozen.hub_root()
+        self.assertEqual(stop.exception.code, "FROZEN_UNAVAILABLE")
+
+
 class PreviewBatchKeys(unittest.TestCase):
     """``--dry-run`` says whether the run is a batch (the default for several pieces), apart from ``--ready``."""
 
@@ -256,6 +358,23 @@ class PreviewBatchKeys(unittest.TestCase):
         self.assertEqual(self.preview(["A"])["batch"], False)
         shown = self.preview(None, ready=True)
         self.assertEqual((shown["batch"], shown["ready"]), (True, True))
+
+
+class DiffForReview(unittest.TestCase):
+    def test_headers_alone_are_no_diff(self):
+        self.assertFalse(review_batch.has_hunks("diff --git a/x b/x\nindex 1..2 100644\n--- a/x\n+++ b/x\n"))
+        self.assertTrue(review_batch.has_hunks("diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n"))
+
+    def test_the_whole_project_is_read_by_default(self):
+        self.assertEqual(review_batch.INCLUDE, ["."])
+
+
+class ReadableErrors(unittest.TestCase):
+    def test_a_schema_violation_names_its_path_once(self):
+        from orch.conductor import contract
+        self.assertEqual(contract.problems({"limits": {"nope": 1}}, "run-options"), ["/limits/nope: unexpected property 'nope'"])
+        self.assertEqual(contract.problems({"limits": {"disk_min_gb": "x"}}, "run-options"),
+                         ["/limits/disk_min_gb: expected integer, got string"])
 
 
 class TranscriptFolder(unittest.TestCase):

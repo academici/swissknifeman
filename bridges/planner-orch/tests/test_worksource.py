@@ -256,6 +256,12 @@ class OrchestrationTests(Case):
             {"source": "document:orchestration-p1", "options": {"rules": ["phase rule"]}},
             {"source": "document:orchestration-p1-1", "options": {"limits": {"review_rounds": 1}}}])
 
+    def test_an_unknown_plan_is_refused_with_the_planner_message_not_its_json(self):
+        answer = self.op(worksource.op_claim, op="claim", plan="no-such-plan", items=["P1.1"], run_id="run-z",
+                         submission_id="sub-z", actor=ACTOR)
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "PLAN_NOT_FOUND"))
+        self.assertNotIn("{", answer["message"])
+
     def test_the_scenario_of_the_invocation_wins_over_the_plan(self):
         self.overlay("orchestration-p1", ["P1"], {"scenario": "full"})
         answer = self.claim(items=["P1.1"], scenario="scout-solo")
@@ -448,9 +454,12 @@ class RetryRegisterTests(Case):
             {"text": "needs the plan widened", "kind": "escalation"}]})
         self.assertEqual(blocked["outcome"], "recorded")
         self.assertEqual(self.item("P1.1")["status"], "blocked")
-        done = self.register(status="done", evidence={"V1": self.evidence()})
+        done = self.register(status="done", evidence={"V1": self.evidence()}, report={"summary": "now really done"})
         self.assertEqual(done["outcome"], "recorded", done)
         self.assertEqual(self.item("P1.1")["status"], "done")
+        notes = self.item("P1.1")["result"].get("notes", "")
+        self.assertIn("now really done", notes)
+        self.assertNotIn("stuck", notes)  # the text of the blocked attempt does not outlive the retry
 
 
 class CommitTests(Case):

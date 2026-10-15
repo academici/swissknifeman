@@ -9,11 +9,11 @@ Models are used only for the narrow roles: context scout, executor, reviewer, tr
 ```text
 orch conduct [--config FILE] [--project DIR] run --plan P (--items REF… | --ready [--max-items N]) [--plans-root DIR]
            [--options FILE] [--batch | --no-batch]
-           [--fence project|plan] [--allow-path DIR ...] [--adopt] [--dry-run [--scenario S]]
+           [--fence project|plan] [--allow-path DIR ...] [--adopt] [--frozen] [--dry-run [--scenario S]]
            [--quiet | --json-lines] [--model-catalog FILE]
 orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
            [--quiet | --json-lines] [--model-catalog FILE]
-orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--quiet | --json-lines]
+orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--frozen] [--quiet | --json-lines]
 orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
 orch conduct questions [--run RUN] [--json]
@@ -27,6 +27,16 @@ For an agent that picks its own pieces (ask the source for ready lanes → `run 
 
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
 130 interrupted (Ctrl-C, SIGTERM or SIGHUP: the role and check processes of the run are killed with their groups; `resume` continues).
+
+## A piece that rewrites the orchestrator: `--frozen`
+
+A piece that refactors `orch` changes the code of the process that conducts it. `run --frozen` (and `resume --frozen`) takes a snapshot of
+the committed state (`git archive HEAD`) of the orchestrator checkout the command was started from (`packages/orch`, `aicore`, `planner`
+and `bridges`) under `~/.cache/skm-frozen/run-<time>-<pid>`, starts the same command from it with `--project` naming the project, and
+removes the snapshot when the command ends. The install roots (`SKM_ORCH_ROOT`, `AICORE_ROOT`, `PLANNER_ROOT`, `PLANNER_PLAN_PY`) point
+into the snapshot, `PYTHONPATH` is dropped, and the check commands of the pieces do not inherit roots outside the project, so they test the
+project's own code. The work-source plugin stays the one the configuration registers. `resume --frozen` takes a new snapshot: that is how
+a mechanism fix reaches a run stopped on purpose. Outside a checkout that holds the sources the flag is `FROZEN_UNAVAILABLE`.
 
 ## Work outside a plan: `run --input FILE`
 
@@ -169,7 +179,7 @@ instead; `orch conduct status` shows the latest one of the running step:
 | --- | --- | --- |
 | `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
 | `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output | the same; `no child process` means the model call itself is silent |
-| `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check | the check id and its processes |
+| `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check; the time a check spends stopped (`SIGSTOP`, state `T`) is not counted, for the beacon and for `check_timeout_s` | the check id and its processes |
 | `DISK_LOW` | a check runs and the free space went under `limits.disk_min_gb` (every `check_warn_s`; the check is not cut) | the file system and the free space |
 | `RUN_SLOW` | every `limits.run_warn_s` (default 7200; 0 off) of the **active** time of the run (segments of its processes: a resume a day later does not count the day) | active time, closed and left pieces, the current step; one plan note per threshold; never stops the run |
 | `BUDGET_OVER` | once, when the fresh tokens of a piece pass `limits.tokens_max` | the tokens used |
@@ -402,7 +412,7 @@ piece that adds a module to the foundation found out). Roots inside the project 
 ## One review for a batch: `scripts/batch-review.py`
 
 The conductor reviews piece by piece (`review.*`); a batch is better read once, together: `batch-review.py RUN` takes the
-commits of the run from its `state.json`, keeps their production diff (`--include`, default `packages bridges scripts`,
+commits of the run from its `state.json`, keeps their production diff (`--include`, default `.`, the whole project,
 without tests, docs, fixtures, goldens and plans; `--exclude` adds more), asks one reviewer (the launch catalog route:
 `--provider grok --model grok-4.7 --effort medium`; `high` costs three times the time and found one more Major in the one batch measured) for correctness and safety defects with a concrete failing scenario, and
 writes the reply to `<run folder>/batch-review.md`. The time of a review is the reasoning of the reviewer (its output

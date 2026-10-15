@@ -461,7 +461,7 @@ def check_aicore_schemas(ctx: Context) -> list:
         return []
     schema = schema_validator()
     issues = []
-    for kind, rel in AICORE_SCHEMAS:
+    for _kind, rel in AICORE_SCHEMAS:
         if not (ctx.root / rel).is_dir():
             issues.append(Issue("SCHEMA_PROFILE", rel, "schema directory is missing"))
     schemas_dir = ctx.root / "packages" / "aicore" / "schemas"

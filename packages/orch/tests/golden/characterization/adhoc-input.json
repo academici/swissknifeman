@@ -2,7 +2,7 @@
  "progress": [
   {
    "event": "run.start",
-   "message": "plan <tmp>/input.json; items adhoc@<digest>"
+   "message": "input <tmp>/input.json; items adhoc@<digest>"
   },
   {
    "event": "item.start",

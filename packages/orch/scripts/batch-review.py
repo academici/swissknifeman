@@ -6,7 +6,7 @@
 
 The pieces of a batch are reviewed together (the conductor reviews per piece): the reviewer sees what the pieces did to
 each other. The diff is the commits of the run (``state.json``), limited to the paths of ``--include`` (default
-``packages bridges scripts``) without tests, docs, fixtures, goldens and plans (``--exclude`` adds more). The reviewer role
+``.``, the whole project) without tests, docs, fixtures, goldens and plans (``--exclude`` adds more). The reviewer role
 text is ``roles/reviewer.md``'s output contract in short form; the reply goes to ``<run dir>/batch-review.md``. The route
 defaults to ``[orch.conductor] reviewer`` (``grok/grok-4.7``) at effort ``medium`` (measured on one batch: a third of the time of ``high``, 4 of its 5 Majors and one new); ``--max-tools`` cuts the time further,
 which is the reviewer's reasoning (output tokens), not its reading.
@@ -35,7 +35,7 @@ def main(argv=None) -> int:
     parser.add_argument("--model", default="grok-4.7")
     parser.add_argument("--effort", default="medium", help="default medium: about a third of the time of high, most of its findings")
     parser.add_argument("--max-tools", type=int, default=12)
-    parser.add_argument("--include", nargs="+", default=["packages", "bridges", "scripts"])
+    parser.add_argument("--include", nargs="+", default=review_batch.INCLUDE)
     parser.add_argument("--exclude", nargs="+", default=[])
     parser.add_argument("--argv-json", help="the reviewer command as a JSON list (default: the launch catalog)")
     parser.add_argument("--dry-run", action="store_true", help="print the size of the prompt and the command, run nothing")

@@ -128,14 +128,29 @@ def _kill_group(process) -> None:
         process.wait()
 
 
+def stopped(pid: int) -> bool:
+    """Whether the process is stopped (SIGSTOP, as an observer does to a check while the disk is freed): its state ``T``."""
+    try:
+        with open(f"/proc/{pid}/stat", encoding="utf-8", errors="replace") as handle:
+            return handle.read().rsplit(")", 1)[1].split()[0] in ("T", "t")
+    except (OSError, IndexError):
+        return False
+
+
 def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow) -> int:
-    began, next_warn = time.monotonic(), warn_s
+    """Wait for a check. The time a stopped check spends stopped is not counted: neither the ``CHECK_SLOW`` beacon nor the
+    ceiling ``check_timeout_s`` runs while somebody holds it."""
+    began, next_warn, paused, last = time.monotonic(), warn_s, 0.0, time.monotonic()
     while True:
         try:
             return process.wait(timeout=POLL_S)
         except subprocess.TimeoutExpired:
             pass
-        elapsed = time.monotonic() - began
+        now = time.monotonic()
+        if stopped(process.pid):
+            paused += now - last
+        last = now
+        elapsed = now - began - paused
         if timeout_s and elapsed > timeout_s:
             _kill_group(process)
             out.write(f"\n[orch] check timed out after {timeout_s} s\n".encode("utf-8"))

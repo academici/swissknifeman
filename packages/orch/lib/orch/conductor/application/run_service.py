@@ -44,7 +44,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
     if options_file:
         self.store.keep_options(options_file)
     self._save()
-    self.progress.emit("run.start", message=f"plan {plan}; " + (f"items {', '.join(items)}" if items else
+    self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
                                                                  f"batch, at most {max_items or 'all'}"))
     return self._loop()
 

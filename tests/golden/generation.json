@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "117af6fcf0cc",
-  "reason": "orch-debug 0.3.0: один запуск = один батч, единая сессия исполнителя",
+  "captured_from": "69285e82fe12",
+  "reason": "advisor role in the launch catalog (PLAN4 P10.4)",
   "generators": [
     {
       "id": "skiller-registry",

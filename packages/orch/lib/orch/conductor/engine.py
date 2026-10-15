@@ -47,6 +47,7 @@ from orch.worksource_file import read_input
 
 CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 5}
+ADVICE_DIFF_CHARS = 40_000  # the diff an advisor reads is cut here
 LAUNCH_ROLE = {"context-scout": "scout"}
 RULE_HEADING = re.compile(r"^## ([A-Za-z0-9_.-]+)[ \t]*$", re.M)
 RUN_FILE, STATE_FILE = "run.json", "state.json"
@@ -277,18 +278,22 @@ class Conductor:
         blocked = min((key for key in steps if key.startswith("executor.") and key not in continued(steps) and
                        (((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked")),
                       key=lambda key: steps[key].get("ended", ""), default=None)
-        if blocked is None:
+        held = any(name.startswith("advice-") for name in (self.state.get("questions") or {}).get(ref, {}))
+        if blocked is None and not held:
             raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round that reported blocked")
-        since = steps[blocked].get("ended", "")
         # the input is built again too: the plan was amended (that is why the piece was blocked and reopened), and the
-        # executor must see the amended write set, not the one of the first brief
+        # executor must see the amended write set, not the one of the first brief. A piece held on advice (red checks or a
+        # rejected finding, the question ``advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,
+        # checks, reviews and advice stay and only the opening and closing steps are repeated.
+        since = steps[blocked].get("ended", "") if blocked else None
         for key in [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
-                    or steps[key].get("ended", "") > since]:
+                    or (since is not None and steps[key].get("ended", "") > since)]:
             steps.pop(key)
         for key in ("outcome", "stop", "partial", "skills_auto"):  # the skills are chosen again from the amended write set
             item.pop(key, None)
         self._save()
-        self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated")
+        self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated" if blocked
+                           else "retry: the answer to the advice is applied; the closed rounds are kept")
 
     @staticmethod
     def _work_began(state: dict) -> bool:
@@ -568,6 +573,9 @@ class Conductor:
                 if not findings["findings"]:
                     break
                 triage = self._triage(item, review_round, findings)
+                triage, held = self._retriage(item, review_round, findings, triage)
+                if held:
+                    return self._finish(item, self._blocked(report, "QUESTION", held), rows)
                 if not triage["confirmed"]:
                     break
                 major, minor = self._split_confirmed(item, findings, triage)
@@ -717,15 +725,22 @@ class Conductor:
             replayed = round_no in state["check_fixes_at"]
             done_before = len([number for number in state["check_fixes_at"] if number != round_no])
             why = None if replayed else self._allowance(item, "check_fixes", done_before, progress)
+            advised = None
             if why:
-                names = ", ".join(row["id"] for row in red)
-                return rows, self._blocked(report, "CHECKS_RED", f"acceptance checks {names} stay red after "
-                                                                 f"{done_before} correction(s): {why}"), round_no
+                advised = None if why.startswith("batch:") else self._advise_red(item, round_no, red, report)
+                if advised and advised.get("held"):  # the owner decides; the question waits with the advice
+                    return rows, self._blocked(report, "QUESTION", advised["held"]), round_no
+                if not advised:
+                    names = ", ".join(row["id"] for row in red)
+                    return rows, self._blocked(report, "CHECKS_RED", f"acceptance checks {names} stay red after "
+                                                                     f"{done_before} correction(s): {why}"), round_no
             if not replayed:
                 state["check_fixes_at"].append(round_no)
             state["check_fixes_used"] = len(state["check_fixes_at"])
             round_no += 1
             text, combined = prompts.check_correction(red), state.get("combined")
+            if advised:  # the allowance is spent; the advice makes one more round
+                text = advised["text"]
             if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
                 text += "\n\n" + combined["text"]
                 if combined["review"] not in state.setdefault("combined_done", []):
@@ -933,6 +948,8 @@ class Conductor:
             roles += ["reviewer", self._triage_role(item)]
         if self._closer_named(item):
             roles.append("registrar")
+        if self._advisor_on():
+            roles.append("advisor")
         for role in roles:
             item.routes[role] = self._selected(item, role, persist)
         if item.options["limits"].get("repairs", 0) > 0:
@@ -1168,7 +1185,8 @@ class Conductor:
 
     # ------------------------------------------------------------------ model stages
 
-    def _agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int) -> dict:
+    def _agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int,
+                     causation: Optional[str] = None) -> dict:
         """A new agent run (``agents``): its folder and ``request.json``. It becomes the agent of this thread, so that the
         usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent."""
         with self._agents_lock:
@@ -1177,7 +1195,7 @@ class Conductor:
         parent = getattr(self._local, "agent", None)
         handle = agents.start(item.directory, agents.agent_id(self.run_id, number), role=role, route=self._actor(route),
                               step=key, attempt=attempt, prompt=self._relative(prompt_file),
-                              parent=parent["id"] if parent else None, started_at=utc_now())
+                              parent=parent["id"] if parent else None, started_at=utc_now(), causation=causation)
         handle.update(began=time.monotonic(), previous=parent, last_exit=None, stream=None, lingered=False, trail={})
         self._local.agent = handle
         return handle
@@ -1192,7 +1210,7 @@ class Conductor:
         self._local.agent = handle["previous"]
 
     def _role(self, item: Item, key: str, role: str, blocks: list, kind: Optional[str],
-              extra: Optional[Callable[[dict], list]] = None, cancel=None) -> tuple:
+              extra: Optional[Callable[[dict], list]] = None, cancel=None, causation: Optional[str] = None) -> tuple:
         """``(result, meta)`` of a role as an agent run: the body is :meth:`_role_body`; the run gets its folder under
         ``agents/`` and its result however the role ends, and ``meta`` names it (``agent``). The prompt is the ``blocks``
         rendered; ``prompts/<key>.manifest.json`` (``prompt-manifest/v1``) says what each block is and where it came from."""
@@ -1208,7 +1226,7 @@ class Conductor:
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="BUDGET_OVER",
                                message=f"block {block.kind} {block.origin} {prompts.estimate_tokens(block.text)}")
         attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
-        handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt)
+        handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt, causation)
         try:
             doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle)
         except Stop as stop:
@@ -1812,14 +1830,8 @@ class Conductor:
             query_file.parent.mkdir(parents=True, exist_ok=True)
             query = self._research_query(item)
             query_file.write_text(query + "\n", encoding="utf-8")
-            # ``python3`` as a bare name and no option before the verb: the launch catalog allows the researcher exactly
-            # ``python3 *orch.py research query *``; an invocation config before the verb is outside that allowance.
-            argv = ["python3", str(ORCH_ROOT / "scripts" / "orch.py"), "research", "query", "--source", sources[0],
-                    "--query-file", str(query_file)]
-            if self.config_file:
-                argv[2:2] = ["--config", str(self.config_file)]
             prompt = prompts.researcher(item.input_doc, item=item.ref, step=key, query=query, sources=sources,
-                                        command=shlex.join(argv), roles_dir=self.roles_dir, skills=self._skills(item, role),
+                                        command=self._research_command(sources, query_file), roles_dir=self.roles_dir, skills=self._skills(item, role),
                                         repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role))
             doc, meta = self._role(item, key, role, prompt, "research-result",
                                    extra=lambda found: contract.research_problems(sources, found))
@@ -1833,6 +1845,16 @@ class Conductor:
                    route=self.conductor.get("registrar") or "orch/conductor",
                    verdict=lambda result: f"{result['outcome']} {result.get('path') or ''}".strip())
         return found["result"]
+
+    def _research_command(self, sources: list, query_file: Path) -> str:
+        """The one command a read-only role asks a source with. ``python3`` as a bare name and no option before the verb: the
+        launch catalog allows the researcher and the advisor exactly ``python3 *orch.py research query *``; an invocation
+        config before the verb is outside that allowance."""
+        argv = ["python3", str(ORCH_ROOT / "scripts" / "orch.py"), "research", "query", "--source", sources[0],
+                "--query-file", str(query_file)]
+        if self.config_file:
+            argv[2:2] = ["--config", str(self.config_file)]
+        return shlex.join(argv)
 
     def _research_save(self, item: Item, number: int, found: dict) -> dict:
         result_file = self.project / found["file"]
@@ -1978,6 +2000,217 @@ class Conductor:
             self._plan_note(item, f"deviation fixed in correction {number}: {issue['text']}")
         return carried
 
+    # ------------------------------------------------------------------ advisor (P10.4)
+
+    def _advisor_cfg(self) -> dict:
+        return getattr(self.settings, "advisor", None) or {}
+
+    def _advisor_on(self) -> bool:
+        return bool(self._advisor_cfg().get("enabled"))
+
+    def _advice_slot(self, item: Item, ref: str) -> Optional[int]:
+        """The ordinal of the advice on problem ``ref``: the earlier one when the problem was advised on (a resume walks it
+        again and must not count it twice), a new one while ``orch.advisor.max_rounds`` allows, else ``None``."""
+        known = item.state.setdefault("advice_of", {})
+        if ref in known:
+            return known[ref]
+        if len(known) >= int(self._advisor_cfg().get("max_rounds") or 0):
+            self.progress.emit("info", item=item.ref, reason_code="ADVISOR_LIMIT",
+                               message=f"no advice on {ref}: orch.advisor.max_rounds ({len(known)}) is spent")
+            return None
+        known[ref] = len(known) + 1
+        self._save()
+        return known[ref]
+
+    def _advise(self, item: Item, number: int, ref: str, problem: str, evidence: list) -> Optional[dict]:
+        """One advice round: the advisor role reads ``problem`` and the local ``evidence`` (and may ask the research
+        sources) and answers a closed ``advice``, kept as ``advice-<n>.json`` in the artifacts of the piece. The agent run
+        names the problem as its ``causation``. ``None`` when the advisor failed: an advice is help, never a reason for a
+        piece to stop, so the problem goes on as it would without one."""
+        from orch import research as research_mod
+        sources = [source.id for source in research_mod.sources_from(self.settings)]
+        key, role = f"advice.{number}", "advisor"
+        route = item.routes[role]
+
+        def run() -> dict:
+            command = ""
+            if sources:
+                query_file = item.directory / "advice" / f"query-{number}.txt"
+                query_file.parent.mkdir(parents=True, exist_ok=True)
+                query_file.write_text(problem + "\n", encoding="utf-8")
+                command = self._research_command(sources, query_file)
+            prompt = prompts.advisor(item.input_doc, item=item.ref, step=key, problem_ref=ref, problem=problem,
+                                     evidence=evidence, sources=sources, command=command, roles_dir=self.roles_dir,
+                                     skills=self._skills(item, role), repo_rules=self._repo_rules(item, role),
+                                     skill_texts=self._skill_texts(item, role))
+            doc, meta = self._role(item, key, role, prompt, "advice", extra=lambda found: contract.advice_problems(ref, found),
+                                   causation=ref)
+            saved = write_json(item.artifacts / f"advice-{number}.json", doc)
+            return {"advice": doc, "file": self._relative(saved), **meta}
+
+        try:
+            return self._step(item, key, run, role=role, route=self.label(route),
+                              verdict=lambda result: f"{result['advice']['recommendation']} "
+                                                     f"({result['advice']['confidence']})")
+        except Stop as stop:
+            self.progress.emit("info", item=item.ref, stage=key, reason_code="ADVISOR_FAILED",
+                               message=f"{stop.code}: {stop.message}"[:300])
+            return None
+
+    def _reading(self, advice: dict) -> tuple:
+        """``(recommended option, why the owner must decide or None)``: ``needs_owner`` or a category of
+        ``orch.advisor.human_gate`` is never applied by the conductor."""
+        option = next(entry for entry in advice["options"] if entry["id"] == advice["recommendation"])
+        if advice["needs_owner"]:
+            return option, "the advisor says only the owner can decide"
+        if advice.get("category") in (self._advisor_cfg().get("human_gate") or []):
+            return option, f"category {advice['category']} is held by orch.advisor.human_gate"
+        return option, None
+
+    @staticmethod
+    def _advice_summary(file: str, advice: dict, held: Optional[str]) -> dict:
+        return {"file": file, "recommendation": advice["recommendation"], "confidence": advice["confidence"],
+                "needs_owner": advice["needs_owner"], **({"category": advice["category"]} if advice.get("category") else {}),
+                **({"held": held} if held else {})}
+
+    @staticmethod
+    def _advice_note(entry: dict) -> str:
+        """What an advised question adds to its escalation: the advice, and why the owner still decides."""
+        found = entry.get("advice")
+        if not found:
+            return ""
+        return (f" (advisor, {found['file']}: recommends {found['recommendation']}, {found['confidence']} confidence"
+                + (f"; for the owner: {found['held']}" if found.get("held") else "") + ")")
+
+    def _advice_evidence(self, item: Item, *parts, diff: bool = True) -> list:
+        """The local evidence of a problem as ``(kind, text)`` blocks: ``parts`` (kind, title, text, fence tag) and the
+        diff of the candidate against the head."""
+        found = [(kind, prompts.evidence(title, text, tag)) for kind, title, text, tag in parts]
+        if diff:
+            shown = checks_mod.diff(self.project, checks_mod.head(self.project)) or "(no tracked changes)"
+            if len(shown) > ADVICE_DIFF_CHARS:
+                shown = shown[:ADVICE_DIFF_CHARS] + "\n(cut: the diff is longer; read the files)"
+            found.append(("diff", prompts.evidence("Diff of the candidate against the head", shown, "diff")))
+        return found
+
+    def _hold(self, item: Item, number: int, advice: dict, file: str, held: str, problem: str) -> dict:
+        """The question to the owner for advice that must not be applied by the conductor: ``advice-<n>`` (kind decision, the
+        options of the advice), saved with the advice like any queued question; ``conduct.py answer`` and ``resume --retry``
+        then apply the owner's choice."""
+        store = self._questions(item)
+        asked = {"id": f"advice-{number}", "revision": 1, "kind": "decision", "text": problem, "blocking": True,
+                 "options": [{"id": option["id"], "label": option["text"][:200]} for option in advice["options"]]}
+        binding = {"run": self.run_id, "item": item.ref, "step": f"advice.{number}",
+                   "input_digest": item.input_doc.get("digest")}
+        questions_mod.record(store, [asked], binding, utc_now())
+        entry = store[asked["id"]]
+        entry["advice"] = self._advice_summary(file, advice, held)
+        self._save_questions(item)
+        return entry
+
+    @staticmethod
+    def _owner_choice(advice: dict, entry: dict) -> Optional[tuple]:
+        """``(option, by)`` when the owner answered the question of held advice, else ``None``."""
+        if entry["status"] != "applied" or not entry.get("resolution"):
+            return None
+        chosen = next((option for option in advice["options"] if option["id"] == entry["resolution"]["value"]), None)
+        return (chosen, entry["resolution"]["by"]) if chosen else None
+
+    def _advise_question(self, item: Item, key: str, entry: dict, report: dict) -> bool:
+        """``questions = advisor``: the advisor reads a blocking question. Advice the conductor may apply answers it
+        (resolution ``by: advisor``) and ``True`` is returned; any other stays queued with the advice. Approvals and
+        credentials are the owner's by their kind, a question is answered by the policy only once, and past
+        ``max_rounds`` the question is queued."""
+        if entry["kind"] in ("approval", "credential") or entry.get("auto_answered"):
+            return False
+        ref = f"question:{entry['id']}@{entry['revision']}"
+        number = self._advice_slot(item, ref)
+        if number is None:
+            return False
+        options = "".join(f"\n- `{row['id']}`: {row['label']}" for row in entry.get("options") or [])
+        problem = (f"The executor asked a blocking question ({entry['kind']}) and cannot go on without an answer:\n\n"
+                   f"{entry['text']}\n"
+                   + (f"\nOptions (recommend one of these ids):{options}\n" if options else "")
+                   + (f"\nThe executor's own default: {entry['default']}\n" if "default" in entry else "")
+                   + (f"\nRisk the executor named: {entry['risk']}\n" if entry.get("risk") else ""))
+        found = self._advise(item, number, ref, problem, self._advice_evidence(
+            item, ("candidate", "Report of the executor", json.dumps(report, ensure_ascii=False, indent=2), "json")))
+        if found is None:
+            return False
+        advice = found["advice"]
+        option, held = self._reading(advice)
+        ids = [row["id"] for row in entry.get("options") or []]
+        if held is None and ids and option["id"] not in ids:
+            held = f"the recommendation {option['id']} is not one of the options of the question"
+        entry["advice"] = self._advice_summary(found["file"], advice, held)
+        if held:
+            return False
+        entry["resolution"] = {"value": option["id"] if ids else option["text"], "by": "advisor", "at": utc_now()}
+        entry["status"], entry["auto_answered"] = "applied", True
+        self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_ADVISED",
+                           message=f"question {entry['id']} answered by the advisor with {option['id']} ({found['file']})")
+        return True
+
+    def _advise_red(self, item: Item, round_no: int, red: list, report: dict) -> Optional[dict]:
+        """Red checks that the ``check_fixes`` allowance cannot correct again. ``None``: no advice (the piece is blocked
+        ``CHECKS_RED`` as without an advisor). ``{"held": text}``: the owner decides, the question waits with the advice.
+        ``{"text": correction}``: one more correction round, by the advice."""
+        if not self._advisor_on():
+            return None
+        ref = f"checks:{round_no}"
+        number = self._advice_slot(item, ref)
+        if number is None:
+            return None
+        names = ", ".join(row["id"] for row in red)
+        problem = (f"Acceptance checks {names} stay red after the corrections the run allows. Name the ways to go on and "
+                   "recommend one; the conductor may make one more correction round by it.")
+        found = self._advise(item, number, ref, problem, self._advice_evidence(
+            item, ("verification", "Red acceptance checks", prompts.check_correction(red), "text"),
+            ("candidate", "Report of the executor", json.dumps(report, ensure_ascii=False, indent=2), "json")))
+        if found is None:
+            return None
+        advice = found["advice"]
+        option, held = self._reading(advice)
+        by = "advisor"
+        if held:
+            entry = self._hold(item, number, advice, found["file"], held, problem)
+            chosen = self._owner_choice(advice, entry)
+            if chosen is None:
+                return {"held": f"{entry['id']} {entry['text']}{self._advice_note(entry)}"}
+            option, by = chosen
+        return {"text": prompts.advice_correction(advice, option, by=by, problem=prompts.check_correction(red))}
+
+    def _retriage(self, item: Item, number: int, findings: dict, triage: dict) -> tuple:
+        """``(triage, held)``: a Blocker or Major finding the triager rejected is a disagreement with the reviewer, and the
+        advisor reads both sides; the findings are then triaged again with the advice (``triage.<n>-a``). ``held`` is the
+        text of the question to the owner when the advice must not be applied by the conductor."""
+        severe = [entry for entry in triage.get("rejected", [])
+                  if self._severity_of(findings, entry["finding"]) in ("blocker", "major")]
+        if not severe or not self._advisor_on():
+            return triage, None
+        ref = f"findings:{number}"
+        slot = self._advice_slot(item, ref)
+        if slot is None:
+            return triage, None
+        ids = ", ".join(entry["finding"] for entry in severe)
+        problem = (f"The reviewer raised finding(s) {ids}, the triager rejected them. Name the ways to go on (confirm, keep "
+                   "the rejection, or something between) and recommend one; the findings are then triaged again with your advice.")
+        found = self._advise(item, slot, ref, problem, self._advice_evidence(
+            item, ("findings", "Review findings", json.dumps(findings, ensure_ascii=False, indent=2), "json"),
+            ("findings", "Triage of the findings", json.dumps(triage, ensure_ascii=False, indent=2), "json")))
+        if found is None:
+            return triage, None
+        advice = found["advice"]
+        option, held = self._reading(advice)
+        by = "advisor"
+        if held:
+            entry = self._hold(item, slot, advice, found["file"], held, problem)
+            chosen = self._owner_choice(advice, entry)
+            if chosen is None:
+                return triage, f"{entry['id']} {entry['text']}{self._advice_note(entry)}"
+            option, by = chosen
+        return self._triage(item, number, findings, advice=prompts.advice_for_triage(advice, option, by=by)), None
+
     # ------------------------------------------------------------------ questions of the executor (D11)
 
     def _questions(self, item: Item) -> dict:
@@ -2001,6 +2234,10 @@ class Conductor:
         questions_mod.record(store, asked, binding, utc_now())
         waiting = questions_mod.blocking_open(store, asked)
         mode = self.conductor.get("questions") or "queue"
+        if mode == "advisor" and not self._advisor_on():
+            self.progress.emit("info", item=item.ref, stage=key, reason_code="ADVISOR_DISABLED",
+                               message="questions = advisor, but orch.advisor.enabled is false: the question is queued")
+            mode = "queue"
         if waiting and mode == "deny":
             for entry in waiting:
                 entry["status"] = "denied"
@@ -2011,11 +2248,15 @@ class Conductor:
                     waiting.remove(entry)
                     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DEFAULT",
                                        message=f"question {entry['id']} answered by policy with its default")
+        elif waiting and mode == "advisor":
+            for entry in list(waiting):
+                if self._advise_question(item, key, entry, report):
+                    waiting.remove(entry)
         self._save_questions(item)
         if not waiting:
             return report, any(entry["status"] == "applied" and entry["binding"]["step"] == key
                                for entry in store.values())
-        said = "; ".join(f"{entry['id']} {entry['text']}" for entry in waiting)
+        said = "; ".join(f"{entry['id']} {entry['text']}{self._advice_note(entry)}" for entry in waiting)
         if mode == "deny":
             self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
             return self._blocked(report, "QUESTION_DENIED", said), False
@@ -2023,7 +2264,7 @@ class Conductor:
                            message=f"{said[:240]}; answer with conduct.py answer, then resume --retry {item.ref}")
         blocked = report
         for entry in waiting:
-            blocked = self._blocked(blocked, "QUESTION", f"{entry['id']} {entry['text']}")
+            blocked = self._blocked(blocked, "QUESTION", f"{entry['id']} {entry['text']}{self._advice_note(entry)}")
         return blocked, False
 
     def _sync_questions(self, item: Item) -> None:
@@ -2443,7 +2684,8 @@ class Conductor:
         """The confirmed findings of review round ``previous`` that the correction after it had to fix."""
         steps = item.state.get("steps", {})
         findings = ((steps.get(f"review.{previous}") or {}).get("result") or {}).get("findings") or {}
-        triage = ((steps.get(f"triage.{previous}") or {}).get("result") or {}).get("triage") or {}
+        triage = ((steps.get(f"triage.{previous}-a") or steps.get(f"triage.{previous}") or {}).get("result") or {}
+                  ).get("triage") or {}
         by_id = {found.get("id"): found for found in findings.get("findings", [])}
         return [dict(by_id.get(entry["finding"], {}), id=entry["finding"], fix=entry.get("fix", ""))
                 for entry in triage.get("confirmed", [])]
@@ -2528,16 +2770,19 @@ class Conductor:
         self._verdict_file(item)
         return found["findings"]
 
-    def _triage(self, item: Item, number: int, findings: dict) -> dict:
+    def _triage(self, item: Item, number: int, findings: dict, advice: str = "") -> dict:
+        """The triage of review round ``number``; with ``advice`` the repeated triage of the findings the advisor read
+        (``triage.<n>-a``), which then stands for the round."""
         role = self._triage_role(item)
         route = item.routes[role]
-        key = f"triage.{number}"
+        key = f"triage.{number}" + ("-a" if advice else "")
 
         def run() -> dict:
             base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
             prompt = prompts.triager(item.input_doc, item=item.ref, step=key, base=base, findings=findings,
                                      roles_dir=self.roles_dir, skills=self._skills(item, role),
-                                     repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role))
+                                     repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role),
+                                     advice=advice)
             triage, meta = self._role(item, key, role, prompt, "triage-result",
                                       extra=lambda doc: contract.triage_problems(findings, doc))
             return {"triage": triage, **meta}
@@ -2557,7 +2802,7 @@ class Conductor:
         number = 1
         while f"review.{number}" in steps:
             review = steps[f"review.{number}"]["result"]
-            triage = (steps.get(f"triage.{number}") or {}).get("result") or {}
+            triage = (steps.get(f"triage.{number}-a") or steps.get(f"triage.{number}") or {}).get("result") or {}
             triaged = triage.get("triage") or {}
             reproduced = {entry["finding"]: entry["reproduction"] for entry in triaged.get("confirmed", [])}
             route = item.routes.get("reviewer", {})

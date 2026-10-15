@@ -236,6 +236,9 @@ below. A breaking change creates `schemas/exec/v2/` with `contract_version: "exe
 - conductor/v1 — new kind `prompt-manifest` (`prompt-manifest/v1`: `step`, `role`, `route`, `blocks` with `kind`, `origin`, `sha256`, `tokens`, `id?`, `excluded`, `estimated_tokens`, `prompt_sha256`, `budgets?`): what the prompt of a role step was made of, written to `prompts/<step>.manifest.json`; existing kinds are unchanged.
 - conductor/v1 — new kind `research-result` (`query`, `claims` of `text` and at least one `sources` entry, `contradictions`, `unknowns`, `sources_used`): the closed answer of the researcher role; existing kinds are unchanged.
 - exec/v1 — `role-manifest.result_shape` accepts `research-result` (enum widened) for the role `researcher`; existing documents remain valid.
+- conductor/v1 — new kind `advice` (`problem_ref`, `options` of `id`, `text`, `pros`, `cons`, `recommendation`, `confidence`, `sources`, `needs_owner`, optional `category`): the closed answer of the advisor role; `run-options` accepts the stage role `advisor`; existing kinds are unchanged.
+- exec/v1 — `role-manifest.result_shape` accepts `advice` (enum widened) for the role `advisor`; existing documents remain valid.
+- config — `[orch.advisor]` (`enabled`, `max_rounds`, `human_gate`) and the value `advisor` of `[orch.conductor] questions`; the defaults keep every run as it was.
 - work-source/v1 — optional op `research` (`plan`, `plans_root?`, `ref`, `run_id`, `number`, `result`, `actor?` → `recorded` \| `no-op` \| `refused`, `path?`): the source keeps the research result of a piece of work; existing ops are unchanged.
 - exec/v1 — `role-manifest.result_shape` accepts `triage-result` (enum widened) and `run-policy.review` has an
   optional `triage` (`role`, `model_class?`); existing documents remain valid.

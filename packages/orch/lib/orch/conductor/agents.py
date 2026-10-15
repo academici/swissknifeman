@@ -5,7 +5,8 @@ an id ``agent-<run suffix>-<n>`` and the folder ``<run>/<item>/agents/<agent_run
 
 - ``request.json`` is written when the role starts: ``agent_run_id``, ``role``, ``route`` (provider, model, effort), ``step``,
   ``attempt`` (of the step), ``prompt`` (the prompt file, relative to the project), ``parent_agent_run_id`` (set for the
-  report-fixer: the role whose answer it mends), ``causation`` (the step that caused the start) and ``started_at``;
+  report-fixer: the role whose answer it mends), ``causation`` (the step that caused the start; for the advisor the
+  problem it advises on, ``question:<id>@<revision>``, ``checks:<round>`` or ``findings:<review round>``) and ``started_at``;
 - ``result.json`` is written when it ends, however it ends: ``exit``, ``error`` (an ``error/v1`` document when the failure was
   classified, else ``{code, message}`` of the stop), ``decisions`` (of ``retry.decide``), ``duration_s``, ``stream`` (relative
   path) and ``lingered``;
@@ -37,11 +38,11 @@ def _write(path: Path, doc: dict) -> None:
 
 
 def start(item_directory: Path, agent: str, *, role: str, route: dict, step: str, attempt: int, prompt: str,
-          parent: Optional[str], started_at: str) -> dict:
+          parent: Optional[str], started_at: str, causation: Optional[str] = None) -> dict:
     """Write ``request.json``; the returned dict is the handle the engine keeps until :func:`finish`."""
     directory = Path(item_directory) / AGENTS / agent
     request = {"agent_run_id": agent, "role": role, "route": route, "step": step, "attempt": attempt, "prompt": prompt,
-               "causation": step, "started_at": started_at}
+               "causation": causation or step, "started_at": started_at}
     if parent:
         request["parent_agent_run_id"] = parent
     _write(directory / "request.json", request)

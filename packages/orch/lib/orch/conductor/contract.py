@@ -1,5 +1,5 @@
 """The closed documents of the conductor (``schemas/conductor/v1``): run-options, stage-report, review-findings,
-triage-result, research-result, progress-line, scout-write-set and prompt-manifest, checked by the closed-profile validator of aicore."""
+triage-result, research-result, advice, progress-line, scout-write-set and prompt-manifest, checked by the closed-profile validator of aicore."""
 from __future__ import annotations
 
 from aicore.util import schema
@@ -7,7 +7,7 @@ from aicore.util import schema
 from orch.settings import ORCH_ROOT
 
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "conductor" / "v1"
-KINDS = ("progress-line", "prompt-manifest", "research-result", "review-findings", "run-options", "scout-write-set", "stage-report",
+KINDS = ("advice", "progress-line", "prompt-manifest", "research-result", "review-findings", "run-options", "scout-write-set", "stage-report",
          "triage-result")
 _REGISTRY: list = []
 
@@ -50,4 +50,16 @@ def research_problems(allowed: list, result: dict) -> list[str]:
               for name in result.get("sources_used", []) if name not in allowed]
     if result.get("claims") and not result.get("sources_used"):
         issues.append("/sources_used: claims are given but no source was asked")
+    return issues
+
+
+def advice_problems(ref: str, advice: dict) -> list[str]:
+    """What the schema cannot see in an advice: it answers the problem asked (``ref``), its option ids are unique and the
+    recommendation is one of them."""
+    ids = [option.get("id") for option in advice.get("options", [])]
+    issues = [f"/options: id {name} repeats" for name in sorted(set(ids)) if ids.count(name) > 1]
+    if advice.get("problem_ref") != ref:
+        issues.append(f"/problem_ref: must be {ref!r}, the problem given in the prompt")
+    if advice.get("recommendation") not in ids:
+        issues.append(f"/recommendation: {advice.get('recommendation')!r} is not the id of an option")
     return issues

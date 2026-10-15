@@ -7,8 +7,9 @@ import unittest
 from orch.contracts import LIFECYCLE_PHRASES
 
 ROLES = Path(__file__).resolve().parents[1] / "roles"
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher")
-WORKER_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "researcher")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher",
+            "advisor")
+WORKER_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "researcher", "advisor")
 SECTIONS = ("## You receive", "## You do", "## You never", "## You return")
 EXPORT = re.compile(r"<!-- export:(begin|end) ([\w-]+) -->")
 
@@ -87,6 +88,12 @@ class RolesTextTests(unittest.TestCase):
     def test_researcher_sends_a_claim_without_a_source_to_unknowns(self):
         text = _text("researcher")
         for phrase in ("`claims`", "`unknowns`", "`contradictions`", "`sources_used`", "Invent a source"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, text)
+
+    def test_advisor_names_options_a_recommendation_and_the_owner_flag(self):
+        text = _text("advisor")
+        for phrase in ("`options`", "`recommendation`", "`confidence`", "`needs_owner`", "`category`", "Invent a source"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, text)
 

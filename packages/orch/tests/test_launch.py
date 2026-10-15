@@ -31,7 +31,7 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_repository_catalog_is_valid_and_complete(self):
         rows = [(role, provider) for role, providers in self.catalog["launch"].items() for provider in providers]
-        self.assertEqual(len(rows), 19)
+        self.assertEqual(len(rows), 20)
         self.assertEqual({provider for role, provider in rows if role == "triager"}, {"claude-code", "codex"})
         self.assertEqual({role for role, _ in rows}, set(launch.ROLES))
         self.assertNotIn(("scout", "grok"), rows)
@@ -67,7 +67,8 @@ class LaunchCatalogTests(unittest.TestCase):
         # --tools cuts the start-up context of an isolated role from ≈14 K to ≈7 K tokens (measured, P12 prep);
         # --allowedTools alone only skips the permission prompt and leaves every tool definition in the context.
         for role, tools in {"executor": "Bash,Read,Edit,Write,Grep,Glob", "reviewer": "Bash,Read,Grep,Glob",
-                            "triager": "Bash,Read,Grep,Glob", "researcher": "Bash,Read,Grep,Glob"}.items():
+                            "triager": "Bash,Read,Grep,Glob", "researcher": "Bash,Read,Grep,Glob",
+                            "advisor": "Bash,Read,Grep,Glob"}.items():
             argv = launch.build_argv(self.catalog, role, "claude-code", model="sonnet")
             self.assertIn("--tools", argv, role)
             self.assertEqual(argv[argv.index("--tools") + 1], tools, role)

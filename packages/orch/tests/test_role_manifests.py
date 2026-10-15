@@ -9,7 +9,7 @@ from orch import contracts
 
 ORCH = Path(__file__).resolve().parents[1]
 ROLES = ORCH / "roles"
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher", "advisor")
 
 
 def _manifest(role: str) -> dict:

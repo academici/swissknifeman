@@ -80,6 +80,7 @@ Every step has a key and is recorded in `state.json` once it closes; the work so
 | `checks.N` | deterministic | every `acceptance`/`impact` command check of the cadences asked for, with a check-evidence file per check |
 | `review.N` | reviewer (default `grok/grok-4.7/high`) | read-only, the diff against the base and the check results; returns `review-findings` |
 | `triage.N` | triager | reproduces every finding; returns `triage-result` (confirmed with a correction package, or rejected with a reason) |
+| `advice.N`, `triage.N-a` | advisor (`frontier`), triager | with `orch.advisor.enabled`: one opinion on a problem the work cannot solve alone, returned as `advice` (see [The advisor](#the-advisor-p104)); `triage.N-a` is the triage of review round N repeated with the advice, which then stands for the round |
 | `close` | registrar (economy) | only when a layer of the options names the registrar in `stages`: a model runs the one `source register` command the conductor built (the launch catalog allows it exactly `python3 *orch.py source register *`) and answers with its output; it never sees the task |
 | `register` | work source | `source register` with the report, the status and the evidence; a repeat is a no-op, so after a closer it only confirms the record, and when the closer failed it records the result and `close` says `conductor` and why |
 | `commit` | work source | `source commit` with the changed paths and the artifact folder, when the pack's `git_action` is `commit` |
@@ -311,7 +312,9 @@ nothing is ever answered on a timeout.
   `queue`: the piece is `blocked` with the escalation `QUESTION: <id> <text>` and the run stops with `ITEM_BLOCKED`;
   `deny`: blocked at once with `QUESTION_DENIED: <id> <text>`, nobody is expected to answer;
   `defaults`: a question with a `default` is answered by it **once**, by `policy`, and the round is asked again as
-  `executor.<n>-q<k>`; a question without one, or one the executor asks again, is queued.
+  `executor.<n>-q<k>`; a question without one, or one the executor asks again, is queued;
+  `advisor`: the advisor role reads the question ([The advisor](#the-advisor-p104)); advice that needs no owner answers it
+  with `resolution.by = advisor`, any other advice is queued with the question.
 - The question is saved in `state.questions[<item>]` and in `<run>/<item>/questions.json` with its binding
   `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
   `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
@@ -325,9 +328,43 @@ nothing is ever answered on a timeout.
   `revision + 1` and the executor, which is not told that answer, asks it again. The executor of every later round gets the
   section `# Answers` (question, answer, who answered).
 
+### The advisor (P10.4)
+
+The role `advisor` (`roles/advisor.md|json`; class `frontier`; filesystem read, shell read-only, network allowed, no write
+authority; launch entry `claude-code` with `--tools Bash,Read,Grep,Glob` and the one allowed command
+`python3 *orch.py research query *`) gives one opinion on one problem. It is off by default: `[orch.advisor] enabled = false`.
+With `enabled = true` the conductor asks it, deterministically and at most `max_rounds` times per piece (default 2, all
+triggers together; past it the problem goes on as it would without an advisor):
+
+| Trigger | The problem (`problem_ref`) | Applied advice |
+|---|---|---|
+| a blocking question, with `[orch.conductor] questions = "advisor"` | `question:<id>@<revision>` | the question is answered with `resolution.by = advisor` (the id of the recommended option; free text of its option when the question has none) and the executor round is asked again with `# Answers` |
+| red acceptance checks once the `check_fixes` allowance is spent (before `CHECKS_RED`) | `checks:<round>` | one more correction round whose package carries the advice (`# Advice`) |
+| a Blocker or Major finding the triager rejected | `findings:<review round>` | `triage.<n>-a`: the findings are triaged again with the advice |
+
+The advisor reads the problem and the local evidence (the report of the executor, the red checks or the findings and the
+triage, the diff against the head, cut at 40 000 characters) and may ask the sources of `[orch.research.sources]`. It answers a
+closed `advice` (`schemas/conductor/v1/advice.schema.json`): `problem_ref`, `options[{id, text, pros, cons}]`,
+`recommendation` (an option id), `confidence` (`low|medium|high`), `sources`, `needs_owner` and the optional `category`
+(`security|destructive|public-api|scope-expansion|other`). A question with options keeps its option ids; a recommendation
+that is not one of them is held. The advice is kept as `advice-<n>.json` in the artifacts of the piece, and its agent run in
+`agents/<id>/` has `causation` = the `problem_ref`.
+
+The human gate: advice with `needs_owner: true`, or with a `category` of `[orch.advisor] human_gate` (default `security`,
+`destructive`, `public-api`, `scope-expansion`), is never applied by the conductor. It is handled as `queue`: the piece is
+`blocked` with `QUESTION: <id> <text>` and the advice (file, recommendation, confidence, why the owner decides); the
+question is saved with the advice (`advice` in `questions.json`). A held question of the executor is that question; for red
+checks and a rejected finding it is a new question `advice-<n>` (kind `decision`, the options of the advice). `conduct.py
+answer` and `resume --run R --retry ITEM` then apply the owner's choice the same way: the correction round or the repeated
+triage carries the option the owner chose (`by owner`), and the closed rounds, checks and the advice are not repeated. An
+approval or a credential question is the owner's by its kind and is not asked of the advisor; the policy answers a question
+only once. A failed advisor (`ADVISOR_FAILED`), a spent `max_rounds` (`ADVISOR_LIMIT`) or `questions = advisor` without
+`enabled` (`ADVISOR_DISABLED`) leave the problem as it would be without one. Beacons: `QUESTION_ADVISED`. One opinion only:
+no panel of several models.
+
 ### Resume
 
-`resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
+`resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`; a piece held on advice for the owner, whose question `advice-<n>` is answered, needs no executor round that reported `blocked`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
 
 `run --adopt` starts the first piece on a tree that already holds an earlier attempt of it (all changed paths inside its
 write set, else `WORKTREE_DIRTY`): the executor is told to check and finish that work, not to start over. The artifact
@@ -526,7 +563,7 @@ The `report-fixer` role runs on the conductor's provider by default (an economy 
 a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}` moves it, and `limits.repairs: 0` turns it off.
 
 `[orch.conductor]` (`configs/config.schema.json`): `provider` (default `claude-code`), `reviewer`
-(`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `questions` (`queue` default, `deny`, `defaults`), `risk` (weights, patterns and `diff_lines` of the dynamic review), `limits.tokens_max`,
+(`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `questions` (`queue` default, `deny`, `defaults`, `advisor`), `risk` (weights, patterns and `diff_lines` of the dynamic review), `limits.tokens_max`,
 `limits.stage_timeout_s`, `limits.check_timeout_s`, and `argv.<role>`: the command line of a role instead of the
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.

@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 ROLES = ("scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
-         "researcher")
+         "researcher", "advisor")
 PROVIDERS = ("claude-code", "codex", "grok")
 MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")

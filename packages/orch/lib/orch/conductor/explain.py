@@ -14,7 +14,7 @@ from aicore.provider.config import routing_available
 
 from orch.conductor import engine, gates, options as opts
 
-ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher")
+ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
 DEFAULT_SOURCE = "default"
 
 

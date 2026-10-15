@@ -38,7 +38,7 @@ BUDGET_LIMITS = {"core": "prompt_core_tokens", "supporting": "prompt_supporting_
                  "retrieval": "prompt_retrieval_tokens"}  # the ``limits`` keys of the run options
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
-                "triager": "triage-result", "researcher": "research-result"}
+                "triager": "triage-result", "researcher": "research-result", "advisor": "advice"}
 _FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 
 _STAGE_REPORT = """\
@@ -111,6 +111,22 @@ A claim without a source is not a claim: it goes to `unknowns`:
  "contradictions": ["source A says …, source B says …"],
  "unknowns": ["what no source answered"],
  "sources_used": ["id of a source you asked"]}
+```
+"""
+
+_ADVICE = """\
+End your answer with exactly one fenced block tagged `advice` holding one JSON object and nothing else.
+`recommendation` is the id of one of your `options`; `needs_owner` is true when only the owner can decide; `category`
+is optional:
+
+```advice
+{"problem_ref": "the problem_ref given above",
+ "options": [{"id": "option-id", "text": "what this option does", "pros": ["why"], "cons": ["why not"]}],
+ "recommendation": "option-id",
+ "confidence": "low | medium | high",
+ "sources": ["https://… or repository/path, or empty"],
+ "needs_owner": false,
+ "category": "security | destructive | public-api | scope-expansion | other"}
 ```
 """
 
@@ -522,12 +538,13 @@ def _outside_scope(outside) -> str:
 
 
 def triager(input_doc: dict, *, item: str, step: str, base: str, findings: dict, roles_dir=None, skills=(),
-            repo_rules: str = "", skill_texts=None) -> list:
+            repo_rules: str = "", skill_texts=None, advice: str = "") -> list:
     parts = [_head("triager", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
              [Block("candidate", CONDUCTOR, f"## Candidate\n\nBase revision `{base}`; the candidate is the working tree. "
                     "Scratch files go to a temporary directory outside the repository.")],
              [Block("findings", "review-findings", "## Review findings\n\n"
                     + _fence(json.dumps(findings, ensure_ascii=False, indent=2), "json"))],
+             *([[Block("instruction", "advice", advice)]] if advice else []),
              [_progress(item, step)],
              [Block("result_contract", CONDUCTOR, "## Result\n\n" + _TRIAGE_RESULT)]]
     return _join(parts)
@@ -570,8 +587,25 @@ def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: li
     return _join(parts)
 
 
+def advisor(input_doc: dict, *, item: str, step: str, problem_ref: str, problem: str, evidence=(), sources=(),
+            command: str = "", roles_dir=None, skills=(), repo_rules: str = "", skill_texts=None) -> list:
+    """The prompt of the advisor: the problem (``problem_ref`` and text), the local evidence as ``(kind, text)`` pairs
+    (the reports, the red checks, the diff or the findings) and, when sources are configured, the one command that asks one."""
+    parts = [_head("advisor", input_doc, roles_dir, list(skills), repo_rules, skill_texts),
+             [Block("instruction", CONDUCTOR, f"## Problem\n\n`problem_ref`: `{problem_ref}`\n\n" + problem.rstrip())],
+             *[[Block(kind, CONDUCTOR, text)] for kind, text in evidence]]
+    if sources:
+        listed = "\n".join(f"- `{name}`" for name in sources)
+        parts.append([Block("instruction", CONDUCTOR,
+                            "## Allowed sources\n\nAsk a source only for what the repository cannot answer; only these, "
+                            "by id:\n\n" + listed + "\n\nWrite the question to a query file outside the repository and run "
+                            "the command with Bash; every other command is denied.\n\n" + _fence(command, "sh"))])
+    parts += [[_progress(item, step)], [Block("result_contract", CONDUCTOR, "## Result\n\n" + _ADVICE)]]
+    return _join(parts)
+
+
 CONTRACT_TEXT = {"stage-report": _STAGE_REPORT, "review-findings": _REVIEW_FINDINGS, "triage-result": _TRIAGE_RESULT,
-                 "research-result": _RESEARCH_RESULT}
+                 "research-result": _RESEARCH_RESULT, "advice": _ADVICE}
 
 
 def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, limit: int = 40_000) -> list:
@@ -623,3 +657,35 @@ def review_correction(findings: dict, triage: dict) -> str:
                      f"{finding.get('failure_scenario', '')}\n  reproduced: `{repro['cmd']}` → exit {repro['exit']}: "
                      f"{repro['observed']}\n  fix: {entry['fix']}")
     return "The review found these defects and the triage reproduced each one:\n\n" + "\n".join(lines)
+
+
+def evidence(title: str, text: str, tag: str = "") -> str:
+    """One piece of local evidence for the advisor: a titled, fenced block."""
+    return f"## {title}\n\n" + _fence(text, tag)
+
+
+def advice_text(advice: dict, option: dict, *, by: str) -> str:
+    """The advice as the role that acts on it must read it: the chosen option, who chose it, and the reasons both ways.
+    It is guidance for the work inside the write set; it widens no scope and changes no acceptance check."""
+    lines = [f"Chosen way: {option['id']} — {option['text']} (chosen by {by}; the advisor's confidence is "
+             f"{advice['confidence']})"]
+    for title, key in (("For", "pros"), ("Against", "cons")):
+        if option.get(key):
+            lines.append(f"{title}: " + "; ".join(option[key]))
+    if advice.get("sources"):
+        lines.append("Sources: " + ", ".join(advice["sources"]))
+    return "\n".join(lines)
+
+
+def advice_correction(advice: dict, option: dict, *, by: str, problem: str) -> str:
+    """Correction package of red checks the advisor advised on, to follow the chosen way."""
+    return (problem.rstrip() + "\n\n# Advice\n\nThe correction allowance is spent; an advisor read the problem and one more "
+            "correction round is made by this advice. It does not widen `scope.write_set` or change an acceptance check; "
+            "if the way needs either, stop and report it.\n\n" + advice_text(advice, option, by=by))
+
+
+def advice_for_triage(advice: dict, option: dict, *, by: str) -> str:
+    """The "Advice" section of a repeated triage: the disagreement between the reviewer and the first triage, advised on."""
+    return ("## Advice\n\nThe first triage rejected a Major or Blocker finding the reviewer raised. An advisor read both "
+            "sides. Weigh it, reproduce again what it points at, and triage every finding again; the advice is a lead, "
+            "not a verdict.\n\n" + advice_text(advice, option, by=by))

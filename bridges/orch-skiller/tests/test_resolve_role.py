@@ -16,7 +16,7 @@ if str(BRIDGE) not in sys.path:
 import partners  # noqa: E402
 
 SCRIPT = BRIDGE / "resolve_role.py"
-ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher")
+ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher", "advisor")
 PROVIDERS = ("claude-code", "codex", "grok")
 SKILLER = partners.find_skiller()
 ORCH = partners.find_orch_root()

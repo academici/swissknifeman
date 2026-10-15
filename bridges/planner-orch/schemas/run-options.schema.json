@@ -46,7 +46,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer", "researcher"]
+            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor"]
           }
         },
         "module_rules": {
@@ -227,7 +227,8 @@
             "triager",
             "registrar",
             "report-fixer",
-            "researcher"
+            "researcher",
+            "advisor"
           ]
         },
         "provider": {
@@ -289,7 +290,7 @@
         "role": {
           "description": "Role id.",
           "type": "string",
-          "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer", "researcher"]
+          "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor"]
         },
         "provider": {
           "description": "Provider of the route, such as claude-code, codex or grok.",

@@ -103,3 +103,9 @@ concurrency = 1
 ```
 
 For a deep search add a second source with `tool = "search_deep"`, `capabilities = ["deep"]` and a higher `order`.
+
+## The advisor and the sources
+
+The `advisor` role ([Conductor](conductor.md#the-advisor-p104)) may ask the same sources with the same one command
+(`orch.py research query`), for what the repository cannot answer; it asks them only when `[orch.research.sources]` names
+some, and its launch entry allows nothing else. Its `advice` lists the URLs or paths it rests on in `sources`.

@@ -139,12 +139,13 @@
         },
         "questions": {
           "type": "string",
-          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for conduct.py answer), deny (blocked QUESTION_DENIED, no answer expected) or defaults (a question with a default is answered by it once, by policy; without one it is queued).",
+          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for conduct.py answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled).",
           "default": "queue",
           "enum": [
             "queue",
             "deny",
-            "defaults"
+            "defaults",
+            "advisor"
           ]
         },
         "limits": {
@@ -456,6 +457,45 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "advisor": {
+      "type": "object",
+      "description": "The advisor role (P10.4): one opinion on a blocking question (questions = advisor), on acceptance checks that stay red after the check_fixes corrections, and on a Major finding the triager rejected.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the conductor asks the advisor at all. Off: every trigger behaves as before.",
+          "default": false
+        },
+        "max_rounds": {
+          "type": "integer",
+          "description": "Advice rounds per piece of work, all triggers together; past it the problem is handled as without the advisor.",
+          "default": 2,
+          "minimum": 0
+        },
+        "human_gate": {
+          "type": "array",
+          "description": "Advice categories that are never applied without the owner: the problem is queued with the advice instead.",
+          "default": [
+            "security",
+            "destructive",
+            "public-api",
+            "scope-expansion"
+          ],
+          "items": {
+            "type": "string",
+            "description": "One advice category.",
+            "enum": [
+              "security",
+              "destructive",
+              "public-api",
+              "scope-expansion",
+              "other"
+            ]
           }
         }
       }

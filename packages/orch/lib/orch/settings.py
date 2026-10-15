@@ -50,6 +50,7 @@ class Settings:
     conductor: Mapping[str, object] = field(default_factory=dict)
     aicore: ResolvedConfig | None = None  # the ``aicore`` module: ``providers.available`` is read from it (routing)
     research: Mapping[str, object] = field(default_factory=dict)  # ``[orch.research]``: ``policy`` and ``sources``
+    advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``
 
     def explain_text(self, key: str | None = None) -> str:
         """Where each value comes from (empty when the settings were built by hand)."""
@@ -94,6 +95,12 @@ def _research(resolved: ResolvedConfig) -> dict:
             "sources": {name: dict(entry) for name, entry in (resolved.get("research.sources") or {}).items()}}
 
 
+def _advisor(resolved: ResolvedConfig) -> dict:
+    """``[orch.advisor]`` as plain data."""
+    return {"enabled": bool(resolved.get("advisor.enabled")), "max_rounds": int(resolved.get("advisor.max_rounds")),
+            "human_gate": list(resolved.get("advisor.human_gate") or [])}
+
+
 def load(*, project: str | Path | None = None, config_file: str | Path | None = None,
          env: Mapping[str, str] | None = None, home: str | Path | None = None,
          flags: Mapping[str, object] | None = None) -> Settings:
@@ -114,6 +121,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         conductor=_conductor(resolved),
         aicore=foundation,
         research=_research(resolved),
+        advisor=_advisor(resolved),
     )
 
 

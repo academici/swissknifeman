@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 TAGS = {"executor": "stage-report", "reviewer": "review-findings", "triager": "triage-result",
-        "researcher": "research-result"}
+        "researcher": "research-result", "advisor": "advice"}
 
 role = sys.argv[1]
 prompt = sys.stdin.read()

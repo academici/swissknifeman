@@ -37,7 +37,7 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     if assumed:
         report = dict(report, open_issues=list(report.get("open_issues", [])) + assumed)
     status = report["status"]
-    write_json(item.artifacts / "stage-report.json", report)
+    self._write_artifact(item, "stage-report.json", report)
     body = {key: value for key, value in report.items() if key not in ("status", "questions", "review_recommendation")}
     if status != "blocked":
         body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]
@@ -49,10 +49,7 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     executor = self._actor(item.routes["executor"])
     registrar = self.conductor.get("registrar") or "orch/conductor"
 
-    args = ["source", "register", "--run", item.orch_run, "--report", str(report_path), "--status", status,
-            "--actor", registrar, "--executed-by", self.label(executor)]
-    for check_id, path in sorted(evidence.items()):
-        args += ["--evidence", f"{check_id}={path}"]
+    args = self._register_args(item, report_path, status, registrar, self.label(executor), evidence)
     closed = self._close(item, args) if self._closer_named(item) else None
 
     def said(result: dict) -> str:

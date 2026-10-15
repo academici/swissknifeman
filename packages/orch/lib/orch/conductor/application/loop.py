@@ -225,7 +225,7 @@ def piece(self, answer: dict) -> str:
 def conduct(self, item: Item) -> str:
     brief = self._step(item, "brief", lambda: self._brief(item))
     item.input_doc = json.loads(Path(brief["input_path"]).read_text(encoding="utf-8"))
-    item.artifacts = self.project / brief["artifacts_dir"]
+    self._open_artifacts(item, brief)
     if "source_paths" not in item.state:  # what the work source changed by claiming: never the role's work
         item.state["source_paths"] = sorted(set(self._dirty_paths()) - set(item.state.get("adopted") or []))
         self._save()

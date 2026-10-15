@@ -17,7 +17,6 @@ from orch.conductor.domain.stop import Stop
 RUN_FILE, STATE_FILE = "run.json", "state.json"
 OPTIONS_COPY = "options.json"
 REPORTS = Path(".swissknifeman") / "orch" / "reports"  # observer reports: run output, ignored
-FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
 

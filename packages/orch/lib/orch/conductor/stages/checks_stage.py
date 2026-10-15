@@ -91,7 +91,7 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
     """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
     try:
         return checks_mod.run_checks(
-            item.input_doc, project=self.project, evidence_dir=item.artifacts / "evidence",
+            item.input_doc, project=self.project, evidence_dir=self._evidence_dir(item),
             log_dir=item.directory / "checks" / str(number),
             timeout_s=item.options["limits"]["check_timeout_s"],
             evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,

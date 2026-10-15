@@ -34,8 +34,9 @@ from orch.conductor.domain.report import continued, evidence_paths, findings_pro
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import roles, work_source
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
-from orch.conductor.infrastructure.files import (FALLBACK_ARTIFACTS, OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE,
-                                                 RunStore, read_json, runs_root, safe, write_json)
+from orch.conductor.infrastructure.files import (OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE, RunStore, read_json,
+                                                 runs_root, safe, write_json)
+from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
 from orch.conductor.policies import allowance, budget, retry_policy, routing
 from orch.conductor.policies import risk as risk_policy, sandbox as sandbox_policy
 from orch.conductor.policies.allowance import BATCH_FIELDS, BATCH_LIMITS
@@ -154,6 +155,11 @@ class Conductor:
     _research_save = work_source.research_save
     _register = work_source.register
     _commit = work_source.commit
+    _open_artifacts = work_source.open_artifacts
+    _write_artifact = work_source.write_artifact
+    _evidence_dir = staticmethod(work_source.evidence_dir)
+    _register_args = staticmethod(work_source.register_args)
+    _closer_command = work_source.closer_command
 
     _agent_start = roles.agent_start
     _agent_end = roles.agent_end

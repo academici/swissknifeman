@@ -1,8 +1,14 @@
 """The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief, prepare,
-release, research, register, commit), never the plan itself."""
+release, research, register, commit), never the plan itself, and the artifact folder of a piece.
+
+The one place of the conductor that writes into the artifact folder (``artifacts_dir`` of the brief, or
+``.swissknifeman/orch-artifacts/<run>/<work>/`` for a source without one) or builds and runs an ``orch.py source``
+command line (knowledge/p11-refactor#fs; ``tests/test_boundaries.py`` keeps it so)."""
 from __future__ import annotations
 
 import json
+from pathlib import Path
+import shlex
 import subprocess
 import sys
 from typing import Optional
@@ -13,8 +19,10 @@ from orch.conductor import checks as checks_mod, options as opts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import FALLBACK_ARTIFACTS, safe, write_json
+from orch.conductor.infrastructure.files import safe, write_json
 from orch.settings import ORCH_ROOT
+
+FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
 
 
 def run_orch(self, *args: str) -> tuple:
@@ -171,3 +179,37 @@ def commit(self, item: Item, paths: list) -> dict:
         reason = (answer or {}).get("reason_code") or "COMMIT_REFUSED"
         raise Stop("COMMIT_REFUSED", f"{reason}: {(answer or {}).get('message') or err}")
     return {"outcome": answer["outcome"], "sha": answer.get("sha")}
+
+
+def open_artifacts(self, item: Item, brief: dict) -> None:
+    """The artifact folder of the piece, as the brief named it."""
+    item.artifacts = self.project / brief["artifacts_dir"]
+
+
+def write_artifact(self, item: Item, name: str, doc) -> Path:
+    """``doc`` as ``<artifacts>/<name>``: a committed record of the piece (stage-report, review-verdict, advice)."""
+    return write_json(item.artifacts / name, doc)
+
+
+def evidence_dir(item: Item) -> Path:
+    """The folder of the evidence files the acceptance checks of the piece leave."""
+    return item.artifacts / "evidence"
+
+
+def register_args(item: Item, report_path: Path, status: str, actor: str, executed_by: str, evidence: dict) -> list:
+    """The arguments of ``orch.py source register`` for the result of the piece."""
+    args = ["source", "register", "--run", item.orch_run, "--report", str(report_path), "--status", status,
+            "--actor", actor, "--executed-by", executed_by]
+    for check_id, path in sorted(evidence.items()):
+        args += ["--evidence", f"{check_id}={path}"]
+    return args
+
+
+def closer_command(self, args: list) -> str:
+    """The one command a model registrar runs to record the result. ``python3`` as a bare name: the launch catalog
+    allows the registrar exactly ``python3 *orch.py source register *``; an invocation config before the verb is
+    outside that allowance, so such a closer is refused and the conductor records."""
+    argv = ["python3", str(ORCH_ROOT / "scripts" / "orch.py"), *args]
+    if self.config_file:
+        argv[2:2] = ["--config", str(self.config_file)]
+    return shlex.join(argv)

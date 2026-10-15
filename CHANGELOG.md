@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **orch:** the conductor by layer (PLAN4 P11, no change of behaviour). A characterization test keeps normalized `progress.jsonl` and `state.json` snapshots of eleven scenarios on fake roles (`tests/golden/characterization/`, rewritten only with `--recapture --reason`) and checks that every stop code and beacon of `docs/conductor.md` is met. `conductor/engine.py` (3100 lines) is split into `domain/`, `infrastructure/`, `policies/`, `stages/` and `application/` (every module at most 600 lines); `engine.py` is a facade whose `Conductor` binds the layer functions as its methods, and the public names stay importable from it. The time seams of the tests moved to `infrastructure/clock.py`. Only `infrastructure/work_source.py` writes into the artifact folder of a piece (stage-report, review-verdict, advice, evidence, the `orch-artifacts` fallback) and builds or runs an `orch.py source` command line; `tests/test_boundaries.py` enforces it.
+
 ### Added
 
 - **planner, planner-orch:** `plan.py start --in-progress-deps`: a dependency that is in progress counts as met (the pieces of one batch started one after another); the bridge sets it for `source claim --batch`. When a commit is refused only because plan files of other in-progress pieces are dirty, the bridge repeats it with `--leave-outside`. A shared Claude Code executor may write the transcripts folder of the project under the filesystem guard (`ro-run.py --rw`), otherwise the session is never saved and `--resume` cannot find it.

@@ -177,4 +177,4 @@ def verdict_file(self, item: Item) -> None:
         number += 1
     doc = {"schema": "orch-conductor-review-verdict/v1", "item": item.ref, "run": self.run_id,
            "selector": item.options.get("reviewer"), "rounds": rounds}
-    write_json(item.artifacts / "review-verdict.json", doc)
+    self._write_artifact(item, "review-verdict.json", doc)

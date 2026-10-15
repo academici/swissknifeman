@@ -9,7 +9,6 @@ from orch.conductor import checks as checks_mod, contract, prompts, questions as
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import write_json
 
 ADVICE_DIFF_CHARS = 40_000  # the diff an advisor reads is cut here
 
@@ -60,7 +59,7 @@ def advise(self, item: Item, number: int, ref: str, problem: str, evidence: list
                                  skill_texts=self._skill_texts(item, role))
         doc, meta = self._role(item, key, role, prompt, "advice", extra=lambda found: contract.advice_problems(ref, found),
                                causation=ref)
-        saved = write_json(item.artifacts / f"advice-{number}.json", doc)
+        saved = self._write_artifact(item, f"advice-{number}.json", doc)
         return {"advice": doc, "file": self._relative(saved), **meta}
 
     try:

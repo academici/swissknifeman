@@ -4,6 +4,7 @@ of the run; ``per-item`` (``--no-batch``) starts a fresh session each time."""
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import unittest
 from unittest import mock
 
@@ -203,6 +204,20 @@ class ClaimActorTests(ConductorCase):
         self.assertIsNone(eng._invocation_executor_class())
 
 
+class TranscriptGuardTests(ConductorCase):
+    def test_a_shared_claude_executor_may_write_the_transcripts_of_the_project_and_nothing_else_of_claude(self):
+        eng = engine.Conductor.__new__(engine.Conductor)
+        eng.project = Path("/tmp/my.proj-x")
+        item = type("I", (), {"options": {"session": {"executor": "shared"}, "scope": {}}})()
+        argv = ["python3", "/x/ro-run.py", "--rw", "/p", "--", "claude", "-p"]
+        with mock.patch.object(Path, "mkdir"), mock.patch.object(Path, "home", return_value=Path("/home/u")):
+            out = eng._extra_write_dirs(item, "executor", argv)
+            self.assertIn("/home/u/.claude/projects/-tmp-my-proj-x", out)
+            self.assertNotIn("/home/u/.claude", out)
+            item.options["session"]["executor"] = "per-item"
+            self.assertEqual(eng._extra_write_dirs(item, "executor", argv), argv)
+
+
 class FenceTests(ConductorCase):
     def test_the_project_fence_is_the_default_and_the_executor_is_told_it_may_report_instead_of_block(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
@@ -228,13 +243,14 @@ class FenceTests(ConductorCase):
 
     def test_ro_run_gets_one_rw_per_extra_path_before_the_separator(self):
         eng = engine.Conductor.__new__(engine.Conductor)
-        item = type("I", (), {"options": {"scope": {"extra_paths": ["/data/a", "~/b"]}}})()
+        item = type("I", (), {"options": {"scope": {"extra_paths": ["/data/a", "~/b"]}, "session": {"executor": "per-item"}}})()
         argv = ["python3", "/x/ro-run.py", "--rw", "/p", "--", "claude", "-p"]
         out = eng._extra_write_dirs(item, "executor", argv)
         self.assertEqual(out[:5], ["python3", "/x/ro-run.py", "--rw", "/p", "--rw"])
         self.assertEqual(out[out.index("--"):], ["--", "claude", "-p"])
         self.assertEqual(out.count("--rw"), 3)
         self.assertEqual(eng._extra_write_dirs(item, "reviewer", argv), argv)
+        self.assertEqual(eng._extra_write_dirs(item, "executor", ["claude", "-p"]), ["claude", "-p"])
         self.assertEqual(eng._extra_write_dirs(item, "executor", ["claude", "-p"]), ["claude", "-p"])
 
 

@@ -241,9 +241,14 @@ def op_claim(fields: dict) -> dict:
         # An item this very attempt already closed stays claimed by the run: its claim is answered again, unchanged.
         if (doc.get("result") or {}).get("attempt_id") != attempt_id:
             phase = ref.split(".", 1)[0]
-            together = [name for name in fields.get("after") or [] if name != ref and name.split(".", 1)[0] == phase]
-            plan_json(["start", plan, *together, ref, "--actor", actor_text(fields["actor"]), "--session", run_id,
-                       "--no-scout", "--json"], plans_root, code="START_REFUSED")
+            # A batch: the pieces named in ``together`` start in this one call (the planner counts a dependency met only
+            # when its piece starts in the same call); a piece an earlier call of the batch started and that has no
+            # attempt yet is taken over by its own run.
+            together = [name for name in fields.get("together") or [] if name != ref and name.split(".", 1)[0] == phase]
+            taking = bool(fields.get("batch")) and doc.get("status") == "in_progress" \
+                and not (doc.get("result") or {}).get("attempt_id")
+            plan_json(["start", plan, ref, *together, "--actor", actor_text(fields["actor"]), "--session", run_id,
+                       "--no-scout", "--json", *(["--take-over"] if taking else [])], plans_root, code="START_REFUSED")
     except Blocked as blocked:
         answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)
         return {key: value for key, value in answer.items() if value is not None}
@@ -362,6 +367,19 @@ def op_register(fields: dict) -> dict:
 # ------------------------------------------------------------------------------------------------ commit
 
 
+_FOREIGN = re.compile(r"OUTSIDE_SCOPE: foreign dirty paths: (.*?); use --leave-outside")
+
+
+def _only_plan_dirt(text: str) -> bool:
+    """``OUTSIDE_SCOPE`` whose foreign dirty paths are all plan files (``.../phases/P/Pn.m.json``, ``log.jsonl``)."""
+    found = _FOREIGN.search(text or "")
+    if not found:
+        return False
+    paths = re.findall(r"'([^']+)'", found.group(1))
+    return bool(paths) and all(re.search(r"(^|/)plans/.+/(phases/[^/]+/[^/]+(\.json|/.*)|log\.jsonl|plan\.json)$", path)
+                               for path in paths)
+
+
 def op_commit(fields: dict) -> dict:
     """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op."""
     argv = ["commit", fields["plan"], fields["ref"], "--role", "executor"]
@@ -370,6 +388,10 @@ def op_commit(fields: dict) -> dict:
     if fields.get("actor"):
         argv += ["--actor", actor_text(fields["actor"])]
     done = plan_py([*argv, "--json"], fields.get("plans_root"))
+    if done.returncode and _only_plan_dirt(done.stderr or done.stdout):
+        # Pieces of one batch are in progress together: the bookkeeping of the others (their item files, started in the
+        # same call) is dirty and belongs to their own commits, so it stays out of this one instead of refusing it.
+        done = plan_py([*argv, "--leave-outside", "--json"], fields.get("plans_root"))
     if done.returncode:
         blocked = refusal_of(done.stderr or done.stdout, "COMMIT_REFUSED")
         if blocked.code == "NOTHING_TO_COMMIT":

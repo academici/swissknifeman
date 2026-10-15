@@ -568,3 +568,13 @@ class ProtocolTests(Case):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OnlyPlanDirtTests(unittest.TestCase):
+    def test_only_plan_files_among_the_foreign_dirty_paths_are_left_outside(self):
+        plan_only = ("OUTSIDE_SCOPE: foreign dirty paths: 'plans/2026-X/phases/P11/P11.3.json', "
+                     "'plans/2026-X/phases/P11/P11.3/stage-report.json'; use --leave-outside or --path and plan.py log")
+        self.assertTrue(worksource._only_plan_dirt(plan_only))
+        mixed = "OUTSIDE_SCOPE: foreign dirty paths: 'plans/2026-X/phases/P11/P11.3.json', 'src/app.py'; use --leave-outside"
+        self.assertFalse(worksource._only_plan_dirt(mixed))
+        self.assertFalse(worksource._only_plan_dirt("NOTHING_TO_COMMIT: no changed paths"))

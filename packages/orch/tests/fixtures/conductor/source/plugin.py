@@ -44,15 +44,26 @@ def claim(state, given):
     if ref is None:
         return {"op": "claim", "status": "none", "message": "no item is ready"}
     item = state["items"][ref]
-    if item.get("holder") not in (None, run_id):
+    if item.get("holder") not in (None, run_id) and not (given.get("batch") and item["status"] == "in_progress"):
         return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "ITEM_OWNED", "message": "held"}
-    after = given.get("after") or []
-    unmet = [dep for dep in item.get("depends_on", []) if state["items"][dep]["status"] != "done" and dep not in after]
+    together = [name for name in given.get("together") or [] if name != ref]
+    started_here = [ref] + together
+    unmet = [dep for dep in item.get("depends_on", [])
+             if state["items"][dep]["status"] != "done" and dep not in started_here[:started_here.index(ref)]]
+    if item["status"] == "in_progress" and given.get("batch") and item.get("holder") not in (None, run_id):
+        item["holder"] = None  # a piece an earlier claim of the batch started, taken over by its own run
+        unmet = []
     if unmet:
         return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "DEPENDENCY_NOT_READY",
                 "message": f"{ref} waits for {', '.join(unmet)}"}
     if item["status"] == "todo":
         item["status"] = "in_progress"
+    for name in together:  # the pieces started in the same call (the planner counts their dependencies met in order)
+        other = state["items"][name]
+        met = [dep for dep in other.get("depends_on", []) if state["items"][dep]["status"] != "done"
+               and dep not in started_here[:started_here.index(name)]]
+        if other["status"] == "todo" and not met:
+            other["status"], other["holder"] = "in_progress", run_id
     item["holder"] = run_id
     answer = {"op": "claim", "status": "claimed", "ref": ref, "title": item.get("title", ref),
               "scenario": item.get("scenario", "full"), "scenario_source": "item",

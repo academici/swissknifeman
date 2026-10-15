@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "69285e82fe12",
-  "reason": "advisor role in the launch catalog (PLAN4 P10.4)",
+  "captured_from": "63340dbad783",
+  "reason": "orch-debug: --batch/--no-batch, --ready",
   "generators": [
     {
       "id": "skiller-registry",
@@ -174,7 +174,7 @@
     ".agents/skills/field-feedback-loop/SKILL.md": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35",
     ".agents/skills/harness-operations/SKILL.md": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b",
     ".agents/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
-    ".agents/skills/orch-debug/SKILL.md": "096f53d49ff8ab909f9f2e13b2d3e2ddc2bb214872b75e345ca9b899c0b9148d",
+    ".agents/skills/orch-debug/SKILL.md": "61bd701f30d36cd5b540c709a823f87b9ba81c3630464a15c1bf3f874c0fae6e",
     ".agents/skills/package-architecture/SKILL.md": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86",
     ".agents/skills/planner-development-philosophy/SKILL.md": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3",
     ".agents/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
@@ -190,7 +190,7 @@
     ".claude/skills/field-feedback-loop/SKILL.md": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35",
     ".claude/skills/harness-operations/SKILL.md": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b",
     ".claude/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
-    ".claude/skills/orch-debug/SKILL.md": "096f53d49ff8ab909f9f2e13b2d3e2ddc2bb214872b75e345ca9b899c0b9148d",
+    ".claude/skills/orch-debug/SKILL.md": "61bd701f30d36cd5b540c709a823f87b9ba81c3630464a15c1bf3f874c0fae6e",
     ".claude/skills/package-architecture/SKILL.md": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86",
     ".claude/skills/planner-development-philosophy/SKILL.md": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3",
     ".claude/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
@@ -203,7 +203,7 @@
     ".cursor/rules/swissknifeman-packages.mdc": "e33abaca3f65746ecdb01e1b2948db955528aa9955f807d73158da955a2034da",
     ".cursor/rules/swissknifeman-router.mdc": "e3be1b179d98ca3956b76517663327ea42a9370bb51de337d9755ef017795b97",
     ".grok/rules/swissknifeman-instructions.md": "2eac0e121bc75d121a219c9d3e78bac0e94073283f1d5ec8a2f2abca9e7f43c2",
-    "bootstrap/publication-lock.json": "00c95fd80ce46e94fb190adb04ddb89ec63548ef815d4f9195ca8ff6fa390a19",
+    "bootstrap/publication-lock.json": "75a872199349770a75960504a033d2b3611335331eb7a7bf59555b0c71574711",
     "docs/provider-support.md": "2e1d793c251c5b077020617804c67e7143608ac59c7271abdf634ca826724999",
     "packages/harness/docs/reference/provider-instructions.md": "76de972f2bf1b8e232d1fd3d134e5a8bb4c2207dbaaa2030468caa4cc31b5712",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "50e60c7e08c92e547d700a28d9e4f6ae4538522987c0894ea3e1f3cf23bd47cd",

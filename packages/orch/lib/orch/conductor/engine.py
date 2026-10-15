@@ -471,7 +471,7 @@ class Conductor:
         earlier pass are left alone; ``--no-batch`` claims one piece at a time. ``(claimed answers by key, the changed
         paths of the tree taken over by ``--adopt``)``."""
         doc, claimed, adopted = self.run_doc, {}, []
-        for key, asked in keys:
+        for position, (key, asked) in enumerate(keys):
             known = self.state["claims"].get(key)
             outcome = self.state["items"].get(known["ref"], {}).get("outcome") if known else None
             if outcome in ("done", "done_with_deviations", "blocked"):
@@ -482,7 +482,8 @@ class Conductor:
                 else:
                     self._require_clean_tree()
             try:
-                answer = self._claim(key, asked, after=tuple(a["ref"] for a in claimed.values()))
+                later = tuple(ref for _, refs in keys[position + 1:] for ref in refs) if not claimed else ()
+                answer = self._claim(key, asked, together=later, batch=True)
             except Stop as stop:
                 if stop.code == "CLAIM_BLOCKED" and "DEPENDENCY_NOT_READY" in stop.message:
                     continue  # waits for something outside this batch: claimed when its turn comes
@@ -510,7 +511,7 @@ class Conductor:
             raise Stop("WORKTREE_DIRTY", f"{len(dirty)} changed path(s) before new work, such as {dirty[0]}; "
                                          "commit or set them aside, or take them over with run --adopt, then resume")
 
-    def _claim(self, key: str, asked: list, after: tuple = ()) -> Optional[dict]:
+    def _claim(self, key: str, asked: list, together: tuple = (), batch: bool = False) -> Optional[dict]:
         actor = self._claim_actor()
         submission = f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
         file_source = self.run_doc.get("source") or {}
@@ -521,8 +522,10 @@ class Conductor:
             args += ["--plans-root", self.run_doc["plans_root"]]
         for ref in asked:
             args += ["--item", ref]
-        for ref in after:  # the pieces of this batch held so far: a piece that waits for one of them starts with them
-            args += ["--after", ref]
+        for ref in together:  # the later pieces of the batch start in this call, so a piece that waits for one is startable
+            args += ["--together", ref]
+        if batch:
+            args.append("--batch")
         code, answer, err = self._orch(*args)
         if code == 3:
             raise Stop("WORK_SOURCE_UNAVAILABLE", err or "no work source")
@@ -1695,11 +1698,22 @@ class Conductor:
 
     def _extra_write_dirs(self, item: Item, role: str, argv: list) -> list:
         """``scope.extra_paths`` for an executor started through ``ro-run.py``: one more ``--rw`` each, before the ``--``."""
-        paths = self._scope_option(item, "extra_paths", [])
-        if role != "executor" or not paths or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
+        paths = list(self._scope_option(item, "extra_paths", []))
+        if role != "executor" or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
+            return argv
+        if self._shared_session(item, role, {"provider": "claude-code"}) and "claude" in argv[argv.index("--") + 1:][:1]:
+            paths.append(self._claude_transcripts())  # else the guard stops the CLI from saving the session it must resume
+        if not paths:
             return argv
         at = argv.index("--")
         return argv[:at] + [part for path in paths for part in ("--rw", os.path.expanduser(path))] + argv[at:]
+
+    def _claude_transcripts(self) -> str:
+        """The folder where Claude Code keeps the transcripts of this project: ``~/.claude/projects/<path with every
+        character outside [A-Za-z0-9] as -``. It is the one place besides the project that a resumable session needs."""
+        folder = Path.home() / ".claude" / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(self.project))
+        folder.mkdir(parents=True, exist_ok=True)
+        return str(folder)
 
     @staticmethod
     def _scope_option(item: Item, key: str, default):

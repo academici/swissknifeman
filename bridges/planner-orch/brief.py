@@ -98,6 +98,14 @@ def _read(plan: store.Plan, entry: dict, inline: bool) -> dict:
     return entry
 
 
+def _research(item: dict) -> dict | None:
+    """The research need the designer set on the item (``rag.need``, ``rag.notes``); ``status`` and ``captures`` are plan state."""
+    rag = item.get("rag")
+    if not isinstance(rag, dict) or not rag.get("need"):
+        return None
+    return {"need": rag["need"], **({"notes": rag["notes"]} if rag.get("notes") else {})}
+
+
 def _constraints(pack: dict, unit: dict | None) -> list[dict]:
     found = []
     for source, texts in (("plan.rules", pack["plan"].get("rules")), ("phase.pitfalls", pack["phase"].get("pitfalls")),
@@ -297,6 +305,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "context_refs": _context_refs(plan, pack, plan_dir), "upstream": _upstream(pack),
         "lessons": [{key: e[key] for key in _LESSON_KEYS if key in e} for e in pack["lessons"]],
         "hints": [{"text": text, "source": "scout"} for text in pack.get("scout", {}).get("entries", [])],
+        "research": _research(item),
     }
     doc.update({key: value for key, value in optional.items() if value})
     missing = verify(plan, item_id, doc, unit_id=unit_id)

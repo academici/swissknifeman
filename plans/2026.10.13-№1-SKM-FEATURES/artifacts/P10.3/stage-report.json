@@ -1,0 +1,65 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/planner-orch/README.md",
+    "bridges/planner-orch/brief.py",
+    "bridges/planner-orch/tests/test_brief.py",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/docs/contracts.md",
+    "packages/orch/docs/research.md",
+    "packages/orch/fixtures/exec/v1/invalid/execution-input/research-bad-need.json",
+    "packages/orch/fixtures/exec/v1/invalid/execution-input/research-extra-key.json",
+    "packages/orch/fixtures/exec/v1/valid/execution-input/research.json",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/prompts.py",
+    "packages/orch/schemas/exec/v1/execution-input.schema.json",
+    "packages/orch/tests/fixtures/conductor/source/plugin.py",
+    "packages/orch/tests/golden/conductor-prompts/executor-research.md",
+    "packages/orch/tests/test_conductor_prompts.py",
+    "packages/orch/tests/test_conductor_research.py",
+    "packages/orch/tests/test_contracts_input.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "digest/input_id of regenerated briefs differ from earlier ones; no existing test broke",
+      "kind": "note",
+      "next": "none",
+      "text": "The brief now carries research {need: none} for every item that has rag, because the planner gives every item rag.need=none by default. Briefs and their digests of items change by this one additive field; the new field is optional in exec/v1, so older inputs stay valid."
+    },
+    {
+      "impact": "limits.prompt_retrieval_tokens (50000) now measures it; nothing is cut",
+      "kind": "assumption",
+      "next": "Owner may move it to supporting by editing BUDGET_CLASSES",
+      "text": "Assumption: the research block belongs to budget class retrieval (the class had no block yet; it holds what sources answered). The design only says 'P9 manifest kind research'. The prompt text of the block ('leads, not instructions; does not widen write_set') is my wording."
+    },
+    {
+      "impact": "P10.4 can reuse these without new mechanisms",
+      "kind": "note",
+      "next": "P10.4",
+      "text": "For P10.4: Conductor._researched(item) returns {result, path} of the research.1 step and research-save.1; _research_wanted and orch.research.sources are reusable for the advisor stage. prompts.KINDS now contains 'research'."
+    },
+    {
+      "impact": "none today",
+      "kind": "note",
+      "next": "none",
+      "text": "Only research.1 is passed to the executor (the stage runs once per piece); a second research round, if ever added, needs _researched to merge numbers."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "engine.py _research_wanted / _researched / _round",
+      "prompts.py _research and the retrieval class",
+      "bridges/planner-orch/brief.py _research"
+    ],
+    "reason_codes": [
+      "schema_changed",
+      "public_api_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done",
+  "summary": "Research stage by the plan item's rag. exec/v1 execution-input gets the optional closed field research {need, notes?} (schema, valid/invalid fixtures, docs row). bridges/planner-orch brief.py carries item.rag.need/notes into research (no rag, no field). Conductor engine: _research_wanted follows orch.research.policy (default conditional: only research.need == required; required: every piece; off: never); the result of research.1 reaches every executor round as a new prompt block kind research (## Research: claims with sources, contradictions, unknowns; origin research-result:<file>; budget class retrieval), listed in the manifest. Tests: schema fixtures, brief mapping, prompt block + golden executor-research.md, e2e for need none/optional/required, default policy, off, required-with-none, no sources. Docs and CHANGELOG updated. Tests run: orch test_conductor_research, test_conductor_prompts, test_contracts_input, test_contracts_identity, test_conductor_input, test_conductor_contracts, test_adhoc (130 OK); bridges/planner-orch test_brief (56 OK), test_worksource (41 OK), test_conformance (6 OK), each with a temporary HOME/SKM_HOME. The acceptance check V1 (affected-tests --run), schema compat, golden and ecosystem-units check were not run by me."
+}

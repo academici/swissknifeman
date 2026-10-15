@@ -16,6 +16,8 @@ from tests.test_conductor import GREEN, ConductorCase, executor_ok
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = Path(__file__).resolve().parent / "golden" / "conductor-prompts"
 INPUTS = ROOT / "fixtures" / "exec" / "v1" / "valid" / "execution-input"
+RESEARCH = {"query": "q", "claims": [{"text": "The flag exists.", "sources": ["https://example.org/a", "docs/cli.md"]}],
+            "contradictions": ["A says on, B says off"], "unknowns": ["the default value"], "sources_used": ["fake"]}
 RULES = "## Rules\n\n- keep it small <!-- generator marker -->\n- stdlib only\n"
 
 
@@ -38,6 +40,8 @@ def cases() -> dict:
             answers=[{"id": "Q1", "text": "Which?", "answer": "a", "by": "owner"},
                      {"id": "Q2", "text": "How?", "answer": {"k": 1}, "by": "policy"}],
             fix=prompts.DEVIATION_FIX),
+        "executor-research": prompts.executor(
+            plan, item="P1.1", step="executor.1", research=RESEARCH, research_origin="plans/T/research/P1.1-1.json"),
         "executor-targeted": prompts.executor(plan, item="P1.1", step="executor.1", scout_text="map"),
         "executor-checks": prompts.executor(adhoc, item="W1", step="executor.1", targeted_tests=False, correction="x"),
         "executor-bounded": prompts.executor(adhoc, item="W1", step="executor.1", role="bounded-implementer"),
@@ -97,6 +101,25 @@ class BlockTests(unittest.TestCase):
             self.assertIn(kind, by_kind)
         self.assertEqual(by_kind["context_map"][0].origin, "scout-cache")
         self.assertEqual(by_kind["result_contract"][0].origin, "conductor")
+
+    def test_the_research_block_carries_claims_with_sources_and_names_its_file(self):
+        blocks = prompts.executor(fixture("adhoc"), item="W1", step="executor.1", research=RESEARCH,
+                                  research_origin="plans/T/research/W1-1.json")
+        (block,) = [block for block in blocks if block.kind == "research"]
+        self.assertEqual(block.origin, "research-result:plans/T/research/W1-1.json")
+        for text in ("The flag exists.", "https://example.org/a", "docs/cli.md", "A says on, B says off", "the default value"):
+            self.assertIn(text, block.text)
+        self.assertEqual(prompts.budget_class("research"), "retrieval")
+        kinds = [item.kind for item in blocks]
+        self.assertLess(kinds.index("research"), kinds.index("progress"))
+
+    def test_no_research_no_block(self):
+        for research in (None, {}):
+            blocks = prompts.executor(fixture("adhoc"), item="W1", step="executor.1", research=research)
+            self.assertNotIn("research", [block.kind for block in blocks])
+        empty = {"query": "q", "claims": [], "contradictions": [], "unknowns": [], "sources_used": []}
+        blocks = prompts.executor(fixture("adhoc"), item="W1", step="executor.1", research=empty)
+        self.assertIn("research", [block.kind for block in blocks])  # a stage that found nothing still says so
 
     def test_the_scout_cache_file_is_the_origin_of_the_context_map(self):
         blocks = prompts.executor(fixture("adhoc"), item="W1", step="executor.1", scout_text="map",

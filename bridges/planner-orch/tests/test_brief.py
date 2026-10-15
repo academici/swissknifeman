@@ -85,6 +85,20 @@ class MappingTests(BriefCase):
                                                   "commit_owner": "coordinator", "plan_mutation": "forbidden"})
         self.assertEqual(doc["escalation"], brief.ESCALATION)
 
+    def test_the_research_need_of_the_item_is_carried_with_its_notes(self):
+        self.assertEqual(self.brief()["research"], {"need": "none"})  # the planner default: no research
+        ops.patch(self.root, "P1.1", {"rag": {"need": "required", "status": "pending", "notes": "check the flags"}})
+        doc = self.brief()
+        self.assertEqual(doc["research"], {"need": "required", "notes": "check the flags"})
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+        ops.patch(self.root, "P1.1", {"rag": {"need": "optional", "status": "pending"}})
+        self.assertEqual(self.brief()["research"], {"need": "optional", "notes": "check the flags"})
+
+    def test_an_item_without_rag_gets_no_research_field(self):
+        plan = self.load()
+        plan.items["P1.1"].pop("rag")
+        self.assertNotIn("research", brief.build(plan, "P1.1"))
+
     def test_constraints_keep_order_and_source(self):
         self.assertEqual(self.brief()["constraints"], [
             {"text": "stdlib only", "source": "plan.rules[0]"},

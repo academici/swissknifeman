@@ -123,6 +123,81 @@ class PlanBoundResearchTests(ResearchCase):
         self.assertIn("ROLE_OUTPUT_INVALID", err)
 
 
+class ConditionalPolicyTests(ResearchCase):
+    """PLAN4 P10.3 (knowledge/p10-research#triggers): the research need is the designer's decision, carried by the input."""
+
+    def configure(self, policy: str) -> None:
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in (*ROLES, "researcher")},
+                          extra=SOURCE.replace('policy = "required"', f'policy = "{policy}"'))
+
+    def run_with(self, need: str, policy: str = "conditional") -> tuple:
+        self.configure(policy)
+        self.set_items({"W1": {"research": {"need": need, "notes": "what the flag does"}}})
+        self.script({"researcher": [RESEARCHER], "executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        return err
+
+    def test_need_none_adds_no_stage_under_conditional(self):
+        err = self.run_with("none")
+        self.assertEqual(self.calls("researcher"), 0)
+        self.assertNotIn("research.1", [stage for _, stage in self.stages(err)])
+
+    def test_need_optional_adds_no_stage_under_conditional(self):
+        self.run_with("optional")
+        self.assertEqual(self.calls("researcher"), 0)
+
+    def test_need_required_adds_the_stage_before_the_executor_under_conditional(self):
+        err = self.run_with("required")
+        self.assertEqual((self.calls("researcher"), self.calls("executor")), (1, 1))
+        stages = self.stages(err)
+        self.assertLess(stages.index(("stage.end", "research.1")), stages.index(("stage.start", "executor.1")))
+        self.assertIn("plans/T/research/W1-1.json", self.git("ls-files").split())
+
+    def test_the_default_policy_is_conditional(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in (*ROLES, "researcher")},
+                          extra=SOURCE.replace('policy = "required"\n', ""))
+        self.set_items({"W1": {"research": {"need": "required"}}})
+        self.script({"researcher": [RESEARCHER], "executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("researcher")), (0, 1), err)
+
+    def test_the_policy_off_never_researches(self):
+        self.run_with("required", "off")
+        self.assertEqual(self.calls("researcher"), 0)
+
+    def test_the_policy_required_researches_a_piece_whose_need_is_none(self):
+        self.run_with("none", "required")
+        self.assertEqual(self.calls("researcher"), 1)
+
+    def test_a_required_need_without_a_source_stops_before_any_work(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in (*ROLES, "researcher")})
+        self.set_items({"W1": {"research": {"need": "required"}}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "RESEARCH_NO_SOURCES")), err)
+        self.assertEqual(self.calls("executor"), 0)
+
+
+class ExecutorBlockTests(ResearchCase):
+    def test_the_executor_prompt_carries_the_result_as_a_research_block(self):
+        self.script({"researcher": [RESEARCHER], "executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        _, _, err = self.run_items("W1")
+        prompt = self.prompt("executor", 1)
+        self.assertIn("## Research", prompt)
+        self.assertIn(URL, prompt)
+        self.assertIn("command answer: Research for this work:", prompt)
+        manifest = json.loads((self.run_dir(err) / "W1" / "prompts" / "executor.1.manifest.json").read_text())
+        (row,) = [row for row in manifest["blocks"] if row["kind"] == "research"]
+        self.assertTrue(row["origin"].startswith("research-result:"), row["origin"])
+
+    def test_a_piece_without_research_has_no_block(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in (*ROLES, "researcher")})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        self.run_items("W1")
+        self.assertNotIn("## Research", self.prompt("executor", 1))
+
+
 class ContractTests(unittest.TestCase):
     def doc(self, **fields) -> dict:
         return {"query": "q", "claims": [{"text": "t", "sources": ["u"]}], "contradictions": [], "unknowns": [],

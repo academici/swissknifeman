@@ -1777,9 +1777,13 @@ class Conductor:
     # ------------------------------------------------------------------ research
 
     def _research_wanted(self, item: Item) -> bool:
-        """Whether the piece gets a research stage. ``orch.research.policy`` ``required`` asks for one before every piece;
-        ``off`` never; ``conditional`` is for a piece whose plan asks for research, which the input does not carry yet."""
-        return (getattr(self.settings, "research", None) or {}).get("policy") == "required"
+        """Whether the piece gets a research stage (``orch.research.policy``, ``conditional`` when unset): ``required`` asks
+        for one before every piece, ``off`` never, ``conditional`` only when the input says the designer of the plan needs
+        research for it (``research.need`` is ``required``; no heuristic of the conductor)."""
+        policy = (getattr(self.settings, "research", None) or {}).get("policy") or "conditional"
+        if policy == "conditional":
+            return ((item.input_doc or {}).get("research") or {}).get("need") == "required"
+        return policy == "required"
 
     @staticmethod
     def _research_query(item: Item) -> str:
@@ -1797,7 +1801,8 @@ class Conductor:
         from orch import research as research_mod
         sources = [source.id for source in research_mod.sources_from(self.settings)]
         if not sources:
-            raise Stop("RESEARCH_NO_SOURCES", "orch.research.policy is required, but [orch.research.sources] names no source")
+            raise Stop("RESEARCH_NO_SOURCES", "the piece needs research (orch.research.policy "
+                       f"{(self.settings.research or {}).get('policy') or 'conditional'}), but [orch.research.sources] names no source")
         role, key = "researcher", f"research.{number}"
         route = item.routes[role]
         folder = item.directory / "research"
@@ -1845,6 +1850,18 @@ class Conductor:
         return {"outcome": "kept", "path": self._relative(kept), "reason": why[:300]}
 
     @staticmethod
+    def _researched(item: Item) -> dict:
+        """``{result, path}`` of the research stage of the piece for the executor prompt: the closed research-result and the
+        file that keeps it (``research-save.1`` says where; the artifacts of the piece when the work source did not take it);
+        ``{}`` when the piece had no research stage."""
+        steps = item.state.get("steps") or {}
+        found = (steps.get("research.1") or {}).get("result") or {}
+        if not found.get("result"):
+            return {}
+        saved = (steps.get("research-save.1") or {}).get("result") or {}
+        return {"result": found["result"], "path": saved.get("path") or found.get("file") or ""}
+
+    @staticmethod
     def _research_paths(item: Item) -> set:
         """The files the work source saved research results in (a plan's ``research`` folder): a commit of the piece takes them."""
         saved = (((item.state.get("steps") or {}).get(key) or {}).get("result") or {}
@@ -1874,6 +1891,7 @@ class Conductor:
             if number > 1 or refresh:
                 self._refresh_input(item)
             scouted = ((item.state.get("steps") or {}).get("scout") or {}).get("result") or {}
+            researched = self._researched(item)
             prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                       rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir,
                                       targeted_tests=not item.options["checks"]["executor_runs_checks"],
@@ -1883,7 +1901,8 @@ class Conductor:
                                       expected=item.state.get("expected"),
                                       answers=questions_mod.answers_text(self._questions(item)), fix=fix,
                                       scout_origin=scouted.get("cache") or "",
-                                      batch=self._batch_note(item))
+                                      batch=self._batch_note(item), research=researched.get("result"),
+                                      research_origin=researched.get("path") or "")
             report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
             write_json(item.directory / "reports" / f"{key}.json", report)
             return {"report": report, "changed": self._changed_now(item), **meta}

@@ -653,6 +653,29 @@
         "additionalProperties": false
       }
     },
+    "research": {
+      "type": "object",
+      "description": "Research need of the work, as the plan designer decided it.",
+      "properties": {
+        "need": {
+          "type": "string",
+          "description": "none: no research; optional: research may help; required: research precedes the work.",
+          "enum": [
+            "none",
+            "optional",
+            "required"
+          ]
+        },
+        "notes": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "What to find out."
+        }
+      },
+      "required": [
+        "need"
+      ],
+      "additionalProperties": false
+    },
     "route": {
       "type": "object",
       "description": "Execution route requirement.",

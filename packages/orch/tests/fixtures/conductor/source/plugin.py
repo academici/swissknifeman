@@ -65,6 +65,8 @@ def brief(state, given, project):
     doc["acceptance"]["checks"] = item["checks"]
     doc["scope"]["write_set"] = item.get("write_set", ["out/**"])
     doc["goal"] = item.get("goal", f"Create the output of {given['ref']}.")
+    if "research" in item:  # the research need of the plan item, as the planner bridge carries it
+        doc["research"] = item["research"]
     doc.pop("digest", None)
     doc["input_id"] = f"PLAN9.{given['ref']}"
     digest = sha256_hex(canonical_json_bytes(doc))

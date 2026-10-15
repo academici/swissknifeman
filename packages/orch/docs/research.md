@@ -72,13 +72,19 @@ Every claim has at least one source; a statement without one belongs to `unknown
 allowed sources, and claims need a source that was asked (`ROLE_OUTPUT_INVALID` otherwise). The raw replies of the sources
 are not stored: the stream of the role keeps them.
 
-With `policy = "required"` the conductor adds the steps `research.1` and `research-save.1` before the executor of every
-piece (the question is the goal and the reason of the piece; see [Conductor](conductor.md)). `research-save.1` has the
-work source keep the result (`orch.py source research`): a plan keeps `research/<item>-<n>.json` in its folder and declares
-it as an input of the item (through the planner bridge); a file input keeps `research-<n>.json` in its
-artifacts. A source that cannot keep it leaves the result in the artifacts of the piece (`RESEARCH_NOT_SAVED`). With no
-source configured the run stops before any work with `RESEARCH_NO_SOURCES`. The policy `conditional` (the research need
-of a plan item) and the block of the executor prompt are not part of this stage yet.
+The policy decides who wants research. `required`: the conductor adds the steps `research.1` and `research-save.1` before the
+executor of every piece. `conditional` (the default): only for a piece whose input says `research.need = required`; the need is the
+decision of the plan designer (the `rag.need` and `rag.notes` of a plan item, carried into the execution-input by the
+`planner-orch` brief), not a guess of the conductor, so `none` and `optional` get no stage. `off`: never. The question is the
+goal and the reason of the piece (see [Conductor](conductor.md)). `research-save.1` has the work source keep the result
+(`orch.py source research`): a plan keeps `research/<item>-<n>.json` in its folder and declares it as an input of the item
+(through the planner bridge); a file input keeps `research-<n>.json` in its artifacts. A source that cannot keep it leaves the
+result in the artifacts of the piece (`RESEARCH_NOT_SAVED`). With no source configured the run stops before any work with
+`RESEARCH_NO_SOURCES`.
+
+The result then reaches the executor: its prompt gets a block `research` (`## Research`: the claims, each with its sources, the
+contradictions and the unknowns; origin `research-result:<file>`, budget class `retrieval`) in every round of the piece. The
+block is a lead for the executor, not an instruction: it does not widen the write set and no acceptance check changes.
 
 ## Example: Perplexity (machine file)
 

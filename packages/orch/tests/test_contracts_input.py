@@ -30,6 +30,8 @@ EXPECTED = {
     "run-policy/fallback-undeclared.json": "FALLBACK_UNDECLARED",
     "capability-record/fresh-before-observed.json": "CAPABILITY_FRESHNESS",
     "execution-input/condensed-drift.json": "CONDENSED_REQUIRED_DRIFT",
+    "execution-input/research-bad-need.json": "enum",
+    "execution-input/research-extra-key.json": "additional",
 }
 
 

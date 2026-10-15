@@ -34,6 +34,7 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
   (a workflow it retires); `exists: false` marks such a read.
 - Lifecycle instructions, the report API, the full plan and owner messages are excluded; the full
   coordinator pack stays reachable through `context_refs`.
+- `research` carries the research need the designer set on the item: `rag.need` (`none`, `optional`, `required`) and `rag.notes`; `rag.status` and `rag.captures` are plan state and stay out. An item without `rag` gets no `research` field. Under `orch.research.policy = conditional` the conductor adds a research stage only for `required`.
 - `--unit U#` briefs one unit: its goal, files (write set), checks and instructions. A unit without
   files is read-only with no write authority.
 - `--inline-reads` embeds the full text of existing text reads; binary reads get `error`.

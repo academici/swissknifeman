@@ -146,7 +146,7 @@ class Tree:
             "version": "1.2.0", "stability": "beta", "destination": "hub",
             "requires": [{"unit": "aicore", "range": "^0.1"}],
             "provides": {
-                "cli": ["bin/alpha", "scripts/alpha.py"],
+                "cli": ["bin/alpha"],
                 "plugins": [{"name": "alpha", "manifest": ".claude-plugin/plugin.json"}],
                 "contracts": [{"id": "urn:swissknifeman:alpha:data", "path": "schemas/data/v1",
                                "version": "v1", "stability": "alpha"}],
@@ -324,6 +324,7 @@ class ManifestCheckTests(unittest.TestCase):
         self.assertIn("does not exist", result.stderr)
 
     def test_python_cli_needs_no_exec_bit(self):
+        self.tree.alpha["provides"]["cli"] = ["scripts/alpha.py"]
         self.assertEqual(self.tree.check().returncode, 0)
         self.assertTrue((self.tree.root / "packages/alpha/scripts/alpha.py").stat().st_mode & 0o111 == 0)
 

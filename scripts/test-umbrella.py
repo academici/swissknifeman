@@ -934,5 +934,65 @@ class TestProjectLauncherEndToEnd(unittest.TestCase):
         self.assertIn("LAUNCHER_PROTOCOL_NEWER", result.stderr)
 
 
+    def stub_hub(self, body):
+        """A stand-in `swissknifeman` first on PATH, to observe what the launcher hands over."""
+        stub_bin = Path(self._tmp.name) / "stub-bin"
+        stub_bin.mkdir(exist_ok=True)
+        stub = stub_bin / "swissknifeman"
+        stub.write_text("#!" + sys.executable + "\n" + body, encoding="utf-8")
+        stub.chmod(0o755)
+        return {"PATH": f"{stub_bin}{os.pathsep}/usr/bin{os.pathsep}/bin"}
+
+    def test_pythonpath_from_the_environment_does_not_reach_the_module(self):
+        path = self.stub_hub("import os\nprint(os.environ.get('PYTHONPATH', '<unset>'))\n")
+        result = self.launch(self.a, self.a, "planner", "list", PYTHONPATH="/evil/path", **path)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual("<unset>", result.stdout.strip())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX signals")
+    def test_signals_reach_the_module_and_the_exit_code_is_kept(self):
+        import signal
+        import time
+        body = ("import signal, sys, time\n"
+                "signal.signal(signal.SIGTERM, lambda *_: sys.exit(41))\n"
+                "signal.signal(signal.SIGINT, lambda *_: sys.exit(42))\n"
+                "print('ready', flush=True)\n"
+                "time.sleep(30)\n")
+        path = self.stub_hub(body)
+        for sig, code in ((signal.SIGTERM, 41), (signal.SIGINT, 42)):
+            proc = subprocess.Popen([sys.executable, "-I", str(self.a / ".swissknifeman" / "launcher.py"), "planner",
+                                     "list"], cwd=str(self.a), env={**self.env, **path}, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True)
+            self.addCleanup(proc.kill)
+            self.addCleanup(proc.stdout.close)
+            self.addCleanup(proc.stderr.close)
+            self.assertEqual("ready", proc.stdout.readline().strip())
+            time.sleep(0.2)
+            proc.send_signal(sig)
+            self.assertEqual(code, proc.wait(timeout=20))
+
+    def test_launcher_inside_a_git_worktree(self):
+        git = ["git", "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "init"], cwd=str(self.a), check=True)
+        tree = self.a.parent / "wt tree"
+        subprocess.run([*git, "worktree", "add", "-q", "-b", "wt", str(tree)], cwd=str(self.a), check=True)
+        self.assertTrue((tree / ".git").is_file())
+        done = self.sh(tree, "swissknifeman", "project", "init")
+        self.assertEqual(0, done.returncode, done.stderr)
+        (tree / "sub").mkdir()
+        result = self.launch(tree, tree / "sub", "project", "context", "--json")
+        self.assertEqual(0, result.returncode, result.stderr)
+        doc = json.loads(result.stdout)
+        self.assertEqual((doc["project_root"], doc["resolution"]), (str(tree.resolve()), "launcher"))
+
+    def test_orch_conduct_status_from_a_nested_folder_with_spaces(self):
+        cwd = self.a / "src" / "deep"
+        self.assertIn(" ", str(cwd))
+        result = self.launch(self.a, cwd, "orch", "conduct", "status")
+        self.assertNotIn("PROJECT_", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertIn(result.returncode, (0, 1), result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -550,8 +550,8 @@ go to `<run>/instructions.json`, the digest to `run.json` (`instructions_digest`
 resumes reads that snapshot; a resume whose files changed says `STUBS_CHANGED`. The block `stub` (budget class
 `supporting`) stands after the role text and before the task, under a heading that says it cannot change tools, write
 authority, scope, checks or the result contract; the real limits stay the launch catalog, the sandbox, the filesystem guard
-and the result parser. A stub that cannot be used (symlink, not a regular file, over 32 KiB, over 64 KiB for one target,
-not UTF-8, unknown header field, mode or version, a header that names another target, text in a `disable` file) stops the
+and the result parser. A stub that cannot be used (symlink, not a regular file, writable by every user, over 32 KiB, over 64 KiB for one
+target, text that looks like a secret, not UTF-8, unknown header field, mode or version, a header that names another target, text in a `disable` file) stops the
 run with `STUBS_INVALID` before any role starts. `[orch.stubs]` (machine, invocation or flags only): `enabled` (true) and
 `layers` (`["machine", "project"]`; leave `project` out on a machine that runs repositories it does not trust).
 `orch stubs list` shows the effective stubs of every role, `orch stubs show ROLE` the block and where each part comes from.

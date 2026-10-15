@@ -19,6 +19,7 @@ RUN_FILE, STATE_FILE = "run.json", "state.json"
 OPTIONS_COPY = "options.json"
 REPORTS = Path(".swissknifeman") / "orch" / "reports"  # observer reports: run output, ignored
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+_RUN_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
 
 def runs_root(project: Path) -> Path:
@@ -27,7 +28,10 @@ def runs_root(project: Path) -> Path:
 
 
 def safe(text: str) -> str:
-    return _SAFE.sub("-", text).strip("-") or "x"
+    """``text`` as one folder name: runs of other characters become ``-``; a name of dots only (``..``) is never a
+    folder of its own, so a reference cannot lead out of the run folder."""
+    name = _SAFE.sub("-", text).strip("-")
+    return name if name.strip(".") else "x"
 
 
 def write_json(path: Path, doc: Any) -> Path:
@@ -53,6 +57,8 @@ class RunStore:
     (``state.json``) and the copy of ``--options``; it numbers the agent runs of the run, one at a time."""
 
     def __init__(self, project: Path, run_id: str):
+        if not _RUN_ID.match(run_id or ""):  # ``--run ../x`` must not reach a folder outside the runs
+            raise Stop("RUN_UNKNOWN", f"{run_id!r} is not a run id (cnd-<UTC stamp>-<hex>)")
         self.run_id = run_id
         self.directory = runs_root(project) / run_id
         self._agents_lock = threading.Lock()

@@ -31,6 +31,7 @@ from typing import Iterable, Mapping, Optional
 
 from aicore.state.locations import PROJECT_DIRNAME, config_dir
 from aicore.util.digest import digest_json
+from aicore.util.redact import redact_text
 
 SCHEMA = "urn:swissknifeman:aicore:instruction-set:v1"
 LAYERS = ("machine", "project")
@@ -44,9 +45,9 @@ _TARGET = re.compile(r"^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$")
 
 
 class StubError(ValueError):
-    """A stub that cannot be used: ``STUB_SYMLINK_FORBIDDEN``, ``STUB_NOT_REGULAR``, ``STUB_TOO_LARGE``,
-    ``STUB_INVALID_UTF8``, ``STUB_METADATA_INVALID``, ``STUB_TARGET_MISMATCH``, ``STUB_MODE_INVALID``,
-    ``STUB_TARGET_UNKNOWN``. The message names the file."""
+    """A stub that cannot be used: ``STUB_SYMLINK_FORBIDDEN``, ``STUB_NOT_REGULAR``, ``STUB_PERMISSIONS`` (writable by
+    every user), ``STUB_TOO_LARGE``, ``STUB_INVALID_UTF8``, ``STUB_METADATA_INVALID``, ``STUB_TARGET_MISMATCH``,
+    ``STUB_MODE_INVALID``, ``STUB_SECRET``, ``STUB_TARGET_UNKNOWN``. The message names the file."""
 
     def __init__(self, code: str, message: str):
         super().__init__(f"{code}: {message}")
@@ -88,6 +89,8 @@ def _read(path: Path) -> Optional[bytes]:
         info = os.fstat(handle)
         if not stat.S_ISREG(info.st_mode):
             raise StubError("STUB_NOT_REGULAR", f"{path} is not a regular file")
+        if info.st_mode & stat.S_IWOTH:  # any user of the machine could put words into every prompt of the role
+            raise StubError("STUB_PERMISSIONS", f"{path} is writable by every user (chmod o-w)")
         if info.st_size > MAX_BYTES:
             raise StubError("STUB_TOO_LARGE", f"{path} has {info.st_size} bytes, more than {MAX_BYTES}")
         with os.fdopen(handle, "rb") as stream:
@@ -136,6 +139,9 @@ def parse(data: bytes, *, path: str, target: str, slot: str) -> dict:
     elif "skm-stub:" in text.split("\n", 1)[0]:
         raise StubError("STUB_METADATA_INVALID", f"{path}: the first line is not a valid skm-stub header")
     body = _COMMENT.sub("", text).strip()
+    if body and redact_text(body) != body:  # the text goes to a model provider: a token never does
+        raise StubError("STUB_SECRET", f"{path}: the text holds what looks like a secret (a token or name=value of a "
+                        "secret name); name where the role finds it instead")
     if mode == "disable" and body:
         raise StubError("STUB_MODE_INVALID", f"{path}: a disable stub holds no text")
     return {"mode": mode, "body": body + "\n" if body else ""}

@@ -111,6 +111,17 @@ class HangAndTreeTests(unittest.TestCase):
                               timeout_s=30, evidence_prefix="r:W1:checks.2", on_changed=quiet.append)
             self.assertEqual(quiet, [])
 
+    def test_a_check_whose_cwd_leads_outside_the_project_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _repo(tmp)
+            document = doc("touch escaped")
+            document["acceptance"]["checks"][0]["cwd"] = ".."
+            with self.assertRaises(ValueError) as caught:
+                checks.run_checks(document, project=root, evidence_dir=root / "ev", log_dir=root / "log", timeout_s=30,
+                                  evidence_prefix="r:W1:checks.1")
+            self.assertIn("outside the project", str(caught.exception))
+            self.assertFalse((root.parent / "escaped").exists())
+
     def test_python_output_of_a_check_is_unbuffered(self):
         self.assertEqual(checks.check_env(Path("."), environ={})["PYTHONUNBUFFERED"], "1")
 

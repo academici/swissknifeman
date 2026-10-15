@@ -64,5 +64,17 @@ class DurableStateTests(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(os.stat(folder).st_mode), 0o700)
 
 
+class PathSafetyTests(unittest.TestCase):
+    def test_a_reference_of_dots_never_names_a_parent_folder(self):
+        self.assertEqual([files.safe(text) for text in ("..", ".", "...", "../x", "P1.2")], ["x", "x", "x", "..-x", "P1.2"])
+
+    def test_a_run_id_that_is_a_path_is_refused(self):
+        for run_id in ("../other", "a/b", "", ".."):
+            with self.subTest(run_id=run_id), self.assertRaises(Stop) as caught:
+                files.RunStore(Path("/tmp"), run_id)
+            self.assertEqual(caught.exception.code, "RUN_UNKNOWN")
+        self.assertEqual(files.RunStore(Path("/tmp"), "cnd-20261016T000000Z-abc123").run_id, "cnd-20261016T000000Z-abc123")
+
+
 if __name__ == "__main__":
     unittest.main()

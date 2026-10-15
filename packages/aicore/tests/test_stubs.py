@@ -119,6 +119,14 @@ class RefusalTests(StubCase):
                 self.write("project", "orch/roles/reviewer.md", text)
                 self.refused(code)
 
+    def test_a_world_writable_file_and_a_secret_are_refused(self):
+        path = self.write("project", "orch/roles/reviewer.md", "fine text\n")
+        os.chmod(path, 0o666)
+        self.refused("STUB_PERMISSIONS")
+        os.chmod(path, 0o644)
+        self.write("project", "orch/roles/reviewer.md", "use token=abcdef123456 for the API\n")
+        self.refused("STUB_SECRET")
+
     def test_an_unknown_target_shape_is_refused(self):
         with self.assertRaises(stubs.StubError) as caught:
             stubs.slots("reviewer")

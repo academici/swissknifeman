@@ -117,6 +117,32 @@ class ConfigTests(ResearchCase):
             self.load()
 
 
+class ProcessGroupTests(ResearchCase):
+    def test_a_command_source_that_times_out_takes_its_children_along(self):
+        marker = self.root / "child.pid"
+        script = self.root / "slow.py"
+        script.write_text("import subprocess, sys, time\n"
+                          "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])\n"
+                          f"open({str(marker)!r}, 'w').write(str(child.pid))\n"
+                          "time.sleep(60)\n", encoding="utf-8")
+        source = sources.Source(id="slow", kind="command", argv=(PY, str(script)), timeout_s=1)
+        with self.assertRaises(Exception):
+            sources._command(source, "q", cwd=self.root)
+        pid = int(marker.read_text())
+        import os
+        import time
+        for _ in range(50):
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return
+            stat = Path(f"/proc/{pid}/stat")
+            if stat.exists() and stat.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                return
+            time.sleep(0.1)
+        self.fail(f"the child {pid} of the timed-out source is still alive")
+
+
 class McpStdioTests(ResearchCase):
     def test_the_reply_is_normalised(self):
         log = self.root / "log.jsonl"

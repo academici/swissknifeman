@@ -223,6 +223,9 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                "candidate": candidate, "started_at": started}
         if check.get("cmd"):
             cwd = (project / check.get("cwd", ".")).resolve()
+            root = project.resolve()
+            if cwd != root and root not in cwd.parents:  # ``cwd: ../x`` (or a symlink out) would run it elsewhere
+                raise ValueError(f"check {check_id}: cwd {check.get('cwd')!r} leads outside the project ({cwd})")
             log = Path(log_dir) / f"{check_id}.log"
             log.parent.mkdir(parents=True, exist_ok=True)
             begin = time.monotonic()

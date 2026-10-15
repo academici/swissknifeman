@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "3ee14851a47c",
-  "reason": "project-local launcher: orch conduct group, project alias, launcher CLI in planner commands",
+  "captured_from": "22a21f6e8047",
+  "reason": "orch.py gains the stubs verb (additional instructions of the roles)",
   "generators": [
     {
       "id": "skiller-registry",

@@ -12,6 +12,9 @@
 - **orch:** `scope.extra_paths` (`--allow-path`) is resolved (`~`, symlinks) and refused when it is the root, a system folder, HOME or an ancestor, the project or an ancestor, a secrets folder under HOME or inside `.git` (`OPTIONS_UNSAFE_PATH`); the guard gets the canonical path.
 - **orch:** the risk feature `security` is critical by default (`[orch.conductor.risk] critical`): it adds the review on its own, whatever the score; its patterns cover the code that confines the roles (`sandbox*`, `ro-run*`, launch catalog, role manifests, run policies, hooks, CI workflows, `install.sh`).
 - **orch:** the run folders are `0700`.
+- **orch:** a reference of dots (`..`) never names a parent folder of the run (`safe`), a `--run` id that is a path is `RUN_UNKNOWN`, and a check whose `cwd` leads outside the project (`..`, a symlink out) is refused (`CHECKS_FAILED`) instead of running there.
+- **orch:** a research source runs in its own process group: a timeout or the end of an `mcp-stdio` server ends what it started (a browser) too, not only the leader.
+- **aicore:** a stub writable by every user (`STUB_PERMISSIONS`) or holding what looks like a secret (`STUB_SECRET`) is refused before it reaches a prompt.
 - **orch:** `orch conduct answer --text` refuses an answer that looks like a secret (a token format or `name=value` of a secret name): an answer goes into `questions.json` and into the executor prompt, so a credential is named, never pasted.
 
 ### Fixed
@@ -21,6 +24,7 @@
 - **orch:** the JSON files of a run are written crash-safely (unique temporary file, fsync of the file and its folder; two threads writing one file no longer collide), and a torn one stops with `STATE_CORRUPT` naming it instead of a traceback.
 - **orch:** a hung process no longer holds a run forever: `limits.stage_idle_timeout_s` defaults to 5400 (a role whose stream is silent that long) and the new `limits.check_idle_timeout_s` (3600) stops a check whose log has not grown that long (checks run with `PYTHONUNBUFFERED=1`); wall-clock ceilings stay off.
 - **orch:** what a finished role left running in its process group (a server, a watcher started in the background) is ended when the role ends (SIGTERM, SIGKILL after 5 s); zombies do not hold the wait.
+- **orch:** `run --frozen` unpacks its snapshot on a Python without the tar `data` filter (3.9 before 3.9.17) as well.
 - **orch:** the beacon `CHECK_CHANGED_TREE` names the files the checks of a round changed (their evidence and logs aside).
 
 - **orch:** `run --scenario S` is honoured for a plan run (it was silent): the scenario goes into every claim (`source claim --scenario`, `work-source/v1` claim gets an optional `scenario`), wins over the plan's overlays, and an unknown one blocks the claim with `SCENARIO_UNKNOWN`; the claim answer names `scenario_source: invocation:--scenario`. The mirror `bridges/planner-orch/schemas/run-options.schema.json` was stale and is synced.

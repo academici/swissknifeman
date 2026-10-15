@@ -117,16 +117,39 @@ def _urls(text: str) -> list:
 
 # -- command ----------------------------------------------------------------------------------------------------
 
+def _end_group(process, gently: bool = True) -> None:
+    """End the process group of a source: SIGTERM, then SIGKILL after 5 s (``gently=False``: only what is left, at once)."""
+    import signal
+    try:
+        os.killpg(process.pid, signal.SIGTERM if gently else signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        return
+    if gently:
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+        process.wait()
+
 def _command(source: Source, text: str, *, cwd) -> dict:
     if not source.argv:
         raise SourceError("SOURCE_INVALID", f"source {source.id!r} (command) has no argv")
-    try:
-        done = subprocess.run(_expand(source.argv), input=text, capture_output=True, text=True,
-                              timeout=source.timeout_s, cwd=cwd)
-    except subprocess.TimeoutExpired:
-        raise _Busy("timeout", f"no answer in {source.timeout_s} s") from None
+    try:  # its own process group: a timeout ends the source and whatever it started (a browser), not the leader only
+        process = subprocess.Popen(_expand(source.argv), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, cwd=cwd, start_new_session=True)
     except OSError as error:
         raise SourceError("SOURCE_UNAVAILABLE", f"{source.id}: cannot start: {error}") from None
+    try:
+        stdout, stderr = process.communicate(text, timeout=source.timeout_s)
+    except subprocess.TimeoutExpired:
+        _end_group(process)
+        raise _Busy("timeout", f"no answer in {source.timeout_s} s") from None
+    finally:
+        _end_group(process, gently=False)
+    done = subprocess.CompletedProcess(process.args, process.returncode, stdout, stderr)
     if done.returncode != 0:
         raise SourceError("SOURCE_UNAVAILABLE", f"{source.id}: exit {done.returncode}: {done.stderr.strip()[:200]}")
     try:
@@ -231,7 +254,7 @@ class McpStdioClient:
         self._lines: queue.Queue = queue.Queue()
         self._next = 0
         self._proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                      text=True, bufsize=1, cwd=cwd)
+                                      text=True, bufsize=1, cwd=cwd, start_new_session=True)
         self._reader = threading.Thread(target=self._pump, daemon=True)
         self._reader.start()
 
@@ -278,12 +301,8 @@ class McpStdioClient:
             self._proc.stdin.close()
         except OSError:
             pass
-        self._proc.terminate()
-        try:
-            self._proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            self._proc.kill()
-            self._proc.wait()
+        _end_group(self._proc)  # the server and what it started (a browser) end together
+        _end_group(self._proc, gently=False)
         self._reader.join(timeout=2)
         self._proc.stdout.close()
 

@@ -49,7 +49,8 @@ def freeze(hub: Path, destination: Path) -> Path:
         raise FrozenError("FROZEN_FAILED", f"git archive failed: {done.stderr.decode('utf-8', 'replace').strip()}")
     destination.mkdir(parents=True, exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(done.stdout)) as archive:
-        archive.extractall(destination, filter="data")
+        # the archive is our own committed HEAD; the "data" filter (refuse links out, absolute names) where Python has it
+        archive.extractall(destination, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
     return destination
 
 

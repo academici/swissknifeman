@@ -18,6 +18,7 @@
 
 ### Fixed
 
+- gui review of phase P2: a coalesced `.progress` frame no longer jumps over a log frame queued after it (the client dropped the lower `seq`); `gui serve --detached` started by `gui open` no longer registers its own working folder (the state folder) as a trusted project; `Broker.stop` before the waiter task exists now waits on the process and still sends SIGKILL.
 - harness review-gate `plan-check` skipped every plan when the planner was installed only as the `plan.py` link of `install.sh`: it now finds `plan.py` on PATH after `planner`, in the order of `aicore.util.partners` (its test `test_broken_plan_json_is_a_violation` failed on `main`).
 - `ecosystem-units check --strict` failed on `main`: `unit.json` versions of `analyst`, `maind` and `skiller` lagged their `package.json` after the 0.30.2 and 0.30.3 releases (now 0.4.1, 0.6.2, 0.19.6).
 

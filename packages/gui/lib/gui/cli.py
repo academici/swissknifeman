@@ -135,6 +135,8 @@ def _project_dir(args: argparse.Namespace) -> Optional[Path]:
 
     if args.project:
         return Path(args.project).expanduser().resolve()
+    if getattr(args, "detached", False):  # `gui open` registers its project itself; cwd is the state folder
+        return None
     return project_marker_root(Path.cwd())
 
 

@@ -44,6 +44,18 @@ class TestVersion(unittest.TestCase):
         self.assertEqual("gui 0.1.0", result.stdout.strip())
 
 
+class TestDetachedProject(unittest.TestCase):
+    def test_detached_serve_does_not_register_its_cwd(self):
+        import argparse
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".swissknifeman").mkdir()
+            with mock.patch("pathlib.Path.cwd", return_value=Path(tmp)):
+                self.assertIsNone(cli._project_dir(argparse.Namespace(project=None, detached=True)))
+                self.assertIsNotNone(cli._project_dir(argparse.Namespace(project=None, detached=False)))
+
+
 class TestUsage(unittest.TestCase):
     def test_no_command_prints_help(self):
         code, out, _ = run_main()

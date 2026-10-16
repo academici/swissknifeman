@@ -5,7 +5,7 @@
   "title": "Plan №1 — SKM GUI: desktop control plane — Tauri 2, React/TypeScript, Python sidecar",
   "status": "active",
   "created": "2026-10-16",
-  "updated_at": "2026-10-16T12:38:56Z",
+  "updated_at": "2026-10-16T18:15:04Z",
   "repository": "swissknifeman",
   "owner": "repository owner",
   "authoring": {
@@ -29,8 +29,10 @@
     "Версии сторонних библиотек (npm, PyPI, crates) сверяются с реестром в момент пункта и фиксируются lockfile; не по памяти.",
     "Контракты gui — закрытый профиль aicore.util.schema; ломающее изменение замороженного контракта — только новая v<N+1>/ рядом (I14).",
     "Каждый пункт: тесты затронутого (python3 scripts/affected-tests.py --run; frontend — npm --prefix packages/gui/frontend run check с P2); широкий проход — phase.validation пунктом, закрывающим фазу.",
-    "Review — только пункты Review Pn на Grok в фазах с названным жёстким риском (knowledge/roadmap#sizing); остальные пункты review.mode none.",
-    "CHANGELOG.md [Unreleased] и документация модуля обновляются в том же пункте, что и поведение."
+    "CHANGELOG.md [Unreleased] и документация модуля обновляются в том же пункте, что и поведение.",
+    "Review (решение D16, с P3): одна групповая review на фазу — orchestration.options плана: review.strategy single по единственному batch фазы, reviewer codex/gpt-6.1-sol/high, fallback codex класса frontier (gpt-6-astra), limits.review_rounds 1, corrections 1, review.dynamic false; у пунктов review.mode none, отдельных пунктов Review Pn нет. Findings Blocker/Major исправляются одним follow-up прогоном `orch conduct run --input <group-review-N.followup.json> --commit` без повторной review; Minor — заметки плана. Ревьюер работает только read-only по diff (промпт групповой review: без команд, ≤ 12 tool calls) и не запускает тесты и сборки.",
+    "Исполнение (D16, с P3): executor — claude-code класса implementation (sonnet), effort medium; route пунктов — implementation/medium; каждая фаза — один batch B1 со всеми пунктами по порядку зависимостей.",
+    "Длинные прогоны — только нужные по коду: исполнитель запускает тесты изменённого кода (`python3 scripts/affected-tests.py --run`; `npm --prefix packages/gui/frontend run check` — только при изменении frontend); `--tier all`, E2E, smoke, `npm ci`, сборки desktop — только в phase.validation пункта, закрывающего фазу, и только те, чей код фаза меняла (фаза без frontend не включает V15/V16, без desktop — сборки Tauri); ревьюер их не запускает; повтор красного длинного прогона — только после правки, которая его касается (checks.red_first)."
   ],
   "phases": [
     "P1",
@@ -45,5 +47,45 @@
     "design_audit": "none",
     "scout": "off",
     "context_pack": "scoped"
+  },
+  "orchestration": {
+    "scenario": "solo",
+    "options": {
+      "stages": [
+        {
+          "role": "executor",
+          "provider": "claude-code",
+          "model_class": "implementation",
+          "effort": "medium"
+        }
+      ],
+      "reviewer": "codex/gpt-6.1-sol/high",
+      "rules": [
+        "Run only the tests of the code you changed (python3 scripts/affected-tests.py --run; npm --prefix packages/gui/frontend run check only when the frontend changed). Never run --tier all, E2E, smoke, npm ci or desktop builds unless this item closes the phase and its own validation names them; the conductor runs the acceptance checks after your report.",
+        "review.dynamic is false: the phase gets one group review (review.strategy single, codex) after its last item (plan rule D16)."
+      ],
+      "limits": {
+        "review_rounds": 1,
+        "corrections": 1
+      },
+      "checks": {
+        "red_first": true,
+        "executor_runs_checks": false
+      },
+      "review": {
+        "correct_min_severity": "Major",
+        "pre_final": true,
+        "dynamic": false,
+        "strategy": "single"
+      },
+      "fallback_routes": [
+        {
+          "role": "reviewer",
+          "provider": "codex",
+          "model_class": "frontier",
+          "effort": "high"
+        }
+      ]
+    }
   }
 }

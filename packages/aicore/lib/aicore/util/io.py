@@ -93,23 +93,11 @@ def assert_safe_replace_target(path):
 
 
 def atomic_write_text(path, text, *, encoding="utf-8", mode=None, check_target=True):
-    """Atomically write text through a sibling temporary file.
+    """Atomically and durably write text (see :func:`_replace`); the new file gets ``mode``, else the umask's.
 
-    Optionally set final permissions and reject unsafe replacement targets.
+    ``check_target=False`` lets a symlink target be replaced by a regular file.
     """
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    try:
-        tmp.write_text(text, encoding=encoding)
-        if mode is not None:
-            os.chmod(tmp, mode)
-        if check_target:
-            assert_safe_replace_target(path)
-        os.replace(tmp, path)
-    except BaseException:
-        tmp.unlink(missing_ok=True)
-        raise
+    _replace(Path(path), text.encode(encoding), mode=mode, check_target=check_target, private=False)
 
 
 def atomic_write_json(path, data, *, version=None, indent=2, mode=None, check_target=True):
@@ -122,16 +110,22 @@ def atomic_write_json(path, data, *, version=None, indent=2, mode=None, check_ta
 
 
 def durable_replace(path, data, *, mode=None):
-    """Replace ``path`` with ``data`` (bytes) crash-safely: a unique temporary file in the same folder (so the same
-    filesystem), flushed and ``fsync``-ed, then ``os.replace`` and an ``fsync`` of the folder. A failure at any point
-    leaves the old file untouched and removes the temporary one; an unsafe target (symlink, hard link, not a regular
-    file) is refused like :func:`atomic_write_text` does."""
-    import tempfile
+    """Replace ``path`` with ``data`` (bytes) crash-safely, the new file private (``0600``) unless ``mode`` says
+    otherwise; an unsafe target (symlink, hard link, not a regular file) is refused."""
+    _replace(Path(path), data, mode=mode, check_target=True, private=True)
 
-    path = Path(path)
+
+def _replace(path, data, *, mode, check_target, private):
+    """A unique temporary file in the same folder (so the same filesystem), created exclusively and without
+    following a link (a planted ``*.tmp`` symlink is never written through), flushed and ``fsync``-ed, then
+    ``os.replace`` and an ``fsync`` of the folder. Two writers of one file never share a temporary file. A failure
+    at any point leaves the old file untouched and removes the temporary one."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    assert_safe_replace_target(path)
-    handle, name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+    if check_target:
+        assert_safe_replace_target(path)
+    name = path.with_name(f".{path.name}.{os.getpid()}.{os.urandom(4).hex()}.tmp")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    handle = os.open(str(name), flags, 0o600 if private else 0o666)
     try:
         with os.fdopen(handle, "wb") as stream:
             stream.write(data)
@@ -146,13 +140,18 @@ def durable_replace(path, data, *, mode=None):
         except FileNotFoundError:
             pass
         raise
+    _fsync_folder(path.parent)
+
+
+def _fsync_folder(folder):
+    """Make a rename in ``folder`` durable; a filesystem that cannot fsync a folder is left as it is."""
     try:
-        folder = os.open(str(path.parent), os.O_RDONLY)
+        handle = os.open(str(folder), os.O_RDONLY)
     except OSError:
         return
     try:
-        os.fsync(folder)
+        os.fsync(handle)
     except OSError:
         pass
     finally:
-        os.close(folder)
+        os.close(handle)

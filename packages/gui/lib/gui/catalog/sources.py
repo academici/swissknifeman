@@ -54,6 +54,9 @@ def unit_roots(env: Optional[Mapping[str, str]] = None) -> Tuple[List[Path], Opt
     """Unit folders from ``SKM_UNITS_PATH`` when set, else from the hub registry; and a problem or ``None``."""
     environment = dict(os.environ if env is None else env)
     if environment.get(UNITS_PATH_VAR):
+        for part in environment[UNITS_PATH_VAR].split(os.pathsep):
+            if part and not Path(part).is_dir():
+                return [], _problem(UNITS_SOURCE, f"{UNITS_PATH_VAR} entry is not a directory: {part}")
         return [Path(path) for path in unit_dirs(environment)], None
     executable = environment.get(UMBRELLA_VAR) or shutil.which("swissknifeman", path=environment.get("PATH"))
     if not executable:
@@ -61,7 +64,7 @@ def unit_roots(env: Optional[Mapping[str, str]] = None) -> Tuple[List[Path], Opt
     try:
         result = subprocess.run([executable, "units", "list", "--json"], capture_output=True, text=True,
                                 env=environment, timeout=UMBRELLA_TIMEOUT_S, stdin=subprocess.DEVNULL)
-    except (OSError, subprocess.SubprocessError) as exc:
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
         return [], _problem(UNITS_SOURCE, f"cannot run swissknifeman: {exc.__class__.__name__}")
     if result.returncode != 0:
         return [], _problem(UNITS_SOURCE, f"swissknifeman units list exited with {result.returncode}")

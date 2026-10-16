@@ -117,6 +117,14 @@ class TestConflicts(CatalogCase):
         self.assertEqual(["CONTRIB_CONFLICT"] * 2, [entry["code"] for entry in doc["rejected"]])
         self.assertIn("owner 'demo'", doc["rejected"][0]["message"])
 
+    def test_one_file_reached_twice_rejects_both(self):
+        real = self.unit("demo", demo())
+        alias = self.tmp / "alias"
+        alias.symlink_to(real)
+        doc = self.catalog(real, alias)
+        self.assertEqual([], doc["contributions"])
+        self.assertEqual(["CONTRIB_CONFLICT"] * 2, [entry["code"] for entry in doc["rejected"]])
+
     def test_duplicates_inside_one_file(self):
         gui = demo()
         gui["routes"].append(dict(gui["routes"][0]))
@@ -373,6 +381,19 @@ class TestSources(CatalogCase):
         roots, problem = sources.unit_roots({"SKM_UNITS_PATH": str(FIXTURES / "two-owners")})
         self.assertIsNone(problem)
         self.assertEqual(["alpha", "beta"], [root.name for root in roots])
+
+    def test_missing_units_path_is_a_code(self):
+        roots, problem = sources.unit_roots({"SKM_UNITS_PATH": str(self.tmp / "nope")})
+        self.assertEqual([], roots)
+        self.assertEqual("CATALOG_SOURCE_UNAVAILABLE", problem["code"])
+
+    def test_non_utf8_umbrella_output_is_a_code(self):
+        script = self.tmp / "swissknifeman-bin"
+        script.write_text("#!/bin/sh\nprintf '\\377' >&2\necho '{}'\n", encoding="utf-8")
+        script.chmod(0o755)
+        roots, problem = sources.unit_roots({"PATH": "/usr/bin:/bin", "SKM_UMBRELLA": str(script),
+                                             "HOME": str(self.tmp)})
+        self.assertEqual("CATALOG_SOURCE_UNAVAILABLE", problem["code"])
 
     def test_registry_roots_resolve_against_hub_root(self):
         hub = self.tmp / "hub"

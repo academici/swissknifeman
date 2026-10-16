@@ -449,19 +449,19 @@ def resolve(collected: Collected, *, host_protocol: Tuple[str, str] = HOST_PROTO
         else:
             code, message, findings = rejection
             rejected.append(_rejected(source.owner, evaluation.file, code, message, findings))
-    claims: Dict[Tuple[str, str], Set[str]] = {}
-    for _source, evaluation in accepted:
+    claims: Dict[Tuple[str, str], List[int]] = {}
+    for index, (_source, evaluation) in enumerate(accepted):  # one participant per source, even for one file
         for key in set(_local_keys(evaluation.document)):
-            claims.setdefault(key, set()).add(evaluation.file)
-    conflicting: Dict[str, List[str]] = {}
-    for (kind, value), files in sorted(claims.items()):
-        if len(files) > 1:
-            for file in files:
-                conflicting.setdefault(file, []).append(f"{kind} {value!r}")
+            claims.setdefault(key, []).append(index)
+    conflicting: Dict[int, List[str]] = {}
+    for (kind, value), participants in sorted(claims.items()):
+        if len(participants) > 1:
+            for index in participants:
+                conflicting.setdefault(index, []).append(f"{kind} {value!r}")
     entries = []
-    for source, evaluation in accepted:
-        if evaluation.file in conflicting:
-            claimed = conflicting[evaluation.file]
+    for index, (source, evaluation) in enumerate(accepted):
+        if index in conflicting:
+            claimed = conflicting[index]
             rejected.append(_rejected(source.owner, evaluation.file, CONFLICT,
                                       "another contribution also claims " + ", ".join(claimed[:5])))
         else:

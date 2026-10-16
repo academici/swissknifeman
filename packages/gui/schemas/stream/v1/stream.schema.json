@@ -148,6 +148,34 @@
           "description": "Backend epoch the cursor belongs to (from bootstrap/v1); null without a cursor."
         }
       },
+      "oneOf": [
+        {
+          "description": "No replay: both null.",
+          "properties": {
+            "cursor": {
+              "type": "null",
+              "description": "No cursor."
+            },
+            "epoch": {
+              "type": "null",
+              "description": "No epoch."
+            }
+          }
+        },
+        {
+          "description": "Replay: an integer cursor with the epoch it belongs to.",
+          "properties": {
+            "cursor": {
+              "type": "integer",
+              "description": "Cursor."
+            },
+            "epoch": {
+              "type": "string",
+              "description": "Epoch."
+            }
+          }
+        }
+      ],
       "additionalProperties": false
     },
     "unsubscribe": {

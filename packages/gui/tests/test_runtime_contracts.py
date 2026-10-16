@@ -197,6 +197,13 @@ class TestSafety(unittest.TestCase):
         self.assertIn("expected_revision", schema["preview_request"]["required"])
         self.assertIn("expected_revision", schema["commit_request"]["required"])
 
+    def test_cursor_and_epoch_are_both_set_or_both_null(self):
+        frame = {"$schema": "urn:swissknifeman:gui:stream:v1", "kind": "subscribe", "id": "live", "filter": {}}
+        epoch = "e" * 8
+        for cursor, ep, ok in ((None, None, True), (5, epoch, True), (5, None, False), (None, epoch, False)):
+            issues = contracts.validate({**frame, "cursor": cursor, "epoch": ep}, "stream")
+            self.assertEqual(ok, issues == [], (cursor, ep, issues))
+
     def test_resume_needs_cursor_and_epoch(self):
         self.assertLessEqual({"cursor", "epoch"}, set(root_schema("stream")["$defs"]["subscribe"]["required"]))
         for mode in ("desktop", "browser"):

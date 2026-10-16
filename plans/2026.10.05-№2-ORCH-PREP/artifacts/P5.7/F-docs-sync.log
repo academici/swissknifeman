@@ -1,2 +1,0 @@
-docs-sync:
-  docs/skiller is deprecated; run bash scripts/docs-sync.sh

@@ -1,3 +1,0 @@
-observed CLI exit: 1
-[{"path": "/procedure", "code": "EVIDENCE_CARRIER", "message": "manual evidence requires verdict and observation without exit"}]
-EVIDENCE_CARRIER: manual evidence requires verdict and observation without exit

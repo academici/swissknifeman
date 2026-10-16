@@ -1,2 +1,0 @@
-skiller connect [--profile P|--plugins a,b] [--file settings.json|settings.local.json] [--cleanup-vendored] [--list] [--dry-run] [--hub] [--no-core] [--no-permissions] [--cleanup-codex-vendored] [--cleanup-codex-links] [--cleanup-codex-equivalent-links] [--cleanup-codex-physical] [--fix-path] [--native-codex|--native-codex-only]
-  --native-codex-only: only changes project .codex/config.toml according to current profile; doesn't write distribution, permissions or state.

@@ -1,9 +1,0 @@
-59:- **Repository bootstrap у владельцев:** 14 canonical skills перенесены из Skiller:
-141:  fallback; signature unchanged. `profile-catalog` now resolves to the harness canon.
-187:- Duplicate `configs/profile-catalog.json` (never released); the canon is
-188:  `packages/harness/configs/common/profile-catalog.json`.
-918:- **Deliver readback.** `command-routing.json` and `profile-catalog.json` — regular files
-928:- **Shared root configs.** `configs/command-routing.json`, `configs/profile-catalog.json`
-2141:  duplicate canon - pairs from `adapters/repository-bootstrap/publication-lock.json`: body
-2783:  `publication-lock.json` via a new stdlib CLI front
-2796:  path/hash, no copied body) plus one combined `publication-lock.json`. `registry.py` →

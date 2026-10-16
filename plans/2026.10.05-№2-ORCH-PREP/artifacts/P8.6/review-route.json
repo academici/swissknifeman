@@ -1,9 +1,0 @@
-{
-  "provider": "grok",
-  "model": "grok-4.7",
-  "effort": "high",
-  "session_id": "b1a02d60-acb5-407d-843d-a766007c288d",
-  "session_kind": "headless",
-  "actual_native_path": "/home/vostrikov/.grok/sessions/%2Fhome%2Fvostrikov%2Fprojects%2Fpackages%2Fswissknifeman/b1a02d60-acb5-407d-843d-a766007c288d",
-  "context_cli_argument": null
-}

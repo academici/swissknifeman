@@ -1,3 +1,0 @@
-d4bcc4b22ac209b3b4b76e54fb737a0c49e9c8ae	feat(task): схема конверта --output json, валидация вывода и --out, plan.py brief
-38b6b18d02c1966c27c7e9d6cdb15971e9b73e81	feat(task): добавить plan.py brief — проекцию execution-input exec/v1
-58025e3a4a7b024f0a917bbbf3d13e9ffacf04de	docs(orch): спроектировать PLAN2 «Подготовка к оркестрации»

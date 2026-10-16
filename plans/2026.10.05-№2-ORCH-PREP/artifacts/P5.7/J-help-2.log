@@ -1,9 +1,0 @@
-usage: orch.py validate [-h] [--quiet] kind file
-
-positional arguments:
-  kind
-  file
-
-options:
-  -h, --help  show this help message and exit
-  --quiet     suppress JSON output

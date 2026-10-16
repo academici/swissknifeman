@@ -1,3 +1,0 @@
-2feece57b4cda3709398094d2bb711419b95491d	fix(orch): закрыть read-only полномочия и warning-only валидацию
-67f34f32b315d6116d4380a96d28e1089fb67feb	feat(orch): добавить входные контракты exec/v1 и semantic checks
-58025e3a4a7b024f0a917bbbf3d13e9ffacf04de	docs(orch): спроектировать PLAN2 «Подготовка к оркестрации»

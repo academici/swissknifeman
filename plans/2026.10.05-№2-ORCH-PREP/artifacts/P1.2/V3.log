@@ -1,3 +1,0 @@
-observed CLI exit: 1
-[{"path": "/stages/1/on_unavailable", "code": "POLICY_REQUIRED_REFUSE", "message": "required stages must refuse when unavailable"}]
-POLICY_REQUIRED_REFUSE: required stages must refuse when unavailable

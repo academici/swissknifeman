@@ -1,9 +1,0 @@
-Standalone Skiller: tracked package + core (including shared provider data), no repository or host config
-tests: OK (Ran 802 tests)
-skill template: generated copy is byte-stable
-translations (strict): EN canonical template and generated projection are valid
-Traceback (most recent call last):
-  File "<stdin>", line 628, in <module>
-  File "/tmp/skiller-standalone.uEVs4oOp/vendor/skiller/lib/skiller/host.py", line 20, in <module>
-    from core import die, find_repo_root
-ModuleNotFoundError: No module named 'core'

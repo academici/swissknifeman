@@ -1,3 +1,0 @@
-2feece57b4cda3709398094d2bb711419b95491d	fix(orch): закрыть read-only полномочия и warning-only валидацию
-ecc7c299ef6aa61d18da59a508245f353ec044ea	feat(orch): добавить выходные контракты exec/v1 и synthetic traces
-58025e3a4a7b024f0a917bbbf3d13e9ffacf04de	docs(orch): спроектировать PLAN2 «Подготовка к оркестрации»

@@ -1,2 +1,0 @@
-test ! -e packages/skiller/tests/boundary_allowlist.json
-exit 0: allowlist absent

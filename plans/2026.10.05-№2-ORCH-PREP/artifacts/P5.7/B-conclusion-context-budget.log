@@ -1,4 +1,0 @@
-P5.6 372 KB (scoped; budget 256 KB; OVER)
-  documents 289 KB, brief 25 KB, decisions 16 KB, plan 11 KB, lessons 8 KB, item 6 KB, phase_dependencies 5 KB, phase 3 KB, reads 1 KB, upstream 0 KB, projection 0 KB, orchestration 0 KB, ref 0 KB, ready_units 0 KB, units 0 KB
-  duplicate reads: 6, 1 KB
-  top: knowledge/sources 139 KB (item), knowledge/contracts 26 KB (phase), knowledge/conclusion 23 KB (item), knowledge/task-changes 21 KB (item), knowledge/instruction-split 19 KB (item)

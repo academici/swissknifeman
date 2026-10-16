@@ -1,3 +1,0 @@
-python3 scripts/test-agent-framework-freshness.py: exit 0, 6 tests OK
-python3 scripts/test-task-plugin-cache-revision.py: exit 0, 5 tests OK
-python3 scripts/test-public-hygiene.py: exit 0, 11 tests OK

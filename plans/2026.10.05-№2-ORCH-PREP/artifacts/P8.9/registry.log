@@ -1,6 +1,0 @@
-Updated skills.json: 217 skills, 4 references
-Updated skills/_index.md (tag matrix)
-Updated plugin manifests: 55 plugins (.claude-plugin/marketplace.json)
-Updated root-bootstrap projections: 30 artifacts (.claude/skills + .agents/skills + publication-lock.json, P1.2/D31)
-Updated docs/guide/graph.md: 129 nodes, 180 edges
-Updated docs/guide/budget.md: 217 skills, ⊕11513 ↻270562 current

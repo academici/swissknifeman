@@ -1,8 +1,0 @@
-usage: orch.py launch show [-h] role provider
-
-positional arguments:
-  role
-  provider
-
-options:
-  -h, --help  show this help message and exit

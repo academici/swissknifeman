@@ -168,6 +168,10 @@ fails on its own marketplace. A hub clone is replaced by step 2 of the machine s
 - `skiller release` proposes `0.31.0` when a `feat:` commit is in range; for a patch release set the `CHANGELOG.md` heading by hand, bump the
   `planner` files (`command-routing.json`, `unit.json`, three `plugin.json`, `ownership.md`), then `skiller registry`,
   `render-provider-commands.py --root . --write --repair-owned`, `golden.py capture` and `skiller attest`.
-- `release-fleet` re-creates `~/.swissknifeman/receipts/` (legacy place) and ends `PARTIAL` (`DELIVERY_READBACK_FAILED`, `...PROVIDER_UNCONFIRMED`)
-  until the Claude Code session is restarted and the plugin cache is rebuilt; run it again after the restart.
+- `release-fleet` re-creates `~/.swissknifeman/receipts/` (legacy place). Up to v0.30.1 it ended `PARTIAL` (`DELIVERY_READBACK_FAILED` on stale
+  vendored `.agents/plugins`, `DELIVERY_PROVIDER_UNCONFIRMED` for a directory marketplace); from v0.30.2 it ends `GREEN` on a migrated machine.
+  The tag must point at `HEAD` (`RELEASE_FLEET_HEAD_MISMATCH` otherwise): commit docs before tagging.
+- Registries: after `skiller list --prune` and dropping a deleted clone from `maind` `registry.json` the fleet run has no `TARGET_MISSING`
+  rows. Never run package tests against the real state directory: `maind` onboard tests registered 15 `/tmp/tmp*` projects in
+  `skiller/projects.json`.
 - Claude Code plugin manifests must list agent files (`./agents/<name>.md`), not the directory, otherwise the plugin fails to load.

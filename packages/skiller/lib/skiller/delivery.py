@@ -3,6 +3,7 @@ from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime, timezone
 import io
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -280,6 +281,19 @@ def _recover_lock_locked(target, attestation, history, backup, *, dry_run=False)
     return rows, []
 
 
+def _native_codex_plugins(target):
+    """Plugins enabled through native Codex (``[plugins."<id>@swissknifeman"]`` with ``enabled = true``),
+    or None when the project has no native selection table at all."""
+    path = Path(target) / ".codex" / "config.toml"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8")
+    tables = re.findall(r'^\[plugins\."([^"@]+)@swissknifeman"\]\s*\n((?:(?!\[).*\n?)*)', text, flags=re.M)
+    if not tables:
+        return None
+    return sorted({name for name, body in tables if re.search(r'^enabled\s*=\s*true\b', body, flags=re.M)})
+
+
 def project_readback(target, value):
     target = Path(target)
     units = {u["id"]: u for u in value["units"]}
@@ -308,11 +322,23 @@ def project_readback(target, value):
             projection = unit["providers"]["claude-code"]
             errors.extend(name + "/" + p for p in verify_surface(source_root / projection["source"], projection))
         surfaces.append({"surface": "claude-activation/" + filename, "status": "blocked" if errors else "current", "errors": errors})
+    native = _native_codex_plugins(target)
+    if native is not None:
+        # Native Codex selection (.codex/config.toml) replaces vendored bundles: a leftover
+        # .agents/plugins tree is not a delivery surface and is never read back.
+        errors = ["unattested-plugin:" + name for name in native
+                  if name not in units or "codex" not in units[name]["providers"]]
+        surfaces.append({"surface": "codex-native/config", "status": "blocked" if errors else "current", "errors": errors})
     marker = target / ".agents/plugins/marketplace.json"
-    if marker.is_file():
+    if marker.is_file() and native is None:
         for entry in json.loads(marker.read_text())["plugins"]:
             name = entry["name"]
-            surface = units[name]["providers"]["codex"]
+            unit = units.get(name)
+            if not unit or "codex" not in unit["providers"]:
+                surfaces.append({"surface": "codex/" + str(name), "status": "blocked",
+                                 "errors": ["unattested-plugin:" + str(name)]})
+                continue
+            surface = unit["providers"]["codex"]
             errors = verify_surface(target / ".agents/plugins/bundles" / name, surface,
                                     reject_extras=True)
             surfaces.append({"surface": "codex/" + name, "digest": surface["tree_digest"],
@@ -321,6 +347,7 @@ def project_readback(target, value):
     if lock_path.is_file():
         lock = parse_lock(lock_path.read_bytes())
         errors = [r.target_path for r in lock.records if r.artifact_id.startswith("skiller.codex.connect.")
+                  and not (native is not None and r.target_path.startswith(".agents/plugins/"))
                   and (not (target / r.target_path).is_file() or
                        digest((target / r.target_path).read_bytes()) != r.rendered_hash)]
         surfaces.append({"surface": "provider-lock", "status": "blocked" if errors else "current", "errors": errors})
@@ -447,7 +474,12 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             installed = json.loads(listed.stdout)["installed"]
             for entry in installed:
                 name = entry.get("name")
-                if entry.get("marketplaceName") != "swissknifeman" or not entry.get("enabled") or name not in units:
+                if entry.get("marketplaceName") != "swissknifeman" or name not in units:
+                    continue
+                if not entry.get("enabled"):
+                    # Disabled by the owner: nothing is delivered to it, and nothing can be stale in use.
+                    receipt["targets"].append({"surface": "codex-cache/" + name, "status": "current",
+                                               "reason": "DELIVERY_DISABLED_BY_OWNER"})
                     continue
                 row = {"surface": "codex-cache/" + name, "status": "blocked"}
                 receipt["targets"].append(row)
@@ -505,6 +537,28 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
                         row["status"] = "updated"
                     save()
+        # A directory marketplace is read in place by Claude Code: there is no installed_plugins.json
+        # entry or cache copy to update, so the checkout itself is the delivered surface.
+        known_path = env.home / ".claude/plugins/known_marketplaces.json"
+        in_place = False
+        if known_path.is_file():
+            try:
+                declared = json.loads(known_path.read_text()).get("swissknifeman", {})
+                in_place = (declared.get("source", {}).get("source") == "directory"
+                            and Path(declared["source"].get("path", "")).resolve() == root.resolve())
+            except (OSError, ValueError, KeyError):
+                in_place = False
+        if in_place:
+            for unit in value["units"]:
+                projection = unit["providers"].get("claude-code")
+                expected = "claude-cache/" + unit["id"]
+                if (projection is None or "claude-code" not in unit.get("required_providers", [])
+                        or any(row.get("surface") == expected for row in receipt["targets"])):
+                    continue
+                errors = verify_surface(root / projection["source"], projection)
+                receipt["targets"].append({"surface": expected, "status": "blocked" if errors else "current",
+                                           "reason": "DELIVERY_DIRECTORY_MARKETPLACE", "readback": errors})
+            save()
         # Grok command plugins are machine-level plugins, not files in each
         # project's `.grok/` directory.  Update only the host's existing channels
         # and prove each installed cache against the attested Grok projection.

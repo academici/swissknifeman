@@ -16,9 +16,9 @@
 | orch | capability | 0.1.0 | own-repo | alpha | aicore |
 | orch-harness | bridge | 0.1.0 | hub | alpha | aicore, orch, harness |
 | orch-skiller | bridge | 0.1.0 | hub | alpha | aicore, orch, skiller |
-| planner | capability | 0.30.1 | own-repo | beta | aicore |
+| planner | capability | 0.30.2 | own-repo | beta | aicore |
 | planner-orch | bridge | 0.1.0 | hub | alpha | aicore, planner, orch |
-| skiller | capability | 0.19.4 | own-repo | beta | aicore |
+| skiller | capability | 0.19.5 | own-repo | beta | aicore |
 
 ## Ownership map
 

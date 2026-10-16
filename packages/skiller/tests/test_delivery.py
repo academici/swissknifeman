@@ -70,6 +70,30 @@ class DeliveryTests(unittest.TestCase):
                 rows = project_readback(target, attestation({}))
                 self.assertTrue(any(row["status"] != "current" for row in rows), rows)
 
+    def test_native_codex_selection_ignores_stale_vendored_bundles(self):
+        # Native Codex (.codex/config.toml) replaces vendored bundles: a stale leftover
+        # .agents/plugins tree must not block delivery, while an enabled unattested plugin does.
+        self.write(self.root / ".agents/plugins/marketplace.json",
+                   json.dumps({"plugins": [{"name": "plugin-a"}]}).encode())
+        self.write(self.root / ".agents/plugins/bundles/plugin-a/SKILL.md", b"stale")
+        stale = project_readback(self.root, attestation({"SKILL.md": b"fresh"}))
+        self.assertTrue(any(row["status"] == "blocked" for row in stale), stale)
+        self.write(self.root / ".codex/config.toml",
+                   b'[plugins."plugin-a@swissknifeman"]\nenabled = true\n\n'
+                   b'[plugins."system@swissknifeman"]\nenabled = false\n')
+        rows = project_readback(self.root, attestation({"SKILL.md": b"fresh"}))
+        self.assertTrue(rows and all(row["status"] == "current" for row in rows), rows)
+        self.write(self.root / ".codex/config.toml",
+                   b'[plugins."gone@swissknifeman"]\nenabled = true\n')
+        rows = project_readback(self.root, attestation({"SKILL.md": b"fresh"}))
+        self.assertTrue(any("unattested-plugin:gone" in row["errors"] for row in rows), rows)
+
+    def test_vendored_marketplace_with_unknown_plugin_is_reported_not_raised(self):
+        self.write(self.root / ".agents/plugins/marketplace.json",
+                   json.dumps({"plugins": [{"name": "system"}]}).encode())
+        rows = project_readback(self.root, attestation({}))
+        self.assertTrue(any(row["errors"] == ["unattested-plugin:system"] for row in rows), rows)
+
     def test_provider_extra_requires_exact_source_bound_migration_bytes(self):
         source = self.root / "source"
         self.write(source / "commands/plan-design.md",
@@ -285,6 +309,58 @@ class DeliveryTests(unittest.TestCase):
             receipt = deliver(env, "v1.0.0")
         runner.assert_any_call(["claude", "plugin", "update", "plugin-a@swissknifeman", "--scope", "local", "--yes"], cwd=str(project))
         self.assertEqual(receipt["status"], "GREEN")
+
+    def test_directory_marketplace_confirms_claude_in_place(self):
+        # Claude Code reads a directory marketplace from the checkout: no installed_plugins entry exists.
+        checkout = self.root / "checkout"
+        value = attestation({})
+        value["units"][0]["providers"]["claude-code"] = surface({})
+        value["units"][0]["required_providers"] = ["claude-code"]
+        self.write(checkout / "releases/v1.0.0.json", json.dumps(value).encode())
+        env = SimpleNamespace(root=checkout, home=self.root / "home")
+        self.write(env.home / ".claude/plugins/known_marketplaces.json", json.dumps(
+            {"swissknifeman": {"source": {"source": "directory", "path": str(checkout)}}}).encode())
+        with patch("skiller.delivery.find_repo_root", return_value=checkout), \
+                patch("skiller.delivery.check", return_value=[]), \
+                patch("skiller.delivery.subprocess.run", return_value=SimpleNamespace(stdout="abc\n", returncode=0)), \
+                patch("skiller.delivery.shutil.which", return_value=None):
+            receipt = deliver(env, "v1.0.0")
+        rows = [t for t in receipt["targets"] if t.get("surface") == "claude-cache/plugin-a"]
+        self.assertEqual([r["status"] for r in rows], ["current"], receipt["targets"])
+        self.assertEqual(receipt["status"], "GREEN")
+        # A marketplace pointing at another directory is not a confirmation.
+        self.write(env.home / ".claude/plugins/known_marketplaces.json", json.dumps(
+            {"swissknifeman": {"source": {"source": "directory", "path": str(self.root / "other")}}}).encode())
+        with patch("skiller.delivery.find_repo_root", return_value=checkout), \
+                patch("skiller.delivery.check", return_value=[]), \
+                patch("skiller.delivery.subprocess.run", return_value=SimpleNamespace(stdout="abc\n", returncode=0)), \
+                patch("skiller.delivery.shutil.which", return_value=None):
+            receipt = deliver(env, "v1.0.0")
+        self.assertEqual(receipt["status"], "PARTIAL")
+
+    def test_codex_plugin_disabled_by_owner_is_not_a_missing_delivery(self):
+        checkout = self.root / "checkout"
+        value = attestation({})
+        value["units"][0]["required_providers"] = ["codex"]
+        self.write(checkout / "releases/v1.0.0.json", json.dumps(value).encode())
+        env = SimpleNamespace(root=checkout, home=self.root / "home")
+
+        def run(command, **_kwargs):
+            if command[:3] == ["codex", "plugin", "list"]:
+                return SimpleNamespace(stdout=json.dumps({"installed": [
+                    {"name": "plugin-a", "marketplaceName": "swissknifeman", "enabled": False}]}), returncode=0)
+            if command[:4] == ["codex", "plugin", "marketplace", "list"]:
+                return SimpleNamespace(stdout=json.dumps({"marketplaces": []}), returncode=0)
+            return SimpleNamespace(stdout="abc\n", returncode=0)
+
+        with patch("skiller.delivery.find_repo_root", return_value=checkout), \
+                patch("skiller.delivery.check", return_value=[]), \
+                patch("skiller.delivery.subprocess.run", side_effect=run), \
+                patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "codex" else None):
+            receipt = deliver(env, "v1.0.0")
+        rows = [t for t in receipt["targets"] if t.get("surface") == "codex-cache/plugin-a"]
+        self.assertEqual([(r["status"], r["reason"]) for r in rows],
+                         [("current", "DELIVERY_DISABLED_BY_OWNER")], receipt["targets"])
 
     def _native_host(self, checkout, host):
         """Run a native delivery against `host` with fake grok/codex CLIs; return (receipt, calls)."""

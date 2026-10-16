@@ -15,7 +15,10 @@ executed there, **[verified]** as checked on real projects. Paths: `HUB=~/projec
 - Every project has `.swissknifeman/` (`config.toml`, `launcher.py` + lock, `hooks.env`, `provider-artifacts.lock.json`) and no
   `.swissknife.json`, `*.bak`, `*.env.ini` (except `review-gate.env.ini`, see below).
 - Plugins per project: `planner` instead of `task` (the `task` alias still resolves), `maind harness analyst brain` instead of `system`.
-- `releases/` is empty and `CHANGELOG.md` has no history; the first release of this line starts from a clean baseline.
+- Version line: hub `0.30.0` (tag `v0.30.0`, `releases/v0.30.0.json`). `CHANGELOG.md` holds only `[Unreleased]` and `[0.30.0]`; the old
+  release snapshots and history are gone (old tags `v0.5`…`v0.28.x` stay in git).
+- No stale caches anywhere: Claude/Codex/Grok plugin caches hold only the plugins of this release, no `~/.swissknifeman`, `~/.maind`,
+  hub-root `config.json`/`safe-dirs.json`/`*.bak`.
 
 ## What changed
 
@@ -67,10 +70,23 @@ Added to `plan/v1` (additive): schema `read-followups` (follow-ups and owner dec
    `task@` by `planner@` in `enabledPlugins` by hand (connect adds `planner` but keeps `system`; check there is no duplicate). **[done]**
    `/plugin marketplace update swissknifeman` is global (one `known_marketplaces.json` entry): run it once, in any project, then
    restart the Claude Code session in every project to load the new plugin set. **[done]**
-9. `swissknifeman doctor`: expected 11 ok / 7 warn / 2 fail on computer 1. The two fails (`aicore.doctor`, `skiller.doctor`:
+9. `swissknifeman doctor`: expected 14 ok / 4 warn / 2 fail on computer 1 once step 10 is done. The two fails (`aicore.doctor`, `skiller.doctor`:
    "probe output is not JSON") are a tooling defect, not the machine. Warns that are the owner's: memory daemon
    (`maind start --only memory`), `orch.sandbox` (bwrap needs an AppArmor profile on Ubuntu 24.04+), `analyst.partners`.
-10. Clean-up **[done on computer 1]**: delete the old clone folder(s), every `git worktree` of it (`git worktree list`, then
+10. **Caches — delete every old one, nothing of the previous version may take part** **[done]**:
+    - Claude Code: back up `~/.claude/plugins/installed_plugins.json`, drop every `*@swissknifeman` entry from it, then
+      `rm -rf ~/.claude/plugins/cache/swissknifeman ~/.claude/plugins/data/core-swissknifeman` (it was 1.9 GB of sha- and version-keyed copies,
+      among them `task/0.28.3` and `system`). They are re-created at the next session start / `/plugin marketplace update swissknifeman`
+      from the enabled plugins of each project; restart the session in every project.
+    - Codex and Grok: `rm -rf ~/.codex/plugins/cache/swissknifeman ~/.grok/installed-plugins/*`, then `./install.sh --force` in `$HUB`
+      reinstalls `core` and `planner` at the current version (Grok `registry.json` is recreated).
+    - Project side: `.agents/plugins/` vendored bundles are removed or regenerated (project step 7); `.swissknifeman/backups/` of a project
+      is only the safety copy of the upgrade — delete it once the project is committed and verified.
+    - Hub root: after step 4 delete `config.json`, `safe-dirs.json`, `safe-dirs.json.bak`, `CLAUDE.md.bak` (their content lives in
+      `[maind]`/`registry.json`/`harness/safe-dirs.json`; the originals are in the backup folder). Move `~/.swissknifeman/topology.json` to
+      `~/.local/state/swissknifeman/maind/topology.json` and delete `~/.swissknifeman`.
+    - `swissknifeman doctor` must print no `legacy` warning; expected afterwards 14 ok / 4 warn / 2 fail (see 9).
+11. Clean-up of clones **[done on computer 1]**: delete the old clone folder(s), every `git worktree` of it (`git worktree list`, then
     `git worktree prune`), temp sandboxes `/tmp/skm-sandbox-*`. Before deleting a clone, bring its branches in:
     `git fetch <clone> 'refs/heads/*:refs/heads/next/*'` and compare tags (`git tag | wc -l` equal) so nothing is lost.
 
@@ -110,6 +126,16 @@ fails on its own marketplace. A hub clone is replaced by step 2 of the machine s
 | vaulter | commit (branch off `improve/test-run-modes`): `SPUB_OWNERSHIP_CONFLICT` fixed by step 7, `.agents/plugins` dropped |
 | azguard, chatom | only git-ignored files changed — no commit (chatom's unrelated dirty files untouched) |
 | skm-orch-dev | hub clone — not upgraded, deleted with the other clones |
+
+## Release 0.30.0 (what was done for the version line)
+
+`CHANGELOG.md` heading `[0.30.0]`; `planner` follows it (`packages/planner/configs/command-routing.json` `plugin_version`, three
+`plugin.json`, `unit.json`, `ownership.md`), bridge range `^0.30`; package-owned plugins were aligned with their `package.json`
+(analyst 0.4.0, harness 0.7.2, maind 0.6.1, skiller 0.19.3) and the skill units that changed bytes since `v0.28.3` were bumped
+(`core`, `devops`, `general`, `laravel-testing`, `quality`, `axioma`) — otherwise `RELEASE_IMMUTABLE_TUPLE`. Then `skiller registry`,
+`render-provider-commands.py --write --repair-owned`, `golden.py capture` (planner-provider-commands, skiller-registry),
+`skiller attest --release v0.30.0 --previous v0.28.3`, `verify-tag.py v0.30.0`, tag, push. Each later release is the usual flow
+(`skiller release`, `version-guard`). The `task` alias is to be removed in the next minor.
 
 ## Tooling facts met on the way
 

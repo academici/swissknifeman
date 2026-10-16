@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "4dc398ce6310",
-  "reason": "skm moves to the hub root (plugins/skm): skiller no longer renders the skm unit or its Codex adapter",
+  "captured_from": "fe31f5a5b17a",
+  "reason": "unit versions bumped for v0.30.0",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

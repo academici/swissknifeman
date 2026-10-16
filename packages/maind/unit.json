@@ -3,7 +3,7 @@
   "id": "maind",
   "title": "Project memory and code graph hub",
   "kind": "capability",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "stability": "beta",
   "destination": "hub",
   "requires": [

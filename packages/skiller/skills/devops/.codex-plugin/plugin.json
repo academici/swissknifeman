@@ -1,6 +1,6 @@
 {
   "name": "devops",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Docker environments, CI/CD pipelines, GitOps",
   "skills": [
     "./ci-cd",

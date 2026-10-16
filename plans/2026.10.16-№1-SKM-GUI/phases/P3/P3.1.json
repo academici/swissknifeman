@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.1",
   "title": "aicore: lock слоя, CAS expected_revision, многооперационный патч и откат в записи конфига; swissknifeman config set|unset --expected-revision",
-  "status": "in_progress",
+  "status": "todo",
   "summary": "aicore.config.model аддитивно: layer_revision (sha256_tagged байтов файла), LayerSnapshot + read_layer, plan_layer_edit (чистый многооперационный патч с issues), apply_layer_patch (layer_lock flock на <realpath>.lock → CAS expected_revision → plan → backup → atomic_write_text → перечитать и откатить при сбое), resolve(layer_texts=); edit_layer_file — обёртка над apply_layer_patch, EditResult.revision; коды CONFIG_REVISION_CONFLICT, CONFIG_LOCKED, CONFIG_EDIT_REFUSED; CLI swissknifeman config set|unset --expected-revision/--lock-timeout и revision в --json и config paths --json; gitignore-policy config-locks; тесты гонок двух процессов.",
   "why": "Сейчас edit_layer_file делает read-modify-write без lock и без проверки revision: два писателя (CLI↔GUI, GUI↔GUI) теряют обновление, внешнее изменение молча перезаписывается (нарушение I8). Жёсткие риски: потеря обновления при гонке процессов, lock на inode, который меняет os.replace, частично записанный или невалидный файл после записи, значение секрета в TOML или в сообщении ошибки, поломка существующих вызовов edit_layer_file в maind (распаковка EditResult), совместимость aicore с Python 3.9.",
   "scope": {
@@ -217,13 +217,6 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": {
-    "started_at": "2026-10-16T18:23:37Z",
-    "executor": {
-      "provider": "claude-code",
-      "model": "sonnet",
-      "session": "run-ac7c891da1e652551f541ae6"
-    }
-  },
-  "updated_at": "2026-10-16T18:23:37Z"
+  "result": null,
+  "updated_at": "2026-10-16T18:24:49Z"
 }

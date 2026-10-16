@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:trust:v1",
+  "title": "trust",
+  "description": "Trust state of one plugin (a hub bridge or an external extension): life cycle state, the two enable flags, compatibility, failures, the status of each declared effect and the grants. Trust is not transitive; a grant is bound to a manifest digest.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "id",
+    "source",
+    "state",
+    "runtime_enabled",
+    "ui_enabled",
+    "manifest_digest",
+    "compatibility",
+    "failures",
+    "permissions",
+    "grants"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:gui:trust:v1",
+      "description": "Contract id of this document."
+    },
+    "id": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+      "description": "Plugin id: the owner of its contribution."
+    },
+    "source": {
+      "enum": [
+        "unit",
+        "extension"
+      ],
+      "description": "Where the plugin comes from."
+    },
+    "state": {
+      "$ref": "#/$defs/plugin_state",
+      "description": "Life cycle state."
+    },
+    "runtime_enabled": {
+      "type": "boolean",
+      "description": "Queries, commands and processes of the plugin may run."
+    },
+    "ui_enabled": {
+      "type": "boolean",
+      "description": "Routes, widgets and docs of the plugin are shown."
+    },
+    "manifest_digest": {
+      "$ref": "urn:swissknifeman:aicore:digest:v1",
+      "description": "Digest of the manifest and contribution the state was computed for."
+    },
+    "compatibility": {
+      "type": "object",
+      "description": "Compatibility with the host.",
+      "required": [
+        "protocol_ok",
+        "missing_contracts"
+      ],
+      "properties": {
+        "protocol_ok": {
+          "type": "boolean",
+          "description": "The host protocol is inside the plugin's gui_protocol range."
+        },
+        "missing_contracts": {
+          "type": "array",
+          "description": "Required contracts the host does not support.",
+          "items": {
+            "type": "object",
+            "description": "One contract.",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^urn:swissknifeman:[a-z0-9-]+:[a-z0-9-]+(:[a-z0-9-]+)*$",
+                "description": "Contract id without the version."
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^v[1-9][0-9]*$",
+                "description": "Contract major version."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "failures": {
+      "type": "object",
+      "description": "Recent failures that count toward quarantine.",
+      "required": [
+        "count",
+        "window_s"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Failures inside the window."
+        },
+        "window_s": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Length of the window in seconds."
+        },
+        "last_code": {
+          "$ref": "urn:swissknifeman:gui:api-error:v1#/$defs/code",
+          "description": "Code of the last failure."
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "array",
+      "description": "Status of every declared effect.",
+      "items": {
+        "$ref": "#/$defs/effect_status",
+        "description": "One effect."
+      }
+    },
+    "grants": {
+      "type": "array",
+      "description": "Grants of the plugin.",
+      "items": {
+        "$ref": "#/$defs/grant",
+        "description": "One grant."
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "enforcement": {
+      "enum": [
+        "declared",
+        "enforced",
+        "advisory"
+      ],
+      "description": "How an effect is limited: declared only, enforced by the platform, or advisory (shown, not applied). The UI never shows enforced when the platform does not apply it."
+    },
+    "effect_status": {
+      "type": "object",
+      "description": "Status of one effect.",
+      "required": [
+        "effect",
+        "declared",
+        "enforcement"
+      ],
+      "properties": {
+        "effect": {
+          "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/effect",
+          "description": "The effect."
+        },
+        "declared": {
+          "type": "boolean",
+          "description": "The plugin declares the effect."
+        },
+        "enforcement": {
+          "$ref": "#/$defs/enforcement",
+          "description": "How the effect is limited."
+        }
+      },
+      "additionalProperties": false
+    },
+    "grant_id": {
+      "type": "string",
+      "pattern": "^grant-[0-9a-f]{32}$",
+      "description": "Grant id."
+    },
+    "grant": {
+      "type": "object",
+      "description": "Permission of one plugin for one effect in one project, bound to a manifest digest.",
+      "required": [
+        "id",
+        "plugin",
+        "capability",
+        "project_id",
+        "manifest_digest",
+        "granted_at",
+        "expires_at",
+        "granted_by"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/grant_id",
+          "description": "Grant id."
+        },
+        "plugin": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+          "description": "Plugin id."
+        },
+        "capability": {
+          "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/effect",
+          "description": "The granted effect."
+        },
+        "project_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "description": "Project id."
+            },
+            {
+              "type": "null",
+              "description": "Every project."
+            }
+          ],
+          "description": "Project the grant applies to; null for every project."
+        },
+        "manifest_digest": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Digest of the manifest the grant was given for; a change with new permissions voids the grant."
+        },
+        "granted_at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the grant was given."
+        },
+        "expires_at": {
+          "oneOf": [
+            {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+              "description": "Expiry time."
+            },
+            {
+              "type": "null",
+              "description": "No expiry."
+            }
+          ],
+          "description": "When the grant ends; null for no expiry."
+        },
+        "granted_by": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Who gave the grant."
+        }
+      },
+      "additionalProperties": false
+    },
+    "plugin_state": {
+      "enum": [
+        "discovered",
+        "compatible",
+        "enabled",
+        "starting",
+        "healthy",
+        "degraded",
+        "quarantined",
+        "disabled",
+        "incompatible",
+        "invalid",
+        "permission_denied"
+      ],
+      "description": "Life cycle state of a plugin."
+    }
+  }
+}

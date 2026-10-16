@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:api-error:v1",
+  "title": "api-error",
+  "description": "Error body of every failed request of the local gui API and of the error frame of the event stream. The message is safe to show: it never carries a secret, a token or a stack trace.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "error"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:gui:api-error:v1",
+      "description": "Contract id of this document."
+    },
+    "error": {
+      "$ref": "#/$defs/error",
+      "description": "The error."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "description": "Stable error code; the registry with class and HTTP status is in docs/api.md."
+    },
+    "class": {
+      "enum": [
+        "invalid",
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "locked",
+        "incompatible",
+        "unavailable",
+        "timeout",
+        "limit",
+        "internal"
+      ],
+      "description": "Error class: what the client can do about it."
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9-]{8,64}$",
+      "description": "Id that ties the error to the audit log and the backend log."
+    },
+    "issue": {
+      "type": "object",
+      "description": "One validation issue.",
+      "required": [
+        "pointer",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "pointer": {
+          "type": "string",
+          "pattern": "^(/([^~/]|~[01])*)*$",
+          "description": "JSON pointer of the value in the request."
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$|^[A-Z][A-Z0-9_]*$",
+          "description": "Validation issue code (aicore.util.schema codes or a gui rule code)."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Safe text of the issue."
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "description": "The error object.",
+      "required": [
+        "code",
+        "class",
+        "message",
+        "retryable",
+        "correlation_id"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/code",
+          "description": "Error code."
+        },
+        "class": {
+          "$ref": "#/$defs/class",
+          "description": "Error class."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Safe text for the user."
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Whether the same request may succeed later without a change."
+        },
+        "correlation_id": {
+          "$ref": "#/$defs/correlation_id",
+          "description": "Correlation id."
+        },
+        "details": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z][a-z0-9_]*$": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ],
+              "description": "One detail value."
+            }
+          },
+          "additionalProperties": false,
+          "description": "Scalar details by name."
+        },
+        "issues": {
+          "type": "array",
+          "description": "Validation issues of the request.",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/issue",
+            "description": "One issue."
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

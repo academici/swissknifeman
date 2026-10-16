@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:run:v1",
+  "title": "run",
+  "description": "Record of one command run: what ran, in which context, with which permission decision, its state and outcome. Input values and argv are stored after redaction; no field holds a secret value.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "run_id",
+    "command",
+    "owner",
+    "state",
+    "dry_run",
+    "context",
+    "input",
+    "created_at",
+    "actor",
+    "permission",
+    "log",
+    "correlation_id"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:gui:run:v1",
+      "description": "Contract id of this document."
+    },
+    "run_id": {
+      "$ref": "#/$defs/run_id",
+      "description": "Run id."
+    },
+    "command": {
+      "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/local_id",
+      "description": "Command id of the contribution."
+    },
+    "owner": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+      "description": "Owner of the command."
+    },
+    "state": {
+      "$ref": "#/$defs/state",
+      "description": "Current state."
+    },
+    "dry_run": {
+      "type": "boolean",
+      "description": "The run is a dry run."
+    },
+    "context": {
+      "type": "object",
+      "description": "Context the command ran in.",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Project id."
+        },
+        "plan_id": {
+          "type": "string",
+          "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]{2}-№[0-9]+-[A-Z][A-Z0-9-]*$|^PLAN[0-9]+$",
+          "description": "Plan id (planner plan id or PLAN<N>)."
+        },
+        "item_id": {
+          "type": "string",
+          "pattern": "^P[0-9]+\\.[0-9]+$",
+          "description": "Plan item id."
+        }
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z][a-z0-9_]*$": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "description": "One input value."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Input values by field name, after redaction."
+    },
+    "created_at": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+      "description": "When the run was requested."
+    },
+    "started_at": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+      "description": "When the process started."
+    },
+    "finished_at": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+      "description": "When the run reached a terminal state."
+    },
+    "exit": {
+      "$ref": "#/$defs/exit",
+      "description": "How the process ended."
+    },
+    "executable": {
+      "type": "object",
+      "description": "The program that ran.",
+      "required": [
+        "path",
+        "digest"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path after realpath."
+        },
+        "digest": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Digest of the program file."
+        }
+      },
+      "additionalProperties": false
+    },
+    "argv_redacted": {
+      "type": "array",
+      "description": "The argv after redaction.",
+      "items": {
+        "type": "string",
+        "description": "One argument."
+      }
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Working folder of the process."
+    },
+    "actor": {
+      "type": "object",
+      "description": "Who requested the run.",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "user",
+            "system"
+          ],
+          "description": "A person through the UI or the system itself."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Actor id."
+        }
+      },
+      "additionalProperties": false
+    },
+    "permission": {
+      "type": "object",
+      "description": "The authorization decision.",
+      "required": [
+        "decision",
+        "effects",
+        "grants"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "allowed",
+            "confirmed",
+            "denied"
+          ],
+          "description": "Allowed by grants, confirmed by the user, or denied."
+        },
+        "effects": {
+          "type": "array",
+          "description": "Effects of the command and how each is limited.",
+          "items": {
+            "type": "object",
+            "description": "One effect.",
+            "required": [
+              "effect",
+              "enforcement"
+            ],
+            "properties": {
+              "effect": {
+                "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/effect",
+                "description": "The effect."
+              },
+              "enforcement": {
+                "$ref": "urn:swissknifeman:gui:trust:v1#/$defs/enforcement",
+                "description": "How the effect is limited."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "grants": {
+          "type": "array",
+          "description": "Grants used by the decision.",
+          "items": {
+            "$ref": "urn:swissknifeman:gui:trust:v1#/$defs/grant_id",
+            "description": "Grant id."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "log": {
+      "type": "object",
+      "description": "Size of the stored log.",
+      "required": [
+        "stdout_bytes",
+        "stderr_bytes",
+        "truncated"
+      ],
+      "properties": {
+        "stdout_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Stored bytes of standard output."
+        },
+        "stderr_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Stored bytes of standard error."
+        },
+        "truncated": {
+          "type": "boolean",
+          "description": "Output beyond the limit was dropped."
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "$ref": "urn:swissknifeman:gui:api-error:v1#/$defs/error",
+      "description": "Why the run failed, was denied or was lost."
+    },
+    "correlation_id": {
+      "$ref": "urn:swissknifeman:gui:api-error:v1#/$defs/correlation_id",
+      "description": "Correlation id of the request."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^run-[0-9a-f]{32}$",
+      "description": "Run id."
+    },
+    "state": {
+      "enum": [
+        "queued",
+        "authorizing",
+        "denied",
+        "starting",
+        "failed_to_start",
+        "running",
+        "cancelling",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "lost"
+      ],
+      "description": "State of a run; the transitions are in docs/api.md and gui.core.run_states."
+    },
+    "exit": {
+      "type": "object",
+      "description": "How the process ended.",
+      "required": [
+        "code",
+        "signal"
+      ],
+      "properties": {
+        "code": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "description": "Exit code."
+            },
+            {
+              "type": "null",
+              "description": "No exit code."
+            }
+          ],
+          "description": "Exit code; null when a signal ended it."
+        },
+        "signal": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^SIG[A-Z0-9]+$",
+              "description": "Signal name such as SIGTERM."
+            },
+            {
+              "type": "null",
+              "description": "No signal."
+            }
+          ],
+          "description": "Signal name; null when it exited."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

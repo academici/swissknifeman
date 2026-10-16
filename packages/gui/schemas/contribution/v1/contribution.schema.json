@@ -139,6 +139,10 @@
                "markdown", "dependency-graph", "board", "command-form"],
       "description": "Host view that renders the data; the data of a query follows the same kind of view-data/v1."
     },
+    "effect": {
+      "enum": ["read", "project.write", "plan.write", "config.write", "process.spawn", "network", "secrets.read", "terminal"],
+      "description": "Effect of a command that the host authorizes; terminal is reserved and refused in v1."
+    },
     "scope": {
       "enum": ["fleet", "project", "plan", "item", "run"],
       "description": "Context the host must pass: the fleet, a project, a plan, a plan item or a run."
@@ -272,10 +276,7 @@
           "minItems": 1,
           "uniqueItems": true,
           "description": "Effects the command may have; the host authorizes each.",
-          "items": {
-            "enum": ["read", "project.write", "plan.write", "config.write", "process.spawn", "network", "secrets.read", "terminal"],
-            "description": "One effect; terminal is reserved and refused in v1."
-          }
+          "items": {"$ref": "#/$defs/effect", "description": "One effect."}
         },
         "risk": {"enum": ["low", "medium", "high"], "description": "Risk class of the command."},
         "confirmation": {"enum": ["none", "risk-based", "always"], "description": "When the user must confirm the run."},

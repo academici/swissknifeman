@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "unsubscribe",
+  "id": "main"
+}

@@ -46,4 +46,6 @@ extensions. Each contract is a JSON Schema validated by `aicore.util.schema` (th
 | `catalog` | `urn:swissknifeman:gui:catalog:v1` | deterministic resolved catalog of contributions with rejection codes and a digest | P1.4 |
 
 The column "Added by" names the step of the module plan that freezes the contract; until then the row is a reservation.
-Frozen: `contribution`, `view-data` (field reference: [docs/contribution.md](../docs/contribution.md)).
+Frozen: `contribution`, `view-data` (field reference: [docs/contribution.md](../docs/contribution.md)); `api-error`,
+`bootstrap`, `run`, `stream`, `trust`, `config-mutation` (code registry, run transitions, stream and write rules:
+[docs/api.md](../docs/api.md)).

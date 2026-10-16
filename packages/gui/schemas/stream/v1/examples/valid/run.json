@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "run",
+  "seq": 44,
+  "sub": "runs",
+  "run": {
+    "run_id": "run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "state": "succeeded",
+    "exit": {
+      "code": 0,
+      "signal": null
+    },
+    "finished_at": "2026-10-16T15:20:00Z"
+  }
+}

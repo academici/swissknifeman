@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-mutation:v1",
+  "kind": "preview",
+  "preview_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "module": "planner",
+  "layer": "project",
+  "file": "/home/user/projects/swissknifeman/.swissknifeman/config.toml",
+  "revision": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "diff": [
+    {
+      "key": "budget.context_tokens",
+      "before": 23000,
+      "after": 16000,
+      "effective_before": {
+        "value": 23000,
+        "layer": "project"
+      },
+      "effective_after": {
+        "value": 16000,
+        "layer": "project"
+      }
+    },
+    {
+      "key": "route.default_model",
+      "before": "claude/opus",
+      "after": null,
+      "effective_before": {
+        "value": "claude/opus",
+        "layer": "project"
+      },
+      "effective_after": {
+        "value": null,
+        "layer": null
+      }
+    }
+  ],
+  "issues": [],
+  "confirm_required": true,
+  "confirm_reasons": [
+    "removes the default model"
+  ]
+}

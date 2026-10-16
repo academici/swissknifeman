@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:stream:v1",
+  "title": "stream",
+  "description": "Frames of the WebSocket /v1/events: subscribe and unsubscribe from the client; event, log, run, snapshot_required, heartbeat and error from the server. One kind per frame, chosen by the const field kind.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/subscribe",
+      "description": "Client: open or replace a subscription."
+    },
+    {
+      "$ref": "#/$defs/unsubscribe",
+      "description": "Client: close a subscription."
+    },
+    {
+      "$ref": "#/$defs/event",
+      "description": "Server: one journal event."
+    },
+    {
+      "$ref": "#/$defs/log",
+      "description": "Server: a chunk of a run log."
+    },
+    {
+      "$ref": "#/$defs/run",
+      "description": "Server: a run state change."
+    },
+    {
+      "$ref": "#/$defs/snapshot_required",
+      "description": "Server: the client must reload a snapshot."
+    },
+    {
+      "$ref": "#/$defs/heartbeat",
+      "description": "Server: the connection is alive."
+    },
+    {
+      "$ref": "#/$defs/error",
+      "description": "Server: an error."
+    }
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:stream:v1",
+      "description": "Contract id of this document."
+    },
+    "sub_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,32}$",
+      "description": "Subscription id chosen by the client."
+    },
+    "subscribe": {
+      "type": "object",
+      "description": "Open a subscription or replace the one with the same id.",
+      "required": [
+        "$schema",
+        "kind",
+        "id",
+        "filter",
+        "cursor",
+        "epoch"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "subscribe",
+          "description": "Kind of frame."
+        },
+        "id": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id."
+        },
+        "filter": {
+          "type": "object",
+          "description": "What the subscription receives; an absent list means every value.",
+          "properties": {
+            "projects": {
+              "type": "array",
+              "description": "Project ids.",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Project id."
+              }
+            },
+            "runs": {
+              "type": "array",
+              "description": "Run ids.",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "urn:swissknifeman:gui:run:v1#/$defs/run_id",
+                "description": "Run id."
+              }
+            },
+            "owners": {
+              "type": "array",
+              "description": "Owners of commands and events.",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+                "description": "Owner."
+              }
+            },
+            "types": {
+              "type": "array",
+              "description": "Event type patterns (shell-style wildcards).",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z*][a-z0-9.*_-]*$",
+                "description": "Event type pattern."
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "cursor": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Last seq the client has."
+            },
+            {
+              "type": "null",
+              "description": "No replay."
+            }
+          ],
+          "description": "Replay after this seq; null for live frames only."
+        },
+        "epoch": {
+          "oneOf": [
+            {
+              "$ref": "urn:swissknifeman:gui:bootstrap:v1#/$defs/epoch",
+              "description": "Epoch."
+            },
+            {
+              "type": "null",
+              "description": "No epoch."
+            }
+          ],
+          "description": "Backend epoch the cursor belongs to (from bootstrap/v1); null without a cursor."
+        }
+      },
+      "additionalProperties": false
+    },
+    "unsubscribe": {
+      "type": "object",
+      "description": "Close a subscription.",
+      "required": [
+        "$schema",
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "unsubscribe",
+          "description": "Kind of frame."
+        },
+        "id": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id."
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "description": "One event of the project journal, unchanged.",
+      "required": [
+        "$schema",
+        "kind",
+        "seq",
+        "sub",
+        "event"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "event",
+          "description": "Kind of frame."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sequence number of the frame; monotonic inside one backend epoch."
+        },
+        "sub": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id."
+        },
+        "event": {
+          "$ref": "urn:swissknifeman:aicore:event:v1",
+          "description": "The event (aicore event/v1)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "log": {
+      "type": "object",
+      "description": "A redacted chunk of the output of a run.",
+      "required": [
+        "$schema",
+        "kind",
+        "seq",
+        "sub",
+        "run_id",
+        "stream",
+        "chunk",
+        "text",
+        "truncated"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "log",
+          "description": "Kind of frame."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sequence number of the frame; monotonic inside one backend epoch."
+        },
+        "sub": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id."
+        },
+        "run_id": {
+          "$ref": "urn:swissknifeman:gui:run:v1#/$defs/run_id",
+          "description": "Run id."
+        },
+        "stream": {
+          "enum": [
+            "stdout",
+            "stderr"
+          ],
+          "description": "Output stream."
+        },
+        "chunk": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of the chunk inside the run stream."
+        },
+        "text": {
+          "type": "string",
+          "description": "Redacted text of the chunk."
+        },
+        "truncated": {
+          "type": "boolean",
+          "description": "Text of the chunk beyond the limit was dropped."
+        }
+      },
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "description": "A state change of a run (a subset of run/v1).",
+      "required": [
+        "$schema",
+        "kind",
+        "seq",
+        "sub",
+        "run"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "run",
+          "description": "Kind of frame."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sequence number of the frame; monotonic inside one backend epoch."
+        },
+        "sub": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id."
+        },
+        "run": {
+          "type": "object",
+          "description": "The changed fields of the run.",
+          "required": [
+            "run_id",
+            "state"
+          ],
+          "properties": {
+            "run_id": {
+              "$ref": "urn:swissknifeman:gui:run:v1#/$defs/run_id",
+              "description": "Run id."
+            },
+            "state": {
+              "$ref": "urn:swissknifeman:gui:run:v1#/$defs/state",
+              "description": "New state."
+            },
+            "exit": {
+              "$ref": "urn:swissknifeman:gui:run:v1#/$defs/exit",
+              "description": "How the process ended."
+            },
+            "finished_at": {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+              "description": "When the run reached a terminal state."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "snapshot_required": {
+      "type": "object",
+      "description": "The cursor cannot be served: reload the state through the HTTP API, then subscribe without a cursor.",
+      "required": [
+        "$schema",
+        "kind",
+        "sub",
+        "reason"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "snapshot_required",
+          "description": "Kind of frame."
+        },
+        "sub": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id."
+        },
+        "reason": {
+          "enum": [
+            "cursor_expired",
+            "overflow"
+          ],
+          "description": "The cursor left the retention, or the subscription overflowed its queue."
+        }
+      },
+      "additionalProperties": false
+    },
+    "heartbeat": {
+      "type": "object",
+      "description": "The connection is alive.",
+      "required": [
+        "$schema",
+        "kind",
+        "seq",
+        "at"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "heartbeat",
+          "description": "Kind of frame."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sequence number of the frame; monotonic inside one backend epoch."
+        },
+        "at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "Server time."
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "description": "An error of a subscription or of the connection.",
+      "required": [
+        "$schema",
+        "kind",
+        "error"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "error",
+          "description": "Kind of frame."
+        },
+        "sub": {
+          "$ref": "#/$defs/sub_id",
+          "description": "Subscription id; absent for a connection error."
+        },
+        "error": {
+          "$ref": "urn:swissknifeman:gui:api-error:v1#/$defs/error",
+          "description": "The error."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

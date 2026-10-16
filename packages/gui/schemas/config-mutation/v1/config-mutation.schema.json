@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:config-mutation:v1",
+  "title": "config-mutation",
+  "description": "Configuration write of the GUI: preview_request, preview, commit_request, commit_result. A write is never blind: the preview names the revision it was computed on, and the commit repeats it.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/preview_request",
+      "description": "Ask for a preview of a patch."
+    },
+    {
+      "$ref": "#/$defs/preview",
+      "description": "The preview of a patch."
+    },
+    {
+      "$ref": "#/$defs/commit_request",
+      "description": "Write a previewed patch."
+    },
+    {
+      "$ref": "#/$defs/commit_result",
+      "description": "The written file."
+    }
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:config-mutation:v1",
+      "description": "Contract id of this document."
+    },
+    "value": {
+      "oneOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ],
+          "description": "A scalar."
+        },
+        {
+          "type": "array",
+          "description": "A list of scalars.",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ],
+            "description": "One scalar."
+          }
+        }
+      ],
+      "description": "A configuration value: a scalar or a list of scalars (TOML has no null)."
+    },
+    "effective": {
+      "type": "object",
+      "description": "Effective value and the layer it comes from.",
+      "required": [
+        "value",
+        "layer"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/value",
+              "description": "Value."
+            },
+            {
+              "type": "null",
+              "description": "Not set."
+            }
+          ],
+          "description": "Effective value; null when no layer sets it."
+        },
+        "layer": {
+          "oneOf": [
+            {
+              "enum": [
+                "defaults",
+                "machine",
+                "project",
+                "env",
+                "invocation",
+                "flags"
+              ],
+              "description": "aicore configuration layer."
+            },
+            {
+              "type": "null",
+              "description": "No layer."
+            }
+          ],
+          "description": "Layer that sets the value; null when none does."
+        }
+      },
+      "additionalProperties": false
+    },
+    "preview_request": {
+      "type": "object",
+      "description": "A typed patch of one layer file.",
+      "required": [
+        "$schema",
+        "kind",
+        "module",
+        "layer",
+        "expected_revision",
+        "patch"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "preview_request",
+          "description": "Kind of document."
+        },
+        "module": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+          "description": "Module whose configuration changes."
+        },
+        "layer": {
+          "enum": [
+            "machine",
+            "project"
+          ],
+          "description": "File layer the GUI may write."
+        },
+        "expected_revision": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Revision (digest of the file content) the patch was made on."
+        },
+        "patch": {
+          "type": "array",
+          "description": "Operations in order.",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "description": "Set a key.",
+                "required": [
+                  "op",
+                  "key",
+                  "value"
+                ],
+                "properties": {
+                  "op": {
+                    "const": "set",
+                    "description": "Operation."
+                  },
+                  "key": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                    "description": "Dotted key of the module configuration."
+                  },
+                  "value": {
+                    "$ref": "#/$defs/value",
+                    "description": "New value; a secret key takes only a secret reference (env:// or keyring://)."
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "description": "Remove a key from the layer.",
+                "required": [
+                  "op",
+                  "key"
+                ],
+                "properties": {
+                  "op": {
+                    "const": "unset",
+                    "description": "Operation."
+                  },
+                  "key": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                    "description": "Dotted key of the module configuration."
+                  }
+                },
+                "additionalProperties": false
+              }
+            ],
+            "description": "One operation."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "preview": {
+      "type": "object",
+      "description": "What the patch would change; no side effects.",
+      "required": [
+        "$schema",
+        "kind",
+        "preview_id",
+        "module",
+        "layer",
+        "file",
+        "revision",
+        "diff",
+        "issues",
+        "confirm_required",
+        "confirm_reasons"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "preview",
+          "description": "Kind of document."
+        },
+        "preview_id": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Digest of module, layer, revision and patch."
+        },
+        "module": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+          "description": "Module."
+        },
+        "layer": {
+          "enum": [
+            "machine",
+            "project"
+          ],
+          "description": "File layer the GUI may write."
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path of the layer file."
+        },
+        "revision": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Revision the preview was computed on."
+        },
+        "diff": {
+          "type": "array",
+          "description": "Changed keys.",
+          "items": {
+            "type": "object",
+            "description": "One changed key.",
+            "required": [
+              "key",
+              "before",
+              "after",
+              "effective_before",
+              "effective_after"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                "description": "Dotted key of the module configuration."
+              },
+              "before": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/value",
+                    "description": "Value."
+                  },
+                  {
+                    "type": "null",
+                    "description": "Absent."
+                  }
+                ],
+                "description": "Value in the layer before; null when absent."
+              },
+              "after": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/value",
+                    "description": "Value."
+                  },
+                  {
+                    "type": "null",
+                    "description": "Absent."
+                  }
+                ],
+                "description": "Value in the layer after; null when absent."
+              },
+              "effective_before": {
+                "$ref": "#/$defs/effective",
+                "description": "Effective value before."
+              },
+              "effective_after": {
+                "$ref": "#/$defs/effective",
+                "description": "Effective value after."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "issues": {
+          "type": "array",
+          "description": "Validation issues; a preview with issues cannot be committed.",
+          "items": {
+            "type": "object",
+            "description": "One issue.",
+            "required": [
+              "key",
+              "code",
+              "message"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                "description": "Dotted key of the module configuration."
+              },
+              "code": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$|^[A-Z][A-Z0-9_]*$",
+                "description": "Issue code."
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Safe text of the issue."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "confirm_required": {
+          "type": "boolean",
+          "description": "The commit must carry confirmed: true."
+        },
+        "confirm_reasons": {
+          "type": "array",
+          "description": "Why a confirmation is required.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One reason."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "commit_request": {
+      "type": "object",
+      "description": "Write the previewed patch if the file still has the revision.",
+      "required": [
+        "$schema",
+        "kind",
+        "preview_id",
+        "expected_revision",
+        "confirmed"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "commit_request",
+          "description": "Kind of document."
+        },
+        "preview_id": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Preview to write."
+        },
+        "expected_revision": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Revision of the preview."
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "The user confirmed the change."
+        }
+      },
+      "additionalProperties": false
+    },
+    "commit_result": {
+      "type": "object",
+      "description": "The written file.",
+      "required": [
+        "$schema",
+        "kind",
+        "revision",
+        "file",
+        "backup"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "commit_result",
+          "description": "Kind of document."
+        },
+        "revision": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "New revision of the file."
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path of the layer file."
+        },
+        "backup": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "description": "Backup path."
+            },
+            {
+              "type": "null",
+              "description": "No backup."
+            }
+          ],
+          "description": "Path of the backup of the old file; null when the file was new."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

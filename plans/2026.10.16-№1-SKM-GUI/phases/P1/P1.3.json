@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.3",
   "title": "Контракты API v1: api-error, bootstrap, run, stream, trust, config-mutation; таблицы состояний run и кодов ошибок в коде",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Контракты API v1: api-error (envelope ошибок и реестр кодов), bootstrap (handshake версий и протокола), run (запись run и 12 состояний), stream (кадры WebSocket по const kind с cursor и snapshot_required), trust (enforcement declared|enforced|advisory, grant, plugin_state, документ plugin), config-mutation (preview_request, preview, commit_request, commit_result) с фикстурами; данные-источники в коде: lib/gui/core/run_states.py (TRANSITIONS, TERMINAL), lib/gui/errors.py (CODES: code → class, HTTP status); тесты согласованности код ↔ схема; docs/api.md.",
   "why": "Эти контракты фиксируют поведение P2–P6 (API, broker, плагины, конфиг) до написания кода. Жёсткие риски: секрет или resolved secret выразим в контракте (I6), переход run без терминального состояния или с усыновлением PID (I11), stream без cursor/snapshot (потеря событий при reconnect), config-mutation без expected_revision (silent last-write-wins, I8).",
   "scope": {
@@ -203,6 +203,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T12:46:16Z"
+  "result": {
+    "started_at": "2026-10-16T15:12:09Z",
+    "finished_at": "2026-10-16T15:18:57Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "b083d981-cf52-4d68-88f4-08ac8e3a8ec7"
+    },
+    "notes": "Six API contracts v1 frozen with examples (api-error 3/5, bootstrap 2/4, run 4/5, stream 9/6, trust 3/5, config-mutation 4/6 valid/invalid); gui.errors CODES (35 codes: design + CONTRIB_* + CATALOG_SOURCE_UNAVAILABLE) with class/HTTP/retryable; gui.core.run_states TRANSITIONS/TERMINAL/WITH_PROCESS; test_runtime_contracts (22 tests) ties code, schemas and docs/api.md; schemas README, CHANGELOG. Requested grok review not run: no --reviewer flag in this invocation.",
+    "deviations": [
+      "bootstrap/stream get epoch; run transitions add queued->cancelled and queued|authorizing->lost (I11); config values exclude null; contribution gets $defs/effect"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T15:18:57Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T15:18:57Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T15:18:57Z"
 }

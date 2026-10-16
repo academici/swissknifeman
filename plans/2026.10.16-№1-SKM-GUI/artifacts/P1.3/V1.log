@@ -1,0 +1,8 @@
+packages/gui: bash scripts/test.sh
+hub: python3 scripts/ecosystem-units.py check
+hub: python3 scripts/public-hygiene.py
+hub: python3 scripts/golden.py check
+[ok] packages/gui: bash scripts/test.sh
+[ok] hub: python3 scripts/ecosystem-units.py check
+[ok] hub: python3 scripts/public-hygiene.py
+[ok] hub: python3 scripts/golden.py check

@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:gui:api-error:v1",
+  "error": {
+    "code": "INPUT_INVALID",
+    "class": "invalid",
+    "message": "The input is invalid.",
+    "retryable": false,
+    "correlation_id": "req-00000001",
+    "issues": [
+      {
+        "pointer": "/input/item",
+        "code": "pattern",
+        "message": "/input/item: 'x' does not match pattern ^P[0-9]+\\.[0-9]+$"
+      }
+    ]
+  }
+}

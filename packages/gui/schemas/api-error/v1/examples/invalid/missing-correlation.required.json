@@ -1,0 +1,13 @@
+{
+  "$schema": "urn:swissknifeman:gui:api-error:v1",
+  "error": {
+    "code": "CONFIG_REVISION_CONFLICT",
+    "class": "conflict",
+    "message": "The configuration file changed after the preview.",
+    "retryable": false,
+    "details": {
+      "module": "planner",
+      "layer": "project"
+    }
+  }
+}

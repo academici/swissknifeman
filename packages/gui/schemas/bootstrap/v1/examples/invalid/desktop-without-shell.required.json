@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:gui:bootstrap:v1",
+  "mode": "desktop",
+  "epoch": "e-7f3a9c2d41b0",
+  "backend": {
+    "version": "0.1.0",
+    "python": "3.12.3"
+  },
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "contracts": [
+    {
+      "id": "urn:swissknifeman:gui:contribution",
+      "version": "v1"
+    },
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    },
+    {
+      "id": "urn:swissknifeman:gui:stream",
+      "version": "v1"
+    }
+  ],
+  "units": [
+    {
+      "id": "aicore",
+      "version": "0.1.0"
+    },
+    {
+      "id": "gui",
+      "version": "0.1.0"
+    }
+  ],
+  "features": [
+    "config.write",
+    "runs.stream"
+  ],
+  "platform": {
+    "os": "linux",
+    "arch": "x86_64"
+  }
+}

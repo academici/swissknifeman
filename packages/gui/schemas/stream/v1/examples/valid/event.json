@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "event",
+  "seq": 42,
+  "sub": "main",
+  "event": {
+    "specversion": "1.0",
+    "id": "fedcba9876543210fedcba9876543210",
+    "source": "urn:swissknifeman:module:planner",
+    "type": "planner.item.finished",
+    "time": "2026-10-16T15:20:00Z",
+    "data": {
+      "plan": "PLAN5",
+      "item": "P1.2"
+    }
+  }
+}

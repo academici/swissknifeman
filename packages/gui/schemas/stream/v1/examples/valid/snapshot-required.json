@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "snapshot_required",
+  "sub": "main",
+  "reason": "cursor_expired"
+}

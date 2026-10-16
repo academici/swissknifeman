@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:gui:api-error:v1",
+  "error": {
+    "code": "HANDLER_TIMEOUT",
+    "class": "timeout",
+    "message": "The query did not answer in 30 s.",
+    "retryable": true,
+    "correlation_id": "req-00000002"
+  }
+}

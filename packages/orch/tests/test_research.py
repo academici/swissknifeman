@@ -18,7 +18,7 @@ from aicore.config import ConfigError
 
 from orch import research, settings
 from orch.cli import main
-from orch.research import sources
+from orch.research import filesystem, local_files, sources
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "research"
 PY = sys.executable
@@ -126,7 +126,7 @@ class ProcessGroupTests(ResearchCase):
                           f"open({str(marker)!r}, 'w').write(str(child.pid))\n"
                           "time.sleep(60)\n", encoding="utf-8")
         source = sources.Source(id="slow", kind="command", argv=(PY, str(script)), timeout_s=1)
-        with self.assertRaises(Exception):
+        with self.assertRaises(sources._Busy):
             sources._command(source, "q", cwd=self.root)
         pid = int(marker.read_text())
         import os
@@ -265,7 +265,7 @@ class CommandAndFilesystemTests(ResearchCase):
     def test_two_words_need_both_and_the_phrase_ranks_above_scattered_words(self):
         root, source = self.tree({"a.md": "timeout of the gateway\n", "b.md": "gateway only\n"})
         self.assertEqual(["a.md"], research.query(source, "gateway timeout", cwd=root)["sources"])
-        many = {f"p{n:02}.md": "the gateway timeout is 30s\n" for n in range(sources.MAX_MATCHES)}
+        many = {f"p{n:02}.md": "the gateway timeout is 30s\n" for n in range(filesystem.MAX_MATCHES)}
         root, source = self.tree({**many, "z.md": "timeout of the gateway\n"})
         answer = research.query(source, "gateway timeout", cwd=root)
         self.assertNotIn("z.md", answer["sources"])  # the phrase matches fill the answer first
@@ -282,17 +282,17 @@ class CommandAndFilesystemTests(ResearchCase):
         self.assertNotIn("ghp_abcdefghijklmnopqrstuvwxyz0123456789", text)
 
     def test_the_walk_stops_when_the_best_matches_fill_the_answer(self):
-        root, source = self.tree({f"f{n:03}.md": "gateway timeout\n" for n in range(sources.MAX_MATCHES + 30)})
-        original, seen = sources.Path.read_text, []
+        root, source = self.tree({f"f{n:03}.md": "gateway timeout\n" for n in range(filesystem.MAX_MATCHES + 30)})
+        original, seen = local_files.read_text, []
 
         def spy(path, *args, **kwargs):
             seen.append(path.name)
             return original(path, *args, **kwargs)
 
-        with mock.patch.object(sources.Path, "read_text", spy):
+        with mock.patch.object(local_files, "read_text", spy):
             answer = research.query(source, "gateway timeout", cwd=root)
-        self.assertEqual(sources.MAX_MATCHES, len(answer["text"].splitlines()))
-        self.assertLessEqual(len(seen), sources.MAX_MATCHES)
+        self.assertEqual(filesystem.MAX_MATCHES, len(answer["text"].splitlines()))
+        self.assertLessEqual(len(seen), filesystem.MAX_MATCHES)
 
     def test_filesystem_without_a_match_or_roots(self):
         source = sources.Source(id="fs", kind="filesystem", roots=(str(FIXTURES / "tree"),))

@@ -18,22 +18,13 @@ import subprocess
 import threading
 import time
 
-from aicore.util.redact import redact_text
 from orch import retry
+from orch.research import filesystem
 
 RETRIES_MAX = 3
 RETRY_WAIT_S = 5          # the wait before the first repeat; it grows with the attempt
 PROTOCOL_VERSION = "2024-11-05"
 BUSY_MARK = "BROWSER_BUSY"
-MAX_MATCHES = 50
-MAX_FILE_BYTES = 1_000_000
-MAX_FILES = 5000          # files looked at in one query: a root that is a whole disk does not run for ever
-SKIPPED_DIRS = frozenset({".git", "node_modules", "__pycache__", ".swissknifeman", ".ssh", ".gnupg", ".aws", ".kube"})
-# Files that hold secrets are never read into a prompt, whatever the query
-SECRET_FILE = re.compile(r"^(\.env($|[.-])|id_(rsa|dsa|ecdsa|ed25519)|credentials|\.netrc|\.npmrc|\.pypirc)|"
-                         r"(secret|token|password)|\.(pem|key|p12|pfx|keystore|jks|kdbx|gpg)$", re.IGNORECASE)
-STOPWORDS = frozenset({"the", "and", "for", "are", "how", "what", "why", "who", "when", "where", "does", "with", "that",
-                       "this", "from", "not", "you", "can", "use", "has", "have", "was", "were", "which", "into", "about"})
 _URL = re.compile(r"https?://[^\s<>\"')\]]+")
 _GATES: dict = {}
 _GATES_LOCK = threading.Lock()
@@ -149,6 +140,9 @@ def _command(source: Source, text: str, *, cwd) -> dict:
         raise _Busy("timeout", f"no answer in {source.timeout_s} s") from None
     finally:
         _end_group(process, gently=False)
+        for pipe in (process.stdin, process.stdout, process.stderr):  # a timeout leaves them open
+            if pipe:
+                pipe.close()
     done = subprocess.CompletedProcess(process.args, process.returncode, stdout, stderr)
     if done.returncode != 0:
         raise SourceError("SOURCE_UNAVAILABLE", f"{source.id}: exit {done.returncode}: {done.stderr.strip()[:200]}")
@@ -166,79 +160,11 @@ def _command(source: Source, text: str, *, cwd) -> dict:
 
 # -- filesystem -------------------------------------------------------------------------------------------------
 
-def _inside(path: Path, base: Path) -> bool:
-    try:
-        path.resolve().relative_to(base.resolve())
-    except (OSError, ValueError):
-        return False
-    return True
-
-
-def terms_of(text: str) -> list:
-    """The words of a question that can find something: three letters or more, no stop words, once each, in order."""
-    return list(dict.fromkeys(word for word in re.findall(r"\w+", text.lower()) if len(word) >= 3 and word not in STOPWORDS))
-
-
-def line_score(line: str, needle: str, terms: list) -> int:
-    """How well a line answers the query: the whole text as a phrase scores highest; else the number of its words
-    that the line holds, counted only when the line holds enough of them (all of two, 60% of more)."""
-    low = line.lower()
-    if needle and needle in low:
-        return len(terms) + 1
-    if not terms:
-        return 0
-    found = sum(1 for term in terms if term in low)
-    need = len(terms) if len(terms) <= 2 else -(-len(terms) * 3 // 5)
-    return found if found >= need else 0
-
-
 def _filesystem(source: Source, text: str, *, cwd) -> dict:
     if not source.roots:
         raise SourceError("SOURCE_INVALID", f"source {source.id!r} (filesystem) has no roots")
-    needle = text.strip().lower()
-    terms = terms_of(text)
-    top_score = len(terms) + 1
-    base = Path(cwd) if cwd else Path.cwd()
-    found: list = []  # (score, order, row, file)
-    looked = 0
-    done = False
-    for root in source.roots:
-        top = Path(os.path.expanduser(root))
-        relative = not top.is_absolute() and not root.startswith("~")
-        top = top if top.is_absolute() else base / top
-        if relative and not _inside(top, base):  # a project folder that is a link out of the project is not read
-            continue
-        for folder, dirs, names in os.walk(top):  # symlinked folders are not followed: only reading, only inside
-            if done:
-                break
-            dirs[:] = sorted(name for name in dirs if name not in SKIPPED_DIRS)
-            for name in sorted(names):
-                if SECRET_FILE.search(name):
-                    continue
-                if looked >= MAX_FILES or sum(1 for hit in found if hit[0] == top_score) >= MAX_MATCHES:
-                    done = True  # nothing found later can rank above what is already collected
-                    break
-                looked += 1
-                path = Path(folder) / name
-                try:
-                    if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_FILE_BYTES:  # a fifo would block
-                        continue
-                    lines = path.read_text(encoding="utf-8").splitlines()
-                except (OSError, UnicodeDecodeError):
-                    continue
-                try:
-                    shown = str(path.relative_to(base))
-                except ValueError:
-                    shown = str(path)
-                for number, line in enumerate(lines, 1):
-                    score = line_score(line, needle, terms)
-                    if score:
-                        found.append((score, len(found), f"{shown}:{number}: {redact_text(line.strip())}", shown))
-    chosen = sorted(sorted(found, key=lambda hit: (-hit[0], hit[1]))[:MAX_MATCHES], key=lambda hit: hit[1])
-    rows = [hit[2] for hit in chosen]
-    files = list(dict.fromkeys(hit[3] for hit in chosen))
-    body = "\n".join(rows)
-    return {"text": body, "sources": files, "raw_ref": _digest(body)}
+    answer = filesystem.search(source.roots, text, Path(cwd) if cwd else Path.cwd())
+    return {**answer, "raw_ref": _digest(answer["text"])}
 
 
 # -- mcp-stdio --------------------------------------------------------------------------------------------------

@@ -145,3 +145,18 @@ fails on its own marketplace. A hub clone is replaced by step 2 of the machine s
 - `version-guard` had no path for a line without release snapshots; fixed in the same cleanup that emptied `releases/`.
 - Many `LEGACY_*` read paths remain in the modules (`MAIND_LEGACY_CONFIG`, `MAIND_LEGACY_PROVIDERS`, `SKILLER_LEGACY_CONFIG`, ...) and the
   dev guard (`.swissknifeman-dev` marker). With both computers migrated they are dead code: remove them in a follow-up (grep `LEGACY_`).
+
+## Notes from computer 2 (2026-10-16, no `-next` clone used: `git merge -s ours` straight from `origin/main`)
+
+- Dirty hub checkout: `git stash` it first (`read-tree -u --reset` overwrites tracked edits); untracked files survive.
+- `skiller connect` did **not** replace `system@swissknifeman` in project `.claude/settings.local.json` when the profile pins explicit plugin
+  lists (it printed "included in addition ... system@swissknifeman"). Replace by hand: `system` → `maind harness analyst brain`.
+- A project may carry a stale `extraKnownMarketplaces.swissknifeman.path` (e.g. `/tmp/skm-grok-delivery`): `skiller connect` warns and
+  needs `--fix-path` there. "Do not use `--fix-path`" holds only when the path is already `$HUB`.
+- `plan.py check` fails with `PLAN_NOT_FOUND` on a trailing slash (`plans/<plan>/`); pass `plans/<plan>` without it.
+- `install.sh` prints `plan.py (wrapper: target is not executable)`: `packages/planner/scripts/plan.py` lacks the executable bit
+  (the wrapper still works).
+- Projects with a husky pre-commit hook may fail the migration commit on unrelated lint; fix there, never `--no-verify`.
+- Hub-owned `rm` in `$HUB` is blocked by the harness `deny_hard` hook; the owner runs the clean-up of step 10 via `!`.
+- In projects that were already dirty, files touched both by the owner and by the upgrade (`CLAUDE.md`, `.claude/settings*.json`,
+  regenerated `.agents/plugins`) cannot be committed separately: leave them on `chore/skm-upgrade` for the owner.

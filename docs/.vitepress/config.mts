@@ -20,6 +20,7 @@ export default withMermaid(defineConfig({
   themeConfig: {
     nav: [
       { text: 'Overview', link: '/' },
+      { text: 'How it works', link: '/overview' },
       { text: 'Development', link: '/develop', activeMatch: '/develop' },
       { text: 'Architecture', link: '/architecture/', activeMatch: '/architecture/' },
       { text: 'Status', link: '/status', activeMatch: '/status' },
@@ -244,6 +245,21 @@ export default withMermaid(defineConfig({
             { text: 'Adding an engine', link: '/orch/adding-an-engine' },
           ],
         },
+        {
+          text: 'Conducting work',
+          items: [
+            { text: 'Quickstart', link: '/orch/quickstart' },
+            { text: 'How work flows (diagrams)', link: '/orch/flows' },
+            { text: 'Conductor', link: '/orch/conductor' },
+            { text: 'Agent mode', link: '/orch/agent-mode' },
+            { text: 'Work source', link: '/orch/work-source' },
+            { text: 'Run-policy packs', link: '/orch/run-policies' },
+            { text: 'Research sources', link: '/orch/research' },
+            { text: 'Configuration', link: '/orch/configuration' },
+            { text: 'Events', link: '/orch/events' },
+            { text: 'Engine conformance', link: '/orch/conformance' },
+          ],
+        },
       ],
 
       '/planner/': [
@@ -313,6 +329,7 @@ export default withMermaid(defineConfig({
             { text: '0076 Conformance kit for plugins and engines', link: '/architecture/decisions/0076-conformance-kit' },
             { text: '0077 Release bundle: compat manifest, schemas, attestation, checksums', link: '/architecture/decisions/0077-release-bundle' },
             { text: '0078 Installed-form smoke and a CI matrix from unit.json', link: '/architecture/decisions/0078-installed-form-smoke-and-ci-matrix' },
+            { text: '0079 The skm front door is a plugin of the hub root', link: '/architecture/decisions/0079-umbrella-front-door-plugin-at-the-root' },
           ],
         },
       ],
@@ -322,6 +339,7 @@ export default withMermaid(defineConfig({
           text: 'Ecosystem',
           items: [
             { text: 'Overview', link: '/' },
+            { text: 'How SwissKnifeMan works', link: '/overview' },
             { text: 'Get started', link: '/getting-started' },
             { text: 'Install profiles', link: '/install-profiles' },
             { text: 'Development with Claude Code', link: '/develop' },

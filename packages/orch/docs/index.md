@@ -4,6 +4,7 @@ Internal, engine-neutral orchestration contracts for the swissknifeman monorepo.
 Status: **internal, not published**. The package uses only the Python standard library, `orch` and the `aicore` foundation.
 
 - [Quickstart](quickstart.md) — what a real project needs, what a run changes, the switches that matter.
+- [How work flows](flows.md) — diagrams: the parts, one piece end to end, the item lifecycle, correction rounds and limits, the review decision, batches, questions and the advisor, provider failures, stop and recovery, setting layers, debug mode.
 - [exec/v1 contracts](contracts.md) — nine document kinds, conventions, contract changelog.
 - [Engine Port](engine-port.md) — operations, run states, binding capability matrix.
 - [Configuration](configuration.md) — the `[orch]` section, layers, engine choice, digest.

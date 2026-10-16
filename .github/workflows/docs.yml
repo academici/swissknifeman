@@ -10,6 +10,7 @@ on:
       - 'docs/package.json'
       - 'docs/package-lock.json'
       - 'scripts/docs-sync.sh'
+      - 'scripts/docs-mermaid-check.mjs'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -37,6 +38,9 @@ jobs:
       # + vitepress build . → artifact in docs/.vitepress/dist.
       - run: npm ci
         working-directory: docs
+      # The site renders diagrams in the browser: a broken one would deploy as an error box.
+      - name: Mermaid diagrams parse
+        run: node scripts/docs-mermaid-check.mjs
       - run: npm run docs:build
         working-directory: docs
       - uses: actions/configure-pages@1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d  # v4.0.0

@@ -95,7 +95,7 @@ sequenceDiagram
   participant skm as swissknifeman
   participant proj as project
   participant brain
-  Dev->>maind: maind onboard &lt;project&gt;
+  Dev->>maind: maind onboard PROJECT
   maind->>maind: register in registry.json
   maind->>skm: integrate (skills + hooks)
   skm->>proj: .claude/skills + hooks + skills-lock.json

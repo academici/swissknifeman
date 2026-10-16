@@ -51,12 +51,12 @@
     {
       "path": "bridges/gui-planner/adapter.py",
       "why": "результат P4.2: planner_json, диспетчер",
-      "required": true
+      "required": false
     },
     {
       "path": "bridges/gui-planner/gui.json",
       "why": "результат P4.2: routes и queries",
-      "required": true
+      "required": false
     },
     {
       "path": "packages/gui/schemas/contribution/v1/contribution.schema.json",
@@ -163,5 +163,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-16T20:02:34Z"
+  "updated_at": "2026-10-16T20:03:03Z"
 }

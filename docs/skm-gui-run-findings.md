@@ -20,6 +20,7 @@
 | 7 | follow-up групповой review: `ROUTE_UNDERSHOOT — the executor effort medium is below high required` за 1 с | `followup_input` (`review_plan.py`) жёстко задаёт `route.minimum.effort = high`, а решение D16 требует исполнителя sonnet/medium и в follow-up | обход: input пересобран через `orch input adhoc --effort medium --provenance review_followup` (тот же goal и scope). **исправлено:** `followup_input` берёт эффорт маршрута исполнителя прогона (`high`, если его нет), тест `test_the_followup_asks_no_more_effort…` | закрыто |
 | 8 | follow-up `blocked`: vitest (7 файлов) и eslint не стартуют у исполнителя, `EACCES` на `node_modules/**/*.min.js` | в личных настройках владельца `.claude/settings.local.json:80` стоит `Read(**/*.min.js)` в deny; песочница Claude переносит правило в запрет чтения для Bash-процессов | правки follow-up приняты вручную: `npm run check` (eslint, tsc, vitest 60/60) и affected-тесты прогнаны мной вне песочницы, красный eslint (`set-state-in-effect` в `PreviewDialog.tsx`) исправлен, добавлен регрессионный тест, закоммичено | **обсудить.** Пока правило стоит, исполнитель не может проверять frontend: проверки пунктов проходят только через conductor вне песочницы. Варианты: убрать правило владельцем, либо `sandbox.filesystem.allowRead` в блоке conductor |
 | 9 | после `blocked` follow-up правки остались в дереве, а `.swissknifeman/orch-artifacts/` (по `conductor.md` committed) — нетрекаемой папкой | `--commit` коммитит только при принятом результате; blocked с готовыми правками оставляет их владельцу | артефакты закоммичены вместе с принятой работой | норма процедуры; но `blocked` по причине окружения (п. 8) выглядит как провал работы — различать в отчёте |
+| 10 | при проектировании P4 повторилась проблема №2: required-чтения, создаваемые более ранним пунктом батча (P4.3, P4.5) | `plan-design`/`design-done` не предупреждают о required `path`, которого нет на диске, пока это не поймает claim | перед запуском сверил все required-пути P4 с диском и перевёл созданные ранними пунктами в `required: false`; claim ловить не пришлось | **крупное, повтор №2.** Проверка в `design-done` (required path отсутствует и не создаётся зависимостью пункта) убрала бы класс ошибок; пока — ручная сверка скриптом при детализации каждой фазы |
 
 ## Review фазы P3
 
@@ -30,3 +31,7 @@
 ## Прогон дальше
 
 Записи следующих пунктов и фаз добавляются ниже по мере выполнения.
+
+## P4 (дизайн)
+
+Детализация P4: 5 пунктов в одном batch B1 (P4.1 planner аддитивно, P4.2 чтения моста, P4.3 мутации и формы, P4.4 host views, P4.5 редактор item и E2E), решения D17–D21, knowledge/p4-design.

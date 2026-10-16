@@ -80,12 +80,12 @@
     {
       "path": "bridges/gui-planner/gui.json",
       "why": "forms[] и commands моста (результат P4.3)",
-      "required": true
+      "required": false
     },
     {
       "path": "bridges/gui-planner/tests/fixtures/plan-enums.json",
       "why": "enum схемы item (результат P4.3)",
-      "required": true
+      "required": false
     }
   ],
   "task_files": [
@@ -175,5 +175,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-16T20:02:13Z"
+  "updated_at": "2026-10-16T20:03:04Z"
 }

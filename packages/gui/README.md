@@ -7,8 +7,8 @@ domain mutations, runs allowlisted commands (dry-run, confirmation, log stream, 
 catalog with isolation and quarantine.
 
 Status: `development`, version 0.1.0: the frozen v1 contracts, the contribution resolver, the loopback backend
-(`gui serve` / `gui open`: projects, queries, command runs, the event stream, browser session) and the commands
-`contributions` and `check`; the frontend and the desktop shell come next.
+(`gui serve` / `gui open`: projects, queries, command runs, the event stream, browser session), the browser frontend and the commands
+`contributions`, `check` and `schemas bundle`; the desktop shell comes next.
 
 ## Principles
 
@@ -48,7 +48,7 @@ bridges/gui-orch/                  # conductor runs
 
 In 0.1.0 the contracts (`schemas/`), `lib/gui/contracts.py`, `lib/gui/errors.py`, `lib/gui/core/` (run states,
 project registry), `lib/gui/catalog/`, `lib/gui/storage/` (`gui.db`), `lib/gui/settings.py`, `lib/gui/deps.py`, `lib/gui/backend.py`,
-`lib/gui/http/` and the CLI exist; frontend, desktop and sidecar are the target layout.
+`lib/gui/http/`, `frontend/` and the CLI exist; desktop and sidecar are the target layout.
 
 `gui` is a tool module of the hub (`standalone.tools`): its third-party dependencies, Node and Rust are not part of the
 core check; it is checked by its own `dev.test`.
@@ -84,6 +84,7 @@ trail; migrations only get appended and a database from a newer gui is refused w
 ```text
 gui deps ensure [--json] [--offline]         install the locked third-party packages of the backend once
 gui deps path                                print their install folder
+gui schemas bundle --out DIR                 each contract as one self-contained JSON Schema (for type generators)
 gui serve [--port N] [--project DIR] [--no-browser]
                                              run the loopback backend and print a one-time URL (GUI_URL ...)
 gui open [--project DIR] [--no-browser]      open the GUI: reuse the running backend or start one detached
@@ -99,6 +100,12 @@ Exit codes: 0 ok, 1 failure (code on stderr: `BACKEND_RUNNING`, `BACKEND_START_F
 2 usage error. The project of `serve`/`open` is `--project DIR`, else the current project when it has
 `.swissknifeman/`; adding it makes it trusted. The local API and its security are described in
 [docs/api.md](docs/api.md).
+
+## Frontend
+
+`frontend/` (React, TypeScript, Vite) is built with `npm --prefix packages/gui/frontend ci && npm --prefix
+packages/gui/frontend run build`; `gui serve` serves `frontend/dist`. Its transport, pages, host views, contract types
+and rules are in [docs/frontend.md](docs/frontend.md).
 
 ## Tests
 

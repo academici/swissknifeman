@@ -84,3 +84,73 @@ def _discriminator(registry: schema.Registry, root: dict,
         if len(set(values)) == len(values) and all(name in (node.get("required") or ()) for node, _ in branches):
             return name, list(zip(values, branches))
     return None
+
+
+# --- bundle: one self-contained schema per contract (for type generators) ------------------------------------
+
+_SCHEMA_MAPS = ("properties", "patternProperties", "$defs")
+_SCHEMA_LISTS = ("oneOf", "anyOf", "allOf", "prefixItems")
+_SCHEMA_NODES = ("items", "not", "contains", "if", "then", "else", "additionalProperties", "propertyNames")
+
+
+def _short(owner: str) -> str:
+    """``urn:swissknifeman:aicore:common:v1`` → ``aicore_common``."""
+    parts = owner.split(":")[2:]
+    if parts and parts[-1].startswith("v") and parts[-1][1:].isdigit():
+        parts = parts[:-1]
+    return "_".join(part.replace("-", "_") for part in parts)
+
+
+def bundle(contract: str, version: str = VERSION) -> Dict[str, Any]:
+    """The contract as one JSON Schema without external references: every ``$ref`` (to this contract, another gui
+    contract or the foundation) points at ``#/$defs/<key>``; keys of other schemas are prefixed with their short id.
+    The result is deterministic (sorted ``$defs``), so generated types can be compared with the ones in git."""
+    registry, kind = load(contract, version)
+    root, root_id = registry.for_kind(kind)
+    defs: Dict[str, Any] = {}
+    pending: set = set()
+
+    def key_of(ref: str, base: str) -> str:
+        document, _, fragment = ref.partition("#")
+        owner = document or base
+        name = fragment[len("/$defs/"):] if fragment else ""
+        if owner == root_id:
+            return name or _short(owner)
+        return f"{_short(owner)}_{name}" if name else _short(owner)
+
+    def rewrite(node: Any, base: str) -> Any:
+        if isinstance(node, list):
+            return [rewrite(item, base) for item in node]
+        if not isinstance(node, dict):
+            return node
+        out: Dict[str, Any] = {}
+        for name, value in node.items():
+            if name == "$ref":
+                key = key_of(value, base)
+                if key not in defs and key not in pending:
+                    pending.add(key)
+                    target, owner = registry.resolve(value, base)
+                    resolved = rewrite({k: v for k, v in target.items() if k not in ("$defs", "$id", "$schema")},
+                                       owner)
+                    defs[key] = resolved
+                    pending.discard(key)
+                out["$ref"] = f"#/$defs/{key}"
+            elif name in _SCHEMA_MAPS and isinstance(value, dict):
+                if name == "$defs":
+                    continue  # only referenced definitions are kept, under their bundle keys
+                out[name] = {child: rewrite(schema, base) for child, schema in value.items()}
+            elif name in _SCHEMA_LISTS and isinstance(value, list):
+                out[name] = [rewrite(item, base) for item in value]
+            elif name in _SCHEMA_NODES and isinstance(value, dict):
+                out[name] = rewrite(value, base)
+            elif name in ("$id", "$schema"):
+                continue
+            else:
+                out[name] = value
+        return out
+
+    document = rewrite(root, root_id)
+    document = {"$schema": "https://json-schema.org/draft/2020-12/schema", "title": contract, **document}
+    if defs:
+        document["$defs"] = {key: defs[key] for key in sorted(defs)}
+    return document

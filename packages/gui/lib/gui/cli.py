@@ -41,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--json", action="store_true", help="print {path, lock_digest, installed}")
     q.add_argument("--offline", action="store_true", help="never download: fail unless already installed")
     deps_sub.add_parser("path", help="print the install folder of the lock")
+    p = sub.add_parser("schemas", help="the gui contracts as self-contained JSON Schemas (for type generators)")
+    schemas_sub = p.add_subparsers(dest="schemas_command", parser_class=_Parser, metavar="<action>", required=True)
+    q = schemas_sub.add_parser("bundle", help="write <contract>.schema.json per contract of unit.json, refs inlined")
+    q.add_argument("--out", metavar="DIR", required=True, help="output folder (created)")
     p = sub.add_parser("serve", help="run the loopback backend in the foreground and print a one-time browser URL")
     p.add_argument("--port", type=int, default=None, metavar="N", help="TCP port on 127.0.0.1 (default: [gui] port)")
     p.add_argument("--project", metavar="DIR", default=None, help="register this project (default: the current one)")
@@ -103,6 +107,21 @@ def _deps(args: argparse.Namespace) -> int:
         print(json.dumps({"path": str(folder), "lock_digest": deps.lock_digest(), "installed": not present}))
     else:
         print(f"{'present' if present else 'installed'}: {folder}")
+    return 0
+
+
+def _schemas(args: argparse.Namespace) -> int:
+    from . import contracts
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    unit = json.loads((contracts.SCHEMAS.parent / "unit.json").read_text(encoding="utf-8"))
+    for entry in unit["provides"]["contracts"]:
+        name = entry["id"].rpartition(":")[2]
+        document = contracts.bundle(name, entry["version"])
+        (out / f"{name}.schema.json").write_text(json.dumps(document, indent=2, sort_keys=True,
+                                                            ensure_ascii=False) + "\n", encoding="utf-8")
+        print(out / f"{name}.schema.json")
     return 0
 
 
@@ -225,6 +244,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _contributions(args)
     if args.command == "deps":
         return _deps(args)
+    if args.command == "schemas":
+        return _schemas(args)
     if args.command in ("serve", "open"):
         from aicore.config import ConfigError
 

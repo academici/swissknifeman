@@ -730,7 +730,10 @@ def toml_project_providers(root):
         return None
     resolved = resolve("aicore", schema=aicore_schema(), project=root)
     providers = resolved.get("providers") or {}
-    return providers if providers.get("selection") else None
+    if not providers.get("selection"):
+        return None
+    # routing availability is a machine/invocation axis; the resolved table carries an empty one
+    return {key: providers[key] for key in ("contract_version", "selection") if key in providers}
 
 
 def resolve_provider_config(config, catalog: ProviderConfigCatalog | None, project_id, *,

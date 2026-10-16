@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D12",
+  "title": "Проекты gui: собственный реестр доверенных проектов в SQLite; добавление только явным действием владельца",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Откуда control plane берёт проекты и доверие для cwd команд (I5), не импортируя maind?",
+  "options": [
+    {
+      "id": "A",
+      "text": "ProjectRegistry в gui.db: проект добавляет gui open --project/cwd или подтверждённый POST /v1/projects; id = slug(basename)-sha256(realpath)[:8]; trusted всегда true; парк maind показывается мостом gui-hub только как данные",
+      "pros": "нет связи core с мостом; доверие = явное действие владельца; I5 проверяется realpath + is_within",
+      "cons": "парк maind и проекты gui — разные списки"
+    },
+    {
+      "id": "B",
+      "text": "core получает проекты из query моста gui-hub",
+      "pros": "один список",
+      "cons": "core зависит от конкретного моста; доверие maind переносится в gui транзитивно (против I13)"
+    }
+  ],
+  "decision": "A — ProjectRegistry в gui.db: проект добавляет gui open --project/cwd или подтверждённый POST /v1/projects; id = slug(basename)-sha256(realpath)[:8]; trusted всегда true; парк maind показывается мостом gui-hub только как данные",
+  "rationale": "Сверка кода HEAD 849dd6505 и машины 2026-10-16 (knowledge/p2-design#code-facts); вариант A сохраняет инварианты I5, I9, I11, I13 без owner gate.",
+  "consequences": [
+    "контракт project/v1 (kinds project, project_list) — P2.1",
+    "gui-hub сопоставляет проект gui с проектом maind по realpath path"
+  ],
+  "applies_to": [
+    "P2.1",
+    "P2.2",
+    "P2.4"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

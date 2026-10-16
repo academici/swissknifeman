@@ -11,6 +11,7 @@
   ],
   "provides": {
     "cli": ["bin/gui"],
+    "install": ["install.sh"],
     "config": "configs/config.schema.json",
     "contracts": [
       {"id": "urn:swissknifeman:gui:contribution", "path": "schemas/contribution/v1", "version": "v1", "stability": "development"},

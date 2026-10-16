@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D11",
+  "title": "Сторонние Python-зависимости gui без pip: hashed requirements.lock + stdlib-установщик в кэш по digest lock",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как доставить Starlette/uvicorn на машину без pip и ensurepip (Python 3.12, uv нет)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "requirements.lock (pip-формат с hashes, только py3-none-any wheels) + gui.deps.ensure: pip --target при наличии, иначе загрузка wheel по PyPI JSON с проверкой sha256 и распаковкой в cache_dir(gui)/pydeps/py<ver>-<lock digest>; gui.deps.activate добавляет каталог в sys.path",
+      "pros": "без sudo и без изменения системного Python; воспроизводимо по hashes; работает и в CI с pip",
+      "cons": "собственный минимальный установщик; только чистые Python-wheels"
+    },
+    {
+      "id": "B",
+      "text": "owner устанавливает python3.12-venv или uv; venv модуля",
+      "pros": "стандартный путь",
+      "cons": "owner gate (sudo) на каждой машине; блокирует фазу"
+    },
+    {
+      "id": "C",
+      "text": "vendoring исходников зависимостей в репозиторий",
+      "pros": "офлайн",
+      "cons": "тысячи строк чужого кода в git, обновления вручную, противоречит правилу lockfile"
+    }
+  ],
+  "decision": "A — requirements.lock (pip-формат с hashes, только py3-none-any wheels) + gui.deps.ensure: pip --target при наличии, иначе загрузка wheel по PyPI JSON с проверкой sha256 и распаковкой в cache_dir(gui)/pydeps/py<ver>-<lock digest>; gui.deps.activate добавляет каталог в sys.path",
+  "rationale": "Сверка кода HEAD 849dd6505 и машины 2026-10-16 (knowledge/p2-design#code-facts); вариант A сохраняет инварианты I5, I9, I11, I13 без owner gate.",
+  "consequences": [
+    "knowledge/p2-design#deps — контракт gui.deps и состав lock",
+    "WebSocket uvicorn — wsproto (чистый Python), не websockets",
+    "test.sh gui выполняет deps ensure до подмены HOME; офлайн без кэша тесты API падают с GUI_DEPS_UNAVAILABLE"
+  ],
+  "applies_to": [
+    "P2.1",
+    "P2.2",
+    "P2.3",
+    "P2.6"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

@@ -1,0 +1,13 @@
+
+> @swissknifeman/gui-frontend@0.1.0 e2e
+> playwright test
+
+
+Running 4 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/cancel.spec.ts:14:1 › cancel stops the whole process group (1.2s)
+  ✓  2 [chromium] › e2e/commands.spec.ts:4:1 › greet runs as a dry run and for real, with its log (1.3s)
+  ✓  3 [chromium] › e2e/reconnect.spec.ts:4:1 › a dropped event stream resumes without lost or repeated log chunks (4.9s)
+  ✓  4 [chromium] › e2e/session.spec.ts:3:1 › the one-time URL signs in once and opens the dashboard (637ms)
+
+  4 passed (9.9s)

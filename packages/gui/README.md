@@ -58,6 +58,12 @@ core check; it is checked by its own `dev.test`.
 - Python 3.11 or newer (the hub itself runs on 3.9; an older interpreter gets `PYTHON_TOO_OLD`).
 - The `aicore` foundation, found by the aicore locator (`$AICORE_ROOT`, `_vendor/aicore` or the sibling folder).
 
+## Browser mode
+
+`swissknifeman install --profile full` (or `bash install.sh`) links `gui`, installs the locked backend packages and
+builds the frontend when npm is present; `gui open` opens the GUI. Start, security, configuration and the error
+codes of this mode: [docs/browser-mode.md](docs/browser-mode.md).
+
 ## Third-party packages
 
 The HTTP backend needs Starlette and uvicorn (with `wsproto` for WebSocket); they are pinned with their sha256 in
@@ -110,7 +116,10 @@ and rules are in [docs/frontend.md](docs/frontend.md).
 ## Tests
 
 ```bash
-bash scripts/test.sh        # from packages/gui
+bash scripts/test.sh                       # from packages/gui: Python tests
+npm --prefix frontend run check            # frontend: generated types, tsc, eslint, vitest
+npm --prefix frontend run e2e              # browser mode end to end (Playwright, Chromium)
+bash scripts/smoke.sh                      # read-only smoke against the real hub
 ```
 
 `scripts/test.sh` runs `gui deps ensure` against the real cache before it switches `HOME` to a throwaway folder and

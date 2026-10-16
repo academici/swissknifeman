@@ -1,0 +1,35 @@
+
+added 322 packages, and audited 323 packages in 5s
+
+131 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> @swissknifeman/gui-frontend@0.1.0 check
+> node scripts/gen-types.mjs --check && tsc --noEmit -p tsconfig.json && eslint . && vitest run
+
+contract types: 11 up to date
+
+ RUN  v5.0.5 /home/vostrikov/projects/packages/swissknifeman/packages/gui/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  29 passed (29)
+   Start at  21:19:01
+   Duration  2.92s (environment 72%, tests 9%, setup 8%, import 7%, transform 4%)
+
+
+> @swissknifeman/gui-frontend@0.1.0 build
+> tsc --noEmit -p tsconfig.json && vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 318 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:   0.26 kB
+dist/assets/index-BrgzaM1F.css    4.56 kB │ gzip:   1.50 kB
+dist/assets/index-B8klbPO8.js   434.82 kB │ gzip: 134.81 kB
+
+✓ built in 448ms

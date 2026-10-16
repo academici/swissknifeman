@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D13",
+  "title": "Один backend на state dir: flock + backend.json (0600) с секретом сессии; gui open выдаёт одноразовый токен через Bearer",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как gui open находит работающий backend и получает новый одноразовый URL без второго процесса?",
+  "options": [
+    {
+      "id": "A",
+      "text": "gui serve держит flock state_dir/backend.lock, пишет backend.json {pid, port, epoch, session_secret} с правами 0600; gui open читает его и вызывает POST /v1/session/tokens с Authorization: Bearer; иначе стартует serve отсоединённо",
+      "pros": "одна SQLite и один набор runs (mark_lost корректен); аутентификация CLI правами файла; тот же Bearer, что у desktop (P6)",
+      "cons": "секрет на диске в 0600 файле пользователя"
+    },
+    {
+      "id": "B",
+      "text": "каждый gui open — новый backend",
+      "pros": "просто",
+      "cons": "два процесса делят gui.db, mark_lost второго помечает runs первого lost"
+    }
+  ],
+  "decision": "A — gui serve держит flock state_dir/backend.lock, пишет backend.json {pid, port, epoch, session_secret} с правами 0600; gui open читает его и вызывает POST /v1/session/tokens с Authorization: Bearer; иначе стартует serve отсоединённо",
+  "rationale": "Сверка кода HEAD 849dd6505 и машины 2026-10-16 (knowledge/p2-design#code-facts); вариант A сохраняет инварианты I5, I9, I11, I13 без owner gate.",
+  "consequences": [
+    "CLI-коды BACKEND_RUNNING, BACKEND_START_FAILED",
+    "desktop P6 передаёт секрет через stdin и не пишет backend.json для browser-клиентов"
+  ],
+  "applies_to": [
+    "P2.2",
+    "P2.6"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

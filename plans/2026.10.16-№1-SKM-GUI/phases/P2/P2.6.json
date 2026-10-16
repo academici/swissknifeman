@@ -1,0 +1,245 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.6",
+  "title": "E2E browser mode (Playwright), smoke реального хаба, install.sh и профиль full; закрытие фазы P2",
+  "status": "done",
+  "summary": "Приёмка browser mode и закрытие фазы P2: Playwright E2E (одноразовый URL → cookie → дашборд, повтор URL → 401, запуск команды dry-run и обычный с логом, cancel долгой команды без сирот в группе, reconnect WebSocket без потерь и дублей через page.routeWebSocket) на самодостаточных фикстурах packages/gui/tests/fixtures/units/e2e; smoke против реального хаба (scripts/smoke.sh: bootstrap, каталог с gui-hub, query gui-hub.units); install.sh модуля gui и включение в install-профиль full; документация browser mode; phase.validation P2.",
+  "why": "Фаза обещает рабочий путь `gui open` → дашборд → команда с логом/отменой; модульные тесты P2.2–P2.5 не доказывают его в реальном браузере. Жёсткие риски: E2E, зависящий от состояния машины разработчика (реальный HOME, хаб) вместо временного SKM_HOME; профиль full, ломающий установку на машине без Node; сироты процессов после cancel в реальном браузерном сценарии.",
+  "scope": {
+    "include": [
+      "packages/gui/frontend/playwright.config.ts, e2e/** , package.json (script e2e, devDependency @playwright/test), package-lock.json",
+      "packages/gui/tests/fixtures/units/e2e/**",
+      "packages/gui/scripts/smoke.sh",
+      "packages/gui/install.sh, packages/gui/unit.json provides.install",
+      "configs/install-profiles.json (full)",
+      "golden-фикстуры install/help при изменении",
+      "packages/gui/docs/browser-mode.md, packages/gui/README.md, CHANGELOG.md",
+      "phase.validation P2 (V11–V17)"
+    ],
+    "exclude": [
+      "новая функциональность API/broker/frontend: дефект, найденный E2E, исправляется в этом пункте только если он держит V красными; иначе plan note на владельца-пункт",
+      "desktop E2E (P6/P7)"
+    ]
+  },
+  "depends_on": [
+    "P2.5"
+  ],
+  "decisions": [
+    "D4",
+    "D11",
+    "D13"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p2-design#e2e-install",
+      "why": "сценарии, фикстуры, smoke, install, профиль full",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p2-design#http",
+      "why": "gui serve: строка GUI_URL, backend.json, SIGTERM",
+      "required": true
+    },
+    {
+      "ref": "knowledge/roadmap#sizing",
+      "why": "состав phase.validation",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#testing",
+      "why": "E2E browser mode в стратегии тестов",
+      "required": false
+    },
+    {
+      "path": "packages/analyst/install.sh",
+      "why": "образец install.sh (dev-clone guard, --bin-dir, --force)",
+      "required": true
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "section": "_steps, _run_installer",
+      "why": "как профиль вызывает provides.install и принимает ли bridges",
+      "required": true
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "why": "профиль full",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/package.json",
+      "why": "scripts и devDependencies после P2.5",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/frontend/playwright.config.ts",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/e2e/**",
+      "change": "create",
+      "note": "backend.ts (global setup/teardown), *.spec.ts"
+    },
+    {
+      "path": "packages/gui/frontend/package.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/frontend/package-lock.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/e2e/**",
+      "change": "create",
+      "note": "demo: gui.json (widget, command-form routes), extension.json, handler, bin/greet, bin/ticks (pgid первой строкой, дочерний sleep 600)"
+    },
+    {
+      "path": "packages/gui/scripts/smoke.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/install.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/unit.json",
+      "change": "modify",
+      "note": "provides.install"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/docs/browser-mode.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "E2E и smoke запускают backend только с временным SKM_HOME; E2E использует SKM_UNITS_PATH на фикстуры внутри packages/gui; ни один тест не пишет в реальный HOME.",
+    "Версия @playwright/test — актуальная с npm в момент пункта; браузер ставится `npx playwright install chromium` в кэш пользователя, без `--with-deps` и sudo; при невозможности загрузки — open_issue kind owner_decision, E2E не помечается пройденным.",
+    "install.sh модуля gui не падает без Node: frontend собирается только при наличии npm, иначе предупреждение FRONTEND_NOT_BUILT и exit 0; deps ensure обязателен.",
+    "Smoke только читает: bootstrap, contributions, query gui-hub.units; команд не запускает."
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: (1) фикстуры e2e (demo-юнит; `packages/gui/bin/gui check <fixture>/demo` зелёный); (2) playwright: devDependency, `npx playwright install chromium`, config (webServer не используется — global setup запускает `gui serve --port 0 --no-browser --project <tmp>` с временным SKM_HOME и SKM_UNITS_PATH и читает GUI_URL из stdout), спеки 1–4 из knowledge/p2-design#e2e-install; script `e2e` = `playwright test`; (3) smoke.sh (Bearer из `$SKM_HOME/state/gui/backend.json`, curl или python urllib, проверки через python3 -c json); (4) install.sh + provides.install; install-profiles full += gui (и gui-hub, если шаги профиля поддерживают bridges — сверить с umbrella._steps); `swissknifeman install --profile full --dry-run --json` содержит шаг gui; golden; (5) docs/browser-mode.md (запуск, модель безопасности кратко со ссылкой на docs/api.md, конфиг, коды GUI_DEPS_UNAVAILABLE, BACKEND_RUNNING, FRONTEND_NOT_BUILT), README, CHANGELOG; (6) V1–V3, затем phase.validation V11–V17 с HEAD начала фазы 849dd6505.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/gui/frontend ci && npm --prefix packages/gui/frontend run build && npm --prefix packages/gui/frontend run e2e",
+      "expect": "exit 0; 4 сценария passed",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/scripts/smoke.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "swissknifeman install --profile full --dry-run --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert \"gui\" in json.dumps(d)'",
+      "expect": "exit 0: шаг gui в профиле full",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "Playwright E2E browser mode",
+    "scripts/smoke.sh",
+    "install.sh + профиль full",
+    "docs/browser-mode.md",
+    "phase.validation P2"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-16T17:10:26Z",
+    "finished_at": "2026-10-16T17:26:02Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "9320b893-b442-4c92-8323-d222526f5492"
+    },
+    "notes": "E2E 4/4 (Playwright), smoke реального хаба, install.sh + профиль full, docs/browser-mode.md; phase P2 validation V11–V17 green; логи в artifacts/P2.6",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V14",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V15",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V16",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      },
+      {
+        "id": "V17",
+        "exit": 0,
+        "at": "2026-10-16T17:26:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T17:26:02Z"
+}

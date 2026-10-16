@@ -1,0 +1,167 @@
+<form class="schema-form">
+<div class="cfg-field" data-key="title">
+<label for="field-title">title</label>
+<div class="cfg-control">
+<input id="field-title" type="text" placeholder="" value=""/>
+</div>
+<div class="muted cfg-description">Free text.</div>
+<span class="prov" data-testid="prov-title">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<div class="cfg-field" data-key="verbose">
+<label for="field-verbose">verbose</label>
+<div class="cfg-control">
+<input id="field-verbose" type="checkbox"/>
+</div>
+<div class="muted cfg-description">Print details.</div>
+<span class="prov" data-testid="prov-verbose">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<div class="cfg-field" data-key="mode">
+<label for="field-mode">mode</label>
+<div class="cfg-control">
+<select id="field-mode">
+<option value="" selected="">—</option>
+<option value="fast">fast</option>
+<option value="safe">safe</option>
+</select>
+</div>
+<div class="muted cfg-hint">one of fast, safe</div>
+<div class="muted cfg-description">Run mode.</div>
+<span class="prov" data-testid="prov-mode">
+<span class="badge layer-env">env</span>
+<span class="prov-value">&quot;fast&quot;</span>
+<code class="prov-where">CONFIG_DEMO_MODE</code>
+<details class="prov-overridden">
+<summary>overrides 1</summary>
+<ul>
+<li>
+<span class="badge layer-defaults">defaults</span> <span>&quot;safe&quot;</span> </li>
+</ul>
+</details>
+</span>
+</div>
+<fieldset class="cfg-table" data-key="limits">
+<legend>limits</legend>
+<div class="cfg-field" data-key="limits.max">
+<label for="field-limits.max">limits.max</label>
+<div class="cfg-control">
+<input id="field-limits.max" type="text" inputMode="numeric" placeholder="6" value="6"/>
+</div>
+<button type="button" class="link-button" aria-label="Unset limits.max">Unset</button>
+<div class="muted cfg-hint">min 1 · max 100</div>
+<div class="muted cfg-description">Largest count.</div>
+<span class="prov" data-testid="prov-limits.max">
+<span class="badge layer-project">project</span>
+<span class="prov-value">6</span>
+<code class="prov-where">/home/user/proj/.swissknifeman/config.toml:3</code>
+<details class="prov-overridden">
+<summary>overrides 1</summary>
+<ul>
+<li>
+<span class="badge layer-defaults">defaults</span> <span>4</span> </li>
+</ul>
+</details>
+</span>
+</div>
+<div class="cfg-field" data-key="limits.ratio">
+<label for="field-limits.ratio">limits.ratio</label>
+<div class="cfg-control">
+<input id="field-limits.ratio" type="text" inputMode="decimal" placeholder="" value=""/>
+</div>
+<div class="muted cfg-hint">min 0 · max 1</div>
+<span class="prov" data-testid="prov-limits.ratio">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+</fieldset>
+<div class="cfg-field" data-key="sources">
+<label for="field-sources">sources</label>
+<div class="cfg-control">
+<div class="cfg-list" id="field-sources">
+<button type="button">Add item</button>
+</div>
+</div>
+<span class="prov" data-testid="prov-sources">
+<span class="badge layer-defaults">defaults</span>
+<span class="prov-value">[&quot;local&quot;]</span>
+<span class="muted"> default</span>
+</span>
+</div>
+<fieldset class="cfg-map" data-key="profiles">
+<legend>profiles</legend>
+<div class="muted">Profiles by name.</div>
+<fieldset class="cfg-entry" data-entry="fast">
+<legend>fast</legend>
+<div class="cfg-field" data-key="profiles.fast.level">
+<label for="field-profiles.fast.level">profiles.fast.level</label>
+<div class="cfg-control">
+<input id="field-profiles.fast.level" type="text" inputMode="numeric" placeholder="3" value="3"/>
+</div>
+<button type="button" class="link-button" aria-label="Unset profiles.fast.level">Unset</button>
+<div class="muted cfg-hint">min 0 · max 9</div>
+<div class="muted cfg-description">Level of the profile.</div>
+<span class="prov" data-testid="prov-profiles.fast.level">
+<span class="badge layer-project">project</span>
+<span class="prov-value">3</span>
+<code class="prov-where">/home/user/proj/.swissknifeman/config.toml:6</code>
+<details class="prov-overridden">
+<summary>overrides 1</summary>
+<ul>
+<li>
+<span class="badge layer-defaults">defaults</span> <span>1</span> </li>
+</ul>
+</details>
+</span>
+</div>
+<div class="cfg-field" data-key="profiles.fast.label">
+<label for="field-profiles.fast.label">profiles.fast.label</label>
+<div class="cfg-control">
+<input id="field-profiles.fast.label" type="text" placeholder="" value=""/>
+</div>
+<span class="prov" data-testid="prov-profiles.fast.label">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<button type="button" aria-label="Remove entry profiles.fast">Remove entry</button>
+</fieldset>
+<div class="cfg-add">
+<input type="text" aria-label="New entry of profiles" placeholder="name, pattern ^[a-z][a-z0-9-]*$" value=""/>
+<button type="button" disabled="">Add entry</button>
+</div>
+</fieldset>
+<div class="cfg-field" data-key="token">
+<label for="field-token">token</label>
+<div class="cfg-control">
+<span class="cfg-secret">
+<select aria-label="token scheme">
+<option value="env" selected="">env</option>
+<option value="keyring">keyring</option>
+</select>
+<span>://</span>
+<input id="field-token" type="text" autoComplete="off" spellCheck="false" value=""/>
+</span>
+</div>
+<div class="muted cfg-description">Reference to the API token.</div>
+<span class="prov" data-testid="prov-token">
+<span class="badge layer-machine">machine</span>
+<span class="prov-value">&quot;env://DEMO_TOKEN&quot;</span>
+<code class="prov-where">/home/user/.config/swissknifeman/config.toml:2</code>
+</span>
+</div>
+<div class="cfg-field disabled" data-key="cache_dir">
+<label for="field-cache_dir">cache_dir</label>
+<div class="cfg-control">
+<input id="field-cache_dir" type="text" disabled="" placeholder="" value=""/>
+</div>
+<div class="muted cfg-reason">allowed: defaults, machine</div>
+<div class="muted cfg-description">Machine-local cache directory.</div>
+<span class="prov" data-testid="prov-cache_dir">
+<span class="badge layer-defaults">defaults</span>
+<span class="prov-value">&quot;&quot;</span>
+<span class="muted"> default</span>
+</span>
+</div>
+</form>

@@ -1,0 +1,110 @@
+<form class="schema-form">
+<div class="cfg-field" data-key="title">
+<label for="field-title">title</label>
+<div class="cfg-control">
+<input id="field-title" type="text" placeholder="" value=""/>
+</div>
+<div class="muted cfg-description">Free text.</div>
+<span class="prov" data-testid="prov-title">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<div class="cfg-field" data-key="verbose">
+<label for="field-verbose">verbose</label>
+<div class="cfg-control">
+<input id="field-verbose" type="checkbox"/>
+</div>
+<div class="muted cfg-description">Print details.</div>
+<span class="prov" data-testid="prov-verbose">
+<span class="badge layer-defaults">defaults</span>
+<span class="prov-value">false</span>
+<span class="muted"> default</span>
+</span>
+</div>
+<div class="cfg-field" data-key="mode">
+<label for="field-mode">mode</label>
+<div class="cfg-control">
+<select id="field-mode">
+<option value="" selected="">—</option>
+<option value="fast">fast</option>
+<option value="safe">safe</option>
+</select>
+</div>
+<div class="muted cfg-hint">one of fast, safe</div>
+<div class="muted cfg-description">Run mode.</div>
+<span class="prov" data-testid="prov-mode">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<fieldset class="cfg-table" data-key="limits">
+<legend>limits</legend>
+<div class="cfg-field" data-key="limits.max">
+<label for="field-limits.max">limits.max</label>
+<div class="cfg-control">
+<input id="field-limits.max" type="text" inputMode="numeric" placeholder="" value=""/>
+</div>
+<div class="muted cfg-hint">min 1 · max 100</div>
+<div class="muted cfg-description">Largest count.</div>
+<span class="prov" data-testid="prov-limits.max">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<div class="cfg-field" data-key="limits.ratio">
+<label for="field-limits.ratio">limits.ratio</label>
+<div class="cfg-control">
+<input id="field-limits.ratio" type="text" inputMode="decimal" placeholder="" value=""/>
+</div>
+<div class="muted cfg-hint">min 0 · max 1</div>
+<span class="prov" data-testid="prov-limits.ratio">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+</fieldset>
+<div class="cfg-field" data-key="sources">
+<label for="field-sources">sources</label>
+<div class="cfg-control">
+<div class="cfg-list" id="field-sources">
+<button type="button">Add item</button>
+</div>
+</div>
+<span class="prov" data-testid="prov-sources">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<fieldset class="cfg-map" data-key="profiles">
+<legend>profiles</legend>
+<div class="muted">Profiles by name.</div>
+<div class="muted">No entries.</div>
+<div class="cfg-add">
+<input type="text" aria-label="New entry of profiles" placeholder="name, pattern ^[a-z][a-z0-9-]*$" value=""/>
+<button type="button" disabled="">Add entry</button>
+</div>
+</fieldset>
+<div class="cfg-field" data-key="token">
+<label for="field-token">token</label>
+<div class="cfg-control">
+<span class="cfg-secret">
+<select aria-label="token scheme">
+<option value="env" selected="">env</option>
+<option value="keyring">keyring</option>
+</select>
+<span>://</span>
+<input id="field-token" type="text" autoComplete="off" spellCheck="false" value=""/>
+</span>
+</div>
+<div class="muted cfg-description">Reference to the API token.</div>
+<span class="prov" data-testid="prov-token">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+<div class="cfg-field" data-key="cache_dir">
+<label for="field-cache_dir">cache_dir</label>
+<div class="cfg-control">
+<input id="field-cache_dir" type="text" placeholder="" value=""/>
+</div>
+<div class="muted cfg-description">Machine-local cache directory.</div>
+<span class="prov" data-testid="prov-cache_dir">
+<span class="badge layer-unset">unset</span>
+</span>
+</div>
+</form>

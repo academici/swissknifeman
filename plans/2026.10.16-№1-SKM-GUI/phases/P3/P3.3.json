@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.3",
   "title": "Frontend редактора конфигурации: schema-form renderer, provenance, выбор слоя, Form/Diff/Raw/Explain, three-way конфликт, golden и E2E; закрытие фазы P3",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Frontend редактора конфигурации: маршруты /settings/config и /settings/config/:module (layer, project, mode в search params), пункт навигации settings; src/forms — разбор закрытого профиля aicore (profile.ts), черновик → patch (draft.ts), SchemaForm с полями String/Integer/Number/Boolean/Enum/ScalarList/SecretRef/Map, ProvenanceBadge, LayerPicker, PreviewDialog (preview → confirm → commit), ConflictView (three-way по ключам: base/current/mine, Reload/Reapply); режимы Form/Diff/Raw/Explain; golden компонентные тесты toMatchFileSnapshot; E2E config.spec.ts (правка → preview → apply, внешний конфликт → Reapply); docs/frontend.md; закрытие фазы P3.",
   "why": "Пользователь видит и подтверждает то, что будет записано. Жёсткие риски: форма шлёт patch не той revision или не тому слою, правка поля с запрещённым слоем, потеря черновика или молчаливая перезапись при конфликте, показ/ввод значения секрета вместо ссылки, клиентская валидация расходится с backend (D6: решает только preview), падение renderer на неподдерживаемом keyword схемы.",
   "scope": {
@@ -135,6 +135,14 @@
     {
       "path": ".swissknifeman/state/artifacts/sha256/80230d1516975a9287b7ddcb7f11f37a4df0b417b21a951fb78d152d588b8613",
       "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/08b665ca2b8923feef96c24c4ee3faaec994ab1ca428cbc6e9b0dabeb72366cb",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/fa1afe61230b0ec294727f6245148cb4ff20045ef2582e54098b8a7ca74e374e",
+      "role": "input"
     }
   ],
   "rules": [
@@ -193,11 +201,95 @@
   },
   "result": {
     "started_at": "2026-10-16T18:25:00Z",
+    "finished_at": "2026-10-16T19:37:24Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet",
-      "session": "run-146023ddbd325602732bb7a4"
-    }
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-146023ddbd325602732bb7a4-P3.3",
+    "notes": "Fixed the E2E locator: getByLabel('greeting_repeat') matched both the input and the aria-label 'Unset greeting_repeat' button (strict mode violation); the spec now uses getByLabel('greeting_repeat', { exact: true }). No product code changed.\nChanged: CHANGELOG.md, packages/gui/docs/frontend.md, packages/gui/frontend/e2e/config.spec.ts, packages/gui/frontend/src/app/App.tsx, packages/gui/frontend/src/forms/ConflictView.tsx, packages/gui/frontend/src/forms/LayerPicker.tsx, packages/gui/frontend/src/forms/PreviewDialog.tsx, packages/gui/frontend/src/forms/ProvenanceBadge.tsx, packages/gui/frontend/src/forms/SchemaForm.golden.test.tsx, packages/gui/frontend/src/forms/SchemaForm.tsx, packages/gui/frontend/src/forms/__golden__/form-draft.html, packages/gui/frontend/src/forms/__golden__/form-machine.html, packages/gui/frontend/src/forms/__golden__/form-project.html, packages/gui/frontend/src/forms/__golden__/form-unsupported.html, packages/gui/frontend/src/forms/draft.test.ts, packages/gui/frontend/src/forms/draft.ts, packages/gui/frontend/src/forms/fields/BooleanField.tsx, packages/gui/frontend/src/forms/fields/EnumField.tsx, packages/gui/frontend/src/forms/fields/FieldFrame.tsx, packages/gui/frontend/src/forms/fields/LeafField.tsx, packages/gui/frontend/src/forms/fields/MapField.tsx, packages/gui/frontend/src/forms/fields/NumberField.tsx, packages/gui/frontend/src/forms/fields/ReadOnlyField.tsx, packages/gui/frontend/src/forms/fields/ScalarListField.tsx, packages/gui/frontend/src/forms/fields/SecretRefField.tsx, packages/gui/frontend/src/forms/fields/StringField.tsx, packages/gui/frontend/src/forms/formContext.ts, packages/gui/frontend/src/forms/profile.test.ts, packages/gui/frontend/src/forms/profile.ts, packages/gui/frontend/src/forms/test-fixtures.ts, packages/gui/frontend/src/forms/types.ts, packages/gui/frontend/src/pages/ConfigEditor.test.tsx, packages/gui/frontend/src/pages/ConfigEditor.tsx, packages/gui/frontend/src/pages/ConfigModules.tsx, packages/gui/frontend/src/styles.css, packages/gui/tests/fixtures/units/e2e/demo/configs/config.schema.json, packages/gui/tests/fixtures/units/e2e/demo/unit.json",
+    "deviations": [
+      "changed outside the write set: packages/gui/frontend/src/pages/ConfigEditor.test.tsx"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V3.json"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V11.json"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V12.json"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V13.json"
+      },
+      {
+        "id": "V14",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V14.json"
+      },
+      {
+        "id": "V15",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V15.json"
+      },
+      {
+        "id": "V16",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V16.json"
+      },
+      {
+        "id": "V17",
+        "exit": 0,
+        "at": "2026-10-16T19:37:24Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V17.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V3.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V11.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V12.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V13.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V14.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V15.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V16.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.3/evidence/V17.json"
+    ]
   },
-  "updated_at": "2026-10-16T18:33:11Z"
+  "updated_at": "2026-10-16T19:37:24Z"
 }

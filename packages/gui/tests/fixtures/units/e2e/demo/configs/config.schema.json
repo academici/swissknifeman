@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:demo:config:v1",
+  "title": "demo config",
+  "type": "object",
+  "description": "Settings of the E2E demo unit.",
+  "additionalProperties": false,
+  "properties": {
+    "greeting_repeat": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 1,
+      "description": "How many times the demo greets."
+    },
+    "api_token": {
+      "type": "string",
+      "x-skm-secret": true,
+      "description": "Reference to the demo API token."
+    }
+  }
+}

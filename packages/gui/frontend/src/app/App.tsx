@@ -1,5 +1,7 @@
 import { NavLink, Route, Routes } from "react-router";
 import type { Bootstrap } from "../contracts";
+import { ConfigEditor } from "../pages/ConfigEditor";
+import { ConfigModules } from "../pages/ConfigModules";
 import { CatalogPage } from "../pages/CatalogPage";
 import { ContributionRoute } from "../pages/ContributionRoute";
 import { Dashboard } from "../pages/Dashboard";
@@ -22,10 +24,11 @@ function Navigation() {
       <NavLink to="/catalog">Catalog</NavLink>
       {sections.map((section) => {
         const routes = navRoutes(catalog.data, section);
-        if (routes.length === 0) return null;
+        if (routes.length === 0 && section !== "settings") return null;
         return (
           <div key={section} className="nav-section">
             <div className="nav-title">{section}</div>
+            {section === "settings" && <NavLink to="/settings/config">Configuration</NavLink>}
             {routes.map((route) => {
               const path = routePath(route);
               return path ? (
@@ -60,6 +63,8 @@ function Shell({ bootstrap }: { bootstrap: Bootstrap }) {
             <Route path="/runs" element={<Runs />} />
             <Route path="/runs/:runId" element={<RunPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/settings/config" element={<ConfigModules />} />
+            <Route path="/settings/config/:module" element={<ConfigEditor />} />
             <Route path="/x/:owner/*" element={<ContributionRoute />} />
             <Route path="*" element={<div className="muted">Nothing here.</div>} />
           </Routes>

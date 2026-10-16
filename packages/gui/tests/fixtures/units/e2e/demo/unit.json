@@ -7,5 +7,5 @@
   "stability": "development",
   "destination": "hub",
   "requires": [{"unit": "aicore", "range": "^0.1"}],
-  "provides": {"gui": "gui.json"}
+  "provides": {"gui": "gui.json", "config": "configs/config.schema.json"}
 }

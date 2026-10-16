@@ -90,3 +90,30 @@ button:disabled { opacity: 0.5; cursor: default; }
 .add-project input { min-width: 360px; }
 .project-list { padding-left: 18px; }
 .placeholder { padding: 12px; border: 1px dashed var(--line); border-radius: 8px; }
+.layer-picker { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 8px 0 12px; }
+.schema-form { display: flex; flex-direction: column; gap: 8px; max-width: 760px; }
+.cfg-table, .cfg-map, .cfg-entry { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.cfg-field { display: grid; grid-template-columns: 220px 1fr max-content; gap: 2px 12px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.cfg-field.changed { border-left: 3px solid var(--accent); padding-left: 8px; }
+.cfg-field.disabled label { color: var(--muted); }
+.cfg-field > :nth-child(n+4) { grid-column: 2 / span 2; }
+.cfg-control input[type="text"], .cfg-control select { width: 100%; box-sizing: border-box; }
+.cfg-list, .cfg-secret { display: flex; flex-direction: column; gap: 4px; }
+.cfg-secret { flex-direction: row; align-items: center; }
+.cfg-list-item, .cfg-add { display: flex; gap: 6px; }
+.cfg-error { color: var(--fail); font-size: 13px; }
+.cfg-notice { border: 1px solid var(--warn); border-radius: 6px; padding: 6px 10px; }
+.cfg-confirm { border: 1px solid var(--warn); border-radius: 6px; padding: 6px 10px; }
+.link-button { background: none; color: var(--accent); padding: 0 4px; }
+.prov { display: inline-flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
+.prov-where { color: var(--muted); }
+.prov-overridden ul { margin: 4px 0; padding-left: 18px; }
+.badge { display: inline-block; padding: 0 8px; border-radius: 10px; border: 1px solid var(--line); font-size: 12px; }
+.layer-machine, .layer-project { border-color: var(--accent); }
+.layer-env, .layer-flags, .layer-invocation { border-color: var(--warn); }
+.preview-dialog, .conflict-view { flex-direction: column; align-items: stretch; margin-top: 12px; }
+.table { border-collapse: collapse; width: 100%; }
+.table th, .table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.status-conflict td:last-child { color: var(--fail); }
+.status-theirs td:last-child { color: var(--warn); }
+.config-actions { margin-top: 12px; }

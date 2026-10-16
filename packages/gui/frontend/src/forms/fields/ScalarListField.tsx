@@ -22,7 +22,12 @@ function convert(texts: string[], itemType: string | undefined): Scalar[] | null
 /** A list of scalars: one text input per item, add and remove. */
 export function ScalarListField(props: FieldProps) {
   const { spec, entry, value, disabled } = props;
-  const [local, setLocal] = useState<string[] | null>(null);
+  const [stored, setLocal] = useState<string[] | null>(null);
+  // the local texts are valid only while they still describe the draft value: after a discard or an apply the value
+  // changes under them and they must not bring back what was dropped
+  const storedValue = stored === null ? null : convert(stored, spec.itemType);
+  const local = stored !== null && storedValue !== null && JSON.stringify(storedValue) !== JSON.stringify(value ?? []) ? null : stored;
+  if (stored !== null && local === null) setLocal(null);
   const texts = local ?? (Array.isArray(value) ? value.map(String) : []);
   const error = local !== null && convert(local, spec.itemType) === null ? `an item is not ${spec.itemType === "integer" ? "an integer" : "a number"}` : null;
 

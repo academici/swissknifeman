@@ -281,24 +281,30 @@ class TestApply(Workspace):
     def test_corrupted_write_is_rolled_back_to_the_backup(self):
         self.write(self.machine_file, COMMENTED)
 
-        def corrupt(path, text, **kwargs):
-            _io.durable_replace(path, b"garbage [[[", mode=kwargs.get("mode"))
-
-        with mock.patch("aicore.util.io.atomic_write_text", corrupt):
+        with mock.patch("aicore.config.model._verify_written", return_value=False):
             with self.assertRaises(ConfigError) as caught:
                 self.apply([("set", "mode", "fast")])
         self.assertEqual(caught.exception.code, "CONFIG_FILE_INVALID")
         self.assertEqual(self.machine_file.read_text(encoding="utf-8"), COMMENTED)
 
     def test_corrupted_write_of_a_new_file_removes_it(self):
-        def corrupt(path, text, **kwargs):
-            _io.durable_replace(path, b"garbage [[[", mode=kwargs.get("mode"))
-
-        with mock.patch("aicore.util.io.atomic_write_text", corrupt):
+        with mock.patch("aicore.config.model._verify_written", return_value=False):
             with self.assertRaises(ConfigError) as caught:
                 self.apply([("set", "mode", "fast")])
         self.assertEqual(caught.exception.code, "CONFIG_FILE_INVALID")
         self.assertFalse(self.machine_file.exists())
+
+    def test_external_writer_during_read_back_is_not_overwritten(self):
+        self.write(self.machine_file, COMMENTED)
+
+        def external(path, text, **kwargs):
+            _io.durable_replace(path, b"mode = 'external'\n", mode=kwargs.get("mode"))
+
+        with mock.patch("aicore.util.io.atomic_write_text", external):
+            with self.assertRaises(ConfigError) as caught:
+                self.apply([("set", "mode", "fast")])
+        self.assertEqual(caught.exception.code, "CONFIG_FILE_INVALID")
+        self.assertEqual(self.machine_file.read_bytes(), b"mode = 'external'\n")
 
     def test_symlink_stays_a_symlink(self):
         real = self.root / "real" / "config.toml"

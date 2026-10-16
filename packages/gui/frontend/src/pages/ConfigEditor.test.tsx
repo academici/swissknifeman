@@ -90,6 +90,22 @@ describe("configuration editor", () => {
     expect(apply.disabled).toBe(true);
   });
 
+  it("offers no Apply for an earlier draft while the preview of the changed draft is computed", async () => {
+    let previews = 0;
+    const transport = setup({
+      [PREVIEW_PATH]: () => (++previews === 1 ? previewDoc() : new Promise(() => undefined)), [COMMIT_PATH]: COMMIT_RESULT,
+    });
+    const user = await editMax("7");
+    await user.click(screen.getByRole("button", { name: "Preview (1)" }));
+    await screen.findByRole("button", { name: "Apply" });
+    const input = screen.getByLabelText("limits.max");
+    await user.clear(input);
+    await user.type(input, "8");
+    await waitFor(() => expect(previews).toBeGreaterThan(1));
+    expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
+    expect(bodies(transport, "PATCH")).toHaveLength(0);
+  });
+
   it("shows the three-way view on 409 and reapplies on the new revision", async () => {
     const fresh = changed(projectView, (copy) => {
       copy.layers[2]!.revision = REV2;

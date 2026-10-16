@@ -1381,6 +1381,13 @@ def apply_layer_patch(path: PathLike, module_id: str, ops: Sequence[PatchOp], *,
         written = plan.text_after.encode("utf-8")
         _io.atomic_write_text(target, plan.text_after, mode=mode)
         if not _verify_written(layer, target, file, module, module_id, written):
+            try:
+                still_ours = target.read_bytes() == written
+            except OSError:
+                still_ours = False
+            if not still_ours:  # an external writer replaced the file: its content is not ours to overwrite
+                raise ConfigError("CONFIG_FILE_INVALID", "the file read back differs from what was written "
+                                  "(changed by another writer); it was left as found", layer=layer, file=file)
             if existed:
                 _io.durable_replace(target, saved.read_bytes() if saved is not None else data, mode=mode)
             else:

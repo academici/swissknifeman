@@ -28,8 +28,11 @@ export function PreviewDialog({
   onClose: () => void;
 }) {
   const transport = useTransport();
-  const [preview, setPreview] = useState<Preview | null>(null);
-  const [error, setError] = useState<unknown>(null);
+  // a preview is applicable only for the draft it was made for: a changed draft shows none until its own arrives
+  const [held, setHeld] = useState<{ draft: Draft; preview: Preview } | null>(null);
+  const [failure, setFailure] = useState<{ draft: Draft; error: unknown } | null>(null);
+  const preview = held && held.draft === draft ? held.preview : null;
+  const error = failure && failure.draft === draft ? failure.error : null;
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [nonce, setNonce] = useState(0);
@@ -40,11 +43,14 @@ export function PreviewDialog({
       try {
         const next = await transport.request<Preview>("POST", `/v1/config/${encodeURIComponent(draft.module)}/preview${query(projectId)}`,
           previewRequest(draft));
-        if (!cancelled) setPreview(next);
+        if (!cancelled) {
+          setHeld({ draft, preview: next });
+          setFailure(null);
+        }
       } catch (caught) {
         if (cancelled) return;
         if (caught instanceof ApiError && caught.code === "CONFIG_REVISION_CONFLICT") onConflict();
-        else setError(caught);
+        else setFailure({ draft, error: caught });
       }
     }
     void run();
@@ -58,7 +64,7 @@ export function PreviewDialog({
     const body: CommitRequest = { $schema: MUTATION_CONTRACT, kind: "commit_request", preview_id: current.preview_id,
       expected_revision: draft.revision, confirmed: current.confirm_required } as CommitRequest;
     setBusy(true);
-    setError(null);
+    setFailure(null);
     setNotice(null);
     try {
       const result = await transport.request<CommitResult>("PATCH",
@@ -67,12 +73,12 @@ export function PreviewDialog({
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === "CONFIG_REVISION_CONFLICT") onConflict();
       else if (caught instanceof ApiError && caught.code === "PREVIEW_STALE") {
-        setPreview(null);
+        setHeld(null);
         setNotice("The preview expired or the schema changed; it is being made again.");
         setNonce((value) => value + 1);
       } else if (caught instanceof ApiError && caught.code === "CONFIG_LOCKED") {
         setNotice("Another process holds the lock of the file. Try Apply again in a moment.");
-      } else setError(caught);
+      } else setFailure({ draft, error: caught });
     } finally {
       setBusy(false);
     }

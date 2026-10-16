@@ -1,0 +1,22 @@
+bridges/orch-skiller: bash scripts/test.sh
+packages/analyst: bash scripts/test.sh
+packages/gui: bash scripts/test.sh
+packages/maind: bash scripts/test.sh
+packages/skiller: bash scripts/test.sh
+hub: python3 scripts/ecosystem-units.py check
+hub: python3 scripts/public-hygiene.py
+hub: python3 scripts/golden.py check
+hub: python3 scripts/test-aicore-locator.py
+hub: python3 scripts/test-dev-guard.py
+hub: python3 scripts/test-ecosystem-units.py
+[ok] bridges/orch-skiller: bash scripts/test.sh
+[ok] packages/analyst: bash scripts/test.sh
+[ok] packages/gui: bash scripts/test.sh
+[ok] packages/maind: bash scripts/test.sh
+[ok] packages/skiller: bash scripts/test.sh
+[ok] hub: python3 scripts/ecosystem-units.py check
+[ok] hub: python3 scripts/public-hygiene.py
+[ok] hub: python3 scripts/golden.py check
+[ok] hub: python3 scripts/test-aicore-locator.py
+[ok] hub: python3 scripts/test-dev-guard.py
+[ok] hub: python3 scripts/test-ecosystem-units.py

@@ -21,6 +21,7 @@ ENTRY_POINTS = [
     "bin/swissknifeman",
     "packages/analyst/bin/analyst",
     "packages/brain/bin/brain",
+    "packages/gui/bin/gui",
     "packages/harness/bin/harness",
     "packages/maind/bin/maind",
     "packages/skiller/bin/skiller",

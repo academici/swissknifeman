@@ -21,11 +21,13 @@ END = "# --- end aicore locator ---"
 CARRIERS = [
     "packages/analyst/bin/analyst",
     "packages/brain/bin/brain",
+    "packages/gui/bin/gui",
     "packages/harness/bin/harness",
     "packages/maind/bin/maind",
     "packages/skiller/bin/skiller",
     "packages/analyst/scripts/test.sh",
     "packages/brain/scripts/test.sh",
+    "packages/gui/scripts/test.sh",
     "packages/harness/scripts/test.sh",
     "packages/maind/scripts/test.sh",
     "packages/skiller/scripts/test.sh",
@@ -66,7 +68,7 @@ class CarrierTests(unittest.TestCase):
             self.assertEqual(found[0], canonical, f"{name}: locator block differs from the canonical copy")
 
     def test_carriers_put_aicore_lib_on_pythonpath(self) -> None:
-        for name in CARRIERS[:8]:
+        for name in CARRIERS[:10]:
             self.assertIn("$AICORE_LIB", re.sub(r"(?s)" + re.escape(START) + ".*?" + re.escape(END), "",
                                                  (ROOT / name).read_text(encoding="utf-8")), name)
 

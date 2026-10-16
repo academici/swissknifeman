@@ -6,6 +6,7 @@
     "aicore": "pass",
     "analyst": "pass",
     "brain": "pass",
+    "gui": "pass",
     "harness": "pass",
     "maind": "pass",
     "orch": "pass",

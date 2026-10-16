@@ -105,3 +105,8 @@ by a new record.
 | [0077](0077-release-bundle.md) | Release bundle: compat manifest, schema package, attestation and checksums | Accepted |
 | [0078](0078-installed-form-smoke-and-ci-matrix.md) | Smoke of the installed form and a CI matrix generated from `unit.json` | Accepted |
 | [0079](0079-umbrella-front-door-plugin-at-the-root.md) | The `skm` front door is a plugin of the hub root | Accepted |
+| [0080](0080-gui-tauri-shell-react-python-control-plane.md) | GUI is a Tauri 2 shell, a React/TypeScript frontend and a Python control plane | Accepted |
+| [0081](0081-gui-domains-through-bridges.md) | GUI reaches domains only through bridges `gui-<module>` and the aicore plugin protocol | Accepted |
+| [0082](0082-gui-declarative-contributions.md) | GUI contributions are declarative; UI annotations stay outside canonical schemas | Accepted |
+| [0083](0083-gui-local-api-security.md) | GUI local API: loopback, session secret, desktop transport adapter | Accepted |
+| [0084](0084-gui-state-canonical-files.md) | GUI state: canonical files are the source of truth; SQLite is a rebuildable index | Accepted |

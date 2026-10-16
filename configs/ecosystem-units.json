@@ -10,6 +10,7 @@
     "analyst",
     "harness",
     "brain",
+    "gui",
     "bridges/planner-orch",
     "bridges/orch-skiller",
     "bridges/orch-harness",
@@ -29,6 +30,10 @@
     },
     "brain": {
       "path": "packages/brain/lib/brain/__init__.py",
+      "read": "python:__version__"
+    },
+    "gui": {
+      "path": "packages/gui/lib/gui/__init__.py",
       "read": "python:__version__"
     },
     "harness": {
@@ -110,6 +115,7 @@
     "timeout_s": 1800,
     "tools": [
       "analyst",
+      "gui",
       "maind"
     ]
   },

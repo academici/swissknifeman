@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "gui",
+  "title": "GUI: desktop and browser control plane for Swiss Knife Man",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "own-repo",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: schema validator, digest, config, extension protocol, redaction, events."}
+  ],
+  "provides": {
+    "cli": ["bin/gui"],
+    "extension_points": [
+      {"id": "query", "description": "Read-only GUI queries of a contribution: input {id, context, params}, output view-data/v1."},
+      {"id": "command", "description": "Short GUI commands of a contribution executed through the aicore plugin protocol."}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"]
+  }
+}

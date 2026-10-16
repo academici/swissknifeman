@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "2af999717c6f",
-  "reason": "release v0.30.3",
+  "captured_from": "5456ceddd86a",
+  "reason": "PLAN5.P1.1",
   "generators": [
     {
       "id": "skiller-registry",

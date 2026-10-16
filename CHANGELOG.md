@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- New module `packages/gui` (0.1.0, `development`, `destination: own-repo`): skeleton of the SKM GUI control plane — `unit.json` with the extension points `gui:query` and `gui:command`, `bin/gui` (`--version`; Python ≥ 3.11, `PYTHON_TOO_OLD` otherwise), `scripts/test.sh`, CLI tests, README, `schemas/README.md` (contract rules and the table of the nine v1 contracts), `docs/architecture.md`. Registered in `configs/ecosystem-units.json` as a tool module (`targets`, `version_sources`, `standalone.tools`); the umbrella help lists it.
+- ADR 0080–0084: GUI stack (Tauri 2 shell, React/TypeScript, Python control plane), domains through bridges `gui-<module>`, declarative contributions, local API security, state on canonical files.
+
+### Fixed
+
+- `ecosystem-units check --strict` failed on `main`: `unit.json` versions of `analyst`, `maind` and `skiller` lagged their `package.json` after the 0.30.2 and 0.30.3 releases (now 0.4.1, 0.6.2, 0.19.6).
+
 ## [0.30.3] - 2026-10-16
 
 ### Added

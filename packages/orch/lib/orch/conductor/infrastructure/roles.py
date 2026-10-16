@@ -362,8 +362,20 @@ def role_argv(self, item: Item, role: str, route: dict) -> list:
     argv = list(route["argv"])
     if self._shared_session(item, role, route):  # a session that is not saved cannot be resumed by the next executor
         argv = [arg for arg in argv if arg != "--no-session-persistence"]
+    sandboxed = self._sandbox_args(item, role, route)
+    if sandboxed:  # the provider sandbox (bubblewrap) cannot start under the Landlock guard: it replaces the guard
+        argv = strip_guard(argv)
     argv = self._extra_write_dirs(item, role, argv)
-    return argv + (extra or []) + self._resume_args(item, role, route) + self._sandbox_args(item, role, route)
+    return argv + (extra or []) + self._resume_args(item, role, route) + sandboxed
+
+
+def strip_guard(argv: list) -> list:
+    """``argv`` without the ``ro-run.py [--rw DIR]... --`` prefix of the Landlock filesystem guard. Landlock also
+    forbids ``mount`` and writes to ``/proc/<pid>/uid_map``, so the bubblewrap sandbox of Claude Code cannot start
+    inside it ("bwrap: setting up uid map: Permission denied"); the sandbox confines the shell commands itself."""
+    if "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
+        return argv
+    return argv[argv.index("--") + 1:]
 
 
 def extra_write_dirs(self, item: Item, role: str, argv: list) -> list:

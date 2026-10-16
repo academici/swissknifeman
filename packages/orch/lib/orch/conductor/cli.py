@@ -17,6 +17,7 @@ from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, progress, prompts, questions
+from orch.conductor.infrastructure import roles
 
 
 def _project(args):
@@ -57,7 +58,12 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     problems = {role: conductor.route_problem(route) for role, route in item.routes.items()}
     available = {role: problem is None for role, problem in problems.items()}
     unavailable = {role: problem for role, problem in problems.items() if problem}
-    isolation = {role: conductor._role_argv(item, role, route)[len(route["argv"]):] for role, route in item.routes.items()}
+    isolation = {}
+    for role, route in item.routes.items():
+        built = conductor._role_argv(item, role, route)
+        guarded = any(arg.endswith("ro-run.py") for arg in built[:2])
+        base = route["argv"] if guarded else roles.strip_guard(route["argv"])
+        isolation[role] = built[len(base):]
     probed = sandbox.probe()
     network, warnings = {}, []
     for role, route in item.routes.items():

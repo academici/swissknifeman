@@ -22,7 +22,7 @@ import unittest
 from unittest import mock
 
 from orch.conductor import cli, engine, gates, options as opts, progress
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import clock, roles
 from orch.conductor.policies import sandbox as sandbox_policy
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1317,6 +1317,24 @@ class SandboxTests(ConductorCase):
         self.assertEqual(self.extra(preview, "reviewer"), [])  # no Bash in its stand-in argv
         self.assertEqual(preview["sandbox"], {"available": True, "reason": None})
         self.assertEqual(preview["network"]["executor"], {"declared": "none", "enforced": True, "by": "claude-sandbox"})
+
+    def test_the_landlock_guard_is_dropped_when_the_provider_sandbox_applies(self):
+        """bubblewrap cannot start under Landlock (no ``mount``, no write to ``uid_map``): the sandbox replaces the guard."""
+        self.stand_in()
+        argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        argv["executor"] = [sys.executable, "ro-run.py", "--rw", str(self.project), "--", *argv["executor"],
+                            "--tools", "Bash,Read,Edit"]
+        self.write_config(argv)
+        preview = self.preview(self.UP)
+        self.assertEqual(self.extra(preview, "executor")[0], "--settings")
+        preview = self.preview(self.DOWN)
+        self.assertEqual(self.extra(preview, "executor"), [])  # no sandbox: the Landlock guard stays
+
+    def test_strip_guard_removes_only_the_ro_run_prefix(self):
+        guarded = ["python3", "/x/ro-run.py", "--rw", "/p", "--", "claude", "-p"]
+        self.assertEqual(roles.strip_guard(guarded), ["claude", "-p"])
+        self.assertEqual(roles.strip_guard(["claude", "-p"]), ["claude", "-p"])
+        self.assertEqual(roles.strip_guard(["codex", "exec", "--", "x"]), ["codex", "exec", "--", "x"])
 
     def test_a_role_that_may_use_the_network_gets_no_allowlist(self):
         self.stand_in()

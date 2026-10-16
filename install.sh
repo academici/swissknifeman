@@ -39,4 +39,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Stop before touching the machine when a required program is missing (bash 4+, python3 3.9+, git, writable
+# config/state dirs); recommended items only warn. SKM_SKIP_ENV_CHECK=1 skips the check.
+if [[ "${SKM_SKIP_ENV_CHECK:-}" != 1 && -x "$REPO_ROOT/scripts/check-env.sh" ]]; then
+  "$REPO_ROOT/scripts/check-env.sh" --quiet --bin-dir "$BIN_DIR" || {
+    echo "ERROR: install stopped: fix the required items above (scripts/check-env.sh) or set SKM_SKIP_ENV_CHECK=1" >&2
+    exit 1
+  }
+fi
+
 exec "$REPO_ROOT/bin/swissknifeman" install --profile full --bin-dir "$BIN_DIR" ${args[@]+"${args[@]}"}

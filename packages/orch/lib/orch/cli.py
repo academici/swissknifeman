@@ -441,7 +441,8 @@ def _sandbox_check() -> dict:
                   f"the provider sandbox cannot start ({probed['reason']}): Codex roles are unavailable and the shell "
                   "commands of Claude Code roles run under the filesystem guard only", evidence=evidence,
                   remediation="install bubblewrap and socat; on Ubuntu 24.04+ an AppArmor profile that allows "
-                              "user namespaces for bwrap is needed (a change to the machine, made by its owner)")
+                              "user namespaces for bwrap is needed (a change to the machine, made by its owner); "
+                              "scripts/check-env.sh lists every gap, docs/getting-started.md#requirements has the steps")
 
 
 def doctor_checks(project: Path | None) -> list:

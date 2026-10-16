@@ -3,11 +3,65 @@
 SwissKnifeMan does not require a plan for each task. Choose a shortcut based on the scale of work;
 `planner` and full onboarding are enabled by an explicit solution.
 
+## Requirements
+
+Check the machine first: `scripts/check-env.sh` is read-only, installs nothing and prints, for every gap, the command that fixes it
+(`--strict` also fails on a missing recommended item, `--json` prints `skm-env-check/v1`, `--quiet` shows only the gaps).
+
+```bash
+scripts/check-env.sh
+```
+
+| Level | Program or feature | Version | Needed for | Install (Debian/Ubuntu) |
+|:--|:--|:--|:--|:--|
+| required | `bash` | 4+ (macOS: any) | `install.sh`, hooks | preinstalled |
+| required | `python3` | 3.9+ | every module (they use only the standard library) | `sudo apt install python3` |
+| required | `git` | any | `planner`, delivery, project steps | `sudo apt install git` |
+| recommended | `~/.local/bin` on `PATH` | | the `swissknifeman`, `skiller`, `maind`, `harness`, `analyst`, `brain`, `plan.py` commands | `export PATH="$HOME/.local/bin:$PATH"` in your shell profile |
+| recommended | `jq` | any | Claude Code hooks (review-gate, observer) and the status line | `sudo apt install jq` |
+| recommended | `node` | 18+ | the memory daemon (`maind`), building these docs | `sudo apt install nodejs` or `nvm` |
+| recommended | `uvx` (from `uv`) | any | the code-graph MCP server (Serena) in a project's `.mcp.json` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| recommended | `systemctl --user` | | `maind service install` (otherwise `maind start --only memory`) | a systemd user session |
+| recommended | `bubblewrap` (`bwrap`) and `socat` | | the sandbox of `orch` and of Claude Code / Codex roles ([setup](#sandbox-on-ubuntu-24-04)) | `sudo apt install bubblewrap socat` |
+| recommended | one agent client | | `claude`, `codex` or `grok`: the program that reads skills and commands | see each vendor |
+| optional | `php`, `composer` | | Laravel and PHP packs (`pint`) | `sudo apt install php-cli composer` |
+| optional | `pnpm` | | Node projects with husky or lint | `corepack enable` |
+| optional | `ruff`, `rsync` | | development of this repository (`scripts/lint.sh`, `scripts/dev-sandbox.sh`) | `pipx install ruff`, `sudo apt install rsync` |
+
+On macOS use `brew install` with the same package names; the sandbox needs no `bubblewrap` there (the system sandbox is used).
+`swissknifeman doctor` checks the same things later from inside the installed modules (`orch.sandbox`, `maind.environment`, ...);
+`check-env.sh` is the one you can run before anything is installed.
+
+### Sandbox on Ubuntu 24.04+
+
+`bubblewrap` installed is not enough on Ubuntu 24.04 and later: `kernel.apparmor_restrict_unprivileged_userns = 1` stops `bwrap` from
+creating a user namespace unless an AppArmor profile allows it, and `check-env.sh` then reports
+`sandbox-namespaces: bwrap cannot start` (the error is `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`). Allowing it is a
+change of the machine and is made by its owner:
+
+```bash
+sudo tee /etc/apparmor.d/bwrap >/dev/null <<'EOF'
+abi <abi/4.0>,
+include <tunables/global>
+
+profile bwrap /usr/bin/bwrap flags=(unconfined) {
+  userns,
+  include if exists <local/bwrap>
+}
+EOF
+sudo apparmor_parser -r /etc/apparmor.d/bwrap
+scripts/check-env.sh --quiet        # sandbox-namespaces must be ok now
+```
+
+Without the sandbox `orch` still runs, but Codex roles are unavailable and the shell commands of Claude Code roles run under the
+filesystem guard only (`instructions.sandbox: prefer`); with `require` a run stops with `SANDBOX_UNAVAILABLE`.
+
 ## Check installation
 
 From a cloned root SwissKnifeMan:
 
 ```bash
+scripts/check-env.sh                             # read-only: is everything the modules call on this machine?
 ./install.sh --bin-dir ~/.local/bin              # every module (profile full)
 # or choose a profile; --dry-run first prints the plan and writes nothing
 ./bin/swissknifeman install --profile minimal --dry-run

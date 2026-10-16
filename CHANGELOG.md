@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/check-env.sh` (`--strict`, `--quiet`, `--json`, `--bin-dir`): a read-only check that the machine has what the modules call (bash 4+, python3 3.9+, git, `jq`, `node` 18+, `uvx`, systemd user session, `bubblewrap` + `socat` and a working user+net namespace, an agent client, optional PHP/pnpm/ruff/rsync). It prints the fix for every gap; `install.sh` runs it first and stops when a required item is missing (`SKM_SKIP_ENV_CHECK=1` skips it). Tests: `scripts/test-check-env.py`.
+- "Requirements" block (table of programs, versions and install commands) and "Sandbox on Ubuntu 24.04+" (the AppArmor profile for `bwrap`) in `docs/getting-started.md` and a short list in `README.md`.
+
+### Changed
+
+- `orch.sandbox` remediation points to `scripts/check-env.sh` and the requirements page.
+
 ## [0.30.2] - 2026-10-16
 
 ### Fixed

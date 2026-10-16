@@ -46,6 +46,9 @@ Added to `plan/v1` (additive): schema `read-followups` (follow-ups and owner dec
 
 ## Machine steps (once per computer; the owner runs what changes live state)
 
+0. `scripts/check-env.sh` (read-only): every required item must be `ok`; fix the recommended gaps it names (`jq`, `node`, `uvx`,
+   `bubblewrap` + `socat` and, on Ubuntu 24.04+, the AppArmor profile for `bwrap`: [requirements](docs/getting-started.md#requirements)).
+
 1. **Backup** **[done]**: `mkdir ~/skm-backup-$(date +%F)`; `tar czf` of `~/.config/swissknifeman ~/.local/state/swissknifeman ~/.swissknifeman
    ~/.claude/settings.json ~/.claude/plugins/known_marketplaces.json`; copy `$HUB/config.json` and `safe-dirs.json`;
    `git bundle create <dir>/base-main.bundle main` in `$HUB`.

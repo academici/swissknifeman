@@ -89,7 +89,12 @@ General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, 
 
 ## Installation
 
+Requirements: `python3` 3.9+, `git`, `bash` 4+; recommended `~/.local/bin` on `PATH`, `jq`, `node` 18+, `uvx`, `bubblewrap` + `socat`
+(sandbox) and one agent client. Check them first with the read-only `scripts/check-env.sh` (full table and the Ubuntu 24.04 sandbox
+setup: [Get started](docs/getting-started.md#requirements)).
+
 ```bash
+scripts/check-env.sh          # read-only: lists what is missing and how to install it
 ./install.sh                  # every module: profile full (CLI + router + Codex core/planner + Grok planner plugin)
 ./bin/swissknifeman install --profile minimal --dry-run   # look first; profiles: minimal, standard (default), full
 swissknifeman doctor          # read-only checks of every module

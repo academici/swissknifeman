@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-10-16
+
 ### Fixed
 
 - `analyst` and `maind` plugin manifests: `agents` listed the `./agents` directory, which Claude Code rejects ("must end with .md"), so both plugins failed to load. They now list the agent files (`analyst` 0.4.1, `maind` 0.6.2).

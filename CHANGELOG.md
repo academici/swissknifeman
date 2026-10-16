@@ -29,6 +29,7 @@
 
 ### Fixed
 
+- **aicore:** the attestation of a historical tag no longer fails on a package unit the current policy names but the tag does not hold yet (`brain` at v0.28.3: `git show` of a missing `package.json`); the transition check of the next release can run again.
 - **ci:** `upstream-sync.yml` read the exit code of `tee`, not of `update-upstreams.sh --check` (always 0): upstream updates were never applied and errors never failed the job; `scanner-pr.yml` ended its scan in `|| true` and read candidates from the wrong folder, so every outcome looked like "0 candidates" — the scan now fails on error and says `SCAN_PATHS_ABSENT` when none of its local projects exist (a hosted runner).
 - **orch:** a `command` research source that times out closes its pipes (they leaked).
 - **hygiene:** three skiller configs (`exclusive-groups`, `licenses`, `selection-summary`) had no entry in `configs/config-inventory.json`, so the hygiene job was red.

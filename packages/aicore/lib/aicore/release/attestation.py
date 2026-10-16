@@ -158,13 +158,17 @@ def _layout(source, policy, name, key):
 
 
 def _package_units(source, policy):
-    """Runtime package units {id: path}: the ref's policy, else the host's current one."""
+    """Runtime package units {id: path}: the ref's policy, else the host's current one. A unit borrowed from the
+    current policy that the ref does not hold yet (a package added later) is left out of that ref."""
     units = policy.get("package_units")
-    if units is None:
+    borrowed = units is None
+    if borrowed:
         units = (_worktree_policy(source.root) or {}).get("package_units", {})
     if not isinstance(units, dict) or not all(
             isinstance(path, str) and path for path in units.values()):
         raise ValueError("RELEASE_UNIT_POLICY_INVALID: package_units")
+    if borrowed and source.ref:
+        units = {name: path for name, path in units.items() if source.exists(path + "/package.json")}
     return units
 
 

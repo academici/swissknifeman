@@ -119,6 +119,21 @@ class HostPolicyBuildTests(unittest.TestCase):
         self.assertIn("grok", units["plugin-a"]["providers"])
         self.assertEqual(units["plugin-b"]["version_source"], "vendor/plugin-b/package.json")
 
+    def test_a_package_unit_added_after_a_historical_ref_is_left_out_of_it(self):
+        _host_repo(self.root, _policy())
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "before the new package")
+        _write(self.root, "configs/release-units.json",
+               _policy(package_units={"plugin-b": "vendor/plugin-b", "later": "vendor/later"}))
+        units = self.units(build(self.root, ref="HEAD"))
+        self.assertIn("package.plugin-b", units)
+        self.assertNotIn("package.later", units)  # it was a crash: git show HEAD:vendor/later/package.json
+        _write(self.root, "vendor/later/package.json", {"version": "0.1.0"})
+        _write(self.root, "vendor/later/lib/x.py", "pass\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "the new package")
+        self.assertIn("package.later", self.units(build(self.root)))  # the worktree names its own units
+
     def test_invalid_schema_version_is_rejected(self):
         _host_repo(self.root, _policy(schema_version="release-unit-policy/v0"))
         with self.assertRaisesRegex(ValueError, "RELEASE_UNIT_POLICY_INVALID"):

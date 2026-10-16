@@ -117,3 +117,5 @@ plans/**/views/
 
 # gui frontend build output (npm --prefix packages/gui/frontend run build)
 packages/gui/frontend/dist/
+packages/gui/frontend/test-results/
+packages/gui/frontend/playwright-report/

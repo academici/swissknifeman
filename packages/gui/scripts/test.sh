@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the gui tests (stdlib unittest, no dependencies, no network).
+# Runs the gui tests (stdlib unittest; the locked backend packages are installed once by `gui deps ensure`).
 # Usage: scripts/test.sh [-v]   (-v: verbose unittest output)
 # The tests run against a throwaway HOME; they never touch the developer machine.
 set -euo pipefail
@@ -37,6 +37,12 @@ unset -f _aicore_ok
 
 # lib/ is the package gui; REPO_ROOT makes tests.* importable.
 export PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+# The locked third-party packages (requirements.lock) are installed into the real cache once, before HOME is replaced,
+# and the tests find them through GUI_PYDEPS_DIR. Offline without a filled cache this fails instead of skipping tests.
+GUI_PYDEPS_DIR="$(python3 -m gui.cli deps path)" || { echo "GUI_DEPS_UNAVAILABLE: cannot name the install folder" >&2; exit 1; }
+python3 -m gui.cli deps ensure >/dev/null || { echo "GUI_DEPS_UNAVAILABLE: gui deps ensure failed" >&2; exit 1; }
+export GUI_PYDEPS_DIR
 
 # The configuration and state locations must not come from the developer machine.
 TEST_HOME="$(mktemp -d)"

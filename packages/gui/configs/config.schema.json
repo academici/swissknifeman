@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:config:v1",
+  "title": "gui config",
+  "description": "Settings of the gui module: the local backend (port, browser), command runs, the event stream, log retention and queries. The backend listens on loopback only; there is no host key.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "port": {
+      "type": "integer",
+      "description": "TCP port of the loopback backend; 0 picks a free port at every start. Machine-wide: one backend serves every project.",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 65535,
+      "x-skm-layers": [
+        "defaults",
+        "machine",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "open_browser": {
+      "type": "boolean",
+      "description": "Whether gui open starts the default browser with the session URL (the URL is printed either way).",
+      "default": true
+    },
+    "runs": {
+      "type": "object",
+      "description": "Limits of command runs started by the ExecutionBroker.",
+      "additionalProperties": false,
+      "properties": {
+        "max_global": {
+          "type": "integer",
+          "description": "Runs active at the same time on the machine; a new run beyond it is refused with CONCURRENCY_LIMIT.",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 64
+        },
+        "max_per_project": {
+          "type": "integer",
+          "description": "Runs active at the same time in one project.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 64
+        },
+        "max_per_owner": {
+          "type": "integer",
+          "description": "Runs active at the same time of one contribution owner.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 64
+        },
+        "chunk_bytes": {
+          "type": "integer",
+          "description": "Largest log chunk of one stream frame in bytes.",
+          "default": 16384,
+          "minimum": 1024,
+          "maximum": 1048576
+        },
+        "log_max_bytes": {
+          "type": "integer",
+          "description": "Largest stored log of one output stream (stdout or stderr) of a run in bytes; the rest is dropped and marked.",
+          "default": 52428800,
+          "minimum": 65536
+        },
+        "idle_timeout_s": {
+          "type": "integer",
+          "description": "A run without output for this many seconds is stopped as timed_out; 0 never stops it.",
+          "default": 600,
+          "minimum": 0
+        },
+        "cancel_grace_s": {
+          "type": "integer",
+          "description": "Seconds between SIGTERM and SIGKILL of the process group when a run is cancelled.",
+          "default": 5,
+          "minimum": 0,
+          "maximum": 300
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "The event stream /v1/events.",
+      "additionalProperties": false,
+      "properties": {
+        "ring_frames": {
+          "type": "integer",
+          "description": "Frames kept in memory for resume after a reconnect.",
+          "default": 10000,
+          "minimum": 100
+        },
+        "queue_frames": {
+          "type": "integer",
+          "description": "Frames queued per subscription before the subscriber is told to resync.",
+          "default": 1000,
+          "minimum": 10
+        },
+        "heartbeat_s": {
+          "type": "integer",
+          "description": "Seconds between heartbeat frames of an idle subscription.",
+          "default": 15,
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "journal_poll_s": {
+          "type": "integer",
+          "description": "Seconds between reads of the project event journal.",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 3600
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "description": "Retention of run logs.",
+      "additionalProperties": false,
+      "properties": {
+        "log_days": {
+          "type": "integer",
+          "description": "Run logs older than this many days are removed; 0 keeps them.",
+          "default": 30,
+          "minimum": 0
+        },
+        "log_total_mb": {
+          "type": "integer",
+          "description": "Run logs are removed oldest first above this total size in MiB; 0 has no ceiling.",
+          "default": 1024,
+          "minimum": 0
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "GUI queries of contributions.",
+      "additionalProperties": false,
+      "properties": {
+        "max_output_bytes": {
+          "type": "integer",
+          "description": "Largest canonical JSON output of one query handler in bytes; a larger one is OUTPUT_INVALID.",
+          "default": 1048576,
+          "minimum": 1024
+        }
+      }
+    }
+  }
+}

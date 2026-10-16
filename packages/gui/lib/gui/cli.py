@@ -35,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("check", help="check one contribution: its rules and the conformance of its handler")
     p.add_argument("path", metavar="PATH", help="a gui.json file or a unit or extension folder that declares one")
     p.add_argument("--json", action="store_true", help="print a list of check-result/v1 documents")
+    p = sub.add_parser("deps", help="third-party Python packages of the backend (requirements.lock)")
+    deps_sub = p.add_subparsers(dest="deps_command", parser_class=_Parser, metavar="<action>", required=True)
+    q = deps_sub.add_parser("ensure", help="install the locked wheels once (pip when it works, else from PyPI)")
+    q.add_argument("--json", action="store_true", help="print {path, lock_digest, installed}")
+    q.add_argument("--offline", action="store_true", help="never download: fail unless already installed")
+    deps_sub.add_parser("path", help="print the install folder of the lock")
     return parser
 
 
@@ -73,6 +79,25 @@ def _check(args: argparse.Namespace) -> int:
     return EXIT_FAILURE if any(result["status"] == "fail" for result in results) else 0
 
 
+def _deps(args: argparse.Namespace) -> int:
+    from . import deps
+
+    try:
+        if args.deps_command == "path":
+            print(deps.site_dir())
+            return 0
+        present = deps.is_complete(deps.site_dir())
+        folder = deps.ensure(offline=args.offline)
+    except deps.GuiDepsError as error:
+        print(str(error), file=sys.stderr)
+        return EXIT_FAILURE
+    if args.json:
+        print(json.dumps({"path": str(folder), "lock_digest": deps.lock_digest(), "installed": not present}))
+    else:
+        print(f"{'present' if present else 'installed'}: {folder}")
+    return 0
+
+
 def check_python(version_info: Optional[Sequence[int]] = None) -> Optional[str]:
     """The ``PYTHON_TOO_OLD`` message when the interpreter is older than ``MIN_PYTHON``, else ``None``."""
     current: Tuple[int, ...] = tuple(version_info if version_info is not None else sys.version_info)[:2]
@@ -95,6 +120,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
     if args.command == "contributions":
         return _contributions(args)
+    if args.command == "deps":
+        return _deps(args)
     return _check(args)
 
 

@@ -1,0 +1,58 @@
+# gui configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[gui]
+# TCP port of the loopback backend; 0 picks a free port at every start. Machine-wide: one backend serves every project. Integer >= 0 and <= 65535.
+# Allowed in layers: defaults, machine, env, invocation, flags.
+# port = 0
+
+# Whether gui open starts the default browser with the session URL (the URL is printed either way). Boolean.
+# open_browser = true
+
+[gui.runs]
+# Runs active at the same time on the machine; a new run beyond it is refused with CONCURRENCY_LIMIT. Integer >= 1 and <= 64.
+# max_global = 4
+
+# Runs active at the same time in one project. Integer >= 1 and <= 64.
+# max_per_project = 2
+
+# Runs active at the same time of one contribution owner. Integer >= 1 and <= 64.
+# max_per_owner = 2
+
+# Largest log chunk of one stream frame in bytes. Integer >= 1024 and <= 1048576.
+# chunk_bytes = 16384
+
+# Largest stored log of one output stream (stdout or stderr) of a run in bytes; the rest is dropped and marked. Integer >= 65536.
+# log_max_bytes = 52428800
+
+# A run without output for this many seconds is stopped as timed_out; 0 never stops it. Integer >= 0.
+# idle_timeout_s = 600
+
+# Seconds between SIGTERM and SIGKILL of the process group when a run is cancelled. Integer >= 0 and <= 300.
+# cancel_grace_s = 5
+
+[gui.events]
+# Frames kept in memory for resume after a reconnect. Integer >= 100.
+# ring_frames = 10000
+
+# Frames queued per subscription before the subscriber is told to resync. Integer >= 10.
+# queue_frames = 1000
+
+# Seconds between heartbeat frames of an idle subscription. Integer >= 1 and <= 3600.
+# heartbeat_s = 15
+
+# Seconds between reads of the project event journal. Integer >= 1 and <= 3600.
+# journal_poll_s = 1
+
+[gui.retention]
+# Run logs older than this many days are removed; 0 keeps them. Integer >= 0.
+# log_days = 30
+
+# Run logs are removed oldest first above this total size in MiB; 0 has no ceiling. Integer >= 0.
+# log_total_mb = 1024
+
+[gui.query]
+# Largest canonical JSON output of one query handler in bytes; a larger one is OUTPUT_INVALID. Integer >= 1024.
+# max_output_bytes = 1048576

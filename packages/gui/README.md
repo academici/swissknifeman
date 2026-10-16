@@ -45,8 +45,9 @@ bridges/gui-planner/               # plans
 bridges/gui-orch/                  # conductor runs
 ```
 
-In 0.1.0 the contracts (`schemas/`), `lib/gui/contracts.py`, `lib/gui/errors.py`, `lib/gui/core/run_states.py`,
-`lib/gui/catalog/` and the CLI exist; HTTP, storage, frontend, desktop and sidecar are the target layout.
+In 0.1.0 the contracts (`schemas/`), `lib/gui/contracts.py`, `lib/gui/errors.py`, `lib/gui/core/` (run states,
+project registry), `lib/gui/catalog/`, `lib/gui/storage/` (`gui.db`), `lib/gui/settings.py`, `lib/gui/deps.py` and the
+CLI exist; HTTP, frontend, desktop and sidecar are the target layout.
 
 `gui` is a tool module of the hub (`standalone.tools`): its third-party dependencies, Node and Rust are not part of the
 core check; it is checked by its own `dev.test`.
@@ -56,9 +57,32 @@ core check; it is checked by its own `dev.test`.
 - Python 3.11 or newer (the hub itself runs on 3.9; an older interpreter gets `PYTHON_TOO_OLD`).
 - The `aicore` foundation, found by the aicore locator (`$AICORE_ROOT`, `_vendor/aicore` or the sibling folder).
 
+## Third-party packages
+
+The HTTP backend needs Starlette and uvicorn (with `wsproto` for WebSocket); they are pinned with their sha256 in
+`requirements.lock` (pure-Python `py3-none-any` wheels only) and imported only by `lib/gui/http`. `gui deps ensure`
+installs them once into `<cache>/gui/pydeps/py<major><minor>-<lock digest>` (`$GUI_PYDEPS_DIR` overrides the folder):
+with `pip --require-hashes --target` when pip works, else by itself from the PyPI JSON API, checking each wheel's
+sha256 and refusing archive members that could leave the folder. No virtual environment and no system change is
+needed; a failure is `GUI_DEPS_UNAVAILABLE`.
+
+## Configuration
+
+`[gui]` in the SKM configuration files (`configs/config.schema.json`, resolved by `aicore.config`): `port` (0: a free
+port; machine-wide), `open_browser`, `runs.*` (concurrency, log and timeout limits), `events.*` (stream buffers and
+heartbeat), `retention.*` (run logs) and `query.max_output_bytes`. There is no host key: the backend binds loopback
+only. `swissknifeman config explain gui` shows where each value comes from.
+
+## State
+
+`state_dir("gui")/gui.db` (SQLite, WAL, `0600`) holds the registry of trusted projects, preferences and the audit
+trail; migrations only get appended and a database from a newer gui is refused with `STATE_INCOMPATIBLE`.
+
 ## Command line
 
 ```text
+gui deps ensure [--json] [--offline]         install the locked third-party packages of the backend once
+gui deps path                                print their install folder
 gui contributions [--json] [--project DIR]   resolved catalog of GUI contributions (catalog/v1)
 gui check PATH [--json]                      check one contribution: its rules and the conformance of its handler
 gui --version                                print the version
@@ -74,3 +98,7 @@ Exit codes: 0 ok, 1 failure (code on stderr), 2 usage error.
 ```bash
 bash scripts/test.sh        # from packages/gui
 ```
+
+`scripts/test.sh` runs `gui deps ensure` against the real cache before it switches `HOME` to a throwaway folder and
+exports `GUI_PYDEPS_DIR`, so the API tests import the locked packages; offline without a filled cache it fails with
+`GUI_DEPS_UNAVAILABLE` instead of skipping tests. The installer tests use a local fake index and never the network.

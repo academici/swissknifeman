@@ -44,8 +44,10 @@ extensions. Each contract is a JSON Schema validated by `aicore.util.schema` (th
 | `trust` | `urn:swissknifeman:gui:trust:v1` | plugin trust: enforcement (`declared`, `enforced`, `advisory`), grants, plugin state, plugin document | P1.3 |
 | `config-mutation` | `urn:swissknifeman:gui:config-mutation:v1` | configuration write: preview request, preview, commit request, commit result | P1.3 |
 | `catalog` | `urn:swissknifeman:gui:catalog:v1` | deterministic resolved catalog of contributions with rejection codes and a digest | P1.4 |
+| `project` | `urn:swissknifeman:gui:project:v1` | trusted projects of the control plane (`/v1/projects`): one `project` or a `project_list`, chosen by `kind` | P2.1 |
 
 The column "Added by" names the step of the module plan that freezes the contract; until then the row is a reservation.
 Frozen: `contribution`, `view-data` (field reference: [docs/contribution.md](../docs/contribution.md)); `api-error`,
 `bootstrap`, `run`, `stream`, `trust`, `config-mutation` (code registry, run transitions, stream and write rules:
-[docs/api.md](../docs/api.md)); `catalog` (resolver and catalog: [docs/contribution.md](../docs/contribution.md#resolver)).
+[docs/api.md](../docs/api.md)); `catalog` (resolver and catalog: [docs/contribution.md](../docs/contribution.md#resolver)); `project` (registry
+rules: [docs/api.md](../docs/api.md#projects-projectv1)).

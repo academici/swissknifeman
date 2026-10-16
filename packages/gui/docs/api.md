@@ -62,12 +62,17 @@ audit and backend logs; `issues` lists validation issues as `{pointer, code, mes
 | `CONTRIB_INPUT_UNKNOWN` | invalid | 422 | no |
 | `CONTRIB_CAPABILITY_RESERVED` | forbidden | 403 | no |
 | `CATALOG_SOURCE_UNAVAILABLE` | unavailable | 503 | yes |
+| `GUI_DEPS_UNAVAILABLE` | unavailable | 503 | yes |
+| `STATE_INCOMPATIBLE` | internal | 500 | no |
 | `INTERNAL` | internal | 500 | no |
 
 `AUTH_*`, `HOST_REJECTED` and `ORIGIN_REJECTED` come from the security checks of every request (session secret,
 Host in `127.0.0.1:<port>`, `localhost:<port>`, `[::1]:<port>`, Origin in the allowlist of the mode).
 The `CONTRIB_*` codes are the rejection codes of the contribution resolver ([contribution.md](contribution.md));
-`CATALOG_SOURCE_UNAVAILABLE` means the unit list could not be read. A new code is added to `gui.errors.CODES` and to
+`CATALOG_SOURCE_UNAVAILABLE` means the unit list could not be read. `GUI_DEPS_UNAVAILABLE` means the locked
+third-party packages of the backend are not installed and could not be (`gui deps ensure`); `STATE_INCOMPATIBLE`
+means `gui.db` was written by a newer gui (its schema version is above the known migrations) and is left untouched.
+A new code is added to `gui.errors.CODES` and to
 this table in the same change.
 
 ## Handshake (`bootstrap/v1`)
@@ -170,3 +175,19 @@ The commit takes the layer lock (`CONFIG_LOCKED` on timeout), compares the file 
 writes through aicore (temp file, fsync, atomic replace, backup), re-reads and validates. A write is never blind:
 there is no last-write-wins. A layer the key may not be set in is `CONFIG_LAYER_FORBIDDEN`. Configuration values are
 scalars or lists of scalars (TOML has no null); `null` in a diff means the key is absent.
+
+## Projects (`project/v1`)
+
+The control plane keeps its own registry of trusted projects in `gui.db` (`state_dir("gui")`, SQLite). A project
+gets in only by an explicit act of the owner: `gui open`/`gui serve` with `--project DIR` or from inside a project, or
+a confirmed `POST /v1/projects`. Its root is the nearest folder above the path with `.git` or `.swissknifeman/`
+(else the path itself) after `realpath`; the id is `<slug of the folder name>-<first 8 hex of sha256(root)>`, so
+adding the same root again returns the same entry. Every entry is `trusted: true` in v1; the maind fleet is shown by
+the `gui-hub` bridge as data and grants no trust (I13).
+
+- `project`: `{$schema, kind: "project", id, name, root, trusted, source: open|user, added_at}`.
+- `project_list`: `{$schema, kind: "project_list", projects: [...]}` sorted by name and id.
+
+A working folder of a project (the `cwd` of a command, a `project-path` input) is resolved only through the registry:
+the stored root must still be the same real directory (else `NOT_FOUND`) and the path must stay inside it after
+`realpath` (else `PATH_ESCAPE`). Adding and removing a project writes an `audit` row.

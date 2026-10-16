@@ -49,13 +49,17 @@ CODES: Dict[str, Tuple[str, int]] = {
     "CONTRIB_INPUT_UNKNOWN": ("invalid", 422),
     "CONTRIB_CAPABILITY_RESERVED": ("forbidden", 403),
     "CATALOG_SOURCE_UNAVAILABLE": ("unavailable", 503),
+    # Backend host: third-party packages and the state database.
+    "GUI_DEPS_UNAVAILABLE": ("unavailable", 503),
+    "STATE_INCOMPATIBLE": ("internal", 500),
     # Anything unexpected; the message never carries a trace.
     "INTERNAL": ("internal", 500),
 }
 
 # Transient failures: the same request may succeed later. A quarantined plugin or a too large body does not heal.
 RETRYABLE = frozenset({"CONCURRENCY_LIMIT", "HANDLER_FAILED", "HANDLER_TIMEOUT", "PLUGIN_UNAVAILABLE",
-                       "CONFIG_LOCKED", "CATALOG_SOURCE_UNAVAILABLE"})
+                       "CONFIG_LOCKED", "CATALOG_SOURCE_UNAVAILABLE",
+                       "GUI_DEPS_UNAVAILABLE"})
 
 
 def error_class(code: str) -> str:

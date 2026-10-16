@@ -6,6 +6,7 @@
   "type": "object",
   "properties": {
     "schema": {"const": "umbrella-units/v1", "description": "Format identifier."},
+    "hub_root": {"type": "string", "minLength": 1, "description": "Absolute path of the hub root that relative unit roots resolve against."},
     "units": {
       "type": "array",
       "description": "Every module found by unit.json, sorted by id.",
@@ -17,7 +18,7 @@
           "version": {"type": "string", "description": "Module version."},
           "stability": {"type": "string", "description": "Stability stage."},
           "destination": {"enum": ["own-repo", "hub"], "description": "Where the module lives after the split."},
-          "root": {"type": "string", "description": "Module folder relative to the hub root."},
+          "root": {"type": "string", "description": "Module folder relative to hub_root, or an absolute path when the folder is outside the hub."},
           "cli": {"type": "array", "items": {"type": "string"}, "description": "provides.cli entries."},
           "plugins": {"type": "array", "items": {"type": "string"}, "description": "Names of provides.plugins."},
           "doctor": {"type": "integer", "minimum": 0, "description": "Number of provides.doctor checks."},

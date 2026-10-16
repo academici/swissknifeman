@@ -313,7 +313,7 @@ def units_command(args: Sequence[str], units: Optional[Mapping[str, Any]] = None
         return 2
     rows = [unit_row(unit) for unit in units.values()]
     if as_json:
-        print(json.dumps({"schema": UNITS_SCHEMA, "units": rows}, indent=2, ensure_ascii=False))
+        print(json.dumps({"schema": UNITS_SCHEMA, "hub_root": str(ROOT), "units": rows}, indent=2, ensure_ascii=False))
         return 0
     for row in rows:
         print(" ".join([row["id"], row["kind"], row["version"], row["stability"], row["destination"],

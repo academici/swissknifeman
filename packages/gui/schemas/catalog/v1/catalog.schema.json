@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:catalog:v1",
+  "title": "catalog",
+  "description": "Resolved catalog of GUI contributions: the accepted ones and the rejected ones with their codes, in a deterministic order (owner, source, file) and without timestamps, so the same inputs give the same document and digest.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "host",
+    "contributions",
+    "rejected",
+    "digest"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:gui:catalog:v1",
+      "description": "Contract id of this document."
+    },
+    "host": {
+      "type": "object",
+      "description": "The host the catalog was resolved for.",
+      "required": [
+        "gui_protocol"
+      ],
+      "properties": {
+        "gui_protocol": {
+          "type": "object",
+          "description": "Host protocol versions; min <= max.",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/protocol_version",
+              "description": "Lowest protocol version."
+            },
+            "max": {
+              "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/protocol_version",
+              "description": "Highest protocol version."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "contributions": {
+      "type": "array",
+      "description": "Accepted contributions, sorted by owner, source and file.",
+      "items": {
+        "type": "object",
+        "description": "One accepted contribution.",
+        "required": [
+          "owner",
+          "source",
+          "file",
+          "digest",
+          "document"
+        ],
+        "properties": {
+          "owner": {
+            "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+            "description": "Owner of the contribution."
+          },
+          "source": {
+            "enum": [
+              "unit",
+              "extension"
+            ],
+            "description": "Where the contribution was found: a hub unit or an external extension."
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Absolute path of the gui.json after realpath."
+          },
+          "digest": {
+            "$ref": "urn:swissknifeman:aicore:digest:v1",
+            "description": "Digest of the gui.json document."
+          },
+          "document": {
+            "$ref": "urn:swissknifeman:gui:contribution:v1",
+            "description": "The contribution document."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "description": "Rejected contributions and unavailable sources, sorted by owner, file and code.",
+      "items": {
+        "type": "object",
+        "description": "One rejected contribution or unavailable source.",
+        "required": [
+          "owner",
+          "file",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "owner": {
+            "description": "Owner named by the manifest; null when unknown.",
+            "oneOf": [
+              {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+                "description": "Owner id."
+              },
+              {
+                "type": "null",
+                "description": "No owner."
+              }
+            ]
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path of the gui.json, or the name of the source that could not be read."
+          },
+          "code": {
+            "enum": [
+              "CONTRIB_INVALID",
+              "CONTRIB_UNREADABLE",
+              "CONTRIB_OWNER_MISMATCH",
+              "CONTRIB_ID_PREFIX",
+              "CONTRIB_CONFLICT",
+              "CONTRIB_INCOMPATIBLE",
+              "CONTRIB_HANDLER_MISSING",
+              "CONTRIB_PATH_ESCAPE",
+              "CONTRIB_REF_UNKNOWN",
+              "CONTRIB_INPUT_UNKNOWN",
+              "CONTRIB_CAPABILITY_RESERVED",
+              "CATALOG_SOURCE_UNAVAILABLE"
+            ],
+            "description": "Rejection code (docs/contribution.md)."
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Safe text of the reason."
+          },
+          "issues": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Validation issues behind the rejection.",
+            "items": {
+              "$ref": "urn:swissknifeman:gui:api-error:v1#/$defs/issue",
+              "description": "One issue."
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "digest": {
+      "$ref": "urn:swissknifeman:aicore:digest:v1",
+      "description": "Digest of the accepted contributions (owner, source, digest of each) and the host; paths are not part of it."
+    }
+  },
+  "additionalProperties": false
+}

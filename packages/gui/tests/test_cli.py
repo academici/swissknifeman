@@ -61,6 +61,73 @@ class TestUsage(unittest.TestCase):
         self.assertIn("gui: usage:", err)
 
 
+FIXTURES = MODULE_ROOT / "tests" / "fixtures" / "units"
+
+
+class TestContributions(unittest.TestCase):
+    def run_with_units(self, case, *argv):
+        with mock.patch.dict(os.environ, {"SKM_UNITS_PATH": str(FIXTURES / case)}):
+            return run_main(*argv)
+
+    def test_json_is_a_valid_catalog(self):
+        from gui import contracts
+
+        code, out, err = self.run_with_units("two-owners", "contributions", "--json")
+        self.assertEqual((0, ""), (code, err))
+        doc = json.loads(out)
+        self.assertEqual([], contracts.validate(doc, "catalog"))
+        self.assertEqual(["alpha", "beta"], [entry["owner"] for entry in doc["contributions"]])
+
+    def test_rejections_do_not_change_the_exit_code(self):
+        code, out, _ = self.run_with_units("conflict-id", "contributions", "--json")
+        doc = json.loads(out)
+        self.assertEqual(0, code)
+        self.assertEqual(([], {"CONTRIB_CONFLICT"}), (doc["contributions"], {r["code"] for r in doc["rejected"]}))
+
+    def test_text_table(self):
+        code, out, _ = self.run_with_units("conflict-id", "contributions")
+        self.assertEqual(0, code)
+        self.assertIn("owner  source", out)
+        self.assertIn("rejected:\n  CONTRIB_CONFLICT demo ", out)
+        self.assertRegex(out, r"digest: sha256:[0-9a-f]{64}\n$")
+        code, out, _ = self.run_with_units("valid-one", "contributions")
+        self.assertRegex(out, r"\ndemo +unit +2 +0 +1 +/")
+
+    def test_project_option(self):
+        with mock.patch("gui.catalog.sources.extension_sources", return_value=([], None)) as extensions:
+            code, _, _ = self.run_with_units("empty", "contributions", "--project", str(MODULE_ROOT), "--json")
+        self.assertEqual(0, code)
+        self.assertEqual(MODULE_ROOT.resolve(), extensions.call_args[0][0])
+
+    def test_wrapper_runs_the_resolver(self):
+        env = {**{k: v for k, v in os.environ.items() if k != "PYTHONPATH"},
+               "SKM_UNITS_PATH": str(FIXTURES / "conflict-id")}
+        result = subprocess.run([str(MODULE_ROOT / "bin" / "gui"), "contributions", "--json"], capture_output=True,
+                                text=True, env=env, timeout=60)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual({"CONTRIB_CONFLICT"}, {r["code"] for r in json.loads(result.stdout)["rejected"]})
+
+
+class TestCheck(unittest.TestCase):
+    def test_valid_contribution(self):
+        code, out, _ = run_main("check", str(FIXTURES / "valid-one" / "demo"))
+        self.assertEqual(0, code)
+        self.assertTrue(out.startswith("ok gui.contribution.path: "))
+        code, out, _ = run_main("check", str(FIXTURES / "valid-one" / "demo"), "--json")
+        self.assertEqual(0, code)
+        self.assertEqual({"ok"}, {result["status"] for result in json.loads(out)})
+
+    def test_failure_exits_1(self):
+        code, out, _ = run_main("check", str(FIXTURES / "empty" / "plain"))
+        self.assertEqual(1, code)
+        self.assertTrue(out.startswith("fail gui.contribution.path: "))
+
+    def test_usage(self):
+        code, _, err = run_main("check")
+        self.assertEqual(2, code)
+        self.assertIn("gui: usage:", err)
+
+
 class TestPythonFloor(unittest.TestCase):
     def test_floor_is_3_11(self):
         self.assertEqual((3, 11), gui.MIN_PYTHON)

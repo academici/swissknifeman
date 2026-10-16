@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:gui:catalog:v1",
+  "host": {
+    "gui_protocol": {
+      "min": "1",
+      "max": "1"
+    }
+  },
+  "contributions": [],
+  "rejected": [],
+  "digest": "sha256:957ce2a3044004239f8ce989255039c2edc149add6408b4fd99734cd3e753a6d"
+}

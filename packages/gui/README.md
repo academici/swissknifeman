@@ -6,8 +6,8 @@ the control surface, edits configuration with provenance and safe writes, presen
 domain mutations, runs allowlisted commands (dry-run, confirmation, log stream, cancellation, audit) and keeps a plugin
 catalog with isolation and quarantine.
 
-Status: `development`, version 0.1.0. This release holds the module skeleton; the contracts, the contribution resolver
-and the commands arrive in the following steps of the module plan.
+Status: `development`, version 0.1.0: the frozen v1 contracts, the contribution resolver and the commands
+`contributions` and `check`; the local API, the frontend and the desktop shell come next.
 
 ## Principles
 
@@ -45,8 +45,8 @@ bridges/gui-planner/               # plans
 bridges/gui-orch/                  # conductor runs
 ```
 
-Only `unit.json`, `bin/gui`, `lib/gui/__init__.py`, `lib/gui/cli.py`, `scripts/test.sh`, `tests/` and the docs exist
-in 0.1.0; the rest of the tree is the target layout.
+In 0.1.0 the contracts (`schemas/`), `lib/gui/contracts.py`, `lib/gui/errors.py`, `lib/gui/core/run_states.py`,
+`lib/gui/catalog/` and the CLI exist; HTTP, storage, frontend, desktop and sidecar are the target layout.
 
 `gui` is a tool module of the hub (`standalone.tools`): its third-party dependencies, Node and Rust are not part of the
 core check; it is checked by its own `dev.test`.
@@ -59,9 +59,13 @@ core check; it is checked by its own `dev.test`.
 ## Command line
 
 ```text
-gui --version        print the version
-gui --help           show the commands
+gui contributions [--json] [--project DIR]   resolved catalog of GUI contributions (catalog/v1)
+gui check PATH [--json]                      check one contribution: its rules and the conformance of its handler
+gui --version                                print the version
+gui --help                                   show the commands
 ```
+
+Units come from `SKM_UNITS_PATH` or `swissknifeman units list --json`; see [docs/contribution.md](docs/contribution.md).
 
 Exit codes: 0 ok, 1 failure (code on stderr), 2 usage error.
 

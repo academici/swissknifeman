@@ -101,23 +101,55 @@ only here: canonical schemas never carry UI keywords. `readonly` is UX only; the
 - `config_sections[]`: `{id, module, title, form?}` — a module configuration shown in the settings screen.
 - `docs[]`: `{id, title, root, index}` — a documentation tree inside the owner root; `index` is relative to `root`.
 
-## Resolver rules
+## Resolver
 
-The resolver accepts or rejects a whole contribution; a rejected file is listed with its code and adds nothing.
+`gui.catalog` finds and accepts contributions (stdlib + aicore; it does not know the hub layout):
 
-| Code | Rule |
-| --- | --- |
-| `CONTRIB_INVALID` | the document fails `contribution/v1` (issues in the details) |
-| `CONTRIB_UNREADABLE` | the file cannot be read or parsed, or exceeds a limit below |
-| `CONTRIB_OWNER_MISMATCH` | `owner` differs from the id of the unit or extension that declares the file |
-| `CONTRIB_ID_PREFIX` | a local id does not start with `<owner>.` |
-| `CONTRIB_CONFLICT` | two contributions use the same local id or route path; every participant is rejected |
-| `CONTRIB_INCOMPATIBLE` | `gui_protocol` excludes the host protocol, `min > max`, or a required contract is unsupported |
-| `CONTRIB_HANDLER_MISSING` | a query or an `invoke` command exists without `handler`, or the handler lacks the point |
-| `CONTRIB_PATH_ESCAPE` | `argv[0]`, `handler.extension` or a docs path leaves the owner root (`..`, absolute, symlink) |
-| `CONTRIB_REF_UNKNOWN` | a route, widget, action, configuration section or `dry_run` names an undeclared query, command, form, docs tree or field; a route parameter is not a query parameter; `enum` without type `enum` |
-| `CONTRIB_INPUT_UNKNOWN` | an argv `{input}` names an undeclared field, or a field with a flag |
-| `CONTRIB_CAPABILITY_RESERVED` | the effect `terminal`, or `stream`/`cancel` with an `invoke` exec, or `dry-run` without `dry_run` (and the reverse) |
+1. **Sources.** Unit folders come from `SKM_UNITS_PATH` when it is set, else from the hub registry
+   `swissknifeman units list --json` (the executable from `SKM_UMBRELLA` or `PATH`; relative unit roots resolve
+   against its `hub_root`). External extensions are the enabled, loadable entries of `[aicore.plugins]` (for
+   `--project DIR`, with that project's configuration). A unit or extension counts when its manifest has
+   `provides.gui`. A source that cannot be read is a `CATALOG_SOURCE_UNAVAILABLE` entry; the other sources still count.
+2. **Rules.** Every contribution goes through the rules in this order; the first failing rule names the rejection
+   code and the rest of the file adds nothing:
+
+| Rule | Code | Fails when |
+| --- | --- | --- |
+| path | `CONTRIB_PATH_ESCAPE` | `provides.gui` is absolute or its realpath leaves the owner root (`..`, a symlink, a symlink loop) |
+| read | `CONTRIB_UNREADABLE` | the file is missing, larger than 256 KiB or not UTF-8 JSON |
+| schema | `CONTRIB_INVALID` | the document fails `contribution/v1` (issues with pointers) |
+| limits | `CONTRIB_INVALID` | a limit below is exceeded or a field `pattern` does not compile |
+| owner | `CONTRIB_OWNER_MISMATCH` | `owner` differs from the id of the unit or extension that declares the file |
+| ids | `CONTRIB_ID_PREFIX`, `CONTRIB_CONFLICT` | a local id does not start with `<owner>.`; a local id (per list), route path or field name is declared twice in the file |
+| protocol | `CONTRIB_INCOMPATIBLE` | `min > max`, the range excludes the host protocol, or a required contract is not provided by gui or aicore |
+| handler | `CONTRIB_HANDLER_MISSING`, `CONTRIB_PATH_ESCAPE` | a query or an `invoke` command exists without `handler`; the handler file is missing, not a usable command `extension.json` (aicore `load_manifest`) or lacks `gui:query` / `gui:command`; its path leaves the owner root |
+| refs | `CONTRIB_REF_UNKNOWN`, `CONTRIB_PATH_ESCAPE` | a route, widget, action, configuration section or `dry_run` names an undeclared query, command, form, docs tree or boolean field; a route or widget view differs from what its query returns; a route needs a query (or a command for `command-form`, docs or a query for `markdown`); a route parameter is not a query parameter; `enum` values without type `enum` or the reverse; an unknown `concurrency_key` placeholder; a docs index is missing (`REF_UNKNOWN`) or leaves the owner root (`PATH_ESCAPE`) |
+| argv | `CONTRIB_PATH_ESCAPE`, `CONTRIB_REF_UNKNOWN`, `CONTRIB_INPUT_UNKNOWN` | `argv[0]` is not a literal or leaves the owner root; it is not an executable file; an `{input}` is undeclared or has a flag |
+| capabilities | `CONTRIB_CAPABILITY_RESERVED` | the effect `terminal`; `stream` or `cancel` with an `invoke` exec; `supports: dry-run` without `dry_run` or the reverse |
+
+3. **Conflicts.** Accepted contributions are compared with each other: two that claim the same owner, local id or
+   route path (`/x/<owner>/<path>`) are all rejected with `CONTRIB_CONFLICT`. The order of the sources never decides
+   a winner.
+
+## Catalog (`catalog/v1`)
+
+`{$schema, host {gui_protocol}, contributions [{owner, source, file, digest, document}], rejected [{owner, file, code,
+message, issues?}], digest}` — contributions sorted by owner, source and file; rejected entries by owner, file and code;
+no timestamps. `file` is the realpath of the gui.json (or the name of an unavailable source); each `digest` is the
+digest of its document; the catalog `digest` covers the host and the `(owner, source, digest)` of every accepted
+contribution, not the paths, so the same contributions give the same digest on every machine.
+
+## Command line
+
+```text
+gui contributions [--json] [--project DIR]   the catalog: a table (owner, source, routes, queries, commands, file),
+                                             the rejected entries and the digest; --json prints catalog/v1; exit 0
+gui check PATH [--json]                      one contribution (a gui.json, or a unit or extension folder): one
+                                             check-result/v1 per rule (gui.contribution.<rule>), then the aicore
+                                             conformance of its handler (starts the handler); exit 1 on a fail
+```
+
+Exit 2 is a usage error.
 
 ## Limits
 

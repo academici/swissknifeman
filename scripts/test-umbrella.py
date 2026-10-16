@@ -497,6 +497,8 @@ class TestUnits(unittest.TestCase):
         self.assertEqual("umbrella-units/v1", doc["schema"])
         schema = json.loads((ROOT / "configs" / "schemas" / "umbrella-units.schema.json").read_text(encoding="utf-8"))
         self.assertEqual("umbrella-units/v1", schema["properties"]["schema"]["const"])
+        self.assertLessEqual(set(doc), set(schema["properties"]))
+        self.assertTrue(Path(doc["hub_root"]).is_absolute())
         item = schema["properties"]["units"]["items"]
         for row in doc["units"]:
             self.assertEqual(set(item["properties"]), set(row))
@@ -521,8 +523,12 @@ class TestUnits(unittest.TestCase):
         env.pop("SKM_UNITS_PATH", None)
         out = subprocess.run([sys.executable, str(UMBRELLA), "units", "--json"], env=env, capture_output=True,
                              text=True, check=True).stdout
-        kinds = {row["id"]: row["kind"] for row in json.loads(out)["units"]}
+        doc = json.loads(out)
+        kinds = {row["id"]: row["kind"] for row in doc["units"]}
         self.assertIn("bridge", set(kinds.values()))
+        self.assertEqual(str(ROOT), doc["hub_root"])
+        for row in doc["units"]:  # a relative root resolves against hub_root
+            self.assertTrue((Path(doc["hub_root"]) / row["root"] / "unit.json").is_file(), row["root"])
 
 
 class TestInstall(unittest.TestCase):

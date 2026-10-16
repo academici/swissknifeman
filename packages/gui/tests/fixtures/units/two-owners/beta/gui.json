@@ -1,0 +1,94 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "beta",
+  "version": "0.1.0",
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "routes": [
+    {
+      "id": "beta.guide",
+      "title": "Guide",
+      "path": "guide",
+      "view": "markdown",
+      "scope": "fleet",
+      "docs": "beta.guide",
+      "nav": {
+        "section": "fleet",
+        "order": 100
+      }
+    },
+    {
+      "id": "beta.greet",
+      "title": "Greet",
+      "path": "greet",
+      "view": "command-form",
+      "scope": "project",
+      "command": "beta.greet"
+    }
+  ],
+  "commands": [
+    {
+      "id": "beta.greet",
+      "title": "Greet",
+      "scope": "project",
+      "input": [
+        {
+          "name": "name",
+          "title": "Name",
+          "type": "string",
+          "required": true,
+          "pattern": "^[A-Za-z]+$"
+        },
+        {
+          "name": "loud",
+          "title": "Loud",
+          "type": "boolean",
+          "required": false,
+          "flag": "--loud"
+        }
+      ],
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "supports": [
+        "dry-run",
+        "cancel",
+        "stream"
+      ],
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/greet",
+          {
+            "input": "name"
+          }
+        ],
+        "cwd": "owner"
+      },
+      "dry_run": {
+        "argv_append": [
+          "--dry-run"
+        ]
+      }
+    }
+  ],
+  "docs": [
+    {
+      "id": "beta.guide",
+      "title": "Guide",
+      "root": "docs",
+      "index": "index.md"
+    }
+  ]
+}

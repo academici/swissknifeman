@@ -462,9 +462,13 @@ def _check_paths(ctx, rel_base, manifest, doc) -> list:
 
 def _check_gui(ctx, schema, rel_base, manifest, rel) -> list:
     """provides.gui names a file inside the unit that is a valid contribution/v1 document of the gui module."""
-    base = (ctx.root / rel_base).resolve()
     target = ctx.root / rel_base / rel
-    if not safe_relpath(rel) or not target.resolve().is_relative_to(base):
+    try:
+        base = (ctx.root / rel_base).resolve()
+        inside = safe_relpath(rel) and target.resolve().is_relative_to(base)
+    except (OSError, RuntimeError):  # symlink loop: fail closed
+        inside = False
+    if not inside:
         return [Issue("UNIT_GUI", manifest, f"provides.gui: {rel!r} must stay inside the unit")]
     if not target.is_file():
         return [Issue("UNIT_GUI", manifest, f"provides.gui: {rel!r} does not exist")]

@@ -407,6 +407,12 @@ class ManifestCheckTests(unittest.TestCase):
         self.tree.alpha["provides"]["gui"] = "link.json"
         self.assertIn("must stay inside the unit", self.assertFails("UNIT_GUI").stderr)
 
+    def test_gui_contribution_symlink_loop_fails_closed(self):
+        self.gui_ready()
+        (self.tree.root / "packages/alpha/gui.json").unlink()
+        (self.tree.root / "packages/alpha/gui.json").symlink_to("gui.json")
+        self.assertIn("must stay inside the unit", self.assertFails("UNIT_GUI").stderr)
+
     def test_gui_contribution_invalid(self):
         self.gui_ready({"$schema": "urn:swissknifeman:gui:contribution:v1", "owner": "alpha", "version": "1.2.0",
                         "gui_protocol": {"min": "1", "max": "1"}, "theme": "dark"})

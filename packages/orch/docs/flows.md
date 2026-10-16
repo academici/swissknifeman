@@ -11,7 +11,7 @@ flowchart LR
   owner([Owner / observer agent])
   subgraph planner [planner: the plan]
     plan[(plans/ID/plan.json)]
-    planpy[plan.py]
+    planpy[plan engine CLI]
   end
   subgraph bridge [bridges/planner-orch]
     ws[work-source plugin]
@@ -42,7 +42,7 @@ flowchart LR
 
 The conductor decides nothing by itself: it branches on exit codes, on the closed results of the roles
 (`schemas/conductor/v1`) and on the limits of the run options. It never reads the plan: every plan operation goes
-through `orch.py source …`, which calls the work-source plugin of the bridge, which calls `plan.py`. Every role is a
+through `orch.py source …`, which calls the work-source plugin of the bridge, which calls the plan engine. Every role is a
 child process started from the launch catalog; models are used only in these narrow roles.
 
 ## 2. One piece, end to end

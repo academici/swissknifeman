@@ -153,8 +153,11 @@ class TestOnboard(unittest.TestCase):
             _seed_config(root)
             proj_dir = Path(tmp) / "p2"
             proj_dir.mkdir()
-            with self.assertRaises(SystemExit) as cm:
-                onb.cmd_onboard(env, [str(proj_dir), "--yes"])
+            with mock.patch.dict(os.environ, {"PATH": str(Path(tmp) / "none")}):
+                for var in ("SKM_SKILLER_BIN", "SKM_SKILLER_ROOT", "MAIND_SKM_BIN"):
+                    os.environ.pop(var, None)
+                with self.assertRaises(SystemExit) as cm:
+                    onb.cmd_onboard(env, [str(proj_dir), "--yes"])
             self.assertNotEqual(cm.exception.code, 0)
 
     def test_cmd_onboard_allow_partial_no_escalation(self):

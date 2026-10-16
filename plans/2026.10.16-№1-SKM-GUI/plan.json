@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:plan:v1",
+  "id": "2026.10.16-№1-SKM-GUI",
+  "short_id": "PLAN5",
+  "title": "Plan №1 — SKM GUI: desktop control plane — Tauri 2, React/TypeScript, Python sidecar",
+  "status": "active",
+  "created": "2026-10-16",
+  "updated_at": "2026-10-16T12:38:56Z",
+  "repository": "swissknifeman",
+  "owner": "repository owner",
+  "authoring": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "goal": "Модуль packages/gui — локальный control plane SKM с одним frontend build для desktop (Tauri 2) и browser mode: дашборд парка и четырёх слоёв control surface, редактор конфигурации с provenance и безопасной записью, Planner в человеческом виде с typed domain mutations, каталог плагинов с изоляцией и карантином, запуск allowlisted команд с dry-run, подтверждением, потоком логов, отменой и аудитом. Python control plane — единственный авторитет; canonical файлы SKM — источник истины; домены подключаются только через bridges/gui-<module> и протокол расширений aicore. Итог — MVP DoD исходника ideas/gui (knowledge/architecture, knowledge/roadmap).",
+  "context": "Исходник требований — ideas/gui/skm-gui-architecture.md и ideas/gui/SKM GUI  архитектура, стек и план расширяемой desktop-платформы.md (коммит 177b3ecc9). Сжатая целевая архитектура с поправками по коду и исследованию — knowledge/architecture (при конфликте с ideas/gui верен он); факты кода — knowledge/facts; внешние предпосылки с источниками — knowledge/research-2026-10-16; нарезка и приёмка фаз P2–P7 — knowledge/roadmap; дизайн P1 — knowledge/p1-contracts. Решения D1–D10 приняты агентом-проектировщиком по поручению владельца («Все решения за тобой»). Фазы детализируются по очереди (rolling wave): следующая — после закрытия предыдущей, по реальному коду; первый пункт каждой фазы сверяет нужные разделы knowledge с кодом.",
+  "non_goals": [
+    "Remote multi-user режим, RBAC, TLS и remote bind backend",
+    "Произвольный JavaScript UI плагинов, Module Federation, runtime import() из каталогов плагинов",
+    "Windows в v1 (POSIX-модель процессов aicore.ext.process)",
+    "Electron и PySide/Qt",
+    "Изменение модулей-владельцев доменов ради GUI, кроме аддитивных публичных возможностей их CLI/библиотек отдельными пунктами",
+    "Публикация релизов, push и подпись артефактов ключом владельца"
+  ],
+  "rules": [
+    "Модуль gui импортирует только lib/gui и aicore; домены — через bridges/gui-<module> и протокол расширений aicore; имена packages/<other>/ в файлах gui запрещены (CLAUDE.md root.module-folders, ADR 0002).",
+    "Инварианты I1–I14 knowledge/architecture#invariants обязательны для каждого пункта; нарушение — Blocker review и повод вернуть пункт.",
+    "Сторонние Python-зависимости только в packages/gui/lib/gui/http и тестах API, по requirements.lock с hashes; domain core (lib/gui/catalog, lib/gui/core, lib/gui/storage) — stdlib + aicore.",
+    "Версии сторонних библиотек (npm, PyPI, crates) сверяются с реестром в момент пункта и фиксируются lockfile; не по памяти.",
+    "Контракты gui — закрытый профиль aicore.util.schema; ломающее изменение замороженного контракта — только новая v<N+1>/ рядом (I14).",
+    "Каждый пункт: тесты затронутого (python3 scripts/affected-tests.py --run; frontend — npm --prefix packages/gui/frontend run check с P2); широкий проход — phase.validation пунктом, закрывающим фазу.",
+    "Review — только пункты Review Pn на Grok в фазах с названным жёстким риском (knowledge/roadmap#sizing); остальные пункты review.mode none.",
+    "CHANGELOG.md [Unreleased] и документация модуля обновляются в том же пункте, что и поведение."
+  ],
+  "phases": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7"
+  ],
+  "settings": {
+    "design_audit": "none",
+    "scout": "off",
+    "context_pack": "scoped"
+  }
+}

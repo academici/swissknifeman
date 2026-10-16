@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Редактор конфигурации с provenance и безопасной записью",
+  "design": "skeleton",
+  "goal": "Machine- и project-конфиг любого модуля редактируется в GUI с effective value, слоем-победителем, файлом и строкой, overridden и default; запись — preview diff, подтверждение, общий lock aicore, CAS revision, атомарная замена, three-way diff при конфликте; secret-поля — только ссылки.",
+  "context": "Модель целостности — knowledge/architecture#config; нарезка — knowledge/roadmap#p3. P3.1 меняет aicore аддитивно (владелец записи конфига). Review P3 на Grok (целостность записи).",
+  "depends_on": [
+    "P2"
+  ],
+  "deliverables": [
+    "expected_revision + lock в aicore config writer",
+    "ConfigService + /v1/config/*",
+    "schema-form renderer и экраны конфига"
+  ],
+  "items": [],
+  "batches": []
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.3",
+  "title": "Контракты API v1: api-error, bootstrap, run, stream, trust, config-mutation; таблицы состояний run и кодов ошибок в коде",
+  "status": "todo",
+  "summary": "Контракты API v1: api-error (envelope ошибок и реестр кодов), bootstrap (handshake версий и протокола), run (запись run и 12 состояний), stream (кадры WebSocket по const kind с cursor и snapshot_required), trust (enforcement declared|enforced|advisory, grant, plugin_state, документ plugin), config-mutation (preview_request, preview, commit_request, commit_result) с фикстурами; данные-источники в коде: lib/gui/core/run_states.py (TRANSITIONS, TERMINAL), lib/gui/errors.py (CODES: code → class, HTTP status); тесты согласованности код ↔ схема; docs/api.md.",
+  "why": "Эти контракты фиксируют поведение P2–P6 (API, broker, плагины, конфиг) до написания кода. Жёсткие риски: секрет или resolved secret выразим в контракте (I6), переход run без терминального состояния или с усыновлением PID (I11), stream без cursor/snapshot (потеря событий при reconnect), config-mutation без expected_revision (silent last-write-wins, I8).",
+  "scope": {
+    "include": [
+      "packages/gui/schemas/{api-error,bootstrap,run,stream,trust,config-mutation}/v1/**",
+      "packages/gui/lib/gui/core/__init__.py, run_states.py",
+      "packages/gui/lib/gui/errors.py",
+      "packages/gui/tests/test_runtime_contracts.py",
+      "packages/gui/unit.json provides.contracts",
+      "packages/gui/docs/api.md",
+      "packages/gui/schemas/README.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "HTTP-реализация и broker (P2)",
+      "catalog/v1 (P1.4)",
+      "изменения aicore"
+    ]
+  },
+  "depends_on": [
+    "P1.2"
+  ],
+  "decisions": [
+    "D4",
+    "D7",
+    "D8"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-contracts#runtime",
+      "why": "поля всех шести контрактов, реестр кодов, таблица переходов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#schema-rules",
+      "why": "раскладка, профиль, oneOf по const kind, фикстуры",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#transport",
+      "why": "endpoints, кадры stream, cursor, snapshot",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#state",
+      "why": "состояния run, lost, порядок записи и события",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#config",
+      "why": "preview/commit, revision, preview_id",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#plugins",
+      "why": "plugin_state, флаги, grants",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I6, I8, I11, I12, I13",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/event/v1/event.schema.json",
+      "why": "$ref event в stream",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/error/v1/error.schema.json",
+      "why": "классы ошибок провайдера — не смешивать с api-error; согласовать имена классов где совпадают",
+      "required": false
+    },
+    {
+      "path": "packages/gui/lib/gui/contracts.py",
+      "why": "загрузчик из P1.2",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/schemas/api-error/v1/**",
+      "change": "create",
+      "note": "schema + examples valid ≥ 2, invalid ≥ 3"
+    },
+    {
+      "path": "packages/gui/schemas/bootstrap/v1/**",
+      "change": "create",
+      "note": "schema + examples; valid desktop и browser"
+    },
+    {
+      "path": "packages/gui/schemas/run/v1/**",
+      "change": "create",
+      "note": "schema + examples; valid running, succeeded, lost"
+    },
+    {
+      "path": "packages/gui/schemas/stream/v1/**",
+      "change": "create",
+      "note": "schema + examples; valid по одному на kind"
+    },
+    {
+      "path": "packages/gui/schemas/trust/v1/**",
+      "change": "create",
+      "note": "schema + examples; valid healthy и quarantined"
+    },
+    {
+      "path": "packages/gui/schemas/config-mutation/v1/**",
+      "change": "create",
+      "note": "schema + examples; valid по одному на kind; invalid без expected_revision"
+    },
+    {
+      "path": "packages/gui/lib/gui/core/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/core/run_states.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/errors.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_runtime_contracts.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/unit.json",
+      "change": "any",
+      "note": "provides.contracts: шесть контрактов; создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/docs/api.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/README.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — knowledge/p1-contracts#runtime; имена полей, enum, кодов — строго оттуда; расхождение — open_issues kind deviation.",
+    "Ни один контракт не содержит поля для значения секрета: только secret-ref строки по паттерну knowledge/p1-contracts#ids (secret-ref).",
+    "run_states.TRANSITIONS, run_states.TERMINAL и errors.CODES — единственный источник в коде; тест сверяет enum run/v1 state == ключи и цели TRANSITIONS, enum api-error class ⊇ классы CODES, каждый код CODES описан в docs/api.md.",
+    "Контракты ссылаются друг на друга только через $ref urn:swissknifeman:gui:<contract>:v1#/$defs/<name> (run → api-error, stream → run/api-error/aicore event)."
+  ],
+  "guidance": "Исполнитель: frontier/high. Порядок: api-error + errors.py → run + run_states.py → stream → bootstrap → trust → config-mutation → test_runtime_contracts.py (согласованность) → docs/api.md (реестр кодов с классом и HTTP статусом, таблица переходов, правило совместимости bootstrap, семантика cursor/epoch/snapshot_required, поток preview→commit) → README + CHANGELOG → V1–V2. Общий test_contracts.py из P1.2 подхватывает новые контракты из unit.json без правок.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "api-error/v1",
+    "bootstrap/v1",
+    "run/v1",
+    "stream/v1",
+    "trust/v1",
+    "config-mutation/v1",
+    "run_states.py",
+    "errors.py",
+    "docs/api.md"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "grok-4.7",
+      "note": "Владелец M1: review на Grok только в нужных местах; жёсткий риск — замораживаемые контракты локального API, исполнения и записи конфига",
+      "provider": "grok",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T12:46:16Z"
+}

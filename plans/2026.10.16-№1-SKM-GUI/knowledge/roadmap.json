@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "roadmap",
+  "title": "Фазы P2–P7: нарезка пунктов, приёмка, риски, review",
+  "sections": [
+    {
+      "id": "sizing",
+      "title": "Правила нарезки и review",
+      "text": "- Пункт = вертикальный результат с собственными тестами, который исполнитель класса implementation (Sonnet) или frontier (Opus) завершает за один прогон без чтения всего плана. Не дробить по файлам и слоям; не объединять несвязанные риски.\n- Контракты, безопасность и целостность данных — route frontier/high; адаптеры, экраны, интеграция — implementation/high; механические регистрации — implementation/medium.\n- Review — item-level `review: {mode: requested, reviewer: {provider: grok, class: frontier, model: grok-4.7, effort: high}}` только у пунктов с названным жёстким риском; conductor orch сам ведёт review → triage → одна correction (≤ 2 раунда, `review.correct_min_severity` Major). Фазы с такими пунктами: P1 (замороженные публичные контракты: P1.2, P1.3), P2 (локальный API: аутентификация, Host/Origin, исполнение процессов), P3 (целостность записи конфига), P5 (доверие и изоляция плагинов), P6 (подпись, sidecar, IPC-адаптер). P4 и P7 — без review, если проектировщик фазы не назовёт новый жёсткий риск. Отдельный read-only пункт `Review Pn` в конце фазы — только когда риск интеграционный и не принадлежит одному пункту (решает проектировщик фазы, с обоснованием в why).\n- Каждая фаза — `phase.validation` (широкий проход один раз пунктом, закрывающим фазу): `python3 scripts/affected-tests.py --run --tier all`, `bash packages/gui/scripts/test.sh`, `python3 scripts/ecosystem-units.py check --strict`, `python3 scripts/golden.py check`, `python3 scripts/public-hygiene.py`, `aicore schema compat --base <HEAD начала фазы>`; с P2 добавляются frontend `npm --prefix packages/gui/frontend run check` (typecheck+lint+unit) и E2E."
+    },
+    {
+      "id": "p2",
+      "title": "P2 — Browser-mode control plane и дашборд парка",
+      "text": "Цель: `gui open` поднимает loopback backend и открывает в браузере дашборд: парк проектов и четыре слоя control surface, doctor-проверки, каталог contributions, запуск allowlisted команды с потоком логов, отменой и аудитом.\nПункты-ориентиры:\n- P2.1 Backend core (frontier/high): `lib/gui/http` (Starlette + uvicorn), `requirements.lock` с hashes, session secret и browser-mode обмен токена на cookie, Host/Origin middleware, `api-error/v1` envelope, `/v1/bootstrap`, `/v1/ui/contributions`, `/v1/schemas`, `/v1/queries/{id}` через `invoke`, SQLite storage + миграции, `gui serve` / `gui open`, config schema модуля (`configs/config.schema.json`: порт, лимиты, retention). Тесты безопасности API.\n- P2.2 ExecutionBroker + RunStore + EventHub (frontier/high): `exec_argv`, лимиты, cancel группы процессов, redaction, аудит, состояния run и `lost` при старте, `/v1/commands*`, `/v1/runs*`, WebSocket `/v1/events` с cursor replay, coalesce, heartbeat; трансляция журнала событий проекта.\n- P2.3 bridges/gui-hub (implementation/high): gui.json + extension.json + адаптер: queries fleet/projects/project layers (`swissknifeman status`), doctor (`swissknifeman doctor --json` → status-table), units; commands: `swissknifeman doctor`, sync/fix dry-run команд из control surface (только существующие CLI).\n- P2.4 Frontend shell (implementation/high): `packages/gui/frontend` (Vite, React, TS, TanStack Query; версии сверить с npm в момент пункта), Transport (HttpTransport), генерация TS типов из контрактов gui (json-schema-to-typescript + golden), app-shell, host views resource-list, status-table, metric-group, timeline, log-stream, markdown (sanitizer), command-form, дашборд и страницы проекта/запусков; CSP.\n- P2.5 E2E browser mode + install (implementation/high): Playwright сценарии (открытие по одноразовому URL, дашборд, запуск/отмена команды, reconnect логов), включение gui в install-профиль `full` и `swissknifeman gui` через umbrella; закрытие фазы.\n- Review P2 (Grok): локальный API, broker.\nРиски: DNS rebinding/CSWSH; утечка секретов в логах; осиротевшие процессы после cancel; дублирование логики CLI в адаптере."
+    },
+    {
+      "id": "p3",
+      "title": "P3 — Редактор конфигурации с provenance",
+      "text": "Цель: глобальный (machine) и проектный конфиг любого модуля редактируется в GUI: effective value, слой-победитель, файл и строка, overridden значения, default, разрешённые слои; preview diff, подтверждение, CAS, lock, атомарная запись, конфликт — three-way diff.\nПункты-ориентиры:\n- P3.1 aicore: `expected_revision`, общий межпроцессный lock и fsync в `edit_layer_file` + `swissknifeman config set|unset` (frontier/high; владелец aicore, аддитивно, тесты aicore на гонки двух процессов).\n- P3.2 ConfigService + API `/v1/config/*` по `config-mutation/v1` (frontier/high): preview/commit, правила опасности, secret-ref, события и аудит.\n- P3.3 Frontend schema-form (implementation/high): ограниченный renderer закрытого профиля (типы, enum, map patternProperties, массивы скаляров), provenance-бейджи, выбор слоя, режимы Form/Diff/Raw/Explain, three-way diff конфликта; golden компонентные тесты; закрытие фазы.\n- Review P3 (Grok): модель целостности knowledge/architecture#config.\nРиски: потеря комментариев TOML; гонка CLI↔GUI; запись секрета значением."
+    },
+    {
+      "id": "p4",
+      "title": "P4 — Planner vertical slice",
+      "text": "Цель: планы проекта читаются в человеческом виде (список с прогрессом, overview, phases, board, graph, decisions, evidence, timeline, raw) и меняются typed domain mutations: поля item, route, review mode/provider/model/effort, decisions; lifecycle-действия с подтверждением.\nПункты-ориентиры:\n- P4.1 bridges/gui-planner — чтения (implementation/high): queries поверх `plan.py --output json` → view-data; прогресс и next ready.\n- P4.2 bridges/gui-planner — мутации и формы (frontier/high): commands `set|apply|push|decide|log` с allowlist полей, lifecycle commands, forms item/phase/decision c группами knowledge/architecture#planner и readonly lifecycle-полей; model-picker из model-catalog; недостающий `--json` у CLI planner — аддитивно отдельным пунктом владельца planner, если сверка покажет пробел.\n- P4.3 Frontend: host views board, dependency-graph, resource-detail, schema-form для item (implementation/high); E2E: изменить reviewer model item → файл плана изменён через plan.py, `plan.py check` зелёный; закрытие фазы.\nРиски: обход lifecycle (I7); расхождение прогресса с CLI; гонки с параллельным plan-run (lock planner)."
+    },
+    {
+      "id": "p5",
+      "title": "P5 — Платформа плагинов",
+      "text": "Цель: каталог плагинов с совместимостью и permissions (declared/enforced/advisory); включение/отключение с drain; карантин после сбоев; grants с digest manifest; внешний subprocess-плагин подключается без изменения frontend routing; `gui check` как conformance gate.\nПункты-ориентиры:\n- P5.1 PluginHost: state machine trust/v1, флаги runtime/ui, drain, quarantine, grants и повторный approval при изменении digest, `/v1/plugins*`, события gui.plugin.* (frontier/high).\n- P5.2 Frontend plugins (каталог, permissions, health, logs) + пример внешнего расширения в fixtures + E2E «disable во время run» (implementation/high); закрытие фазы.\n- Review P5 (Grok): доверие, нетранзитивность, обход grants."
+    },
+    {
+      "id": "p6",
+      "title": "P6 — Desktop shell (Tauri 2)",
+      "text": "Цель: устанавливаемое desktop-приложение (Linux AppImage/deb; macOS .app) управляет sidecar, переживает его сбой, обновляется подписанными артефактами; тот же frontend build, что и browser mode.\nOwner gate (authority owner_gate `GUI_TOOLCHAIN`): установка rustup/cargo, системных пакетов Tauri для Linux (webkit2gtk-4.1 и др.), генерация ключа updater (`tauri signer generate`) и хранение приватного ключа владельцем.\nПункты-ориентиры:\n- P6.1 Sidecar: PyInstaller onedir spec, сборка `gui-backend-<target-triple>`, READY-handshake по stdout, секрет и порт через stdin, graceful shutdown; тест spawn-to-READY (frontier/high).\n- P6.2 Tauri shell: окно, capabilities, CSP, single instance, tray, нативные диалоги, deep links, Rust-адаптер транспорта (knowledge/architecture#transport) + TauriTransport во frontend; надзор и рестарт sidecar с backoff; диагностический экран (frontier/high).\n- P6.3 Bundling и updater: `createUpdaterArtifacts`, minisign, `requireSignedVersion`, инструкции подписи вне CI, smoke установленного bundle (implementation/high); закрытие фазы.\n- Review P6 (Grok): IPC-адаптер, секрет, подпись, sidecar.\nРиски: различия WebKitGTK; динамические библиотеки onedir; утечка секрета во frontend; неподписанный update JSON."
+    },
+    {
+      "id": "p7",
+      "title": "P7 — Терминал, runs orch, hardening",
+      "text": "Цель: интерактивный терминал как отдельная привилегия; запуск и наблюдение runs orch conductor из GUI (bridges/gui-orch); enforceable sandbox там, где он подтверждён; supply chain и a11y gates; MVP DoD исходника выполнен целиком.\nПункты-ориентиры:\n- P7.1 PTY capability `terminal` + xterm.js + credits backpressure + аудит (frontier/high).\n- P7.2 bridges/gui-orch: plan-run/conductor runs, статус, observer (implementation/high).\n- P7.3 Hardening: sandbox enforcement indicators (bubblewrap probe переиспользовать), SBOM, digest sidecar, a11y и performance budgets, `gui state rebuild`, installer E2E (implementation/high); закрытие фазы и плана.\nReview: решает проектировщик P7 по рискам."
+    },
+    {
+      "id": "non-goals",
+      "title": "Сознательно вне плана",
+      "text": "- Remote multi-user режим, RBAC, TLS — отдельная будущая архитектура (I9); в production нет флага remote bind.\n- Произвольный JS UI плагинов, Module Federation, runtime `import()` из каталогов плагинов.\n- Windows (process model POSIX; триггер — запрос владельца).\n- Electron (резерв только при измеренном блокере Tauri, отдельное решение).\n- OpenTelemetry collector (локальные OTel-совместимые JSON логи; OTLP exporter — opt-in позже).\n- Публикация релизов, push, подпись ключом владельца — действия владельца вне плана."
+    }
+  ],
+  "applies_to": [
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7"
+  ],
+  "provenance": {
+    "note": "Скелет для детализации фаз P2–P7 (rolling wave): фаза детализируется после закрытия предыдущей по реальному коду; нарезка — ориентир, проектировщик фазы вправе изменить её, сохранив цель и приёмку фазы. Размер пункта: один осмысленный вертикальный результат на 1 прогон модели Claude (Sonnet implementation/high или Opus frontier/high), ≈ 15–40 файлов, без микро-пунктов."
+  }
+}

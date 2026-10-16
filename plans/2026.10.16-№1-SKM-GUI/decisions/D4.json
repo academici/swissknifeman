@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D4",
+  "title": "Транспорт и локальная безопасность: loopback API + секрет сессии; desktop через Rust-адаптер (invoke + Channel); browser mode через одноразовый токен → cookie",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как webview и браузер обращаются к backend и где хранится секрет?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Один HTTP/WS API на loopback; desktop: ограниченный Rust-адаптер пересылает /v1/ запросы и подписки, секрет только в Rust и sidecar; browser: одноразовый URL → HttpOnly SameSite=Strict cookie; Host/Origin проверки",
+      "pros": "один API, секрет не во frontend, нет зависимости от Origin WebKitGTK",
+      "cons": "тонкий Rust-код адаптера"
+    },
+    {
+      "id": "B",
+      "text": "webview ходит напрямую на loopback с bearer-токеном во frontend",
+      "pros": "проще",
+      "cons": "токен в JS, Origin различается по платформам и версиям WebKit"
+    },
+    {
+      "id": "C",
+      "text": "весь API через Tauri IPC, без HTTP",
+      "pros": "нет сети",
+      "cons": "нет browser mode — нарушает требование одного frontend build"
+    }
+  ],
+  "decision": "A — Один HTTP/WS API на loopback; desktop: ограниченный Rust-адаптер пересылает /v1/ запросы и подписки, секрет только в Rust и sidecar; browser: одноразовый URL → HttpOnly SameSite=Strict cookie; Host/Origin проверки",
+  "rationale": "knowledge/research-2026-10-16#transport: Channel — документированный путь для потоков; адаптер не произвольный прокси (фиксированный endpoint, allowlist методов и /v1/, лимит тела). Browser mode сохраняется без изменения frontend.",
+  "consequences": [
+    "frontend Transport с двумя реализациями",
+    "контракты bootstrap/v1 и stream/v1 в P1.3"
+  ],
+  "global": true,
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

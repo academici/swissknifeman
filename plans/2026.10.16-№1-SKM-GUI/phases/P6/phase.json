@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P6",
+  "title": "Desktop shell: Tauri 2, sidecar, подписанные обновления",
+  "design": "skeleton",
+  "goal": "Устанавливаемое desktop-приложение (Linux AppImage/deb, macOS .app) на Tauri 2 запускает и надзирает PyInstaller onedir sidecar, хранит секрет сессии вне frontend, пересылает API через ограниченный Rust-адаптер (invoke + Channel), переживает сбой sidecar и обновляется подписанными артефактами; тот же frontend build, что и browser mode.",
+  "context": "knowledge/architecture#desktop, #transport; knowledge/research-2026-10-16#sidecar, #transport, #updater; knowledge/roadmap#p6. Требует owner gate GUI_TOOLCHAIN (rustup/cargo, системные пакеты Tauri, ключ updater у владельца). Review P6 на Grok.",
+  "depends_on": [
+    "P2"
+  ],
+  "deliverables": [
+    "sidecar onedir + READY handshake",
+    "Tauri shell + Rust-адаптер + TauriTransport",
+    "bundling и updater"
+  ],
+  "items": [],
+  "batches": []
+}

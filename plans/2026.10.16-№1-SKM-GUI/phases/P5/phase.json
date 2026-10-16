@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P5",
+  "title": "Платформа плагинов: состояние, доверие, карантин",
+  "design": "skeleton",
+  "goal": "Каталог плагинов показывает совместимость и permissions (declared/enforced/advisory); включение и отключение с drain; карантин после сбоев; grants с digest manifest и повторным approval; внешний subprocess-плагин подключается без изменения frontend routing; `gui check` — conformance gate.",
+  "context": "knowledge/architecture#plugins, knowledge/roadmap#p5; контракт trust/v1 (P1). Review P5 на Grok (доверие, изоляция).",
+  "depends_on": [
+    "P2"
+  ],
+  "deliverables": [
+    "PluginHost + /v1/plugins*",
+    "экраны плагинов",
+    "пример внешнего расширения и E2E disable во время run"
+  ],
+  "items": [],
+  "batches": []
+}

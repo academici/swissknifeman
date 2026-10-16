@@ -1,0 +1,12 @@
+{"v":1,"ts":"2026-10-16T12:27:02Z","type":"plan_created","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"plan PLAN5 created","data":{"plan_id":"2026.10.16-№1-SKM-GUI"}}
+{"v":1,"ts":"2026-10-16T12:39:16Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D1 accepted","data":{"id":"D1","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:17Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D2 accepted","data":{"id":"D2","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:17Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D3 accepted","data":{"id":"D3","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:18Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D4 accepted","data":{"id":"D4","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:18Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D5 accepted","data":{"id":"D5","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:19Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D6 accepted","data":{"id":"D6","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:19Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D7 accepted","data":{"id":"D7","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:20Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D8 accepted","data":{"id":"D8","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:20Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D9 accepted","data":{"id":"D9","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:39:21Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D10 accepted","data":{"id":"D10","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-16T12:46:21Z","type":"design_done","phase":"P1","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"P1 design done"}

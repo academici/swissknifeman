@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P7",
+  "title": "Терминал, runs orch, hardening и MVP DoD",
+  "design": "skeleton",
+  "goal": "Интерактивный терминал как отдельная привилегия terminal; запуск и наблюдение runs orch conductor (bridges/gui-orch); индикаторы enforceable sandbox; SBOM и digest sidecar; a11y и performance budgets; `gui state rebuild`; installer E2E; MVP DoD исходника ideas/gui выполнен целиком.",
+  "context": "knowledge/architecture#hardening, knowledge/roadmap#p7. Review решает проектировщик P7 по рискам.",
+  "depends_on": [
+    "P4",
+    "P5",
+    "P6"
+  ],
+  "deliverables": [
+    "PTY capability",
+    "bridges/gui-orch",
+    "hardening gates",
+    "MVP DoD"
+  ],
+  "items": [],
+  "batches": []
+}

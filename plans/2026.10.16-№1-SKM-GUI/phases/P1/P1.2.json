@@ -1,0 +1,258 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.2",
+  "title": "Контракты contribution/v1 и view-data/v1, provides.gui в aicore unit/v1 и extension/v1, проверка в ecosystem-units",
+  "status": "todo",
+  "summary": "Контракты urn:swissknifeman:gui:contribution:v1 (gui.json: owner, version, gui_protocol, requires_contracts, handler, routes, widgets, queries, commands с exec invoke|argv и dry_run, forms с UI-аннотациями по JSON pointer, config_sections, docs) и urn:swissknifeman:gui:view-data:v1 (11 видов по const view) с фикстурами; загрузчик lib/gui/contracts.py; аддитивное provides.gui (relpath) в aicore unit/v1 и extension/v1 с примерами; scripts/ecosystem-units.py check проверяет наличие файла provides.gui и валидирует его контрактом contribution/v1; docs/contribution.md.",
+  "why": "Публичный контракт расширения GUI замораживается: каждый мост и внешнее расширение пишет gui.json по нему. Жёсткие риски: инъекция в argv через типизированные поля (I4), путь вне корня владельца, ломающее изменение unit/v1 и extension/v1 (обязано быть property-added), UI-аннотации в canonical схемах (запрещены D3).",
+  "scope": {
+    "include": [
+      "packages/gui/schemas/contribution/v1/**",
+      "packages/gui/schemas/view-data/v1/**",
+      "packages/gui/lib/gui/contracts.py",
+      "packages/gui/tests/test_contracts.py",
+      "packages/gui/unit.json provides.contracts",
+      "packages/gui/docs/contribution.md",
+      "packages/aicore/schemas/unit/v1 и extension/v1: provides.gui + valid-примеры",
+      "packages/aicore/schemas/README.md",
+      "scripts/ecosystem-units.py check_manifests + scripts/test-ecosystem-units.py",
+      "CHANGELOG.md, packages/aicore/CHANGELOG.md"
+    ],
+    "exclude": [
+      "правила resolver сверх схемы (префиксы id, ссылки, конфликты) — P1.4",
+      "runtime-контракты API — P1.3",
+      "gui.json реальных мостов — P2+"
+    ]
+  },
+  "depends_on": [
+    "P1.1"
+  ],
+  "decisions": [
+    "D2",
+    "D3",
+    "D6",
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-contracts#schema-rules",
+      "why": "раскладка, $id, профиль, фикстуры, загрузка",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#ids",
+      "why": "паттерны id, path, имён полей, ссылочных типов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#contribution",
+      "why": "поля и $defs contribution/v1",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#view-data",
+      "why": "11 видов view-data/v1",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#resolver",
+      "why": "абзац provides.gui — проверка в ecosystem-units",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I4, I5, I14 — что схема обязана сделать невыразимым",
+      "required": true
+    },
+    {
+      "ref": "knowledge/facts#aicore-reuse",
+      "why": "закрытый профиль, load_contract_set, compat rules",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schema.py",
+      "section": "_referenced_contract_dirs",
+      "why": "разрешение $ref модульного контракта; аддитивная правка для aicore-префикса",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/common/v1/common.schema.json",
+      "why": "имена $defs для $ref",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/unit.schema.json",
+      "section": "provides",
+      "why": "куда добавить gui",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/extension/v1/extension.schema.json",
+      "section": "provides",
+      "why": "куда добавить gui",
+      "required": true
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "section": "check_manifests",
+      "why": "probe путей provides.contracts — образец для provides.gui",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/schemas/contribution/v1/contribution.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/contribution/v1/examples/valid/minimal.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/contribution/v1/examples/valid/full.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/contribution/v1/examples/invalid/**",
+      "change": "create",
+      "note": "extra-field.additional.json, bad-view.enum.json, command-without-exec.required.json, field-type.enum.json, route-path-dotdot.pattern.json, flag-pattern.pattern.json"
+    },
+    {
+      "path": "packages/gui/schemas/view-data/v1/view-data.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/view-data/v1/examples/valid/**",
+      "change": "create",
+      "note": "по одному файлу на вид, 11 файлов"
+    },
+    {
+      "path": "packages/gui/schemas/view-data/v1/examples/invalid/**",
+      "change": "create",
+      "note": "unknown-view.one_of.json, status.enum.json (или код, который даёт oneOf — сверить с validate), list-without-columns.required.json, edge-kind.enum.json"
+    },
+    {
+      "path": "packages/gui/lib/gui/contracts.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_contracts.py",
+      "change": "create",
+      "note": "обходит все provides.contracts из unit.json — P1.3 и P1.4 не меняют тест"
+    },
+    {
+      "path": "packages/gui/unit.json",
+      "change": "any",
+      "note": "provides.contracts: contribution, view-data; создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/docs/contribution.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/unit.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/examples/valid/capability-with-gui.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/extension/v1/extension.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/schemas/extension/v1/examples/valid/command-with-gui.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/schema.py",
+      "change": "modify",
+      "note": "аддитивно: _referenced_contract_dirs при urn_prefix модуля (не aicore) дополнительно разрешает $ref с префиксом urn:swissknifeman:aicore: в foundation; поведение для aicore-префикса не меняется"
+    },
+    {
+      "path": "packages/aicore/tests/test_schema.py",
+      "change": "modify",
+      "note": "тест: модульный контракт во временном каталоге с $ref на common/v1 и на соседний контракт модуля загружается и валидирует; неизвестный aicore-контракт → SchemaProfileError"
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/schemas/README.md",
+      "change": "any",
+      "note": "строки contribution и view-data: статус «есть»; создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge/p1-contracts из reads; имена полей, enum, паттернов, кодов — строго оттуда; расхождение с кодом или профилем валидатора — open_issues kind deviation с выбранным решением.",
+    "В unit/v1 и extension/v1 меняется только добавление необязательного свойства provides.gui ($ref common relpath + description); никаких required/enum/pattern изменений (aicore schema compat обязан пройти).",
+    "UI-аннотации полей существуют только в contribution forms[]; canonical схемы других модулей не меняются.",
+    "argv_part допускает только строку-литерал или {input: имя}; конкатенация значений input с текстом невыразима схемой.",
+    "Каждый объект схемы — additionalProperties false и description у свойства; открытый объект — только schema-form.document с description, называющим валидирующий контракт.",
+    "Загрузка контрактов gui — aicore.util.schema.load_contract(dir, urn_prefix=\"urn:swissknifeman:gui:\"); разрешение $ref на aicore из модульного контракта — аддитивная правка aicore в этом пункте, без изменения поведения для контрактов aicore."
+  ],
+  "guidance": "Исполнитель: frontier/high. Порядок: сверка knowledge/facts#aicore-reuse (SUPPORTED_KEYWORDS, имена $defs common/digest) → contracts.py + test_contracts.py (обход provides.contracts; invalid-фикстура с кодом в имени файла падает именно с этим ValidationIssue.code) → contribution/v1 с фикстурами → view-data/v1 → provides.gui в aicore + примеры → ecosystem-units: provides.gui указывает на существующий файл внутри корня юнита и валиден по packages/gui/schemas/contribution/v1 (код issue по образцу соседних, например MANIFEST_GUI) + тесты на отсутствующий файл, выход за корень, невалидный gui.json → docs/contribution.md (каждое поле, лимиты кода, примеры) → CHANGELOG → V1–V3. Пример: argv: [\"bin/plan-adapter\", \"run-item\", {\"input\": \"plan\"}, {\"input\": \"item\"}] + field {name: \"dry\", type: \"boolean\", flag: \"--dry-run\"} → [\"<owner>/bin/plan-adapter\", \"run-item\", \"<plan>\", \"P2.1\", \"--dry-run\"]",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "contribution/v1",
+    "view-data/v1",
+    "provides.gui в unit/v1 и extension/v1",
+    "проверка provides.gui в ecosystem-units"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "grok-4.7",
+      "note": "Владелец M1: review на Grok только в нужных местах; жёсткий риск — замораживаемый публичный контракт расширения GUI и изменение контрактов aicore",
+      "provider": "grok",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T12:46:50Z"
+}

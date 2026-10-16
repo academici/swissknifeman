@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D6",
+  "title": "Формы: собственный ограниченный renderer закрытого профиля; без клиентской валидации; TS-типы из контрактов",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как рендерить и валидировать формы конфигурации и планов во frontend?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Свой renderer подмножества закрытого профиля aicore + forms overlay; валидация только backend preview; типы — json-schema-to-typescript с golden",
+      "pros": "точное соответствие профилю, строгая CSP без unsafe-eval, один авторитет",
+      "cons": "свой код renderer"
+    },
+    {
+      "id": "B",
+      "text": "rjsf v6 + Ajv2020",
+      "pros": "быстрый старт",
+      "cons": "2020-12 не полностью протестирован, Ajv требует unsafe-eval"
+    },
+    {
+      "id": "C",
+      "text": "JSON Forms",
+      "pros": "кастомизация",
+      "cons": "базовое разрешение $ref, второй UI-schema язык"
+    }
+  ],
+  "decision": "A — Свой renderer подмножества закрытого профиля aicore + forms overlay; валидация только backend preview; типы — json-schema-to-typescript с golden",
+  "rationale": "knowledge/research-2026-10-16#forms; закрытый профиль мал (23 keyword), renderer ограничен им.",
+  "consequences": [
+    "P3.3 строит renderer",
+    "ответ preview приходит с debounce"
+  ],
+  "applies_to": [
+    "P1",
+    "P3",
+    "P4"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

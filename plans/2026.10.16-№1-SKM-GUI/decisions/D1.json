@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D1",
+  "title": "Стек: Tauri 2 shell + React/TypeScript/Vite + Python control plane (sidecar)",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Какой стек desktop/web GUI?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Tauri 2 (Rust только lifecycle/OS) + React/TS/Vite + Python sidecar; тот же UI/API в browser mode",
+      "pros": "тонкая привилегированная граница, capabilities, переиспользование web UI, Python остаётся владельцем домена",
+      "cons": "Rust toolchain, сборка sidecar по target triple, различия WebView"
+    },
+    {
+      "id": "B",
+      "text": "Electron + Python backend",
+      "pros": "единый Chromium, зрелая экосистема",
+      "cons": "больший runtime, Node в main повышает последствия XSS"
+    },
+    {
+      "id": "C",
+      "text": "PySide6/Qt",
+      "pros": "один язык",
+      "cons": "нет browser mode, трудно runtime contributions"
+    },
+    {
+      "id": "D",
+      "text": "только localhost web UI",
+      "pros": "быстрый dev loop",
+      "cons": "жизненный цикл daemon, слабая OS-интеграция"
+    }
+  ],
+  "decision": "A — Tauri 2 (Rust только lifecycle/OS) + React/TS/Vite + Python sidecar; тот же UI/API в browser mode",
+  "rationale": "Совпадает с исходником владельца; исследование 2026-10-16 (knowledge/research-2026-10-16#sidecar, #transport) подтверждает зрелость sidecar и IPC Channel. D — режим разработки и fallback того же продукта, не отдельное приложение. Electron — резерв только при измеренном блокере Tauri.",
+  "consequences": [
+    "P6 требует owner gate на Rust toolchain и ключ updater",
+    "frontend не зависит от Tauri API напрямую: только через Transport"
+  ],
+  "global": true,
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

@@ -1,0 +1,222 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.4",
+  "title": "Resolver contributions, catalog/v1, CLI gui contributions и gui check; закрытие фазы P1",
+  "status": "todo",
+  "summary": "lib/gui/catalog: источники юнитов (SKM_UNITS_PATH → aicore.config.units.unit_dirs, иначе swissknifeman units list --json), внешние расширения через aicore.ext.plugins.list_plugins, resolver с проверками сверх схемы и кодами CONTRIB_*, детерминированный каталог urn:swissknifeman:gui:catalog:v1 с digest; CLI `gui contributions [--json] [--project DIR]` и `gui check <path> [--json]` (check-result/v1 по правилам + aicore conformance handler); фикстуры юнитов; закрытие фазы P1 широким проходом.",
+  "why": "Resolver — единственная точка доверия к contributions: всё, что он примет, UI отрисует, а broker исполнит. Жёсткие риски: выход пути gui.json/handler/argv[0] за корень владельца (в т.ч. symlink), захват чужого id или route path, недетерминированный каталог (порядок загрузки решает победителя), отсутствующий источник юнитов как исключение вместо кода.",
+  "scope": {
+    "include": [
+      "packages/gui/lib/gui/catalog/__init__.py, sources.py, resolve.py",
+      "packages/gui/schemas/catalog/v1/**",
+      "packages/gui/lib/gui/cli.py (contributions, check)",
+      "packages/gui/tests/test_catalog.py, tests/test_cli.py, tests/fixtures/units/**",
+      "packages/gui/unit.json provides.contracts (catalog)",
+      "packages/gui/docs/contribution.md (раздел resolver и коды)",
+      "scripts/umbrella.py + scripts/test-umbrella.py — только если units list не даёт абсолютного корня",
+      "CHANGELOG.md",
+      "phase.validation P1 (V11–V15)"
+    ],
+    "exclude": [
+      "HTTP endpoint /v1/ui/contributions (P2.1)",
+      "gui.json реальных мостов (P2.3+)",
+      "исполнение queries/commands (P2)"
+    ]
+  },
+  "depends_on": [
+    "P1.3"
+  ],
+  "decisions": [
+    "D2",
+    "D3",
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-contracts#resolver",
+      "why": "модули, функции, коды, контракт catalog/v1, CLI, тестовые случаи",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#ids",
+      "why": "проверки префиксов и path",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#contribution",
+      "why": "правила resolver, помеченные «resolver»",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#discovery",
+      "why": "порядок источников, правила, конфликт отклоняет всех",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I4, I5, I13",
+      "required": true
+    },
+    {
+      "ref": "knowledge/facts#hub-cli",
+      "why": "формат umbrella-units/v1",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/units.py",
+      "section": "unit_dirs",
+      "why": "семантика SKM_UNITS_PATH",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "section": "module_subscriptions",
+      "why": "образец: путь внутри корня модуля через is_within, warn_once",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/plugins.py",
+      "section": "list_plugins",
+      "why": "регистрации внешних расширений",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/conformance.py",
+      "section": "run_conformance",
+      "why": "проверка handler в gui check",
+      "required": true
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "section": "units",
+      "why": "поле root и корень хаба в units list --json",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/lib/gui/catalog/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/catalog/sources.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/catalog/resolve.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/catalog/v1/**",
+      "change": "create",
+      "note": "schema + examples valid (пустой, с принятым и отклонённым), invalid ≥ 3"
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/tests/test_catalog.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_cli.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/**",
+      "change": "create",
+      "note": "раскладка: <case>/ — корень юнитов для SKM_UNITS_PATH, внутри <unit-id>/unit.json + gui.json [+ extension.json]; обязательны valid-one/demo (V15 фазы) и conflict-id (V3)"
+    },
+    {
+      "path": "packages/gui/unit.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/docs/contribution.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/schemas/README.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "packages/gui/README.md",
+      "change": "any",
+      "note": "раздел CLI; создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "change": "modify",
+      "note": "только если нет абсолютного корня хаба: аддитивное поле hub_root в umbrella-units/v1"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "modify",
+      "note": "только вместе с umbrella.py"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — knowledge/p1-contracts#resolver и knowledge/architecture#discovery; коды CONTRIB_* — строго из раздела; расхождение — open_issues kind deviation.",
+    "Каждый путь (gui.json, handler.extension, argv[0], docs.root/index) проходит realpath + aicore.util.paths.is_within(корень владельца); выход → CONTRIB_PATH_ESCAPE; symlink-цикл → тот же код (fail-closed).",
+    "Конфликт id или route path отклоняет всех участников; порядок источников не влияет на результат и digest.",
+    "Ошибка одного источника или файла не прерывает сборку каталога: она становится записью rejected или CATALOG_SOURCE_UNAVAILABLE.",
+    "lib/gui/catalog импортирует только stdlib, aicore и lib/gui; gui не знает раскладку хаба (packages/, bridges/) — только корни из реестра."
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: сверка формата `swissknifeman units list --json` (root относителен — найти корень хаба; при отсутствии — hub_root в umbrella) → фикстуры и падающие test_catalog.py по списку случаев раздела resolver → sources.py → resolve.py → catalog/v1 → CLI contributions/check (text и --json; exit-коды: 0 — нет fail, 1 — fail, 2 — usage) → docs → CHANGELOG → V1–V3 пункта → phase.validation V11–V15 (пункт закрывает фазу P1).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SKM_UNITS_PATH=packages/gui/tests/fixtures/units/conflict-id packages/gui/bin/gui contributions --json | python3 -c \"import json,sys; d=json.load(sys.stdin); assert not d['contributions'] and {r['code'] for r in d['rejected']}=={'CONTRIB_CONFLICT'}\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "catalog resolver",
+    "catalog/v1",
+    "gui contributions",
+    "gui check",
+    "закрытие P1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T12:46:16Z"
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D10",
+  "title": "Размер пунктов и review: пункт = вертикальный результат на один прогон Claude; review — пункт Review Pn на Grok только при жёстком риске",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как нарезать работу и где ставить review?",
+  "options": [
+    {
+      "id": "A",
+      "text": "3–5 крупных пунктов на фазу (implementation/high или frontier/high), Review Pn на Grok (grok-4.7, high) в P1, P2, P3, P5, P6",
+      "pros": "скорость и качество без микро-пунктов; review там, где ошибка дорога",
+      "cons": "крупные пункты требуют точных task_files"
+    },
+    {
+      "id": "B",
+      "text": "мелкие пункты по файлам и review на каждом",
+      "pros": "контроль",
+      "cons": "медленно и дорого; противоречит запросу владельца M1"
+    }
+  ],
+  "decision": "A — 3–5 крупных пунктов на фазу (implementation/high или frontier/high), Review Pn на Grok (grok-4.7, high) в P1, P2, P3, P5, P6",
+  "rationale": "Запрос владельца M1 (не мельчить, оптимальный объём под модели Claude, review на Grok только в нужных местах); planner-development-philosophy (review opt-in, ≤ 2 раунда).",
+  "consequences": [
+    "knowledge/roadmap#sizing — правила для проектировщиков P2–P7",
+    "механизм: item-level review.mode requested с reviewer grok/frontier/grok-4.7/high у пунктов с жёстким риском; conductor orch ведёт review → triage → одну correction; отдельный пункт Review Pn — только для интеграционного риска без одного владельца",
+    "P1: review у P1.2 и P1.3 (замороженные контракты), P1.1 и P1.4 — none"
+  ],
+  "global": true,
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

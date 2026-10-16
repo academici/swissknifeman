@@ -1,0 +1,250 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Скелет модуля gui, регистрация в хабе как tool, ADR архитектуры GUI",
+  "status": "todo",
+  "summary": "Скелет packages/gui (unit.json kind capability, destination own-repo, requires aicore ^0.1, extension_points query и command; lib/gui с __version__ 0.1.0 и MIN_PYTHON (3, 11); bin/gui; scripts/test.sh; tests), регистрация в configs/ecosystem-units.json (targets, version_sources, standalone.tools), ownership.md через render, карта ecosystem.md, schemas/README.md с таблицей всех девяти контрактов P1, пять ADR архитектуры GUI.",
+  "why": "Модуль-носитель контрактов P1.2–P1.4 и всего плана. Риски: нарушение root.module-folders (имена packages/<other>/ в файлах gui), расхождение блока aicore locator с каноном, падение core-матрицы из-за Python 3.11 — gui обязан быть в standalone.tools.",
+  "scope": {
+    "include": [
+      "packages/gui: unit.json, lib/gui/__init__.py, lib/gui/cli.py, bin/gui, scripts/test.sh, tests/__init__.py, tests/test_cli.py, README.md, schemas/README.md, docs/architecture.md",
+      "configs/ecosystem-units.json",
+      "docs/architecture/ownership.md (render)",
+      "docs/architecture/ecosystem.md",
+      "docs/architecture/decisions: 5 ADR + README.md",
+      "CHANGELOG.md [Unreleased]"
+    ],
+    "exclude": [
+      "контракты и их фикстуры (P1.2, P1.3)",
+      "resolver и подкоманды contributions/check (P1.4)",
+      "install-профили, release-units, marketplace (P2.5)",
+      "HTTP, frontend, desktop"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D8",
+    "D9",
+    "D10"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-contracts#skeleton",
+      "why": "точные файлы, unit.json, регистрация, список ADR",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#boundaries",
+      "why": "раскладка модуля и мостов для README и ecosystem.md",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#layers",
+      "why": "текст ADR стека и границ",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I1–I14 в docs/architecture.md и ADR",
+      "required": true
+    },
+    {
+      "ref": "knowledge/facts#module-rules",
+      "why": "правила модулей, карта хаба, шаблон test.sh",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#schema-rules",
+      "why": "содержимое schemas/README.md",
+      "required": true
+    },
+    {
+      "path": "packages/analyst/scripts/test.sh",
+      "why": "шаблон тестового скрипта",
+      "required": true
+    },
+    {
+      "path": "packages/analyst/bin/analyst",
+      "why": "шаблон bin: dev-clone guard, locator",
+      "required": true
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "why": "targets, version_sources, standalone.tools",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/README.md",
+      "why": "формат таблицы ADR и следующий номер",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/0079-umbrella-front-door-plugin-at-the-root.md",
+      "why": "формат ADR",
+      "required": false
+    },
+    {
+      "ref": "knowledge/research-2026-10-16",
+      "why": "ссылки ADR на источники по разделам",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/bin/gui",
+      "change": "create",
+      "note": "chmod +x"
+    },
+    {
+      "path": "packages/gui/scripts/test.sh",
+      "change": "create",
+      "note": "chmod +x; блок aicore locator байт-в-байт с packages/aicore/scripts/aicore-locator.sh"
+    },
+    {
+      "path": "packages/gui/tests/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_cli.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/docs/architecture.md",
+      "change": "create"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только python3 scripts/ecosystem-units.py render"
+    },
+    {
+      "path": "docs/architecture/ecosystem.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/decisions/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/decisions/0080-gui-tauri-shell-react-python-control-plane.md",
+      "change": "create",
+      "note": "номер — следующий свободный; при занятости сдвинуть все пять"
+    },
+    {
+      "path": "docs/architecture/decisions/0081-gui-domains-through-bridges.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/0082-gui-declarative-contributions.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/0083-gui-local-api-security.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/0084-gui-state-canonical-files.md",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/generation.json",
+      "change": "modify",
+      "note": "только если python3 scripts/golden.py check требует capture; capture с --reason PLAN5.P1.1"
+    },
+    {
+      "path": "packages/gui/AGENTS.md",
+      "change": "create",
+      "note": "только если configs/managed-blocks.json требует файл инструкций у каждого модуля"
+    },
+    {
+      "path": "packages/gui/CLAUDE.md",
+      "change": "create",
+      "note": "только при том же условии"
+    }
+  ],
+  "rules": [
+    "Дизайн — knowledge/p1-contracts#skeleton; имена файлов, полей, кодов — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation.",
+    "Файлы packages/gui не содержат строк packages/<другой модуль>/ (паттерн sibling-package); ссылки на чужие файлы в README/docs — через docs/architecture или имена модулей без пути.",
+    "lib/gui импортирует только stdlib и aicore.",
+    "Install-профили, release-units и marketplace не меняются.",
+    "Текст ADR — контекст, решение, отвергнутые варианты, последствия из decisions D1–D10; источники — URL из knowledge/research-2026-10-16, без ссылок на файлы плана и без пересказа исследования."
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: сверка knowledge/facts#module-rules с кодом (grep '\"analyst\"' configs scripts .github — найти все списки модулей) → unit.json + lib + bin + test.sh + test_cli.py (версия, --help, PYTHON_TOO_OLD при подмене sys.version_info через переменную окружения теста или параметр функции проверки) → регистрация в ecosystem-units.json → render ownership.md → README, schemas/README.md, docs/architecture.md → ADR + таблица → CHANGELOG → V1–V3. Пример: configs/ecosystem-units.json: \"version_sources\": {..., \"gui\": {\"path\": \"packages/gui/lib/gui/__init__.py\", \"read\": \"python:__version__\"}}, \"standalone\": {..., \"tools\": [\"analyst\", \"gui\", \"maind\"]}",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && packages/gui/bin/gui --version",
+      "expect": "exit 0; версия 0.1.0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "packages/gui (скелет)",
+    "регистрация в хабе",
+    "ADR 0080–0084"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T12:45:25Z"
+}

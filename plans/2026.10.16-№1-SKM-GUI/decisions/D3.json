@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D3",
+  "title": "Контракт contributions в модуле gui; provides.gui аддитивно в aicore unit/v1 и extension/v1; UI-аннотации вне canonical схем",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Где живёт GUI-контракт и куда класть UI-аннотации полей (виджет, группа, порядок, readonly)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "urn:swissknifeman:gui:contribution:v1 в packages/gui/schemas; provides.gui (relpath) — аддитивное свойство unit/v1 и extension/v1; аннотации — в forms[] contribution по JSON pointer",
+      "pros": "canonical схемы и закрытый профиль валидатора не меняются; одна точка истины UI",
+      "cons": "указатели могут устареть при изменении схемы — ловит resolver/тест"
+    },
+    {
+      "id": "B",
+      "text": "x-skm-widget/x-skm-group внутри canonical схем",
+      "pros": "рядом с полем",
+      "cons": "закрытый профиль aicore отклоняет неизвестные x-*; смешение валидации и UI; правка схем всех модулей"
+    }
+  ],
+  "decision": "A — urn:swissknifeman:gui:contribution:v1 в packages/gui/schemas; provides.gui (relpath) — аддитивное свойство unit/v1 и extension/v1; аннотации — в forms[] contribution по JSON pointer",
+  "rationale": "aicore.util.schema принимает только x-skm-secret и x-skm-layers (knowledge/facts#aicore-reuse); добавление property в unit/v1 — не ломающее по aicore.util.schemacompat (property-added).",
+  "consequences": [
+    "P1.2 меняет aicore unit/v1, extension/v1 и ecosystem-units check",
+    "lifecycle readonly в forms — только UX; запрет записи обеспечивает мост и planner"
+  ],
+  "applies_to": [
+    "P1"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

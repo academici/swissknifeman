@@ -1,0 +1,20 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P2",
+  "title": "Browser-mode control plane: API, broker, события, дашборд парка",
+  "design": "skeleton",
+  "goal": "`gui open` поднимает loopback backend (Starlette) с секретом сессии и открывает в браузере дашборд парка: проекты, четыре слоя control surface, doctor, каталог contributions; allowlisted команда запускается с dry-run, подтверждением, потоком логов через /v1/events, отменой группы процессов и аудитом; bridges/gui-hub даёт данные хаба; gui входит в install-профиль full.",
+  "context": "Нарезка и риски — knowledge/roadmap#p2; архитектура — knowledge/architecture (#transport, #execution, #state, #invariants); контракты — замороженные P1. Детализируется после закрытия P1 по реальному коду. Review P2 на Grok (локальный API, broker).",
+  "depends_on": [
+    "P1"
+  ],
+  "deliverables": [
+    "lib/gui/http + requirements.lock",
+    "ExecutionBroker, RunStore, EventHub",
+    "bridges/gui-hub",
+    "frontend shell и дашборд",
+    "E2E browser mode"
+  ],
+  "items": [],
+  "batches": []
+}

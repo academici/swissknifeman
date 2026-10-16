@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P4",
+  "title": "Planner vertical slice через bridges/gui-planner",
+  "design": "skeleton",
+  "goal": "Планы проекта читаются в человеческом виде (список с прогрессом, overview, phases, board, graph, decisions, evidence, timeline, raw) и меняются typed domain mutations через plan.py: поля item, route, review mode/provider/model/effort, decisions; lifecycle-действия с подтверждением; lifecycle-поля недоступны generic форме.",
+  "context": "knowledge/architecture#planner, knowledge/roadmap#p4; мост bridges/gui-planner; planner не меняется ради GUI, кроме аддитивных --json пробелов отдельным пунктом.",
+  "depends_on": [
+    "P3"
+  ],
+  "deliverables": [
+    "bridges/gui-planner (queries, commands, forms)",
+    "views board, dependency-graph, resource-detail",
+    "E2E правки reviewer model"
+  ],
+  "items": [],
+  "batches": []
+}

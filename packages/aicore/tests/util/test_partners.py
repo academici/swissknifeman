@@ -114,6 +114,14 @@ class TestPlanner(PartnerTestCase):
         self.assertEqual(partner_command("planner", env=env), [str(on_path / "planner")])
         self.assertIsNone(partner_command("planner", env=self.env(SKM_PLANNER_BIN=other)))
 
+    def test_planner_is_found_as_the_installed_plan_py_link(self):
+        on_path = self.tmp / "installed"
+        _script(on_path / "plan.py", "true")
+        env = self.env(PATH=str(on_path))
+        self.assertEqual(partner_command("planner", env=env), [str(on_path / "plan.py")])
+        _script(on_path / "planner", "true")
+        self.assertEqual(partner_command("planner", env=env), [str(on_path / "planner")])  # a launcher wins
+
 
 class TestRequireAndRun(PartnerTestCase):
     def test_require_raises_with_code(self):

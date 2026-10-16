@@ -7,6 +7,7 @@ test_desc_burndown_gate.py (length, description-only fixtures) and test_desc_tri
 
 Mirrors the same two wrappers (real launch validate.sh vs. synthetic skills/,
 check SPECIFIC lines stdout, not generic exit-code)."""
+import os
 import subprocess
 import tempfile
 import unittest
@@ -51,7 +52,8 @@ class DescListingCombinedGateCase(unittest.TestCase):
     def _run(self):
         return subprocess.run(
             ["bash", str(self.scripts_dir / "validate.sh")],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60,
+            env={**os.environ, "AICORE_ROOT": str(PKG_ROOT.parent / "aicore")})
 
     def test_trigger_in_when_to_use_satisfies_gate(self):
         # description itself does not carry a trigger - it is ONLY in when_to_use.

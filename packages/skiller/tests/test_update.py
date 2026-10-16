@@ -23,7 +23,7 @@ from skiller.registry import build_registry
 from skiller.skillset import do_sync
 from skiller.vendor import do_vendor
 from skiller.update import (cmd_update, prune_legacy_runtime_links, replay_opts, retire_equivalent_codex_skill_links,
-                            retire_legacy_codex_links, retire_legacy_codex_vendor,
+                            retire_legacy_codex_links, retire_legacy_codex_vendor, retire_vendored_codex_bundles,
                             retire_orphaned_codex_vendor_manifest, update_one)
 try:
     from . import fixtures as fx
@@ -169,6 +169,55 @@ class UpdateCase(unittest.TestCase):
         self.assertTrue((local / "SKILL.md").exists())
         self.assertFalse((path.parent / "old").exists())
         self.assertEqual(next((project / ".swissknifeman/backups").glob("*/old/SKILL.md")).read_text(), "old bytes")
+
+    def _bundle_project(self, *, foreign=False):
+        project = self.tmp / "bundles"
+        for relative in (".agents/plugins/marketplace.json", ".agents/plugins/bundles/planner/SKILL.md"):
+            path = project / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("old " + relative)
+        if foreign:
+            (project / ".agents/plugins/bundles/own.md").write_text("mine")
+        (project / ".codex").mkdir()
+        (project / ".codex/config.toml").write_text('[plugins."planner@swissknifeman"]\nenabled = true\n')
+
+        def record(artifact, target):
+            return {"adapter_id": "skiller.codex-publication", "adapter_version": "1.0.1", "artifact_id": artifact,
+                    "canonical_sources": [{"hash": "sha256:" + "0" * 64, "path": "src", "source_id": "skiller.connect.source"}],
+                    "capability_requirements": [{"accepted_levels": ["adapted", "native"], "id": "skills.repository"}],
+                    "contract_version": "1.0.0", "managed_boundary": {"block_ids": [], "mode": "whole-file"},
+                    "override_layers": [], "provider_id": "codex", "rendered_hash": "sha256:" + "0" * 64,
+                    "source_hash": "sha256:" + "1" * 64, "target_path": target}
+        lock = project / ".swissknifeman/provider-artifacts.lock.json"
+        lock.parent.mkdir(parents=True)
+        from aicore.artifacts.lock import ArtifactLock, _provenance_from_value, serialize_lock
+        records = (record("skiller.codex.connect.a", ".agents/plugins/marketplace.json"),
+                   record("skiller.codex.connect.b", ".agents/plugins/bundles/planner/SKILL.md"),
+                   record("other.codex.lifecycle.handler", ".codex/hooks/lifecycle.py"))
+        lock.write_bytes(serialize_lock(ArtifactLock(1, tuple(_provenance_from_value(r) for r in records))))
+        return project, lock
+
+    def test_vendored_bundles_retire_with_their_lock_records_under_native_codex(self):
+        project, lock = self._bundle_project()
+        self.assertTrue(silently(retire_vendored_codex_bundles, self.env, project, dry_run=True))
+        self.assertTrue((project / ".agents/plugins").exists())
+        self.assertTrue(silently(retire_vendored_codex_bundles, self.env, project))
+        self.assertFalse((project / ".agents/plugins").exists())
+        kept = [r["artifact_id"] for r in json.loads(lock.read_text())["records"]]
+        self.assertEqual(kept, ["other.codex.lifecycle.handler"])
+        saved = next((project / ".swissknifeman/backups").glob("legacy-codex-bundles-*/plugins/marketplace.json"))
+        self.assertEqual(saved.read_text(), "old .agents/plugins/marketplace.json")
+
+    def test_vendored_bundles_stay_when_a_file_is_not_lock_owned_or_codex_is_not_native(self):
+        project, lock = self._bundle_project(foreign=True)
+        with self.assertRaisesRegex(ValueError, "CODEX_BUNDLES_FOREIGN_FILES"):
+            silently(retire_vendored_codex_bundles, self.env, project)
+        self.assertTrue((project / ".agents/plugins/bundles/own.md").exists())
+        self.assertEqual(len(json.loads(lock.read_text())["records"]), 3)
+        (project / ".agents/plugins/bundles/own.md").unlink()
+        (project / ".codex/config.toml").write_text("")
+        self.assertFalse(silently(retire_vendored_codex_bundles, self.env, project))
+        self.assertTrue((project / ".agents/plugins").exists())
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

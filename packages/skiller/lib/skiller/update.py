@@ -261,6 +261,44 @@ def retire_legacy_codex_vendor(env, target, *, dry_run=False):
         return True
 
 
+def retire_vendored_codex_bundles(env, target, *, dry_run=False):
+    """Explicit cleanup of vendored Codex bundles (`.agents/plugins`) once the project selects plugins natively.
+
+    Only the lock-owned `skiller.codex.connect.*` files are retired; a file under `.agents/plugins` that the lock
+    does not own keeps the whole tree in place. The tree moves to `.swissknifeman/backups/` (reversible) and its
+    lock records are dropped in the same step."""
+    from aicore.artifacts.lock import (ArtifactLock, LOCK_RELATIVE_PATH, _atomic_write_bytes,
+                                       parse_lock, serialize_lock)
+    from .delivery import _native_codex_plugins
+    target = Path(target)
+    with _writer_guard(target):
+        if _native_codex_plugins(target) is None:
+            return False
+        tree = _contained_target(target, ".agents/plugins")
+        if not tree.is_dir():
+            return False
+        lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
+        lock = parse_lock(lock_path.read_bytes()) if lock_path.is_file() else None
+        owned = {r.target_path for r in (lock.records if lock else ())
+                 if r.artifact_id.startswith("skiller.codex.connect.") and r.target_path.startswith(".agents/plugins/")}
+        files = [p for p in tree.rglob("*") if p.is_file() or p.is_symlink()]
+        foreign = sorted(p.relative_to(target).as_posix() for p in files
+                         if p.relative_to(target).as_posix() not in owned)
+        if foreign:
+            raise ValueError("CODEX_BUNDLES_FOREIGN_FILES: not owned by the lock, nothing retired: "
+                             + ", ".join(foreign[:5]) + (" ..." if len(foreign) > 5 else ""))
+        backup = _contained_target(target, ".swissknifeman/backups/legacy-codex-bundles-" + uuid.uuid4().hex)
+        if not dry_run:
+            backup.mkdir(parents=True, exist_ok=True)
+            shutil.move(tree, backup / "plugins")
+            if lock:
+                kept = tuple(r for r in lock.records if r.target_path not in owned)
+                _atomic_write_bytes(lock_path, serialize_lock(ArtifactLock(lock.schema_version, kept)))
+        print(f"{'[dry-run] ' if dry_run else ''}retire {len(files)} vendored Codex bundle files "
+              f"({len(owned)} lock records); backup={backup}")
+        return True
+
+
 def detect_vendor_path(target, config):
     config = ProjectConfig.coerce(config)  # historical calls are sent dict
     candidates = []

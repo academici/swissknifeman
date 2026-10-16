@@ -7,6 +7,7 @@ REPO_ROOT resolves from the script location → copy validate.sh + desc-burndown
 MINIMUM synthetic skills/. Checking for non-general exit-code (it is expectedly non-zero due to
 missing registry environment - buckets.json/skills.json etc.), and SPECIFIC lines about
 description-gate in stdout."""
+import os
 import subprocess
 import tempfile
 import unittest
@@ -56,7 +57,8 @@ class DescBurndownGateCase(unittest.TestCase):
     def _run(self):
         return subprocess.run(
             ["bash", str(self.scripts_dir / "validate.sh")],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60,
+            env={**os.environ, "AICORE_ROOT": str(PKG_ROOT.parent / "aicore")})
 
     def test_over_450_is_hard_error_even_in_burndown(self):
         self._write_skill("over-450", DESC_451)

@@ -345,6 +345,23 @@ class TestDoctor(unittest.TestCase):
                          (by_id["gap.two"]["status"], by_id["gap.two"]["observed"]))
         self.assertIn("bin/gap doctor", by_id["gap.two"]["remediation"])
 
+    def test_a_text_probe_is_judged_by_its_exit_code(self):
+        # `output: text`: the first line is the observation, the next lines are evidence, exit != 0 is a fail.
+        for unit_id, code in (("txtok", 0), ("txtbad", 3)):
+            folder = make_unit(self.hub.packages, unit_id, [f"bin/{unit_id}"], doctor=True)
+            (folder / "bin" / unit_id).write_text(
+                f"#!/usr/bin/env python3\nimport sys\nprint('{unit_id} report')\nprint('  [ok ] detail')\nsys.exit({code})\n",
+                encoding="utf-8")
+        rc, doc = self.json()
+        by_id = {r["check_id"]: r for r in doc["results"]}
+        self.assertEqual(1, rc)
+        self.assertEqual(("ok", "txtok report", ["[ok ] detail"]),
+                         (by_id["txtok.environment"]["status"], by_id["txtok.environment"]["observed"],
+                          by_id["txtok.environment"]["evidence"]))
+        self.assertEqual("fail", by_id["txtbad.environment"]["status"])
+        self.assertIn("bin/txtbad doctor", by_id["txtbad.environment"]["remediation"])
+        self.assertNotIn("txtbad.doctor", by_id)  # a text probe is never "not JSON"
+
     def test_the_declared_category_decides_the_filter_and_a_matching_document_is_kept(self):
         row = check("aa.cfg", "ok", "state", "actually fine")  # the probe says state, the module declared config
         probe_unit(self.hub, "aa", f"print(json.dumps([{row!r}]))", ["aa.cfg"], {"aa.cfg": "config"})

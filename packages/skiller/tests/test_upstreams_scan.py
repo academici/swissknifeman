@@ -18,6 +18,7 @@ a separate case fixes the immiscibility of exit codes (triage 11 != drift 10).
 import hashlib
 import json
 import shutil
+import os
 import subprocess
 import tempfile
 import unittest
@@ -342,7 +343,8 @@ class ValidateAuditBlockCase(unittest.TestCase):
 
     def _run(self):
         return subprocess.run(["bash", str(self.root / "scripts" / "validate.sh")],
-                              capture_output=True, text=True, timeout=60)
+                              capture_output=True, text=True, timeout=60,
+                              env={**os.environ, "AICORE_ROOT": str(Path(__file__).resolve().parents[2] / "aicore")})
 
     def test_valid_audit_block_raises_nothing(self):
         self._write(audit={})

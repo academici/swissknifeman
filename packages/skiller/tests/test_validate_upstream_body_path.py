@@ -15,6 +15,7 @@ missing registry environment), and SPECIFIC lines about body_path in stdout."""
 import hashlib
 import json
 import shutil
+import os
 import subprocess
 import tempfile
 import unittest
@@ -64,7 +65,8 @@ class ValidateBodyPathCase(unittest.TestCase):
     def _run(self):
         return subprocess.run(
             ["bash", str(self.root / "scripts" / "validate.sh")],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60,
+            env={**os.environ, "AICORE_ROOT": str(Path(__file__).resolve().parents[2] / "aicore")})
 
     def test_valid_body_path_no_related_errors(self):
         self._write_upstream()

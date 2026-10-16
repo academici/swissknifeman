@@ -592,7 +592,9 @@ class TestConformance(unittest.TestCase):
             self.assertEqual(by_id[1]["result"]["serverInfo"]["name"], "maind")
             self.assertEqual(by_id[1]["result"]["protocolVersion"], "2024-11-05")
             self.assertEqual(len(by_id[2]["result"]["tools"]), 11)
-            self.assertIsInstance(json.loads(by_id[3]["result"]["content"][0]["text"]), list)
+            projects = json.loads(by_id[3]["result"]["content"][0]["text"])
+            # `maind projects list` answers {"items": [...]} (a list in the older contract).
+            self.assertIsInstance(projects["items"] if isinstance(projects, dict) else projects, list)
             self.assertIn(4, by_id)                              # ping replied
 
 

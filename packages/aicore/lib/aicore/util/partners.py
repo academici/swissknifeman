@@ -69,7 +69,9 @@ def _planner_command(env: Mapping[str, str]) -> Optional[list]:
         if found:
             _warn_once("SKM_TASK_ROOT", "set PLANNER_ROOT")
             return [sys.executable, found]
-    which = shutil.which("planner", path=env.get("PATH", ""))
+    # `install.sh` links the planner as `plan.py`; a `planner` launcher is the other accepted form.
+    which = (shutil.which("planner", path=env.get("PATH", ""))
+             or shutil.which("plan.py", path=env.get("PATH", "")))
     return [which] if which else None
 
 

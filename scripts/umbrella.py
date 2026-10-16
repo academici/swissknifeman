@@ -377,14 +377,14 @@ def _synthetic(schema_id: str, unit_id: str, check_id: str, category: str, obser
 
 
 def _run_probe(argv: Sequence[str], cwd: Path, timeout: float) -> Any:
-    """Run one probe read-only from the module root: ``(stdout, None)`` or ``(None, reason)``."""
+    """Run one probe read-only from the module root: ``(stdout, None, exit code)`` or ``(None, reason, None)``."""
     head = cwd / argv[0]
     command = (_command(head) if head.exists() else [argv[0]]) + list(argv[1:])
     try:
         proc = subprocess.Popen(command, cwd=str(cwd), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, text=True, start_new_session=True)
     except OSError as exc:
-        return None, f"probe could not start: {exc.__class__.__name__}: {exc}"
+        return None, f"probe could not start: {exc.__class__.__name__}: {exc}", None
     try:
         out, err = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -393,10 +393,10 @@ def _run_probe(argv: Sequence[str], cwd: Path, timeout: float) -> Any:
         except OSError:
             proc.kill()
         proc.communicate()
-        return None, f"probe timed out after {timeout:g} s"
+        return None, f"probe timed out after {timeout:g} s", None
     if not out.strip():
-        return None, f"probe printed nothing (exit {proc.returncode}): {err.strip()[:300]}"
-    return out, None
+        return None, f"probe printed nothing (exit {proc.returncode}): {err.strip()[:300]}", None
+    return out, None, proc.returncode
 
 
 def _check_registry() -> Any:
@@ -407,6 +407,24 @@ def _check_registry() -> Any:
     registry, kind = load_contract(folder)
     schema = json.loads((folder / f"{kind}.schema.json").read_text(encoding="utf-8"))
     return registry, kind, schema["properties"]["$schema"]["const"]
+
+
+def _text_results(items: Sequence[Dict[str, Any]], out: str, code: int, schema_id: str, argv: Sequence[str]) -> List[Dict[str, Any]]:
+    """Documents for a probe declared ``output: text``: one per declared check, status from the exit code.
+
+    The first printed line is the observation and the next lines are evidence; a probe that exits non-zero fails."""
+    lines = [line.rstrip() for line in out.splitlines() if line.strip()]
+    docs = []
+    for item in items:
+        doc: Dict[str, Any] = {"$schema": schema_id, "check_id": item["id"],
+                               "status": "ok" if code == 0 else "fail",
+                               "category": str(item.get("category") or "environment"),
+                               "observed": lines[0].strip()[:300],
+                               "evidence": [line.strip()[:300] for line in lines[1:9]]}
+        if code != 0:
+            doc["remediation"] = "run in the module folder: " + " ".join(argv)
+        docs.append(doc)
+    return docs
 
 
 def _parse_results(out: str, registry: Any, kind: str) -> Any:
@@ -447,8 +465,11 @@ def collect_doctor(units: Mapping[str, Any], unit_ids: Sequence[str], categories
         broken: List[Any] = []  # (probe items, probe argv, reason) of the probes that gave no documents
         for argv, items in probes.items():
             ids = {item["id"] for item in items}
-            out, reason = _run_probe(argv, unit.root, timeout)
-            docs, reason = _parse_results(out, registry, kind) if out is not None else (None, reason)
+            out, reason, code = _run_probe(argv, unit.root, timeout)
+            if out is not None and all(item.get("output") == "text" for item in items):
+                docs = _text_results(items, out, code, schema_id, argv)
+            else:
+                docs, reason = _parse_results(out, registry, kind) if out is not None else (None, reason)
             if docs is None:
                 broken.append((items, argv, str(reason)))
                 continue

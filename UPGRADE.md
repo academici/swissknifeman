@@ -73,9 +73,10 @@ Added to `plan/v1` (additive): schema `read-followups` (follow-ups and owner dec
    `task@` by `planner@` in `enabledPlugins` by hand (connect adds `planner` but keeps `system`; check there is no duplicate). **[done]**
    `/plugin marketplace update swissknifeman` is global (one `known_marketplaces.json` entry): run it once, in any project, then
    restart the Claude Code session in every project to load the new plugin set. **[done]**
-9. `swissknifeman doctor`: expected 14 ok / 4 warn / 2 fail on computer 1 once step 10 is done. The two fails (`aicore.doctor`, `skiller.doctor`:
-   "probe output is not JSON") are a tooling defect, not the machine. Warns that are the owner's: memory daemon
-   (`maind start --only memory`), `orch.sandbox` (bwrap needs an AppArmor profile on Ubuntu 24.04+), `analyst.partners`.
+9. `swissknifeman doctor`: from v0.30.3 expected `0 fail` and `0 warn` on a machine that passes `scripts/check-env.sh --strict`
+   (the `aicore.doctor`/`skiller.doctor` "probe output is not JSON" failures were a defect of the doctor aggregator, which ignored
+   `output: text`). Warns that remain are the owner's: memory daemon (`maind start --only memory`), `orch.sandbox` (see
+   [requirements](docs/getting-started.md#requirements)).
 10. **Caches — delete every old one, nothing of the previous version may take part** **[done]**:
     - Claude Code: back up `~/.claude/plugins/installed_plugins.json`, drop every `*@swissknifeman` entry from it, then
       `rm -rf ~/.claude/plugins/cache/swissknifeman ~/.claude/plugins/data/core-swissknifeman` (it was 1.9 GB of sha- and version-keyed copies,
@@ -88,7 +89,7 @@ Added to `plan/v1` (additive): schema `read-followups` (follow-ups and owner dec
     - Hub root: after step 4 delete `config.json`, `safe-dirs.json`, `safe-dirs.json.bak`, `CLAUDE.md.bak` (their content lives in
       `[maind]`/`registry.json`/`harness/safe-dirs.json`; the originals are in the backup folder). Move `~/.swissknifeman/topology.json` to
       `~/.local/state/swissknifeman/maind/topology.json` and delete `~/.swissknifeman`.
-    - `swissknifeman doctor` must print no `legacy` warning; expected afterwards 14 ok / 4 warn / 2 fail (see 9).
+    - `swissknifeman doctor` must print no `legacy` warning (see 9).
 11. Clean-up of clones **[done on computer 1]**: delete the old clone folder(s), every `git worktree` of it (`git worktree list`, then
     `git worktree prune`), temp sandboxes `/tmp/skm-sandbox-*`. Before deleting a clone, bring its branches in:
     `git fetch <clone> 'refs/heads/*:refs/heads/next/*'` and compare tags (`git tag | wc -l` equal) so nothing is lost.
@@ -110,9 +111,10 @@ Work on a branch `chore/skm-upgrade`. Absolute paths only (`maind onboard .` fai
 5. `harness hooks sync` → `.swissknifeman/hooks.env`. **[verified]**
 6. `skiller connect --file settings.local.json --cleanup-codex-vendored --native-codex` — replaces `system@` by `maind harness
    analyst brain`, writes `.codex/config.toml`. **[verified]** Do not use `--fix-path` (the marketplace path is `$HUB` already).
-7. Vendored Codex bundles `.agents/plugins/`: git-ignored → `rm -rf .agents/plugins`; tracked → `skiller connect` regenerates them,
-   commit the result; `SPUB_OWNERSHIP_CONFLICT: ... modified prior artifact` → `git rm -rf .agents/plugins`, repeat steps 3 and 6
-   (native Codex only). **[verified]**
+7. Vendored Codex bundles `.agents/plugins/` are replaced by the native selection in `.codex/config.toml` (step 6). Retire them with
+   `skiller connect --file settings.local.json --native-codex-only --cleanup-codex-bundles` (moves the tree and its lock records to
+   `.swissknifeman/backups/legacy-codex-bundles-*`, refuses when a file under `.agents/plugins` is not lock-owned), then commit the
+   deletion. A bundle left in place is stale after every patch release and no longer blocks `release-fleet` (v0.30.2+).
 8. Verify: `swissknifeman project verify`, `maind health --cwd` (memory daemon warning aside), `plan.py check plans/<plan>`,
    `git diff --stat` read by hand, `grep -rIn "packages/task\|/task:\|swissknife.json" . --exclude-dir={vendor,node_modules,.git,plans}`
    → only prose in docs you chose to keep. Commit on the branch; do not push without the owner.

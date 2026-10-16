@@ -4,6 +4,7 @@ must respond «when to call» + burn-down-ratchet (scripts/desc-trigger-burndown
 Mirrors test_desc_burndown_gate.py (same wrapper, same technique: real launch
 validate.sh vs. synthetic skills/, check SPECIFIC lines in stdout, not
 general exit-code - it is expectedly non-zero due to the missing registry environment)."""
+import os
 import subprocess
 import tempfile
 import unittest
@@ -51,7 +52,8 @@ class DescTriggerGateCase(unittest.TestCase):
     def _run(self):
         return subprocess.run(
             ["bash", str(self.scripts_dir / "validate.sh")],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60,
+            env={**os.environ, "AICORE_ROOT": str(PKG_ROOT.parent / "aicore")})
 
     def test_no_trigger_not_in_burndown_is_error(self):
         self._write_skill("no-trigger", DESC_NO_TRIGGER)

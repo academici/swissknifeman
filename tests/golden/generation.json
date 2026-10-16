@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "c8b467731643",
-  "reason": "release v0.30.2",
+  "captured_from": "2af999717c6f",
+  "reason": "release v0.30.3",
   "generators": [
     {
       "id": "skiller-registry",
@@ -209,7 +209,7 @@
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "50e60c7e08c92e547d700a28d9e4f6ae4538522987c0894ea3e1f3cf23bd47cd",
     "packages/planner/docs/reference/provider-commands.md": "65a3c81e3c886a34aa81089b9c5edac928256caaac26dccfb422152d985a9fbb",
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
-    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "a22af4d7dfba60b1ce0b19b068fb271a30bfc366d32214237c4b89f129a23ff1",
+    "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "f3d989b8c4e122d6d1b596a17231508730959f7a5f047f8d90c51b06de92ab8a",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/design.md": "edaf219f32ad36a1ca6265f1e350a3de86fcc3c2a91388da890eba6b91081cd0",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/dev.md": "a0840c4420080b7086e123a4f36cd7f58e5a4054de9f9f84b277b8f37b807f04",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/fix.md": "e8e86bd5f71d09c96f0bf27febc348912b3f3faf91c304ef0461e715c28f0dcb",
@@ -230,7 +230,7 @@
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-run.md": "bafbe2606abe9f2007dd80c71bbd19c6955a0dee88384dc5a33dce77cf09ad86",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f",
-    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "4dd2b6b201acd52f2fd838b4e01df5c3f8f00237d54c382d1d1d9583831a1de3",
+    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "77f95bf759ec5893002344d1545d11bd52eae4b08fa8f85511cc3083926926fc",
     "packages/skiller/.claude-plugin/catalog.json": "112dac245b7ad3e99356cd42ef68cf181273037194a5754a11b92f0c13f85521",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "dd59120751e6a94f72849d690566e0ec04042d653f674f142ee4a459172d2280",
     "packages/skiller/adapters/codex/core/publication-lock.json": "f54d35dc75aeb6ae0781dee2ec864f2f1d2facab7d862f173aacdfdfffb57593",

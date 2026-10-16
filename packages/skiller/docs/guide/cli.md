@@ -339,4 +339,6 @@ date and tree digests, to avoid creating a self-referencing SHA release commit.
 
 `connect --cleanup-codex-vendored` explicitly retires only directories declared by a known v1 `.agents/skills` vendor manifest. It keeps unlisted local skills, refuses foreign lock ownership, and moves the old copies into `.swissknifeman/backups/` so they can be restored. It does not change the project's configured plugin selection.
 
+`connect --cleanup-codex-bundles` retires vendored Codex bundles (`.agents/plugins`) once the project selects plugins natively (`.codex/config.toml`). It moves the whole tree into `.swissknifeman/backups/legacy-codex-bundles-*`, drops the matching `skiller.codex.connect.*` lock records and refuses (`CODEX_BUNDLES_FOREIGN_FILES`) when a file under `.agents/plugins` is not owned by the lock. Without a native selection it does nothing.
+
 Release attestation distinguishes contained `codex` skill bundles from full `codex-native` source caches. Ignored local telemetry is not a release surface. Added evidence coverage is checked against the previous Git source tag; changing already recorded bytes still requires a new unit version.

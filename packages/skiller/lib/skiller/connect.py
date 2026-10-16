@@ -529,7 +529,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
 def cmd_connect(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--profile": "str", "--plugins": "str",
-        "--file": "str", "--cleanup-vendored": "bool", "--cleanup-codex-vendored": "bool",
+        "--file": "str", "--cleanup-vendored": "bool", "--cleanup-codex-vendored": "bool", "--cleanup-codex-bundles": "bool",
         "--cleanup-codex-physical": "bool", "--list": "bool",
         "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
         "--no-permissions": "bool", "--fix-path": "bool",
@@ -541,7 +541,7 @@ def cmd_connect(env, argv):
         print("skiller connect [--profile P|--plugins a,b] "
               "[--file settings.json|settings.local.json] [--cleanup-vendored] "
               "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions] "
-              "[--cleanup-codex-vendored] [--cleanup-codex-links] [--cleanup-codex-equivalent-links] [--cleanup-codex-physical] "
+              "[--cleanup-codex-vendored] [--cleanup-codex-bundles] [--cleanup-codex-links] [--cleanup-codex-equivalent-links] [--cleanup-codex-physical] "
               "[--fix-path] [--native-codex|--native-codex-only]\n"
               "  --native-codex-only: only changes project .codex/config.toml according to current "
               "profile; doesn't write distribution, permissions or state.")
@@ -551,6 +551,9 @@ def cmd_connect(env, argv):
     if opts.get("cleanup_codex_vendored"):
         from .update import retire_legacy_codex_vendor
         retire_legacy_codex_vendor(env, target, dry_run=opts.get("dry_run", False))
+    if opts.get("cleanup_codex_bundles"):
+        from .update import retire_vendored_codex_bundles
+        retire_vendored_codex_bundles(env, target, dry_run=opts.get("dry_run", False))
     if opts.get("cleanup_codex_links"):
         from .update import retire_legacy_codex_links
         retire_legacy_codex_links(env, target, dry_run=opts.get("dry_run", False))

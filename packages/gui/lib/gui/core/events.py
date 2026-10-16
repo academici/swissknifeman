@@ -71,7 +71,7 @@ class Subscription:
         if frame["kind"] == "event" and str(frame["event"].get("type", "")).endswith(".progress"):
             key = (frame["event"]["type"], frame["event"].get("subject"))
             held = self._pending.get(key)
-            if held is not None and self._clock() - held[1] <= COALESCE_S:
+            if held is not None and self._clock() - held[1] <= COALESCE_S and self._items[-1] is held[0]:  # nothing queued after it: seq order holds
                 held[0][0] = self._tag(frame)
                 return
         if len(self._items) >= self.limit:

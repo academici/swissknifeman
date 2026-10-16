@@ -481,7 +481,7 @@ class Broker:
         except ProcessLookupError:
             return
         try:
-            await asyncio.wait_for(asyncio.shield(active.waiter), timeout=self.settings.runs.cancel_grace_s)
+            await asyncio.wait_for(asyncio.shield(active.waiter or asyncio.ensure_future(process.wait())), timeout=self.settings.runs.cancel_grace_s)
         except asyncio.TimeoutError:
             pass
         if group_alive(process.pid):

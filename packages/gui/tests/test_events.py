@@ -119,6 +119,15 @@ class TestFlow(HubCase):
                           ("orch.run.finished", "run-1", f"{10:032x}")],
                          [(f["event"]["type"], f["event"]["subject"], f["event"]["id"]) for f in frames])
 
+    async def test_progress_does_not_jump_over_a_later_frame(self):
+        subscription = self.hub.subscribe("p", {}, None, None)
+        self.hub.publish_event(event_doc("x.y.progress", "s", 1), "p-1")
+        self.log(chunk=0)
+        self.hub.publish_event(event_doc("x.y.progress", "s", 2), "p-1")
+        seqs = [frame["seq"] for frame in drain(subscription)]
+        self.assertEqual(sorted(seqs), seqs)
+        self.assertEqual(3, len(seqs))
+
     async def test_progress_after_the_window_is_kept(self):
         now = [0.0]
         subscription = events.Subscription("p", {}, 10, clock=lambda: now[0])

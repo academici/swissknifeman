@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import sys
 import tempfile
 import threading
 import time
@@ -17,7 +18,7 @@ from aicore.util.redact import env_secrets
 
 from gui import contracts
 from gui.core import broker as broker_mod
-from gui.core.broker import Broker, LogSink
+from gui.core.broker import Active, Broker, LogSink
 from gui.core.events import EventHub
 from gui.core.runs import RunStore, frame_run, group_alive
 from gui.errors import GuiError
@@ -209,6 +210,18 @@ class TestStopping(BrokerCase):
         await self.broker.cancel(run["run_id"])
         done = await self.finish(run)
         self.assertEqual(("cancelled", "SIGKILL"), (done["state"], done["exit"]["signal"]))
+
+    async def test_stop_before_the_waiter_exists_still_kills(self):
+        self.limits(cancel_grace_s=0)
+        process = await asyncio.create_subprocess_exec(
+            sys.executable, "-c", "import signal,time;signal.signal(signal.SIGTERM,signal.SIG_IGN);print('r',flush=True);time.sleep(30)",
+            stdout=asyncio.subprocess.PIPE, start_new_session=True)
+        await process.stdout.readline()
+        active = Active("run-x", None, "xdemo", None, {}, None, "c")
+        active.process = process
+        await self.broker.stop(active)
+        await asyncio.wait_for(process.wait(), 5)
+        self.assertFalse(group_alive(process.pid))
 
     async def test_command_without_cancel_is_not_cancellable(self):
         run = await self.submit("xdemo.quiet", project=False)

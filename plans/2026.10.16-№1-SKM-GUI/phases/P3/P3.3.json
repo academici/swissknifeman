@@ -45,13 +45,13 @@
     },
     {
       "path": "packages/gui/schemas/config-view/v1/examples/valid",
-      "why": "фикстуры golden-тестов",
-      "required": true
+      "why": "фикстуры golden-тестов (создаётся P3.2; к началу P3.3 существует)",
+      "required": false
     },
     {
       "path": "packages/gui/frontend/src/contracts/generated/config-view.ts",
-      "why": "TS-типы view",
-      "required": true
+      "why": "TS-типы view (создаётся P3.2; к началу P3.3 существует)",
+      "required": false
     },
     {
       "path": "packages/gui/frontend/src/contracts/generated/config-mutation.ts",
@@ -186,5 +186,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-16T18:15:28Z"
+  "updated_at": "2026-10-16T18:24:11Z"
 }

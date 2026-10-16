@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.2",
   "title": "ConfigService и /v1/config/*: effective с provenance (config-view/v1), preview/commit по config-mutation/v1, правила подтверждения, secret-ref, audit и события",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "gui.core.config: ConfigService (modules, view, preview, commit) и PreviewStore поверх aicore.config (read_layer, plan_layer_edit, apply_layer_patch, resolve(layer_texts=)); контракт urn:swissknifeman:gui:config-view:v1 (config_modules, config_view: schema модуля, слои с revision и redacted raw, entries с provenance, overridden, allowed_layers, layer_values; maps); endpoints GET /v1/config, GET /v1/config/{module}/effective, POST /v1/config/{module}/preview, PATCH /v1/config/{module}/layers/{layer} по config-mutation/v1; правила подтверждения, secret-ref, audit и событие gui.config.changed; ключи gui config.lock_timeout_s, config.preview_ttl_s.",
   "why": "Backend превращает правку из браузера в запись файла конфигурации любого модуля. Жёсткие риски: запись без актуальной revision (last-write-wins, I8), commit не того патча, который видел пользователь (подмена preview_id, смена схемы, другой проект), запись в слой, запрещённый x-skm-layers, или в env/invocation/flags, значение секрета в TOML, ответе, raw, audit или событии (I6), запись файла в обход aicore (I3), блокировка event loop ожиданием lock.",
   "scope": {
@@ -242,6 +242,13 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T18:15:28Z"
+  "result": {
+    "started_at": "2026-10-16T18:23:38Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "session": "run-8161c1de374cea2feee36ab8"
+    }
+  },
+  "updated_at": "2026-10-16T18:23:38Z"
 }

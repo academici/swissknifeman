@@ -62,6 +62,11 @@ Added to `plan/v1` (additive): schema `read-followups` (follow-ups and owner dec
 7. `harness hooks --global` **[done]** (refreshes stale hook copies in `~/.claude`).
 8. Claude Code: `/plugin marketplace update swissknifeman`; enable `planner`, `brain`, `skm`; `task` may stay as an alias.
    `~/.claude/settings.json` has a trust sentence naming the old clone path (`.../swissknifeman-next`): change it to `$HUB`.
+   The hub project itself (`$HUB/.claude/settings.local.json`) is not a consumer project, so project steps skip it: run
+   `skiller connect --file settings.local.json`, then replace `system@swissknifeman` by `maind`, `harness`, `analyst`, `brain` and
+   `task@` by `planner@` in `enabledPlugins` by hand (connect adds `planner` but keeps `system`; check there is no duplicate). **[done]**
+   `/plugin marketplace update swissknifeman` is global (one `known_marketplaces.json` entry): run it once, in any project, then
+   restart the Claude Code session in every project to load the new plugin set. **[done]**
 9. `swissknifeman doctor`: expected 11 ok / 7 warn / 2 fail on computer 1. The two fails (`aicore.doctor`, `skiller.doctor`:
    "probe output is not JSON") are a tooling defect, not the machine. Warns that are the owner's: memory daemon
    (`maind start --only memory`), `orch.sandbox` (bwrap needs an AppArmor profile on Ubuntu 24.04+), `analyst.partners`.

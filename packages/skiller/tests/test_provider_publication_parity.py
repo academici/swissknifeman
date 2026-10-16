@@ -65,7 +65,6 @@ class TestProviderPublicationParity(unittest.TestCase):
         self.assertTrue(set(policy["skills"]).issubset(expected_ids))
 
         registry, metadata, buckets = build_registry(self.env)
-        claude = build_claude_publication(self.env, metadata, buckets, registry)
         codex = build_codex_publication(self.env, metadata, buckets, registry)
         catalog_ids = tuple(sorted(f"{item['bucket']}/{item['name']}" for item in registry["skills"]))
         self.assertEqual(catalog_ids, expected_ids)

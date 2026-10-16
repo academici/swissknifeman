@@ -168,7 +168,6 @@ class QuarantineCase(unittest.TestCase):
 
     def test_quarantined_skill_is_neither_vendored_nor_published_nor_resolved(self):
         from skiller import vendor
-        from skiller.publication import build_publication_catalog
         from skiller.resolve import resolve_skills
         with tempfile.TemporaryDirectory() as tmp:
             root, env = fx.make_registry(Path(tmp))

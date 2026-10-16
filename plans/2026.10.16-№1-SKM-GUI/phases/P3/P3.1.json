@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.1",
   "title": "aicore: lock слоя, CAS expected_revision, многооперационный патч и откат в записи конфига; swissknifeman config set|unset --expected-revision",
-  "status": "todo",
+  "status": "blocked",
   "summary": "aicore.config.model аддитивно: layer_revision (sha256_tagged байтов файла), LayerSnapshot + read_layer, plan_layer_edit (чистый многооперационный патч с issues), apply_layer_patch (layer_lock flock на <realpath>.lock → CAS expected_revision → plan → backup → atomic_write_text → перечитать и откатить при сбое), resolve(layer_texts=); edit_layer_file — обёртка над apply_layer_patch, EditResult.revision; коды CONFIG_REVISION_CONFLICT, CONFIG_LOCKED, CONFIG_EDIT_REFUSED; CLI swissknifeman config set|unset --expected-revision/--lock-timeout и revision в --json и config paths --json; gitignore-policy config-locks; тесты гонок двух процессов.",
   "why": "Сейчас edit_layer_file делает read-modify-write без lock и без проверки revision: два писателя (CLI↔GUI, GUI↔GUI) теряют обновление, внешнее изменение молча перезаписывается (нарушение I8). Жёсткие риски: потеря обновления при гонке процессов, lock на inode, который меняет os.replace, частично записанный или невалидный файл после записи, значение секрета в TOML или в сообщении ошибки, поломка существующих вызовов edit_layer_file в maind (распаковка EditResult), совместимость aicore с Python 3.9.",
   "scope": {
@@ -156,6 +156,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/442c76f21a8e8f50e1c9a407f0068ee0e5bed811991c3334c5484fd15d5ffbf2",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Изменения aicore только аддитивные: существующие имена, сигнатуры (кроме новых keyword-аргументов с default) и коды ошибок не меняются; EditResult получает поле revision с default, существующая распаковка из двух полей проверяется grep по репозиторию.",
     "Код aicore импортируется на Python 3.9 (tests/test_python39.py): без match, без `X | Y` в аннотациях вне `from __future__ import annotations`, только stdlib.",
@@ -217,6 +223,21 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T18:24:49Z"
+  "result": {
+    "started_at": "2026-10-16T18:24:57Z",
+    "finished_at": "2026-10-16T18:25:24Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-5265c2833d650202ca3f4b11-P3.1",
+    "notes": "No work done. Every Bash command fails with 'bwrap: setting up uid map: Permission denied', so the required tests (including the multi-process race tests) and the grep of edit_layer_file/EditResult callers cannot be run. Nothing in the repository was changed.",
+    "escalation": "Bash sandbox is unusable in this session (bwrap: setting up uid map: Permission denied); the executor cannot run tests, and dangerouslyDisableSandbox is disabled."
+  },
+  "updated_at": "2026-10-16T18:25:24Z"
 }

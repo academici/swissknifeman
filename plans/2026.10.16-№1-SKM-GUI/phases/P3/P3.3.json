@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.3",
   "title": "Frontend редактора конфигурации: schema-form renderer, provenance, выбор слоя, Form/Diff/Raw/Explain, three-way конфликт, golden и E2E; закрытие фазы P3",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Frontend редактора конфигурации: маршруты /settings/config и /settings/config/:module (layer, project, mode в search params), пункт навигации settings; src/forms — разбор закрытого профиля aicore (profile.ts), черновик → patch (draft.ts), SchemaForm с полями String/Integer/Number/Boolean/Enum/ScalarList/SecretRef/Map, ProvenanceBadge, LayerPicker, PreviewDialog (preview → confirm → commit), ConflictView (three-way по ключам: base/current/mine, Reload/Reapply); режимы Form/Diff/Raw/Explain; golden компонентные тесты toMatchFileSnapshot; E2E config.spec.ts (правка → preview → apply, внешний конфликт → Reapply); docs/frontend.md; закрытие фазы P3.",
   "why": "Пользователь видит и подтверждает то, что будет записано. Жёсткие риски: форма шлёт patch не той revision или не тому слою, правка поля с запрещённым слоем, потеря черновика или молчаливая перезапись при конфликте, показ/ввод значения секрета вместо ссылки, клиентская валидация расходится с backend (D6: решает только preview), падение renderer на неподдерживаемом keyword схемы.",
   "scope": {
@@ -131,6 +131,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/80230d1516975a9287b7ddcb7f11f37a4df0b417b21a951fb78d152d588b8613",
+      "role": "input"
+    }
+  ],
   "rules": [
     "UI не пишет файлы и не строит пути: только GET /v1/config*, POST preview, PATCH layers через Transport (I2).",
     "expected_revision preview и commit — revision выбранного слоя из view, на котором создан черновик; черновик хранит base layer_values этой revision для three-way.",
@@ -185,6 +191,13 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T18:24:11Z"
+  "result": {
+    "started_at": "2026-10-16T18:25:00Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "session": "run-146023ddbd325602732bb7a4"
+    }
+  },
+  "updated_at": "2026-10-16T18:26:31Z"
 }

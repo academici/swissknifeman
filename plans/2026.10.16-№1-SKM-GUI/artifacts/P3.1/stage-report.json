@@ -1,0 +1,15 @@
+{
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "P3.1 не реализован; P3.2 и P3.3 зависят от него",
+      "kind": "escalation",
+      "next": "Владелец чинит окружение (разрешить непривилегированные user namespaces для bwrap) или меняет настройки песочницы, затем повторяет запуск P3.1",
+      "text": "Bash-песочница в сессии не запускает ни одной команды (bwrap: setting up uid map: Permission denied); dangerouslyDisableSandbox отключён. Без запуска тестов, включая многопроцессные тесты гонок, реализацию P3.1 проверить нельзя."
+    }
+  ],
+  "status": "blocked",
+  "summary": "Работа не выполнена. Bash-песочница по-прежнему неработоспособна (bwrap: setting up uid map: Permission denied), поэтому ни тесты, ни grep вызывающих edit_layer_file/EditResult запустить нельзя. Файлы репозитория не менялись."
+}

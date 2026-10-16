@@ -8,7 +8,7 @@ from typing import Optional
 from aicore.stubs import StubError
 
 from orch import settings as settings_mod
-from orch.conductor import stubs as stubs_mod
+from orch.conductor import debug_mode, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -43,7 +43,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
                "project": str(self.project), "project_resolution": self.project_resolution,
                "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
                "config_layers": settings_mod.config_layers(self.settings),
-               "instructions_digest": instructions["digest"]}
+               "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False))}
     self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
     self.store.create(run_doc)
     write_json(self.directory / stubs_mod.SNAPSHOT_FILE, instructions)
@@ -53,6 +53,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
     self._save()
     self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
                                                                  f"batch, at most {max_items or 'all'}"))
+    debug_mode.announce(self.progress, self.directory, run_id, self.settings)
     return self._loop()
 
 
@@ -69,6 +70,7 @@ def resume(self, run_id: str, retry=()) -> int:
     state["resumes"] = state.get("resumes", 0) + 1
     self._save()
     self.progress.emit("run.resume", message=f"resume {state['resumes']}")
+    debug_mode.announce(self.progress, self.directory, run_id, self.settings)
     return self._loop()
 
 

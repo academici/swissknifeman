@@ -38,6 +38,11 @@
       "default": "solo",
       "pattern": "^[a-z][a-z0-9-]*$"
     },
+    "debug": {
+      "type": "boolean",
+      "description": "Debug mode of conductor runs: a run reports DEBUG_MODE at its start with the observer protocol (packages/orch/dev-skills/orch-debug) and keeps a journal, a metrics table and findings in <run>/debug/. The roles and their prompts do not change. Set it per machine, per project, or with --debug/--no-debug for one run.",
+      "default": false
+    },
     "work_source": {
       "type": "string",
       "description": "Id of the plugin of the extension point orch:work-source that supplies the work.",

@@ -672,6 +672,17 @@ triage confirmed and rejected, idle time between stages, seconds and tokens by r
 each piece and proposals to improve the run options. `orch conduct observe --follow` prints the notable lines of a run
 that is still going from another terminal; `orch conduct observe` writes the report again.
 
+### Debug mode
+
+`[orch] debug` (default `false`) is set per machine (`~/.config/swissknifeman/config.toml`), per project
+(`<project>/.swissknifeman/config.toml`, wins over the machine) or for one run with `run`/`resume --debug` or
+`--no-debug` (wins over both; `SKM_ORCH_DEBUG` and `--config` sit in between). With it on, the run prints the beacon
+`DEBUG_MODE` after `run.start` and after every resume: the layer that switched it on, the observer protocol
+(`dev-skills/orch-debug/SKILL.md`) and the folder `<run>/debug/` with `journal.md`, `metrics.md` and `findings.md`
+skeletons (created once; a resume keeps what the observer wrote). `run.json` records `debug`. The roles, their
+prompts and the decisions of the conductor do not change: the mode tells the agent who watches the run to work as a
+team-lead observer and where to keep its record.
+
 ## Configuration
 
 The `report-fixer` role runs on the conductor's provider by default (an economy model: Claude Code haiku, codex luna, grok);

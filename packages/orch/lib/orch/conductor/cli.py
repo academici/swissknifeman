@@ -228,6 +228,9 @@ def main(argv: list | None = None) -> int:
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     resume.add_argument("--frozen", action="store_true", help="as for run: a new snapshot of the committed orchestrator")
     for sub in (run, resume):
+        sub.add_argument("--debug", action=argparse.BooleanOptionalAction, default=None,
+                         help="debug mode for this run: DEBUG_MODE beacon with the observer protocol and a journal in "
+                              "<run>/debug/ (default: `[orch] debug` of the project, else of the machine, else off)")
         quiet = sub.add_mutually_exclusive_group()
         quiet.add_argument("--quiet", action="store_true", help="no progress lines on stderr")
         quiet.add_argument("--json-lines", dest="json_lines", action="store_true", help="progress lines as JSON")
@@ -349,7 +352,9 @@ def main(argv: list | None = None) -> int:
         return 0
 
     try:
-        current = settings_mod.load(project=project, config_file=args.config)
+        debug = getattr(args, "debug", None)
+        current = settings_mod.load(project=project, config_file=args.config,
+                                    flags=None if debug is None else {"debug": debug})
     except ConfigError as error:
         print(f"CONFIG_INVALID: {error}", file=sys.stderr)
         return 1

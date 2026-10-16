@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "22a21f6e8047",
-  "reason": "orch.py gains the stubs verb (additional instructions of the roles)",
+  "captured_from": "3aaaf403b28d",
+  "reason": "orch-debug 0.4.0: activation by [orch] debug / --debug, journal in <run>/debug",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

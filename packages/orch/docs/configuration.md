@@ -23,6 +23,7 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `engine` | `native`, `cao`, `claude-only` | `native` | all | engine used when nothing more specific applies |
 | `engine_by_role` | table: role id → engine | empty | all | engine of a role |
 | `default_profile` | string | `solo` | all | run-policy used when a scenario names none |
+| `debug` | boolean | `false` | all | debug mode of conductor runs: the `DEBUG_MODE` beacon with the observer protocol and a journal in `<run>/debug/` (`run --debug`/`--no-debug` for one run; see [conductor](conductor.md#debug-mode)) |
 | `work_source` | string | `planner-orch` | all | id of the plugin of the extension point `orch:work-source` |
 | `capabilities.stale` | `warn`, `refuse` | `warn` | all | what preparation does with a capability record past its freshness date |
 | `profiles.dirs` | array of paths | empty | defaults, machine, invocation, flags | extra folders with run-policy packs |

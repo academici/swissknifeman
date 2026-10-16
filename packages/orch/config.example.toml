@@ -10,6 +10,9 @@ schema_version = 1
 # Run-policy used when the scenario of a task names none. String.
 # default_profile = "solo"
 
+# Debug mode of conductor runs: a run reports DEBUG_MODE at its start with the observer protocol (packages/orch/dev-skills/orch-debug) and keeps a journal, a metrics table and findings in <run>/debug/. The roles and their prompts do not change. Set it per machine, per project, or with --debug/--no-debug for one run. Boolean.
+# debug = false
+
 # Id of the plugin of the extension point orch:work-source that supplies the work. String.
 # work_source = "planner-orch"
 

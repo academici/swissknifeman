@@ -52,6 +52,7 @@ class Settings:
     research: Mapping[str, object] = field(default_factory=dict)  # ``[orch.research]``: ``policy`` and ``sources``
     advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``
     stubs: Mapping[str, object] = field(default_factory=dict)  # ``[orch.stubs]``: ``enabled``, ``layers``
+    debug: bool = False  # ``[orch] debug`` / ``--debug``: the observer protocol and journal of a run (conductor.debug_mode)
 
     def explain_text(self, key: str | None = None) -> str:
         """Where each value comes from (empty when the settings were built by hand)."""
@@ -127,6 +128,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         research=_research(resolved),
         advisor=_advisor(resolved),
         stubs={"enabled": bool(resolved.get("stubs.enabled")), "layers": list(resolved.get("stubs.layers") or [])},
+        debug=bool(resolved.get("debug")),
     )
 
 

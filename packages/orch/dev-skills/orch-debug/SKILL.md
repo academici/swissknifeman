@@ -1,15 +1,15 @@
 ---
 name: orch-debug
 bucket: repository-bootstrap
-version: 0.3.0
-description: "Debug-mode protocol for an agent that drives the orch conductor run by run (team-lead observer): estimate, watch the beacons, measure, fix the mechanism, log, hand the logs to a final reviewer. Activate ONLY when the user names this skill; without it the agent is a plain supervisor."
-when_to_use: "Only on an explicit request to run orch in debug mode (for example 'use orch-debug' or '/orch-debug'); never by inference from a plan or a conductor command."
+version: 0.4.0
+description: "Debug-mode protocol for an agent that drives the orch conductor run by run (team-lead observer): estimate, watch the beacons, measure, fix the mechanism, log, hand the logs to a final reviewer. Activate when the user names this skill or a run prints the DEBUG_MODE beacon ([orch] debug = true, --debug); otherwise the agent is a plain supervisor."
+when_to_use: "On an explicit request to run orch in debug mode ('use orch-debug', '/orch-debug', 'conduct with --debug') or when a conductor run prints DEBUG_MODE; never by inference from a plan alone."
 risk: write
 persona: oss-dev
 tags: [orch, conductor, debug, observer, root-bootstrap]
 requires: []
 produces_for: []
-outputs: [chat, "docs/orch-*-run-findings.md", "docs/orch-*-observer-journal.md"]
+outputs: [chat, "<run>/debug/*.md", "docs/orch-*-run-findings.md", "docs/orch-*-observer-journal.md"]
 snippets: []
 adapters: [claude, cursor, fable]
 sha256: ""
@@ -21,6 +21,25 @@ Internal skill. It changes the role of the agent that starts and watches `conduc
 agent is a plain supervisor (start a run, report its progress, stop on an error code, change nothing in the package).
 With it the agent is a team lead: it watches the work of the role agents, measures it, fixes the mechanism in the
 package, and leaves a record that a later reviewer can audit. Never activate it on your own.
+
+## Switching it on
+
+Debug mode is one setting, `[orch] debug` (boolean, default `false`), read like every `[orch]` key, the most
+specific layer winning:
+
+| Level | Where | Example |
+|---|---|---|
+| machine | `~/.config/swissknifeman/config.toml` | `[orch]` `debug = true` — every run of this machine |
+| project | `<project>/.swissknifeman/config.toml` | `[orch]` `debug = false` — this project, over the machine |
+| run | `conduct.py run ... --debug` / `--no-debug` (also `resume`) | this run only, over both |
+
+`SKM_ORCH_DEBUG=true` and a `--config FILE` sit between the project and the flag. With it on, the run prints
+`DEBUG_MODE` right after `run.start` (and after every resume): the layer that switched it on, this file, and the run's
+journal folder `<runs>/<run>/debug/` with `journal.md`, `metrics.md` and `findings.md` skeletons (created once, a
+resume keeps them). That beacon is the cue to follow this protocol. The roles, their prompts and every decision of
+the conductor are the same with the mode on or off: it changes only what the observer does and where it writes.
+The run folder is outside the tracked tree, so writing the journal there does not break "the main tree is the
+conductor's"; copy the finished journal and findings into the plan or `docs/` after the run.
 
 ## Invariants
 
@@ -81,7 +100,8 @@ findings by severity, and the rejected Majors (each is a plan note). A metric th
 
 ## Where things are
 
-- Findings and tables: `docs/orch-*-run-findings.md`; observer journal: `docs/orch-*-observer-journal.md`.
+- While the run goes: `<runs>/<run>/debug/` (named by the `DEBUG_MODE` beacon). After it, the committed copies:
+  findings and tables `docs/orch-*-run-findings.md`, observer journal `docs/orch-*-observer-journal.md`.
 - Options (`review.*`, `checks.*`, `scope.*`, `instructions.*`, `limits.*`) and beacons: `packages/orch/docs/conductor.md`.
 - Tools: `packages/orch/scripts/estimate.py`, `run-usage.py`, `step-profile.py`; `scripts/affected-tests.py`.
 - Editing this skill: follow the `skill-authoring` workflow (registry, `golden.py check`, affected tests).

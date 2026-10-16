@@ -190,6 +190,15 @@
       "why": "Project layer of the module configuration: shared settings of the team, no secrets (secrets are referenced by name, never stored)."
     },
     {
+      "id": "config-locks",
+      "policy": "ignore",
+      "paths": [
+        ".swissknifeman/config.toml.lock"
+      ],
+      "owner": "aicore.config",
+      "why": "Lock file next to the project layer (flock of aicore.config.layer_lock while a writer changes config.toml): empty, created on first write, machine-local."
+    },
+    {
       "id": "swissknifeman-state",
       "policy": "ignore",
       "paths": [

@@ -100,6 +100,7 @@ docs/orch/
 .swissknifeman/task-terminal/
 .swissknifeman/terminal-admission/
 .swissknifeman/state/
+.swissknifeman/config.toml.lock
 # Conductor output (observer reports of every run): generated, never an artifact of a plan item
 .swissknifeman/orch/
 # Raw role streams (review, executor) are megabytes of token logs: they live in .swissknifeman/state/; a plan

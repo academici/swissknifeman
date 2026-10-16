@@ -21,14 +21,17 @@ import os
 import re
 import stat
 import sys
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import (Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence,
+from typing import (Any, Callable, Dict, Iterable, Iterator, List, Mapping, NamedTuple, Optional, Sequence,
                     Set, Tuple, Union)
 
 from ..state import backup, ensure_dir, machine_config_file, project_config_file
 from ..util import io as _io
 from ..util import schema as _schema
+from ..util.digest import sha256_tagged
 from . import ConfigError, toml, toml_edit
 from .secrets import Secret, is_secret_ref, resolve_ref
 
@@ -935,21 +938,29 @@ def _read_layer(layer: str, file: str, text: str, module_id: str
     return data.get(module_id, {}), index
 
 
-def _load_file(layer: str, path: Path, module_id: str, *, must_exist: bool = False
+def _load_file(layer: str, path: Path, module_id: str, *, must_exist: bool = False,
+               text: Optional[str] = None
                ) -> Tuple[LayerInfo, Optional[Dict[str, Any]], Optional[toml.LineIndex]]:
     file = str(path)
-    if not path.exists():
-        if must_exist:
-            raise ConfigError("CONFIG_FILE_INVALID", "the file does not exist", layer=layer, file=file)
-        return LayerInfo(layer, file, False), None, None
+    if text is None:
+        if not path.exists():
+            if must_exist:
+                raise ConfigError("CONFIG_FILE_INVALID", "the file does not exist", layer=layer, file=file)
+            return LayerInfo(layer, file, False), None, None
+        text = _decode_file(layer, path, file)
+    elif text.startswith("\ufeff"):
+        text = text[1:]
+    section, index = _read_layer(layer, file, text, module_id)
+    return LayerInfo(layer, file, section is not None), section, index
+
+
+def _decode_file(layer: str, path: Path, file: str) -> str:
     try:
-        text = path.read_bytes().decode("utf-8-sig")
+        return path.read_bytes().decode("utf-8-sig")
     except (OSError, UnicodeDecodeError) as exc:
         reason = "not valid UTF-8" if isinstance(exc, UnicodeDecodeError) else exc.strerror or "unreadable"
         raise ConfigError("CONFIG_FILE_INVALID", f"cannot read the file: {reason}", layer=layer,
                           file=file) from None
-    section, index = _read_layer(layer, file, text, module_id)
-    return LayerInfo(layer, file, section is not None), section, index
 
 
 # ``SKM_<MODULE>_ROOT`` names the folder of a module for the tools that look for it (bridges, locators). It is not
@@ -1028,7 +1039,8 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
             project: Optional[PathLike] = None, config_file: Optional[PathLike] = None,
             extra_layers: Sequence[ExtraLayer] = (), flags: Optional[Mapping[str, Any]] = None,
             env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
-            warn: Optional[Callable[[str], None]] = None) -> ResolvedConfig:
+            warn: Optional[Callable[[str], None]] = None,
+            layer_texts: Optional[Mapping[str, str]] = None) -> ResolvedConfig:
     """Resolve the configuration of ``module_id`` from all layers.
 
     ``schema`` is a :class:`ModuleSchema` or a path to ``config.schema.json``; without it the schema
@@ -1038,7 +1050,9 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
     the command line (``None`` values are skipped, text values are parsed by the key's type). ``env``
     and ``home`` default to the process environment and home directory. ``warn`` receives the
     ``CONFIG_ENV_UNKNOWN`` notices (default: stderr, once per process and variable); they are also in
-    ``ResolvedConfig.warnings``.
+    ``ResolvedConfig.warnings``. ``layer_texts`` maps ``machine`` and ``project`` to a text that is read instead
+    of the file (the file name in the provenance stays the real path; nothing is read or written), which gives
+    the effective settings of a change before it is written.
     """
     module = _schema_for(module_id, schema, unit_root)
     state = _State(module)
@@ -1053,7 +1067,8 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
     if project is not None:
         candidates.append(("project", Path(project_config_file(project))))
     for layer, path in candidates:
-        info, section, index = _load_file(layer, path, module_id)
+        override = layer_texts.get(layer) if layer_texts else None
+        info, section, index = _load_file(layer, path, module_id, text=override)
         layers.append(info)
         if section:
             state.apply_section(layer, section, file=info.file, index=index, prefix=prefix)
@@ -1094,9 +1109,285 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
 # Writing a layer
 # ---------------------------------------------------------------------------------------------
 
-class EditResult(NamedTuple):
+# ---------------------------------------------------------------------------------------------
+# Writing a layer
+# ---------------------------------------------------------------------------------------------
+
+_BOM = "﻿"
+_LOCK_POLL_S = 0.05
+PatchOp = Tuple[str, str, Any]  # ("set", key, value) | ("unset", key, None)
+
+
+class _EditRefused(ConfigError, toml_edit.TomlEditError):
+    """``CONFIG_EDIT_REFUSED``; still a ``TomlEditError`` for callers of ``edit_layer_file`` that catch that."""
+
+
+class _EditFields(NamedTuple):
     changed: bool
     backup: Optional[Path]
+
+
+class EditResult(_EditFields):
+    """``(changed, backup)`` of a write, plus ``revision``: the digest of the file after it (before it, if unchanged).
+
+    A tuple of two so that ``changed, backup = result`` keeps working; ``revision`` is an attribute.
+    """
+
+    revision: str
+
+    def __new__(cls, changed: bool, backup: Optional[Path], revision: str = "") -> "EditResult":
+        self = super().__new__(cls, changed, backup)
+        self.revision = revision
+        return self
+
+    def __repr__(self) -> str:
+        return f"EditResult(changed={self.changed!r}, backup={self.backup!r}, revision={self.revision!r})"
+
+
+def layer_revision(data: bytes) -> str:
+    """The revision of a layer file: the tagged sha256 of its bytes (a missing file is ``b""``)."""
+    return sha256_tagged(data)
+
+
+@dataclass(frozen=True)
+class LayerSnapshot:
+    """A layer file as it is on disk: text without BOM, revision of the raw bytes, the module's own values."""
+
+    file: str
+    exists: bool
+    text: str
+    revision: str
+    values: Dict[str, Any]  # dotted key -> value set in this layer (secret values that are not references redacted)
+    lines: Dict[str, int]  # dotted key -> 1-based line
+
+
+@dataclass(frozen=True)
+class LayerEditPlan:
+    text_before: str
+    text_after: str
+    changed: bool
+    before: Dict[str, Any]  # value of the key of each operation in the layer before (absent key: not in the dict)
+    after: Dict[str, Any]
+    issues: Tuple[ConfigError, ...]
+
+
+def _read_bytes(layer: str, target: Path, file: str) -> Tuple[bool, bytes]:
+    try:
+        if not target.exists():
+            return False, b""
+        return True, target.read_bytes()
+    except OSError as exc:
+        raise ConfigError("CONFIG_FILE_INVALID", f"cannot read the file: {exc.strerror or 'unreadable'}",
+                          layer=layer, file=file) from None
+
+
+def _decode(layer: str, data: bytes, file: str) -> str:
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        raise ConfigError("CONFIG_FILE_INVALID", "cannot read the file: not valid UTF-8", layer=layer,
+                          file=file) from None
+    return text[1:] if text.startswith(_BOM) else text
+
+
+def _check_layer(layer: str) -> None:
+    if layer not in FILE_LAYERS:
+        raise ValueError(f"layer must be one of {', '.join(FILE_LAYERS)}, got {layer!r}")
+
+
+def _layer_values(module: ModuleSchema, section: Optional[Mapping[str, Any]], index: Optional[toml.LineIndex],
+                  module_id: str) -> Tuple[Dict[str, Any], Dict[str, int]]:
+    values: Dict[str, Any] = {}
+    lines: Dict[str, int] = {}
+
+    def walk(body: Mapping[str, Any], base: Key) -> None:
+        for name, value in body.items():
+            key = base + (name,)
+            kind = module.classify(key)
+            if kind == "leaf":
+                leaf = module.leaf(key)
+                values[_dotted(key)] = ("(value redacted)" if leaf.secret and not (
+                    isinstance(value, str) and is_secret_ref(value)) else copy.deepcopy(value))
+                line = index.lookup((module_id,) + key) if index is not None else None
+                if line is not None:
+                    lines[_dotted(key)] = line
+            elif kind is not None and isinstance(value, Mapping):
+                walk(value, key)
+
+    walk({k: v for k, v in (section or {}).items() if k not in _OPERATORS}, ())
+    return values, lines
+
+
+def read_layer(path: PathLike, module_id: str, *, schema: Any, layer: str) -> LayerSnapshot:
+    """Read a layer file without a lock: its text, revision and the values this layer sets for ``module_id``."""
+    _check_layer(layer)
+    module = _schema_for(module_id, schema, None)
+    target = Path(os.path.realpath(path))
+    file = str(path)
+    exists, data = _read_bytes(layer, target, file)
+    text = _decode(layer, data, file)
+    section, index = _read_layer(layer, file, text, module_id)
+    values, lines = _layer_values(module, section, index, module_id)
+    return LayerSnapshot(file, exists, text, layer_revision(data), values, lines)
+
+
+def _lookup(section: Optional[Mapping[str, Any]], key: Key) -> Tuple[bool, Any]:
+    node: Any = section or {}
+    for part in key:
+        if not isinstance(node, Mapping) or part not in node:
+            return False, None
+        node = node[part]
+    return True, node
+
+
+def plan_layer_edit(text: str, module_id: str, ops: Sequence[PatchOp], *, schema: Any, layer: str,
+                    file: str = "<string>") -> LayerEditPlan:
+    """Apply ``ops`` (``("set", key, value)`` / ``("unset", key, None)``) to ``text`` in memory, in order.
+
+    Nothing is read or written. An operation that is refused or makes the section invalid is skipped and
+    reported in ``issues``; the others are applied. Raises :class:`ConfigError` if ``text`` itself is invalid.
+    """
+    _check_layer(layer)
+    module = _schema_for(module_id, schema, None)
+    if text.startswith(_BOM):
+        text = text[1:]
+    section, _index = _read_layer(layer, file, text, module_id)
+    base = text if section is not None else f"schema_version = {CONFIG_FILE_VERSION}\n" + text
+    current = base
+    issues: List[ConfigError] = []
+    keys: List[Key] = []
+    for op in ops:
+        name: Any = None
+        try:
+            kind, name, value = op
+            if kind not in ("set", "unset"):
+                raise ConfigError("CONFIG_EDIT_REFUSED", f"unknown operation {kind!r}", layer=layer, file=file,
+                                  key=_dotted(_split_key(name)))
+            leaf = module.leaf(name)
+            edit_path = (module_id,) + leaf.key
+            if kind == "unset":
+                new_text = toml_edit.unset_value(current, edit_path, source=file)
+            else:
+                if leaf.secret and not (isinstance(value, str) and is_secret_ref(value)):
+                    raise ConfigError("SECRET_REF_INVALID", "not a secret reference of the form <scheme>://<name> "
+                                      "(value redacted)", layer=layer, file=file, key=_dotted(leaf.key))
+                new_text = toml_edit.set_value(current, edit_path, value, source=file)
+            new_section, new_index = _read_layer(layer, file, new_text, module_id)
+            _State(module).apply_section(layer, new_section or {}, file=file, index=new_index,
+                                         prefix=(module_id,))
+        except toml_edit.TomlEditError as exc:
+            issues.append(_EditRefused("CONFIG_EDIT_REFUSED", str(exc), layer=layer, file=file,
+                                       key=_dotted(_split_key(name)) if isinstance(name, (str, tuple, list)) else None))
+        except ConfigError as exc:
+            if exc.layer is None:
+                exc.layer = layer
+            issues.append(exc)
+        except (TypeError, ValueError) as exc:
+            issues.append(ConfigError("CONFIG_EDIT_REFUSED", f"malformed operation: {exc}", layer=layer, file=file))
+        else:
+            current = new_text
+            keys.append(leaf.key)
+    reference = base if section is None else text
+    changed = current != reference
+    text_after = current if changed else text
+    final_section = _read_layer(layer, file, text_after, module_id)[0]
+    before: Dict[str, Any] = {}
+    after: Dict[str, Any] = {}
+    for key in keys:
+        for source, target in ((section, before), (final_section, after)):
+            found, value = _lookup(source, key)
+            if found:
+                target[_dotted(key)] = copy.deepcopy(value)
+    return LayerEditPlan(text, text_after, changed, before, after, tuple(issues))
+
+
+@contextmanager
+def layer_lock(path: PathLike, *, timeout_s: float = 5.0) -> Iterator[None]:
+    """Hold an exclusive ``flock`` on ``<realpath of path>.lock`` (a file next to the layer, never deleted).
+
+    The lock is on a neighbour because ``os.replace`` gives the layer file a new inode. Polls every 50 ms and
+    raises ``ConfigError('CONFIG_LOCKED')`` after ``timeout_s``.
+    """
+    import fcntl
+
+    target = Path(os.path.realpath(path))
+    lock_file = str(target) + ".lock"
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(lock_file, os.O_RDWR | os.O_CREAT | getattr(os, "O_CLOEXEC", 0), 0o600)
+    except OSError as exc:
+        raise ConfigError("CONFIG_FILE_INVALID", f"cannot open the lock file: {exc.strerror or 'error'}",
+                          file=lock_file) from None
+    try:
+        deadline = time.monotonic() + max(timeout_s, 0.0)
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise ConfigError("CONFIG_LOCKED", f"another writer holds the lock of this file "
+                                      f"(waited {timeout_s:g} s); try again", file=str(target)) from None
+                time.sleep(_LOCK_POLL_S)
+        yield
+    finally:
+        os.close(fd)  # closing the descriptor releases the lock
+
+
+def _verify_written(layer: str, target: Path, file: str, module: ModuleSchema, module_id: str,
+                    expected: bytes) -> bool:
+    try:
+        data = target.read_bytes()
+        if data != expected:
+            return False
+        section, index = _read_layer(layer, file, _decode(layer, data, file), module_id)
+        _State(module).apply_section(layer, section or {}, file=file, index=index, prefix=(module_id,))
+    except (OSError, ConfigError):
+        return False
+    return True
+
+
+def apply_layer_patch(path: PathLike, module_id: str, ops: Sequence[PatchOp], *, schema: Any, layer: str,
+                      expected_revision: Optional[str] = None, lock_timeout_s: float = 5.0,
+                      project: Optional[PathLike] = None, env: Optional[Mapping[str, str]] = None,
+                      home: Optional[PathLike] = None) -> EditResult:
+    """Write ``ops`` into a layer file: the one way aicore writes a layer.
+
+    Under :func:`layer_lock`: read the bytes, compare ``expected_revision`` (if given) with their revision
+    (``CONFIG_REVISION_CONFLICT`` and nothing written otherwise), plan the edit (the first issue is raised),
+    back up the file, replace it atomically, then read it again: bytes that differ from what was written or an
+    invalid section restore the old file (a new file is removed) and raise ``CONFIG_FILE_INVALID``.
+    Comments are kept; a symlink is followed so the link stays. Without changes nothing is written.
+    """
+    _check_layer(layer)
+    module = _schema_for(module_id, schema, None)
+    target = Path(os.path.realpath(path))
+    file = str(path)
+    if layer == "machine" and not target.parent.exists():  # the lock file lives next to the layer file
+        ensure_dir(target.parent)
+    with layer_lock(target, timeout_s=lock_timeout_s):
+        existed, data = _read_bytes(layer, target, file)
+        revision = layer_revision(data)
+        if expected_revision is not None and expected_revision != revision:
+            raise ConfigError("CONFIG_REVISION_CONFLICT", f"the file changed since revision {expected_revision}",
+                              layer=layer, file=file)
+        plan = plan_layer_edit(_decode(layer, data, file), module_id, ops, schema=module, layer=layer, file=file)
+        if plan.issues:
+            raise plan.issues[0]
+        if not plan.changed:
+            return EditResult(False, None, revision)
+        saved = backup(path, project=project, env=env, home=home) if existed else None
+        mode = stat.S_IMODE(target.stat().st_mode) if existed else None
+        written = plan.text_after.encode("utf-8")
+        _io.atomic_write_text(target, plan.text_after, mode=mode)
+        if not _verify_written(layer, target, file, module, module_id, written):
+            if existed:
+                _io.durable_replace(target, saved.read_bytes() if saved is not None else data, mode=mode)
+            else:
+                target.unlink()
+            raise ConfigError("CONFIG_FILE_INVALID", "the file read back differs from what was written or is "
+                              "invalid; the previous content was restored", layer=layer, file=file)
+        return EditResult(True, saved, layer_revision(written))
 
 
 def edit_layer_file(path: PathLike, module_id: str, key: Union[str, Iterable[str]], value: Any = None, *,
@@ -1105,48 +1396,13 @@ def edit_layer_file(path: PathLike, module_id: str, key: Union[str, Iterable[str
                     home: Optional[PathLike] = None) -> EditResult:
     """Set (or, with ``remove``, delete) one key in a layer file, keeping its comments.
 
-    Steps: parse the file, edit the text with :mod:`aicore.config.toml_edit`, check the resulting
-    section of the layer against the module schema (unknown key, type, range, forbidden layer),
-    back the old file up with :func:`aicore.state.backup` and replace it atomically. On any error
-    the file is left untouched. A missing or empty file is created with ``schema_version``.
-    ``value`` is typed (use :func:`parse_value` for text). A symlink is followed, so the link stays.
-    Raises :class:`ConfigError`, or ``toml_edit.TomlEditError`` for layouts the editor refuses.
+    One operation of :func:`apply_layer_patch` (so under the layer lock, without a revision check): the key
+    is checked against the module schema (unknown key, type, range, forbidden layer), the old file is backed
+    up with :func:`aicore.state.backup` and replaced atomically. On any error the file is left untouched.
+    A missing or empty file is created with ``schema_version``. ``value`` is typed (use :func:`parse_value`
+    for text). A symlink is followed, so the link stays. Raises :class:`ConfigError`.
     """
-    if layer not in FILE_LAYERS:
-        raise ValueError(f"layer must be one of {', '.join(FILE_LAYERS)}, got {layer!r}")
-    module = _schema_for(module_id, schema, None)
-    leaf = module.leaf(key)
-    target = Path(os.path.realpath(path))
-    file = str(path)
-    existed = target.exists()
-    try:
-        text = target.read_bytes().decode("utf-8") if existed else ""
-    except (OSError, UnicodeDecodeError) as exc:
-        reason = "not valid UTF-8" if isinstance(exc, UnicodeDecodeError) else exc.strerror or "unreadable"
-        raise ConfigError("CONFIG_FILE_INVALID", f"cannot read the file: {reason}", layer=layer,
-                          file=file) from None
-    if text.startswith("﻿"):
-        text = text[1:]
-    section, _index = _read_layer(layer, file, text, module_id)
-    base = text
-    if section is None:  # absent or empty: start the file with its version line
-        base = f"schema_version = {CONFIG_FILE_VERSION}\n" + text
-    edit_path = (module_id,) + leaf.key
-    if remove:
-        new_text = toml_edit.unset_value(base, edit_path, source=file)
-    else:
-        if leaf.secret and not is_secret_ref(value):
-            raise ConfigError("SECRET_REF_INVALID", "not a secret reference of the form <scheme>://<name> "
-                              "(value redacted)", layer=layer, key=_dotted(leaf.key))
-        new_text = toml_edit.set_value(base, edit_path, value, source=file)
-    new_section, new_index = _read_layer(layer, file, new_text, module_id)
-    scratch = _State(module)
-    scratch.apply_section(layer, new_section or {}, file=file, index=new_index, prefix=(module_id,))
-    if new_text == text or (remove and new_text == base):
-        return EditResult(False, None)
-    saved = backup(path, project=project, env=env, home=home) if existed else None
-    mode = stat.S_IMODE(target.stat().st_mode) if existed else None
-    if layer == "machine" and not target.parent.exists():
-        ensure_dir(target.parent)
-    _io.atomic_write_text(target, new_text, mode=mode)
-    return EditResult(True, saved)
+    name = key if isinstance(key, str) else ".".join(key)
+    op: PatchOp = ("unset", name, None) if remove else ("set", name, value)
+    return apply_layer_patch(path, module_id, [op], schema=schema, layer=layer, project=project, env=env,
+                             home=home)

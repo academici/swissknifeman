@@ -1,15 +1,103 @@
 {
-  "changed_paths": [],
-  "checks_run": [],
+  "changed_paths": [
+    ".gitignore",
+    "CHANGELOG.md",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/README.md",
+    "packages/aicore/configs/gitignore-policy.json",
+    "packages/aicore/lib/aicore/config/__init__.py",
+    "packages/aicore/lib/aicore/config/cli.py",
+    "packages/aicore/lib/aicore/config/model.py",
+    "packages/aicore/tests/config/test_cli.py",
+    "packages/aicore/tests/config/test_layer_write.py",
+    "packages/aicore/tests/state/test_gitignore.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "python3 scripts/affected-tests.py --run --no-cache",
+      "exit": 1,
+      "id": "V3"
+    }
+  ],
   "evidence": [],
   "open_issues": [
     {
-      "impact": "P3.1 не реализован; P3.2 и P3.3 зависят от него",
-      "kind": "escalation",
-      "next": "Владелец чинит окружение (разрешить непривилегированные user namespaces для bwrap) или меняет настройки песочницы, затем повторяет запуск P3.1",
-      "text": "Bash-песочница в сессии не запускает ни одной команды (bwrap: setting up uid map: Permission denied); dangerouslyDisableSandbox отключён. Без запуска тестов, включая многопроцессные тесты гонок, реализацию P3.1 проверить нельзя."
+      "class": "write_set",
+      "evidence": [
+        ".gitignore:103"
+      ],
+      "impact": "коммит должен включить .gitignore",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Корневой .gitignore изменён (строка .swissknifeman/config.toml.lock) вне write_set."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/aicore/lib/aicore/config/model.py"
+      ],
+      "impact": "P3.2 должен читать result.revision по атрибуту; индексация и распаковка остаются двухполевыми",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "EditResult сделан подклассом двухполевого кортежа с атрибутом revision, а не NamedTuple из трёх полей: иначе распаковка changed, backup = result ломается у вызывающих."
+    },
+    {
+      "impact": "поведение edit_layer_file для вызывающих без expected_revision сохранено",
+      "kind": "note",
+      "outcome": "accepted",
+      "text": "CONFIG_EDIT_REFUSED реализован классом, наследующим ConfigError и TomlEditError, чтобы вызывающие edit_layer_file, ловившие TomlEditError, не сломались."
+    },
+    {
+      "impact": "косметика; нужно для существующего теста приватности каталога",
+      "kind": "note",
+      "outcome": "accepted",
+      "text": "Каталог machine-слоя создаётся до взятия lock (ensure_dir, 0700): при отклонённой операции остаются пустой каталог и файл .lock."
+    },
+    {
+      "class": "test_env",
+      "impact": "V3 не подтверждён для gui и skiller",
+      "kind": "difficulty",
+      "outcome": "follow_up",
+      "severity": "medium",
+      "text": "Полный affected-tests красный только из-за окружения: sandbox делает skills.json и requirements.lock нечитаемыми (char-устройства), падают packages/gui, packages/skiller, bridges/orch-skiller и golden.py check. Без --no-cache скрипт падает на git diff (exit 128). V1, V2 и V3 в чистом виде должен подтвердить координатор вне песочницы."
+    },
+    {
+      "impact": "координатор должен исключить их из коммита",
+      "kind": "note",
+      "outcome": "accepted",
+      "text": "В git status файлы *.lock, package-lock.json, skills.json показаны изменёнными; я их не трогал, это артефакт песочницы. Коммитить их не нужно."
+    },
+    {
+      "impact": "контракт использования для ConfigService",
+      "kind": "note",
+      "outcome": "accepted",
+      "text": "Для P3.2: превью = plan_layer_edit + resolve(layer_texts=), ревизия превью = read_layer(...).revision, commit = apply_layer_patch(expected_revision=...). LayerSnapshot.values подменяет не-ссылочное значение секретного ключа на '(value redacted)'."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        ".gitignore"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: .gitignore"
     }
   ],
-  "status": "blocked",
-  "summary": "Работа не выполнена. Bash-песочница по-прежнему неработоспособна (bwrap: setting up uid map: Permission denied), поэтому ни тесты, ни grep вызывающих edit_layer_file/EditResult запустить нельзя. Файлы репозитория не менялись."
+  "review_recommendation": {
+    "focus": [
+      "packages/aicore/lib/aicore/config/model.py: layer_lock, apply_layer_patch (порядок lock, CAS, write, reread, rollback), EditResult-подкласс",
+      "обработка секретов в plan_layer_edit и read_layer"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "shared_module_changed",
+      "security_touched"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "aicore.config: добавлены layer_revision, LayerSnapshot/read_layer, plan_layer_edit (чистый патч с issues), layer_lock (flock на <realpath>.lock), apply_layer_patch (lock, CAS, plan, backup, atomic write, перечитывание и откат) и resolve(layer_texts=). edit_layer_file стал обёрткой над apply_layer_patch, EditResult получил атрибут revision. CLI config set|unset получили --expected-revision и --lock-timeout, revision есть в --json и config paths --json. Добавлена запись gitignore config-locks. Тесты: test_layer_write.py (38 тестов, включая гонки двух процессов и property round-trip), добавки в test_cli.py и test_gitignore.py. Обновлены README, CHANGELOG aicore и корневой. Отдельно прошли test_cli, test_layer_write, test_edit_layer, test_gitignore, test_python39. V1 и V2 в форме приёмки не запускались. affected-tests --run --no-cache (вместо V3): aicore, maind, harness, orch, planner, brain, gui-hub, orch-harness зелёные; gui, skiller, orch-skiller и golden.py падают из-за песочницы (skills.json и requirements.lock читаются как char-устройства, Permission denied)."
 }

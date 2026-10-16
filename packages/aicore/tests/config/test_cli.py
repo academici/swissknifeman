@@ -235,6 +235,29 @@ class TestSetUnset(CliCase):
         doc = json.loads(out)
         self.assertEqual((0, True, "machine"), (code, doc["changed"], doc["layer"]))
 
+    def test_json_has_revision_and_expected_revision_is_checked(self):
+        code, out, _ = self.run_cli("config", "set", "demo.mode", "fast", "--machine", "--json")
+        revision = json.loads(out)["revision"]
+        self.assertRegex(revision, r"^sha256:[0-9a-f]{64}$")
+        code, out, _ = self.run_cli("config", "paths", "--json")
+        self.assertEqual(revision, json.loads(out)["machine_revision"])
+        before = self.machine_file.read_bytes()
+        code, out, err = self.run_cli("config", "set", "demo.mode", "safe", "--machine", "--json",
+                                      "--expected-revision", "sha256:" + "0" * 64)
+        self.assertEqual(1, code)
+        self.assertIn("CONFIG_REVISION_CONFLICT", err + out)
+        self.assertEqual(before, self.machine_file.read_bytes())
+        code, out, _ = self.run_cli("config", "unset", "demo.mode", "--machine", "--json",
+                                    "--expected-revision", revision)
+        self.assertEqual((0, True), (code, json.loads(out)["changed"]))
+
+    def test_lock_timeout_reports_config_locked(self):
+        from aicore.config import layer_lock
+        with layer_lock(self.machine_file, timeout_s=1):
+            code, _, err = self.run_cli("config", "set", "demo.mode", "fast", "--machine", "--lock-timeout", "0.1")
+        self.assertEqual(1, code)
+        self.assertIn("CONFIG_LOCKED", err)
+
     def test_usage_errors(self):
         for argv in (("config", "set", "demo.mode", "fast"),  # no layer
                      ("config", "set", "demo.mode", "fast", "--machine", "--project"),
@@ -325,6 +348,8 @@ class TestPaths(CliCase):
         self.assertEqual(str(self.machine_file), doc["machine_config_file"])
         self.assertEqual(str(self.project), doc["project"]["root"])
         self.assertEqual(str(self.project_file), doc["project"]["config_file"])
+        empty = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        self.assertEqual((empty, empty), (doc["machine_revision"], doc["project"]["revision"]))
         code, out, _ = self.run_cli("config", "paths")
         self.assertIn(f"state: {self.tmp / 'skm' / 'state'}", out)
         self.assertIn("isolated: true", out)

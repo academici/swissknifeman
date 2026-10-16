@@ -69,6 +69,33 @@ must be an absolute path; a relative `XDG_*` value is ignored. A file that exist
 until `swissknifeman upgrade`. Before a write the old file is copied to `.swissknifeman/backups/<UTC stamp>/` (machine
 files: to the state directory), and the newest ten copies are kept. `aicore config paths` prints the resolved places.
 
+### Writing configuration: lock and revision
+
+`aicore.config.apply_layer_patch(path, module, ops, schema=, layer=, expected_revision=None, lock_timeout_s=5.0)` is the one
+way aicore writes a layer file; `edit_layer_file` and `aicore config set|unset` call it. `ops` is a list of
+`("set", key, value)` and `("unset", key, None)`. Order, all under an exclusive `flock` on `<realpath>.lock` (a file next to
+the layer file, created `0600`, never deleted; polled every 50 ms; a symlink is followed):
+
+1. read the bytes of the file; the **revision** is `sha256:` of those bytes (`layer_revision`; a missing file has the
+   digest of empty bytes, so any outside change, comments included, changes it);
+2. `expected_revision` given and different: `CONFIG_REVISION_CONFLICT`, nothing is written;
+3. `plan_layer_edit` (pure, no disk access) applies the operations in order with comments kept; an operation that is
+   refused (`CONFIG_EDIT_REFUSED`) or invalid (`CONFIG_TYPE`, `CONFIG_UNKNOWN_KEY`, `CONFIG_LAYER_FORBIDDEN`,
+   `SECRET_REF_INVALID`) is an issue of the plan, and the first issue is raised by `apply_layer_patch`;
+4. back up the file, replace it atomically (temp file, `fsync`, `os.replace`, `fsync` of the folder), read it back: other
+   bytes or an invalid section restore the old file (a new file is removed) and raise `CONFIG_FILE_INVALID`.
+
+The lock wait ends with `CONFIG_LOCKED` after `lock_timeout_s`. Without `expected_revision` the operations apply to the
+text found under the lock (the CLI default). A key of a secret is written only as a reference (`env://NAME`), and a value
+never appears in an error. `read_layer` returns a `LayerSnapshot` (text, revision, values and lines of the module's keys)
+without a lock; `resolve(..., layer_texts={"machine": text})` gives the effective settings of a text not yet written.
+
+`aicore config set|unset ... --expected-revision DIGEST --lock-timeout SECONDS`; `--json` shows `revision`, and
+`config paths --json` shows `machine_revision` and `project.revision`. Limit: an editor or `git checkout` does not take
+the lock, so a change it makes in the milliseconds between the check and the replace can be lost; the revision check
+catches every other outside change. The project lock file `.swissknifeman/config.toml.lock` is ignored by the
+gitignore policy (`config-locks`).
+
 ### Layers and merging
 
 From low to high: schema `default`, machine file, project file, a module's own extra layers, environment,

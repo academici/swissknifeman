@@ -15,7 +15,8 @@ from typing import Any, List, Mapping, Optional, Sequence, TextIO
 from ..state import (backup, ensure_dir, find_project_root, machine_config_file, machine_locations,
                      project_backups_dir, project_config_file, project_state_dir)
 from ..util import io as _io
-from . import ConfigError, edit_layer_file, load_module_schema, parse_value, resolve, toml_edit
+from . import (ConfigError, apply_layer_patch, layer_revision, load_module_schema, parse_value, resolve,
+               toml_edit)
 from .example import render_sections, render_unit
 from .model import CONFIG_FILE_VERSION, _where
 from .units import UnitInfo, discover, load_unit
@@ -67,6 +68,10 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "set":
             sub.add_argument("value")
         _layer_options(sub)
+        sub.add_argument("--expected-revision", metavar="DIGEST",
+                         help="write only if the file still has this revision (see `config paths --json`)")
+        sub.add_argument("--lock-timeout", type=float, default=5.0, metavar="SECONDS",
+                         help="how long to wait for the file lock (default: 5)")
 
     init = commands.add_parser("init", parents=[common], help="create a layer file from the module examples")
     _layer_options(init)
@@ -178,11 +183,14 @@ def _edit(ctx: _Context, *, remove: bool) -> int:
     schema = load_module_schema(info.schema_path, module_id)
     value = None if remove else parse_value(schema, key, ctx.args.value)
     path = ctx.layer_file()
-    result = edit_layer_file(path, module_id, key, value, schema=schema, layer=ctx.layer(), remove=remove,
-                             project=ctx.root if ctx.args.project else None, env=ctx.env)
+    op = ("unset", key, None) if remove else ("set", key, value)
+    result = apply_layer_patch(path, module_id, [op], schema=schema, layer=ctx.layer(),
+                               expected_revision=ctx.args.expected_revision, lock_timeout_s=ctx.args.lock_timeout,
+                               project=ctx.root if ctx.args.project else None, env=ctx.env)
     if ctx.args.json:
         ctx.emit_json({"module": module_id, "key": key, "layer": ctx.layer(), "file": str(path),
-                       "changed": result.changed, "backup": str(result.backup) if result.backup else None})
+                       "changed": result.changed, "backup": str(result.backup) if result.backup else None,
+                       "revision": result.revision})
         return 0
     verb = "removed" if remove else "set"
     if result.changed:
@@ -249,13 +257,24 @@ def _cmd_example(ctx: _Context) -> int:
     return 0
 
 
+def _revision_of(path: Path) -> str:
+    try:
+        return layer_revision(Path(os.path.realpath(path)).read_bytes())
+    except FileNotFoundError:
+        return layer_revision(b"")
+    except OSError as exc:
+        raise _Refusal(f"cannot read {path}: {exc.strerror or 'error'}") from None
+
+
 def _cmd_paths(ctx: _Context) -> int:
     where = machine_locations(ctx.env)
     doc = {
         "config": str(where.config), "state": str(where.state), "data": str(where.data),
         "cache": str(where.cache), "isolated": where.isolated,
         "machine_config_file": str(machine_config_file(env=ctx.env)),
+        "machine_revision": _revision_of(Path(machine_config_file(env=ctx.env))),
         "project": {"root": str(ctx.root), "config_file": str(project_config_file(ctx.root)),
+                    "revision": _revision_of(Path(project_config_file(ctx.root))),
                     "state": str(project_state_dir(ctx.root)), "backups": str(project_backups_dir(ctx.root))},
     }
     if ctx.args.json:

@@ -2,7 +2,7 @@
 
 Entry points: :func:`resolve` (the effective settings of one module, with explain), :class:`Secret`
 and :func:`register_secret_resolver` (secret references), :func:`edit_layer_file` (change one key of
-a layer file). ``aicore.config`` may use :mod:`aicore.util` and :mod:`aicore.state`. The TOML parser
+a layer file), :func:`apply_layer_patch` (several changes under a lock and a revision check). ``aicore.config`` may use :mod:`aicore.util` and :mod:`aicore.state`. The TOML parser
 is reachable only through :mod:`aicore.config.toml`.
 """
 from typing import Optional
@@ -38,11 +38,14 @@ class ConfigError(ValueError):
 from . import toml, toml_edit  # noqa: E402  (ConfigError is defined first: the submodules import it)
 from .secrets import Secret, register_secret_resolver  # noqa: E402
 from .model import (CONFIG_FILE_VERSION, LAYER_NAMES, EditResult, ExplainEntry, ExtraLayer,  # noqa: E402
-                    LayerInfo, Leaf, ModuleSchema, ResolvedConfig, Setting, edit_layer_file,
-                    load_module_schema, parse_value, resolve)
+                    LayerEditPlan, LayerInfo, LayerSnapshot, Leaf, ModuleSchema, PatchOp, ResolvedConfig,
+                    Setting, apply_layer_patch, edit_layer_file, layer_lock, layer_revision,
+                    load_module_schema, parse_value, plan_layer_edit, read_layer, resolve)
 
 __all__ = [
     "CONFIG_FILE_VERSION", "ConfigError", "EditResult", "ExplainEntry", "ExtraLayer", "LAYER_NAMES",
-    "LayerInfo", "Leaf", "ModuleSchema", "ResolvedConfig", "Secret", "Setting", "edit_layer_file",
-    "load_module_schema", "parse_value", "register_secret_resolver", "resolve", "toml", "toml_edit",
+    "LayerEditPlan", "LayerInfo", "LayerSnapshot", "Leaf", "ModuleSchema", "PatchOp", "ResolvedConfig",
+    "Secret", "Setting", "apply_layer_patch", "edit_layer_file", "layer_lock", "layer_revision",
+    "load_module_schema", "parse_value", "plan_layer_edit", "read_layer", "register_secret_resolver",
+    "resolve", "toml", "toml_edit",
 ]

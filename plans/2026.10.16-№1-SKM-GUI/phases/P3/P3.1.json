@@ -1,0 +1,222 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.1",
+  "title": "aicore: lock слоя, CAS expected_revision, многооперационный патч и откат в записи конфига; swissknifeman config set|unset --expected-revision",
+  "status": "todo",
+  "summary": "aicore.config.model аддитивно: layer_revision (sha256_tagged байтов файла), LayerSnapshot + read_layer, plan_layer_edit (чистый многооперационный патч с issues), apply_layer_patch (layer_lock flock на <realpath>.lock → CAS expected_revision → plan → backup → atomic_write_text → перечитать и откатить при сбое), resolve(layer_texts=); edit_layer_file — обёртка над apply_layer_patch, EditResult.revision; коды CONFIG_REVISION_CONFLICT, CONFIG_LOCKED, CONFIG_EDIT_REFUSED; CLI swissknifeman config set|unset --expected-revision/--lock-timeout и revision в --json и config paths --json; gitignore-policy config-locks; тесты гонок двух процессов.",
+  "why": "Сейчас edit_layer_file делает read-modify-write без lock и без проверки revision: два писателя (CLI↔GUI, GUI↔GUI) теряют обновление, внешнее изменение молча перезаписывается (нарушение I8). Жёсткие риски: потеря обновления при гонке процессов, lock на inode, который меняет os.replace, частично записанный или невалидный файл после записи, значение секрета в TOML или в сообщении ошибки, поломка существующих вызовов edit_layer_file в maind (распаковка EditResult), совместимость aicore с Python 3.9.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/config/model.py: layer_revision, LayerSnapshot, read_layer, LayerEditPlan, plan_layer_edit, layer_lock, apply_layer_patch, resolve(layer_texts=), EditResult.revision, edit_layer_file через apply_layer_patch",
+      "packages/aicore/lib/aicore/config/__init__.py: экспорт новых имён",
+      "packages/aicore/lib/aicore/config/cli.py: set|unset --expected-revision, --lock-timeout; revision в --json; config paths --json revision",
+      "packages/aicore/configs/gitignore-policy.json: запись config-locks",
+      "packages/aicore/tests/config/test_layer_write.py; правки test_cli.py, test_edit_layer.py при необходимости",
+      "packages/aicore/README.md (раздел записи конфигурации), packages/aicore/CHANGELOG.md, CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui (P3.2)",
+      "изменение контрактов aicore schemas/** (config-explain/v1 не меняется)",
+      "изменение поведения edit_layer_file для вызывающих без expected_revision (кроме взятия lock)",
+      "packages/maind: только если существующие тесты maind падают из-за EditResult — тогда минимальная правка распаковки"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D14"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-design#aicore-write",
+      "why": "сигнатуры, порядок apply_layer_patch, CLI, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p3-design#integrity",
+      "why": "инвариант W, lock, revision, пары операция/lock, секреты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p3-design#code-facts",
+      "why": "текущий API aicore.config и места вызова",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I3, I6, I8",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/model.py",
+      "section": "_State, _read_layer, _load_file, resolve, edit_layer_file",
+      "why": "код, который расширяется",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/toml_edit.py",
+      "section": "set_value, unset_value",
+      "why": "редактор текста с сохранением комментариев",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/io.py",
+      "section": "atomic_write_text, _fsync_folder",
+      "why": "уже fsync; повторно не реализовывать",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/journal.py",
+      "section": "flock, fork",
+      "why": "образец flock и закрытия дескриптора в aicore",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/cli.py",
+      "section": "_edit, _cmd_paths, build_parser",
+      "why": "CLI set|unset|paths",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/config/test_edit_layer.py",
+      "why": "существующие ожидания edit_layer_file",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/config.py",
+      "section": "edit_layer_file",
+      "why": "внешний вызов, должен остаться рабочим",
+      "required": false
+    },
+    {
+      "ref": "knowledge/architecture#testing",
+      "why": "property-тесты round-trip patch, интеграция с реальным CLI",
+      "required": true
+    },
+    {
+      "ref": "knowledge/roadmap#p3",
+      "why": "риски фазы: потеря комментариев TOML, гонка CLI↔GUI, запись секрета значением",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/config/model.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/__init__.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/configs/gitignore-policy.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/config/test_layer_write.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/config/test_cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/config/test_edit_layer.py",
+      "change": "any",
+      "note": "только если ожидание меняется из-за EditResult.revision"
+    },
+    {
+      "path": "packages/aicore/tests/state/test_gitignore.py",
+      "change": "any",
+      "note": "только если тест перечисляет записи политики"
+    },
+    {
+      "path": "packages/maind/lib/maind/config.py",
+      "change": "any",
+      "note": "только при поломке распаковки EditResult"
+    },
+    {
+      "path": "packages/maind/lib/maind/provider_deploy.py",
+      "change": "any",
+      "note": "только при поломке распаковки EditResult"
+    },
+    {
+      "path": "packages/aicore/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Изменения aicore только аддитивные: существующие имена, сигнатуры (кроме новых keyword-аргументов с default) и коды ошибок не меняются; EditResult получает поле revision с default, существующая распаковка из двух полей проверяется grep по репозиторию.",
+    "Код aicore импортируется на Python 3.9 (tests/test_python39.py): без match, без `X | Y` в аннотациях вне `from __future__ import annotations`, только stdlib.",
+    "apply_layer_patch — единственный путь записи слоя; edit_layer_file и CLI set|unset вызывают его; весь read → CAS → write → reread выполняется под layer_lock.",
+    "Lock — fcntl.flock(LOCK_EX|LOCK_NB) с опросом 50 ms на <realpath>.lock (O_CREAT, 0600, файл не удаляется); тайм-аут → ConfigError('CONFIG_LOCKED'); дескриптор закрывается в finally.",
+    "revision = sha256_tagged(сырые байты файла); отсутствующий файл = sha256_tagged(b''); expected_revision ≠ текущей → ConfigError('CONFIG_REVISION_CONFLICT'), файл и backup не создаются.",
+    "plan_layer_edit не пишет на диск и не создаёт каталогов; ошибки отдельных ops возвращает в issues, а не исключением.",
+    "Значение секрета не попадает ни в файл (секретный ключ — только is_secret_ref), ни в текст ConfigError (как сейчас: '(value redacted)').",
+    "После записи файл перечитывается под lock; байты ≠ записанным или секция невалидна → восстановление из backup (новый файл удаляется) и ConfigError('CONFIG_FILE_INVALID')."
+  ],
+  "guidance": "Исполнитель: claude-code implementation (sonnet)/medium (D16); групповая review фазы — codex после P3.3. Порядок: (1) layer_revision, LayerSnapshot, read_layer (переиспользовать _read_layer и toml.LineIndex для lines; values — dotted ключи модуля) + тесты revision (отсутствует, пустой, BOM); (2) plan_layer_edit поверх toml_edit (вынести из edit_layer_file общий шаг проверки секции; TomlEditError → issue CONFIG_EDIT_REFUSED) + тесты чистоты и issues; (3) layer_lock + apply_layer_patch по порядку knowledge/p3-design#aicore-write; edit_layer_file → apply_layer_patch с одной op; (4) resolve(layer_texts=) — подставлять текст в _load_file-эквивалент для machine/project; (5) тесты гонок: дочерние процессы через subprocess `sys.executable -c` с PYTHONPATH=packages/aicore/lib и временным HOME; держатель lock сигнализирует готовность строкой в stdout; без sleep-ожиданий дольше 2 s; (5a) property-тест round-trip: stdlib random с фиксированным seed, 200 случайных последовательностей set/unset по листьям фикстурной схемы → секция после plan_layer_edit равна ожидаемому dict, комментарии исходного файла на месте; (6) CLI флаги и JSON; (7) gitignore-policy запись config-locks + тест packages/aicore/tests/state/test_gitignore.py зелёный; (8) README раздел «Запись конфигурации: lock и revision» (порядок, коды, ограничение для внешнего редактора без lock), CHANGELOG aicore и корневой; V1–V3. Перед завершением: grep `edit_layer_file(` и `EditResult` по репозиторию — все вызывающие зелёные. Примеры: `apply_layer_patch(path, 'gui', [('set', 'runs.max_global', 6), ('unset', 'port', None)], schema=schema, layer='machine', expected_revision='sha256:…') -> EditResult(changed=True, backup=Path(...), revision='sha256:…')`; `swissknifeman config set --machine gui.runs.max_global 6 --expected-revision sha256:<64 нуля> --json` → ненулевой exit, вывод содержит CONFIG_REVISION_CONFLICT.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib:. HOME=$(mktemp -d) python3 -m unittest tests.config.test_layer_write",
+      "expect": "exit 0; тесты гонок и lock проходят последовательно",
+      "kind": "acceptance",
+      "cwd": "packages/aicore"
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0 (включая maind и gui)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.config: layer_revision, read_layer, plan_layer_edit, layer_lock, apply_layer_patch, resolve(layer_texts=)",
+    "CLI config set|unset --expected-revision/--lock-timeout",
+    "gitignore-policy config-locks",
+    "tests/config/test_layer_write.py с гонками двух процессов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none",
+    "reviewer": {
+      "class": "frontier",
+      "model": "grok-4.7",
+      "note": "жёсткий риск: целостность записи конфига — lock/CAS/откат, потеря обновления при гонке процессов (knowledge/p3-design#integrity, knowledge/roadmap#sizing)",
+      "provider": "grok",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T18:15:28Z"
+}

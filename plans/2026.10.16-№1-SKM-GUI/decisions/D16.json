@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D16",
+  "title": "Исполнение и review с P3: executor claude-code sonnet/medium, одна групповая review фазы на codex (gpt-6.1-sol, fallback gpt-6-astra), 1 раунд; длинные прогоны только нужные по коду",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как исполнять и ревьюировать фазы P3–P7 в режиме оркестрации?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Указание владельца 2026-10-16: executor claude-code implementation/medium; review.strategy single по batch фазы, reviewer codex/gpt-6.1-sol/high, fallback codex frontier (gpt-6-astra), limits.review_rounds 1, corrections 1, review.dynamic false, у пунктов review none; ревьюер только read-only по diff без запуска команд; длинные прогоны (tier all, E2E, smoke, npm ci, сборки) — только в phase.validation закрывающего пункта и только для изменённого кода",
+      "pros": "исполнение дешевле; одна независимая review на фазу видит взаимодействие пунктов; нет повторных долгих прогонов",
+      "cons": "P3.1/P3.2 с рисками целостности исполняет implementation-класс; риск снимается групповой review codex и тестами гонок в validation"
+    },
+    {
+      "id": "B",
+      "text": "прежняя схема: frontier/high пункты рисков, item-level review Grok (knowledge/roadmap#sizing)",
+      "pros": "сильнее исполнитель на рисковых пунктах",
+      "cons": "не соответствует указанию владельца"
+    }
+  ],
+  "decision": "A — Указание владельца 2026-10-16: executor claude-code implementation/medium; review.strategy single по batch фазы, reviewer codex/gpt-6.1-sol/high, fallback codex frontier (gpt-6-astra), limits.review_rounds 1, corrections 1, review.dynamic false, у пунктов review none; ревьюер только read-only по diff без запуска команд; длинные прогоны (tier all, E2E, smoke, npm ci, сборки) — только в phase.validation закрывающего пункта и только для изменённого кода",
+  "rationale": "Указание владельца в сессии 2026-10-16 (режим оркестрации до конца плана); заменяет правила review и route из knowledge/roadmap#sizing для P3–P7. Codex проверен: gpt-6.1-sol и gpt-6-astra отвечают через argv launch-catalog reviewer.",
+  "consequences": [
+    "plan.orchestration: scenario solo + options (reviewer, stages, review, limits, fallback_routes, checks, rules)",
+    "route пунктов P3–P7: implementation/medium; review.mode none; каждая фаза — один batch",
+    "follow-up исправление: orch conduct run --input <group-review-N.followup.json> --commit"
+  ],
+  "global": true,
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

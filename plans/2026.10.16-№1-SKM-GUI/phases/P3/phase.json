@@ -2,17 +2,94 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P3",
   "title": "Редактор конфигурации с provenance и безопасной записью",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Machine- и project-конфиг любого модуля редактируется в GUI с effective value, слоем-победителем, файлом и строкой, overridden и default; запись — preview diff, подтверждение, общий lock aicore, CAS revision, атомарная замена, three-way diff при конфликте; secret-поля — только ссылки.",
-  "context": "Модель целостности — knowledge/architecture#config; нарезка — knowledge/roadmap#p3. P3.1 меняет aicore аддитивно (владелец записи конфига). Review P3 на Grok (целостность записи).",
+  "context": "Дизайн — knowledge/p3-design (сверен с кодом HEAD 18389d98e: #code-facts, #integrity, #aicore-write, #service-api, #frontend); цели — knowledge/architecture#config, knowledge/roadmap#p3. Решения фазы: D14 (lock на <file>.lock + CAS по sha256 байтов, apply_layer_patch в aicore), D15 (config-view/v1, PreviewStore в памяти, three-way по ключам, без watcher), D6 (свой renderer, валидация только backend). P3.1 меняет aicore аддитивно; config-mutation/v1 заморожен, новый контракт только config-view/v1 (I14). HEAD начала фазы: 18389d98e. Review (D16): одна групповая review фазы на codex/gpt-6.1-sol/high (review.strategy single по B1, 1 раунд, follow-up исправление Blocker/Major без повторной review); у пунктов review.mode none; жёсткие риски целостности записи (knowledge/p3-design#integrity) названы в why пунктов P3.1 и P3.2 и проверяются этой review.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/config (model, cli, __init__), packages/aicore/configs/gitignore-policy.json, packages/aicore/tests/config, packages/aicore/README.md, CHANGELOG",
+      "packages/gui (core/config, http/routes_config, schemas/config-view, configs, settings, frontend src/forms и страницы конфигурации, e2e, tests, docs)",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "изменения контрактов aicore и gui P1/P2 (config-mutation/v1 заморожен)",
+      "maind, skiller, planner, orch — кроме минимальной правки распаковки EditResult при поломке",
+      "planner slice (P4), PluginHost (P5), desktop (P6), PTY (P7)"
+    ]
+  },
   "depends_on": [
     "P2"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/affected-tests.py --run --tier all --with-tools",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/gui/scripts/test.sh && bash bridges/gui-hub/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V14",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base 18389d98e",
+      "expect": "exit 0; нет ломающих изменений контрактов",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V15",
+      "cmd": "npm --prefix packages/gui/frontend ci && npm --prefix packages/gui/frontend run check && npm --prefix packages/gui/frontend run build",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V16",
+      "cmd": "npm --prefix packages/gui/frontend run e2e",
+      "expect": "exit 0; все сценарии passed",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V17",
+      "cmd": "bash packages/gui/scripts/smoke.sh && packages/gui/bin/gui check bridges/gui-hub --json > /dev/null",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
   ],
   "deliverables": [
     "expected_revision + lock в aicore config writer",
     "ConfigService + /v1/config/*",
     "schema-form renderer и экраны конфига"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

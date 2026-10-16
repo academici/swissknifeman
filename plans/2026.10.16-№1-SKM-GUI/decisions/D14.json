@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D14",
+  "title": "Запись слоя конфигурации: flock на файле-соседе <file>.lock + CAS по sha256 байтов файла, единая функция aicore apply_layer_patch",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как сериализовать запись TOML-слоя между CLI, GUI и внешним редактором и не допустить last-write-wins?",
+  "options": [
+    {
+      "id": "A",
+      "text": "flock на <realpath>.lock (файл-сосед), revision = sha256_tagged байтов, apply_layer_patch под lock: read → CAS → plan → backup → atomic write → reread; edit_layer_file — обёртка",
+      "pros": "сериализует любые писатели через aicore независимо от SKM_HOME; os.replace не ломает lock; внешний редактор ловится CAS",
+      "cons": "служебный файл рядом с config.toml проекта (запись gitignore-policy config-locks)"
+    },
+    {
+      "id": "B",
+      "text": "lock-файл в state_dir(aicore)",
+      "pros": "не трогает каталог проекта",
+      "cons": "разные SKM_HOME (CLI и backend) берут разные lock — гонка остаётся"
+    },
+    {
+      "id": "C",
+      "text": "flock на самом config.toml",
+      "pros": "нет лишнего файла",
+      "cons": "atomic replace меняет inode — следующий писатель берёт lock на новом inode, сериализации нет"
+    }
+  ],
+  "decision": "A — flock на <realpath>.lock (файл-сосед), revision = sha256_tagged байтов, apply_layer_patch под lock: read → CAS → plan → backup → atomic write → reread; edit_layer_file — обёртка",
+  "rationale": "Код HEAD 18389d98e: atomic_write_text уже fsync файла и каталога, lock и revision отсутствуют (knowledge/p3-design#integrity). Вариант A единственный сериализует CLI и GUI при разных SKM_HOME и переживает os.replace.",
+  "consequences": [
+    "aicore: layer_revision, read_layer, plan_layer_edit, apply_layer_patch, layer_lock, resolve(layer_texts=); коды CONFIG_REVISION_CONFLICT, CONFIG_LOCKED, CONFIG_EDIT_REFUSED",
+    "gitignore-policy: config-locks (.swissknifeman/config.toml.lock, ignore)",
+    "CLI config set|unset: --expected-revision, --lock-timeout"
+  ],
+  "applies_to": [
+    "P3.1",
+    "P3.2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

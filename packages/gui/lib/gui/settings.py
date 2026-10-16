@@ -47,6 +47,12 @@ class Query:
 
 
 @dataclass(frozen=True)
+class Config:
+    lock_timeout_s: float
+    preview_ttl_s: int
+
+
+@dataclass(frozen=True)
 class Settings:
     """The effective ``[gui]`` configuration; ``resolved`` explains where each value comes from."""
 
@@ -56,6 +62,7 @@ class Settings:
     events: Events
     retention: Retention
     query: Query
+    config: Config
     resolved: Optional[ResolvedConfig] = None
 
 
@@ -72,4 +79,5 @@ def load(env: Optional[Mapping[str, str]] = None, project: Optional[PathLike] = 
     return Settings(port=resolved.get("port"), open_browser=bool(resolved.get("open_browser")),
                     runs=_group(resolved, Runs, "runs"), events=_group(resolved, Events, "events"),
                     retention=_group(resolved, Retention, "retention"), query=_group(resolved, Query, "query"),
+                    config=_group(resolved, Config, "config"),
                     resolved=resolved)

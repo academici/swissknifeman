@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.2",
   "title": "ConfigService и /v1/config/*: effective с provenance (config-view/v1), preview/commit по config-mutation/v1, правила подтверждения, secret-ref, audit и события",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "gui.core.config: ConfigService (modules, view, preview, commit) и PreviewStore поверх aicore.config (read_layer, plan_layer_edit, apply_layer_patch, resolve(layer_texts=)); контракт urn:swissknifeman:gui:config-view:v1 (config_modules, config_view: schema модуля, слои с revision и redacted raw, entries с provenance, overridden, allowed_layers, layer_values; maps); endpoints GET /v1/config, GET /v1/config/{module}/effective, POST /v1/config/{module}/preview, PATCH /v1/config/{module}/layers/{layer} по config-mutation/v1; правила подтверждения, secret-ref, audit и событие gui.config.changed; ключи gui config.lock_timeout_s, config.preview_ttl_s.",
   "why": "Backend превращает правку из браузера в запись файла конфигурации любого модуля. Жёсткие риски: запись без актуальной revision (last-write-wins, I8), commit не того патча, который видел пользователь (подмена preview_id, смена схемы, другой проект), запись в слой, запрещённый x-skm-layers, или в env/invocation/flags, значение секрета в TOML, ответе, raw, audit или событии (I6), запись файла в обход aicore (I3), блокировка event loop ожиданием lock.",
   "scope": {
@@ -185,6 +185,14 @@
     {
       "path": ".swissknifeman/state/artifacts/sha256/2c7878de0ef20ab689b9d591fff9ed2c5abcdf1d522c79aee40ea1fadd1180cc",
       "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/260cdb4f4b217bbd5d9f20f7e3dda2cf34871d21389ba5d3e9ecaf9e01ba69c2",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6c0591a2c29ff2de0e1cb6502e119d5d7aabc9743603eeffe85f29c034d14ccc",
+      "role": "input"
     }
   ],
   "rules": [
@@ -250,11 +258,47 @@
   },
   "result": {
     "started_at": "2026-10-16T18:24:59Z",
+    "finished_at": "2026-10-16T19:09:10Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet",
-      "session": "run-d031cab80f98aebba5907eb0"
-    }
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-d031cab80f98aebba5907eb0-P3.2",
+    "notes": "V3 was red only because of public-hygiene on the earlier committed docs/skm-gui-run-findings.md (line 5 named a concrete plan ID and a plan directory path). Reworded that line to refer to the plan journal without the path; public-hygiene.py now reports 0 violations. No P3.2 code changed in this round; the earlier P3.2 changes stand.\nChanged: CHANGELOG.md, docs/skm-gui-run-findings.md, packages/gui/config.example.toml, packages/gui/configs/config.schema.json, packages/gui/docs/api.md, packages/gui/frontend/src/contracts/generated/config-view.ts, packages/gui/lib/gui/backend.py, packages/gui/lib/gui/core/config.py, packages/gui/lib/gui/http/app.py, packages/gui/lib/gui/http/routes_config.py, packages/gui/lib/gui/settings.py, packages/gui/schemas/README.md, packages/gui/schemas/config-view/v1/config-view.schema.json, packages/gui/schemas/config-view/v1/examples/invalid/bad-digest.pattern.json, packages/gui/schemas/config-view/v1/examples/invalid/extra-field.additional.json, packages/gui/schemas/config-view/v1/examples/invalid/layer-outside-enum.enum.json, packages/gui/schemas/config-view/v1/examples/invalid/missing-digest.required.json, packages/gui/schemas/config-view/v1/examples/invalid/object-value.one_of.json, packages/gui/schemas/config-view/v1/examples/invalid/unknown-kind.one_of.json, packages/gui/schemas/config-view/v1/examples/valid/modules.json, packages/gui/schemas/config-view/v1/examples/valid/view-machine.json, packages/gui/schemas/config-view/v1/examples/valid/view-project.json, packages/gui/tests/fixtures/units/config-demo/configs/config.schema.json, packages/gui/tests/fixtures/units/config-demo/unit.json, packages/gui/tests/test_config_service.py, packages/gui/tests/test_http_api.py, packages/gui/tests/test_http_config.py, packages/gui/tests/test_runtime_contracts.py, packages/gui/tests/test_settings.py, packages/gui/unit.json",
+    "deviations": [
+      "Edited docs/skm-gui-run-findings.md (committed in ae9359fde, not part of P3.2) to remove a plan ID/path that public-hygiene.py prohibits; this was the only cause of the red V3. Ran python3 scripts/public-hygiene.py directly: 0 violations, exit 0. The full affected-tests run was not repeated by me.",
+      "changed outside the write set: docs/skm-gui-run-findings.md, packages/gui/config.example.toml, packages/gui/tests/test_http_api.py, packages/gui/tests/test_runtime_contracts.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T19:09:10Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T19:09:10Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.2/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T19:09:10Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.2/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.2/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.2/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P3.2/evidence/V3.json"
+    ]
   },
-  "updated_at": "2026-10-16T18:25:03Z"
+  "updated_at": "2026-10-16T19:09:10Z"
 }

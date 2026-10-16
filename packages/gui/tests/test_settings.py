@@ -25,6 +25,7 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.Events(10000, 1000, 15, 1), loaded.events)
         self.assertEqual(settings.Retention(30, 1024), loaded.retention)
         self.assertEqual(settings.Query(1048576), loaded.query)
+        self.assertEqual(settings.Config(5, 600), loaded.config)
 
     def test_machine_project_and_env_layers(self):
         self.write(self.tmp / "skm" / "config" / "config.toml", "[gui]\nport = 8123\n\n[gui.runs]\nmax_global = 6\n")
@@ -36,6 +37,13 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(1, loaded.runs.max_per_project)
         self.assertFalse(loaded.open_browser)
         self.assertIn("project", loaded.resolved.explain_text("runs.max_per_project"))
+
+    def test_config_keys_are_bounded(self):
+        self.write(self.tmp / "skm" / "config" / "config.toml", "[gui.config]\nlock_timeout_s = 0.5\npreview_ttl_s = 60\n")
+        self.assertEqual(settings.Config(0.5, 60), settings.load(self.env).config)
+        self.write(self.tmp / "skm" / "config" / "config.toml", "[gui.config]\npreview_ttl_s = 5\n")
+        with self.assertRaises(ConfigError):
+            settings.load(self.env)
 
     def test_port_is_machine_wide(self):
         project = self.tmp / "project"

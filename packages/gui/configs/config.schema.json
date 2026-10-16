@@ -131,6 +131,27 @@
         }
       }
     },
+    "config": {
+      "type": "object",
+      "description": "The configuration editor (/v1/config).",
+      "additionalProperties": false,
+      "properties": {
+        "lock_timeout_s": {
+          "type": "number",
+          "description": "Seconds a commit waits for the lock of a layer file held by another writer before it answers CONFIG_LOCKED.",
+          "default": 5,
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        "preview_ttl_s": {
+          "type": "integer",
+          "description": "Seconds a preview can be committed after it was made; the store keeps at most 64 previews in memory.",
+          "default": 600,
+          "minimum": 10,
+          "maximum": 86400
+        }
+      }
+    },
     "query": {
       "type": "object",
       "description": "GUI queries of contributions.",

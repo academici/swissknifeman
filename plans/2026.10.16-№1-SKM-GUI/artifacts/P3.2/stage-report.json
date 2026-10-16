@@ -1,0 +1,64 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "docs/skm-gui-run-findings.md",
+    "packages/gui/config.example.toml",
+    "packages/gui/configs/config.schema.json",
+    "packages/gui/docs/api.md",
+    "packages/gui/frontend/src/contracts/generated/config-view.ts",
+    "packages/gui/lib/gui/backend.py",
+    "packages/gui/lib/gui/core/config.py",
+    "packages/gui/lib/gui/http/app.py",
+    "packages/gui/lib/gui/http/routes_config.py",
+    "packages/gui/lib/gui/settings.py",
+    "packages/gui/schemas/README.md",
+    "packages/gui/schemas/config-view/v1/config-view.schema.json",
+    "packages/gui/schemas/config-view/v1/examples/invalid/bad-digest.pattern.json",
+    "packages/gui/schemas/config-view/v1/examples/invalid/extra-field.additional.json",
+    "packages/gui/schemas/config-view/v1/examples/invalid/layer-outside-enum.enum.json",
+    "packages/gui/schemas/config-view/v1/examples/invalid/missing-digest.required.json",
+    "packages/gui/schemas/config-view/v1/examples/invalid/object-value.one_of.json",
+    "packages/gui/schemas/config-view/v1/examples/invalid/unknown-kind.one_of.json",
+    "packages/gui/schemas/config-view/v1/examples/valid/modules.json",
+    "packages/gui/schemas/config-view/v1/examples/valid/view-machine.json",
+    "packages/gui/schemas/config-view/v1/examples/valid/view-project.json",
+    "packages/gui/tests/fixtures/units/config-demo/configs/config.schema.json",
+    "packages/gui/tests/fixtures/units/config-demo/unit.json",
+    "packages/gui/tests/test_config_service.py",
+    "packages/gui/tests/test_http_api.py",
+    "packages/gui/tests/test_http_config.py",
+    "packages/gui/tests/test_runtime_contracts.py",
+    "packages/gui/tests/test_settings.py",
+    "packages/gui/unit.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "docs/skm-gui-run-findings.md:5"
+      ],
+      "impact": "the commit takes docs/skm-gui-run-findings.md with the piece",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Edited docs/skm-gui-run-findings.md (committed in ae9359fde, not part of P3.2) to remove a plan ID/path that public-hygiene.py prohibits; this was the only cause of the red V3. Ran python3 scripts/public-hygiene.py directly: 0 violations, exit 0. The full affected-tests run was not repeated by me."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "docs/skm-gui-run-findings.md",
+        "packages/gui/config.example.toml",
+        "packages/gui/tests/test_http_api.py",
+        "packages/gui/tests/test_runtime_contracts.py"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: docs/skm-gui-run-findings.md, packages/gui/config.example.toml, packages/gui/tests/test_http_api.py, packages/gui/tests/test_runtime_contracts.py"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "V3 was red only because of public-hygiene on the earlier committed docs/skm-gui-run-findings.md (line 5 named a concrete plan ID and a plan directory path). Reworded that line to refer to the plan journal without the path; public-hygiene.py now reports 0 violations. No P3.2 code changed in this round; the earlier P3.2 changes stand."
+}

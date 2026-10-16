@@ -161,11 +161,16 @@ class TestSafety(unittest.TestCase):
             for index, child in enumerate(node.get("oneOf", ())):
                 self.walk(child, f"{where}/oneOf/{index}", found)
 
+    # Flags that say a key is a secret reference (a boolean), not fields that hold a value.
+    SECRET_FLAGS = frozenset({"config-view/$defs/entry/secret"})
+
     def test_no_field_holds_a_secret_value(self):
         for contract in LISTED:
             found = []
             self.walk(root_schema(contract), contract, found)
             for where, name in found:
+                if where in self.SECRET_FLAGS:
+                    continue
                 self.assertNotRegex(name.lower(), r"secret|token|password|passwd|api_?key|credential", where)
 
     def test_every_reference_resolves(self):

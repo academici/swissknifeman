@@ -31,6 +31,7 @@ from aicore.util.redact import env_secrets
 from . import __version__, contracts
 from .catalog import resolve, sources
 from .core.broker import Broker
+from .core.config import ConfigService
 from .core.events import EventHub
 from .core.projects import ProjectRegistry
 from .core.runs import RunStore, frame_run, prune_logs
@@ -44,7 +45,7 @@ TOKEN_TTL_S = 300
 COOKIE = "skm_gui_session"
 GUI_PROTOCOL = {"min": resolve.HOST_PROTOCOL[0], "max": resolve.HOST_PROTOCOL[1]}
 FRONTEND_DIR = contracts.SCHEMAS.parent / "frontend" / "dist"
-FEATURES = ("queries", "projects", "runs", "events")
+FEATURES = ("queries", "projects", "runs", "events", "config")
 
 
 class BackendError(Exception):
@@ -250,6 +251,7 @@ class BackendState:
     features: Tuple[str, ...] = FEATURES
     db_lock: threading.RLock = field(default_factory=threading.RLock)
     query_cache: Dict[Tuple[str, ...], Tuple[float, Any]] = field(default_factory=dict)
+    loop: Any = None  # the event loop of the running backend (set by start)
 
     def __post_init__(self) -> None:
         self.registry = ProjectRegistry(self.conn)
@@ -260,6 +262,10 @@ class BackendState:
         self.broker = Broker(store=self.store, hub=self.hub, settings=lambda: self.settings, conn=self.conn,
                              db_lock=self.db_lock, env=self.env, runs_dir=self.runs_dir, secrets=self.secrets,
                              emit=self.emit)
+        self.config = ConfigService(self.env, lambda: self.settings.config, audit=self._config_audit,
+                                    emit_project=lambda type_, data, subject, root: self.emit(
+                                        type_, data, subject=subject, project=root),
+                                    emit_machine=self._config_publish)
         self.tasks: List[Any] = []
         if self.catalog is None:
             self.refresh_catalog()
@@ -275,10 +281,26 @@ class BackendState:
 
         emit(type_, data, source="gui", subject=subject, project=project, env=dict(self.env))
 
+    def _config_audit(self, action: str, target: str, decision: str, details: Mapping[str, Any]) -> None:
+        with self.db_lock:
+            db.audit(self.conn, actor="user", action=action, target=target, decision=decision, details=details)
+
+    def _config_publish(self, type_: str, data: Mapping[str, Any], subject: str) -> None:
+        """A machine-wide ``gui.config.changed`` frame (no project journal); safe to call from a worker thread."""
+        from aicore.ext.events import build_event
+
+        event = build_event(type_, data, source="gui", subject=subject).to_json()
+        loop = self.loop
+        if loop is not None and loop.is_running():
+            loop.call_soon_threadsafe(self.hub.publish_event, event, None)
+        else:
+            self.hub.publish_event(event, None)
+
     async def start(self) -> None:
         """Before the first request: runs of an earlier backend become ``lost``; heartbeats and journals start."""
         import asyncio
 
+        self.loop = asyncio.get_running_loop()
         lost = self.store.mark_lost(grace_s=self.settings.runs.cancel_grace_s)
         for run_id in lost:
             run = self.store.get(run_id)

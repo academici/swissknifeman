@@ -53,6 +53,13 @@ schema_version = 1
 # Run logs are removed oldest first above this total size in MiB; 0 has no ceiling. Integer >= 0.
 # log_total_mb = 1024
 
+[gui.config]
+# Seconds a commit waits for the lock of a layer file held by another writer before it answers CONFIG_LOCKED. Number >= 0.1 and <= 60.
+# lock_timeout_s = 5
+
+# Seconds a preview can be committed after it was made; the store keeps at most 64 previews in memory. Integer >= 10 and <= 86400.
+# preview_ttl_s = 600
+
 [gui.query]
 # Largest canonical JSON output of one query handler in bytes; a larger one is OUTPUT_INVALID. Integer >= 1024.
 # max_output_bytes = 1048576

@@ -27,7 +27,7 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 
 | Method and path | Answer |
 | --- | --- |
-| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`), platform |
+| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`, `runs`, `events`, `config`), platform |
 | `GET /v1/ui/contributions[?refresh=1]` | `catalog/v1`, resolved at start; `refresh=1` collects and resolves again |
 | `GET /v1/schemas/{contract}/{version}` | the JSON Schema of a contract listed in `unit.json`; anything else `NOT_FOUND` |
 | `GET /v1/projects`, `GET /v1/projects/{id}` | `project/v1` (`project_list`, `project`) |
@@ -39,6 +39,10 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 | `GET /v1/runs/{run_id}` | `run/v1` |
 | `POST /v1/runs/{run_id}:cancel` `{}` | `run/v1` in `cancelling` (or `cancelled` from `queued`); `RUN_NOT_CANCELLABLE` otherwise |
 | `GET /v1/runs/{run_id}/log?stream=&cursor=&limit=` | `run-api/v1` `log_page`: stored chunks from chunk `cursor`; `next_cursor` null when the run ended and all were returned |
+| `GET /v1/config` | `config-view/v1` `config_modules`: the modules that have a configuration schema |
+| `GET /v1/config/{module}/effective[?project_id=]` | `config-view/v1` `config_view`: schema, layers with revision, keys with provenance |
+| `POST /v1/config/{module}/preview[?project_id=]` `preview_request` | `config-mutation/v1` `preview`; no side effects |
+| `PATCH /v1/config/{module}/layers/{layer}[?project_id=]` `commit_request` | `config-mutation/v1` `commit_result`; `layer` is `machine` or `project`, anything else `CONFIG_LAYER_FORBIDDEN` |
 | WebSocket `/v1/events` | `stream/v1` frames: subscriptions, replay by cursor, run, log, journal events, heartbeats |
 | `POST /v1/session/tokens` `{}` | `201` `{url}`: a new one-time browser URL; bearer only (`PERMISSION_DENIED` otherwise) |
 | `GET /?t=<token>` | the token exchange: `303` to `/` with the session cookie |
@@ -316,11 +320,74 @@ Four kinds, chosen by `kind`; the GUI writes only the `machine` and `project` la
    confirmation (`CONFIRMATION_REQUIRED` otherwise).
 4. `commit_result {revision, file, backup}`.
 
-The commit takes the layer lock (`CONFIG_LOCKED` on timeout), compares the file revision with `expected_revision`
-(`CONFIG_REVISION_CONFLICT`), repeats the preview on the current text and compares `preview_id` (`PREVIEW_STALE`),
-writes through aicore (temp file, fsync, atomic replace, backup), re-reads and validates. A write is never blind:
-there is no last-write-wins. A layer the key may not be set in is `CONFIG_LAYER_FORBIDDEN`. Configuration values are
-scalars or lists of scalars (TOML has no null); `null` in a diff means the key is absent.
+The commit takes the patch from the stored preview (`preview_id`), never from its body: a `commit_request` has no
+patch, and an extra field is `INPUT_INVALID`. It checks the preview (`PREVIEW_STALE`), the confirmation
+(`CONFIRMATION_REQUIRED`), then calls `aicore.config.apply_layer_patch` with `expected_revision` = the revision of the
+preview: under the layer lock (`CONFIG_LOCKED` on timeout) it compares the file revision (`CONFIG_REVISION_CONFLICT`),
+backs up, replaces the file atomically, re-reads and validates. A write is never blind: there is no last-write-wins.
+A layer the key may not be set in is `CONFIG_LAYER_FORBIDDEN`. Configuration values are scalars or lists of scalars
+(TOML has no null); `null` in a diff means the key is absent.
+
+## Configuration (`config-view/v1`)
+
+`GET /v1/config` answers `config_modules {modules: [{id, title, description}]}` (modules of
+`aicore.config.units.discover`). `GET /v1/config/{module}/effective?project_id=` answers `config_view`; every GET reads
+the files again (no cache, no watcher), so staleness shows as a different `revision`:
+
+- `schema` is the module's `config.schema.json` as it is; `schema_digest` the digest of its bytes.
+- `layers` lists `defaults, machine, project, env, invocation, flags`. `writable` is true for `machine` and, with a
+  `project_id`, for `project`; only a writable layer has `revision` (digest of the file bytes; a missing file is the
+  digest of nothing) and `raw`, the file text with the values of secret-named environment variables redacted
+  (`raw` is null and `raw_truncated` true above 262144 bytes).
+- `entries` holds every key of the schema in schema order, then the keys of the entries of each map. `effective` is the
+  winning value with `layer`, `file`, `line`, `source` (a variable or option for `env` and `flags`); `overridden` the
+  hidden values nearest first; `layer_values` the value each writable file layer sets (null: not set);
+  `allowed_layers` is `x-skm-layers`. `maps` names each dictionary table and its entries.
+- A secret key (`secret: true`) holds a reference (`env://NAME`, `keyring://NAME`), never a value. The whole document
+  passes `redact_document` before it is validated and sent.
+
+`project_id` is a query parameter (an unknown project is `NOT_FOUND`); `project` layer calls without it are
+`INPUT_INVALID`. `preview` and `commit` bind the preview to `project_id` too.
+
+### Preview and commit
+
+`POST .../preview` checks the body (`config-mutation/v1`, `module` equal to the path), reads the layer and answers
+`CONFIG_REVISION_CONFLICT` (`details.current_revision`) when `expected_revision` is not its revision. The patch is
+planned in memory by `aicore.config.plan_layer_edit`; each refused operation is an entry of `issues`
+(`{key, code, message}`: `CONFIG_UNKNOWN_KEY`, `CONFIG_TYPE`, `CONFIG_LAYER_FORBIDDEN` by `x-skm-layers`,
+`SECRET_REF_INVALID`) and a preview with issues cannot be committed. `diff` has the keys of the operations and the
+keys whose effective value changed; the effective values come from `resolve(layer_texts=)`.
+
+`confirm_reasons` (fixed order, no duplicates); `confirm_required` is true when it is not empty:
+
+| Reason | When |
+| --- | --- |
+| `machine_layer` | the layer is `machine` |
+| `secret_key` | an operation touches a secret key |
+| `unset` | an operation removes a key |
+| `shadowed:<layer>` | after the change the effective value of a touched key comes from a layer above the written one, so the value does not take effect |
+
+A secret key takes only a string reference with the scheme `env` or `keyring`; anything else is the issue
+`SECRET_REF_INVALID` with a message that does not contain the value.
+
+`preview_id` is the digest of module, layer, real path of the file, revision, patch, `schema_digest` and `project_id`;
+the same inputs give the same id, and a change of the schema, the project or the file gives another one. The
+`PreviewStore` keeps at most 64 previews in the memory of the backend process, each for `config.preview_ttl_s`
+seconds (default 600); the oldest is dropped first. A restart of the backend, an unknown or expired id, a layer,
+module, project or `expected_revision` that differs from the preview, a changed schema file, or a second commit of the
+same preview is `PREVIEW_STALE`: preview again.
+
+The commit waits for the layer lock at most `config.lock_timeout_s` seconds (default 5; the wait runs in a worker
+thread, never in the event loop). On success it audits `config.commit` (`target` `<module>:<layer>`, decision
+`applied`, details `file`, `revision_before`, `revision_after`, `keys`; no values) and publishes the event
+`gui.config.changed {module, layer, keys, revision}`: for the `project` layer in the project journal (it reaches
+`/v1/events` through the journal tailer), for `machine` as an `event` frame without a journal. Refusals
+(`CONFIG_REVISION_CONFLICT`, `CONFIG_LOCKED`, `CONFIRMATION_REQUIRED`) are audited with decision `refused` and the
+code. `CONFIRMATION_REQUIRED` of a commit carries `details.confirm_reasons`, the reasons joined by commas.
+
+Limit: the lock and the revision protect against aicore writers (the CLI, another backend). An editor that does not
+take the lock can still lose a change written in the milliseconds between the revision check and the replace; it is
+caught only by the revision check, not prevented.
 
 ## Projects (`project/v1`)
 

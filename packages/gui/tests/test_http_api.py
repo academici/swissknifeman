@@ -30,7 +30,7 @@ class TestCore(ApiCase):
         self.assertEqual(("browser", self.backend.state.epoch), (body["mode"], body["epoch"]))
         self.assertEqual([{"id": "qdemo", "version": "0.2.0"}], body["units"])
         self.assertIn({"id": "urn:swissknifeman:gui:project", "version": "v1"}, body["contracts"])
-        self.assertEqual(["queries", "projects", "runs", "events"], body["features"])
+        self.assertEqual(["queries", "projects", "runs", "events", "config"], body["features"])
 
     def test_contributions_and_refresh(self):
         catalog = self.client.get("/v1/ui/contributions").json()

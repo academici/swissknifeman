@@ -106,7 +106,6 @@ class PublicationCatalog:
     bucket_metadata: tuple[tuple[str, tuple[tuple[str, object], ...]], ...]
     sibling_plugins: tuple[SiblingPlugin, ...]
     generate_skill_description: str
-    skm_present: bool
 
 
 @dataclass(frozen=True)
@@ -137,7 +136,7 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
                               bucket_dirs: Sequence[str], core_skills: Sequence[str],
                               core_plugin: str, package_version: str,
                               siblings: Sequence[SiblingPlugin],
-                              generate_skill_description: str, skm_present: bool,
+                              generate_skill_description: str,
                               unit_versions: Mapping[str, str] | None = None,
                               default_unit_version: str | None = None) -> PublicationCatalog:
     """Build a deterministic semantic catalog from explicit canonical scan results.
@@ -201,9 +200,6 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
                                      content_version=unit_version(core_plugin)))
     units.append(PublicationUnit("generate-skill", "generate-skill", "meta", (),
                                  content_version=unit_version("generate-skill")))
-    if skm_present:
-        units.append(PublicationUnit("skm", "skm", "management", (),
-                                     content_version=unit_version("skm")))
 
     return PublicationCatalog(
         marketplace_name=_require_string(registry.get("name"), "registry name"),
@@ -214,7 +210,6 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
         bucket_metadata=metadata,
         sibling_plugins=tuple(sorted(siblings, key=lambda item: item.name)),
         generate_skill_description=generate_skill_description,
-        skm_present=skm_present,
     )
 
 
@@ -297,15 +292,6 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 "description": catalog.generate_skill_description, "category": "meta",
                 "tags": ["meta", "authoring"], "codex": dict(codex_policy),
             })
-        elif unit.kind == "management":
-            plugins.append({
-                "name": "skm", "source": "skm",
-                "description": "skiller CLI — managing project skills: buckets "
-                               "(connect/vendor), integrate, status",
-                "category": "meta", "tags": ["cli", "skills", "management"],
-                "codex": {"source": "adapters/codex/skm",
-                          "description": "skiller management skill adapter", **codex_policy},
-            })
 
     catalog_data = {
         "schema": PLUGIN_CATALOG_SCHEMA,
@@ -324,9 +310,9 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                              package_root: Path, manifest_path=None) -> tuple[CodexPublicationArtifact, ...]:
     """Render native Codex plugins independently from the semantic catalog.
 
-    Bucket plugins remain direct canonical roots.  The discontiguous core and
-    management unit are explicit cache-contained bundles; only declared SKILL.md
-    members are copied into those bundles.
+    Bucket plugins remain direct canonical roots.  The discontiguous core
+    unit is an explicit cache-contained bundle; only declared SKILL.md
+    members are copied into that bundle.
     """
     validate_publication_capabilities(ProviderId.CODEX, manifest_path=manifest_path)
     if not isinstance(catalog, PublicationCatalog):
@@ -362,9 +348,6 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
             artifacts.extend(_render_codex_bundle(
                 root, unit, catalog, tuple(by_id[item] for item in unit.member_ids), repo_root, package_root,
                 description="Curated always-on core skills", skill_root="./skills"))
-        elif unit.kind == "management":
-            root = package_root / "adapters" / "codex" / "skm"
-            artifacts.extend(_render_codex_skm_bundle(root, unit, catalog, repo_root, package_root=package_root))
     return tuple(artifacts)
 
 
@@ -403,25 +386,6 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
                 target, unit, source.read_bytes(), (member,), repo_root,
                 catalog.package_version, content_version=unit.content_version,
                 package_root=package_root))
-    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts),
-                                        repo_root, package_root=package_root))
-    return tuple(artifacts)
-
-
-def _render_codex_skm_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
-                             repo_root: Path, package_root: Path) -> tuple[CodexPublicationArtifact, ...]:
-    skill = ("---\nname: skm\ndescription: skiller CLI management adapter.\n---\n\n"
-             "Use the repository-local skiller CLI for status, doctor, skills, and integration.\n")
-    artifacts = [
-        _render_codex_artifact(root / ".codex-plugin" / "plugin.json", unit,
-                               _codex_plugin_manifest("skm", unit.content_version,
-                                                      "skiller management skill adapter", ["./skills"]),
-                               (), repo_root, catalog.package_version, content_version=unit.content_version,
-                package_root=package_root),
-        _render_codex_artifact(root / "skills" / "skm" / "SKILL.md", unit,
-                               skill.encode("utf-8"), (), repo_root, catalog.package_version,
-                               content_version=unit.content_version, package_root=package_root),
-    ]
     artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts),
                                         repo_root, package_root=package_root))
     return tuple(artifacts)

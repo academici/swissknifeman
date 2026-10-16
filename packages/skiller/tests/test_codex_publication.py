@@ -70,7 +70,7 @@ class TestCodexPublication(unittest.TestCase):
         manifests = [item for item in first if item.target.name == "plugin.json"]
         self.assertTrue(manifests)
         # D27: per-unit manifest version now comes from configs/publication-versions.json —
-        # a bumped unit (core/skm) diverges from the frozen default every other unit keeps.
+        # a bumped unit (core) diverges from the frozen default every other unit keeps.
         versions = json.loads((self.package_root / "configs" /
                                "publication-versions.json").read_text(encoding="utf-8"))
         unit_versions, default_version = versions["units"], versions["default_unit_version"]

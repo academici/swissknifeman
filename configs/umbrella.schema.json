@@ -17,6 +17,21 @@
       "required": ["fallback_file", "fallback_key"],
       "additionalProperties": false
     },
+    "plugins": {
+      "type": "array",
+      "description": "Plugins the hub root ships itself (the umbrella face); aicore.content.marketplace reads them like the provides.plugins of a module, package `root`.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Plugin name."},
+          "manifest": {"type": "string", "minLength": 1, "description": "Its .claude-plugin/plugin.json, relative to the hub root."},
+          "source": {"type": "string", "minLength": 1, "description": "Its folder, relative to the hub root."}
+        },
+        "required": ["name"],
+        "oneOf": [{"required": ["manifest"]}, {"required": ["source"]}],
+        "additionalProperties": false
+      }
+    },
     "aliases": {
       "type": "object",
       "description": "Alias name to its routes.",

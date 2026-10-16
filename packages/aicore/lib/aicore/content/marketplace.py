@@ -5,8 +5,11 @@ of one plugin), ``source`` (the plugin folder) or ``catalog`` (a ``plugin-catalo
 for several plugins). :func:`assemble` turns them into the bytes of ``.claude-plugin/marketplace.json`` and
 ``.agents/plugins/marketplace.json`` of the hub; ``aicore marketplace build`` writes or checks them.
 
+The hub root ships its own plugins (the umbrella face, such as ``skm``) the same way: ``plugins`` of
+``configs/umbrella.json`` holds ``manifest`` or ``source`` entries, read as the module ``root``.
+
 Entries are sorted by name; a repeated name is ``MARKETPLACE_DUPLICATE``. An entry of a module gets ``package``
-(the module id). An entry is in the Codex index when its plugin folder holds ``.codex-plugin/plugin.json`` or
+(the module id, ``root`` for the hub). An entry is in the Codex index when its plugin folder holds ``.codex-plugin/plugin.json`` or
 when a catalog entry has ``codex``. stdlib and aicore only.
 """
 from __future__ import annotations
@@ -26,6 +29,7 @@ from .publication import codex_marketplace_entry, manifest_bytes
 CLAUDE_INDEX = ".claude-plugin/marketplace.json"
 CODEX_INDEX = ".agents/plugins/marketplace.json"
 UMBRELLA_CONFIG = "configs/umbrella.json"
+HUB_PACKAGE = "root"
 _CATALOG_SCHEMA_DIR = Path(__file__).resolve().parents[3] / "schemas" / "plugin-catalog" / "v1"
 
 
@@ -139,6 +143,34 @@ def _catalog_entries(unit: Unit, doc: Mapping[str, Any], hub: Path, entries: lis
         codex.append(record)
 
 
+def _plugin_entries(unit: Unit, plugins, hub: Path, entries: list, codex: list,
+                    docs: list, supplied: Mapping[Path, bytes]) -> None:
+    """The entries of one ``provides.plugins`` list (of a module, or of the hub)."""
+    for plugin in plugins or []:
+        if "catalog" in plugin:
+            path = unit.root / plugin["catalog"]
+            doc = _catalog_doc(unit, path, supplied)
+            docs.append(doc)
+            _catalog_entries(unit, doc, hub, entries, codex)
+        elif "source" in plugin:
+            _plugin_json_entry(unit, plugin["name"], unit.root / plugin["source"], hub, entries, codex)
+        elif "manifest" in plugin:
+            folder = (unit.root / plugin["manifest"]).parent.parent
+            _plugin_json_entry(unit, plugin["name"], folder, hub, entries, codex)
+
+
+def _hub_plugins(hub: Path) -> list:
+    """``plugins`` of ``configs/umbrella.json``: the plugins the hub root ships itself (no catalog form)."""
+    umbrella = hub / UMBRELLA_CONFIG
+    if not umbrella.is_file():
+        return []
+    plugins = _read_json(umbrella, "MARKETPLACE_IDENTITY_INVALID").get("plugins") or []
+    if not isinstance(plugins, list) or any(not isinstance(item, dict) or "catalog" in item for item in plugins):
+        raise MarketplaceError("MARKETPLACE_HUB_PLUGINS_INVALID",
+                               f"{UMBRELLA_CONFIG}: plugins must be a list of manifest or source entries")
+    return plugins
+
+
 def _identity(hub: Path, docs: Sequence[Mapping[str, Any]], name, owner):
     """Marketplace name and owner: arguments, then ``configs/umbrella.json#marketplace``, then a catalog."""
     declared: Mapping[str, Any] = {}
@@ -174,17 +206,9 @@ def assemble(units: Mapping[str, Any], hub_root, *, name: Optional[str] = None,
         unit = units[unit_id]
         unit = Unit(unit.id, Path(unit.root), unit.doc)
         provides = unit.doc.get("provides")
-        for plugin in (provides.get("plugins") if isinstance(provides, dict) else None) or []:
-            if "catalog" in plugin:
-                path = unit.root / plugin["catalog"]
-                doc = _catalog_doc(unit, path, supplied)
-                docs.append(doc)
-                _catalog_entries(unit, doc, hub, entries, codex)
-            elif "source" in plugin:
-                _plugin_json_entry(unit, plugin["name"], unit.root / plugin["source"], hub, entries, codex)
-            elif "manifest" in plugin:
-                folder = (unit.root / plugin["manifest"]).parent.parent
-                _plugin_json_entry(unit, plugin["name"], folder, hub, entries, codex)
+        _plugin_entries(unit, provides.get("plugins") if isinstance(provides, dict) else None, hub, entries, codex,
+                        docs, supplied)
+    _plugin_entries(Unit(HUB_PACKAGE, hub, {}), _hub_plugins(hub), hub, entries, codex, docs, supplied)
     seen: Dict[str, str] = {}
     for entry in entries:
         if entry["name"] in seen:

@@ -297,7 +297,6 @@ def build_catalog(env, bucket_meta, bucket_dirs, registry=None):
         core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
         package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root, load_host(root)),
         generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
-        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
         unit_versions=unit_versions, default_unit_version=default_unit_version,
     )
 

@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "3aaaf403b28d",
-  "reason": "orch-debug 0.4.0: activation by [orch] debug / --debug, journal in <run>/debug",
+  "captured_from": "4dc398ce6310",
+  "reason": "skm moves to the hub root (plugins/skm): skiller no longer renders the skm unit or its Codex adapter",
   "generators": [
     {
       "id": "skiller-registry",
@@ -164,7 +164,7 @@
     }
   ],
   "digests": {
-    ".agents/plugins/marketplace.json": "363fa8d34b98edfd79478774f300369b9a3f6969bcffbd4d939fa36b644e600a",
+    ".agents/plugins/marketplace.json": "3cb1fecd8a9aae53609997ee2b09513901a5403653dbef1bb6aec59550f092c7",
     ".agents/skills/cross-project-optimizer/SKILL.md": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6",
     ".agents/skills/decision-verification/SKILL.md": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a",
     ".agents/skills/docs-maintenance/SKILL.md": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10",
@@ -180,7 +180,7 @@
     ".agents/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
     ".agents/skills/release-discipline/SKILL.md": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9",
     ".agents/skills/skill-authoring/SKILL.md": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8",
-    ".claude-plugin/marketplace.json": "a2f5aa38bb7e735b335c3c1ba142df28d176c3c42fc33a038ab11d700567f68e",
+    ".claude-plugin/marketplace.json": "3530ec9943177d08edb4c3a7e711a0ce6ae456bfb7b0718a185d27cfa600e75a",
     ".claude/skills/cross-project-optimizer/SKILL.md": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6",
     ".claude/skills/decision-verification/SKILL.md": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a",
     ".claude/skills/docs-maintenance/SKILL.md": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10",
@@ -231,7 +231,7 @@
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f",
     "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "e1c29b7e21396ed9a1161393dd2a211611c188f43c82ed4b1dc284064c7b45d3",
-    "packages/skiller/.claude-plugin/catalog.json": "5d7db1bd2ac6733507805d566dd1cec3586600d0bb4cd19b13d1f3d48e5f1e34",
+    "packages/skiller/.claude-plugin/catalog.json": "112dac245b7ad3e99356cd42ef68cf181273037194a5754a11b92f0c13f85521",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "40aa013bca21f181e007ad52aac83643e43169ef231691f3b0bfeba2c2ef149d",
     "packages/skiller/adapters/codex/core/publication-lock.json": "a481e297ea1abef0d4148eba42af1fcd16d709645ff196c0bb7133ea2c1d6ab2",
     "packages/skiller/adapters/codex/core/skills/general/anti-drift/SKILL.md": "372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8",
@@ -250,9 +250,6 @@
     "packages/skiller/adapters/codex/core/skills/general/session-handoff/snippets/handoff-template.md": "fc7d4781e12a19e2cd7ea0f670111c025268f39c31ec3e73c455d8e4b9433a89",
     "packages/skiller/adapters/codex/core/skills/general/session-handoff/snippets/index.json": "df48da222872688e10579aa4126504271e9cb282568018257d2c1f6c4f4896f8",
     "packages/skiller/adapters/codex/core/skills/general/verify-claims/SKILL.md": "821ff84d254dd5a4fc9e56360a2e2a5d14023126e48cf9de1966530b585224a6",
-    "packages/skiller/adapters/codex/skm/.codex-plugin/plugin.json": "16de0995e03550ec57f799e1161c627615a270c2149f5622187efa04789c6cc1",
-    "packages/skiller/adapters/codex/skm/publication-lock.json": "eb71954fa9674b889b71f4b2fc9c6af5ee3d896093fe02a645c34da21dc57382",
-    "packages/skiller/adapters/codex/skm/skills/skm/SKILL.md": "45ec03166fa2b9ed74c63ad398e3c86f4d428c855ee68ccd82ef8ff189704383",
     "packages/skiller/docs/guide/budget.md": "697fc0f32755f631bb13453beaecd282e935a6741712479329345a66e96f3b5a",
     "packages/skiller/docs/guide/graph.md": "e201a4fdf2da09cedbcce2c2ae6ab8ff8be2a93a71d61a650f61761f59351642",
     "packages/skiller/generate-skill/.claude-plugin/plugin.json": "2052fdc81213dd0c50c220ea9753118f76f30ff66ef95ecda7f2593596e2e10f",

@@ -1,10 +1,13 @@
 {
   "schema": "umbrella-config/v1",
-  "_doc": "Aliases of the swissknifeman umbrella CLI: a first word that is not a built-in command and not a module id. A target is a module (unit) or a hub script; routes are tried in order, a route without when always matches.",
+  "_doc": "Aliases of the swissknifeman umbrella CLI: a first word that is not a built-in command and not a module id. A target is a module (unit) or a hub script; routes are tried in order, a route without when always matches. `plugins` lists the plugins the hub root ships itself (the umbrella face), read into the marketplace by aicore.content.marketplace like the provides.plugins of a module.",
   "version": {
     "fallback_file": "packages/planner/configs/command-routing.json",
     "fallback_key": "plugin_version"
   },
+  "plugins": [
+    {"name": "skm", "manifest": "plugins/skm/.claude-plugin/plugin.json"}
+  ],
   "aliases": {
     "skills": {
       "description": "skill registry: connect, vendor, registry, ...",

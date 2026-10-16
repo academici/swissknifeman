@@ -104,3 +104,4 @@ by a new record.
 | [0076](0076-conformance-kit.md) | Conformance kit for plugins and engines | Accepted |
 | [0077](0077-release-bundle.md) | Release bundle: compat manifest, schema package, attestation and checksums | Accepted |
 | [0078](0078-installed-form-smoke-and-ci-matrix.md) | Smoke of the installed form and a CI matrix generated from `unit.json` | Accepted |
+| [0079](0079-umbrella-front-door-plugin-at-the-root.md) | The `skm` front door is a plugin of the hub root | Accepted |

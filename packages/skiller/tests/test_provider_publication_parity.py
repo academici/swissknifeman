@@ -76,7 +76,10 @@ class TestProviderPublicationParity(unittest.TestCase):
         claude_names = {item["name"] for item in claude_marketplace["plugins"]}
         codex_names = {item["name"] for item in codex_marketplace["plugins"]}
         expected_plugins = (set(expected_buckets) - private_buckets) \
-            | {policy["core_plugin"], "generate-skill", "skm"}
+            | {policy["core_plugin"], "generate-skill"}
+        umbrella = self.repo_root / "configs" / "umbrella.json"  # the plugins of the hub root (skm)
+        if umbrella.is_file():
+            expected_plugins.update(item["name"] for item in json.loads(umbrella.read_text()).get("plugins", []))
         expected_plugins.update(
             json.loads((package / ".codex-plugin" / "plugin.json").read_text())["name"]
             for package in (self.repo_root / "packages").glob("*")

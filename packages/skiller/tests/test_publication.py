@@ -31,7 +31,7 @@ class TestPublicationCatalog(unittest.TestCase):
             catalog = build_publication_catalog(
                 registry=registry, bucket_meta=metadata, bucket_dirs=buckets,
                 core_skills=(), core_plugin="core", package_version="0.1.0", siblings=(),
-                generate_skill_description="Meta-skill", skm_present=False)
+                generate_skill_description="Meta-skill")
             self.assertIsInstance(catalog, PublicationCatalog)
             self.assertEqual([unit.unit_id for unit in catalog.units],
                              ["bucket:devops", "bucket:php", "bucket:quality", "generate-skill"])

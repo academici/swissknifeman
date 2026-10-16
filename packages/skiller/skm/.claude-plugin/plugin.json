@@ -1,7 +1,0 @@
-{
-  "name": "skm",
-  "version": "0.4.3",
-  "description": "skiller — managing project skills: buckets (connect/vendor), wizard integrate, status, diagnostics. Thin face above CLI.",
-  "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
-  "commands": ["./commands"]
-}

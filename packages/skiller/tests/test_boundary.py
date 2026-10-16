@@ -151,7 +151,7 @@ class BoundaryScannerTests(unittest.TestCase):
     def test_content_tool_names_allowed_but_repository_paths_rejected(self):
         paths = [f"{directory}/example.md" for directory in (
             "skills/general/example", "references", "docs/guide", "generate-skill",
-            "skm", "adapters", "provider-skills", "prompts", ".swissknifeman.example")]
+            "adapters", "provider-skills", "prompts", ".swissknifeman.example")]
         paths += ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "SKILL_TEMPLATE.md"]
         for relative in paths:
             self.write(relative, "orch harness maind analyst 'planner' /planner:dev\n")

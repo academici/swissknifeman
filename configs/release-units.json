@@ -34,6 +34,15 @@
         "claude-code"
       ]
     },
+    "skm": {
+      "_doc": "The umbrella front door, shipped by the hub root (plugins/skm); the version is kept here and in its plugin manifests.",
+      "version_owner": "explicit",
+      "expected_version": "0.5.0",
+      "required_providers": [
+        "claude-code",
+        "codex"
+      ]
+    },
     "harness": {
       "version_owner": "package",
       "package": "harness",

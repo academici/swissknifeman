@@ -59,7 +59,7 @@ swissknifeman/                      # the hub repository
 | Module | Purpose | Depends on | Built from (current paths) |
 | --- | --- | --- | --- |
 | `aicore` | foundation | none | exists: the former root `core/` package and `configs/provider-*.json` moved in (`core/` is removed); still to come: generic parts of `skiller` (catalog, budget, publication, delivery, quality); generic part of the `planner` command rendering |
-| `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `skm/`, `generate-skill/`, profiles and presets, upstream sync |
+| `skiller` | library of shared skills | `aicore` | `packages/skiller`: `skills/` (shared buckets only; the `system` bucket is provided by the host from module skills), `generate-skill/`, profiles and presets, upstream sync |
 | `planner` | plans: schema, life cycle, API, commands | `aicore` | `packages/planner` |
 | `orch` | orchestration: contracts, engine port, engines, launch catalog | `aicore` | `packages/orch` (research in `docs/research`) |
 | `maind` | memory, graph, project registry, provisioning, MCP | `aicore` | `packages/maind` plus the `topology` registry of the machine from `skiller` |
@@ -67,7 +67,7 @@ swissknifeman/                      # the hub repository
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
 | `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`) |
-| hub root | assembly, install, update, docs, CI | all modules | `bin/`, `scripts/`, `configs/`, `bootstrap/`, `docs/` |
+| hub root | assembly, install, update, docs, CI, the `skm` front door | all modules | `bin/`, `scripts/`, `configs/`, `bootstrap/`, `plugins/`, `docs/` |
 
 The file-level map, with the stage that moves each entry and a confidence mark, is generated into
 [ownership](ownership.md); this document does not copy it.
@@ -392,7 +392,7 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
 
 ### skiller
 
-- **Owns:** the shared skills (buckets), its own plugin of commands `skm`, profiles and presets (which buckets for which
+- **Owns:** the shared skills (buckets), profiles and presets (which buckets for which
   kind of project), the new-skill template and upstream synchronisation.
 - **Code:** a thin CLI over `aicore.content` and `aicore.delivery` plus whatever concerns only its library.
 - **After P8:** `skiller` depends only on `aicore` and holds the shared skills. Its settings are the tables `[skiller]`
@@ -463,6 +463,7 @@ The hub root composes the modules and holds no module logic. It imports only `ai
 | CI | `scripts/ci-matrix.py`, `.github/workflows/modules.yml`, `scripts/smoke-installed.sh` | steps and matrix generated from `unit.json`; smoke of the installed form ([ADR 0078](decisions/0078-installed-form-smoke-and-ci-matrix.md), [development](../develop.md)) |
 | Site | `docs/` (`package.json`, `.vitepress`) | the documentation site; `docs/<module>/` are copies of `packages/<module>/docs` made by `scripts/docs-sync.sh` |
 | Bootstrap skills | `bootstrap/skills/` | the skills of the root, projected by the generators |
+| Front door plugin | `plugins/skm/`, `configs/umbrella.json#plugins` | `/skm`, `/skm:skills`, `/skm:integrate`, `/skm:status`, `/skm:doctor` (all modules through `swissknifeman doctor`); a hub plugin is data, read by the marketplace assembler ([ADR 0079](decisions/0079-umbrella-front-door-plugin-at-the-root.md)) |
 
 ## 8. Skill distribution
 

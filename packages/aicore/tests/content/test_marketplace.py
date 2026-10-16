@@ -150,6 +150,36 @@ class AssembleCase(unittest.TestCase):
         claude = self.hub.assemble(name="given", owner={"name": "G", "email": "g@example.com"})[marketplace.CLAUDE_INDEX]
         self.assertEqual((claude["name"], claude["owner"]["name"]), ("given", "G"))
 
+    def test_the_hub_root_ships_its_own_plugins(self):
+        alpha = self.hub.unit("alpha", [{"name": "alpha", "manifest": ".claude-plugin/plugin.json"}])
+        self.hub.plugin(alpha, ".", "alpha", codex=False)
+        self.hub.plugin(self.hub.root, "plugins/face", "face", codex=True, description="Face")
+        write_json(self.hub.root / "configs" / "umbrella.json", {
+            "marketplace": {"name": "demo", "owner": {"name": "O", "email": "e"}},
+            "plugins": [{"name": "face", "manifest": "plugins/face/.claude-plugin/plugin.json"}]})
+        result = self.hub.assemble()
+        face = [entry for entry in result[marketplace.CLAUDE_INDEX]["plugins"] if entry["name"] == "face"]
+        self.assertEqual([{"name": "face", "source": "./plugins/face", "description": "Face",
+                           "category": "ecosystem", "tags": [], "package": "root"}], face)
+        self.assertEqual(["face"], [entry["name"] for entry in result[marketplace.CODEX_INDEX]["plugins"]])
+
+    def test_a_hub_plugin_list_must_hold_manifest_or_source_entries(self):
+        for plugins in ({"name": "x"}, [{"name": "x", "catalog": "c.json"}], ["x"]):
+            write_json(self.hub.root / "configs" / "umbrella.json", {"plugins": plugins})
+            with self.assertRaises(marketplace.MarketplaceError) as caught:
+                self.hub.assemble(name="demo", owner={"name": "O", "email": "e"})
+            self.assertEqual(caught.exception.code, "MARKETPLACE_HUB_PLUGINS_INVALID")
+
+    def test_a_hub_plugin_named_like_a_module_plugin_is_a_duplicate(self):
+        alpha = self.hub.unit("alpha", [{"name": "same", "manifest": ".claude-plugin/plugin.json"}])
+        self.hub.plugin(alpha, ".", "same", codex=False)
+        self.hub.plugin(self.hub.root, "plugins/same", "same", codex=False)
+        write_json(self.hub.root / "configs" / "umbrella.json", {
+            "plugins": [{"name": "same", "source": "plugins/same"}]})
+        with self.assertRaises(marketplace.MarketplaceError) as caught:
+            self.hub.assemble(name="demo", owner={"name": "O", "email": "e"})
+        self.assertEqual(caught.exception.code, "MARKETPLACE_DUPLICATE")
+
     def test_identity_is_required(self):
         root = self.hub.unit("one", [{"name": "one", "manifest": ".claude-plugin/plugin.json"}])
         self.hub.plugin(root, ".", "one", codex=False)

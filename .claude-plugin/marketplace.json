@@ -664,15 +664,16 @@
     },
     {
       "name": "skm",
-      "source": "./packages/skiller/skm",
-      "description": "skiller CLI — managing project skills: buckets (connect/vendor), integrate, status",
-      "category": "meta",
+      "source": "./plugins/skm",
+      "description": "swissknifeman front door — project skills (connect/vendor), integration wizard, status and diagnostics of every module. Thin face above the swissknifeman and skiller CLIs.",
+      "category": "ecosystem",
       "tags": [
         "cli",
         "skills",
-        "management"
+        "management",
+        "umbrella"
       ],
-      "package": "skiller"
+      "package": "root"
     },
     {
       "name": "task",

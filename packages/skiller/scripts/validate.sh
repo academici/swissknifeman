@@ -1043,10 +1043,6 @@ plugin_roots = {b: root / "skills" / b for b in bucket_dirs
                if not (isinstance(bucket_meta.get(b), dict)
                        and bucket_meta[b].get("private_source_only"))}
 plugin_roots["generate-skill"] = root / "generate-skill"
-# Management plugin (command person CLI, without skills) — is validated as a regular plugin,
-# if the directory exists; registry.py adds it to marketplace.json synchronously.
-if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
-    plugin_roots["skm"] = root / "skm"
 
 # Neighboring monorepo packages (packages/<name>, except swissknifeman) — command/MCP-plugins
 # without skills-fields; them plugin.json — source of truth, registry adds them to marketplace.

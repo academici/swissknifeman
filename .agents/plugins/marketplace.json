@@ -706,13 +706,14 @@
     },
     {
       "name": "skm",
-      "source": "./packages/skiller/adapters/codex/skm",
-      "description": "skiller management skill adapter",
-      "category": "meta",
+      "source": "./plugins/skm",
+      "description": "swissknifeman front door — project skills (connect/vendor), integration wizard, status and diagnostics of every module. Thin face above the swissknifeman and skiller CLIs.",
+      "category": "ecosystem",
       "tags": [
         "cli",
         "skills",
-        "management"
+        "management",
+        "umbrella"
       ],
       "install_policy": "explicit",
       "auth": "none"

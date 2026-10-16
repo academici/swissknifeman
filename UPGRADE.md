@@ -160,3 +160,14 @@ fails on its own marketplace. A hub clone is replaced by step 2 of the machine s
 - Hub-owned `rm` in `$HUB` is blocked by the harness `deny_hard` hook; the owner runs the clean-up of step 10 via `!`.
 - In projects that were already dirty, files touched both by the owner and by the upgrade (`CLAUDE.md`, `.claude/settings*.json`,
   regenerated `.agents/plugins`) cannot be committed separately: leave them on `chore/skm-upgrade` for the owner.
+- Do the project steps **on the project's current branch**, not on a side branch. `maind onboard` resets the memory mode to `maind`:
+  read the old `MODE` from `.claude/memory.env.ini` first and pass `--memory <mode>` (or restore `[harness.hooks.memory] mode` in
+  `.swissknifeman/config.toml` and run `harness hooks sync`). Seen on edufy and Brain (both were `manual`).
+- Run `maind onboard` and `upgrade-project.py` before deleting anything from `.claude/*.env.ini`: those files are the only record of the old
+  hook modes when they are git-ignored.
+- `skiller release` proposes `0.31.0` when a `feat:` commit is in range; for a patch release set the `CHANGELOG.md` heading by hand, bump the
+  `planner` files (`command-routing.json`, `unit.json`, three `plugin.json`, `ownership.md`), then `skiller registry`,
+  `render-provider-commands.py --root . --write --repair-owned`, `golden.py capture` and `skiller attest`.
+- `release-fleet` re-creates `~/.swissknifeman/receipts/` (legacy place) and ends `PARTIAL` (`DELIVERY_READBACK_FAILED`, `...PROVIDER_UNCONFIRMED`)
+  until the Claude Code session is restarted and the plugin cache is rebuilt; run it again after the restart.
+- Claude Code plugin manifests must list agent files (`./agents/<name>.md`), not the directory, otherwise the plugin fails to load.

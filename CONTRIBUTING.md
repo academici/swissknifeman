@@ -58,7 +58,8 @@ python3 scripts/ecosystem-units.py check --strict             # module boundarie
 ```
 
 `validate.sh` of each packet runs `py_compile`, `bash -n`, checks JSON and unit tests
-(`scripts/test.sh`). CI (`.github/workflows/test.yml`) runs the same on Python 3.9–3.13.
+(`scripts/test.sh`). CI (`.github/workflows/modules.yml`, steps from `scripts/ci-matrix.py`) runs the same on
+Python 3.9, 3.13 and 3.14; workflow supply-chain rules are in [SECURITY.md](SECURITY.md).
 
 ## Conventions
 
@@ -83,6 +84,7 @@ python3 scripts/ecosystem-units.py check --strict             # module boundarie
 - Before tag: `skiller registry --check`, provider command generator `--check`,
   `skiller attest --release vX.Y.Z --previous vA.B.C`, then
   `python3 scripts/verify-tag.py vX.Y.Z`. Changed unit tree requires version bump.
+  Tag only a commit on `main` (CI refuses another: `RELEASE_TAG_OFF_MAIN`).
   Attestation contains tag/date/digests; SHA is defined via a tag, without self-referencing release commit.
 - After the tag: `skiller deliver --release vX.Y.Z --all --dry-run`, then the same command
   without `--dry-run`. Only receipt GREEN proves complete delivery; PARTIAL lists

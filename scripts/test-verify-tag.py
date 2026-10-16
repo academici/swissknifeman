@@ -90,5 +90,26 @@ class TestVerifyTag(unittest.TestCase):
             self.assertEqual(code, 2)
 
 
+class TestPreviousTag(unittest.TestCase):
+    def git(self, root, *argv):
+        import subprocess
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *argv], cwd=root, check=True,
+                       capture_output=True)
+
+    def test_a_tag_of_a_side_branch_is_not_the_base(self):
+        with tempfile.TemporaryDirectory() as root:
+            self.git(root, "init", "-q", "-b", "main")
+            self.git(root, "commit", "-q", "--allow-empty", "-m", "a")
+            self.git(root, "tag", "v1.0.0")
+            self.git(root, "checkout", "-q", "-b", "side")
+            self.git(root, "commit", "-q", "--allow-empty", "-m", "b")
+            self.git(root, "tag", "v1.0.1")
+            self.git(root, "tag", "v1.0.2-rc1")
+            self.git(root, "checkout", "-q", "main")
+            self.git(root, "commit", "-q", "--allow-empty", "-m", "c")
+            self.assertEqual("v1.0.0", verify_tag.previous_tag(root, "v1.1.0"))
+            self.assertIsNone(verify_tag.previous_tag(root, "v1.0.0"))
+
+
 if __name__ == "__main__":
     unittest.main()

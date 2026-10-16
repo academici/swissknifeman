@@ -1,0 +1,11 @@
+# Actions are pinned to commit SHAs (scripts/workflow-policy.py); Dependabot proposes the new SHA with its version
+# comment as a PR, so a pin does not quietly age.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

@@ -531,6 +531,34 @@
       "released": true
     },
     {
+      "path": "packages/skiller/configs/exclusive-groups.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/selection.py",
+        "packages/skiller/scripts/validate.sh"
+      ],
+      "released": true,
+      "note": "skills of which a selection keeps at most one"
+    },
+    {
+      "path": "packages/skiller/configs/licenses.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/quality/compat.py"
+      ],
+      "released": true,
+      "note": "SPDX licenses an imported skill may carry; skiller compat quarantines any other"
+    },
+    {
+      "path": "packages/skiller/configs/selection-summary.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/selection.py"
+      ],
+      "released": true,
+      "note": "summary of the skill-selection decisions (skiller selection report)"
+    },
+    {
       "path": "packages/skiller/configs/publication-versions.json",
       "owner": "skiller",
       "consumers": [

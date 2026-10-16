@@ -39,6 +39,19 @@ def verify(tag, changelog_path):
     return 1, f"tag {tag}: released header «{version}» not found in CHANGELOG.md"
 
 
+def previous_tag(repo_root, current):
+    """The highest release tag below ``current`` on the line of HEAD: a tag of a side branch that never reached main
+    (v0.28.4-v0.28.6) is not the base of the next release."""
+    import re
+    import subprocess
+    semver = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+    listed = subprocess.run(["git", "tag", "--list", "v[0-9]*", "--merged", "HEAD"],
+                            cwd=repo_root, capture_output=True, text=True, check=True).stdout.split()
+    key = lambda tag: tuple(map(int, semver.match(tag).groups()))  # noqa: E731
+    lower = [tag for tag in listed if semver.match(tag) and tag != current and key(tag) < key(current)]
+    return max(lower, key=key, default=None)
+
+
 def main(argv):
     if len(argv) != 2:
         print("usage: verify-tag.py <vX.Y.Z>", file=sys.stderr)
@@ -50,13 +63,14 @@ def main(argv):
         import json
         import subprocess
         try:
-            path = Path(repo_root) / "releases" / ("v" + argv[1].removeprefix("v") + ".json")
-            value = json.loads(path.read_text())
-            tags = subprocess.run(["git", "tag", "--list", "v[0-9]*", "--sort=-version:refname"],
-                                  cwd=repo_root, capture_output=True, text=True, check=True).stdout.splitlines()
             current = "v" + argv[1].removeprefix("v")
-            previous = next((t for t in tags if t != current and
-                             tuple(map(int, t[1:].split("."))) < tuple(map(int, current[1:].split(".")))), None)
+            path = Path(repo_root) / "releases" / (current + ".json")
+            if not path.is_file():
+                print(f"RELEASE_MANIFEST_MISSING: tag {current} has no {path.relative_to(repo_root)}; "
+                      f"run skiller attest --release {current} before tagging", file=sys.stderr)
+                return 1
+            value = json.loads(path.read_text())
+            previous = previous_tag(repo_root, current)
             errors = check(Path(repo_root), value, previous_ref=previous,
                            package_root=Path(repo_root) / "packages/skiller")
             if errors:

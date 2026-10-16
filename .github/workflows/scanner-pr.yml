@@ -1,29 +1,36 @@
 name: Scanner PR
 
+# The snippet scanner reads local projects (packages/skiller/.skills-scanner.json scan_paths); a hosted runner has
+# none of them, so here a clean run reports that and finds nothing. A failure of the scanner fails the job: it used
+# to end in `|| true` and read candidates from the wrong folder, so every outcome looked like "0 candidates".
 on:
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
       pull-requests: write
+    env:
+      OUTPUT: packages/skiller/.scanner-output
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
       - name: Run scanner (extract only in CI)
-        run: |
-          chmod +x packages/skiller/scripts/scan-skills.sh packages/skiller/scripts/scan-and-pr.sh
-          ./packages/skiller/scripts/scan-skills.sh --extract || true
+        run: ./packages/skiller/scripts/scan-skills.sh --extract
 
       - name: Check for candidates
         id: check
         run: |
-          if [ -f .scanner-output/candidates.json ]; then
-            count=$(python3 -c "import json; print(len(json.load(open('.scanner-output/candidates.json'))))")
+          if [ -f "$OUTPUT/candidates.json" ]; then
+            count=$(python3 -c "import json, sys; print(len(json.load(open(sys.argv[1]))))" "$OUTPUT/candidates.json")
             echo "count=$count" >> "$GITHUB_OUTPUT"
           else
             echo "count=0" >> "$GITHUB_OUTPUT"
@@ -40,12 +47,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # We take the branch name from the repository — scan-and-pr.sh already done on her
-          # `git checkout -b`. Previously, the formula was duplicated ($(date +%Y%m%d)) and could
-          # diverge from a script branch at the end of the day → push wrong branch.
+          # The branch name comes from the repository: scan-and-pr.sh already made it with `git checkout -b`.
           BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-          # Without `|| true`: real failure push gotta get out job, and not disguise
-          # (otherwise next `gh pr create` hits an unfurled branch).
           git push -u origin "$BRANCH"
           gh pr create \
             --title "feat(scanner): extracted snippets" \

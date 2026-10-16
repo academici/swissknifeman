@@ -33,7 +33,8 @@ frontmatter, not the entire file body), counts hashes and collects the final JSO
 
 ## Automation
 
-- `sha256-update.yml` — recalculates registry hashes on each push.
+- The author runs `skiller registry` and commits the result; `sha256-update.yml` and the skiller unit of
+  `modules.yml` run `skiller registry --check` on push and PR (read-only: no workflow commits to `main`).
 
 Separate mirroring in Obsidian vault no longer exists: vault — normal
 consumer project that connects via `skiller vendor`

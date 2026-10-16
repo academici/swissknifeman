@@ -53,7 +53,8 @@ is rejected or modified before merging.
 ## Automation
 
 Workflow `scanner-pr.yml` runs the scanner weekly and opens PR with new
-candidates. The decision on what will become a skill snippet from what is found is up to the reviewer.
+candidates. The scan paths are local projects: on a hosted runner none exists and the scan says
+`SCAN_PATHS_ABSENT`; run `./scripts/scan-and-pr.sh` on the machine that has them. A scanner error fails the job. The decision on what will become a skill snippet from what is found is up to the reviewer.
 
 ## Why is this needed
 

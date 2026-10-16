@@ -138,7 +138,18 @@ def ensure(env: Optional[Mapping[str, str]] = None, *, offline: bool = False, lo
         raise GuiDepsError(f"install into {target} failed: {error}; {HINT}") from None
     finally:
         shutil.rmtree(work, ignore_errors=True)
+    if not (os.environ if env is None else env).get(ENV_DIR):
+        _prune(target)
     return target
+
+
+def _prune(keep: Path) -> None:
+    """Remove the installs of older locks for the same Python next to ``keep`` (the cache would only grow)."""
+    prefix = keep.name.split("-", 1)[0] + "-"
+    for sibling in keep.parent.iterdir():
+        name = sibling.name
+        if sibling != keep and name.startswith(prefix) and len(name) == len(keep.name) and sibling.is_dir():
+            shutil.rmtree(sibling, ignore_errors=True)
 
 
 def activate(env: Optional[Mapping[str, str]] = None, *, lock_path: Path = LOCK) -> Path:

@@ -98,7 +98,7 @@ class TestLock(DepsCase):
 
     def test_the_real_lock_is_closed_and_pure(self):
         pins = deps.read_lock()
-        self.assertTrue({"starlette", "uvicorn", "h11", "wsproto", "anyio", "idna", "click", "httpx"}
+        self.assertTrue({"starlette", "uvicorn", "h11", "wsproto", "anyio", "idna", "click", "httpx2"}
                         <= {pin.name for pin in pins})
         self.assertEqual(len(pins), len({pin.name for pin in pins}))
 
@@ -227,6 +227,14 @@ class TestInstall(DepsCase):
         self.assertEqual(1, len(calls))
         self.assertTrue((folder / "alpha_pkg").is_dir())
         self.assertEqual([], self.index.hits)
+
+    def test_installs_of_older_locks_are_pruned(self):
+        sha = self.index.add("alpha", "1.0", wheel({"alpha_pkg/__init__.py": ""}))
+        first = self.ensure(self.lock([f"alpha==1.0 --hash=sha256:{sha}"]))
+        second = self.ensure(self.lock([f"alpha==1.0 --hash=sha256:{sha}", "# another lock"]))
+        self.assertNotEqual(first, second)
+        self.assertFalse(first.exists())
+        self.assertTrue(second.is_dir())
 
     def assert_nothing_installed(self, lock):
         folder = deps.site_dir(self.env, lock_path=lock)

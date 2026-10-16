@@ -34,6 +34,10 @@ jobs:
       - name: Test docs-impact gate
         run: python3 scripts/test-docs-impact.py -v
 
+      # The tracked site copies docs/<module> of packages/<module>/docs must not lag (docs/planner did).
+      - name: docs-sync (site copies are fresh)
+        run: bash scripts/docs-sync.sh --check
+
       - name: managed-blocks (canonical exports ↔ generated copies)
         run: |
           python3 scripts/test-sync-managed-blocks.py -v

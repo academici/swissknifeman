@@ -574,8 +574,8 @@ The optional `budgets` of the manifest measures the prompt by class of blocks: `
 `prompt_retrieval_tokens`; 0 is no limit). **core**: `role_text`, `input`, `verification`, `result_contract`, `answers`, `correction`
 and the frame of the review, triage and closing roles (`progress`, `candidate`, `review_scope`, `diff`, `findings`, `instruction`);
 **supporting**: `repository_rules`, `skill`, `skill_names`, `context_map`, `expected_paths`, `focus`, `run_rules`; **retrieval**:
-`research`. A class past its limit is a beacon `BUDGET_OVER` with `message` `block <kind> <origin>
-<tokens>` for its heaviest block. This is a measure and a beacon only: the prompt is never cut, and the limits are for tuning from the data
+`research`. A class past its limit is a beacon `BUDGET_OVER` with `message`
+`block <kind> <origin> <tokens>` for its heaviest block. This is a measure and a beacon only: the prompt is never cut, and the limits are for tuning from the data
 (observer: Prompt budgets).
 
 ### Review focus

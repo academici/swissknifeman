@@ -108,6 +108,9 @@ cutover (or deleted), never upgraded.
 
 ## Known gaps in the tooling (fix or note before the second computer)
 
+- Fixed in the main line (360384f8d): after step 4 of a project, `maind health/onboard` failed with `PCFG_SCHEMA_INVALID`
+  (the `config.toml` provider layer carried an empty `available`). Make sure the second computer has that commit before step 4.
+
 - `swissknifeman doctor`: `aicore.doctor` and `skiller.doctor` fail with "probe output is not JSON" — the unit declares text probes
   (`aicore ext status`, `skiller doctor`, `output: text`) but the aggregator expects JSON for the `*.doctor` ids. Not a machine fault.
 - `orch.sandbox` warns (bwrap loopback not permitted; Ubuntu AppArmor) and `maind.memory` is down (`maind start --only memory`): machine facts, owner's.

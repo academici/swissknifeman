@@ -47,12 +47,20 @@ Check per project: `plan.py check plans/<plan>` for each plan folder → `0 erro
 Needs the owner: they change live machine state (symlinks, `~/.claude`, `~/.config`).
 
 1. Backup: `tar czf ~/skm-backup-$(date +%F).tgz ~/.config/swissknifeman ~/.local/state/swissknifeman ~/.claude/settings.json ~/.claude/plugins/known_marketplaces.json 2>/dev/null` and a copy of the old checkout's `config.json`, `safe-dirs.json`.
-2. Replace the checkout: move this repository's content into `~/projects/packages/swissknifeman` (keep `config.json` and
-   `safe-dirs.json` aside until step 5), drop `.swissknifeman-dev` and the dev guard (`install.sh` / entry points) — **[todo]**
-   the guard is removed in a separate commit at cutover.
+2. Replace the checkout (first computer: **done 2026-10-16**). In the old checkout, after `git bundle create ~/skm-backup-*/base-main.bundle main`:
+   `git fetch <new clone> main && git merge -s ours --no-commit --no-ff FETCH_HEAD && git read-tree -u --reset FETCH_HEAD && git commit`
+   — the tree becomes the new layout, the old history stays as the first parent. Ignored machine files (`config.json`,
+   `safe-dirs.json`, `.claude/*`) stay in place. Then remove what the old layout left untracked (`core/`, `orch/`, `roadmap/`,
+   `packages/artifex/`: only `__pycache__`, old tests and notes — look before deleting). The dev guard is inert without the
+   `.swissknifeman-dev` marker (git does not carry it); removing its code blocks is a later cleanup.
+   Second computer: do the same merge in its old checkout (`git pull` the main line from the first computer's remote/bundle).
 3. `./install.sh` (re-points every symlink; adds `aicore`, `brain`, `plan.py`, `orch.py`; `task` disappears). **[verified]** in a sandbox home.
-4. Move `~/.swissknifeman/{projects,topology}.json` (legacy place, skiller warns) to `~/.local/state/swissknifeman/skiller/`. **[todo]**
-5. Machine config: write `~/.config/swissknifeman/config.toml` — keep existing sections, point `[aicore.plugins.*].manifest` at the
+4. `python3 scripts/migrate-machine.py --apply` — `config.json` -> `[maind]` in the machine config + `registry.json`, `safe-dirs.json` ->
+   `~/.config/swissknifeman/harness/`. Check first that `config.json` lists every project (add missing ones by hand). **[done on computer 1]**
+   Then `harness hooks --global` (refreshes stale hook copies in `~/.claude`). Legacy places `~/.swissknifeman/{projects,topology}.json`
+   and `~/.maind/` (registry landed there because it exists) move to `~/.local/state/swissknifeman/{skiller,maind}/` — plain `mv`
+   after a tarball backup; skiller's `projects.json` was copied, `~/.maind` still **[todo]** (the move was refused by the permission classifier).
+5. Machine config (done: manifest path now `.../swissknifeman/bridges/...`): write `~/.config/swissknifeman/config.toml` — keep existing sections, point `[aicore.plugins.*].manifest` at the
    main checkout (not `-next`). Move hub settings from the old `config.json` into `[maind]` and the project list into `registry.json`. **[todo]**
 6. Claude Code: `/plugin marketplace update swissknifeman`, enable `planner`, `brain`, `skm`; disable `task`. **[todo]**
 7. `swissknifeman doctor` → all units green.
@@ -99,6 +107,11 @@ cutover (or deleted), never upgraded.
   - `skm-orch-dev`: hub clone, reverted, not upgraded.
 
 ## Known gaps in the tooling (fix or note before the second computer)
+
+- `swissknifeman doctor`: `aicore.doctor` and `skiller.doctor` fail with "probe output is not JSON" — the unit declares text probes
+  (`aicore ext status`, `skiller doctor`, `output: text`) but the aggregator expects JSON for the `*.doctor` ids. Not a machine fault.
+- `orch.sandbox` warns (bwrap loopback not permitted; Ubuntu AppArmor) and `maind.memory` is down (`maind start --only memory`): machine facts, owner's.
+- Leftover untracked folders of the old layout in the checkout (`core/`, `orch/`, `roadmap/`, `packages/artifex/`): delete after a look.
 
 - `swissknifeman upgrade` (named by every `*_LEGACY_*` warning and by ADR 0010) does not exist; this document replaces it.
 - `maind onboard .` with a relative path raises `ValueError: root must be explicit and absolute`.

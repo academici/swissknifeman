@@ -44,6 +44,8 @@ def latest_snapshot(since: str | None) -> dict:
         releases_pool = {v: releases[v] for v in tagged} or releases
     else:
         releases_pool = releases
+    if since is None and not releases_pool:
+        return {}  # no release line yet: nothing to compare against
     version = since.lstrip("v") if since else max(releases_pool, key=_key)
     if version not in releases:
         sys.exit(f"ERROR: no releases/v{version}.json")
@@ -87,6 +89,9 @@ def installed_drift(current: dict) -> list[str]:
 
 def cmd_status(args: argparse.Namespace) -> int:
     previous = latest_snapshot(args.since)
+    if not previous:
+        print("no baseline: releases/ holds no snapshot (first release of the line)")
+        return 0
     current = attestation.build(ROOT, None, package_root=ROOT / "packages/skiller")
     print(f"baseline {previous['umbrella']['tag']}, working tree umbrella {current['umbrella']['version']}")
     rows = changed_units(previous, current)

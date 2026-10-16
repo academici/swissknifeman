@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "ecosystem-units.py"
 AICORE_SCHEMAS = ROOT / "packages" / "aicore" / "schemas"
+GUI_CONTRIBUTION = ROOT / "packages" / "gui" / "schemas" / "contribution" / "v1"
 
 spec = importlib.util.spec_from_file_location("ecosystem_units", SCRIPT)
 eu = importlib.util.module_from_spec(spec)
@@ -379,6 +380,44 @@ class ManifestCheckTests(unittest.TestCase):
         self.tree.alpha["provides"]["cli"] = ["../aicore/unit.json"]
         result = self.assertFails("UNIT_PATH")
         self.assertIn("inside the module", result.stderr)
+
+    def gui_ready(self, document=None):
+        self.tree.add_module("gui", requires_foundation=True)
+        shutil.copytree(GUI_CONTRIBUTION, self.tree.root / "packages/gui/schemas/contribution/v1", dirs_exist_ok=True)
+        self.tree.write_json("packages/alpha/gui.json", document or {
+            "$schema": "urn:swissknifeman:gui:contribution:v1", "owner": "alpha", "version": "1.2.0",
+            "gui_protocol": {"min": "1", "max": "1"}})
+        self.tree.alpha["provides"]["gui"] = "gui.json"
+
+    def test_gui_contribution_is_valid(self):
+        self.gui_ready()
+        result = self.tree.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_gui_contribution_missing(self):
+        self.gui_ready()
+        (self.tree.root / "packages/alpha/gui.json").unlink()
+        self.assertIn("provides.gui: 'gui.json' does not exist", self.assertFails("UNIT_GUI").stderr)
+
+    def test_gui_contribution_outside_the_unit(self):
+        self.gui_ready()
+        self.tree.alpha["provides"]["gui"] = "../aicore/unit.json"
+        self.assertIn("must stay inside the unit", self.assertFails("UNIT_GUI").stderr)
+        (self.tree.root / "packages/alpha/link.json").symlink_to(self.tree.root / "packages/aicore/unit.json")
+        self.tree.alpha["provides"]["gui"] = "link.json"
+        self.assertIn("must stay inside the unit", self.assertFails("UNIT_GUI").stderr)
+
+    def test_gui_contribution_invalid(self):
+        self.gui_ready({"$schema": "urn:swissknifeman:gui:contribution:v1", "owner": "alpha", "version": "1.2.0",
+                        "gui_protocol": {"min": "1", "max": "1"}, "theme": "dark"})
+        self.assertIn("additional", self.assertFails("UNIT_GUI").stderr)
+        self.tree.write("packages/alpha/gui.json", "{not json")
+        self.assertIn("cannot parse JSON", self.assertFails("UNIT_GUI").stderr)
+
+    def test_gui_contribution_without_the_gui_contract(self):
+        self.tree.write_json("packages/alpha/gui.json", {})
+        self.tree.alpha["provides"]["gui"] = "gui.json"
+        self.assertIn("cannot load", self.assertFails("UNIT_GUI").stderr)
 
     def test_broken_aicore_schema_fails_profile(self):
         path = self.tree.root / "packages/aicore/schemas/unit/v1/unit.schema.json"

@@ -216,9 +216,12 @@ def _referenced_contract_dirs(directory: Path, urn_prefix: str,
 
     A ``$ref`` to ``<urn_prefix><contract>:v<N>`` (with or without a fragment) names the directory
     ``<schemas>/<contract>/v<N>`` next to the one being loaded; for the foundation prefix a directory missing
-    there is looked up in ``foundation`` (default: the schemas of aicore itself).
+    there is looked up in ``foundation`` (default: the schemas of aicore itself). A module contract (a prefix
+    other than the foundation one) may also reference the foundation contracts: those references are looked up
+    in ``foundation`` only.
     """
     schemas_root = directory.parent.parent
+    foundation_root = foundation or _FOUNDATION_SCHEMAS
     found: list[Path] = []
     pending = [directory]
     seen = {directory}
@@ -229,12 +232,18 @@ def _referenced_contract_dirs(directory: Path, urn_prefix: str,
         for schema in current_schemas.values():
             for ref in _refs(schema):
                 document = ref.partition("#")[0]
-                if not document.startswith(urn_prefix) or document in own_ids:
+                if document in own_ids:
                     continue
-                match = _CONTRACT_REF.fullmatch(document[len(urn_prefix):])
-                target = schemas_root / match.group(1) / match.group(2) if match else None
-                if match and urn_prefix == CONTRACT_URN_PREFIX and not _has_schemas(target):
-                    target = (foundation or _FOUNDATION_SCHEMAS) / match.group(1) / match.group(2)
+                if document.startswith(urn_prefix):
+                    match = _CONTRACT_REF.fullmatch(document[len(urn_prefix):])
+                    target = schemas_root / match.group(1) / match.group(2) if match else None
+                    if match and urn_prefix == CONTRACT_URN_PREFIX and not _has_schemas(target):
+                        target = foundation_root / match.group(1) / match.group(2)
+                elif document.startswith(CONTRACT_URN_PREFIX):
+                    match = _CONTRACT_REF.fullmatch(document[len(CONTRACT_URN_PREFIX):])
+                    target = foundation_root / match.group(1) / match.group(2) if match else None
+                else:
+                    continue
                 if target is None or not _has_schemas(target):
                     raise SchemaProfileError(f"{current.parent.name}/{current.name}: unresolved contract "
                                              f"reference {ref!r}")

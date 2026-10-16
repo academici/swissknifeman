@@ -17,6 +17,8 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
   JSON Schema draft 2020-12 with the root `$schema`, `additionalProperties: false` on every object, and a
   `description` on every property. A dictionary whose keys are identifiers is expressed with `patternProperties` (an anchored pattern such as `^[a-z][a-z0-9-]*$`) and `additionalProperties: false`; `propertyNames` only checks key names and does not make a key allowed. Lists of records stay for ordered collections, and a standard that defines an open map (`skill-descriptor` `metadata`) keeps its open object.
 - A contract can reference another contract of this directory with `$ref: "urn:swissknifeman:aicore:<contract>:v<N>#/$defs/<name>"`; `load_contract` loads the neighbouring `<contract>/v<N>/` directory for the reference (its schemas serve `$ref` only). A missing directory is an error.
+- A module contract (`load_contract` with the module prefix, such as `urn:swissknifeman:gui:`) may reference the
+  foundation contracts (`urn:swissknifeman:aicore:<contract>:v<N>`); those references resolve in the aicore schemas only.
 - Fixtures of every contract are exercised by `tests/test_contracts.py` through `aicore.util.schema.load_contract`;
   `scripts/ecosystem-units.py check` loads every contract under the closed profile.
 - `digest/v1` also ships `vectors.json`: language-neutral test vectors for the canonical JSON rules.
@@ -26,7 +28,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | Contract | Version | Purpose |
 | --- | --- | --- |
 | `common` | v1 | Shared `$defs` for other contracts to reference: `semver`, `module_id`, `relpath`, `argv`, `stability`, `extensions` (namespaced `<owner>.<name>` keys), `media_type`, `rfc3339_utc` |
-| `unit` | v1 | Module manifest (`packages/<id>/unit.json`): identity, version, dependencies, public surface, default event subscriptions |
+| `unit` | v1 | Module manifest (`packages/<id>/unit.json`): identity, version, dependencies, public surface, default event subscriptions; optional `provides.gui` names the GUI contribution file (`gui.json`, validated by the gui module's `contribution/v1`) |
 | `check-result` | v1 | Result of one diagnostic check (`ok`, `warn`, `fail`, `skip`) |
 | `project-launcher-lock` | v1 | Lock of the project-local launcher (`.swissknifeman/launcher.lock.json`): protocol, template digest, managed files |
 | `invocation-context` | v1 | `swissknifeman project context --json`: project root, invocation cwd, resolution, launcher |
@@ -41,7 +43,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `event` | v1 | One event of the project journal, a subset of CloudEvents 1.0: id, source, type `<module>.<subject>.<verb>`, time, optional data; unknown extension attributes are ignored by readers |
 | `artifact-ref` | v1 | Reference to data kept outside an event or a document: tagged digest, size, media type, sensitivity; implemented by `aicore.state.blobs` |
 | `permissions` | v1 | Declared effects (filesystem areas, network, secrets, shell, environment pass-through, sandbox profile); embedded by `unit` and `extension` through `$ref` |
-| `extension` | v1 | Manifest (`extension.json`) of an external plugin: kind `command` or `subscriber`, protocol range, entrypoint, provided points and events, permissions |
+| `extension` | v1 | Manifest (`extension.json`) of an external plugin: kind `command` or `subscriber`, protocol range, entrypoint, provided points and events, permissions; optional `provides.gui` as in `unit` |
 | `plugin-request` | v1 | What the host writes to a plugin: one JSON object with the operation `describe`, `invoke` or `event` |
 | `plugin-response` | v1 | What a plugin writes back: one JSON object with a status, an output or an error |
 | `plugin-describe` | v1 | The output of a `describe` call: plugin identity and the digest of what it provides |

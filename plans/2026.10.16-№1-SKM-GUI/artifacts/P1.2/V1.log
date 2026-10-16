@@ -1,0 +1,28 @@
+bridges/orch-harness: bash scripts/test.sh
+bridges/orch-skiller: bash scripts/test.sh
+bridges/planner-orch: bash scripts/test.sh
+packages/aicore: bash scripts/test.sh
+packages/brain: bash scripts/test.sh
+packages/gui: bash scripts/test.sh
+packages/harness: bash scripts/test.sh
+packages/orch: bash scripts/test.sh
+packages/planner: bash scripts/test.sh
+packages/skiller: bash scripts/test.sh
+hub: python3 scripts/ecosystem-units.py check
+hub: python3 scripts/public-hygiene.py
+hub: python3 scripts/test-ecosystem-units.py
+hub: python3 scripts/golden.py check
+[ok] bridges/orch-harness: bash scripts/test.sh
+[cached] bridges/orch-skiller: bash scripts/test.sh
+[cached] bridges/planner-orch: bash scripts/test.sh
+[cached] packages/aicore: bash scripts/test.sh
+[cached] packages/brain: bash scripts/test.sh
+[cached] packages/gui: bash scripts/test.sh
+[ok] packages/harness: bash scripts/test.sh
+[cached] packages/orch: bash scripts/test.sh
+[cached] packages/planner: bash scripts/test.sh
+[cached] packages/skiller: bash scripts/test.sh
+[ok] hub: python3 scripts/ecosystem-units.py check
+[ok] hub: python3 scripts/public-hygiene.py
+[ok] hub: python3 scripts/test-ecosystem-units.py
+[ok] hub: python3 scripts/golden.py check

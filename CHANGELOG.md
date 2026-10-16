@@ -5,10 +5,12 @@
 ### Added
 
 - New module `packages/gui` (0.1.0, `development`, `destination: own-repo`): skeleton of the SKM GUI control plane — `unit.json` with the extension points `gui:query` and `gui:command`, `bin/gui` (`--version`; Python ≥ 3.11, `PYTHON_TOO_OLD` otherwise), `scripts/test.sh`, CLI tests, README, `schemas/README.md` (contract rules and the table of the nine v1 contracts), `docs/architecture.md`. Registered in `configs/ecosystem-units.json` as a tool module (`targets`, `version_sources`, `standalone.tools`); the umbrella help lists it.
+- gui contracts `contribution/v1` (`gui.json` of a bridge or an extension: routes, widgets, queries, commands with `exec` invoke or argv and dry run, forms with UI annotations by JSON pointer, configuration sections, docs) and `view-data/v1` (11 kinds by the const field `view`) with examples; `gui.contracts` loads them through `aicore.util.schema` and reports the issues of the named kind; `packages/gui/docs/contribution.md`. aicore `unit/v1` and `extension/v1` get the optional `provides.gui`; `scripts/ecosystem-units.py check` verifies the file of a hub unit and validates it (`ECOSYSTEM_UNIT_GUI`); `aicore.util.schema.load_contract` resolves foundation references of module contracts.
 - ADR 0080–0084: GUI stack (Tauri 2 shell, React/TypeScript, Python control plane), domains through bridges `gui-<module>`, declarative contributions, local API security, state on canonical files.
 
 ### Fixed
 
+- harness review-gate `plan-check` skipped every plan when the planner was installed only as the `plan.py` link of `install.sh`: it now finds `plan.py` on PATH after `planner`, in the order of `aicore.util.partners` (its test `test_broken_plan_json_is_a_violation` failed on `main`).
 - `ecosystem-units check --strict` failed on `main`: `unit.json` versions of `analyst`, `maind` and `skiller` lagged their `package.json` after the 0.30.2 and 0.30.3 releases (now 0.4.1, 0.6.2, 0.19.6).
 
 ## [0.30.3] - 2026-10-16

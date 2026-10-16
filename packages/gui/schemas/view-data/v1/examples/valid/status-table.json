@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "status-table",
+  "rows": [
+    {
+      "id": "aicore.python",
+      "label": "Python",
+      "status": "ok",
+      "detail": "3.12.3"
+    },
+    {
+      "id": "gui.node",
+      "label": "Node",
+      "status": "fail",
+      "detail": "node not found",
+      "repair": {
+        "command": "gui-hub.install-node"
+      }
+    }
+  ]
+}

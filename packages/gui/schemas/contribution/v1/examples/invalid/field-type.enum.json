@@ -1,0 +1,237 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "gui-planner",
+  "version": "0.1.0",
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "handler": {
+    "extension": "extension.json"
+  },
+  "routes": [
+    {
+      "id": "gui-planner.plans",
+      "title": "Plans",
+      "path": "plans",
+      "view": "resource-list",
+      "scope": "project",
+      "query": "gui-planner.plans",
+      "nav": {
+        "section": "project",
+        "order": 10,
+        "icon": "list-checks"
+      }
+    },
+    {
+      "id": "gui-planner.plan",
+      "title": "Plan",
+      "path": "plans/:plan",
+      "view": "board",
+      "scope": "plan",
+      "query": "gui-planner.plan-board",
+      "actions": [
+        "gui-planner.run-item"
+      ]
+    },
+    {
+      "id": "gui-planner.run-item-form",
+      "title": "Run an item",
+      "path": "plans/:plan/run",
+      "view": "command-form",
+      "scope": "plan",
+      "command": "gui-planner.run-item"
+    },
+    {
+      "id": "gui-planner.guide",
+      "title": "Planner guide",
+      "path": "guide",
+      "view": "markdown",
+      "scope": "fleet",
+      "docs": "gui-planner.guide"
+    }
+  ],
+  "widgets": [
+    {
+      "id": "gui-planner.progress",
+      "title": "Plan progress",
+      "view": "metric-group",
+      "query": "gui-planner.progress",
+      "scope": "project",
+      "size": "small"
+    }
+  ],
+  "queries": [
+    {
+      "id": "gui-planner.plans",
+      "title": "Plans of the project",
+      "scope": "project",
+      "returns": "resource-list",
+      "cache_s": 5
+    },
+    {
+      "id": "gui-planner.plan-board",
+      "title": "Items of a plan by status",
+      "scope": "plan",
+      "params": [
+        {
+          "name": "plan",
+          "title": "Plan",
+          "type": "plan-ref",
+          "required": true
+        }
+      ],
+      "returns": "board",
+      "timeout_s": 20
+    },
+    {
+      "id": "gui-planner.progress",
+      "title": "Progress of active plans",
+      "scope": "project",
+      "returns": "metric-group"
+    }
+  ],
+  "commands": [
+    {
+      "id": "gui-planner.run-item",
+      "title": "Run a plan item",
+      "description": "Starts the conductor on one item of the plan.",
+      "scope": "plan",
+      "input": [
+        {
+          "name": "plan",
+          "title": "Plan",
+          "type": "plan-ref",
+          "required": true
+        },
+        {
+          "name": "item",
+          "title": "Item",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "effort",
+          "title": "Effort",
+          "type": "enum",
+          "required": false,
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "default": "high",
+          "flag": "--effort"
+        },
+        {
+          "name": "dry",
+          "title": "Dry run",
+          "type": "boolean",
+          "required": false,
+          "default": false,
+          "flag": "--dry-run"
+        }
+      ],
+      "effects": [
+        "plan.write",
+        "process.spawn"
+      ],
+      "risk": "medium",
+      "confirmation": "risk-based",
+      "supports": [
+        "dry-run",
+        "cancel",
+        "stream"
+      ],
+      "timeout_s": 7200,
+      "concurrency_key": "plan:{plan_id}",
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/plan-adapter",
+          "run-item",
+          {
+            "input": "plan"
+          },
+          {
+            "input": "item"
+          }
+        ],
+        "cwd": "project",
+        "env": [
+          "PATH"
+        ]
+      },
+      "dry_run": {
+        "input": "dry"
+      }
+    },
+    {
+      "id": "gui-planner.reindex",
+      "title": "Rebuild the plan index",
+      "scope": "project",
+      "effects": [
+        "read"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 60,
+      "exec": {
+        "kind": "invoke"
+      }
+    }
+  ],
+  "forms": [
+    {
+      "id": "gui-planner.settings",
+      "schema": "urn:swissknifeman:planner:config:v1",
+      "groups": [
+        {
+          "id": "budgets",
+          "title": "Budgets",
+          "order": 1
+        }
+      ],
+      "fields": [
+        {
+          "pointer": "/budget/context_tokens",
+          "group": "budgets",
+          "order": 1,
+          "widget": "number"
+        },
+        {
+          "pointer": "/route/default_model",
+          "group": "budgets",
+          "widget": "model-picker",
+          "confirm": true
+        },
+        {
+          "pointer": "/status",
+          "readonly": true
+        }
+      ]
+    }
+  ],
+  "config_sections": [
+    {
+      "id": "gui-planner.config",
+      "module": "planner",
+      "title": "Planner",
+      "form": "gui-planner.settings"
+    }
+  ],
+  "docs": [
+    {
+      "id": "gui-planner.guide",
+      "title": "Planner guide",
+      "root": "docs",
+      "index": "guide.md"
+    }
+  ]
+}

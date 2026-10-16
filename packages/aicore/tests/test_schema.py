@@ -257,6 +257,38 @@ class TestLoadContract(SchemaCase):
         with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved contract reference"):
             schema.load_contract(user, urn_prefix=PREFIX)
 
+    def test_module_contract_reaches_the_foundation_and_its_neighbours(self):
+        write_schema(self.contract("base"), "base", {"$defs": {"name": {"type": "string", "pattern": "^[a-z]+$"}}})
+        user = self.contract("user")
+        write_schema(user, "user", {"type": "object", "additionalProperties": False, "properties": {
+            "v": {"$ref": f"{schema.CONTRACT_URN_PREFIX}common:v1#/$defs/semver"},
+            "d": {"$ref": f"{schema.CONTRACT_URN_PREFIX}digest:v1"},
+            "n": {"$ref": f"{PREFIX}base:v1#/$defs/name"}}})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX)
+        self.assertEqual(schema.validate({"v": "1.2.3", "d": "sha256:" + "0" * 64, "n": "abc"}, kind, registry), [])
+        self.assertEqual(sorted(i.code for i in schema.validate({"v": "1", "d": "x", "n": "A"}, kind, registry)),
+                         ["pattern", "pattern", "pattern"])
+
+    def test_module_contract_with_unknown_foundation_contract_is_a_profile_error(self):
+        user = self.contract("user")
+        write_schema(user, "user", {"properties": {"n": {"$ref": f"{schema.CONTRACT_URN_PREFIX}absent:v1"}}})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved contract reference"):
+            schema.load_contract(user, urn_prefix=PREFIX)
+
+    def test_module_contract_finds_the_foundation_only_in_the_foundation(self):
+        # A module folder named like a foundation contract is not used for a foundation reference.
+        write_schema(self.contract("common"), "common", {"$defs": {"semver": {"type": "integer"}}})
+        foundation = self.dir / "foundation"
+        (foundation / "common" / "v1").mkdir(parents=True)
+        (foundation / "common" / "v1" / "common.schema.json").write_text(json.dumps({
+            "$schema": schema.DIALECT, "$id": f"{schema.CONTRACT_URN_PREFIX}common:v1",
+            "$defs": {"semver": {"type": "string"}}}), encoding="utf-8")
+        user = self.contract("user")
+        write_schema(user, "user", {"$ref": f"{schema.CONTRACT_URN_PREFIX}common:v1#/$defs/semver"})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX, foundation=foundation)
+        self.assertEqual(schema.validate("1.0.0", kind, registry), [])
+        self.assertEqual([i.code for i in schema.validate(1, kind, registry)], ["type"])
+
 
 class TestLoadContractSet(SchemaCase):
     PLAN = "urn:test:plan:"

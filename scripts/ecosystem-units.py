@@ -51,6 +51,9 @@ BRIDGES_DIR = "bridges"
 AICORE_SCHEMA_URN_PREFIX = "urn:swissknifeman:aicore:"
 AICORE_SCHEMAS = (("unit", "packages/aicore/schemas/unit/v1"),
                   ("check-result", "packages/aicore/schemas/check-result/v1"))
+# provides.gui of a unit is a contribution document of the gui module; the hub knows where that contract lives.
+GUI_SCHEMA_URN_PREFIX = "urn:swissknifeman:gui:"
+GUI_CONTRIBUTION = "packages/gui/schemas/contribution/v1"
 VERSION_READERS = ("json:version", "python:__version__")
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$")
 CARET = re.compile(r"^\^(\d+)\.(\d+)(?:\.(\d+))?$")
@@ -326,6 +329,8 @@ def check_manifests(ctx: Context) -> list:
                                                           f"{folder!r}, found {found or 'none'}"))
         issues.extend(_check_version(ctx, folder, manifest, doc, config_versions, foundation_id))
         issues.extend(_check_paths(ctx, base, manifest, doc))
+        if "gui" in doc["provides"]:
+            issues.extend(_check_gui(ctx, schema, base, manifest, doc["provides"]["gui"]))
         clis = (doc.get("provides") or {}).get("cli") or []
         if doc["kind"] == "capability" and len(clis) > 1:  # the umbrella routes a group to its first CLI only
             issues.append(Issue("UNIT_CLI", manifest, f"a capability has one public CLI (provides.cli), found "
@@ -453,6 +458,26 @@ def _check_paths(ctx, rel_base, manifest, doc) -> list:
         probe("subscribes", subscription["run"][0], f"subscribes[{subscription['id']}].run", executable=True,
               code="UNIT_SUBSCRIBES_RUN")
     return issues
+
+
+def _check_gui(ctx, schema, rel_base, manifest, rel) -> list:
+    """provides.gui names a file inside the unit that is a valid contribution/v1 document of the gui module."""
+    base = (ctx.root / rel_base).resolve()
+    target = ctx.root / rel_base / rel
+    if not safe_relpath(rel) or not target.resolve().is_relative_to(base):
+        return [Issue("UNIT_GUI", manifest, f"provides.gui: {rel!r} must stay inside the unit")]
+    if not target.is_file():
+        return [Issue("UNIT_GUI", manifest, f"provides.gui: {rel!r} does not exist")]
+    try:
+        registry, kind = schema.load_contract(ctx.root / GUI_CONTRIBUTION, urn_prefix=GUI_SCHEMA_URN_PREFIX)
+    except schema.SchemaProfileError as exc:
+        return [Issue("UNIT_GUI", manifest, f"provides.gui: cannot load {GUI_CONTRIBUTION}: {exc}")]
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [Issue("UNIT_GUI", manifest, f"provides.gui: {rel!r}: cannot parse JSON: {exc}")]
+    return [Issue("UNIT_GUI", manifest, f"provides.gui: {rel!r}: {problem.code}: {problem.message}")
+            for problem in schema.validate(document, kind, registry)]
 
 
 def check_aicore_schemas(ctx: Context) -> list:

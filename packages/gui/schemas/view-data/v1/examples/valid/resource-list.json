@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "resource-list",
+  "columns": [
+    {
+      "id": "title",
+      "title": "Plan",
+      "type": "text"
+    },
+    {
+      "id": "status",
+      "title": "Status",
+      "type": "status"
+    },
+    {
+      "id": "done",
+      "title": "Done",
+      "type": "progress"
+    }
+  ],
+  "rows": [
+    {
+      "id": "PLAN5",
+      "cells": {
+        "title": "SKM GUI",
+        "status": "active",
+        "done": 0.25
+      },
+      "link": {
+        "route": "gui-planner.plan",
+        "params": {
+          "plan": "PLAN5"
+        }
+      }
+    },
+    {
+      "id": "PLAN4",
+      "cells": {
+        "title": "Release line",
+        "status": "closed",
+        "done": 1
+      }
+    }
+  ],
+  "total": 2
+}

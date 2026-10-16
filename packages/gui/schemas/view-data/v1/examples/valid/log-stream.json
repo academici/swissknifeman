@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "log-stream",
+  "run_id": "run-0123456789abcdef0123456789abcdef"
+}

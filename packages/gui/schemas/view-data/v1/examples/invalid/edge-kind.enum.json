@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "dependency-graph",
+  "nodes": [
+    {
+      "id": "P1.1",
+      "label": "Skeleton",
+      "status": "ok",
+      "group": "P1"
+    },
+    {
+      "id": "P1.2",
+      "label": "Contracts",
+      "status": "unknown",
+      "group": "P1"
+    }
+  ],
+  "edges": [
+    {
+      "from": "P1.1",
+      "to": "P1.2",
+      "kind": "depends"
+    }
+  ]
+}

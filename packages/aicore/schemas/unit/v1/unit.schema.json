@@ -241,6 +241,10 @@
             "required": ["id", "bridge"],
             "additionalProperties": false
           }
+        },
+        "gui": {
+          "$ref": "#/$defs/relpath",
+          "description": "GUI contribution file (gui.json, urn:swissknifeman:gui:contribution:v1) relative to the module root; the gui module validates it."
         }
       },
       "additionalProperties": false

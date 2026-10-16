@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "schema-form",
+  "form": "gui-planner.settings",
+  "document": {
+    "budget": {
+      "context_tokens": 16000
+    }
+  },
+  "revision": "sha256:abababababababababababababababababababababababababababababababab"
+}

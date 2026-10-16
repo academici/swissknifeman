@@ -1,0 +1,404 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:view-data:v1",
+  "title": "view-data",
+  "description": "Answer of a GUI query: the data of one host view, chosen by the const field view. Every string the host shows is rendered as text; markdown is sanitized without raw HTML.",
+  "oneOf": [
+    {"$ref": "#/$defs/resource_list", "description": "A table of resources."},
+    {"$ref": "#/$defs/resource_detail", "description": "One resource."},
+    {"$ref": "#/$defs/metric_group", "description": "A group of metrics."},
+    {"$ref": "#/$defs/status_table", "description": "A table of checks."},
+    {"$ref": "#/$defs/timeline", "description": "Entries in time order."},
+    {"$ref": "#/$defs/log_stream", "description": "The log of a run."},
+    {"$ref": "#/$defs/markdown", "description": "A markdown page."},
+    {"$ref": "#/$defs/dependency_graph", "description": "A graph of dependencies."},
+    {"$ref": "#/$defs/board", "description": "A board of cards in columns."},
+    {"$ref": "#/$defs/schema_form", "description": "A document edited by a form."},
+    {"$ref": "#/$defs/command_form", "description": "The input form of a command."}
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:view-data:v1",
+      "description": "Contract id of this document."
+    },
+    "local_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$",
+      "description": "Id of a route, command or form of a contribution (contribution/v1 local id)."
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Name of a column, cell or input field."
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Text shown to the user."
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Id of an element, unique inside its list."
+    },
+    "scalar": {
+      "type": ["string", "number", "boolean", "null"],
+      "description": "A scalar value."
+    },
+    "scalar_map": {
+      "type": "object",
+      "description": "Values by field name.",
+      "patternProperties": {
+        "^[a-z][a-z0-9_]*$": {"$ref": "#/$defs/scalar", "description": "Value of the field."}
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "enum": ["ok", "warn", "fail", "skip", "unknown"],
+      "description": "Status of an element."
+    },
+    "value_type": {
+      "enum": ["text", "number", "status", "date", "ref", "progress"],
+      "description": "How a value is rendered."
+    },
+    "cursor": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque cursor of the next page."
+    },
+    "link": {
+      "type": "object",
+      "description": "Link to a route of a contribution.",
+      "required": ["route"],
+      "properties": {
+        "route": {"$ref": "#/$defs/local_id", "description": "Route id."},
+        "params": {
+          "type": "object",
+          "description": "Route parameters by name.",
+          "patternProperties": {
+            "^[a-z][a-z0-9_]*$": {"type": "string", "description": "Parameter value."}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "description": "A command offered with prefilled input.",
+      "required": ["command"],
+      "properties": {
+        "command": {"$ref": "#/$defs/local_id", "description": "Command id."},
+        "input": {"$ref": "#/$defs/scalar_map", "description": "Prefilled input values."}
+      },
+      "additionalProperties": false
+    },
+    "resource_list": {
+      "type": "object",
+      "description": "A table of resources (view resource-list).",
+      "required": ["$schema", "view", "columns", "rows"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "resource-list", "description": "Kind of view."},
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Columns in display order.",
+          "items": {
+            "type": "object",
+            "description": "One column.",
+            "required": ["id", "title", "type"],
+            "properties": {
+              "id": {"$ref": "#/$defs/key", "description": "Column id; the key of the cells."},
+              "title": {"$ref": "#/$defs/text", "description": "Column title."},
+              "type": {"$ref": "#/$defs/value_type", "description": "How the cells are rendered."}
+            },
+            "additionalProperties": false
+          }
+        },
+        "rows": {
+          "type": "array",
+          "description": "Rows of the page.",
+          "items": {
+            "type": "object",
+            "description": "One row.",
+            "required": ["id", "cells"],
+            "properties": {
+              "id": {"$ref": "#/$defs/item_id", "description": "Row id."},
+              "cells": {"$ref": "#/$defs/scalar_map", "description": "Cell values by column id."},
+              "link": {"$ref": "#/$defs/link", "description": "Where the row leads."}
+            },
+            "additionalProperties": false
+          }
+        },
+        "total": {"type": "integer", "minimum": 0, "description": "Number of rows over all pages."},
+        "next_cursor": {"$ref": "#/$defs/cursor", "description": "Cursor of the next page; absent on the last page."}
+      },
+      "additionalProperties": false
+    },
+    "resource_detail": {
+      "type": "object",
+      "description": "One resource (view resource-detail).",
+      "required": ["$schema", "view", "title", "fields"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "resource-detail", "description": "Kind of view."},
+        "title": {"$ref": "#/$defs/text", "description": "Title of the resource."},
+        "fields": {
+          "type": "array",
+          "description": "Labelled values.",
+          "items": {
+            "type": "object",
+            "description": "One labelled value.",
+            "required": ["label", "value", "type"],
+            "properties": {
+              "label": {"$ref": "#/$defs/text", "description": "Label."},
+              "value": {"$ref": "#/$defs/scalar", "description": "Value."},
+              "type": {"$ref": "#/$defs/value_type", "description": "How the value is rendered."}
+            },
+            "additionalProperties": false
+          }
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Markdown sections below the fields.",
+          "items": {
+            "type": "object",
+            "description": "One section.",
+            "required": ["title", "markdown"],
+            "properties": {
+              "title": {"$ref": "#/$defs/text", "description": "Section title."},
+              "markdown": {"type": "string", "description": "Section text in markdown (sanitized, no raw HTML)."}
+            },
+            "additionalProperties": false
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Commands offered for the resource.",
+          "items": {"$ref": "#/$defs/action", "description": "One action."}
+        }
+      },
+      "additionalProperties": false
+    },
+    "metric_group": {
+      "type": "object",
+      "description": "A group of metrics (view metric-group).",
+      "required": ["$schema", "view", "metrics"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "metric-group", "description": "Kind of view."},
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Metrics in display order.",
+          "items": {
+            "type": "object",
+            "description": "One metric.",
+            "required": ["id", "label", "value", "status"],
+            "properties": {
+              "id": {"$ref": "#/$defs/item_id", "description": "Metric id."},
+              "label": {"$ref": "#/$defs/text", "description": "Label."},
+              "value": {"type": "number", "description": "Value."},
+              "unit": {"type": "string", "minLength": 1, "description": "Unit of the value."},
+              "status": {"enum": ["ok", "warn", "fail", "unknown"], "description": "Status of the metric."},
+              "link": {"$ref": "#/$defs/link", "description": "Where the metric leads."}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "status_table": {
+      "type": "object",
+      "description": "A table of checks (view status-table); statuses map 1:1 to aicore check-result/v1.",
+      "required": ["$schema", "view", "rows"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "status-table", "description": "Kind of view."},
+        "rows": {
+          "type": "array",
+          "description": "Checks in display order.",
+          "items": {
+            "type": "object",
+            "description": "One check.",
+            "required": ["id", "label", "status"],
+            "properties": {
+              "id": {"$ref": "#/$defs/item_id", "description": "Check id."},
+              "label": {"$ref": "#/$defs/text", "description": "Label."},
+              "status": {"$ref": "#/$defs/status", "description": "Status of the check."},
+              "detail": {"type": "string", "description": "Observation or remediation text."},
+              "repair": {"$ref": "#/$defs/action", "description": "Command that repairs the check."}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "description": "Entries in time order (view timeline).",
+      "required": ["$schema", "view", "entries"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "timeline", "description": "Kind of view."},
+        "entries": {
+          "type": "array",
+          "description": "Entries, newest first.",
+          "items": {
+            "type": "object",
+            "description": "One entry.",
+            "required": ["at", "kind", "title"],
+            "properties": {
+              "at": {"$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc", "description": "When it happened."},
+              "kind": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$", "description": "Kind of entry, such as an event type."},
+              "title": {"$ref": "#/$defs/text", "description": "Title."},
+              "detail": {"type": "string", "description": "Details."},
+              "link": {"$ref": "#/$defs/link", "description": "Where the entry leads."}
+            },
+            "additionalProperties": false
+          }
+        },
+        "next_cursor": {"$ref": "#/$defs/cursor", "description": "Cursor of older entries; absent at the end."}
+      },
+      "additionalProperties": false
+    },
+    "log_stream": {
+      "type": "object",
+      "description": "The log of a run (view log-stream); the lines arrive through the event stream.",
+      "required": ["$schema", "view", "run_id"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "log-stream", "description": "Kind of view."},
+        "run_id": {"type": "string", "pattern": "^run-[0-9a-f]{32}$", "description": "Id of the run (run/v1)."}
+      },
+      "additionalProperties": false
+    },
+    "markdown": {
+      "type": "object",
+      "description": "A markdown page (view markdown).",
+      "required": ["$schema", "view", "text"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "markdown", "description": "Kind of view."},
+        "text": {"type": "string", "description": "Markdown text (sanitized, no raw HTML)."},
+        "base_route": {"$ref": "#/$defs/local_id", "description": "Route that relative links resolve against."}
+      },
+      "additionalProperties": false
+    },
+    "dependency_graph": {
+      "type": "object",
+      "description": "A graph of dependencies (view dependency-graph).",
+      "required": ["$schema", "view", "nodes", "edges"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "dependency-graph", "description": "Kind of view."},
+        "nodes": {
+          "type": "array",
+          "description": "Nodes of the graph.",
+          "items": {
+            "type": "object",
+            "description": "One node.",
+            "required": ["id", "label"],
+            "properties": {
+              "id": {"$ref": "#/$defs/item_id", "description": "Node id."},
+              "label": {"$ref": "#/$defs/text", "description": "Label."},
+              "status": {"$ref": "#/$defs/status", "description": "Status of the node."},
+              "group": {"type": "string", "minLength": 1, "description": "Group the node is drawn in."}
+            },
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "description": "Edges between nodes.",
+          "items": {
+            "type": "object",
+            "description": "One edge.",
+            "required": ["from", "to", "kind"],
+            "properties": {
+              "from": {"$ref": "#/$defs/item_id", "description": "Id of the source node."},
+              "to": {"$ref": "#/$defs/item_id", "description": "Id of the target node."},
+              "kind": {"enum": ["blocks", "related"], "description": "Kind of edge."}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "board": {
+      "type": "object",
+      "description": "A board of cards in columns (view board).",
+      "required": ["$schema", "view", "columns"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "board", "description": "Kind of view."},
+        "columns": {
+          "type": "array",
+          "description": "Columns in display order.",
+          "items": {
+            "type": "object",
+            "description": "One column.",
+            "required": ["id", "title", "cards"],
+            "properties": {
+              "id": {"$ref": "#/$defs/item_id", "description": "Column id."},
+              "title": {"$ref": "#/$defs/text", "description": "Column title."},
+              "cards": {
+                "type": "array",
+                "description": "Cards of the column.",
+                "items": {
+                  "type": "object",
+                  "description": "One card.",
+                  "required": ["id", "title"],
+                  "properties": {
+                    "id": {"$ref": "#/$defs/item_id", "description": "Card id."},
+                    "title": {"$ref": "#/$defs/text", "description": "Card title."},
+                    "subtitle": {"type": "string", "minLength": 1, "description": "Second line."},
+                    "status": {"$ref": "#/$defs/status", "description": "Status of the card."},
+                    "link": {"$ref": "#/$defs/link", "description": "Where the card leads."}
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "schema_form": {
+      "type": "object",
+      "description": "A document edited by a form (view schema-form).",
+      "required": ["$schema", "view", "form", "document", "revision"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "schema-form", "description": "Kind of view."},
+        "form": {"$ref": "#/$defs/local_id", "description": "Form (contribution/v1 forms[]) that annotates the document."},
+        "document": {
+          "type": "object",
+          "description": "The edited document; validated by the canonical contract named by the schema of the form, not by view-data/v1."
+        },
+        "revision": {"$ref": "urn:swissknifeman:aicore:digest:v1", "description": "Revision of the document for the compare-and-swap write."}
+      },
+      "additionalProperties": false
+    },
+    "command_form": {
+      "type": "object",
+      "description": "The input form of a command (view command-form).",
+      "required": ["$schema", "view", "command"],
+      "properties": {
+        "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
+        "view": {"const": "command-form", "description": "Kind of view."},
+        "command": {"$ref": "#/$defs/local_id", "description": "Command id."},
+        "defaults": {"$ref": "#/$defs/scalar_map", "description": "Default input values by field name."}
+      },
+      "additionalProperties": false
+    }
+  }
+}

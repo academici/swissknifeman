@@ -9,7 +9,8 @@ plan_dirs="$(printf '%s\n' "$changed" | grep -oE '^plans/[^/]+/' | sed -E 's#/$#
 [ -n "$plan_dirs" ] || exit 0
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-# Planner lookup: PLANNER_PLAN_PY -> PLANNER_ROOT/scripts/plan.py -> `planner` on PATH. Not found: skip the check.
+# Planner lookup (the order of aicore.util.partners): PLANNER_PLAN_PY -> PLANNER_ROOT/scripts/plan.py -> `planner`
+# or `plan.py` (the link install.sh makes) on PATH. Not found: skip the check.
 plan_cmd=()
 if [ -n "${PLANNER_PLAN_PY:-}" ] && [ -f "$PLANNER_PLAN_PY" ]; then
   plan_cmd=(python3 "$PLANNER_PLAN_PY")
@@ -17,6 +18,8 @@ elif [ -n "${PLANNER_ROOT:-}" ] && [ -f "$PLANNER_ROOT/scripts/plan.py" ]; then
   plan_cmd=(python3 "$PLANNER_ROOT/scripts/plan.py")
 elif command -v planner >/dev/null 2>&1; then
   plan_cmd=(planner)
+elif command -v plan.py >/dev/null 2>&1; then
+  plan_cmd=(plan.py)
 fi
 if [ "${#plan_cmd[@]}" -eq 0 ]; then
   echo "plan-check: planner not found (set PLANNER_ROOT)" >&2

@@ -98,6 +98,10 @@
             "description": "Extension point <module>:<id>."
           }
         },
+        "gui": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/relpath",
+          "description": "GUI contribution file (gui.json, urn:swissknifeman:gui:contribution:v1) relative to the manifest folder; the gui module validates it."
+        },
         "events": {
           "type": "array",
           "minItems": 1,
